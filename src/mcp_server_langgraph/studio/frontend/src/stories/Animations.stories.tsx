@@ -1,4 +1,3 @@
- 
 /**
  * Animations Stories
  *
@@ -44,17 +43,44 @@ function DurationTokens() {
   const [activeDemo, setActiveDemo] = useState<string | null>(null);
 
   const durations = [
-    { name: "instant", value: ANIMATION_DURATION.instant, ms: "100ms", usage: "Hover states, micro-feedback" },
-    { name: "fast", value: ANIMATION_DURATION.fast, ms: "150ms", usage: "Button states, quick feedback" },
-    { name: "normal", value: ANIMATION_DURATION.normal, ms: "200ms", usage: "Standard transitions" },
-    { name: "slow", value: ANIMATION_DURATION.slow, ms: "300ms", usage: "Complex animations, modals" },
-    { name: "slower", value: ANIMATION_DURATION.slower, ms: "500ms", usage: "Page transitions" },
+    {
+      name: "instant",
+      value: ANIMATION_DURATION.instant,
+      ms: "100ms",
+      usage: "Hover states, micro-feedback",
+    },
+    {
+      name: "fast",
+      value: ANIMATION_DURATION.fast,
+      ms: "150ms",
+      usage: "Button states, quick feedback",
+    },
+    {
+      name: "normal",
+      value: ANIMATION_DURATION.normal,
+      ms: "200ms",
+      usage: "Standard transitions",
+    },
+    {
+      name: "slow",
+      value: ANIMATION_DURATION.slow,
+      ms: "300ms",
+      usage: "Complex animations, modals",
+    },
+    {
+      name: "slower",
+      value: ANIMATION_DURATION.slower,
+      ms: "500ms",
+      usage: "Page transitions",
+    },
   ];
 
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Duration Tokens</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Duration Tokens
+        </h2>
         <p className="text-neutral-11">
           Standardized animation durations for consistent timing across the UI.
         </p>
@@ -62,7 +88,10 @@ function DurationTokens() {
 
       <div className="space-y-3">
         {durations.map((d) => (
-          <div key={d.name} className="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg">
+          <div
+            key={d.name}
+            className="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg"
+          >
             <div className="w-24 shrink-0">
               <code className="text-sm text-neutral-11">{d.name}</code>
             </div>
@@ -70,7 +99,9 @@ function DurationTokens() {
             <div className="flex-1 text-sm text-neutral-10">{d.usage}</div>
             <div className="w-40 shrink-0">
               <button
-                onClick={() => setActiveDemo(activeDemo === d.name ? null : d.name)}
+                onClick={() =>
+                  setActiveDemo(activeDemo === d.name ? null : d.name)
+                }
                 className="px-3 py-1.5 bg-primary-9 text-neutral-12 text-sm rounded hover:bg-primary-10 transition-colors"
               >
                 {activeDemo === d.name ? "Reset" : "Play"}
@@ -99,16 +130,34 @@ function SpringPhysics() {
   const [trigger, setTrigger] = useState(0);
 
   const springs = [
-    { name: "snappy", config: ANIMATION_SPRING.snappy, desc: "Buttons, toggles - quick response" },
-    { name: "smooth", config: ANIMATION_SPRING.smooth, desc: "Most UI elements - natural feel" },
-    { name: "gentle", config: ANIMATION_SPRING.gentle, desc: "Large elements, modals - slow settle" },
-    { name: "bouncy", config: ANIMATION_SPRING.bouncy, desc: "Success states - playful feel" },
+    {
+      name: "snappy",
+      config: ANIMATION_SPRING.snappy,
+      desc: "Buttons, toggles - quick response",
+    },
+    {
+      name: "smooth",
+      config: ANIMATION_SPRING.smooth,
+      desc: "Most UI elements - natural feel",
+    },
+    {
+      name: "gentle",
+      config: ANIMATION_SPRING.gentle,
+      desc: "Large elements, modals - slow settle",
+    },
+    {
+      name: "bouncy",
+      config: ANIMATION_SPRING.bouncy,
+      desc: "Success states - playful feel",
+    },
   ];
 
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Spring Physics</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Spring Physics
+        </h2>
         <p className="text-neutral-11">
           Physics-based springs create natural, organic motion.
         </p>
@@ -125,7 +174,9 @@ function SpringPhysics() {
         {springs.map((s) => (
           <div key={s.name} className="p-4 border border-neutral-6 rounded-lg">
             <div className="flex items-center justify-between mb-3">
-              <code className="text-sm font-medium text-neutral-12">{s.name}</code>
+              <code className="text-sm font-medium text-neutral-12">
+                {s.name}
+              </code>
               <span className="text-xs text-neutral-10">
                 stiffness: {s.config.stiffness}, damping: {s.config.damping}
               </span>
@@ -155,16 +206,34 @@ function EasingFunctions() {
   const [trigger, setTrigger] = useState(0);
 
   const easings = [
-    { name: "easeOut", values: ANIMATION_EASING.easeOut, desc: "Entrances - decelerating" },
-    { name: "easeIn", values: ANIMATION_EASING.easeIn, desc: "Exits - accelerating" },
-    { name: "easeInOut", values: ANIMATION_EASING.easeInOut, desc: "State changes - symmetric" },
-    { name: "anticipate", values: ANIMATION_EASING.anticipate, desc: "Emphasis - pull back first" },
+    {
+      name: "easeOut",
+      values: ANIMATION_EASING.easeOut,
+      desc: "Entrances - decelerating",
+    },
+    {
+      name: "easeIn",
+      values: ANIMATION_EASING.easeIn,
+      desc: "Exits - accelerating",
+    },
+    {
+      name: "easeInOut",
+      values: ANIMATION_EASING.easeInOut,
+      desc: "State changes - symmetric",
+    },
+    {
+      name: "anticipate",
+      values: ANIMATION_EASING.anticipate,
+      desc: "Emphasis - pull back first",
+    },
   ];
 
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Easing Functions</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Easing Functions
+        </h2>
         <p className="text-neutral-11">
           Cubic-bezier curves for non-spring animations.
         </p>
@@ -179,11 +248,16 @@ function EasingFunctions() {
 
       <div className="space-y-4 mt-4">
         {easings.map((e) => (
-          <div key={e.name} className="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg">
+          <div
+            key={e.name}
+            className="flex items-center gap-4 p-3 border border-neutral-6 rounded-lg"
+          >
             <div className="w-28 shrink-0">
               <code className="text-sm text-neutral-11">{e.name}</code>
             </div>
-            <div className="w-40 shrink-0 text-sm text-neutral-10">{e.desc}</div>
+            <div className="w-40 shrink-0 text-sm text-neutral-10">
+              {e.desc}
+            </div>
             <div className="flex-1 h-8 bg-neutral-4 rounded overflow-hidden">
               <motion.div
                 key={trigger}
@@ -219,19 +293,26 @@ function AnimationPresets() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Animation Presets</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Animation Presets
+        </h2>
         <p className="text-neutral-11">
-          Ready-to-use animation configurations that can be spread onto Motion components.
+          Ready-to-use animation configurations that can be spread onto Motion
+          components.
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         {presets.map((p) => (
           <div key={p.name} className="p-4 border border-neutral-6 rounded-lg">
-            <code className="text-sm font-medium text-neutral-12">{p.name}</code>
+            <code className="text-sm font-medium text-neutral-12">
+              {p.name}
+            </code>
             <p className="text-xs text-neutral-10 mt-1 mb-4">{p.desc}</p>
             <button
-              onClick={() => setActivePreset(activePreset === p.name ? null : p.name)}
+              onClick={() =>
+                setActivePreset(activePreset === p.name ? null : p.name)
+              }
               className="w-full py-1.5 bg-neutral-4 text-neutral-11 text-sm rounded hover:bg-neutral-4 transition-colors"
             >
               {activePreset === p.name ? "Hide" : "Demo"}
@@ -241,7 +322,9 @@ function AnimationPresets() {
                 {activePreset === p.name && (
                   <motion.div
                     className="w-12 h-12 bg-primary-9 rounded"
-                    {...(ANIMATION_PRESETS[p.name as keyof typeof ANIMATION_PRESETS] as object)}
+                    {...(ANIMATION_PRESETS[
+                      p.name as keyof typeof ANIMATION_PRESETS
+                    ] as object)}
                   />
                 )}
               </AnimatePresence>
@@ -252,7 +335,9 @@ function AnimationPresets() {
 
       <div className="bg-neutral-2 border border-neutral-6 rounded-lg p-4 font-mono text-xs">
         <p className="text-neutral-10 mb-2">{"// Usage example"}</p>
-        <p className="text-neutral-12">{"<motion.div {...ANIMATION_PRESETS.slideUp}>"}</p>
+        <p className="text-neutral-12">
+          {"<motion.div {...ANIMATION_PRESETS.slideUp}>"}
+        </p>
         <p className="text-neutral-12 pl-4">{"Content here"}</p>
         <p className="text-neutral-12">{"</motion.div>"}</p>
       </div>
@@ -276,7 +361,9 @@ function MicroInteractions() {
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Micro-Interactions</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Micro-Interactions
+        </h2>
         <p className="text-neutral-11">
           Reusable Motion variants for common UI patterns.
         </p>
@@ -331,12 +418,16 @@ function MicroInteractions() {
               </motion.li>
             ))}
           </motion.ul>
-          <p className="text-xs text-neutral-10 mt-2">listContainerVariants + listItemVariants</p>
+          <p className="text-xs text-neutral-10 mt-2">
+            listContainerVariants + listItemVariants
+          </p>
         </div>
 
         {/* Toast */}
         <div className="p-4 border border-neutral-6 rounded-lg">
-          <h4 className="font-medium text-neutral-12 mb-3">Toast Notification</h4>
+          <h4 className="font-medium text-neutral-12 mb-3">
+            Toast Notification
+          </h4>
           <button
             onClick={() => {
               setShowToast(true);
@@ -434,7 +525,9 @@ function MicroInteractions() {
 
         {/* Badge */}
         <div className="p-4 border border-neutral-6 rounded-lg">
-          <h4 className="font-medium text-neutral-12 mb-3">Notification Badge</h4>
+          <h4 className="font-medium text-neutral-12 mb-3">
+            Notification Badge
+          </h4>
           <button
             onClick={() => setBadgeCount((c) => c + 1)}
             className="relative px-4 py-2 bg-neutral-4 text-neutral-12 rounded"
@@ -506,16 +599,23 @@ function MicroInteractions() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-medium text-neutral-12">Modal Title</h3>
-                  <button onClick={() => setShowModal(false)} className="text-neutral-10 hover:text-neutral-12">
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="text-neutral-10 hover:text-neutral-12"
+                  >
                     <X size={18} />
                   </button>
                 </div>
-                <p className="text-sm text-neutral-11">Modal content with animated entrance and exit.</p>
+                <p className="text-sm text-neutral-11">
+                  Modal content with animated entrance and exit.
+                </p>
               </motion.div>
             </>
           )}
         </AnimatePresence>
-        <p className="text-xs text-neutral-10 mt-2">modalVariants + backdropVariants</p>
+        <p className="text-xs text-neutral-10 mt-2">
+          modalVariants + backdropVariants
+        </p>
       </div>
     </div>
   );
@@ -529,7 +629,9 @@ function LoadingStates() {
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Loading States</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Loading States
+        </h2>
         <p className="text-neutral-11">
           Shimmer and skeleton animations for loading placeholders.
         </p>
@@ -629,16 +731,22 @@ function LoadingStates() {
               </motion.div>
             ))}
           </div>
-          <p className="text-xs text-neutral-10 mt-4">shimmerVariants on table rows</p>
+          <p className="text-xs text-neutral-10 mt-4">
+            shimmerVariants on table rows
+          </p>
         </div>
       </div>
 
       <div className="bg-neutral-2 border border-neutral-6 rounded-lg p-4 font-mono text-xs">
         <p className="text-neutral-10 mb-2">{"// Usage example"}</p>
         <p className="text-neutral-12">{"<motion.div"}</p>
-        <p className="text-neutral-12 pl-4">{"className=\"bg-gradient-to-r from-neutral-3 via-neutral-2 to-neutral-3 bg-[length:200%_100%]\""}</p>
+        <p className="text-neutral-12 pl-4">
+          {
+            'className="bg-gradient-to-r from-neutral-3 via-neutral-2 to-neutral-3 bg-[length:200%_100%]"'
+          }
+        </p>
         <p className="text-neutral-12 pl-4">{"variants={shimmerVariants}"}</p>
-        <p className="text-neutral-12 pl-4">{"animate=\"shimmer\""}</p>
+        <p className="text-neutral-12 pl-4">{'animate="shimmer"'}</p>
         <p className="text-neutral-12">{"/>"}</p>
       </div>
     </div>
@@ -653,7 +761,9 @@ function ReducedMotionSupport() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Reduced Motion Support</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Reduced Motion Support
+        </h2>
         <p className="text-neutral-11">
           Accessibility support for users who prefer reduced motion.
         </p>
@@ -663,23 +773,32 @@ function ReducedMotionSupport() {
         <div className="p-4 border border-neutral-6 rounded-lg">
           <h4 className="font-medium text-neutral-12 mb-2">OS Detection</h4>
           <p className="text-sm text-neutral-11 mb-4">
-            Motion's <code className="bg-neutral-4 px-1 rounded">useReducedMotion()</code> hook
-            detects the user's OS preference automatically.
+            Motion's{" "}
+            <code className="bg-neutral-4 px-1 rounded">
+              useReducedMotion()
+            </code>{" "}
+            hook detects the user's OS preference automatically.
           </p>
           <div className="bg-neutral-2 p-3 rounded font-mono text-xs">
             <p className="text-neutral-10">{"// Hook usage"}</p>
-            <p className="text-neutral-12">{"const prefersReduced = useReducedMotion();"}</p>
+            <p className="text-neutral-12">
+              {"const prefersReduced = useReducedMotion();"}
+            </p>
           </div>
         </div>
 
         <div className="p-4 border border-neutral-6 rounded-lg">
-          <h4 className="font-medium text-neutral-12 mb-2">useMotionSafe Hook</h4>
+          <h4 className="font-medium text-neutral-12 mb-2">
+            useMotionSafe Hook
+          </h4>
           <p className="text-sm text-neutral-11 mb-4">
             Our custom hook automatically falls back to opacity-only animations.
           </p>
           <div className="bg-neutral-2 p-3 rounded font-mono text-xs">
             <p className="text-neutral-10">{"// Import and use"}</p>
-            <p className="text-neutral-12">{"const motionProps = useMotionSafe(ANIMATION_PRESETS.slideUp);"}</p>
+            <p className="text-neutral-12">
+              {"const motionProps = useMotionSafe(ANIMATION_PRESETS.slideUp);"}
+            </p>
           </div>
         </div>
       </div>
@@ -687,18 +806,26 @@ function ReducedMotionSupport() {
       <div className="bg-warning-2 border border-warning-6 rounded-lg p-4">
         <h4 className="font-medium text-warning-11 mb-1">Accessibility Note</h4>
         <p className="text-sm text-warning-11">
-          When reduced motion is enabled, all animations fall back to simple opacity transitions
-          with a fast duration (150ms). This respects user preferences while maintaining
-          visual feedback.
+          When reduced motion is enabled, all animations fall back to simple
+          opacity transitions with a fast duration (150ms). This respects user
+          preferences while maintaining visual feedback.
         </p>
       </div>
 
       <div className="bg-neutral-2 border border-neutral-6 rounded-lg p-4 font-mono text-xs">
-        <p className="text-neutral-10 mb-2">{"/* CSS fallback for reduced motion */"}</p>
-        <p className="text-neutral-12">{"@media (prefers-reduced-motion: reduce) {"}</p>
+        <p className="text-neutral-10 mb-2">
+          {"/* CSS fallback for reduced motion */"}
+        </p>
+        <p className="text-neutral-12">
+          {"@media (prefers-reduced-motion: reduce) {"}
+        </p>
         <p className="text-neutral-12 pl-4">{"*, *::before, *::after {"}</p>
-        <p className="text-neutral-12 pl-8">{"animation-duration: 0.01ms !important;"}</p>
-        <p className="text-neutral-12 pl-8">{"transition-duration: 0.01ms !important;"}</p>
+        <p className="text-neutral-12 pl-8">
+          {"animation-duration: 0.01ms !important;"}
+        </p>
+        <p className="text-neutral-12 pl-8">
+          {"transition-duration: 0.01ms !important;"}
+        </p>
         <p className="text-neutral-12 pl-4">{"}"}</p>
         <p className="text-neutral-12">{"}"}</p>
       </div>
@@ -732,7 +859,8 @@ export const Durations: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Standardized duration tokens from instant (100ms) to slower (500ms).",
+        story:
+          "Standardized duration tokens from instant (100ms) to slower (500ms).",
       },
     },
   },
@@ -765,7 +893,8 @@ export const Presets: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Ready-to-use animation configurations (fade, slide, scale, expand).",
+        story:
+          "Ready-to-use animation configurations (fade, slide, scale, expand).",
       },
     },
   },
@@ -776,7 +905,8 @@ export const Interactions: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Reusable Motion variants for buttons, lists, toasts, modals, and more.",
+        story:
+          "Reusable Motion variants for buttons, lists, toasts, modals, and more.",
       },
     },
   },
@@ -818,25 +948,73 @@ function DevToolsAnimations() {
   const [showNetwork, setShowNetwork] = useState(true);
 
   const mockLogs = [
-    { id: "1", level: "info", message: "Server started on port 3000", service: "api" },
-    { id: "2", level: "warning", message: "Rate limit approaching threshold", service: "gateway" },
-    { id: "3", level: "error", message: "Database connection timeout", service: "db" },
-    { id: "4", level: "info", message: "Request completed in 150ms", service: "api" },
+    {
+      id: "1",
+      level: "info",
+      message: "Server started on port 3000",
+      service: "api",
+    },
+    {
+      id: "2",
+      level: "warning",
+      message: "Rate limit approaching threshold",
+      service: "gateway",
+    },
+    {
+      id: "3",
+      level: "error",
+      message: "Database connection timeout",
+      service: "db",
+    },
+    {
+      id: "4",
+      level: "info",
+      message: "Request completed in 150ms",
+      service: "api",
+    },
   ];
 
   const mockNetwork = [
-    { id: "1", method: "GET", url: "/api/users", status: 200, duration: "45ms" },
-    { id: "2", method: "POST", url: "/api/sessions", status: 201, duration: "120ms" },
-    { id: "3", method: "GET", url: "/api/metrics", status: 500, duration: "2500ms" },
-    { id: "4", method: "DELETE", url: "/api/cache", status: 204, duration: "12ms" },
+    {
+      id: "1",
+      method: "GET",
+      url: "/api/users",
+      status: 200,
+      duration: "45ms",
+    },
+    {
+      id: "2",
+      method: "POST",
+      url: "/api/sessions",
+      status: 201,
+      duration: "120ms",
+    },
+    {
+      id: "3",
+      method: "GET",
+      url: "/api/metrics",
+      status: 500,
+      duration: "2500ms",
+    },
+    {
+      id: "4",
+      method: "DELETE",
+      url: "/api/cache",
+      status: 204,
+      duration: "12ms",
+    },
   ];
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case "error": return "text-error-11 bg-error-3";
-      case "warning": return "text-warning-11 bg-warning-3";
-      case "info": return "text-primary-11 bg-primary-3";
-      default: return "text-neutral-11 bg-neutral-4";
+      case "error":
+        return "text-error-11 bg-error-3";
+      case "warning":
+        return "text-warning-11 bg-warning-3";
+      case "info":
+        return "text-primary-11 bg-primary-3";
+      default:
+        return "text-neutral-11 bg-neutral-4";
     }
   };
 
@@ -849,20 +1027,28 @@ function DevToolsAnimations() {
 
   const getMethodColor = (method: string) => {
     switch (method) {
-      case "GET": return "text-primary-11";
-      case "POST": return "text-success-11";
-      case "PUT": return "text-warning-11";
-      case "DELETE": return "text-error-11";
-      default: return "text-neutral-11";
+      case "GET":
+        return "text-primary-11";
+      case "POST":
+        return "text-success-11";
+      case "PUT":
+        return "text-warning-11";
+      case "DELETE":
+        return "text-error-11";
+      default:
+        return "text-neutral-11";
     }
   };
 
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">DevTools Animations</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          DevTools Animations
+        </h2>
         <p className="text-neutral-11">
-          Specialized animations for DevTools panels: log entries and network requests.
+          Specialized animations for DevTools panels: log entries and network
+          requests.
         </p>
       </div>
 
@@ -883,22 +1069,29 @@ function DevToolsAnimations() {
           </p>
           <div className="border border-neutral-6 rounded-lg overflow-hidden">
             <AnimatePresence>
-              {showLogs && mockLogs.map((log, index) => (
-                <motion.div
-                  key={log.id}
-                  className="flex items-center gap-3 p-2 border-b border-neutral-6 last:border-b-0"
-                  variants={logEntryVariants}
-                  initial="hidden"
-                  animate="visible"
-                  custom={index}
-                >
-                  <span className={`px-2 py-0.5 text-xs font-medium rounded uppercase ${getLevelColor(log.level)}`}>
-                    {log.level}
-                  </span>
-                  <span className="text-xs text-neutral-10">{log.service}</span>
-                  <span className="text-sm text-neutral-12 flex-1 truncate">{log.message}</span>
-                </motion.div>
-              ))}
+              {showLogs &&
+                mockLogs.map((log, index) => (
+                  <motion.div
+                    key={log.id}
+                    className="flex items-center gap-3 p-2 border-b border-neutral-6 last:border-b-0"
+                    variants={logEntryVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={index}
+                  >
+                    <span
+                      className={`px-2 py-0.5 text-xs font-medium rounded uppercase ${getLevelColor(log.level)}`}
+                    >
+                      {log.level}
+                    </span>
+                    <span className="text-xs text-neutral-10">
+                      {log.service}
+                    </span>
+                    <span className="text-sm text-neutral-12 flex-1 truncate">
+                      {log.message}
+                    </span>
+                  </motion.div>
+                ))}
             </AnimatePresence>
           </div>
           <p className="text-xs text-neutral-10 mt-2">logEntryVariants</p>
@@ -916,7 +1109,8 @@ function DevToolsAnimations() {
             </button>
           </div>
           <p className="text-sm text-neutral-10 mb-4">
-            Table row animation with fade and subtle slide using networkRowVariants.
+            Table row animation with fade and subtle slide using
+            networkRowVariants.
           </p>
           <div className="border border-neutral-6 rounded-lg overflow-hidden">
             <table className="w-full text-sm">
@@ -930,25 +1124,34 @@ function DevToolsAnimations() {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {showNetwork && mockNetwork.map((req, index) => (
-                    <motion.tr
-                      key={req.id}
-                      className="border-t border-neutral-6"
-                      variants={networkRowVariants}
-                      initial="hidden"
-                      animate="visible"
-                      custom={index}
-                    >
-                      <td className={`px-3 py-2 font-medium ${getMethodColor(req.method)}`}>
-                        {req.method}
-                      </td>
-                      <td className="px-3 py-2 text-neutral-12 font-mono text-xs">{req.url}</td>
-                      <td className={`px-3 py-2 font-medium ${getStatusColor(req.status)}`}>
-                        {req.status}
-                      </td>
-                      <td className="px-3 py-2 text-neutral-10">{req.duration}</td>
-                    </motion.tr>
-                  ))}
+                  {showNetwork &&
+                    mockNetwork.map((req, index) => (
+                      <motion.tr
+                        key={req.id}
+                        className="border-t border-neutral-6"
+                        variants={networkRowVariants}
+                        initial="hidden"
+                        animate="visible"
+                        custom={index}
+                      >
+                        <td
+                          className={`px-3 py-2 font-medium ${getMethodColor(req.method)}`}
+                        >
+                          {req.method}
+                        </td>
+                        <td className="px-3 py-2 text-neutral-12 font-mono text-xs">
+                          {req.url}
+                        </td>
+                        <td
+                          className={`px-3 py-2 font-medium ${getStatusColor(req.status)}`}
+                        >
+                          {req.status}
+                        </td>
+                        <td className="px-3 py-2 text-neutral-10">
+                          {req.duration}
+                        </td>
+                      </motion.tr>
+                    ))}
                 </AnimatePresence>
               </tbody>
             </table>
@@ -959,15 +1162,20 @@ function DevToolsAnimations() {
 
       {/* Shimmer Loading for DevTools */}
       <div className="p-4 border border-neutral-6 rounded-lg">
-        <h4 className="font-medium text-neutral-12 mb-4">DevTools Loading States</h4>
+        <h4 className="font-medium text-neutral-12 mb-4">
+          DevTools Loading States
+        </h4>
         <p className="text-sm text-neutral-10 mb-4">
-          Shimmer skeletons for DevTools panels match the structure of actual content.
+          Shimmer skeletons for DevTools panels match the structure of actual
+          content.
         </p>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Log skeleton */}
           <div className="border border-neutral-6 rounded-lg overflow-hidden">
-            <div className="bg-neutral-2 px-3 py-2 text-sm text-neutral-10">Logs Loading</div>
+            <div className="bg-neutral-2 px-3 py-2 text-sm text-neutral-10">
+              Logs Loading
+            </div>
             <div className="p-3 space-y-2">
               {[1, 2, 3].map((i) => (
                 <motion.div
@@ -986,7 +1194,9 @@ function DevToolsAnimations() {
 
           {/* Network skeleton */}
           <div className="border border-neutral-6 rounded-lg overflow-hidden">
-            <div className="bg-neutral-2 px-3 py-2 text-sm text-neutral-10">Network Loading</div>
+            <div className="bg-neutral-2 px-3 py-2 text-sm text-neutral-10">
+              Network Loading
+            </div>
             <div className="p-3 space-y-2">
               {[1, 2, 3].map((i) => (
                 <motion.div
@@ -1019,7 +1229,8 @@ export const DevTools: Story = {
   parameters: {
     docs: {
       description: {
-        story: "DevTools-specific animations for logs, network requests, and loading states.",
+        story:
+          "DevTools-specific animations for logs, network requests, and loading states.",
       },
     },
   },
@@ -1033,7 +1244,9 @@ import { panelSlideVariants } from "../design-system/micro-interactions";
 
 function PanelAndStatusTransitions() {
   const [showPanel, setShowPanel] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<"disconnected" | "connecting" | "connected" | "error">("disconnected");
+  const [connectionStatus, setConnectionStatus] = useState<
+    "disconnected" | "connecting" | "connected" | "error"
+  >("disconnected");
 
   const statusColors = {
     disconnected: "bg-neutral-4",
@@ -1050,7 +1263,12 @@ function PanelAndStatusTransitions() {
   };
 
   const cycleStatus = () => {
-    const states: Array<typeof connectionStatus> = ["disconnected", "connecting", "connected", "error"];
+    const states: Array<typeof connectionStatus> = [
+      "disconnected",
+      "connecting",
+      "connected",
+      "error",
+    ];
     const currentIndex = states.indexOf(connectionStatus);
     setConnectionStatus(states[(currentIndex + 1) % states.length]);
   };
@@ -1058,7 +1276,9 @@ function PanelAndStatusTransitions() {
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Panel & Status Transitions</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Panel & Status Transitions
+        </h2>
         <p className="text-neutral-11">
           Animations for sliding panels and connection status indicators.
         </p>
@@ -1067,7 +1287,9 @@ function PanelAndStatusTransitions() {
       <div className="grid grid-cols-2 gap-6">
         {/* Panel Slide */}
         <div className="p-4 border border-neutral-6 rounded-lg">
-          <h4 className="font-medium text-neutral-12 mb-3">Panel Slide Animation</h4>
+          <h4 className="font-medium text-neutral-12 mb-3">
+            Panel Slide Animation
+          </h4>
           <p className="text-sm text-neutral-10 mb-4">
             Used in TraceCanvas control panel and floating toolbars.
           </p>
@@ -1092,7 +1314,9 @@ function PanelAndStatusTransitions() {
                       <span className="h-3 w-3 rounded-full bg-success-9" />
                       <span className="text-sm text-neutral-11">Connected</span>
                     </div>
-                    <div className="text-sm text-neutral-10">5 spans | 12 events</div>
+                    <div className="text-sm text-neutral-10">
+                      5 spans | 12 events
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -1103,7 +1327,9 @@ function PanelAndStatusTransitions() {
 
         {/* Connection Status */}
         <div className="p-4 border border-neutral-6 rounded-lg">
-          <h4 className="font-medium text-neutral-12 mb-3">Connection Status Indicator</h4>
+          <h4 className="font-medium text-neutral-12 mb-3">
+            Connection Status Indicator
+          </h4>
           <p className="text-sm text-neutral-10 mb-4">
             Animated status dots with pulse effect for connecting state.
           </p>
@@ -1132,12 +1358,16 @@ function PanelAndStatusTransitions() {
               </motion.span>
             </div>
           </div>
-          <p className="text-xs text-neutral-10 mt-2">Spring animation on status change</p>
+          <p className="text-xs text-neutral-10 mt-2">
+            Spring animation on status change
+          </p>
         </div>
 
         {/* Tab Switch Animation */}
         <div className="p-4 border border-neutral-6 rounded-lg col-span-2">
-          <h4 className="font-medium text-neutral-12 mb-3">Tab Switch Animation</h4>
+          <h4 className="font-medium text-neutral-12 mb-3">
+            Tab Switch Animation
+          </h4>
           <p className="text-sm text-neutral-10 mb-4">
             Smooth fade and slide when switching between DevTools tabs.
           </p>
@@ -1215,7 +1445,8 @@ export const PanelTransitions: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Panel slide animations, connection status indicators, and tab switch transitions.",
+        story:
+          "Panel slide animations, connection status indicators, and tab switch transitions.",
       },
     },
   },
@@ -1235,7 +1466,9 @@ function ReducedMotionDemo() {
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">Reduced Motion Accessibility</h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">
+          Reduced Motion Accessibility
+        </h2>
         <p className="text-neutral-11">
           Demonstrating WCAG 2.2 AA compliance with reduced motion support.
           Toggle the simulation to see how animations change.
@@ -1252,9 +1485,12 @@ function ReducedMotionDemo() {
             className="w-5 h-5 accent-primary-9"
           />
           <div>
-            <span className="font-medium text-warning-11">Simulate prefers-reduced-motion</span>
+            <span className="font-medium text-warning-11">
+              Simulate prefers-reduced-motion
+            </span>
             <p className="text-sm text-warning-10">
-              When enabled, animations are disabled or simplified to opacity-only transitions.
+              When enabled, animations are disabled or simplified to
+              opacity-only transitions.
             </p>
           </div>
         </label>
@@ -1306,8 +1542,8 @@ function ReducedMotionDemo() {
               >
                 <div className="p-4 bg-neutral-2 rounded-lg mt-2">
                   <p className="text-neutral-11">
-                    This content expands with a height animation normally,
-                    but appears instantly with reduced motion.
+                    This content expands with a height animation normally, but
+                    appears instantly with reduced motion.
                   </p>
                 </div>
               </motion.div>
@@ -1317,9 +1553,12 @@ function ReducedMotionDemo() {
 
         {/* Spring vs Instant */}
         <div className="space-y-3 col-span-2">
-          <h4 className="font-medium text-neutral-12">Spring vs Instant Transition</h4>
+          <h4 className="font-medium text-neutral-12">
+            Spring vs Instant Transition
+          </h4>
           <p className="text-sm text-neutral-10">
-            Click the button to toggle the box position and observe the difference.
+            Click the button to toggle the box position and observe the
+            difference.
           </p>
           <BoxTransitionDemo simulateReducedMotion={simulateReducedMotion} />
         </div>
@@ -1327,9 +1566,11 @@ function ReducedMotionDemo() {
 
       {/* Implementation Guide */}
       <div className="bg-neutral-2 border border-neutral-6 rounded-lg p-4">
-        <h4 className="font-medium text-neutral-12 mb-3">Implementation Pattern</h4>
+        <h4 className="font-medium text-neutral-12 mb-3">
+          Implementation Pattern
+        </h4>
         <pre className="text-xs font-mono text-neutral-11 overflow-x-auto">
-{`import { useReducedMotion } from "motion/react";
+          {`import { useReducedMotion } from "motion/react";
 
 function AnimatedComponent() {
   const prefersReducedMotion = useReducedMotion();
@@ -1350,15 +1591,22 @@ function AnimatedComponent() {
 
       {/* Compliance Checklist */}
       <div className="bg-success-2 border border-success-6 rounded-lg p-4">
-        <h4 className="font-medium text-success-11 mb-3">WCAG 2.2 AA Compliance Checklist</h4>
+        <h4 className="font-medium text-success-11 mb-3">
+          WCAG 2.2 AA Compliance Checklist
+        </h4>
         <ul className="space-y-2 text-sm text-success-11">
           <li className="flex items-center gap-2">
             <span className="text-success-9">✓</span>
-            Use <code className="bg-success-3 px-1 rounded">useReducedMotion()</code> in all animated components
+            Use{" "}
+            <code className="bg-success-3 px-1 rounded">
+              useReducedMotion()
+            </code>{" "}
+            in all animated components
           </li>
           <li className="flex items-center gap-2">
             <span className="text-success-9">✓</span>
-            Disable variants, whileHover, whileTap when reduced motion is preferred
+            Disable variants, whileHover, whileTap when reduced motion is
+            preferred
           </li>
           <li className="flex items-center gap-2">
             <span className="text-success-9">✓</span>
@@ -1378,7 +1626,11 @@ function AnimatedComponent() {
   );
 }
 
-function BoxTransitionDemo({ simulateReducedMotion }: { simulateReducedMotion: boolean }) {
+function BoxTransitionDemo({
+  simulateReducedMotion,
+}: {
+  simulateReducedMotion: boolean;
+}) {
   const [isRight, setIsRight] = useState(false);
 
   return (
@@ -1416,7 +1668,8 @@ export const ReducedMotionAccessibility: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Demonstrates WCAG 2.2 AA reduced motion compliance patterns. Toggle the simulation to see before/after comparison.",
+        story:
+          "Demonstrates WCAG 2.2 AA reduced motion compliance patterns. Toggle the simulation to see before/after comparison.",
       },
     },
   },

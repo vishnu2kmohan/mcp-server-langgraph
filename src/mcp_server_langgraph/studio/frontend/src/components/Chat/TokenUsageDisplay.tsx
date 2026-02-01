@@ -106,22 +106,12 @@ export function TokenUsageDisplay({
 
       {/* Token counts */}
       <span className="inline-flex items-center gap-1">
-        {showLabels && (
-          <span className="text-neutral-10">Input:</span>
-        )}
+        {showLabels && <span className="text-neutral-10">Input:</span>}
         <span>{formatNumber(promptTokens)}</span>
-        <span className="text-neutral-9">
-          /
-        </span>
-        {showLabels && (
-          <span className="text-neutral-10">
-            Output:
-          </span>
-        )}
+        <span className="text-neutral-9">/</span>
+        {showLabels && <span className="text-neutral-10">Output:</span>}
         <span>{formatNumber(completionTokens)}</span>
-        <span className="text-neutral-9">
-          =
-        </span>
+        <span className="text-neutral-9">=</span>
         <span className="font-medium text-neutral-10">
           {formatNumber(totalTokens)}
         </span>

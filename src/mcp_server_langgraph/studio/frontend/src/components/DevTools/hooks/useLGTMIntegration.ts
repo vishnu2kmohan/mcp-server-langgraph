@@ -18,7 +18,13 @@ import { useMemo, useCallback } from "react";
 // =============================================================================
 
 export type LGTMProvider = "docker-compose" | "kubernetes" | "unknown";
-export type LGTMPlatform = "aws" | "gcp" | "azure" | "openshift" | "rancher" | "unknown";
+export type LGTMPlatform =
+  | "aws"
+  | "gcp"
+  | "azure"
+  | "openshift"
+  | "rancher"
+  | "unknown";
 
 export interface LGTMConfig {
   grafanaUrl: string;
@@ -107,8 +113,10 @@ export function useLGTMIntegration(): UseLGTMIntegrationReturn {
     const lokiUrl = import.meta.env.VITE_LOKI_URL ?? "";
     const tempoUrl = import.meta.env.VITE_TEMPO_URL ?? "";
     const mimirUrl = import.meta.env.VITE_MIMIR_URL ?? "";
-    const provider = (import.meta.env.VITE_CLOUD_PROVIDER as LGTMProvider) ?? "unknown";
-    const platform = (import.meta.env.VITE_CLOUD_PLATFORM as LGTMPlatform) ?? "unknown";
+    const provider =
+      (import.meta.env.VITE_CLOUD_PROVIDER as LGTMProvider) ?? "unknown";
+    const platform =
+      (import.meta.env.VITE_CLOUD_PLATFORM as LGTMPlatform) ?? "unknown";
 
     return {
       grafanaUrl: normalizeUrl(grafanaUrl),

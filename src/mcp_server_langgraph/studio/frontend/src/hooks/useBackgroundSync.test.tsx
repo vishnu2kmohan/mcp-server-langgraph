@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import type { ReactNode } from "react";
 import {
@@ -78,6 +78,7 @@ describe("useBackgroundSync", () => {
   });
 
   afterEach(() => {
+    cleanup();
     // Restore navigator.onLine
     if (originalOnLine) {
       Object.defineProperty(Navigator.prototype, "onLine", originalOnLine);

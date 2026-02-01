@@ -129,9 +129,7 @@ function getStatusIcon(status: RemediationRequest["status"]) {
     case "failed":
       return <Ban className="w-4 h-4 text-error-9" />;
     default:
-      return (
-        <Clock className="w-4 h-4 text-neutral-10" />
-      );
+      return <Clock className="w-4 h-4 text-neutral-10" />;
   }
 }
 
@@ -202,9 +200,7 @@ function RemediationStepCard({
         )}
       </div>
       {/* Description */}
-      <p className="text-sm text-neutral-11 mb-2">
-        {step.description}
-      </p>
+      <p className="text-sm text-neutral-11 mb-2">{step.description}</p>
       {/* Command */}
       {step.command && (
         <pre className="text-xs bg-neutral-2 p-2 rounded mb-3 overflow-x-auto">
@@ -303,9 +299,7 @@ export function AlertDetailPanel({
           </div>
 
           {/* Message */}
-          <p className="text-neutral-11 mb-2">
-            {alert.message}
-          </p>
+          <p className="text-neutral-11 mb-2">{alert.message}</p>
 
           {/* Labels */}
           <div className="flex flex-wrap gap-2 mb-2">
@@ -320,16 +314,14 @@ export function AlertDetailPanel({
           </div>
 
           {/* Started Time */}
-          <div
-            data-testid="alert-started"
-            className="text-xs text-neutral-10"
-          >
+          <div data-testid="alert-started" className="text-xs text-neutral-10">
             Started: {formatRelativeTime(alert.startedAt)}
           </div>
         </div>
 
         {/* Close Button */}
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="ghost"
           className="min-h-[44px] min-w-[44px] p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg"
           data-testid="close-detail-panel"
@@ -362,10 +354,13 @@ export function AlertDetailPanel({
             <p className="text-error-11 dark:text-error-7">
               Failed to generate recommendation: {recommendationError}
             </p>
-            <Button variant="primary"
+            <Button
+              variant="primary"
               className="mt-2 text-sm text-error-10 dark:text-error-7 underline"
               onClick={onRegenerate}
-            >Try again</Button>
+            >
+              Try again
+            </Button>
           </div>
         )}
 
@@ -389,9 +384,7 @@ export function AlertDetailPanel({
               </h3>
               <div className="bg-neutral-1 p-3 rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-neutral-11">
-                    Overall Risk:
-                  </span>
+                  <span className="text-sm text-neutral-11">Overall Risk:</span>
                   <span
                     data-testid="overall-risk"
                     className={`text-xs px-2 py-0.5 rounded-full text-neutral-12 ${getRiskColor(
@@ -402,17 +395,13 @@ export function AlertDetailPanel({
                   </span>
                 </div>
                 <div>
-                  <span className="text-sm text-neutral-11">
-                    Impact:{" "}
-                  </span>
+                  <span className="text-sm text-neutral-11">Impact: </span>
                   <span className="text-sm text-neutral-11">
                     {recommendation.riskAssessment.impactAnalysis}
                   </span>
                 </div>
                 <div>
-                  <span className="text-sm text-neutral-11">
-                    Rollback:{" "}
-                  </span>
+                  <span className="text-sm text-neutral-11">Rollback: </span>
                   <code className="text-xs bg-neutral-2 px-1 py-0.5 rounded">
                     {recommendation.riskAssessment.rollbackPlan}
                   </code>

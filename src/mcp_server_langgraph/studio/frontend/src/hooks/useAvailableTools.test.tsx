@@ -311,7 +311,7 @@ describe("useAvailableTools", () => {
 
       const { result } = renderHook(
         () => useAvailableTools({ searchTerm: "calc" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.filteredTools).toHaveLength(1);
@@ -335,12 +335,12 @@ describe("useAvailableTools", () => {
 
       const { result } = renderHook(
         () => useAvailableTools({ searchTerm: "GitHub" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.filteredTools).toHaveLength(2);
       expect(
-        result.current.filteredTools.every((t) => t.serverName === "github")
+        result.current.filteredTools.every((t) => t.serverName === "github"),
       ).toBe(true);
     });
 
@@ -361,7 +361,7 @@ describe("useAvailableTools", () => {
 
       const { result } = renderHook(
         () => useAvailableTools({ searchTerm: "" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.filteredTools).toHaveLength(5);
@@ -384,7 +384,7 @@ describe("useAvailableTools", () => {
 
       const { result } = renderHook(
         () => useAvailableTools({ searchTerm: "nonexistent" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.filteredTools).toHaveLength(0);
@@ -536,7 +536,7 @@ describe("useAvailableTools", () => {
 
       const { result } = renderHook(
         () => useAvailableTools({ category: "calculator" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.filteredTools).toHaveLength(1);
@@ -588,12 +588,12 @@ describe("useAvailableTools", () => {
 
       const { result } = renderHook(
         () => useAvailableTools({ source: "builtin" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.filteredTools).toHaveLength(2);
       expect(
-        result.current.filteredTools.every((t) => t.source === "builtin")
+        result.current.filteredTools.every((t) => t.source === "builtin"),
       ).toBe(true);
     });
 
@@ -614,12 +614,12 @@ describe("useAvailableTools", () => {
 
       const { result } = renderHook(
         () => useAvailableTools({ source: "mcp" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.filteredTools).toHaveLength(3);
       expect(
-        result.current.filteredTools.every((t) => t.source === "mcp")
+        result.current.filteredTools.every((t) => t.source === "mcp"),
       ).toBe(true);
     });
   });

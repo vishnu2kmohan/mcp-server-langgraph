@@ -212,10 +212,7 @@ export function ConfirmationDialog({
               >
                 {title}
               </h2>
-              <p
-                id={descriptionId}
-                className="mt-2 text-sm text-neutral-11"
-              >
+              <p id={descriptionId} className="mt-2 text-sm text-neutral-11">
                 {message}
               </p>
             </div>
@@ -256,7 +253,8 @@ export function ConfirmationDialog({
             ref={confirmButtonRef}
             type="button"
             onClick={handleConfirm}
-            disabled={isConfirmDisabled}>
+            disabled={isConfirmDisabled}
+          >
             {isLoading && (
               <Loader2
                 data-testid="loading-spinner"

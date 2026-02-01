@@ -193,9 +193,7 @@ export function ObservabilityDocument({
       <header className="px-6 py-4 bg-neutral-1 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-neutral-12">
-              Observability
-            </h2>
+            <h2 className="text-xl font-bold text-neutral-12">Observability</h2>
             <p className="text-sm text-neutral-10">
               Monitor traces, logs, and metrics for your AI agents
             </p>
@@ -216,9 +214,7 @@ export function ObservabilityDocument({
             data-testid="context-indicator"
             className="mt-3 flex items-center gap-2 flex-wrap"
           >
-            <span className="text-sm text-neutral-10">
-              Filtered by:
-            </span>
+            <span className="text-sm text-neutral-10">Filtered by:</span>
             {sessionId && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7 rounded-full text-sm">
                 <MessageSquare size={14} />
@@ -254,7 +250,8 @@ export function ObservabilityDocument({
               variant="primary"
               className="flex px-4 py-2 rounded-lg"
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}>
+              onClick={() => setActiveTab(tab.id)}
+            >
               <tab.icon size={16} />
               {tab.label}
             </Button>
@@ -274,7 +271,8 @@ export function ObservabilityDocument({
                   className="px-2 py-1 text-xs rounded"
                   key={status || "all"}
                   onClick={() => setStatusFilter(status)}
-                  aria-pressed={statusFilter === status}>
+                  aria-pressed={statusFilter === status}
+                >
                   {status || "All"}
                 </Button>
               ))}
@@ -388,9 +386,7 @@ export function ObservabilityDocument({
                           >
                             {log.level}
                           </span>
-                          <span className="text-neutral-12">
-                            {log.message}
-                          </span>
+                          <span className="text-neutral-12">{log.message}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-neutral-10">
                           {log.service && (

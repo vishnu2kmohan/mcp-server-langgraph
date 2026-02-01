@@ -232,7 +232,9 @@ describe("SessionNav", () => {
       render(<SessionNav />, { wrapper: createWrapper(store) });
 
       // The session button has the highlight class directly (bg-primary-4 for active sessions)
-      const sessionButton = screen.getByRole("button", { name: "Today's Chat" });
+      const sessionButton = screen.getByRole("button", {
+        name: "Today's Chat",
+      });
       expect(sessionButton).toHaveClass("bg-primary-4");
     });
   });

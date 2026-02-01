@@ -198,9 +198,7 @@ export function PromptTester({
         {/* Loading state */}
         {isLoadingPrompts && (
           <div className="flex flex-1 items-center justify-center">
-            <span className="text-neutral-10">
-              Loading prompts...
-            </span>
+            <span className="text-neutral-10">Loading prompts...</span>
           </div>
         )}
 

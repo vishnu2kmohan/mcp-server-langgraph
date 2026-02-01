@@ -214,7 +214,9 @@ export function AddConnectionDialog({
           >
             Add MCP Connection
           </h2>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-1 text-neutral-9 hover:text-neutral-11"
             onClick={handleClose}
             aria-label="Close"
@@ -239,9 +241,7 @@ export function AddConnectionDialog({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Zapier MCP"
               className={`w-full px-3 py-2 border rounded-lg bg-neutral-1 text-neutral-12 ${
-                errors.name
-                  ? "border-error-9"
-                  : "border-neutral-5"
+                errors.name ? "border-error-9" : "border-neutral-5"
               }`}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "name-error" : undefined}
@@ -285,9 +285,7 @@ export function AddConnectionDialog({
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://mcp.example.com"
               className={`w-full px-3 py-2 border rounded-lg bg-neutral-1 text-neutral-12 ${
-                errors.url
-                  ? "border-error-9"
-                  : "border-neutral-5"
+                errors.url ? "border-error-9" : "border-neutral-5"
               }`}
               aria-invalid={!!errors.url}
               aria-describedby={errors.url ? "url-error" : undefined}
@@ -336,9 +334,7 @@ export function AddConnectionDialog({
                   onChange={(e) => setCommand(e.target.value)}
                   placeholder="e.g., python or npx"
                   className={`w-full px-3 py-2 border rounded-lg bg-neutral-1 text-neutral-12 ${
-                    errors.command
-                      ? "border-error-9"
-                      : "border-neutral-5"
+                    errors.command ? "border-error-9" : "border-neutral-5"
                   }`}
                   aria-invalid={!!errors.command}
                   aria-describedby={

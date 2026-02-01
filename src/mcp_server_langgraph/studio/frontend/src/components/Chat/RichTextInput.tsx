@@ -468,7 +468,8 @@ export function RichTextInput({
           >
             <div className="w-px h-4 bg-neutral-3 mx-1" />
 
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1.5 rounded hover:bg-neutral-2"
               type="button"
@@ -480,7 +481,8 @@ export function RichTextInput({
               <Bold className="w-4 h-4" aria-hidden="true" />
             </Button>
 
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1.5 rounded hover:bg-neutral-2"
               type="button"
@@ -492,7 +494,8 @@ export function RichTextInput({
               <Italic className="w-4 h-4" aria-hidden="true" />
             </Button>
 
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1.5 rounded hover:bg-neutral-2"
               type="button"
@@ -562,9 +565,7 @@ export function RichTextInput({
                 role="option"
                 onClick={() => handleMentionSelect(option)}
               >
-                <span className="text-neutral-10 mr-1">
-                  @
-                </span>
+                <span className="text-neutral-10 mr-1">@</span>
                 {option.label || option.value}
               </Button>
             ))}

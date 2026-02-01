@@ -4,8 +4,8 @@
  * TDD tests for the skill details modal component.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { SkillDetails } from "./SkillDetails";
 import type { SkillMetadata } from "../../types/skills";
 
@@ -16,6 +16,11 @@ const mockSkill: SkillMetadata = {
   author: "Anthropic",
   tags: ["research", "web", "search"],
 };
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("SkillDetails", () => {
   it("should not render when skill is null", () => {

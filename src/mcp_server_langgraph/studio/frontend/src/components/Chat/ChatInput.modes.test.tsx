@@ -11,19 +11,35 @@
  * @see test-utils.tsx for MOTION_PROPS and filterMotionProps documentation
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatInput } from "./ChatInput";
 
 // Motion-specific props that should not be passed to DOM elements
 // See test-utils.tsx for the authoritative list
 const MOTION_PROPS = new Set([
-  "whileHover", "whileTap", "whileFocus", "whileDrag", "whileInView",
-  "initial", "animate", "exit", "variants", "transition",
-  "layout", "layoutId", "drag", "dragConstraints", "dragElastic",
-  "dragMomentum", "onAnimationStart", "onAnimationComplete",
-  "onDragStart", "onDragEnd", "onDrag",
+  "whileHover",
+  "whileTap",
+  "whileFocus",
+  "whileDrag",
+  "whileInView",
+  "initial",
+  "animate",
+  "exit",
+  "variants",
+  "transition",
+  "layout",
+  "layoutId",
+  "drag",
+  "dragConstraints",
+  "dragElastic",
+  "dragMomentum",
+  "onAnimationStart",
+  "onAnimationComplete",
+  "onDragStart",
+  "onDragEnd",
+  "onDrag",
 ]);
 
 function filterMotionProps<T extends Record<string, unknown>>(props: T): T {
@@ -37,19 +53,35 @@ function filterMotionProps<T extends Record<string, unknown>>(props: T): T {
 // Mock motion/react to avoid animation issues in tests
 vi.mock("motion/react", () => ({
   motion: {
-    div: ({ children, ...props }: React.ComponentProps<"div"> & Record<string, unknown>) => (
+    div: ({
+      children,
+      ...props
+    }: React.ComponentProps<"div"> & Record<string, unknown>) => (
       <div {...filterMotionProps(props)}>{children}</div>
     ),
-    button: ({ children, ...props }: React.ComponentProps<"button"> & Record<string, unknown>) => (
+    button: ({
+      children,
+      ...props
+    }: React.ComponentProps<"button"> & Record<string, unknown>) => (
       <button {...filterMotionProps(props)}>{children}</button>
     ),
-    span: ({ children, ...props }: React.ComponentProps<"span"> & Record<string, unknown>) => (
+    span: ({
+      children,
+      ...props
+    }: React.ComponentProps<"span"> & Record<string, unknown>) => (
       <span {...filterMotionProps(props)}>{children}</span>
     ),
   },
   useReducedMotion: () => false,
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ChatInput Execution Mode", () => {
   const defaultProps = {
@@ -72,7 +104,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -92,7 +124,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -112,7 +144,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -128,7 +160,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -147,7 +179,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -166,7 +198,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -193,10 +225,12 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={vi.fn()}
-        />
+        />,
       );
 
-      expect(screen.getByTestId("execution-mode-indicator")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("execution-mode-indicator"),
+      ).toBeInTheDocument();
     });
 
     it("displays default mode correctly", () => {
@@ -205,7 +239,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText("Default")).toBeInTheDocument();
@@ -217,7 +251,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="plan"
           onCycleExecutionMode={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText("Plan")).toBeInTheDocument();
@@ -229,7 +263,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="auto_accept"
           onCycleExecutionMode={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText("Auto")).toBeInTheDocument();
@@ -242,7 +276,7 @@ describe("ChatInput Execution Mode", () => {
           executionMode="bypass"
           onCycleExecutionMode={vi.fn()}
           hasBypassPermission={true}
-        />
+        />,
       );
 
       expect(screen.getByText("Bypass")).toBeInTheDocument();
@@ -259,7 +293,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const indicator = screen.getByTestId("execution-mode-indicator");
@@ -275,7 +309,7 @@ describe("ChatInput Execution Mode", () => {
           disabled={true}
           executionMode="default"
           onCycleExecutionMode={vi.fn()}
-        />
+        />,
       );
 
       const indicator = screen.getByTestId("execution-mode-indicator");
@@ -291,7 +325,7 @@ describe("ChatInput Execution Mode", () => {
           executionMode="bypass"
           onCycleExecutionMode={vi.fn()}
           hasBypassPermission={true}
-        />
+        />,
       );
 
       // Bypass mode should be visible when permission is granted
@@ -307,11 +341,13 @@ describe("ChatInput Execution Mode", () => {
           executionMode="default"
           onCycleExecutionMode={vi.fn()}
           hasBypassPermission={false}
-        />
+        />,
       );
 
       // The indicator should be present
-      expect(screen.getByTestId("execution-mode-indicator")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("execution-mode-indicator"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -327,7 +363,7 @@ describe("ChatInput Execution Mode", () => {
           onSubmit={onSubmit}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -348,7 +384,7 @@ describe("ChatInput Execution Mode", () => {
           onSubmit={onSubmit}
           executionMode="default"
           onCycleExecutionMode={onCycleExecutionMode}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -370,10 +406,12 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onExecutionModeChange={vi.fn()}
-        />
+        />,
       );
 
-      expect(screen.getByTestId("execution-mode-segmented")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("execution-mode-segmented"),
+      ).toBeInTheDocument();
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
@@ -384,13 +422,21 @@ describe("ChatInput Execution Mode", () => {
           executionMode="default"
           onExecutionModeChange={vi.fn()}
           hasBypassPermission={true}
-        />
+        />,
       );
 
-      expect(screen.getByRole("radio", { name: /default mode/i })).toBeInTheDocument();
-      expect(screen.getByRole("radio", { name: /plan mode/i })).toBeInTheDocument();
-      expect(screen.getByRole("radio", { name: /auto mode/i })).toBeInTheDocument();
-      expect(screen.getByRole("radio", { name: /bypass mode/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: /default mode/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: /plan mode/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: /auto mode/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: /bypass mode/i }),
+      ).toBeInTheDocument();
     });
 
     it("calls onExecutionModeChange when clicking a mode segment", async () => {
@@ -402,7 +448,7 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onExecutionModeChange={onExecutionModeChange}
-        />
+        />,
       );
 
       const planOption = screen.getByRole("radio", { name: /plan mode/i });
@@ -417,13 +463,15 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="plan"
           onExecutionModeChange={vi.fn()}
-        />
+        />,
       );
 
       const planOption = screen.getByRole("radio", { name: /plan mode/i });
       expect(planOption).toHaveAttribute("aria-checked", "true");
 
-      const defaultOption = screen.getByRole("radio", { name: /default mode/i });
+      const defaultOption = screen.getByRole("radio", {
+        name: /default mode/i,
+      });
       expect(defaultOption).toHaveAttribute("aria-checked", "false");
     });
 
@@ -434,7 +482,7 @@ describe("ChatInput Execution Mode", () => {
           executionMode="default"
           onExecutionModeChange={vi.fn()}
           hasBypassPermission={false}
-        />
+        />,
       );
 
       const bypassOption = screen.getByRole("radio", { name: /bypass mode/i });
@@ -448,7 +496,7 @@ describe("ChatInput Execution Mode", () => {
           executionMode="default"
           onExecutionModeChange={vi.fn()}
           hasBypassPermission={true}
-        />
+        />,
       );
 
       const bypassOption = screen.getByRole("radio", { name: /bypass mode/i });
@@ -462,7 +510,7 @@ describe("ChatInput Execution Mode", () => {
           disabled={true}
           executionMode="default"
           onExecutionModeChange={vi.fn()}
-        />
+        />,
       );
 
       const segmented = screen.getByTestId("execution-mode-segmented");
@@ -476,11 +524,14 @@ describe("ChatInput Execution Mode", () => {
           {...defaultProps}
           executionMode="default"
           onExecutionModeChange={vi.fn()}
-        />
+        />,
       );
 
       const radiogroup = screen.getByRole("radiogroup");
-      expect(radiogroup).toHaveAttribute("aria-label", expect.stringContaining("Ctrl"));
+      expect(radiogroup).toHaveAttribute(
+        "aria-label",
+        expect.stringContaining("Ctrl"),
+      );
     });
   });
 });

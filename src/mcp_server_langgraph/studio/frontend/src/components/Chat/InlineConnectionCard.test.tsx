@@ -5,8 +5,14 @@
  * This component appears when auth_required events are received from the SSE stream.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { InlineConnectionCard } from "./InlineConnectionCard";
@@ -18,7 +24,10 @@ const createUnwrappable = <T,>(value: T) => ({
 });
 
 const createPendingUnwrappable = () => ({
-  unwrap: () => new Promise(() => { /* never resolves */ }),
+  unwrap: () =>
+    new Promise(() => {
+      /* never resolves */
+    }),
 });
 
 const mockCreateConnection = vi.fn(() =>
@@ -103,6 +112,11 @@ const renderWithProviders = (
 ) => {
   return render(<Provider store={store}>{component}</Provider>);
 };
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("InlineConnectionCard", () => {
   beforeEach(() => {
@@ -222,7 +236,9 @@ describe("InlineConnectionCard", () => {
       );
 
       // Use getAllByText since there may be multiple elements matching
-      const reconnectElements = screen.getAllByText(/re-authentication|reconnect/i);
+      const reconnectElements = screen.getAllByText(
+        /re-authentication|reconnect/i,
+      );
       expect(reconnectElements.length).toBeGreaterThan(0);
     });
   });

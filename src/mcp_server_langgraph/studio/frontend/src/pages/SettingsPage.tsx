@@ -227,9 +227,7 @@ export function SettingsPage() {
       <header className="px-6 py-4 bg-neutral-2 border-b border-neutral-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-12">
-              Settings
-            </h1>
+            <h1 className="text-2xl font-bold text-neutral-12">Settings</h1>
             <p className="text-sm text-neutral-11">
               Manage your account and preferences
             </p>
@@ -341,8 +339,9 @@ export function SettingsPage() {
                       </h3>
                       <p className="text-sm text-neutral-11 mb-4">
                         Choose how tools are executed. Native tools use the LLM
-                        provider&apos;s built-in capabilities (e.g., Anthropic web
-                        search). Built-in tools use the server&apos;s implementations.
+                        provider&apos;s built-in capabilities (e.g., Anthropic
+                        web search). Built-in tools use the server&apos;s
+                        implementations.
                       </p>
                       <Select
                         size="lg"
@@ -350,14 +349,24 @@ export function SettingsPage() {
                         value={toolPreference}
                         onChange={(e) => {
                           setToolPreference(
-                            e.target.value as "auto" | "native" | "builtin" | "mcp"
+                            e.target.value as
+                              | "auto"
+                              | "native"
+                              | "builtin"
+                              | "mcp",
                           );
                         }}
                         aria-label="Tool execution preference"
                       >
-                        <option value="auto">Auto (Prefer Native when available)</option>
-                        <option value="native">Native Only (LLM provider tools)</option>
-                        <option value="builtin">Built-in Only (Server tools)</option>
+                        <option value="auto">
+                          Auto (Prefer Native when available)
+                        </option>
+                        <option value="native">
+                          Native Only (LLM provider tools)
+                        </option>
+                        <option value="builtin">
+                          Built-in Only (Server tools)
+                        </option>
                         <option value="mcp">MCP Only (External servers)</option>
                       </Select>
                     </div>
@@ -521,11 +530,7 @@ export function SettingsPage() {
                   <p className="text-sm text-neutral-11 mb-4">
                     Add an extra layer of security to your account
                   </p>
-                  <Button
-                    variant="success"
-                  >
-                    Enable 2FA
-                  </Button>
+                  <Button variant="success">Enable 2FA</Button>
                 </div>
                 <div className="p-4 bg-neutral-2 rounded-lg border border-neutral-6">
                   <h3 className="font-medium text-neutral-12 mb-2">
@@ -574,7 +579,8 @@ export function SettingsPage() {
                   <Button
                     variant="ghost"
                     className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12 dark:hover:text-neutral-2"
-                    onClick={loadManagedUsers}>
+                    onClick={loadManagedUsers}
+                  >
                     <RefreshCw
                       size={16}
                       className={isLoadingUsers ? "animate-spin" : ""}
@@ -591,9 +597,7 @@ export function SettingsPage() {
                   >
                     <div className="flex items-center gap-3">
                       <AlertCircle size={20} className="text-error-9" />
-                      <p className="text-sm text-error-11">
-                        {adminError}
-                      </p>
+                      <p className="text-sm text-error-11">{adminError}</p>
                     </div>
                     <Button
                       variant="danger"
@@ -649,10 +653,7 @@ export function SettingsPage() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-neutral-3 rounded-full flex items-center justify-center">
-                            <User
-                              size={20}
-                              className="text-neutral-11"
-                            />
+                            <User size={20} className="text-neutral-11" />
                           </div>
                           <div>
                             <p className="font-medium text-neutral-12">

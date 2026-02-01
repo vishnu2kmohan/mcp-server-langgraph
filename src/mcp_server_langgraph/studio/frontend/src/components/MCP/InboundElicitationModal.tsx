@@ -170,10 +170,7 @@ export function InboundElicitationModal({
         </div>
 
         {/* Message */}
-        <p
-          id="elicitation-modal-message"
-          className="mb-6 text-neutral-11"
-        >
+        <p id="elicitation-modal-message" className="mb-6 text-neutral-11">
           {request.message}
         </p>
 

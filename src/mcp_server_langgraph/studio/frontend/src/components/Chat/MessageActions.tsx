@@ -242,7 +242,8 @@ export function MessageActions({
       className={`relative inline-flex ${className}`}
     >
       {/* Trigger Button */}
-      <Button size="icon"
+      <Button
+        size="icon"
         variant="secondary"
         className="p-1 rounded hover:bg-neutral-3 text-neutral-10"
         data-testid="message-actions-trigger"
@@ -263,9 +264,7 @@ export function MessageActions({
           {/* Delete Confirmation Dialog */}
           {showDeleteConfirm ? (
             <div data-testid="delete-confirmation" className="p-3 space-y-3">
-              <p className="text-sm text-neutral-11">
-                Delete this message?
-              </p>
+              <p className="text-sm text-neutral-11">Delete this message?</p>
               <div className="flex gap-2">
                 <Button
                   variant="danger"
@@ -332,7 +331,8 @@ export function MessageActions({
                     onClick={handleThumbsUp}
                     data-active={feedbackState === "positive"}
                     role="menuitem"
-                    aria-label="Thumbs up">
+                    aria-label="Thumbs up"
+                  >
                     <ThumbsUp size={16} />
                   </Button>
                   <Button
@@ -342,7 +342,8 @@ export function MessageActions({
                     onClick={handleThumbsDown}
                     data-active={feedbackState === "negative"}
                     role="menuitem"
-                    aria-label="Thumbs down">
+                    aria-label="Thumbs down"
+                  >
                     <ThumbsDown size={16} />
                   </Button>
                 </div>
@@ -356,7 +357,8 @@ export function MessageActions({
                   data-testid="action-bookmark"
                   onClick={handleBookmark}
                   data-bookmarked={isBookmarked}
-                  role="menuitem">
+                  role="menuitem"
+                >
                   <Bookmark
                     size={16}
                     fill={isBookmarked ? "currentColor" : "none"}

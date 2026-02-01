@@ -135,14 +135,16 @@ export function OrganizationCostDashboard({
         <Button
           variant="primary"
           className="flex px-4 py-2 border-b-2"
-          onClick={() => setViewMode("organization")}>
+          onClick={() => setViewMode("organization")}
+        >
           <Building2 size={16} />
           Organizations
         </Button>
         <Button
           variant="ghost"
           className="flex px-4 py-2 border-b-2"
-          onClick={() => setViewMode("project")}>
+          onClick={() => setViewMode("project")}
+        >
           <Folder size={16} />
           Projects
           {selectedOrg && (
@@ -154,7 +156,8 @@ export function OrganizationCostDashboard({
         <Button
           variant="ghost"
           className="flex px-4 py-2 border-b-2"
-          onClick={() => setViewMode("team")}>
+          onClick={() => setViewMode("team")}
+        >
           <Users size={16} />
           Teams
           {selectedProject && (
@@ -275,10 +278,7 @@ export function OrganizationCostDashboard({
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                           <div className="flex items-center gap-2">
-                            <Building2
-                              size={16}
-                              className="text-neutral-9"
-                            />
+                            <Building2 size={16} className="text-neutral-9" />
                             {org.organizationId.replace("organization:", "")}
                           </div>
                         </td>
@@ -360,10 +360,7 @@ export function OrganizationCostDashboard({
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                           <div className="flex items-center gap-2">
-                            <Folder
-                              size={16}
-                              className="text-neutral-9"
-                            />
+                            <Folder size={16} className="text-neutral-9" />
                             {proj.projectId.replace("project:", "")}
                           </div>
                         </td>
@@ -437,16 +434,10 @@ export function OrganizationCostDashboard({
                   </thead>
                   <tbody className="divide-y divide-neutral-5 dark:divide-neutral-6">
                     {teamCosts?.map((team) => (
-                      <tr
-                        key={team.teamId}
-                        className="hover:bg-neutral-a6"
-                      >
+                      <tr key={team.teamId} className="hover:bg-neutral-a6">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-12">
                           <div className="flex items-center gap-2">
-                            <Users
-                              size={16}
-                              className="text-neutral-9"
-                            />
+                            <Users size={16} className="text-neutral-9" />
                             {team.teamId.replace("team:", "")}
                           </div>
                         </td>

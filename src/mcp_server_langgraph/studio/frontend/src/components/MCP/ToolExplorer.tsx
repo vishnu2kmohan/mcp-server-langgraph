@@ -107,9 +107,7 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
       {/* Tool list */}
       <div className="flex flex-col gap-2">
         {filteredTools.length === 0 ? (
-          <div className="p-4 text-center text-neutral-10">
-            No tools found
-          </div>
+          <div className="p-4 text-center text-neutral-10">No tools found</div>
         ) : (
           filteredTools.map((tool) => (
             <Card
@@ -145,7 +143,8 @@ export function ToolExplorer({ serverFilter, onInvoke }: ToolExplorerProps) {
                     "hover:bg-brand-primary/90",
                     "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
                     "transition-colors",
-                  )}>
+                  )}
+                >
                   Invoke
                 </Button>
               </div>

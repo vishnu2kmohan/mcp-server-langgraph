@@ -121,7 +121,9 @@ describe("RichTextInput - Advanced Features", () => {
     it("should render toolbar toggle button", () => {
       render(<RichTextInput onSubmit={mockOnSubmit} />);
       expect(
-        screen.getByRole("button", { name: /show formatting|hide formatting/i }),
+        screen.getByRole("button", {
+          name: /show formatting|hide formatting/i,
+        }),
       ).toBeInTheDocument();
     });
 
@@ -130,7 +132,9 @@ describe("RichTextInput - Advanced Features", () => {
 
       // Toggle button should be visible
       expect(
-        screen.getByRole("button", { name: /show formatting|hide formatting/i }),
+        screen.getByRole("button", {
+          name: /show formatting|hide formatting/i,
+        }),
       ).toBeInTheDocument();
 
       // Formatting buttons should be hidden initially
@@ -323,7 +327,8 @@ describe("RichTextInput - Advanced Features", () => {
       render(
         <RichTextInput
           onSubmit={mockOnSubmit}
-          value="" enableInlineSuggestions={true}
+          value=""
+          enableInlineSuggestions={true}
           inlineSuggestion="world"
         />,
       );

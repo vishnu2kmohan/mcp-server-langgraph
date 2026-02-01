@@ -89,7 +89,8 @@ const mockVoiceInputReturn = {
   isListening: false,
   isSupported: true,
   error: null as string | null,
-  transcript: "", startListening: mockStartListening,
+  transcript: "",
+  startListening: mockStartListening,
   stopListening: mockStopListening,
 };
 
@@ -205,7 +206,8 @@ vi.mock("../hooks/useAvailableTools", () => ({
 
 describe("ConnectedChatInputForm - Core", () => {
   const defaultProps = {
-    value: "", onChange: vi.fn(),
+    value: "",
+    onChange: vi.fn(),
     onSubmit: vi.fn(),
   };
 
@@ -305,7 +307,8 @@ describe("ConnectedChatInputForm - Core", () => {
       render(
         <ConnectedChatInputForm
           {...defaultProps}
-          value="" onSubmit={mockOnSubmit}
+          value=""
+          onSubmit={mockOnSubmit}
         />,
       );
 

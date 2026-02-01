@@ -541,8 +541,7 @@ describe("useOfflineQueue", () => {
         return Promise.resolve({
           ok: false,
           status: 409,
-          json: () =>
-            Promise.resolve({ serverData: `conflict-${callCount}` }),
+          json: () => Promise.resolve({ serverData: `conflict-${callCount}` }),
         });
       });
 
@@ -614,7 +613,9 @@ describe("useOfflineQueue", () => {
 
       expect(result.current.conflicts).toHaveLength(1);
       // Default suggestedResolution is keep-server
-      expect(result.current.conflicts[0].suggestedResolution).toBe("keep-server");
+      expect(result.current.conflicts[0].suggestedResolution).toBe(
+        "keep-server",
+      );
 
       act(() => {
         result.current.resolveAllConflicts();

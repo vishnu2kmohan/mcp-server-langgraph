@@ -149,9 +149,7 @@ export function BudgetStatusCard({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <EntityIcon entityType={status.entityType} />
-          <span className="font-medium text-neutral-12">
-            {displayName}
-          </span>
+          <span className="font-medium text-neutral-12">{displayName}</span>
         </div>
         <span
           className={`text-sm font-semibold px-2 py-0.5 rounded ${styles.textColor} ${styles.bgColor}`}
@@ -170,24 +168,20 @@ export function BudgetStatusCard({
       >
         <div
           className={`h-full ${styles.progressColor} transition-all duration-300`}
-          style={{ '--progress': `${progressWidth}%` } as React.CSSProperties}
+          style={{ "--progress": `${progressWidth}%` } as React.CSSProperties}
         />
       </div>
 
       {/* Stats */}
       <div className="flex justify-between text-sm">
         <div>
-          <span className="text-neutral-10">
-            Spent:{" "}
-          </span>
+          <span className="text-neutral-10">Spent: </span>
           <span className="font-medium text-neutral-12">
             {formatCurrency(status.currentSpend)}
           </span>
         </div>
         <div>
-          <span className="text-neutral-10">
-            Limit:{" "}
-          </span>
+          <span className="text-neutral-10">Limit: </span>
           <span className="font-medium text-neutral-12">
             {formatCurrency(status.monthlyLimitUsd)}
           </span>
@@ -199,9 +193,7 @@ export function BudgetStatusCard({
         <span className={`text-2xl font-bold ${styles.textColor}`}>
           {status.percentUsed.toFixed(0)}%
         </span>
-        <span className="text-neutral-10 text-sm ml-1">
-          used
-        </span>
+        <span className="text-neutral-10 text-sm ml-1">used</span>
       </div>
 
       {/* Remaining */}

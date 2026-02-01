@@ -225,10 +225,7 @@ export function WorkflowEditor({
           className,
         )}
       >
-        <Loader2
-          size={24}
-          className="animate-spin text-neutral-9"
-        />
+        <Loader2 size={24} className="animate-spin text-neutral-9" />
       </div>
     );
   }
@@ -246,9 +243,7 @@ export function WorkflowEditor({
       >
         <div className="text-center">
           <AlertCircle size={32} className="mx-auto mb-2 text-error-9" />
-          <p className="text-neutral-10">
-            Failed to load workflow
-          </p>
+          <p className="text-neutral-10">Failed to load workflow</p>
         </div>
       </div>
     );
@@ -257,10 +252,7 @@ export function WorkflowEditor({
   return (
     <div
       data-testid="workflow-editor"
-      className={cn(
-        "flex flex-col h-full bg-neutral-1",
-        className,
-      )}
+      className={cn("flex flex-col h-full bg-neutral-1", className)}
     >
       {/* Header with tabs */}
       <div className="flex items-center justify-between border-b border-neutral-5 px-4 py-2">
@@ -282,7 +274,8 @@ export function WorkflowEditor({
               currentView === "visual"
                 ? "bg-neutral-1 text-neutral-12 shadow-sm"
                 : "text-neutral-10 hover:text-neutral-11",
-            )}>
+            )}
+          >
             <LayoutGrid size={12} />
             Visual
           </Button>
@@ -298,7 +291,8 @@ export function WorkflowEditor({
               currentView === "code"
                 ? "bg-neutral-1 text-neutral-12 shadow-sm"
                 : "text-neutral-10 hover:text-neutral-11",
-            )}>
+            )}
+          >
             <Code size={12} />
             Code
           </Button>

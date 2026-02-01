@@ -164,17 +164,13 @@ export function ErrorRecovery({
               {error.code}
             </code>
           </h3>
-          <p className="mt-1 text-sm text-neutral-11">
-            {error.message}
-          </p>
+          <p className="mt-1 text-sm text-neutral-11">{error.message}</p>
         </div>
       </div>
       {/* Suggestions */}
       {suggestions && suggestions.length > 0 && (
         <div className="mt-3 ml-8">
-          <p className="text-xs font-medium text-neutral-10 mb-1">
-            Try:
-          </p>
+          <p className="text-xs font-medium text-neutral-10 mb-1">Try:</p>
           <ul className="list-disc list-inside text-sm text-neutral-11 space-y-0.5">
             {suggestions.map((suggestion, index) => (
               <li key={index}>{suggestion}</li>
@@ -211,7 +207,8 @@ export function ErrorRecovery({
             variant="secondary"
             className=".5 px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12 focus:ring-primary-7"
             type="button"
-            onClick={onDismiss}>
+            onClick={onDismiss}
+          >
             <X size={14} />
             Dismiss
           </Button>
@@ -222,7 +219,8 @@ export function ErrorRecovery({
           className="px-2 py-1 text-xs text-neutral-10 hover:text-neutral-11 focus:ring-primary-7"
           type="button"
           onClick={() => setShowDetails(!showDetails)}
-          aria-label={showDetails ? "Hide details" : "Show details"}>
+          aria-label={showDetails ? "Hide details" : "Show details"}
+        >
           {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           Details
         </Button>
@@ -257,28 +255,18 @@ export function ErrorRecovery({
           </div>
           <dl className="text-xs space-y-1">
             <div className="flex">
-              <dt className="font-medium text-neutral-10 w-20">
-                Code:
-              </dt>
-              <dd className="font-mono text-neutral-11">
-                {error.code}
-              </dd>
+              <dt className="font-medium text-neutral-10 w-20">Code:</dt>
+              <dd className="font-mono text-neutral-11">{error.code}</dd>
             </div>
             {error.traceId && (
               <div className="flex">
-                <dt className="font-medium text-neutral-10 w-20">
-                  Trace ID:
-                </dt>
-                <dd className="font-mono text-neutral-11">
-                  {error.traceId}
-                </dd>
+                <dt className="font-medium text-neutral-10 w-20">Trace ID:</dt>
+                <dd className="font-mono text-neutral-11">{error.traceId}</dd>
               </div>
             )}
             {error.timestamp && (
               <div className="flex">
-                <dt className="font-medium text-neutral-10 w-20">
-                  Time:
-                </dt>
+                <dt className="font-medium text-neutral-10 w-20">Time:</dt>
                 <dd className="font-mono text-neutral-11">
                   {new Date(error.timestamp).toLocaleString()}
                 </dd>

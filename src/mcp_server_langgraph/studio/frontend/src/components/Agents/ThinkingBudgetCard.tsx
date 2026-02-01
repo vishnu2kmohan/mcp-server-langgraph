@@ -52,9 +52,7 @@ function getComplexityIcon(complexity: string) {
     case "chaotic":
       return <AlertTriangle size={14} className="text-error-9" />;
     default:
-      return (
-        <Gauge size={14} className="text-neutral-9" />
-      );
+      return <Gauge size={14} className="text-neutral-9" />;
   }
 }
 
@@ -143,22 +141,21 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
               >
                 {data.enabled ? "Enabled" : "Disabled"}
               </span>
-              <Button size="icon"
+              <Button
+                size="icon"
                 variant="secondary"
                 className="p-1.5 rounded hover:bg-neutral-2"
                 data-testid="edit-thinking-budget-button"
                 onClick={handleEdit}
                 title="Edit thinking budget configuration"
               >
-                <Pencil
-                  size={16}
-                  className="text-neutral-10"
-                />
+                <Pencil size={16} className="text-neutral-10" />
               </Button>
             </>
           ) : (
             <>
-              <Button size="icon"
+              <Button
+                size="icon"
                 variant="secondary"
                 className="p-1.5 rounded hover:bg-neutral-2"
                 data-testid="cancel-edit-button"
@@ -166,12 +163,10 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
                 disabled={isSaving}
                 title="Cancel editing"
               >
-                <X
-                  size={16}
-                  className="text-neutral-10"
-                />
+                <X size={16} className="text-neutral-10" />
               </Button>
-              <Button size="icon"
+              <Button
+                size="icon"
                 variant="primary"
                 className="p-1.5 rounded bg-primary-9 hover:bg-primary-10"
                 data-testid="save-thinking-budget-button"
@@ -230,9 +225,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
         {/* Default Level (read-only view) */}
         {!isEditing && (
           <div className="mb-4">
-            <p className="text-sm text-neutral-10 mb-1">
-              Default Level
-            </p>
+            <p className="text-sm text-neutral-10 mb-1">Default Level</p>
             <span
               className={`inline-flex px-2 py-1 text-sm font-medium rounded ${getLevelColorClass(data.defaultLevel)}`}
             >
@@ -243,9 +236,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
         {/* Complexity Mapping */}
         <div className="mb-4">
-          <p className="text-sm text-neutral-10 mb-2">
-            Complexity Mapping
-          </p>
+          <p className="text-sm text-neutral-10 mb-2">Complexity Mapping</p>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(data.complexityMapping).map(
               ([complexity, level]) => (
@@ -272,9 +263,7 @@ export function ThinkingBudgetCard({ data }: ThinkingBudgetCardProps) {
 
         {/* Thinking Levels */}
         <div>
-          <p className="text-sm text-neutral-10 mb-2">
-            Available Levels
-          </p>
+          <p className="text-sm text-neutral-10 mb-2">Available Levels</p>
           <div className="space-y-2">
             {data.levels.map((levelInfo) => (
               <div

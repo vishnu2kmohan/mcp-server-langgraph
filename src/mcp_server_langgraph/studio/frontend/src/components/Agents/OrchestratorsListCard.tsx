@@ -63,10 +63,7 @@ export function OrchestratorsListCard({
                     {isEnabled ? (
                       <Check size={16} className="text-success-9" />
                     ) : (
-                      <X
-                        size={16}
-                        className="text-neutral-9"
-                      />
+                      <X size={16} className="text-neutral-9" />
                     )}
                     <span className="font-medium text-neutral-12">
                       {orchestrator.displayName}

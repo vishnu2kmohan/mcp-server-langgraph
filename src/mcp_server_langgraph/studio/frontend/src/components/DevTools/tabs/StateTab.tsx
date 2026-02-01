@@ -205,15 +205,9 @@ function StateNodeRow({
           }
         >
           {isExpanded ? (
-            <ChevronDown
-              size={12}
-              className="text-neutral-10"
-            />
+            <ChevronDown size={12} className="text-neutral-10" />
           ) : (
-            <ChevronRight
-              size={12}
-              className="text-neutral-10"
-            />
+            <ChevronRight size={12} className="text-neutral-10" />
           )}
         </Button>
       ) : (
@@ -390,22 +384,13 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
   }, []);
 
   return (
-    <div
-      data-testid="state-tab"
-      className="flex flex-col h-full bg-neutral-1"
-    >
+    <div data-testid="state-tab" className="flex flex-col h-full bg-neutral-1">
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Context indicator */}
         <div className="flex items-center gap-1.5">
-          <Database
-            size={14}
-            className="text-neutral-10"
-            aria-hidden="true"
-          />
-          <span className="text-xs text-neutral-11 capitalize">
-            {context}
-          </span>
+          <Database size={14} className="text-neutral-10" aria-hidden="true" />
+          <span className="text-xs text-neutral-11 capitalize">{context}</span>
           {contextEntityId && (
             <span className="text-xs text-neutral-10 ml-1 px-1.5 py-0.5 bg-neutral-2 rounded">
               {contextEntityId}
@@ -456,7 +441,8 @@ export function StateTab({ context, contextEntityId }: StateTabProps) {
         </div>
 
         {/* Refresh button */}
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="refresh-button"

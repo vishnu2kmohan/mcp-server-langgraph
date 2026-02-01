@@ -163,9 +163,7 @@ export function AIEditOverlay({
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-5 bg-neutral-1 rounded-t-lg">
         <Sparkles size={16} className="text-primary-9" />
-        <span className="text-sm font-medium text-neutral-12">
-          AI Edit
-        </span>
+        <span className="text-sm font-medium text-neutral-12">AI Edit</span>
       </div>
       {/* Selection Preview */}
       <div
@@ -269,8 +267,7 @@ export function AIEditOverlay({
                     line.type === "add" && "bg-success-a4 text-success-7",
                     line.type === "remove" &&
                       "bg-error-a4 text-error-7 line-through",
-                    line.type === "same" &&
-                      "text-neutral-9",
+                    line.type === "same" && "text-neutral-9",
                   )}
                 >
                   {line.type === "add" && "+ "}

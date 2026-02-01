@@ -328,7 +328,8 @@ export function NodePalette({
             key={template.type}
             onClick={() => onAddNode?.(template.type)}
             title={`Add ${template.label}: ${template.description}`}
-            aria-label={`Add ${template.label} node`}>
+            aria-label={`Add ${template.label} node`}
+          >
             {template.icon}
           </Button>
         ))}

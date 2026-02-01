@@ -207,9 +207,7 @@ export function InteractiveForm({
       </h2>
       {/* Description */}
       {config.description && (
-        <p className="text-sm text-neutral-11 mb-6">
-          {config.description}
-        </p>
+        <p className="text-sm text-neutral-11 mb-6">{config.description}</p>
       )}
       {/* Fields */}
       <div className="space-y-4">
@@ -259,7 +257,8 @@ export function InteractiveForm({
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "transition-colors",
           "flex items-center justify-center gap-2",
-        )}>
+        )}
+      >
         {isSubmitting && (
           <Loader2
             data-testid="submit-spinner"

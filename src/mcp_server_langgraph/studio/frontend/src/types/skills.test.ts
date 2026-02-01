@@ -5,7 +5,7 @@
  * Validates type exports and structure.
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   SkillMetadata,
   SkillUpdate,
@@ -17,6 +17,10 @@ import type {
   InstallSkillParams,
   ApplySkillUpdatesResponse,
 } from "./skills";
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("Skills Types", () => {
   describe("SkillMetadata", () => {

@@ -51,7 +51,7 @@ export const renderWithRouter = (component: React.ReactNode) => {
   return render(
     <Provider store={store}>
       <MemoryRouter>{component}</MemoryRouter>
-    </Provider>
+    </Provider>,
   );
 };
 

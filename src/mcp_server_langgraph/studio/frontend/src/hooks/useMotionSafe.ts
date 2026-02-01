@@ -67,7 +67,7 @@ const REDUCED_MOTION_DEFAULTS: MotionProps = {
  */
 export function useMotionSafe<T extends MotionProps>(
   fullMotion: T,
-  reducedMotion?: Partial<T>
+  reducedMotion?: Partial<T>,
 ): T {
   const prefersReducedMotion = useReducedMotion();
 
@@ -115,8 +115,14 @@ export function useMotionSafeVariants(variants: Variants): Variants {
     for (const [key, value] of Object.entries(variants)) {
       // Extract only opacity from the variant, or use sensible defaults
       const variantValue = value as Record<string, unknown> | undefined;
-      const opacity = typeof variantValue?.opacity === 'number' ? variantValue.opacity :
-        (key.includes('hidden') || key.includes('exit') || key.includes('collapsed')) ? 0 : 1;
+      const opacity =
+        typeof variantValue?.opacity === "number"
+          ? variantValue.opacity
+          : key.includes("hidden") ||
+              key.includes("exit") ||
+              key.includes("collapsed")
+            ? 0
+            : 1;
       reducedVariants[key] = {
         opacity,
         transition: { duration: 0.15 },

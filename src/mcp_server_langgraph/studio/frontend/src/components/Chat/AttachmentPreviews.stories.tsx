@@ -23,7 +23,7 @@ const createUploadFile = (
   type: string,
   size: number,
   progress: number = 100,
-  status: UploadFile["status"] = "complete"
+  status: UploadFile["status"] = "complete",
 ): UploadFile => ({
   id,
   file: createMockFile(name, type, size),
@@ -38,8 +38,16 @@ const SAMPLE_FILES: UploadFile[] = [
 ];
 
 const SAMPLE_URLS = [
-  { url: "https://example.com/article", title: "Example Article", content: "Article content..." },
-  { url: "https://docs.example.com/api", title: "API Documentation", content: "API docs..." },
+  {
+    url: "https://example.com/article",
+    title: "Example Article",
+    content: "Article content...",
+  },
+  {
+    url: "https://docs.example.com/api",
+    title: "API Documentation",
+    content: "API docs...",
+  },
 ];
 
 const meta: Meta<typeof AttachmentPreviews> = {
@@ -93,7 +101,8 @@ export const WithFiles: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Displays uploaded file previews with type icons and remove buttons.",
+        story:
+          "Displays uploaded file previews with type icons and remove buttons.",
       },
     },
   },
@@ -151,7 +160,14 @@ export const Empty: Story = {
 export const FileUploading: Story = {
   args: {
     uploadFiles: [
-      createUploadFile("file-1", "large-file.zip", "application/zip", 10485760, 45, "uploading"),
+      createUploadFile(
+        "file-1",
+        "large-file.zip",
+        "application/zip",
+        10485760,
+        45,
+        "uploading",
+      ),
       ...SAMPLE_FILES.slice(0, 1),
     ],
     isUploading: true,
@@ -191,7 +207,12 @@ export const VariousFileTypes: Story = {
     uploadFiles: [
       createUploadFile("1", "document.pdf", "application/pdf", 102400),
       createUploadFile("2", "photo.jpg", "image/jpeg", 204800),
-      createUploadFile("3", "spreadsheet.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 51200),
+      createUploadFile(
+        "3",
+        "spreadsheet.xlsx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        51200,
+      ),
       createUploadFile("4", "code.py", "text/x-python", 4096),
       createUploadFile("5", "archive.zip", "application/zip", 1048576),
     ],
@@ -215,7 +236,12 @@ export const ManyAttachments: Story = {
     uploadFiles: [
       createUploadFile("1", "file1.pdf", "application/pdf", 10240),
       createUploadFile("2", "file2.png", "image/png", 20480),
-      createUploadFile("3", "file3.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 30720),
+      createUploadFile(
+        "3",
+        "file3.docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        30720,
+      ),
       createUploadFile("4", "file4.csv", "text/csv", 4096),
       createUploadFile("5", "file5.js", "text/javascript", 8192),
     ],
@@ -258,8 +284,18 @@ export const InChatInputContext: Story = {
       <div className="flex items-center gap-2 pt-2 border-t border-neutral-6">
         <span className="flex-1 text-sm text-neutral-9">Message...</span>
         <button className="p-2 rounded-full bg-primary-9 text-neutral-12">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
+            />
           </svg>
         </button>
       </div>
@@ -301,8 +337,18 @@ export const DarkMode: Story = {
 export const LongFilenames: Story = {
   args: {
     uploadFiles: [
-      createUploadFile("1", "very-long-filename-that-should-be-truncated-nicely.pdf", "application/pdf", 102400),
-      createUploadFile("2", "another-extremely-long-filename-for-testing-truncation.png", "image/png", 51200),
+      createUploadFile(
+        "1",
+        "very-long-filename-that-should-be-truncated-nicely.pdf",
+        "application/pdf",
+        102400,
+      ),
+      createUploadFile(
+        "2",
+        "another-extremely-long-filename-for-testing-truncation.png",
+        "image/png",
+        51200,
+      ),
     ],
     onRemoveFile: (id) => console.log("Remove file:", id),
   },
@@ -316,7 +362,8 @@ export const LongFilenames: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Long filenames are truncated with ellipsis. Hover to see full name.",
+        story:
+          "Long filenames are truncated with ellipsis. Hover to see full name.",
       },
     },
   },

@@ -436,9 +436,7 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
             key={shortcut.action}
             className="flex items-center justify-between py-2 border-b border-neutral-5"
           >
-            <span className="text-sm text-neutral-11">
-              {shortcut.label}
-            </span>
+            <span className="text-sm text-neutral-11">{shortcut.label}</span>
             <kbd className="px-2 py-1 text-xs font-mono bg-neutral-2 rounded border border-neutral-5">
               {preferences.keyboardShortcuts[shortcut.action] || shortcut.keys}
             </kbd>
@@ -695,7 +693,8 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
         <h2 className="text-lg font-semibold">Settings</h2>
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 rounded-md hover:bg-neutral-2 focus:ring-primary-7"
           onClick={onClose}
@@ -712,7 +711,8 @@ export function SettingsPanel({ className = "", onClose }: SettingsPanelProps) {
         className="flex border-b border-neutral-5 px-2"
       >
         {TABS.map((tab, index) => (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             className="flex .5 px-3 py-2 text-sm border-b-2 -mb-px focus:ring-inset focus:ring-primary-7"
             key={tab.id}
             id={`tab-${tab.id}`}

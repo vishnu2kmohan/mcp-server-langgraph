@@ -5,13 +5,20 @@
  * ReferenceChip, ReferencePopover, autocomplete, and other components.
  */
 
-import { Wrench, Sparkles, FileCode, Brain, List, ChevronRight } from 'lucide-react';
+import {
+  Wrench,
+  Sparkles,
+  FileCode,
+  Brain,
+  List,
+  ChevronRight,
+} from "lucide-react";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type ReferenceType = 'tool' | 'skill' | 'artifact' | 'memory' | 'plan';
+export type ReferenceType = "tool" | "skill" | "artifact" | "memory" | "plan";
 
 // =============================================================================
 // Icons
@@ -21,7 +28,7 @@ export type ReferenceType = 'tool' | 'skill' | 'artifact' | 'memory' | 'plan';
  * Icon mapping for reference types.
  * Used consistently across all reference components.
  */
-export const REFERENCE_ICONS: Record<ReferenceType | 'type', typeof Wrench> = {
+export const REFERENCE_ICONS: Record<ReferenceType | "type", typeof Wrench> = {
   tool: Wrench,
   skill: Sparkles,
   artifact: FileCode,
@@ -37,46 +44,46 @@ export const REFERENCE_ICONS: Record<ReferenceType | 'type', typeof Wrench> = {
 /**
  * Primary icon/text colors for reference types (Radix design tokens).
  */
-export const REFERENCE_ICON_COLORS: Record<ReferenceType | 'type', string> = {
-  tool: 'text-primary-9',
-  skill: 'text-success-9',
-  artifact: 'text-neutral-9',
-  memory: 'text-info-9',
-  plan: 'text-warning-9',
-  type: 'text-neutral-11',
+export const REFERENCE_ICON_COLORS: Record<ReferenceType | "type", string> = {
+  tool: "text-primary-9",
+  skill: "text-success-9",
+  artifact: "text-neutral-9",
+  memory: "text-info-9",
+  plan: "text-warning-9",
+  type: "text-neutral-11",
 };
 
 /**
  * Background colors for reference chips (Radix design tokens).
  */
 export const REFERENCE_BG_COLORS: Record<ReferenceType, string> = {
-  tool: 'bg-primary-3',
-  skill: 'bg-success-3',
-  artifact: 'bg-neutral-3',
-  memory: 'bg-info-3',
-  plan: 'bg-warning-3',
+  tool: "bg-primary-3",
+  skill: "bg-success-3",
+  artifact: "bg-neutral-3",
+  memory: "bg-info-3",
+  plan: "bg-warning-3",
 };
 
 /**
  * Border colors for reference chips (Radix design tokens).
  */
 export const REFERENCE_BORDER_COLORS: Record<ReferenceType, string> = {
-  tool: 'border-primary-6',
-  skill: 'border-success-6',
-  artifact: 'border-neutral-6',
-  memory: 'border-info-6',
-  plan: 'border-warning-6',
+  tool: "border-primary-6",
+  skill: "border-success-6",
+  artifact: "border-neutral-6",
+  memory: "border-info-6",
+  plan: "border-warning-6",
 };
 
 /**
  * Text colors for reference labels (Radix design tokens).
  */
 export const REFERENCE_TEXT_COLORS: Record<ReferenceType, string> = {
-  tool: 'text-primary-11',
-  skill: 'text-success-11',
-  artifact: 'text-neutral-11',
-  memory: 'text-info-11',
-  plan: 'text-warning-11',
+  tool: "text-primary-11",
+  skill: "text-success-11",
+  artifact: "text-neutral-11",
+  memory: "text-info-11",
+  plan: "text-warning-11",
 };
 
 // =============================================================================
@@ -87,22 +94,22 @@ export const REFERENCE_TEXT_COLORS: Record<ReferenceType, string> = {
  * Human-readable labels for reference types.
  */
 export const REFERENCE_TYPE_LABELS: Record<ReferenceType, string> = {
-  tool: 'Tool',
-  skill: 'Skill',
-  artifact: 'Artifact',
-  memory: 'Memory',
-  plan: 'Plan',
+  tool: "Tool",
+  skill: "Skill",
+  artifact: "Artifact",
+  memory: "Memory",
+  plan: "Plan",
 };
 
 /**
  * Descriptions for reference types (used in autocomplete).
  */
 export const REFERENCE_TYPE_DESCRIPTIONS: Record<ReferenceType, string> = {
-  tool: 'Reference an MCP tool',
-  skill: 'Reference a skill',
-  artifact: 'Reference an artifact',
-  memory: 'Reference a memory note',
-  plan: 'Reference an execution plan',
+  tool: "Reference an MCP tool",
+  skill: "Reference a skill",
+  artifact: "Reference an artifact",
+  memory: "Reference a memory note",
+  plan: "Reference an execution plan",
 };
 
 // =============================================================================
@@ -112,14 +119,14 @@ export const REFERENCE_TYPE_DESCRIPTIONS: Record<ReferenceType, string> = {
 /**
  * Get the icon component for a reference type.
  */
-export function getReferenceIcon(type: ReferenceType | 'type') {
+export function getReferenceIcon(type: ReferenceType | "type") {
   return REFERENCE_ICONS[type] || REFERENCE_ICONS.type;
 }
 
 /**
  * Get the icon color class for a reference type.
  */
-export function getReferenceIconColor(type: ReferenceType | 'type') {
+export function getReferenceIconColor(type: ReferenceType | "type") {
   return REFERENCE_ICON_COLORS[type] || REFERENCE_ICON_COLORS.type;
 }
 
@@ -151,11 +158,11 @@ export function toMarkdownReference(
   type: ReferenceType,
   qualifier: string,
   id?: string,
-  label?: string
+  label?: string,
 ): string {
   let ref: string;
 
-  if (type === 'tool' && id) {
+  if (type === "tool" && id) {
     ref = `[[tool:${qualifier}:${id}]]`;
   } else {
     ref = `[[${type}:${qualifier}]]`;
@@ -180,7 +187,7 @@ export function parseMarkdownReference(ref: string): {
   label?: string;
 } | null {
   const match = ref.match(
-    /^\[\[(tool|skill|artifact|memory|plan):([a-zA-Z0-9_:/-]+)(?:\|([^\]]+))?\]\]$/
+    /^\[\[(tool|skill|artifact|memory|plan):([a-zA-Z0-9_:/-]+)(?:\|([^\]]+))?\]\]$/,
   );
 
   if (!match) {
@@ -191,13 +198,13 @@ export function parseMarkdownReference(ref: string): {
   const validType = type as ReferenceType;
 
   // For tools, qualifier and id are separated by colon
-  if (validType === 'tool') {
-    const parts = qualifierId.split(':');
+  if (validType === "tool") {
+    const parts = qualifierId.split(":");
     if (parts.length >= 2) {
       return {
         type: validType,
         qualifier: parts[0],
-        id: parts.slice(1).join(':'),
+        id: parts.slice(1).join(":"),
         label,
       };
     }
@@ -221,11 +228,11 @@ export function parseMarkdownReference(ref: string): {
  * All types now supported after Phase 4 data model changes.
  */
 export const SUPPORTED_REFERENCE_TYPES: ReferenceType[] = [
-  'tool',
-  'skill',
-  'artifact',
-  'memory',
-  'plan',
+  "tool",
+  "skill",
+  "artifact",
+  "memory",
+  "plan",
 ];
 
 /**
@@ -239,7 +246,7 @@ export const FUTURE_REFERENCE_TYPES: ReferenceType[] = [];
  */
 export function isValidReferenceType(type: string): type is ReferenceType {
   return [...SUPPORTED_REFERENCE_TYPES, ...FUTURE_REFERENCE_TYPES].includes(
-    type as ReferenceType
+    type as ReferenceType,
   );
 }
 

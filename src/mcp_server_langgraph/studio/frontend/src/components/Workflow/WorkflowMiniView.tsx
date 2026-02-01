@@ -62,18 +62,13 @@ const statusStyles: Record<
     bg: "bg-neutral-2",
     border: "border-neutral-5",
     text: "text-neutral-10",
-    icon: (
-      <Circle size={12} className="text-neutral-9" />
-    ),
+    icon: <Circle size={12} className="text-neutral-9" />,
   },
   pending: {
     bg: "bg-neutral-2",
-    border:
-      "border-neutral-6",
+    border: "border-neutral-6",
     text: "text-neutral-11",
-    icon: (
-      <Circle size={12} className="text-neutral-9" />
-    ),
+    icon: <Circle size={12} className="text-neutral-9" />,
   },
   running: {
     bg: "bg-primary-1 bg-primary-4",
@@ -144,9 +139,7 @@ export function WorkflowMiniView({
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-neutral-10">
-            Workflow
-          </span>
+          <span className="text-xs font-medium text-neutral-10">Workflow</span>
           {activeNode && (
             <span className="text-xs text-primary-10 dark:text-primary-7 flex items-center gap-1">
               <Loader2 size={10} className="animate-spin" />
@@ -155,20 +148,16 @@ export function WorkflowMiniView({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-10">
-            {progress}%
-          </span>
+          <span className="text-xs text-neutral-10">{progress}%</span>
           {onExpand && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1 hover:bg-neutral-2 rounded"
               onClick={onExpand}
               title="Expand workflow view"
             >
-              <ChevronRight
-                size={14}
-                className="text-neutral-9"
-              />
+              <ChevronRight size={14} className="text-neutral-9" />
             </Button>
           )}
         </div>
@@ -177,7 +166,7 @@ export function WorkflowMiniView({
       <div className="h-1 bg-neutral-3 rounded-full mb-3 overflow-hidden">
         <div
           className="h-full bg-primary-9 transition-all duration-500 ease-out"
-          style={{ '--progress': `${progress}%` } as React.CSSProperties}
+          style={{ "--progress": `${progress}%` } as React.CSSProperties}
         />
       </div>
       {/* Nodes */}

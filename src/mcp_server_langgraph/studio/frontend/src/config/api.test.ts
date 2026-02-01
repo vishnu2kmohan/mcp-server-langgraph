@@ -201,9 +201,7 @@ describe("Environment Variable Documentation", () => {
     expect(supportedEnvVars).toContain(
       "OBSERVABILITY_TRACE_LIST_POLLING_IDLE_MS",
     );
-    expect(supportedEnvVars).toContain(
-      "OBSERVABILITY_TRACE_DETAIL_POLLING_MS",
-    );
+    expect(supportedEnvVars).toContain("OBSERVABILITY_TRACE_DETAIL_POLLING_MS");
     expect(supportedEnvVars).toContain("OBSERVABILITY_METRICS_POLLING_MS");
     expect(supportedEnvVars).toContain("OBSERVABILITY_LOGS_POLLING_MS");
     expect(supportedEnvVars).toContain("OBSERVABILITY_ALERTS_POLLING_MS");

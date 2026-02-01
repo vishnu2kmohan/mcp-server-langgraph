@@ -14,7 +14,10 @@
  */
 
 import { createContext, useContext, type ReactNode } from "react";
-import { useMCPWebSocket, type UseMCPWebSocketReturn } from "../hooks/useMCPWebSocket";
+import {
+  useMCPWebSocket,
+  type UseMCPWebSocketReturn,
+} from "../hooks/useMCPWebSocket";
 
 /**
  * MCP Connection Context
@@ -47,7 +50,9 @@ export interface MCPConnectionProviderProps {
  * }
  * ```
  */
-export function MCPConnectionProvider({ children }: MCPConnectionProviderProps) {
+export function MCPConnectionProvider({
+  children,
+}: MCPConnectionProviderProps) {
   // Create a single MCP WebSocket connection for the entire app
   const mcpConnection = useMCPWebSocket();
 
@@ -80,7 +85,9 @@ export function useMCPConnection(): UseMCPWebSocketReturn {
   const context = useContext(MCPConnectionContext);
 
   if (context === null) {
-    throw new Error("useMCPConnection must be used within MCPConnectionProvider");
+    throw new Error(
+      "useMCPConnection must be used within MCPConnectionProvider",
+    );
   }
 
   return context;

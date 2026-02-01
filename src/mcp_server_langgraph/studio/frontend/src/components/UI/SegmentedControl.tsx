@@ -90,7 +90,7 @@ function useSegmentedControl() {
   const context = useContext(SegmentedControlContext);
   if (!context) {
     throw new Error(
-      "SegmentedControlItem must be used within SegmentedControl"
+      "SegmentedControlItem must be used within SegmentedControl",
     );
   }
   return context;
@@ -164,7 +164,7 @@ export function SegmentedControl({
           "border border-neutral-5 dark:border-neutral-6",
           sizeStyles[size],
           disabled && "opacity-50 cursor-not-allowed",
-          className
+          className,
         )}
       >
         {children}
@@ -275,7 +275,7 @@ export function SegmentedControlItem({
           ? "bg-neutral-1 dark:bg-neutral-1 text-neutral-12 shadow-sm"
           : "bg-transparent text-neutral-11 hover:text-neutral-12 hover:bg-neutral-a3",
         isDisabled && "opacity-50 cursor-not-allowed pointer-events-none",
-        className
+        className,
       )}
     >
       {children}

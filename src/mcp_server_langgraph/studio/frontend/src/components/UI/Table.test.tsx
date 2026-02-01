@@ -5,8 +5,8 @@
  * Tests compound component pattern, accessibility, and design system compliance.
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   Table,
   TableHead,
@@ -15,6 +15,11 @@ import {
   TableHeaderCell,
   TableCell,
 } from "./Table";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("Table", () => {
   // ===========================================================================
@@ -304,7 +309,9 @@ describe("Table", () => {
 
       const tbody = screen.getByTestId("tbody");
       // The striped class uses a CSS selector that targets tbody when parent table has data-striped
-      expect(tbody.className).toMatch(/\[table\[data-striped\]>&\]:even:\[&>tr\]:bg-neutral-2/);
+      expect(tbody.className).toMatch(
+        /\[table\[data-striped\]>&\]:even:\[&>tr\]:bg-neutral-2/,
+      );
     });
 
     it("supports 'hoverable' variant for row hover states", () => {

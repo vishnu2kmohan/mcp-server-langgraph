@@ -62,9 +62,7 @@ function VersionDisplay({ label, version, variant }: VersionDisplayProps) {
     >
       <div
         className={`mb-1 text-xs font-medium uppercase tracking-wide ${
-          variant === "local"
-            ? "text-warning-11"
-            : "text-primary-11"
+          variant === "local" ? "text-warning-11" : "text-primary-11"
         }`}
       >
         {label}

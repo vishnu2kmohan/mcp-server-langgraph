@@ -126,9 +126,7 @@ export function AgentsPage() {
             <h1 className="text-2xl font-bold text-neutral-12">
               {pageConfig.title}
             </h1>
-            <p className="text-sm text-neutral-11">
-              {pageConfig.description}
-            </p>
+            <p className="text-sm text-neutral-11">{pageConfig.description}</p>
           </div>
           <Button
             variant="secondary"
@@ -236,9 +234,7 @@ export function AgentsPage() {
             </div>
 
             {tools.length === 0 ? (
-              <p className="text-neutral-11">
-                No tools available
-              </p>
+              <p className="text-neutral-11">No tools available</p>
             ) : (
               <div className="space-y-2">
                 {tools.map((tool) => (

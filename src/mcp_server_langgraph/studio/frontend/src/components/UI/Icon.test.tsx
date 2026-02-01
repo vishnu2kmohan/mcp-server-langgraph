@@ -5,10 +5,15 @@
  * and accessibility features for Lucide icons.
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Icon } from "./Icon";
 import { Check, AlertCircle, Settings, Loader2 } from "lucide-react";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("Icon", () => {
   // ===========================================================================
@@ -31,7 +36,9 @@ describe("Icon", () => {
     });
 
     it("renders different Lucide icons", () => {
-      const { rerender } = render(<Icon icon={Check} data-testid="check-icon" />);
+      const { rerender } = render(
+        <Icon icon={Check} data-testid="check-icon" />,
+      );
       expect(screen.getByTestId("check-icon")).toBeInTheDocument();
 
       rerender(<Icon icon={AlertCircle} data-testid="alert-icon" />);
@@ -102,7 +109,9 @@ describe("Icon", () => {
     });
 
     it("has aria-label when provided (meaningful icon)", () => {
-      render(<Icon icon={AlertCircle} aria-label="Warning" data-testid="icon" />);
+      render(
+        <Icon icon={AlertCircle} aria-label="Warning" data-testid="icon" />,
+      );
 
       const icon = screen.getByTestId("icon");
       expect(icon).toHaveAttribute("aria-label", "Warning");
@@ -129,14 +138,21 @@ describe("Icon", () => {
 
   describe("custom className", () => {
     it("applies custom className", () => {
-      render(<Icon icon={Check} className="text-success-9" data-testid="icon" />);
+      render(
+        <Icon icon={Check} className="text-success-9" data-testid="icon" />,
+      );
 
       expect(screen.getByTestId("icon")).toHaveClass("text-success-9");
     });
 
     it("merges custom className with size classes", () => {
       render(
-        <Icon icon={Check} size="lg" className="text-primary-9" data-testid="icon" />
+        <Icon
+          icon={Check}
+          size="lg"
+          className="text-primary-9"
+          data-testid="icon"
+        />,
       );
 
       const icon = screen.getByTestId("icon");
@@ -156,19 +172,29 @@ describe("Icon", () => {
 
   describe("semantic color usage", () => {
     it("works with success color", () => {
-      render(<Icon icon={Check} className="text-success-9" data-testid="icon" />);
+      render(
+        <Icon icon={Check} className="text-success-9" data-testid="icon" />,
+      );
 
       expect(screen.getByTestId("icon")).toHaveClass("text-success-9");
     });
 
     it("works with error color", () => {
-      render(<Icon icon={AlertCircle} className="text-error-9" data-testid="icon" />);
+      render(
+        <Icon icon={AlertCircle} className="text-error-9" data-testid="icon" />,
+      );
 
       expect(screen.getByTestId("icon")).toHaveClass("text-error-9");
     });
 
     it("works with warning color", () => {
-      render(<Icon icon={AlertCircle} className="text-warning-9" data-testid="icon" />);
+      render(
+        <Icon
+          icon={AlertCircle}
+          className="text-warning-9"
+          data-testid="icon"
+        />,
+      );
 
       expect(screen.getByTestId("icon")).toHaveClass("text-warning-9");
     });
@@ -180,7 +206,9 @@ describe("Icon", () => {
 
   describe("animation", () => {
     it("applies spin animation class when provided", () => {
-      render(<Icon icon={Loader2} className="animate-spin" data-testid="icon" />);
+      render(
+        <Icon icon={Loader2} className="animate-spin" data-testid="icon" />,
+      );
 
       expect(screen.getByTestId("icon")).toHaveClass("animate-spin");
     });

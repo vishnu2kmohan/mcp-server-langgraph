@@ -175,10 +175,7 @@ export function FileDropZone({
             {isDragging ? (
               <FileUp className="w-8 h-8 text-primary-9" aria-hidden="true" />
             ) : (
-              <Upload
-                className="w-8 h-8 text-neutral-9"
-                aria-hidden="true"
-              />
+              <Upload className="w-8 h-8 text-neutral-9" aria-hidden="true" />
             )}
           </div>
 
@@ -192,15 +189,14 @@ export function FileDropZone({
               className="px-4 py-2 text-sm text-primary-10 dark:text-primary-7 hover:text-primary-11 dark:hover:text-primary-5 focus:underline"
               type="button"
               onClick={handleBrowseClick}
-              disabled={disabled}>
+              disabled={disabled}
+            >
               Browse files
             </Button>
           )}
 
           {accept && (
-            <p className="mt-2 text-xs text-neutral-10">
-              Accepted: {accept}
-            </p>
+            <p className="mt-2 text-xs text-neutral-10">Accepted: {accept}</p>
           )}
         </>
       )}

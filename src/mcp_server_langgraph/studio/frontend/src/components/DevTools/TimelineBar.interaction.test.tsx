@@ -116,10 +116,7 @@ describe("TimelineBar - Interaction", () => {
     ];
 
     it("should open bookmark menu when clicked", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
 
@@ -127,10 +124,7 @@ describe("TimelineBar - Interaction", () => {
     });
 
     it("should show 'No bookmarks yet' when empty", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
 
@@ -138,10 +132,7 @@ describe("TimelineBar - Interaction", () => {
     });
 
     it("should display bookmark count in button", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       // Add a bookmark first
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
@@ -158,10 +149,7 @@ describe("TimelineBar - Interaction", () => {
     });
 
     it("should display bookmark items in menu", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       // Add a bookmark
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
@@ -179,10 +167,7 @@ describe("TimelineBar - Interaction", () => {
     it("should call onBookmarkRemove when bookmark is deleted", () => {
       const onBookmarkRemove = vi.fn();
       renderWithProvider(
-        <TimelineBar
-          showBookmarkButton
-          onBookmarkRemove={onBookmarkRemove}
-        />,
+        <TimelineBar showBookmarkButton onBookmarkRemove={onBookmarkRemove} />,
         { initialEvents },
       );
 
@@ -196,16 +181,15 @@ describe("TimelineBar - Interaction", () => {
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
 
       // Click remove button on bookmark
-      fireEvent.click(screen.getByRole("button", { name: /remove bookmark 1/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /remove bookmark 1/i }),
+      );
 
       expect(onBookmarkRemove).toHaveBeenCalledWith(expect.any(String));
     });
 
     it("should jump to bookmark when clicked", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       // Add a bookmark
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
@@ -217,17 +201,16 @@ describe("TimelineBar - Interaction", () => {
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
 
       // Click on bookmark to jump
-      fireEvent.click(screen.getByRole("button", { name: /jump to bookmark 1/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /jump to bookmark 1/i }),
+      );
 
       // Menu should close after jumping
       expect(screen.queryByTestId("bookmark-menu")).not.toBeInTheDocument();
     });
 
     it("should have proper ARIA attributes on bookmark button", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       const button = screen.getByRole("button", { name: /add bookmark/i });
       expect(button).toHaveAttribute("aria-haspopup", "menu");
@@ -274,10 +257,7 @@ describe("TimelineBar - Interaction", () => {
     });
 
     it("should render bookmark dropdown with motion wrapper", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       // Open bookmark menu
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));
@@ -288,20 +268,16 @@ describe("TimelineBar - Interaction", () => {
     });
 
     it("should render minimap when showMinimap is true and events exist", () => {
-      renderWithProvider(
-        <TimelineBar showMinimap showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showMinimap showBookmarkButton />, {
+        initialEvents,
+      });
 
       // Minimap should be rendered when showMinimap=true and events exist
       expect(screen.getByTestId("timeline-minimap")).toBeInTheDocument();
     });
 
     it("should animate bookmark items with stagger effect", () => {
-      renderWithProvider(
-        <TimelineBar showBookmarkButton />,
-        { initialEvents },
-      );
+      renderWithProvider(<TimelineBar showBookmarkButton />, { initialEvents });
 
       // Add two bookmarks
       fireEvent.click(screen.getByRole("button", { name: /add bookmark/i }));

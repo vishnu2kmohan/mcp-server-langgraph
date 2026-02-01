@@ -4,7 +4,7 @@
  * TDD tests for animation performance monitoring.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, cleanup, renderHook } from "@testing-library/react";
 
 import { useAnimationPerformance } from "./useAnimationPerformance";
 
@@ -31,6 +31,7 @@ describe("useAnimationPerformance", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 
@@ -90,7 +91,7 @@ describe("useAnimationPerformance", () => {
 
     it("should auto-start when enabled option is true", () => {
       const { result } = renderHook(() =>
-        useAnimationPerformance({ enabled: true })
+        useAnimationPerformance({ enabled: true }),
       );
 
       expect(result.current.isMonitoring).toBe(true);
@@ -104,13 +105,13 @@ describe("useAnimationPerformance", () => {
       expect(mockObserve).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "long-animation-frame",
-        })
+        }),
       );
     });
 
     it("should disconnect observer on unmount", () => {
       const { unmount } = renderHook(() =>
-        useAnimationPerformance({ enabled: true })
+        useAnimationPerformance({ enabled: true }),
       );
 
       unmount();
@@ -125,7 +126,7 @@ describe("useAnimationPerformance", () => {
         useAnimationPerformance({
           enabled: true,
           jankThresholdMs: 16.67, // 60fps threshold
-        })
+        }),
       );
 
       // Simulate a long frame
@@ -141,7 +142,7 @@ describe("useAnimationPerformance", () => {
           {
             getEntries: () => [mockEntry],
           } as unknown as PerformanceObserverEntryList,
-          observerInstance as unknown as PerformanceObserver
+          observerInstance as unknown as PerformanceObserver,
         );
       });
 
@@ -158,7 +159,7 @@ describe("useAnimationPerformance", () => {
           enabled: true,
           jankThresholdMs: 16.67,
           onJank,
-        })
+        }),
       );
 
       // The callback should be stored and ready to be called

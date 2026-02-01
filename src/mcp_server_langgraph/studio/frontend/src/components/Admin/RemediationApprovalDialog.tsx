@@ -255,7 +255,8 @@ export function RemediationApprovalDialog({
           <h2 className="text-lg font-semibold text-neutral-12">
             Approve Remediation
           </h2>
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg"
             data-testid="close-dialog"
@@ -312,9 +313,7 @@ export function RemediationApprovalDialog({
               </span>
             </div>
 
-            <p className="text-sm text-neutral-11">
-              {remediation.description}
-            </p>
+            <p className="text-sm text-neutral-11">{remediation.description}</p>
 
             {remediation.command && (
               <pre className="text-xs bg-neutral-2 p-2 rounded overflow-x-auto">
@@ -370,9 +369,7 @@ export function RemediationApprovalDialog({
           <div>
             <label className="block text-sm font-medium text-neutral-11 mb-2">
               Rejection Reason{" "}
-              <span className="text-neutral-10">
-                (required for rejection)
-              </span>
+              <span className="text-neutral-10">(required for rejection)</span>
             </label>
             <RadioGroup
               name="rejection-reason"
@@ -428,9 +425,7 @@ export function RemediationApprovalDialog({
               className="block text-sm font-medium text-neutral-11 mb-1"
             >
               Additional Notes{" "}
-              <span className="text-neutral-10">
-                (optional)
-              </span>
+              <span className="text-neutral-10">(optional)</span>
             </label>
             <Textarea
               className="px-3 py-2 text-sm text-neutral-12 placeholder-neutral-9 focus:ring-primary-7"
@@ -464,7 +459,10 @@ export function RemediationApprovalDialog({
             {isRejecting ? (
               <Loader2
                 data-testid="reject-loading"
-                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                className={cn(
+                  "w-4 h-4",
+                  !prefersReducedMotion && "animate-spin",
+                )}
               />
             ) : (
               <XCircle className="w-4 h-4" />
@@ -481,7 +479,10 @@ export function RemediationApprovalDialog({
             {isApproving ? (
               <Loader2
                 data-testid="approve-loading"
-                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                className={cn(
+                  "w-4 h-4",
+                  !prefersReducedMotion && "animate-spin",
+                )}
               />
             ) : (
               <CheckCircle className="w-4 h-4" />

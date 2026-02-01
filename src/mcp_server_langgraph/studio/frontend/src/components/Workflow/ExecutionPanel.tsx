@@ -99,9 +99,7 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-neutral-12">
-            Execution Logs
-          </h3>
+          <h3 className="font-semibold text-neutral-12">Execution Logs</h3>
           <span
             className={`
               text-xs px-2 py-0.5 rounded
@@ -132,12 +130,14 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
               variant="danger"
               size="sm"
               className="text-xs px-2 py-1 text-neutral-11 hover:text-neutral-12"
-              onClick={() => dispatch(clearExecutionLogs())}>
+              onClick={() => dispatch(clearExecutionLogs())}
+            >
               Clear
             </Button>
           )}
           {onClose && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1 hover:bg-neutral-2 rounded"
               onClick={onClose}
@@ -153,9 +153,7 @@ export function ExecutionPanel({ onClose, onStop }: ExecutionPanelProps) {
           data-testid="node-statuses"
           className="flex items-center gap-2 px-3 py-2 border-b border-neutral-5 overflow-x-auto"
         >
-          <span className="text-xs text-neutral-10 shrink-0">
-            Nodes:
-          </span>
+          <span className="text-xs text-neutral-10 shrink-0">Nodes:</span>
           {Object.entries(nodeStatuses).map(([nodeId, status]) => (
             <span
               key={nodeId}

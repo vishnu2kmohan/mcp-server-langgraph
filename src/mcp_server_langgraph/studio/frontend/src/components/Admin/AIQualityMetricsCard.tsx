@@ -184,9 +184,7 @@ export function AIQualityMetricsCard({
               )}
             </Button>
           )}
-          <span className="text-sm text-neutral-10">
-            {displayTimeframe}
-          </span>
+          <span className="text-sm text-neutral-10">{displayTimeframe}</span>
         </div>
       </div>
 
@@ -283,9 +281,7 @@ export function AIQualityMetricsCard({
                     align="right"
                     verticalAlign="middle"
                     formatter={(value: string) => (
-                      <span className="text-sm text-neutral-11">
-                        {value}
-                      </span>
+                      <span className="text-sm text-neutral-11">{value}</span>
                     )}
                   />
                 </PieChart>

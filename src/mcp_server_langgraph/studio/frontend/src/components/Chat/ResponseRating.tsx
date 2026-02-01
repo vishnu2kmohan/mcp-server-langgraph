@@ -64,7 +64,8 @@ export const feedbackButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: "text-primary-10 dark:text-primary-11 hover:bg-primary-1 dark:hover:bg-primary-a3",
+        default:
+          "text-primary-10 dark:text-primary-11 hover:bg-primary-1 dark:hover:bg-primary-a3",
         disabled: "text-neutral-7 cursor-not-allowed",
       },
     },
@@ -121,7 +122,10 @@ export function ResponseRating({
 
   const getButtonState = (rating: "up" | "down") => {
     if (isSubmitting) return "disabled" as const;
-    if (currentRating === rating) return rating === "up" ? "selected_up" as const : "selected_down" as const;
+    if (currentRating === rating)
+      return rating === "up"
+        ? ("selected_up" as const)
+        : ("selected_down" as const);
     return "default" as const;
   };
 
@@ -214,10 +218,7 @@ export function ResponseRating({
         {/* Loading indicator */}
         {isSubmitting && (
           <span data-testid="rating-loading" className="ml-1">
-            <Loader2
-              size={iconSize}
-              className="animate-spin text-neutral-9"
-            />
+            <Loader2 size={iconSize} className="animate-spin text-neutral-9" />
           </span>
         )}
 

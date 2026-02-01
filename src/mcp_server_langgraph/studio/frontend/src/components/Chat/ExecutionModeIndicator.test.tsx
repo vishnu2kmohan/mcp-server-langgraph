@@ -7,19 +7,35 @@
  * @see test-utils.tsx for MOTION_PROPS and filterMotionProps documentation
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ExecutionModeIndicator } from "./ExecutionModeIndicator";
 import type { ExecutionMode } from "@/store/slices/executionModeSlice";
 
 // Motion-specific props that should not be passed to DOM elements
 const MOTION_PROPS = new Set([
-  "whileHover", "whileTap", "whileFocus", "whileDrag", "whileInView",
-  "initial", "animate", "exit", "variants", "transition",
-  "layout", "layoutId", "drag", "dragConstraints", "dragElastic",
-  "dragMomentum", "onAnimationStart", "onAnimationComplete",
-  "onDragStart", "onDragEnd", "onDrag",
+  "whileHover",
+  "whileTap",
+  "whileFocus",
+  "whileDrag",
+  "whileInView",
+  "initial",
+  "animate",
+  "exit",
+  "variants",
+  "transition",
+  "layout",
+  "layoutId",
+  "drag",
+  "dragConstraints",
+  "dragElastic",
+  "dragMomentum",
+  "onAnimationStart",
+  "onAnimationComplete",
+  "onDragStart",
+  "onDragEnd",
+  "onDrag",
 ]);
 
 function filterMotionProps<T extends Record<string, unknown>>(props: T): T {
@@ -33,13 +49,23 @@ function filterMotionProps<T extends Record<string, unknown>>(props: T): T {
 // Mock motion/react to avoid animation issues in tests
 vi.mock("motion/react", () => ({
   motion: {
-    button: ({ children, ...props }: React.ComponentProps<"button"> & Record<string, unknown>) => (
+    button: ({
+      children,
+      ...props
+    }: React.ComponentProps<"button"> & Record<string, unknown>) => (
       <button {...filterMotionProps(props)}>{children}</button>
     ),
   },
   useReducedMotion: () => false,
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ExecutionModeIndicator", () => {
   const defaultProps = {
@@ -57,7 +83,9 @@ describe("ExecutionModeIndicator", () => {
     it("renders with default mode", () => {
       render(<ExecutionModeIndicator {...defaultProps} />);
 
-      expect(screen.getByTestId("execution-mode-indicator")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("execution-mode-indicator"),
+      ).toBeInTheDocument();
       expect(screen.getByText("Default")).toBeInTheDocument();
     });
 
@@ -231,7 +259,9 @@ describe("ExecutionModeIndicator", () => {
       );
 
       // Should display "(Admin)" indicator or special styling
-      expect(screen.getByTestId("execution-mode-indicator")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("execution-mode-indicator"),
+      ).toBeInTheDocument();
     });
 
     it("does not show bypass mode for non-admin", () => {
@@ -246,7 +276,9 @@ describe("ExecutionModeIndicator", () => {
       );
 
       // Should still render but may show warning or fallback
-      expect(screen.getByTestId("execution-mode-indicator")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("execution-mode-indicator"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -272,7 +304,10 @@ describe("ExecutionModeIndicator", () => {
       render(<ExecutionModeIndicator {...defaultProps} mode="auto_accept" />);
 
       const button = screen.getByTestId("execution-mode-indicator");
-      expect(button).toHaveAttribute("title", "Accept suggestions automatically");
+      expect(button).toHaveAttribute(
+        "title",
+        "Accept suggestions automatically",
+      );
     });
 
     it("displays correct tooltip for bypass mode", () => {

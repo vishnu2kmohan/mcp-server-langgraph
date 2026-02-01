@@ -550,9 +550,21 @@ describe("MessageList", () => {
         content: "Sorted sources.",
         timestamp: "2024-01-01T12:00:00Z",
         sources: [
-          { title: "Low Relevance", url: "https://low.com", relevance_score: 0.3 },
-          { title: "High Relevance", url: "https://high.com", relevance_score: 0.95 },
-          { title: "Medium Relevance", url: "https://medium.com", relevance_score: 0.6 },
+          {
+            title: "Low Relevance",
+            url: "https://low.com",
+            relevance_score: 0.3,
+          },
+          {
+            title: "High Relevance",
+            url: "https://high.com",
+            relevance_score: 0.95,
+          },
+          {
+            title: "Medium Relevance",
+            url: "https://medium.com",
+            relevance_score: 0.6,
+          },
         ],
       };
 
@@ -649,14 +661,29 @@ describe("MessageList", () => {
         content: "Deduped and sorted.",
         timestamp: "2024-01-01T12:00:00Z",
         sources: [
-          { title: "Low Score", url: "https://example.com/low", relevance_score: 0.2 },
-          { title: "High Score", url: "https://example.com/high", relevance_score: 0.9 },
-          { title: "Other High", url: "https://other.com/page", relevance_score: 0.85 },
+          {
+            title: "Low Score",
+            url: "https://example.com/low",
+            relevance_score: 0.2,
+          },
+          {
+            title: "High Score",
+            url: "https://example.com/high",
+            relevance_score: 0.9,
+          },
+          {
+            title: "Other High",
+            url: "https://other.com/page",
+            relevance_score: 0.85,
+          },
         ],
       };
 
       render(
-        <MessageList messages={[messageWithDupesAndRelevance]} enableRichContent />,
+        <MessageList
+          messages={[messageWithDupesAndRelevance]}
+          enableRichContent
+        />,
       );
 
       // Deduplication keeps first per domain: example.com/low (0.2), other.com/page (0.85)

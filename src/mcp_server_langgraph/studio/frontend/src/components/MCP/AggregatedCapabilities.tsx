@@ -71,7 +71,8 @@ function TabButton({
         active
           ? "bg-neutral-1 text-brand-primary border-b-2 border-brand-primary"
           : "text-neutral-11 hover:text-neutral-12",
-      )}>
+      )}
+    >
       {label}
     </Button>
   );
@@ -184,7 +185,8 @@ export function AggregatedCapabilitiesPanel({
               "px-4 py-2 text-sm font-medium rounded-md",
               "bg-brand-primary text-neutral-12",
               "hover:bg-brand-primary/90",
-            )}>
+            )}
+          >
             Retry
           </Button>
         </div>
@@ -211,21 +213,13 @@ export function AggregatedCapabilitiesPanel({
             {/* Stats summary */}
             <div className="flex items-center gap-3 text-sm text-neutral-11">
               <span>{totalServers} servers</span>
-              <span className="text-neutral-9">
-                |
-              </span>
+              <span className="text-neutral-9">|</span>
               <span>{totalTools} tools</span>
-              <span className="text-neutral-9">
-                |
-              </span>
+              <span className="text-neutral-9">|</span>
               <span>{totalResources} resources</span>
-              <span className="text-neutral-9">
-                |
-              </span>
+              <span className="text-neutral-9">|</span>
               <span>{totalPrompts} prompts</span>
-              <span className="text-neutral-9">
-                |
-              </span>
+              <span className="text-neutral-9">|</span>
               {/* Real-time sync indicator */}
               <span
                 className="flex items-center gap-1"
@@ -236,8 +230,7 @@ export function AggregatedCapabilitiesPanel({
                     "w-2 h-2 rounded-full",
                     wsStatus === "connected" && "bg-success-9",
                     wsStatus === "connecting" && "bg-warning-9 animate-pulse",
-                    wsStatus === "reconnecting" &&
-                      "bg-warning-9 animate-pulse",
+                    wsStatus === "reconnecting" && "bg-warning-9 animate-pulse",
                     wsStatus === "disconnected" && "bg-neutral-4",
                     wsStatus === "error" && "bg-error-9",
                   )}
@@ -250,7 +243,8 @@ export function AggregatedCapabilitiesPanel({
           </div>
           {/* Admin actions */}
           {showAdminActions && (
-            <Button variant="primary"
+            <Button
+              variant="primary"
               type="button"
               onClick={handleRefreshAll}
               className={cn(
@@ -259,7 +253,9 @@ export function AggregatedCapabilitiesPanel({
                 "hover:bg-neutral-3",
                 "focus:outline-none focus:ring-2 focus:ring-brand-primary",
               )}
-            >Refresh All</Button>
+            >
+              Refresh All
+            </Button>
           )}
         </div>
       </CardHeader>
@@ -269,18 +265,18 @@ export function AggregatedCapabilitiesPanel({
           <span className="text-sm text-primary-11 dark:text-primary-5">
             Filtered by server: <strong>{serverFilter}</strong>
           </span>
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             className="text-sm text-primary-10 dark:text-primary-7 hover:underline"
             type="button"
             onClick={handleClearFilter}
-          >Clear filter</Button>
+          >
+            Clear filter
+          </Button>
         </div>
       )}
       {/* Tabs */}
-      <div
-        className="border-b border-neutral-5 px-4"
-        role="tablist"
-      >
+      <div className="border-b border-neutral-5 px-4" role="tablist">
         <div className="flex gap-2">
           <TabButton
             id="tools"

@@ -84,21 +84,13 @@ function MetricCard({
   return (
     <div className="bg-neutral-1 rounded-lg border border-neutral-5 p-4">
       <div className="flex items-center gap-2">
-        {icon && (
-          <div className="text-neutral-9">{icon}</div>
-        )}
-        <span className="text-sm text-neutral-10">
-          {label}
-        </span>
+        {icon && <div className="text-neutral-9">{icon}</div>}
+        <span className="text-sm text-neutral-10">{label}</span>
       </div>
       <div className="mt-2">
-        <span className="text-2xl font-semibold text-neutral-12">
-          {value}
-        </span>
+        <span className="text-2xl font-semibold text-neutral-12">{value}</span>
         {subValue && (
-          <span className="ml-2 text-sm text-neutral-10">
-            {subValue}
-          </span>
+          <span className="ml-2 text-sm text-neutral-10">{subValue}</span>
         )}
       </div>
     </div>
@@ -133,12 +125,8 @@ function FailureBreakdown({
             key={reason}
             className="flex items-center justify-between text-sm"
           >
-            <span className="text-neutral-11">
-              {reason}
-            </span>
-            <span className="font-medium text-neutral-12">
-              {count}
-            </span>
+            <span className="text-neutral-11">{reason}</span>
+            <span className="font-medium text-neutral-12">{count}</span>
           </div>
         ))}
       </div>
@@ -191,9 +179,7 @@ function EndpointTable({ endpoints }: EndpointTableProps): React.ReactElement {
               key={name}
               className="border-b border-neutral-5 hover:bg-neutral-1"
             >
-              <td className="py-2 px-3 font-mono text-neutral-12">
-                {name}
-              </td>
+              <td className="py-2 px-3 font-mono text-neutral-12">{name}</td>
               <td className="py-2 px-3 text-right text-neutral-11">
                 {metrics.totalAttempts}
               </td>
@@ -248,10 +234,7 @@ export function WebSocketMetricsPanel({
   return (
     <div
       data-testid="ws-metrics-panel"
-      className={cn(
-        "flex flex-col h-full bg-neutral-1",
-        className,
-      )}
+      className={cn("flex flex-col h-full bg-neutral-1", className)}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5 bg-neutral-1">
@@ -296,9 +279,7 @@ export function WebSocketMetricsPanel({
                 d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
               />
             </svg>
-            <p className="text-neutral-10">
-              No WebSocket connections
-            </p>
+            <p className="text-neutral-10">No WebSocket connections</p>
             <p className="text-sm text-neutral-9 mt-1">
               Metrics will appear when WebSocket hooks report data
             </p>

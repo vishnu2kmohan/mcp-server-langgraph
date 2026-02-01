@@ -30,9 +30,8 @@ vi.mock("../api", () => ({
 
 import { useGetNativeCapabilitiesQuery } from "../api";
 
-const mockUseGetNativeCapabilitiesQuery = useGetNativeCapabilitiesQuery as ReturnType<
-  typeof vi.fn
->;
+const mockUseGetNativeCapabilitiesQuery =
+  useGetNativeCapabilitiesQuery as ReturnType<typeof vi.fn>;
 
 // Sample capability data for tests
 const mockAnthropicCapabilities: NativeToolCapabilityCamelCase[] = [
@@ -120,7 +119,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isLoading).toBe(true);
@@ -144,7 +143,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isLoading).toBe(false);
@@ -174,7 +173,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.capabilities).toHaveLength(2);
@@ -199,7 +198,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "gemini-2.0-flash" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.nativeProvider).toBe("google");
@@ -218,13 +217,17 @@ describe("useNativeCapabilities", () => {
       });
 
       renderHook(
-        () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514", skip: true }),
-        { wrapper: createWrapper() }
+        () =>
+          useNativeCapabilities({
+            modelId: "claude-sonnet-4-20250514",
+            skip: true,
+          }),
+        { wrapper: createWrapper() },
       );
 
       expect(mockUseGetNativeCapabilitiesQuery).toHaveBeenCalledWith(
         { modelId: "claude-sonnet-4-20250514" },
-        { skip: true }
+        { skip: true },
       );
     });
 
@@ -244,7 +247,7 @@ describe("useNativeCapabilities", () => {
 
       expect(mockUseGetNativeCapabilitiesQuery).toHaveBeenCalledWith(
         { modelId: "" },
-        { skip: true }
+        { skip: true },
       );
     });
   });
@@ -271,7 +274,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.supportsWebSearch).toBe(true);
@@ -294,7 +297,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.supportsCodeExecution).toBe(true);
@@ -317,7 +320,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "gemini-2.0-flash" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.supportsCodeExecution).toBe(false);
@@ -340,7 +343,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.hasNativeTools).toBe(true);
@@ -363,7 +366,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.hasNativeTools).toBe(false);
@@ -386,7 +389,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       // Supported but NOT enabled
@@ -418,7 +421,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isToolAvailable("web_search")).toBe(true);
@@ -442,7 +445,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "gemini-2.0-flash" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isToolAvailable("code_execution")).toBe(false);
@@ -465,7 +468,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isToolAvailable("unknown_tool")).toBe(false);
@@ -488,7 +491,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isToolAvailable("web_search")).toBe(false);
@@ -517,7 +520,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       const cap = result.current.getCapability("web_search");
@@ -542,7 +545,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       const cap = result.current.getCapability("unknown_tool");
@@ -567,7 +570,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isError).toBe(true);
@@ -586,7 +589,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.capabilities).toEqual([]);
@@ -618,7 +621,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "claude-sonnet-4-20250514" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.refetch).toBe(mockRefetch);
@@ -647,7 +650,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "gpt-4" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.nativeProvider).toBeNull();
@@ -674,7 +677,7 @@ describe("useNativeCapabilities", () => {
 
       const { result } = renderHook(
         () => useNativeCapabilities({ modelId: "unknown-model-xyz" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       expect(result.current.isLoading).toBe(false);

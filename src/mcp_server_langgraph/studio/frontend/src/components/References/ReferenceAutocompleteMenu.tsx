@@ -7,10 +7,17 @@
  * WCAG 2.2 AA compliant with proper listbox pattern.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
-import { Wrench, Sparkles, FileCode, Brain, List, ChevronRight } from 'lucide-react';
-import type { ReferenceSuggestion } from '@/hooks/useReferenceAutocomplete';
-import { cn } from '@/utils/cn';
+import { useCallback, useEffect, useRef } from "react";
+import {
+  Wrench,
+  Sparkles,
+  FileCode,
+  Brain,
+  List,
+  ChevronRight,
+} from "lucide-react";
+import type { ReferenceSuggestion } from "@/hooks/useReferenceAutocomplete";
+import { cn } from "@/utils/cn";
 
 export interface ReferenceAutocompleteMenuProps {
   /** Whether the menu is open */
@@ -41,12 +48,12 @@ const TYPE_ICONS: Record<string, typeof Wrench> = {
 
 // Color mapping for reference types (Radix design tokens)
 const TYPE_COLORS: Record<string, string> = {
-  tool: 'text-primary-9',
-  skill: 'text-success-9',
-  artifact: 'text-neutral-9',
-  memory: 'text-info-9',
-  plan: 'text-warning-9',
-  type: 'text-neutral-11',
+  tool: "text-primary-9",
+  skill: "text-success-9",
+  artifact: "text-neutral-9",
+  memory: "text-info-9",
+  plan: "text-warning-9",
+  type: "text-neutral-11",
 };
 
 /**
@@ -66,10 +73,14 @@ export function ReferenceAutocompleteMenu({
 
   // Scroll selected item into view
   useEffect(() => {
-    if (selectedRef.current && menuRef.current && selectedRef.current.scrollIntoView) {
+    if (
+      selectedRef.current &&
+      menuRef.current &&
+      selectedRef.current.scrollIntoView
+    ) {
       selectedRef.current.scrollIntoView({
-        block: 'nearest',
-        behavior: 'smooth',
+        block: "nearest",
+        behavior: "smooth",
       });
     }
   }, [selectedIndex]);
@@ -78,28 +89,30 @@ export function ReferenceAutocompleteMenu({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
-          onSelectedIndexChange(Math.min(selectedIndex + 1, suggestions.length - 1));
+          onSelectedIndexChange(
+            Math.min(selectedIndex + 1, suggestions.length - 1),
+          );
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           onSelectedIndexChange(Math.max(selectedIndex - 1, 0));
           break;
-        case 'Enter':
+        case "Enter":
           e.preventDefault();
           if (suggestions[selectedIndex]) {
             onSelect(suggestions[selectedIndex]);
           }
           break;
-        case 'Escape':
-        case 'Tab':
+        case "Escape":
+        case "Tab":
           e.preventDefault();
           onClose();
           break;
       }
     },
-    [selectedIndex, suggestions, onSelectedIndexChange, onSelect, onClose]
+    [selectedIndex, suggestions, onSelectedIndexChange, onSelect, onClose],
   );
 
   // Handle suggestion click
@@ -107,7 +120,7 @@ export function ReferenceAutocompleteMenu({
     (suggestion: ReferenceSuggestion) => {
       onSelect(suggestion);
     },
-    [onSelect]
+    [onSelect],
   );
 
   if (!isOpen || suggestions.length === 0) {
@@ -123,10 +136,10 @@ export function ReferenceAutocompleteMenu({
       tabIndex={0}
       onKeyDown={handleKeyDown}
       className={cn(
-        'absolute bottom-full left-0 mb-2 w-72',
-        'bg-neutral-1 border border-neutral-6 rounded-lg shadow-lg',
-        'max-h-64 overflow-y-auto z-dropdown',
-        className
+        "absolute bottom-full left-0 mb-2 w-72",
+        "bg-neutral-1 border border-neutral-6 rounded-lg shadow-lg",
+        "max-h-64 overflow-y-auto z-dropdown",
+        className,
       )}
     >
       {/* Header */}
@@ -140,7 +153,7 @@ export function ReferenceAutocompleteMenu({
       <ul className="py-1">
         {suggestions.map((suggestion, index) => {
           const Icon = TYPE_ICONS[suggestion.type] || ChevronRight;
-          const iconColor = TYPE_COLORS[suggestion.type] || 'text-neutral-9';
+          const iconColor = TYPE_COLORS[suggestion.type] || "text-neutral-9";
           const isSelected = index === selectedIndex;
 
           return (
@@ -152,15 +165,15 @@ export function ReferenceAutocompleteMenu({
               aria-selected={isSelected}
               onClick={() => handleSuggestionClick(suggestion)}
               className={cn(
-                'px-3 py-2 cursor-pointer flex items-center gap-3',
+                "px-3 py-2 cursor-pointer flex items-center gap-3",
                 isSelected
-                  ? 'bg-primary-3 text-primary-12'
-                  : 'hover:bg-neutral-2 text-neutral-12'
+                  ? "bg-primary-3 text-primary-12"
+                  : "hover:bg-neutral-2 text-neutral-12",
               )}
             >
               <Icon
                 size={16}
-                className={cn(iconColor, isSelected && 'text-primary-11')}
+                className={cn(iconColor, isSelected && "text-primary-11")}
                 aria-hidden
               />
               <div className="flex-1 min-w-0">
@@ -173,7 +186,7 @@ export function ReferenceAutocompleteMenu({
                   </div>
                 )}
               </div>
-              {suggestion.type === 'type' && (
+              {suggestion.type === "type" && (
                 <ChevronRight
                   size={14}
                   className="text-neutral-9"
@@ -188,12 +201,18 @@ export function ReferenceAutocompleteMenu({
       {/* Footer hint */}
       <div className="px-3 py-2 border-t border-neutral-6 bg-neutral-2">
         <span className="text-xs text-neutral-10">
-          <kbd className="px-1 py-0.5 bg-neutral-3 rounded text-neutral-11">↑↓</kbd>
-          {' '}navigate{' '}
-          <kbd className="px-1 py-0.5 bg-neutral-3 rounded text-neutral-11">↵</kbd>
-          {' '}select{' '}
-          <kbd className="px-1 py-0.5 bg-neutral-3 rounded text-neutral-11">esc</kbd>
-          {' '}close
+          <kbd className="px-1 py-0.5 bg-neutral-3 rounded text-neutral-11">
+            ↑↓
+          </kbd>{" "}
+          navigate{" "}
+          <kbd className="px-1 py-0.5 bg-neutral-3 rounded text-neutral-11">
+            ↵
+          </kbd>{" "}
+          select{" "}
+          <kbd className="px-1 py-0.5 bg-neutral-3 rounded text-neutral-11">
+            esc
+          </kbd>{" "}
+          close
         </span>
       </div>
     </div>

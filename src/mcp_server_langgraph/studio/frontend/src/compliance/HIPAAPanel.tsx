@@ -60,12 +60,7 @@ function getStatusIcon(status: ControlStatus) {
     case "non-compliant":
       return <XCircle size={14} className="text-error-9" />;
     default:
-      return (
-        <AlertCircle
-          size={14}
-          className="text-neutral-9"
-        />
-      );
+      return <AlertCircle size={14} className="text-neutral-9" />;
   }
 }
 
@@ -126,7 +121,10 @@ export function HIPAAPanel({
         )}
       >
         <div className="flex items-center gap-2 text-neutral-10">
-          <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
+          <Loader2
+            size={16}
+            className={cn(!prefersReducedMotion && "animate-spin")}
+          />
           <span>Loading HIPAA controls...</span>
         </div>
       </div>
@@ -146,9 +144,7 @@ export function HIPAAPanel({
       <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
           <HeartPulse size={18} className="text-error-9" />
-          <h3 className="font-semibold text-neutral-12">
-            HIPAA
-          </h3>
+          <h3 className="font-semibold text-neutral-12">HIPAA</h3>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-2xl font-bold text-neutral-12">
@@ -206,9 +202,7 @@ export function HIPAAPanel({
                       {control.status}
                     </span>
                   </div>
-                  <p className="text-xs text-neutral-10 mt-1">
-                    {control.id}
-                  </p>
+                  <p className="text-xs text-neutral-10 mt-1">{control.id}</p>
                   {control.phiAccessCount !== undefined && (
                     <div className="flex items-center gap-1 mt-2 text-xs text-primary-10 dark:text-primary-7">
                       <Eye size={12} />

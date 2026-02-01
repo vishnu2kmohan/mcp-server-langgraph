@@ -387,7 +387,7 @@ function MarkdownContentImpl({
         ...props
       }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
         // Handle markdown references (ref://type/qualifier:id)
-        if (href?.startsWith('ref://')) {
+        if (href?.startsWith("ref://")) {
           // Parse ref:// URL: ref://type/qualifier:id
           // Examples:
           //   ref://tool/filesystem:read_file -> type=tool, qualifier=filesystem, id=read_file
@@ -401,8 +401,8 @@ function MarkdownContentImpl({
             // For tools, split qualifier:id; for others, use id as both
             let qualifier: string;
             let id: string;
-            if (type === 'tool' && refId.includes(':')) {
-              const colonIndex = refId.indexOf(':');
+            if (type === "tool" && refId.includes(":")) {
+              const colonIndex = refId.indexOf(":");
               qualifier = refId.slice(0, colonIndex);
               id = refId.slice(colonIndex + 1);
             } else {
@@ -523,19 +523,13 @@ function MarkdownContentImpl({
         children,
         ...props
       }: React.TdHTMLAttributes<HTMLTableDataCellElement>) => (
-        <td
-          className="border border-neutral-5 px-3 py-2"
-          {...props}
-        >
+        <td className="border border-neutral-5 px-3 py-2" {...props}>
           {children}
         </td>
       ),
       // Horizontal rule
       hr: (props: React.HTMLAttributes<HTMLHRElement>) => (
-        <hr
-          className="my-4 border-neutral-5"
-          {...props}
-        />
+        <hr className="my-4 border-neutral-5" {...props} />
       ),
     }),
     [enableInteractiveArtifacts, isStreaming],

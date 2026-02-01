@@ -9,7 +9,10 @@
 // =============================================================================
 
 export { HumanTimestamp } from "./HumanTimestamp";
-export type { HumanTimestampProps, HumanTimestampFormat } from "./HumanTimestamp";
+export type {
+  HumanTimestampProps,
+  HumanTimestampFormat,
+} from "./HumanTimestamp";
 
 export { OTELStatusBadge, otelStatusBadgeVariants } from "./OTELStatusBadge";
 export type { OTELStatusBadgeProps, OTELStatusType } from "./OTELStatusBadge";

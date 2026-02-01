@@ -380,7 +380,9 @@ describe("WorkflowsPage - Features", () => {
       // Toggle off
       fireEvent.click(suggestButton);
       await waitFor(() => {
-        expect(screen.queryByTestId("suggestion-chips")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("suggestion-chips"),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -779,7 +781,9 @@ describe("WorkflowsPage - Features", () => {
       fireEvent.click(historyButton);
 
       await waitFor(() => {
-        expect(screen.getByTestId("execution-history-panel")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("execution-history-panel"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -803,7 +807,9 @@ describe("WorkflowsPage - Features", () => {
       // Toggle on
       fireEvent.click(historyButton);
       await waitFor(() => {
-        expect(screen.getByTestId("execution-history-panel")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("execution-history-panel"),
+        ).toBeInTheDocument();
       });
 
       // Toggle off

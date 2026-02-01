@@ -10,10 +10,15 @@
  * - Focus-visible rings for keyboard navigation
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RemoveMarketplaceDialog } from "./RemoveMarketplaceDialog";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("RemoveMarketplaceDialog", () => {
   const defaultProps = {

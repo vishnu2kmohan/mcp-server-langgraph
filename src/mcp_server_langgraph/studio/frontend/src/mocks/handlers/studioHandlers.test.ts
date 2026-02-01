@@ -617,31 +617,30 @@ describe("createStudioAnalyzeResponse", () => {
     expect(response.total_cost).toBeDefined();
   });
 
-describe("API Contract Transformation", () => {
-  it("should return studio analysis in snake_case and transform to camelCase", async () => {
-    const response = await fetch("/api/v1/studio/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: "test-user",
-        tasks: [{ category: "session", type: "session_summarize" }],
-      }),
+  describe("API Contract Transformation", () => {
+    it("should return studio analysis in snake_case and transform to camelCase", async () => {
+      const response = await fetch("/api/v1/studio/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "test-user",
+          tasks: [{ category: "session", type: "session_summarize" }],
+        }),
+      });
+      const rawData = await response.json();
+
+      // Verify snake_case in raw response
+      expect(rawData).toHaveProperty("user_id");
+      expect(rawData).toHaveProperty("cross_insights");
+      expect(rawData).toHaveProperty("failed_analyses");
+      expect(rawData).toHaveProperty("total_cost");
+
+      // Verify transformation works
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toHaveProperty("userId");
+      expect(transformedData).toHaveProperty("crossInsights");
+      expect(transformedData).toHaveProperty("failedAnalyses");
+      expect(transformedData).toHaveProperty("totalCost");
     });
-    const rawData = await response.json();
-
-    // Verify snake_case in raw response
-    expect(rawData).toHaveProperty("user_id");
-    expect(rawData).toHaveProperty("cross_insights");
-    expect(rawData).toHaveProperty("failed_analyses");
-    expect(rawData).toHaveProperty("total_cost");
-
-    // Verify transformation works
-    const transformedData = transformSnakeToCamel(rawData);
-    expect(transformedData).toHaveProperty("userId");
-    expect(transformedData).toHaveProperty("crossInsights");
-    expect(transformedData).toHaveProperty("failedAnalyses");
-    expect(transformedData).toHaveProperty("totalCost");
   });
-});
-
 });

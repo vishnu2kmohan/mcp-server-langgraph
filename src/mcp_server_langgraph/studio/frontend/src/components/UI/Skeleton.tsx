@@ -104,7 +104,11 @@ export function SkeletonText({
   const lineWidths = ["w-full", "w-5/6", "w-3/4", "w-4/5", "w-2/3"];
 
   return (
-    <div className={cn("space-y-2", className)} aria-hidden={ariaHidden} {...props}>
+    <div
+      className={cn("space-y-2", className)}
+      aria-hidden={ariaHidden}
+      {...props}
+    >
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
@@ -135,7 +139,11 @@ export function SkeletonList({
   ...props
 }: SkeletonListProps) {
   return (
-    <div className={cn("space-y-3", className)} aria-hidden={ariaHidden} {...props}>
+    <div
+      className={cn("space-y-3", className)}
+      aria-hidden={ariaHidden}
+      {...props}
+    >
       {Array.from({ length: items }).map((_, i) => (
         <div
           key={i}

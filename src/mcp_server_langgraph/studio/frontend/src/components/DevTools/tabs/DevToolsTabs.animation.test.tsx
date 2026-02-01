@@ -50,35 +50,31 @@ describe("Animation Variants Design System", () => {
   });
 
   it("should export shimmerVariants from micro-interactions", async () => {
-    const { shimmerVariants } = await import(
-      "../../../design-system/micro-interactions"
-    );
+    const { shimmerVariants } =
+      await import("../../../design-system/micro-interactions");
     expect(shimmerVariants).toBeDefined();
     expect(shimmerVariants.shimmer).toBeDefined();
   });
 
   it("should export accordionVariants from micro-interactions", async () => {
-    const { accordionVariants } = await import(
-      "../../../design-system/micro-interactions"
-    );
+    const { accordionVariants } =
+      await import("../../../design-system/micro-interactions");
     expect(accordionVariants).toBeDefined();
     expect(accordionVariants.collapsed).toBeDefined();
     expect(accordionVariants.expanded).toBeDefined();
   });
 
   it("should export cardHoverVariants from micro-interactions", async () => {
-    const { cardHoverVariants } = await import(
-      "../../../design-system/micro-interactions"
-    );
+    const { cardHoverVariants } =
+      await import("../../../design-system/micro-interactions");
     expect(cardHoverVariants).toBeDefined();
     expect(cardHoverVariants.rest).toBeDefined();
     expect(cardHoverVariants.hover).toBeDefined();
   });
 
   it("should export list variants from micro-interactions", async () => {
-    const { listContainerVariants, listItemVariants } = await import(
-      "../../../design-system/micro-interactions"
-    );
+    const { listContainerVariants, listItemVariants } =
+      await import("../../../design-system/micro-interactions");
     expect(listContainerVariants).toBeDefined();
     expect(listItemVariants).toBeDefined();
   });
@@ -276,9 +272,8 @@ describe("NetworkTab Animation Integration", () => {
 
 describe("Shimmer Animation Configuration", () => {
   it("should have shimmerVariants with proper animation configuration", async () => {
-    const { shimmerVariants } = await import(
-      "../../../design-system/micro-interactions"
-    );
+    const { shimmerVariants } =
+      await import("../../../design-system/micro-interactions");
 
     // Verify shimmer animation has backgroundPosition keyframes
     expect(shimmerVariants.shimmer).toBeDefined();
@@ -286,9 +281,8 @@ describe("Shimmer Animation Configuration", () => {
   });
 
   it("should have accordionVariants with height transitions", async () => {
-    const { accordionVariants } = await import(
-      "../../../design-system/micro-interactions"
-    );
+    const { accordionVariants } =
+      await import("../../../design-system/micro-interactions");
 
     // Verify accordion variants have height property
     expect(accordionVariants.collapsed.height).toBe(0);
@@ -301,10 +295,12 @@ describe("Shimmer Animation Configuration", () => {
 // =============================================================================
 
 // Mock Redux store
+// lang-graph: langGraphSlice uses currentSessionId (string), sessionSlice uses currentSession (object)
 vi.mock("../../../store/hooks", () => ({
   useAppSelector: (selector: (state: unknown) => unknown) =>
     selector({
-      session: { currentSessionId: "test-session" },
+      session: { currentSession: null },
+      langGraph: { currentSessionId: "test-session" },
       canvas: { nodes: [] },
     }),
 }));

@@ -86,10 +86,10 @@ export interface CanvasState {
 const CANVAS_STORAGE_KEY = "canvas-state";
 
 const defaultPanelSizes: CanvasPanelSizes = {
-  sessionNav: 10,      // 10% - minimal session list (expands on hover)
-  conversation: 40,    // 40% - primary focus for chat (dominant in 2-panel: 90%)
-  canvas: 50,          // 50% - larger for artifacts/code
-};  // Total: 100%
+  sessionNav: 10, // 10% - minimal session list (expands on hover)
+  conversation: 40, // 40% - primary focus for chat (dominant in 2-panel: 90%)
+  canvas: 50, // 50% - larger for artifacts/code
+}; // Total: 100%
 
 const defaultPreferences: CanvasPreferences = {
   showTimestamps: true,
@@ -266,7 +266,8 @@ const canvasSlice = createSlice({
       // If the removed artifact was selected, clear selection
       if (state.selectedArtifactId === action.payload) {
         // Select the next available artifact or null
-        const newSelected = state.tabOrder.length > 0 ? state.tabOrder[0] : null;
+        const newSelected =
+          state.tabOrder.length > 0 ? state.tabOrder[0] : null;
         state.selectedArtifactId = newSelected;
       }
     },
@@ -355,8 +356,7 @@ export const selectHasCustomLayout = (state: StateWithCanvas) =>
   state.canvas.hasCustomLayout;
 export const selectMaximizedPanelId = (state: StateWithCanvas) =>
   state.canvas.maximizedPanelId;
-export const selectTabOrder = (state: StateWithCanvas) =>
-  state.canvas.tabOrder;
+export const selectTabOrder = (state: StateWithCanvas) => state.canvas.tabOrder;
 
 // =============================================================================
 // Exports

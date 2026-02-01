@@ -5,17 +5,20 @@
  * Showcases all reference types, statuses, and accessibility features.
  */
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { createContext, useContext, type ReactNode } from 'react';
-import { ReferenceChip } from './ReferenceChip';
-import type { ResolvedReference, ReferenceResolverContextValue } from '@/types/references';
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { createContext, useContext, type ReactNode } from "react";
+import { ReferenceChip } from "./ReferenceChip";
+import type {
+  ResolvedReference,
+  ReferenceResolverContextValue,
+} from "@/types/references";
 
 /**
  * Create a mock context value for Storybook.
  */
 const createMockContextValue = (
   refs: ResolvedReference[],
-  isLoading = false
+  isLoading = false,
 ): ReferenceResolverContextValue => {
   const resolvedRefs = new Map<string, ResolvedReference>();
   refs.forEach((ref) => {
@@ -34,18 +37,20 @@ const createMockContextValue = (
 /**
  * Mock context for Storybook (bypasses RTK Query).
  */
-const MockReferenceResolverContext = createContext<ReferenceResolverContextValue>({
-  resolvedRefs: new Map(),
-  isLoading: false,
-  error: undefined,
-  resolve: async () => {},
-});
+const MockReferenceResolverContext =
+  createContext<ReferenceResolverContextValue>({
+    resolvedRefs: new Map(),
+    isLoading: false,
+    error: undefined,
+    resolve: async () => {},
+  });
 
 /**
  * Mock hook for stories.
  */
 // eslint-disable-next-line storybook/prefer-pascal-case -- Hook naming convention
-export const useReferenceResolver = () => useContext(MockReferenceResolverContext);
+export const useReferenceResolver = () =>
+  useContext(MockReferenceResolverContext);
 
 /**
  * Mock provider for Storybook.
@@ -61,35 +66,35 @@ const createMockProvider = (refs: ResolvedReference[], isLoading = false) => {
 };
 
 const meta: Meta<typeof ReferenceChip> = {
-  title: 'References/ReferenceChip',
+  title: "References/ReferenceChip",
   component: ReferenceChip,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   parameters: {
-    layout: 'centered',
+    layout: "centered",
     docs: {
       description: {
         component:
-          'Inline chip component for [[type:qualifier:id]] markdown references. Displays type-specific icons and colors, resolves via context, and shows tooltips on hover.',
+          "Inline chip component for [[type:qualifier:id]] markdown references. Displays type-specific icons and colors, resolves via context, and shows tooltips on hover.",
       },
     },
   },
   argTypes: {
     type: {
-      control: 'select',
-      options: ['tool', 'skill', 'artifact', 'memory', 'plan'],
-      description: 'Reference type determines icon and color',
+      control: "select",
+      options: ["tool", "skill", "artifact", "memory", "plan"],
+      description: "Reference type determines icon and color",
     },
     qualifier: {
-      control: 'text',
-      description: 'Server name for tools, or identifier for other types',
+      control: "text",
+      description: "Server name for tools, or identifier for other types",
     },
     id: {
-      control: 'text',
-      description: 'Tool name, skill name, artifact ID, etc.',
+      control: "text",
+      description: "Tool name, skill name, artifact ID, etc.",
     },
     label: {
-      control: 'text',
-      description: 'Optional custom display label',
+      control: "text",
+      description: "Optional custom display label",
     },
   },
 };
@@ -103,21 +108,22 @@ type Story = StoryObj<typeof ReferenceChip>;
 
 export const ToolReference: Story = {
   args: {
-    type: 'tool',
-    qualifier: 'filesystem',
-    id: 'read_file',
+    type: "tool",
+    qualifier: "filesystem",
+    id: "read_file",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'tool',
-          qualifier: 'filesystem',
-          id: 'read_file',
-          displayName: 'Read File',
-          description: 'Reads a file from the filesystem and returns its contents',
-          status: 'valid',
-          metadata: { connectionId: 'conn-123' },
+          type: "tool",
+          qualifier: "filesystem",
+          id: "read_file",
+          displayName: "Read File",
+          description:
+            "Reads a file from the filesystem and returns its contents",
+          status: "valid",
+          metadata: { connectionId: "conn-123" },
         },
       ]);
       return (
@@ -130,7 +136,7 @@ export const ToolReference: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Tool reference with wrench icon and primary color scheme.',
+        story: "Tool reference with wrench icon and primary color scheme.",
       },
     },
   },
@@ -138,21 +144,21 @@ export const ToolReference: Story = {
 
 export const SkillReference: Story = {
   args: {
-    type: 'skill',
-    qualifier: 'code-review',
-    id: 'code-review',
+    type: "skill",
+    qualifier: "code-review",
+    id: "code-review",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'skill',
-          qualifier: 'code-review',
-          id: 'code-review',
-          displayName: 'Code Review',
-          description: 'Reviews code for quality, security, and best practices',
-          status: 'valid',
-          metadata: { tags: ['quality', 'review'], version: '1.2.0' },
+          type: "skill",
+          qualifier: "code-review",
+          id: "code-review",
+          displayName: "Code Review",
+          description: "Reviews code for quality, security, and best practices",
+          status: "valid",
+          metadata: { tags: ["quality", "review"], version: "1.2.0" },
         },
       ]);
       return (
@@ -165,7 +171,7 @@ export const SkillReference: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Skill reference with sparkles icon and success color scheme.',
+        story: "Skill reference with sparkles icon and success color scheme.",
       },
     },
   },
@@ -173,21 +179,21 @@ export const SkillReference: Story = {
 
 export const ArtifactReference: Story = {
   args: {
-    type: 'artifact',
-    qualifier: 'chart-123',
-    id: 'chart-123',
+    type: "artifact",
+    qualifier: "chart-123",
+    id: "chart-123",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'artifact',
-          qualifier: 'chart-123',
-          id: 'chart-123',
-          displayName: 'Sales Chart',
-          description: 'Monthly sales performance visualization',
-          status: 'valid',
-          metadata: { contentType: 'image/svg+xml' },
+          type: "artifact",
+          qualifier: "chart-123",
+          id: "chart-123",
+          displayName: "Sales Chart",
+          description: "Monthly sales performance visualization",
+          status: "valid",
+          metadata: { contentType: "image/svg+xml" },
         },
       ]);
       return (
@@ -200,7 +206,7 @@ export const ArtifactReference: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Artifact reference with file icon and neutral color scheme.',
+        story: "Artifact reference with file icon and neutral color scheme.",
       },
     },
   },
@@ -208,20 +214,20 @@ export const ArtifactReference: Story = {
 
 export const MemoryReference: Story = {
   args: {
-    type: 'memory',
-    qualifier: 'note-abc',
-    id: 'note-abc',
+    type: "memory",
+    qualifier: "note-abc",
+    id: "note-abc",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'memory',
-          qualifier: 'note-abc',
-          id: 'note-abc',
-          displayName: 'Meeting Notes',
-          description: 'Notes from the architecture planning session',
-          status: 'valid',
+          type: "memory",
+          qualifier: "note-abc",
+          id: "note-abc",
+          displayName: "Meeting Notes",
+          description: "Notes from the architecture planning session",
+          status: "valid",
         },
       ]);
       return (
@@ -234,7 +240,8 @@ export const MemoryReference: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Memory reference with brain icon and info color scheme (Phase 4).',
+        story:
+          "Memory reference with brain icon and info color scheme (Phase 4).",
       },
     },
   },
@@ -242,20 +249,20 @@ export const MemoryReference: Story = {
 
 export const PlanReference: Story = {
   args: {
-    type: 'plan',
-    qualifier: 'plan-xyz',
-    id: 'plan-xyz',
+    type: "plan",
+    qualifier: "plan-xyz",
+    id: "plan-xyz",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'plan',
-          qualifier: 'plan-xyz',
-          id: 'plan-xyz',
-          displayName: 'Refactoring Plan',
-          description: 'Step-by-step plan for refactoring the auth module',
-          status: 'valid',
+          type: "plan",
+          qualifier: "plan-xyz",
+          id: "plan-xyz",
+          displayName: "Refactoring Plan",
+          description: "Step-by-step plan for refactoring the auth module",
+          status: "valid",
         },
       ]);
       return (
@@ -268,7 +275,8 @@ export const PlanReference: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Plan reference with list icon and warning color scheme (Phase 4).',
+        story:
+          "Plan reference with list icon and warning color scheme (Phase 4).",
       },
     },
   },
@@ -280,20 +288,20 @@ export const PlanReference: Story = {
 
 export const ValidStatus: Story = {
   args: {
-    type: 'tool',
-    qualifier: 'fs',
-    id: 'read',
+    type: "tool",
+    qualifier: "fs",
+    id: "read",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'tool',
-          qualifier: 'fs',
-          id: 'read',
-          displayName: 'Read',
-          description: 'File reading tool',
-          status: 'valid',
+          type: "tool",
+          qualifier: "fs",
+          id: "read",
+          displayName: "Read",
+          description: "File reading tool",
+          status: "valid",
         },
       ]);
       return (
@@ -307,19 +315,19 @@ export const ValidStatus: Story = {
 
 export const NotFoundStatus: Story = {
   args: {
-    type: 'tool',
-    qualifier: 'nonexistent',
-    id: 'missing_tool',
+    type: "tool",
+    qualifier: "nonexistent",
+    id: "missing_tool",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'tool',
-          qualifier: 'nonexistent',
-          id: 'missing_tool',
-          displayName: 'missing_tool',
-          status: 'not_found',
+          type: "tool",
+          qualifier: "nonexistent",
+          id: "missing_tool",
+          displayName: "missing_tool",
+          status: "not_found",
         },
       ]);
       return (
@@ -333,7 +341,7 @@ export const NotFoundStatus: Story = {
     docs: {
       description: {
         story:
-          'Reference that could not be found. Shows reduced opacity and strikethrough.',
+          "Reference that could not be found. Shows reduced opacity and strikethrough.",
       },
     },
   },
@@ -341,19 +349,19 @@ export const NotFoundStatus: Story = {
 
 export const UnauthorizedStatus: Story = {
   args: {
-    type: 'artifact',
-    qualifier: 'secret-doc',
-    id: 'secret-doc',
+    type: "artifact",
+    qualifier: "secret-doc",
+    id: "secret-doc",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'artifact',
-          qualifier: 'secret-doc',
-          id: 'secret-doc',
-          displayName: 'secret-doc',
-          status: 'unauthorized',
+          type: "artifact",
+          qualifier: "secret-doc",
+          id: "secret-doc",
+          displayName: "secret-doc",
+          status: "unauthorized",
         },
       ]);
       return (
@@ -367,7 +375,7 @@ export const UnauthorizedStatus: Story = {
     docs: {
       description: {
         story:
-          'Reference the user is not authorized to access. Shows reduced opacity and cursor-not-allowed.',
+          "Reference the user is not authorized to access. Shows reduced opacity and cursor-not-allowed.",
       },
     },
   },
@@ -375,9 +383,9 @@ export const UnauthorizedStatus: Story = {
 
 export const LoadingStatus: Story = {
   args: {
-    type: 'skill',
-    qualifier: 'pending',
-    id: 'pending',
+    type: "skill",
+    qualifier: "pending",
+    id: "pending",
   },
   decorators: [
     (Story) => {
@@ -392,7 +400,7 @@ export const LoadingStatus: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Reference being resolved. Shows pulse animation.',
+        story: "Reference being resolved. Shows pulse animation.",
       },
     },
   },
@@ -404,21 +412,21 @@ export const LoadingStatus: Story = {
 
 export const WithCustomLabel: Story = {
   args: {
-    type: 'tool',
-    qualifier: 'filesystem',
-    id: 'read_file',
-    label: 'Read File Tool',
+    type: "tool",
+    qualifier: "filesystem",
+    id: "read_file",
+    label: "Read File Tool",
   },
   decorators: [
     (Story) => {
       const Provider = createMockProvider([
         {
-          type: 'tool',
-          qualifier: 'filesystem',
-          id: 'read_file',
-          displayName: 'read_file',
-          description: 'Reads a file from the filesystem',
-          status: 'valid',
+          type: "tool",
+          qualifier: "filesystem",
+          id: "read_file",
+          displayName: "read_file",
+          description: "Reads a file from the filesystem",
+          status: "valid",
         },
       ]);
       return (
@@ -432,7 +440,7 @@ export const WithCustomLabel: Story = {
     docs: {
       description: {
         story:
-          'Reference with custom label overrides the resolved displayName.',
+          "Reference with custom label overrides the resolved displayName.",
       },
     },
   },
@@ -446,44 +454,44 @@ export const AllTypes: Story = {
   render: () => {
     const Provider = createMockProvider([
       {
-        type: 'tool',
-        qualifier: 'fs',
-        id: 'read',
-        displayName: 'Read File',
-        description: 'Reads files',
-        status: 'valid',
+        type: "tool",
+        qualifier: "fs",
+        id: "read",
+        displayName: "Read File",
+        description: "Reads files",
+        status: "valid",
       },
       {
-        type: 'skill',
-        qualifier: 'analyze',
-        id: 'analyze',
-        displayName: 'Analyze',
-        description: 'Analyzes data',
-        status: 'valid',
+        type: "skill",
+        qualifier: "analyze",
+        id: "analyze",
+        displayName: "Analyze",
+        description: "Analyzes data",
+        status: "valid",
       },
       {
-        type: 'artifact',
-        qualifier: 'chart',
-        id: 'chart',
-        displayName: 'Chart',
-        description: 'A visualization',
-        status: 'valid',
+        type: "artifact",
+        qualifier: "chart",
+        id: "chart",
+        displayName: "Chart",
+        description: "A visualization",
+        status: "valid",
       },
       {
-        type: 'memory',
-        qualifier: 'note',
-        id: 'note',
-        displayName: 'Note',
-        description: 'A memory note',
-        status: 'valid',
+        type: "memory",
+        qualifier: "note",
+        id: "note",
+        displayName: "Note",
+        description: "A memory note",
+        status: "valid",
       },
       {
-        type: 'plan',
-        qualifier: 'plan',
-        id: 'plan',
-        displayName: 'Plan',
-        description: 'An execution plan',
-        status: 'valid',
+        type: "plan",
+        qualifier: "plan",
+        id: "plan",
+        displayName: "Plan",
+        description: "An execution plan",
+        status: "valid",
       },
     ]);
 
@@ -502,7 +510,7 @@ export const AllTypes: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'All reference types displayed together for comparison.',
+        story: "All reference types displayed together for comparison.",
       },
     },
   },
@@ -512,25 +520,25 @@ export const AllStatuses: Story = {
   render: () => {
     const Provider = createMockProvider([
       {
-        type: 'tool',
-        qualifier: 'a',
-        id: 'valid',
-        displayName: 'Valid',
-        status: 'valid',
+        type: "tool",
+        qualifier: "a",
+        id: "valid",
+        displayName: "Valid",
+        status: "valid",
       },
       {
-        type: 'tool',
-        qualifier: 'b',
-        id: 'not_found',
-        displayName: 'Not Found',
-        status: 'not_found',
+        type: "tool",
+        qualifier: "b",
+        id: "not_found",
+        displayName: "Not Found",
+        status: "not_found",
       },
       {
-        type: 'tool',
-        qualifier: 'c',
-        id: 'unauthorized',
-        displayName: 'Unauthorized',
-        status: 'unauthorized',
+        type: "tool",
+        qualifier: "c",
+        id: "unauthorized",
+        displayName: "Unauthorized",
+        status: "unauthorized",
       },
     ]);
 
@@ -547,7 +555,7 @@ export const AllStatuses: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Comparison of valid, not_found, and unauthorized statuses.',
+        story: "Comparison of valid, not_found, and unauthorized statuses.",
       },
     },
   },
@@ -557,30 +565,33 @@ export const InlineWithText: Story = {
   render: () => {
     const Provider = createMockProvider([
       {
-        type: 'tool',
-        qualifier: 'fs',
-        id: 'read_file',
-        displayName: 'Read File',
-        description: 'Reads a file from the filesystem',
-        status: 'valid',
+        type: "tool",
+        qualifier: "fs",
+        id: "read_file",
+        displayName: "Read File",
+        description: "Reads a file from the filesystem",
+        status: "valid",
       },
       {
-        type: 'skill',
-        qualifier: 'code-review',
-        id: 'code-review',
-        displayName: 'Code Review',
-        description: 'Reviews code quality',
-        status: 'valid',
+        type: "skill",
+        qualifier: "code-review",
+        id: "code-review",
+        displayName: "Code Review",
+        description: "Reviews code quality",
+        status: "valid",
       },
     ]);
 
     return (
       <Provider>
         <p className="text-neutral-12">
-          Use the{' '}
-          <ReferenceChip type="tool" qualifier="fs" id="read_file" /> tool to
-          read the configuration, then apply{' '}
-          <ReferenceChip type="skill" qualifier="code-review" id="code-review" />{' '}
+          Use the <ReferenceChip type="tool" qualifier="fs" id="read_file" />{" "}
+          tool to read the configuration, then apply{" "}
+          <ReferenceChip
+            type="skill"
+            qualifier="code-review"
+            id="code-review"
+          />{" "}
           to check for issues.
         </p>
       </Provider>
@@ -589,7 +600,7 @@ export const InlineWithText: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Reference chips rendered inline with paragraph text.',
+        story: "Reference chips rendered inline with paragraph text.",
       },
     },
   },
@@ -599,25 +610,25 @@ export const DarkMode: Story = {
   render: () => {
     const Provider = createMockProvider([
       {
-        type: 'tool',
-        qualifier: 'fs',
-        id: 'read',
-        displayName: 'Read File',
-        status: 'valid',
+        type: "tool",
+        qualifier: "fs",
+        id: "read",
+        displayName: "Read File",
+        status: "valid",
       },
       {
-        type: 'skill',
-        qualifier: 'analyze',
-        id: 'analyze',
-        displayName: 'Analyze',
-        status: 'valid',
+        type: "skill",
+        qualifier: "analyze",
+        id: "analyze",
+        displayName: "Analyze",
+        status: "valid",
       },
       {
-        type: 'artifact',
-        qualifier: 'chart',
-        id: 'chart',
-        displayName: 'Chart',
-        status: 'valid',
+        type: "artifact",
+        qualifier: "chart",
+        id: "chart",
+        displayName: "Chart",
+        status: "valid",
       },
     ]);
 
@@ -636,7 +647,7 @@ export const DarkMode: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Reference chips in dark mode context.',
+        story: "Reference chips in dark mode context.",
       },
     },
   },

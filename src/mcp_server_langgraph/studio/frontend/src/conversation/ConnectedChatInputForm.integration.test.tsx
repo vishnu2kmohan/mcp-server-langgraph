@@ -79,7 +79,8 @@ const mockVoiceInputReturn = {
   isListening: false,
   isSupported: true,
   error: null as string | null,
-  transcript: "", startListening: mockStartListening,
+  transcript: "",
+  startListening: mockStartListening,
   stopListening: mockStopListening,
 };
 
@@ -191,7 +192,8 @@ vi.mock("../hooks/useAvailableTools", () => ({
 
 describe("ConnectedChatInputForm - Integration", () => {
   const defaultProps = {
-    value: "", onChange: vi.fn(),
+    value: "",
+    onChange: vi.fn(),
     onSubmit: vi.fn(),
   };
 
@@ -237,7 +239,9 @@ describe("ConnectedChatInputForm - Integration", () => {
 
     // TODO: AttachmentMenu is not yet integrated into ConnectedChatInputForm
     // These tests will be enabled when AttachmentMenu integration is complete
-    it.todo("should render KB Focus submenu in AttachmentMenu when feature flag is enabled");
+    it.todo(
+      "should render KB Focus submenu in AttachmentMenu when feature flag is enabled",
+    );
 
     it.skip("should render KB Focus submenu in AttachmentMenu when feature flag is enabled - PENDING IMPLEMENTATION", async () => {
       const user = userEvent.setup();
@@ -265,7 +269,9 @@ describe("ConnectedChatInputForm - Integration", () => {
       await user.click(screen.getByTestId("attachment-menu-button"));
 
       // KB Focus should not be in menu
-      expect(screen.queryByTestId("menu-item-kb-focus")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("menu-item-kb-focus"),
+      ).not.toBeInTheDocument();
     });
 
     it.skip("should show KB Focus submenu options", async () => {

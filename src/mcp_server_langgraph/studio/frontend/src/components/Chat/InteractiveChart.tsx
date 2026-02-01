@@ -150,7 +150,9 @@ export function InteractiveChart({
           <Button
             variant="ghost"
             size="icon"
-            className={chartType === "line" ? "bg-primary-3 dark:bg-primary-12" : ""}
+            className={
+              chartType === "line" ? "bg-primary-3 dark:bg-primary-12" : ""
+            }
             type="button"
             onClick={() => setChartType("line")}
             aria-label="Line chart"
@@ -161,7 +163,9 @@ export function InteractiveChart({
           <Button
             variant="ghost"
             size="icon"
-            className={chartType === "bar" ? "bg-primary-3 dark:bg-primary-12" : ""}
+            className={
+              chartType === "bar" ? "bg-primary-3 dark:bg-primary-12" : ""
+            }
             type="button"
             onClick={() => setChartType("bar")}
             aria-label="Bar chart"
@@ -172,7 +176,9 @@ export function InteractiveChart({
           <Button
             variant="ghost"
             size="icon"
-            className={chartType === "pie" ? "bg-primary-3 dark:bg-primary-12" : ""}
+            className={
+              chartType === "pie" ? "bg-primary-3 dark:bg-primary-12" : ""
+            }
             type="button"
             onClick={() => setChartType("pie")}
             aria-label="Pie chart"
@@ -317,10 +323,7 @@ export function InteractiveChart({
             </thead>
             <tbody>
               {chartData.data.map((row, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-neutral-5"
-                >
+                <tr key={index} className="border-b border-neutral-5">
                   <td className="px-4 py-2 text-neutral-11">
                     {String(row[xKey])}
                   </td>

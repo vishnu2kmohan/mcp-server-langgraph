@@ -31,20 +31,17 @@ export const messageRowVariants = cva(
 /**
  * Message bubble variants (STYLE.md Section 4 - Radix colors)
  */
-export const messageBubbleVariants = cva(
-  "max-w-[70%] rounded-2xl px-4 py-3",
-  {
-    variants: {
-      role: {
-        user: "bg-primary-9 text-neutral-1 rounded-br-md",
-        assistant:
-          "bg-neutral-2 border border-neutral-6 text-neutral-12 rounded-bl-md",
-        system:
-          "bg-neutral-3 border border-neutral-6 text-neutral-11 italic rounded-bl-md",
-      },
-    },
-    defaultVariants: {
-      role: "assistant",
+export const messageBubbleVariants = cva("max-w-[70%] rounded-2xl px-4 py-3", {
+  variants: {
+    role: {
+      user: "bg-primary-9 text-neutral-1 rounded-br-md",
+      assistant:
+        "bg-neutral-2 border border-neutral-6 text-neutral-12 rounded-bl-md",
+      system:
+        "bg-neutral-3 border border-neutral-6 text-neutral-11 italic rounded-bl-md",
     },
   },
-);
+  defaultVariants: {
+    role: "assistant",
+  },
+});

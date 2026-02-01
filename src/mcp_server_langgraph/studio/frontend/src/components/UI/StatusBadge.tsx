@@ -38,9 +38,7 @@ export const statusBadgeVariants = cva(
           "bg-primary-3 text-primary-11",
           "dark:bg-primary-a6 dark:text-primary-5",
         ],
-        neutral: [
-          "bg-neutral-2 text-neutral-11",
-        ],
+        neutral: ["bg-neutral-2 text-neutral-11"],
       },
       size: {
         sm: "px-2 py-0.5 text-xs gap-1",

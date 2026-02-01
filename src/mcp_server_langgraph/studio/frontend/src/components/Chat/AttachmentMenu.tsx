@@ -109,36 +109,39 @@ export function AttachmentMenu({
   const menuItemsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Build menu items based on props - memoized to prevent dependency array issues
-  const menuItems: MenuItem[] = useMemo(() => [
-    {
-      id: "upload",
-      label: "Upload file",
-      icon: Paperclip,
-      action: () => fileInputRef.current?.click(),
-    },
-    ...(showKBFocus
-      ? [
-          {
-            id: "kb-focus",
-            label: "Knowledge Base Focus",
-            icon: Search,
-            hasSubmenu: true,
-          },
-        ]
-      : []),
-    {
-      id: "code",
-      label: "Code snippet",
-      icon: Code,
-      action: onInsertCodeBlock,
-    },
-    {
-      id: "mention",
-      label: "Mention",
-      icon: AtSign,
-      action: onInsertMention,
-    },
-  ], [showKBFocus, onInsertCodeBlock, onInsertMention]);
+  const menuItems: MenuItem[] = useMemo(
+    () => [
+      {
+        id: "upload",
+        label: "Upload file",
+        icon: Paperclip,
+        action: () => fileInputRef.current?.click(),
+      },
+      ...(showKBFocus
+        ? [
+            {
+              id: "kb-focus",
+              label: "Knowledge Base Focus",
+              icon: Search,
+              hasSubmenu: true,
+            },
+          ]
+        : []),
+      {
+        id: "code",
+        label: "Code snippet",
+        icon: Code,
+        action: onInsertCodeBlock,
+      },
+      {
+        id: "mention",
+        label: "Mention",
+        icon: AtSign,
+        action: onInsertMention,
+      },
+    ],
+    [showKBFocus, onInsertCodeBlock, onInsertMention],
+  );
 
   // Close menu on outside click
   useEffect(() => {
@@ -198,7 +201,7 @@ export function AttachmentMenu({
       // Reset input to allow selecting the same file again
       event.target.value = "";
     },
-    [onFileSelect]
+    [onFileSelect],
   );
 
   // Handle menu item click
@@ -207,7 +210,7 @@ export function AttachmentMenu({
       if (item.hasSubmenu) {
         setShowKBSubmenu(true);
         setFocusedKBIndex(
-          KB_FOCUS_OPTIONS.findIndex((opt) => opt.value === kbFocusValue)
+          KB_FOCUS_OPTIONS.findIndex((opt) => opt.value === kbFocusValue),
         );
       } else if (item.action) {
         item.action();
@@ -215,7 +218,7 @@ export function AttachmentMenu({
         setShowKBSubmenu(false);
       }
     },
-    [kbFocusValue]
+    [kbFocusValue],
   );
 
   // Handle KB Focus option click
@@ -225,7 +228,7 @@ export function AttachmentMenu({
       setIsOpen(false);
       setShowKBSubmenu(false);
     },
-    [onKBFocusChange]
+    [onKBFocusChange],
   );
 
   // Handle keyboard navigation in main menu
@@ -262,7 +265,7 @@ export function AttachmentMenu({
           break;
       }
     },
-    [focusedIndex, menuItems, handleMenuItemClick]
+    [focusedIndex, menuItems, handleMenuItemClick],
   );
 
   // Handle keyboard navigation in KB submenu
@@ -276,7 +279,7 @@ export function AttachmentMenu({
         case "ArrowUp":
           event.preventDefault();
           setFocusedKBIndex((prev) =>
-            prev <= 0 ? KB_FOCUS_OPTIONS.length - 1 : prev - 1
+            prev <= 0 ? KB_FOCUS_OPTIONS.length - 1 : prev - 1,
           );
           break;
         case "ArrowLeft":
@@ -291,7 +294,7 @@ export function AttachmentMenu({
           break;
       }
     },
-    [focusedIndex, focusedKBIndex, handleKBFocusSelect]
+    [focusedIndex, focusedKBIndex, handleKBFocusSelect],
   );
 
   const toggleMenu = useCallback(() => {
@@ -314,7 +317,8 @@ export function AttachmentMenu({
         data-testid="attachment-file-input"
       />
       {/* Plus button trigger */}
-      <Button size="icon"
+      <Button
+        size="icon"
         ref={buttonRef}
         variant="ghost"
         type="button"
@@ -327,9 +331,9 @@ export function AttachmentMenu({
         className={cn(
           "p-2 rounded-full",
           "text-neutral-10 hover:text-neutral-11",
-          
+
           "hover:bg-neutral-4",
-          "transition-colors"
+          "transition-colors",
         )}
       >
         <Plus className="w-5 h-5" />
@@ -347,14 +351,13 @@ export function AttachmentMenu({
             "bg-neutral-2",
             "border border-neutral-6",
             "rounded-lg shadow-lg",
-            "z-dropdown"
+            "z-dropdown",
           )}
           onKeyDown={showKBSubmenu ? handleKBSubmenuKeyDown : handleMenuKeyDown}
         >
           {menuItems.map((item, index) => {
             const Icon = item.icon;
             return (
-               
               <Button
                 variant="ghost"
                 key={item.id}
@@ -379,8 +382,9 @@ export function AttachmentMenu({
                   "hover:bg-neutral-4",
                   "focus:bg-neutral-2",
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-inset",
-                  "transition-colors"
-                )}>
+                  "transition-colors",
+                )}
+              >
                 <Icon className="w-4 h-4 text-neutral-10" />
                 <span className="flex-1">{item.label}</span>
                 {item.hasSubmenu && (
@@ -401,14 +405,13 @@ export function AttachmentMenu({
                 "w-52 py-1",
                 "bg-neutral-2",
                 "border border-neutral-6",
-                "rounded-lg shadow-lg"
+                "rounded-lg shadow-lg",
               )}
             >
               {KB_FOCUS_OPTIONS.map((option, index) => {
                 const Icon = option.icon;
                 const isSelected = kbFocusValue === option.value;
                 return (
-                   
                   <Button
                     variant="ghost"
                     key={option.value}
@@ -419,11 +422,11 @@ export function AttachmentMenu({
                       "text-sm text-left",
                       "text-neutral-11",
                       "hover:bg-neutral-4",
-                      focusedKBIndex === index &&
-                        "bg-neutral-4",
+                      focusedKBIndex === index && "bg-neutral-4",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-inset",
-                      "transition-colors"
-                    )}>
+                      "transition-colors",
+                    )}
+                  >
                     <Icon className="w-4 h-4 text-neutral-10" />
                     <span className="flex-1">{option.label}</span>
                     {isSelected && (

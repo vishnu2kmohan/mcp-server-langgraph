@@ -54,20 +54,18 @@ export const languageBadgeVariants = cva(
  * Toolbar button variant
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export const toolbarButtonVariants = cva(
-  "p-1.5 rounded focus:ring-primary-7",
-  {
-    variants: {
-      variant: {
-        default: "bg-neutral-4 hover:bg-neutral-5 text-neutral-9 hover:text-neutral-12",
-        active: "bg-primary-4 text-primary-11",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
+export const toolbarButtonVariants = cva("p-1.5 rounded focus:ring-primary-7", {
+  variants: {
+    variant: {
+      default:
+        "bg-neutral-4 hover:bg-neutral-5 text-neutral-9 hover:text-neutral-12",
+      active: "bg-primary-4 text-primary-11",
     },
   },
-);
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
 /**
  * Get file extension for a language
@@ -155,7 +153,8 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
           onClick={handleToggleWordWrap}
           title="Toggle word wrap"
           aria-label={wordWrap ? "Disable word wrap" : "Enable word wrap"}
-          aria-pressed={wordWrap}>
+          aria-pressed={wordWrap}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"

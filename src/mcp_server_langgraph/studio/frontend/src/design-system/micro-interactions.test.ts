@@ -3,7 +3,7 @@
  *
  * TDD tests for animation variants and tokens.
  */
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   skeletonVariants,
@@ -17,6 +17,10 @@ import {
   modalVariants,
 } from "./micro-interactions";
 
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("micro-interactions", () => {
   describe("skeletonVariants", () => {
     it("should have pulse animation", () => {
@@ -26,7 +30,9 @@ describe("micro-interactions", () => {
     });
 
     it("should have infinite repeat", () => {
-      const transition = (skeletonVariants.pulse as { transition: { repeat: number } }).transition;
+      const transition = (
+        skeletonVariants.pulse as { transition: { repeat: number } }
+      ).transition;
       expect(transition.repeat).toBe(Infinity);
     });
   });
@@ -37,18 +43,24 @@ describe("micro-interactions", () => {
     });
 
     it("should animate background position", () => {
-      const shimmer = shimmerVariants.shimmer as { backgroundPosition: string[] };
+      const shimmer = shimmerVariants.shimmer as {
+        backgroundPosition: string[];
+      };
       expect(shimmer.backgroundPosition).toBeDefined();
       expect(Array.isArray(shimmer.backgroundPosition)).toBe(true);
     });
 
     it("should have infinite repeat", () => {
-      const transition = (shimmerVariants.shimmer as { transition: { repeat: number } }).transition;
+      const transition = (
+        shimmerVariants.shimmer as { transition: { repeat: number } }
+      ).transition;
       expect(transition.repeat).toBe(Infinity);
     });
 
     it("should use linear easing for smooth shimmer", () => {
-      const transition = (shimmerVariants.shimmer as { transition: { ease: string } }).transition;
+      const transition = (
+        shimmerVariants.shimmer as { transition: { ease: string } }
+      ).transition;
       expect(transition.ease).toBe("linear");
     });
   });
@@ -60,7 +72,9 @@ describe("micro-interactions", () => {
     });
 
     it("should stagger children", () => {
-      const visible = listContainerVariants.visible as { transition: { staggerChildren: number } };
+      const visible = listContainerVariants.visible as {
+        transition: { staggerChildren: number };
+      };
       expect(visible.transition.staggerChildren).toBeGreaterThan(0);
     });
   });
@@ -72,7 +86,9 @@ describe("micro-interactions", () => {
     });
 
     it("should use spring physics", () => {
-      const visible = listItemVariants.visible as { transition: { type: string } };
+      const visible = listItemVariants.visible as {
+        transition: { type: string };
+      };
       expect(visible.transition.type).toBe("spring");
     });
   });

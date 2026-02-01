@@ -756,7 +756,10 @@ export const aiHandlers = [
     const artifactId = url.searchParams.get("artifactId");
 
     if (!artifactId) {
-      return apiErrorResponse("Missing required query parameter: artifactId", 400);
+      return apiErrorResponse(
+        "Missing required query parameter: artifactId",
+        400,
+      );
     }
 
     // Return mock suggestions

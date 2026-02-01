@@ -4,17 +4,26 @@
  * Tests for the theme and appearance settings panel.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { Mock, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ThemeSettings } from "./ThemeSettings";
 import { useTheme, usePreferences } from "../../contexts/PreferencesContext";
-import type { ThemeMode, ColorTheme, CodeFontTheme } from "../../types/preferences";
+import type {
+  ThemeMode,
+  ColorTheme,
+  CodeFontTheme,
+} from "../../types/preferences";
 
 // Mock the hooks
 vi.mock("../../contexts/PreferencesContext", () => ({
   useTheme: vi.fn(),
   usePreferences: vi.fn(),
 }));
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ThemeSettings", () => {
   const mockSetTheme = vi.fn();
@@ -58,7 +67,7 @@ describe("ThemeSettings", () => {
       expect(screen.getByTestId("theme-settings")).toBeInTheDocument();
       expect(screen.getByText("Theme & Appearance")).toBeInTheDocument();
       expect(
-        screen.getByText("Customize the look and feel of Agent Studio")
+        screen.getByText("Customize the look and feel of Agent Studio"),
       ).toBeInTheDocument();
     });
 
@@ -75,7 +84,9 @@ describe("ThemeSettings", () => {
 
       expect(screen.getByTestId("color-theme-violet-sage")).toBeInTheDocument();
       expect(screen.getByTestId("color-theme-teal-sage")).toBeInTheDocument();
-      expect(screen.getByTestId("color-theme-violet-olive")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("color-theme-violet-olive"),
+      ).toBeInTheDocument();
       expect(screen.getByTestId("color-theme-teal-olive")).toBeInTheDocument();
     });
 
@@ -247,7 +258,9 @@ describe("ThemeSettings", () => {
     it("uses radiogroup role for color theme selector", () => {
       render(<ThemeSettings />);
 
-      const radiogroup = screen.getByRole("radiogroup", { name: "Color theme" });
+      const radiogroup = screen.getByRole("radiogroup", {
+        name: "Color theme",
+      });
       expect(radiogroup).toBeInTheDocument();
     });
 
@@ -263,15 +276,15 @@ describe("ThemeSettings", () => {
 
       expect(screen.getByTestId("theme-mode-light")).toHaveAttribute(
         "aria-checked",
-        "false"
+        "false",
       );
       expect(screen.getByTestId("theme-mode-dark")).toHaveAttribute(
         "aria-checked",
-        "false"
+        "false",
       );
       expect(screen.getByTestId("theme-mode-system")).toHaveAttribute(
         "aria-checked",
-        "true"
+        "true",
       );
     });
   });

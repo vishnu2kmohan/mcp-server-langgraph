@@ -140,7 +140,16 @@ describe("Typography Stories", () => {
 
   it("should display all text size classes from xs to 4xl", () => {
     render(<Typography.Scale />);
-    const sizes = ["text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl", "text-3xl", "text-4xl"];
+    const sizes = [
+      "text-xs",
+      "text-sm",
+      "text-base",
+      "text-lg",
+      "text-xl",
+      "text-2xl",
+      "text-3xl",
+      "text-4xl",
+    ];
     sizes.forEach((size) => {
       expect(screen.getByText(size)).toBeInTheDocument();
     });
@@ -295,7 +304,9 @@ describe("Design System Consistency", () => {
     const { container: colorContainer } = render(<ColorPalette.Palette />);
     cleanup();
 
-    const { container: typographyContainer } = render(<Typography.Accessibility />);
+    const { container: typographyContainer } = render(
+      <Typography.Accessibility />,
+    );
 
     // Both should NOT contain raw Tailwind colors
     expect(colorContainer.innerHTML).not.toMatch(/\btext-blue-\d{3}\b/);

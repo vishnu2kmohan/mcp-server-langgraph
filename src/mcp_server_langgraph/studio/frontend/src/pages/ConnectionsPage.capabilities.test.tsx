@@ -136,7 +136,11 @@ vi.mock("../api", () => ({
     mockCreateConnection,
     { isLoading: false },
   ],
-  useListConnectionTemplatesQuery: () => ({ data: { templates: [] }, isLoading: false, error: null }),
+  useListConnectionTemplatesQuery: () => ({
+    data: { templates: [] },
+    isLoading: false,
+    error: null,
+  }),
   useUpdateConnectionMutation: () => [
     mockUpdateConnection,
     { isLoading: false },
@@ -293,7 +297,11 @@ const createTestStore = (persona: "admin" | "developer" | "user" = "admin") =>
 
 const renderWithProviders = (component: React.ReactElement) => {
   const store = createTestStore();
-  return render(<Provider store={store}><MemoryRouter>{component}</MemoryRouter></Provider>);
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </Provider>,
+  );
 };
 
 describe("ConnectionsPage Capabilities", () => {

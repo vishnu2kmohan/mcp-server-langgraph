@@ -71,12 +71,7 @@ function getStatusIcon(status: ControlStatus) {
     case "non-compliant":
       return <XCircle size={14} className="text-error-9" />;
     default:
-      return (
-        <AlertCircle
-          size={14}
-          className="text-neutral-9"
-        />
-      );
+      return <AlertCircle size={14} className="text-neutral-9" />;
   }
 }
 
@@ -158,7 +153,10 @@ export function FedRAMPPanel({
         )}
       >
         <div className="flex items-center gap-2 text-neutral-10">
-          <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
+          <Loader2
+            size={16}
+            className={cn(!prefersReducedMotion && "animate-spin")}
+          />
           <span>Loading FedRAMP controls...</span>
         </div>
       </div>
@@ -178,13 +176,8 @@ export function FedRAMPPanel({
       <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
           <BadgeCheck size={18} className="text-insight-10" />
-          <h3 className="font-semibold text-neutral-12">
-            FedRAMP
-          </h3>
-          <Badge
-            size="sm"
-            className={getAuthLevelColor(authStatus.level)}
-          >
+          <h3 className="font-semibold text-neutral-12">FedRAMP</h3>
+          <Badge size="sm" className={getAuthLevelColor(authStatus.level)}>
             {authStatus.level}
           </Badge>
         </div>
@@ -236,10 +229,7 @@ export function FedRAMPPanel({
                     <span className="text-sm font-medium text-neutral-11">
                       {control.id}
                     </span>
-                    <Badge
-                      size="sm"
-                      className={getImpactColor(control.impact)}
-                    >
+                    <Badge size="sm" className={getImpactColor(control.impact)}>
                       {control.impact}
                     </Badge>
                     <span
@@ -251,9 +241,7 @@ export function FedRAMPPanel({
                       {control.status}
                     </span>
                   </div>
-                  <p className="text-sm text-neutral-11">
-                    {control.name}
-                  </p>
+                  <p className="text-sm text-neutral-11">{control.name}</p>
                   <p className="text-xs text-neutral-9 mt-1">
                     {control.family}
                   </p>

@@ -1,4 +1,3 @@
- 
 /**
  * Spacing Stories
  *
@@ -50,18 +49,68 @@ function SpacingRow({ token, value, pixels, usage }: SpacingRowProps) {
 function SpacingScale() {
   const spacingTokens = [
     { token: "space-0", value: "0", pixels: "0px", usage: "Reset" },
-    { token: "space-0.5", value: "0.125rem", pixels: "2px", usage: "Micro adjustments only" },
-    { token: "space-1", value: "0.25rem", pixels: "4px", usage: "Tight spacing, inline elements" },
-    { token: "space-2", value: "0.5rem", pixels: "8px", usage: "Component internal padding" },
+    {
+      token: "space-0.5",
+      value: "0.125rem",
+      pixels: "2px",
+      usage: "Micro adjustments only",
+    },
+    {
+      token: "space-1",
+      value: "0.25rem",
+      pixels: "4px",
+      usage: "Tight spacing, inline elements",
+    },
+    {
+      token: "space-2",
+      value: "0.5rem",
+      pixels: "8px",
+      usage: "Component internal padding",
+    },
     { token: "space-3", value: "0.75rem", pixels: "12px", usage: "Small gaps" },
-    { token: "space-4", value: "1rem", pixels: "16px", usage: "Standard padding" },
-    { token: "space-5", value: "1.25rem", pixels: "20px", usage: "Medium gaps" },
-    { token: "space-6", value: "1.5rem", pixels: "24px", usage: "Section spacing" },
+    {
+      token: "space-4",
+      value: "1rem",
+      pixels: "16px",
+      usage: "Standard padding",
+    },
+    {
+      token: "space-5",
+      value: "1.25rem",
+      pixels: "20px",
+      usage: "Medium gaps",
+    },
+    {
+      token: "space-6",
+      value: "1.5rem",
+      pixels: "24px",
+      usage: "Section spacing",
+    },
     { token: "space-8", value: "2rem", pixels: "32px", usage: "Large gaps" },
-    { token: "space-10", value: "2.5rem", pixels: "40px", usage: "Section breaks" },
-    { token: "space-12", value: "3rem", pixels: "48px", usage: "Major sections" },
-    { token: "space-16", value: "4rem", pixels: "64px", usage: "Page-level spacing" },
-    { token: "space-20", value: "5rem", pixels: "80px", usage: "Hero sections" },
+    {
+      token: "space-10",
+      value: "2.5rem",
+      pixels: "40px",
+      usage: "Section breaks",
+    },
+    {
+      token: "space-12",
+      value: "3rem",
+      pixels: "48px",
+      usage: "Major sections",
+    },
+    {
+      token: "space-16",
+      value: "4rem",
+      pixels: "64px",
+      usage: "Page-level spacing",
+    },
+    {
+      token: "space-20",
+      value: "5rem",
+      pixels: "80px",
+      usage: "Hero sections",
+    },
   ];
 
   return (
@@ -115,7 +164,8 @@ function SpacingRules() {
             1. Internal &le; External
           </h4>
           <p className="text-sm text-neutral-11 mb-3">
-            Padding inside elements should be less than or equal to margin between elements.
+            Padding inside elements should be less than or equal to margin
+            between elements.
           </p>
           <div className="flex gap-4">
             <div className="bg-primary-3 border-2 border-primary-6 rounded p-3">
@@ -175,9 +225,7 @@ function SpacingRules() {
         </div>
 
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-2">
-            4. Touch Targets
-          </h4>
+          <h4 className="font-medium text-neutral-12 mb-2">4. Touch Targets</h4>
           <p className="text-sm text-neutral-11 mb-3">
             Minimum 44x44px (Apple) or 48x48px (Google Material).
           </p>
@@ -215,39 +263,59 @@ function ComponentSpacing() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-6">
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Component</th>
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Internal Padding</th>
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">External Margin</th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Component
+              </th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Internal Padding
+              </th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                External Margin
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-neutral-6">
               <td className="py-3 px-4 font-medium text-neutral-12">Button</td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">py-2 px-4</code> (sm),{}
-                <code className="text-xs bg-neutral-4 px-1 rounded">py-3 px-6</code> (md)
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  py-2 px-4
+                </code>{" "}
+                (sm),{}
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  py-3 px-6
+                </code>{" "}
+                (md)
               </td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">gap-2</code> between buttons
+                <code className="text-xs bg-neutral-4 px-1 rounded">gap-2</code>{" "}
+                between buttons
               </td>
             </tr>
             <tr className="border-b border-neutral-6">
               <td className="py-3 px-4 font-medium text-neutral-12">Card</td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">p-4</code> or{}
+                <code className="text-xs bg-neutral-4 px-1 rounded">p-4</code>{" "}
+                or{}
                 <code className="text-xs bg-neutral-4 px-1 rounded">p-6</code>
               </td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">gap-4</code> between cards
+                <code className="text-xs bg-neutral-4 px-1 rounded">gap-4</code>{" "}
+                between cards
               </td>
             </tr>
             <tr className="border-b border-neutral-6">
               <td className="py-3 px-4 font-medium text-neutral-12">Input</td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">py-2 px-3</code>
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  py-2 px-3
+                </code>
               </td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">space-y-4</code> between fields
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  space-y-4
+                </code>{" "}
+                between fields
               </td>
             </tr>
             <tr className="border-b border-neutral-6">
@@ -258,23 +326,37 @@ function ComponentSpacing() {
               <td className="py-3 px-4 text-neutral-10">N/A (overlay)</td>
             </tr>
             <tr className="border-b border-neutral-6">
-              <td className="py-3 px-4 font-medium text-neutral-12">Form Field</td>
-              <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">space-y-1.5</code> internal
+              <td className="py-3 px-4 font-medium text-neutral-12">
+                Form Field
               </td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">space-y-4</code> between fields
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  space-y-1.5
+                </code>{" "}
+                internal
+              </td>
+              <td className="py-3 px-4 text-neutral-10">
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  space-y-4
+                </code>{" "}
+                between fields
               </td>
             </tr>
             <tr>
               <td className="py-3 px-4 font-medium text-neutral-12">Section</td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">py-6</code> to{}
+                <code className="text-xs bg-neutral-4 px-1 rounded">py-6</code>{" "}
+                to{}
                 <code className="text-xs bg-neutral-4 px-1 rounded">py-8</code>
               </td>
               <td className="py-3 px-4 text-neutral-10">
-                <code className="text-xs bg-neutral-4 px-1 rounded">space-y-12</code> to{}
-                <code className="text-xs bg-neutral-4 px-1 rounded">space-y-16</code>
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  space-y-12
+                </code>{" "}
+                to{}
+                <code className="text-xs bg-neutral-4 px-1 rounded">
+                  space-y-16
+                </code>
               </td>
             </tr>
           </tbody>
@@ -349,7 +431,9 @@ function SpacingUtilities() {
 
         {/* Gap */}
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-3">Gap (Flexbox/Grid)</h4>
+          <h4 className="font-medium text-neutral-12 mb-3">
+            Gap (Flexbox/Grid)
+          </h4>
           <div className="space-y-2 font-mono text-sm">
             <div className="flex justify-between">
               <code className="text-neutral-11">gap-{"{n}"}</code>
@@ -386,8 +470,9 @@ function SpacingUtilities() {
         <h4 className="font-medium text-primary-11 mb-1">Pro Tip</h4>
         <p className="text-sm text-primary-11">
           Prefer <code className="bg-primary-3 px-1 rounded">gap-*</code> over{}
-          <code className="bg-primary-3 px-1 rounded">space-*</code> when using Flexbox or Grid.
-          Gap doesn't add margin to the last child and works better with wrapping.
+          <code className="bg-primary-3 px-1 rounded">space-*</code> when using
+          Flexbox or Grid. Gap doesn't add margin to the last child and works
+          better with wrapping.
         </p>
       </div>
     </div>
@@ -415,7 +500,9 @@ function VisualExamples() {
         <h4 className="font-medium text-neutral-12 mb-4">Form Layout</h4>
         <div className="max-w-md space-y-4">
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-neutral-12">Email</label>
+            <label className="block text-sm font-medium text-neutral-12">
+              Email
+            </label>
             <input
               type="text"
               placeholder="you@example.com"
@@ -423,7 +510,9 @@ function VisualExamples() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-neutral-12">Password</label>
+            <label className="block text-sm font-medium text-neutral-12">
+              Password
+            </label>
             <input
               type="password"
               placeholder="Enter password"
@@ -439,7 +528,8 @@ function VisualExamples() {
         </div>
         <div className="mt-4 pt-4 border-t border-neutral-6">
           <p className="text-xs text-neutral-10 font-mono">
-            space-y-4 between fields, space-y-1.5 within field, pt-2 before button
+            space-y-4 between fields, space-y-1.5 within field, pt-2 before
+            button
           </p>
         </div>
       </div>
@@ -449,16 +539,22 @@ function VisualExamples() {
         <h4 className="font-medium text-neutral-12 mb-4">Card Grid</h4>
         <div className="grid grid-cols-3 gap-4">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="p-4 bg-neutral-2 border border-neutral-6 rounded-lg">
+            <div
+              key={n}
+              className="p-4 bg-neutral-2 border border-neutral-6 rounded-lg"
+            >
               <div className="w-8 h-8 bg-primary-9 rounded mb-3" />
               <h5 className="font-medium text-neutral-12 mb-1">Card {n}</h5>
-              <p className="text-sm text-neutral-10">Card content with p-4 internal padding.</p>
+              <p className="text-sm text-neutral-10">
+                Card content with p-4 internal padding.
+              </p>
             </div>
           ))}
         </div>
         <div className="mt-4 pt-4 border-t border-neutral-6">
           <p className="text-xs text-neutral-10 font-mono">
-            gap-4 between cards, p-4 inside cards, mb-3 below icon, mb-1 below title
+            gap-4 between cards, p-4 inside cards, mb-3 below icon, mb-1 below
+            title
           </p>
         </div>
       </div>
@@ -467,7 +563,9 @@ function VisualExamples() {
       <div className="border border-neutral-6 rounded-lg p-6">
         <h4 className="font-medium text-neutral-12 mb-4">Button Groups</h4>
         <div className="flex gap-2">
-          <button className="px-4 py-2 bg-primary-9 text-neutral-12 rounded-md">Primary</button>
+          <button className="px-4 py-2 bg-primary-9 text-neutral-12 rounded-md">
+            Primary
+          </button>
           <button className="px-4 py-2 bg-neutral-4 text-neutral-12 border border-neutral-6 rounded-md">
             Secondary
           </button>

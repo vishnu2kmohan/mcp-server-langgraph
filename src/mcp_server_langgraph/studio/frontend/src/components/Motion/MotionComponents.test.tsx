@@ -4,8 +4,8 @@
  * Tests for the Motion wrapper component library.
  * TDD: Tests written first to define expected behavior.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import {
   MotionFadeIn,
   MotionSlideIn,
@@ -18,6 +18,11 @@ import {
 
 // Note: motion/react is globally mocked in src/test/setup.ts with proper prop filtering
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("MotionComponents", () => {
   describe("MotionFadeIn", () => {
     it("should render children", () => {
@@ -26,7 +31,11 @@ describe("MotionComponents", () => {
     });
 
     it("should accept custom className", () => {
-      render(<MotionFadeIn className="custom-class" data-testid="fade-in">Content</MotionFadeIn>);
+      render(
+        <MotionFadeIn className="custom-class" data-testid="fade-in">
+          Content
+        </MotionFadeIn>,
+      );
       expect(screen.getByTestId("fade-in")).toHaveClass("custom-class");
     });
 
@@ -59,7 +68,7 @@ describe("MotionComponents", () => {
         <MotionList>
           <li>Item 1</li>
           <li>Item 2</li>
-        </MotionList>
+        </MotionList>,
       );
       expect(screen.getByText("Item 1")).toBeInTheDocument();
       expect(screen.getByText("Item 2")).toBeInTheDocument();
@@ -69,7 +78,7 @@ describe("MotionComponents", () => {
       render(
         <MotionList data-testid="motion-list">
           <li>Item</li>
-        </MotionList>
+        </MotionList>,
       );
       expect(screen.getByTestId("motion-list")).toHaveAttribute("role", "list");
     });
@@ -97,7 +106,7 @@ describe("MotionComponents", () => {
       render(
         <MotionPanel isOpen direction="left">
           Content
-        </MotionPanel>
+        </MotionPanel>,
       );
       expect(screen.getByText("Content")).toBeInTheDocument();
     });
@@ -110,7 +119,9 @@ describe("MotionComponents", () => {
     });
 
     it("should accept width and height props", () => {
-      render(<MotionSkeleton width="100px" height="20px" data-testid="skeleton" />);
+      render(
+        <MotionSkeleton width="100px" height="20px" data-testid="skeleton" />,
+      );
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveStyle({ width: "100px", height: "20px" });
     });
@@ -128,7 +139,11 @@ describe("MotionComponents", () => {
     });
 
     it("should pulse when pulse prop is true", () => {
-      render(<MotionBadge pulse data-testid="badge">3</MotionBadge>);
+      render(
+        <MotionBadge pulse data-testid="badge">
+          3
+        </MotionBadge>,
+      );
       expect(screen.getByTestId("badge")).toBeInTheDocument();
     });
 

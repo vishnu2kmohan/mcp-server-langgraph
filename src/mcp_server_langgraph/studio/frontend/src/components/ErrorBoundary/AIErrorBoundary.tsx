@@ -158,7 +158,8 @@ function DefaultFallback({
           </ul>
         </div>
       )}
-      <Button variant="primary"
+      <Button
+        variant="primary"
         onClick={resetError}
         style={{
           padding: "6px 12px",
@@ -169,7 +170,9 @@ function DefaultFallback({
           cursor: "pointer",
           fontSize: "13px",
         }}
-      >Retry</Button>
+      >
+        Retry
+      </Button>
     </div>
   );
 }

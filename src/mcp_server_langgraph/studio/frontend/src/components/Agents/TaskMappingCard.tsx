@@ -43,9 +43,7 @@ export function TaskMappingCard({
     <div className="bg-neutral-1 rounded-lg border border-neutral-5 p-6">
       <div className="flex items-center gap-3 mb-4">
         <GitBranch size={24} className="text-primary-9" />
-        <h2 className="text-xl font-semibold text-neutral-12">
-          Task Mapping
-        </h2>
+        <h2 className="text-xl font-semibold text-neutral-12">Task Mapping</h2>
         <span className="px-2 py-1 text-xs bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-7 rounded-full">
           {totalCategories} task categories
         </span>

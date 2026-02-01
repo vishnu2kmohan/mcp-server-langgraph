@@ -56,12 +56,8 @@ export const LLMNode = memo(
             <div className="flex items-center gap-2">
               <Brain className="w-5 h-5 text-insight-9" />
               <div className="flex flex-col">
-                <span className="font-medium text-neutral-12">
-                  {label}
-                </span>
-                <span className="text-xs text-neutral-10">
-                  {model}
-                </span>
+                <span className="font-medium text-neutral-12">{label}</span>
+                <span className="text-xs text-neutral-10">{model}</span>
               </div>
             </div>
             <StatusIcon />

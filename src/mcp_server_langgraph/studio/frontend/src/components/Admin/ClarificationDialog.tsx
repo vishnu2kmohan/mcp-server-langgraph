@@ -175,7 +175,8 @@ export function ClarificationDialog({
             <HelpCircle className="w-5 h-5 text-primary-9" />
             Agent Needs Your Input
           </h2>
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg"
             data-testid="close-dialog"
@@ -197,9 +198,7 @@ export function ClarificationDialog({
           {/* Agent Info */}
           <div className="text-sm text-neutral-10">
             Agent:{" "}
-            <strong className="text-neutral-12">
-              {request.agentName}
-            </strong>
+            <strong className="text-neutral-12">{request.agentName}</strong>
           </div>
 
           {/* Question */}
@@ -210,18 +209,11 @@ export function ClarificationDialog({
           {/* Context Display */}
           {Object.keys(request.context).length > 0 && (
             <div className="bg-neutral-1 rounded-lg p-3 text-sm">
-              <div className="text-neutral-10">
-                Context:
-              </div>
+              <div className="text-neutral-10">Context:</div>
               <div className="mt-1 space-y-1">
                 {Object.entries(request.context).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="text-neutral-11"
-                  >
-                    <span className="text-neutral-10">
-                      {key}:
-                    </span>{" "}
+                  <div key={key} className="text-neutral-11">
+                    <span className="text-neutral-10">{key}:</span>{" "}
                     {String(value)}
                   </div>
                 ))}
@@ -254,7 +246,8 @@ export function ClarificationDialog({
                   key={option.id}
                   data-testid={`option-${option.id}`}
                   onClick={() => setSelectedOptionId(option.id)}
-                  disabled={isSubmitting}>
+                  disabled={isSubmitting}
+                >
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-neutral-12">
                       {option.label}
@@ -338,7 +331,10 @@ export function ClarificationDialog({
                 {isSubmitting ? (
                   <Loader2
                     data-testid="submit-loading"
-                    className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                    className={cn(
+                      "w-4 h-4",
+                      !prefersReducedMotion && "animate-spin",
+                    )}
                   />
                 ) : (
                   <Check className="w-4 h-4" />
@@ -365,7 +361,10 @@ export function ClarificationDialog({
                 {isSubmitting ? (
                   <Loader2
                     data-testid="submit-loading"
-                    className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                    className={cn(
+                      "w-4 h-4",
+                      !prefersReducedMotion && "animate-spin",
+                    )}
                   />
                 ) : (
                   <Check className="w-4 h-4" />

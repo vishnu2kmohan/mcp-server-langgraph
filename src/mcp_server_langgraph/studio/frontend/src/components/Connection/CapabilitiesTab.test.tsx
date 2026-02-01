@@ -7,8 +7,14 @@
  * @see ADR-0102 - Connections Page Redesign
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CapabilitiesTab } from "./CapabilitiesTab";
 
 // Mock the store hooks
@@ -31,26 +37,72 @@ vi.mock("../../store/slices/mcpSlice", () => ({
 
 // Mock the lazy components
 vi.mock("../MCP", () => ({
-  LazyAggregatedCapabilitiesPanel: ({ onToolInvoke, onResourceView, onPromptTest }: {
+  LazyAggregatedCapabilitiesPanel: ({
+    onToolInvoke,
+    onResourceView,
+    onPromptTest,
+  }: {
     onToolInvoke?: (name: string) => void;
     onResourceView?: (uri: string) => void;
     onPromptTest?: (name: string) => void;
   }) => (
     <div data-testid="aggregated-capabilities-panel">
-      <button data-testid="panel-invoke-tool" onClick={() => onToolInvoke?.("test-tool")}>Panel: Invoke Tool</button>
-      <button data-testid="panel-view-resource" onClick={() => onResourceView?.("test-resource")}>Panel: View Resource</button>
-      <button data-testid="panel-test-prompt" onClick={() => onPromptTest?.("test-prompt")}>Panel: Test Prompt</button>
+      <button
+        data-testid="panel-invoke-tool"
+        onClick={() => onToolInvoke?.("test-tool")}
+      >
+        Panel: Invoke Tool
+      </button>
+      <button
+        data-testid="panel-view-resource"
+        onClick={() => onResourceView?.("test-resource")}
+      >
+        Panel: View Resource
+      </button>
+      <button
+        data-testid="panel-test-prompt"
+        onClick={() => onPromptTest?.("test-prompt")}
+      >
+        Panel: Test Prompt
+      </button>
     </div>
   ),
-  LazyToolInvocationDialog: ({ open, onClose }: { open: boolean; onClose: () => void }) => (
-    open ? <div data-testid="tool-invocation-dialog"><button onClick={onClose}>Close</button></div> : null
-  ),
-  LazyResourceViewer: ({ open, onClose }: { open: boolean; onClose: () => void }) => (
-    open ? <div data-testid="resource-viewer-dialog"><button onClick={onClose}>Close</button></div> : null
-  ),
-  LazyPromptTester: ({ open, onClose }: { open: boolean; onClose: () => void }) => (
-    open ? <div data-testid="prompt-tester-dialog"><button onClick={onClose}>Close</button></div> : null
-  ),
+  LazyToolInvocationDialog: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
+    open ? (
+      <div data-testid="tool-invocation-dialog">
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null,
+  LazyResourceViewer: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
+    open ? (
+      <div data-testid="resource-viewer-dialog">
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null,
+  LazyPromptTester: ({
+    open,
+    onClose,
+  }: {
+    open: boolean;
+    onClose: () => void;
+  }) =>
+    open ? (
+      <div data-testid="prompt-tester-dialog">
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null,
 }));
 
 // Mock the MCP WebSocket hook
@@ -68,15 +120,23 @@ vi.mock("../../store/slices/personaSlice", () => ({
   selectPersona: vi.fn(),
 }));
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("CapabilitiesTab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock values
     mockUseAppSelector.mockImplementation((selector) => {
       if (selector.name === "selectPersona") return "admin";
-      if (selector.name === "selectAllTools") return [{ name: "tool1", description: "Test tool" }];
-      if (selector.name === "selectAllResources") return [{ name: "resource1", uri: "file://test" }];
-      if (selector.name === "selectAllPrompts") return [{ name: "prompt1", description: "Test prompt" }];
+      if (selector.name === "selectAllTools")
+        return [{ name: "tool1", description: "Test tool" }];
+      if (selector.name === "selectAllResources")
+        return [{ name: "resource1", uri: "file://test" }];
+      if (selector.name === "selectAllPrompts")
+        return [{ name: "prompt1", description: "Test prompt" }];
       if (selector.name === "selectIsConnected") return true;
       return undefined;
     });
@@ -85,15 +145,23 @@ describe("CapabilitiesTab", () => {
   describe("Rendering", () => {
     it("should render the aggregated capabilities panel", () => {
       render(<CapabilitiesTab />);
-      expect(screen.getByTestId("aggregated-capabilities-panel")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("aggregated-capabilities-panel"),
+      ).toBeInTheDocument();
     });
 
     it("should render MCP action buttons", () => {
       render(<CapabilitiesTab />);
       // Multiple buttons exist (header + panel mock), just verify they exist
-      expect(screen.getAllByRole("button", { name: /invoke tool/i }).length).toBeGreaterThan(0);
-      expect(screen.getAllByRole("button", { name: /view resource/i }).length).toBeGreaterThan(0);
-      expect(screen.getAllByRole("button", { name: /test prompt/i }).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByRole("button", { name: /invoke tool/i }).length,
+      ).toBeGreaterThan(0);
+      expect(
+        screen.getAllByRole("button", { name: /view resource/i }).length,
+      ).toBeGreaterThan(0);
+      expect(
+        screen.getAllByRole("button", { name: /test prompt/i }).length,
+      ).toBeGreaterThan(0);
     });
 
     it("should render MCP WebSocket status indicator", () => {
@@ -110,7 +178,9 @@ describe("CapabilitiesTab", () => {
       fireEvent.click(screen.getByTestId("panel-invoke-tool"));
 
       await waitFor(() => {
-        expect(screen.getByTestId("tool-invocation-dialog")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("tool-invocation-dialog"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -120,7 +190,9 @@ describe("CapabilitiesTab", () => {
       fireEvent.click(screen.getByTestId("panel-view-resource"));
 
       await waitFor(() => {
-        expect(screen.getByTestId("resource-viewer-dialog")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("resource-viewer-dialog"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -140,12 +212,16 @@ describe("CapabilitiesTab", () => {
       // Open and close tool dialog
       fireEvent.click(screen.getByTestId("panel-invoke-tool"));
       await waitFor(() => {
-        expect(screen.getByTestId("tool-invocation-dialog")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("tool-invocation-dialog"),
+        ).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole("button", { name: /close/i }));
       await waitFor(() => {
-        expect(screen.queryByTestId("tool-invocation-dialog")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("tool-invocation-dialog"),
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -161,7 +237,9 @@ describe("CapabilitiesTab", () => {
       render(<CapabilitiesTab />);
       // The counts come from the AggregatedCapabilitiesPanel,
       // which is mocked, so we just verify the panel is rendered
-      expect(screen.getByTestId("aggregated-capabilities-panel")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("aggregated-capabilities-panel"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -169,9 +247,15 @@ describe("CapabilitiesTab", () => {
     it("should have accessible labels for action buttons", () => {
       render(<CapabilitiesTab />);
       // Get all buttons with each label and check at least one has the accessible name
-      const invokeButtons = screen.getAllByRole("button", { name: /invoke tool/i });
-      const viewButtons = screen.getAllByRole("button", { name: /view resource/i });
-      const testButtons = screen.getAllByRole("button", { name: /test prompt/i });
+      const invokeButtons = screen.getAllByRole("button", {
+        name: /invoke tool/i,
+      });
+      const viewButtons = screen.getAllByRole("button", {
+        name: /view resource/i,
+      });
+      const testButtons = screen.getAllByRole("button", {
+        name: /test prompt/i,
+      });
       expect(invokeButtons.length).toBeGreaterThan(0);
       expect(viewButtons.length).toBeGreaterThan(0);
       expect(testButtons.length).toBeGreaterThan(0);
@@ -192,7 +276,9 @@ describe("CapabilitiesTab", () => {
 
       render(<CapabilitiesTab />);
       // The panel receives showAdminActions prop - verify it renders
-      expect(screen.getByTestId("aggregated-capabilities-panel")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("aggregated-capabilities-panel"),
+      ).toBeInTheDocument();
     });
 
     it("should pass showAdminActions=false when persona is user", () => {
@@ -202,7 +288,9 @@ describe("CapabilitiesTab", () => {
       });
 
       render(<CapabilitiesTab />);
-      expect(screen.getByTestId("aggregated-capabilities-panel")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("aggregated-capabilities-panel"),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -19,7 +19,10 @@ import React, { useState, useMemo, useCallback } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "motion/react";
 import { cva } from "class-variance-authority";
 import { ExternalLink, ChevronDown } from "lucide-react";
-import { buttonVariants as motionButtonVariants, dropdownVariants } from "@/design-system/micro-interactions";
+import {
+  buttonVariants as motionButtonVariants,
+  dropdownVariants,
+} from "@/design-system/micro-interactions";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import { cn } from "../../../utils/cn";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
@@ -138,7 +141,9 @@ function FilterDropdown({
     <div className="relative">
       <motion.button
         type="button"
-        className={filterButtonVariants({ variant: value ? "active" : "default" })}
+        className={filterButtonVariants({
+          variant: value ? "active" : "default",
+        })}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={label}
         aria-expanded={isOpen}
@@ -188,7 +193,8 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={filterOptionVariants({ selected: !value })}
-                aria-label="All">
+                aria-label="All"
+              >
                 All
               </Button>
               {options.map((option) => (
@@ -202,8 +208,11 @@ function FilterDropdown({
                     onChange(option);
                     setIsOpen(false);
                   }}
-                  className={filterOptionVariants({ selected: value === option })}
-                  aria-label={option}>
+                  className={filterOptionVariants({
+                    selected: value === option,
+                  })}
+                  aria-label={option}
+                >
                   {option}
                 </Button>
               ))}
@@ -255,20 +264,14 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2 flex-wrap">
           <OTELStatusBadge type="alert-state" value={alert.state} />
-          <span className="font-medium text-neutral-12">
-            {alert.name}
-          </span>
+          <span className="font-medium text-neutral-12">{alert.name}</span>
           <OTELStatusBadge type="alert-severity" value={alert.severity} />
-          <span className="text-sm text-neutral-10">
-            {alert.service}
-          </span>
+          <span className="text-sm text-neutral-10">{alert.service}</span>
           <HumanTimestamp timestamp={alert.startedAt} format="relative" />
         </div>
       </div>
       {/* Message */}
-      <p className="mt-2 text-sm text-neutral-11">
-        {alert.message}
-      </p>
+      <p className="mt-2 text-sm text-neutral-11">{alert.message}</p>
       {/* Actions */}
       <div className="mt-3 flex items-center gap-2 flex-wrap">
         {canOpenInGrafana && (
@@ -277,7 +280,8 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
             size="sm"
             className="px-3 py-1 text-sm bg-grafana-9 text-neutral-12 rounded hover:bg-grafana-10 flex gap-1"
             onClick={handleOpenGrafana}
-            aria-label="View in Grafana">
+            aria-label="View in Grafana"
+          >
             <ExternalLink className="w-3 h-3" aria-hidden="true" />
             View in Grafana
           </Button>
@@ -315,36 +319,29 @@ function AlertCard({ alert, onSilence }: AlertCardProps): React.ReactElement {
         <div className="mt-3 pt-3 border-t border-neutral-5">
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <dt className="text-neutral-10">
-                Alert ID
-              </dt>
-              <dd className="font-mono text-neutral-12">
-                {alert.id}
-              </dd>
+              <dt className="text-neutral-10">Alert ID</dt>
+              <dd className="font-mono text-neutral-12">{alert.id}</dd>
             </div>
             <div>
-              <dt className="text-neutral-10">
-                Started
-              </dt>
+              <dt className="text-neutral-10">Started</dt>
               <dd className="text-neutral-12">
                 <HumanTimestamp timestamp={alert.startedAt} format="datetime" />
               </dd>
             </div>
             {alert.resolvedAt && (
               <div>
-                <dt className="text-neutral-10">
-                  Resolved
-                </dt>
+                <dt className="text-neutral-10">Resolved</dt>
                 <dd className="text-neutral-12">
-                  <HumanTimestamp timestamp={alert.resolvedAt} format="datetime" />
+                  <HumanTimestamp
+                    timestamp={alert.resolvedAt}
+                    format="datetime"
+                  />
                 </dd>
               </div>
             )}
             {alert.labels && Object.keys(alert.labels).length > 0 && (
               <div className="col-span-2">
-                <dt className="text-neutral-10">
-                  Labels
-                </dt>
+                <dt className="text-neutral-10">Labels</dt>
                 <dd className="flex flex-wrap gap-1 mt-1">
                   {Object.entries(alert.labels).map(([key, value]) => (
                     <span
@@ -529,12 +526,10 @@ export function AlertsTab({
             className={cn(
               "w-2 h-2 rounded-full",
               connectionStatus === "connected" && "bg-success-9",
-              connectionStatus === "connecting" &&
-                "bg-warning-9 animate-pulse",
+              connectionStatus === "connecting" && "bg-warning-9 animate-pulse",
               connectionStatus === "reconnecting" &&
                 "bg-warning-9 animate-pulse",
-              connectionStatus === "disconnected" &&
-                "bg-neutral-4",
+              connectionStatus === "disconnected" && "bg-neutral-4",
               connectionStatus === "error" && "bg-error-9",
             )}
             title={`WebSocket: ${connectionStatus}`}
@@ -569,7 +564,8 @@ export function AlertsTab({
               setStateFilter("");
               setSeverityFilter("");
               setServiceFilter("");
-            }}>
+            }}
+          >
             Clear filters
           </Button>
         )}

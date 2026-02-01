@@ -256,7 +256,7 @@
   --neutral-a2: hsla(206, 6%, 9%, 0.027);
   --neutral-a3: hsla(206, 6%, 9%, 0.047);
   --neutral-a4: hsla(206, 6%, 9%, 0.071);
-  --neutral-a5: hsla(206, 6%, 9%, 0.090);
+  --neutral-a5: hsla(206, 6%, 9%, 0.09);
 
   --success-1: var(--grass-1);
   --success-2: var(--grass-2);
@@ -343,14 +343,14 @@
    * ========================================================================== */
 
   /* Font Sizes */
-  --font-size-xs: 0.75rem;      /* 12px */
-  --font-size-sm: 0.875rem;     /* 14px */
-  --font-size-base: 1rem;       /* 16px */
-  --font-size-lg: 1.125rem;     /* 18px */
-  --font-size-xl: 1.25rem;      /* 20px */
-  --font-size-2xl: 1.5rem;      /* 24px */
-  --font-size-3xl: 1.875rem;    /* 30px */
-  --font-size-4xl: 2.25rem;     /* 36px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
 
   /* Font Weights */
   --font-weight-normal: 400;
@@ -381,25 +381,25 @@
 
   --spacing-0: 0;
   --spacing-px: 1px;
-  --spacing-0-5: 0.125rem;   /* 2px */
-  --spacing-1: 0.25rem;      /* 4px */
-  --spacing-1-5: 0.375rem;   /* 6px */
-  --spacing-2: 0.5rem;       /* 8px */
-  --spacing-2-5: 0.625rem;   /* 10px */
-  --spacing-3: 0.75rem;      /* 12px */
-  --spacing-3-5: 0.875rem;   /* 14px */
-  --spacing-4: 1rem;         /* 16px */
-  --spacing-5: 1.25rem;      /* 20px */
-  --spacing-6: 1.5rem;       /* 24px */
-  --spacing-7: 1.75rem;      /* 28px */
-  --spacing-8: 2rem;         /* 32px */
-  --spacing-9: 2.25rem;      /* 36px */
-  --spacing-10: 2.5rem;      /* 40px */
-  --spacing-12: 3rem;        /* 48px */
-  --spacing-14: 3.5rem;      /* 56px */
-  --spacing-16: 4rem;        /* 64px */
-  --spacing-20: 5rem;        /* 80px */
-  --spacing-24: 6rem;        /* 96px */
+  --spacing-0-5: 0.125rem; /* 2px */
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-1-5: 0.375rem; /* 6px */
+  --spacing-2: 0.5rem; /* 8px */
+  --spacing-2-5: 0.625rem; /* 10px */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-3-5: 0.875rem; /* 14px */
+  --spacing-4: 1rem; /* 16px */
+  --spacing-5: 1.25rem; /* 20px */
+  --spacing-6: 1.5rem; /* 24px */
+  --spacing-7: 1.75rem; /* 28px */
+  --spacing-8: 2rem; /* 32px */
+  --spacing-9: 2.25rem; /* 36px */
+  --spacing-10: 2.5rem; /* 40px */
+  --spacing-12: 3rem; /* 48px */
+  --spacing-14: 3.5rem; /* 56px */
+  --spacing-16: 4rem; /* 64px */
+  --spacing-20: 5rem; /* 80px */
+  --spacing-24: 6rem; /* 96px */
 
   /* ==========================================================================
    * SHADOW TOKENS
@@ -409,8 +409,10 @@
   --shadow-none: none;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
   /* Semantic shadow aliases */
@@ -424,13 +426,13 @@
    * ========================================================================== */
 
   --radius-none: 0;
-  --radius-sm: 0.125rem;     /* 2px */
+  --radius-sm: 0.125rem; /* 2px */
   --radius-DEFAULT: 0.375rem; /* 6px */
-  --radius-md: 0.375rem;     /* 6px */
-  --radius-lg: 0.5rem;       /* 8px */
-  --radius-xl: 0.75rem;      /* 12px */
-  --radius-2xl: 1rem;        /* 16px */
-  --radius-3xl: 1.5rem;      /* 24px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
+  --radius-2xl: 1rem; /* 16px */
+  --radius-3xl: 1.5rem; /* 24px */
   --radius-full: 9999px;
 
   /* ==========================================================================
@@ -473,8 +475,8 @@
    * Updated dynamically by ResizeObserver
    * ========================================================================== */
 
-  --topbar-height: 3.5rem;      /* 56px default */
-  --statusbar-height: 2rem;     /* 32px default */
+  --topbar-height: 3.5rem; /* 56px default */
+  --statusbar-height: 2rem; /* 32px default */
 
   /* Safe area support for mobile devices (notch, home indicator) */
   --safe-area-top: env(safe-area-inset-top, 0px);

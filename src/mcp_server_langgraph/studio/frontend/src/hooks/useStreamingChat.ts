@@ -426,7 +426,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
               risk: data.routing_decision.risk,
               taskType: data.routing_decision.task_type,
               toolsNeeded: data.routing_decision.tools_needed ?? null,
-              suggestedOrchestrator: data.routing_decision.suggested_orchestrator,
+              suggestedOrchestrator:
+                data.routing_decision.suggested_orchestrator,
               critiqueRounds: data.routing_decision.critique_rounds,
               thinkingBudget: data.routing_decision.thinking_budget,
               confidence: data.routing_decision.confidence,
@@ -435,7 +436,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
               routingRationale: data.routing_decision.routing_rationale ?? "",
               // v35.0 Phase 2e: Tool preference fields
               toolPreference: data.routing_decision.tool_preference ?? null,
-              toolSelectionMode: data.routing_decision.tool_selection_mode ?? null,
+              toolSelectionMode:
+                data.routing_decision.tool_selection_mode ?? null,
             };
           }
 
@@ -646,7 +648,8 @@ export function useStreamingChat(): UseStreamingChatReturn {
                   risk: parsed.routingDecision.risk,
                   taskType: parsed.routingDecision.taskType,
                   toolsNeeded: parsed.routingDecision.toolsNeeded ?? [],
-                  suggestedOrchestrator: parsed.routingDecision.suggestedOrchestrator,
+                  suggestedOrchestrator:
+                    parsed.routingDecision.suggestedOrchestrator,
                   critiqueRounds: parsed.routingDecision.critiqueRounds,
                   thinkingBudget: parsed.routingDecision.thinkingBudget,
                   confidence: parsed.routingDecision.confidence,

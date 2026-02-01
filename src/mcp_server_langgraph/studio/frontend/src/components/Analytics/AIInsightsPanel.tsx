@@ -53,8 +53,7 @@ function formatTimestamp(date: Date | null): string {
  */
 function SeverityBadge({ severity }: { severity: string }) {
   const colorClasses = {
-    critical:
-      "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-4",
+    critical: "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-4",
     warning:
       "bg-warning-3 text-warning-11 dark:bg-warning-12 dark:text-warning-6",
     info: "bg-primary-3 text-primary-11 dark:bg-primary-12 dark:text-primary-4",
@@ -78,10 +77,8 @@ function SentimentBadge({ sentiment }: { sentiment: string }) {
   const colorClasses = {
     positive:
       "bg-success-3 text-success-11 dark:bg-success-12 dark:text-success-4",
-    negative:
-      "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-4",
-    neutral:
-      "bg-neutral-2 text-neutral-12",
+    negative: "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-4",
+    neutral: "bg-neutral-2 text-neutral-12",
   };
 
   return (
@@ -108,9 +105,7 @@ function AnomalyCard({ anomaly }: { anomaly: AnomalyInsight }) {
         </span>
         <SeverityBadge severity={anomaly.severity} />
       </div>
-      <p className="text-sm text-neutral-12 mb-2">
-        {anomaly.message}
-      </p>
+      <p className="text-sm text-neutral-12 mb-2">{anomaly.message}</p>
       {anomaly.suggestedActions && anomaly.suggestedActions.length > 0 && (
         <div className="mt-2">
           <span className="text-xs font-medium text-neutral-10">
@@ -139,9 +134,7 @@ function TrendCard({ trend }: { trend: TrendInsight }) {
         </span>
         <SentimentBadge sentiment={trend.sentiment} />
       </div>
-      <p className="text-sm text-neutral-12">
-        {trend.message}
-      </p>
+      <p className="text-sm text-neutral-12">{trend.message}</p>
     </div>
   );
 }
@@ -158,9 +151,7 @@ function PatternCard({ pattern }: { pattern: PatternInsight }) {
         </span>
         {pattern.sentiment && <SentimentBadge sentiment={pattern.sentiment} />}
       </div>
-      <p className="text-sm text-neutral-12">
-        {pattern.message}
-      </p>
+      <p className="text-sm text-neutral-12">{pattern.message}</p>
     </div>
   );
 }
@@ -186,9 +177,7 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
       </div>
       <div className="flex items-center gap-4 mb-2">
         <div>
-          <span className="text-xs text-neutral-10">
-            Current
-          </span>
+          <span className="text-xs text-neutral-10">Current</span>
           <p className="text-lg font-semibold text-neutral-12">
             {typeof prediction.current === "number" && prediction.current < 1
               ? prediction.current.toFixed(2)
@@ -197,9 +186,7 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
         </div>
         <div className="text-neutral-9">→</div>
         <div>
-          <span className="text-xs text-neutral-10">
-            Predicted
-          </span>
+          <span className="text-xs text-neutral-10">Predicted</span>
           <p
             className={`text-lg font-semibold ${
               isPositive
@@ -220,9 +207,7 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
       </div>
       {prediction.drivers.length > 0 && (
         <div className="mt-2">
-          <span className="text-xs text-neutral-10">
-            Drivers:
-          </span>
+          <span className="text-xs text-neutral-10">Drivers:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {prediction.drivers.map((driver) => (
               <span
@@ -276,9 +261,7 @@ export function AIInsightsPanel({
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-12">
-          AI Insights
-        </h2>
+        <h2 className="text-lg font-semibold text-neutral-12">AI Insights</h2>
         <div className="flex items-center gap-2">
           {lastUpdated && (
             <span className="text-xs text-neutral-10">
@@ -302,7 +285,12 @@ export function AIInsightsPanel({
         {/* Loading State */}
         {isLoading && !hasInsights && (
           <div className="text-center py-8">
-            <div className={cn("text-neutral-10", !prefersReducedMotion && "animate-pulse")}>
+            <div
+              className={cn(
+                "text-neutral-10",
+                !prefersReducedMotion && "animate-pulse",
+              )}
+            >
               Loading insights...
             </div>
           </div>

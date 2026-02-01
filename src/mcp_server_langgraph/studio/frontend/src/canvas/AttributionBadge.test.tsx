@@ -3,10 +3,15 @@
  *
  * TDD: Tests written first to define expected behavior
  */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import { AttributionBadge } from "./AttributionBadge";
 import type { EditMetadata } from "../types/artifacts";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("AttributionBadge", () => {
   describe("getAttributionType helper", () => {

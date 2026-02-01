@@ -174,10 +174,7 @@ export function ConnectionStatus({
 
         {!compact && (
           <>
-            <Icon
-              size={14}
-              className="text-neutral-10"
-            />
+            <Icon size={14} className="text-neutral-10" />
             <span
               role="status"
               aria-live="polite"
@@ -228,9 +225,7 @@ export function ConnectionStatus({
             )}
           </div>
           {syncTimeDisplay && (
-            <div className="mt-1 text-neutral-9">
-              Synced {syncTimeDisplay}
-            </div>
+            <div className="mt-1 text-neutral-9">Synced {syncTimeDisplay}</div>
           )}
           {/* Tooltip arrow */}
           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-12 dark:border-t-neutral-11" />

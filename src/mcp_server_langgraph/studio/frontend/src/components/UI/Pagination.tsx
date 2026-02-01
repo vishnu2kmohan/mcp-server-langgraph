@@ -71,18 +71,13 @@ export function CursorPagination({
     >
       <div className="flex items-center gap-2">
         {itemCount !== undefined && (
-          <span className="text-sm text-neutral-10">
-            {itemCount} items
-          </span>
+          <span className="text-sm text-neutral-10">{itemCount} items</span>
         )}
       </div>
       <div className="flex items-center gap-2">
         {showLimitSelector && (
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="limit-select"
-              className="text-sm text-neutral-10"
-            >
+            <label htmlFor="limit-select" className="text-sm text-neutral-10">
               Show:
             </label>
             <select
@@ -240,17 +235,12 @@ export function PagePagination({
     >
       <div className="flex items-center gap-4">
         {totalItems !== undefined && (
-          <span className="text-sm text-neutral-10">
-            {totalItems} items
-          </span>
+          <span className="text-sm text-neutral-10">{totalItems} items</span>
         )}
 
         {perPage !== undefined && onPerPageChange && (
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="perpage-select"
-              className="text-sm text-neutral-10"
-            >
+            <label htmlFor="perpage-select" className="text-sm text-neutral-10">
               Show:
             </label>
             <select

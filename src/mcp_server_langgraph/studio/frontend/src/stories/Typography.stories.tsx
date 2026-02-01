@@ -1,4 +1,3 @@
- 
 /**
  * Typography Stories
  *
@@ -22,14 +21,22 @@ interface TypeScaleRowProps {
   usage: string;
 }
 
-function TypeScaleRow({ name, className, size, lineHeight, usage }: TypeScaleRowProps) {
+function TypeScaleRow({
+  name,
+  className,
+  size,
+  lineHeight,
+  usage,
+}: TypeScaleRowProps) {
   return (
     <div className="flex items-baseline gap-6 py-4 border-b border-neutral-6">
       <div className="w-24 shrink-0">
         <code className="text-xs text-neutral-11">{name}</code>
       </div>
       <div className="w-24 shrink-0">
-        <span className="text-xs text-neutral-10">{size} / {lineHeight}</span>
+        <span className="text-xs text-neutral-10">
+          {size} / {lineHeight}
+        </span>
       </div>
       <div className="flex-1">
         <span className={`${className} text-neutral-12`}>
@@ -55,8 +62,8 @@ function TypeScale() {
           Typography Scale
         </h2>
         <p className="text-neutral-11">
-          Agent Studio uses a 4px-grid-aligned typography scale for consistent rhythm.
-          All sizes are based on rem units (1rem = 16px).
+          Agent Studio uses a 4px-grid-aligned typography scale for consistent
+          rhythm. All sizes are based on rem units (1rem = 16px).
         </p>
       </div>
 
@@ -132,7 +139,8 @@ function FontFamilies() {
           Font Families
         </h2>
         <p className="text-neutral-11">
-          Two font families are used: Inter for UI text and JetBrains Mono for code.
+          Two font families are used: Inter for UI text and JetBrains Mono for
+          code.
         </p>
       </div>
 
@@ -165,7 +173,8 @@ function FontFamilies() {
             JetBrains Mono (font-mono)
           </h3>
           <p className="text-sm text-neutral-10 mb-4">
-            Code font. Clear distinction between similar characters (0, O, l, 1, I).
+            Code font. Clear distinction between similar characters (0, O, l, 1,
+            I).
           </p>
           <div className="space-y-3 font-mono">
             <p className="font-normal text-neutral-12">
@@ -185,7 +194,9 @@ function FontFamilies() {
             <span className="text-success-11">number</span>
             <span className="text-neutral-12"> {"{"}</span>
             <br />
-            <span className="text-neutral-12">{}return items.reduce((sum, item) ={">"} sum + item.price, 0);</span>
+            <span className="text-neutral-12">
+              {}return items.reduce((sum, item) ={">"} sum + item.price, 0);
+            </span>
             <br />
             <span className="text-neutral-12">{"}"}</span>
           </div>
@@ -199,11 +210,10 @@ function FontWeights() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-xl font-bold text-neutral-12 mb-2">
-          Font Weights
-        </h2>
+        <h2 className="text-xl font-bold text-neutral-12 mb-2">Font Weights</h2>
         <p className="text-neutral-11">
-          Use appropriate weights for hierarchy. Avoid thin weights for body text.
+          Use appropriate weights for hierarchy. Avoid thin weights for body
+          text.
         </p>
       </div>
 
@@ -211,31 +221,61 @@ function FontWeights() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-6">
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Weight</th>
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Class</th>
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Usage</th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Weight
+              </th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Class
+              </th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Usage
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-neutral-6">
-              <td className="py-3 px-4 font-normal text-neutral-12">400 (Normal)</td>
-              <td className="py-3 px-4"><code className="text-xs text-neutral-11">font-normal</code></td>
-              <td className="py-3 px-4 text-neutral-10">Body text, descriptions</td>
+              <td className="py-3 px-4 font-normal text-neutral-12">
+                400 (Normal)
+              </td>
+              <td className="py-3 px-4">
+                <code className="text-xs text-neutral-11">font-normal</code>
+              </td>
+              <td className="py-3 px-4 text-neutral-10">
+                Body text, descriptions
+              </td>
             </tr>
             <tr className="border-b border-neutral-6">
-              <td className="py-3 px-4 font-medium text-neutral-12">500 (Medium)</td>
-              <td className="py-3 px-4"><code className="text-xs text-neutral-11">font-medium</code></td>
-              <td className="py-3 px-4 text-neutral-10">Labels, buttons, tabs</td>
+              <td className="py-3 px-4 font-medium text-neutral-12">
+                500 (Medium)
+              </td>
+              <td className="py-3 px-4">
+                <code className="text-xs text-neutral-11">font-medium</code>
+              </td>
+              <td className="py-3 px-4 text-neutral-10">
+                Labels, buttons, tabs
+              </td>
             </tr>
             <tr className="border-b border-neutral-6">
-              <td className="py-3 px-4 font-semibold text-neutral-12">600 (Semibold)</td>
-              <td className="py-3 px-4"><code className="text-xs text-neutral-11">font-semibold</code></td>
-              <td className="py-3 px-4 text-neutral-10">Subheadings, emphasis</td>
+              <td className="py-3 px-4 font-semibold text-neutral-12">
+                600 (Semibold)
+              </td>
+              <td className="py-3 px-4">
+                <code className="text-xs text-neutral-11">font-semibold</code>
+              </td>
+              <td className="py-3 px-4 text-neutral-10">
+                Subheadings, emphasis
+              </td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-bold text-neutral-12">700 (Bold)</td>
-              <td className="py-3 px-4"><code className="text-xs text-neutral-11">font-bold</code></td>
-              <td className="py-3 px-4 text-neutral-10">Headings, important text</td>
+              <td className="py-3 px-4 font-bold text-neutral-12">
+                700 (Bold)
+              </td>
+              <td className="py-3 px-4">
+                <code className="text-xs text-neutral-11">font-bold</code>
+              </td>
+              <td className="py-3 px-4 text-neutral-10">
+                Headings, important text
+              </td>
             </tr>
           </tbody>
         </table>
@@ -258,10 +298,12 @@ function AccessibilityRules() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-2">Minimum Body Size</h4>
+          <h4 className="font-medium text-neutral-12 mb-2">
+            Minimum Body Size
+          </h4>
           <p className="text-sm text-neutral-11 mb-2">
-            Body text should be at least 16px (1rem). Smaller sizes are acceptable
-            for captions and badges.
+            Body text should be at least 16px (1rem). Smaller sizes are
+            acceptable for captions and badges.
           </p>
           <div className="flex gap-4 mt-3">
             <div className="text-center">
@@ -308,22 +350,29 @@ function AccessibilityRules() {
             with dyslexia.
           </p>
           <div className="mt-3 bg-neutral-2 p-2 rounded text-sm text-neutral-11">
-            <span className="bg-success-3">This line is about 60 characters long, which is ideal.</span>
+            <span className="bg-success-3">
+              This line is about 60 characters long, which is ideal.
+            </span>
           </div>
         </div>
 
         <div className="border border-neutral-6 rounded-lg p-4">
           <h4 className="font-medium text-neutral-12 mb-2">Contrast Ratios</h4>
           <p className="text-sm text-neutral-11 mb-2">
-            Body text: 4.5:1 minimum. Large text (24px+ or 18.66px+ bold): 3:1 minimum.
+            Body text: 4.5:1 minimum. Large text (24px+ or 18.66px+ bold): 3:1
+            minimum.
           </p>
           <div className="flex gap-4 mt-3">
             <div className="text-center">
-              <div className="text-lg font-bold text-neutral-12 bg-neutral-1 px-2 rounded">Aa</div>
+              <div className="text-lg font-bold text-neutral-12 bg-neutral-1 px-2 rounded">
+                Aa
+              </div>
               <span className="text-xs text-success-10">4.5:1+</span>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-neutral-10 bg-neutral-1 px-2 rounded">Aa</div>
+              <div className="text-2xl font-bold text-neutral-10 bg-neutral-1 px-2 rounded">
+                Aa
+              </div>
               <span className="text-xs text-success-10">3:1+</span>
             </div>
           </div>
@@ -333,8 +382,9 @@ function AccessibilityRules() {
       <div className="bg-primary-2 border border-primary-6 rounded-lg p-4">
         <h4 className="font-medium text-primary-11 mb-1">Pro Tip</h4>
         <p className="text-sm text-primary-11">
-          Use <code className="bg-primary-3 px-1 rounded">max-w-prose</code> (65ch) to automatically
-          constrain paragraph width to optimal reading length.
+          Use <code className="bg-primary-3 px-1 rounded">max-w-prose</code>{" "}
+          (65ch) to automatically constrain paragraph width to optimal reading
+          length.
         </p>
       </div>
     </div>
@@ -349,7 +399,8 @@ function HeadingHierarchy() {
           Heading Hierarchy
         </h2>
         <p className="text-neutral-11">
-          Maintain proper heading hierarchy for accessibility. Never skip heading levels.
+          Maintain proper heading hierarchy for accessibility. Never skip
+          heading levels.
         </p>
       </div>
 
@@ -360,11 +411,15 @@ function HeadingHierarchy() {
         </div>
         <div className="border-l-4 border-primary-8 pl-4 ml-4">
           <span className="text-xs font-mono text-neutral-10">h2</span>
-          <h2 className="text-2xl font-semibold text-neutral-12">Section Heading</h2>
+          <h2 className="text-2xl font-semibold text-neutral-12">
+            Section Heading
+          </h2>
         </div>
         <div className="border-l-4 border-primary-7 pl-4 ml-8">
           <span className="text-xs font-mono text-neutral-10">h3</span>
-          <h3 className="text-xl font-semibold text-neutral-12">Subsection Heading</h3>
+          <h3 className="text-xl font-semibold text-neutral-12">
+            Subsection Heading
+          </h3>
         </div>
         <div className="border-l-4 border-primary-6 pl-4 ml-12">
           <span className="text-xs font-mono text-neutral-10">h4</span>
@@ -372,7 +427,9 @@ function HeadingHierarchy() {
         </div>
         <div className="border-l-4 border-primary-5 pl-4 ml-16">
           <span className="text-xs font-mono text-neutral-10">h5</span>
-          <h5 className="text-base font-medium text-neutral-12">Minor Heading</h5>
+          <h5 className="text-base font-medium text-neutral-12">
+            Minor Heading
+          </h5>
         </div>
         <div className="border-l-4 border-primary-4 pl-4 ml-20">
           <span className="text-xs font-mono text-neutral-10">h6</span>
@@ -383,8 +440,9 @@ function HeadingHierarchy() {
       <div className="bg-warning-2 border border-warning-6 rounded-lg p-4">
         <h4 className="font-medium text-warning-11 mb-1">Common Mistake</h4>
         <p className="text-sm text-warning-11">
-          Don't use headings for styling. If you need large text without semantic
-          meaning, use <code className="bg-warning-3 px-1 rounded">text-2xl</code> on a
+          Don't use headings for styling. If you need large text without
+          semantic meaning, use{" "}
+          <code className="bg-warning-3 px-1 rounded">text-2xl</code> on a
           {"<span>"} instead of {"<h2>"}.
         </p>
       </div>

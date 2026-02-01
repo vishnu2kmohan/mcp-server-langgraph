@@ -201,9 +201,7 @@ export const Sizes: Story = {
     return (
       <div className="space-y-6">
         <div>
-          <span className="text-sm text-neutral-11 mb-2 block">
-            Small
-          </span>
+          <span className="text-sm text-neutral-11 mb-2 block">Small</span>
           <FileInput
             size="sm"
             onChange={setSmFiles}
@@ -223,9 +221,7 @@ export const Sizes: Story = {
           />
         </div>
         <div>
-          <span className="text-sm text-neutral-11 mb-2 block">
-            Large
-          </span>
+          <span className="text-sm text-neutral-11 mb-2 block">Large</span>
           <FileInput
             size="lg"
             onChange={setLgFiles}

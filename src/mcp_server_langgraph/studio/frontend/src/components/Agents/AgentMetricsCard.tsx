@@ -71,9 +71,7 @@ export function AgentMetricsCard() {
             data-testid="metrics-loading"
           >
             <Loader2 className="w-6 h-6 animate-spin text-neutral-9" />
-            <span className="ml-2 text-neutral-10">
-              Loading metrics...
-            </span>
+            <span className="ml-2 text-neutral-10">Loading metrics...</span>
           </div>
         </CardContent>
       </Card>
@@ -96,9 +94,7 @@ export function AgentMetricsCard() {
             data-testid="metrics-error"
           >
             <AlertTriangle className="w-8 h-8 text-warning-9 mb-2" />
-            <p className="text-neutral-10 mb-4">
-              Metrics backend unavailable
-            </p>
+            <p className="text-neutral-10 mb-4">Metrics backend unavailable</p>
             <Button
               variant="primary"
               className="flex px-4 py-2 text-sm text-neutral-12 bg-primary-9 rounded hover:bg-primary-10"
@@ -136,7 +132,8 @@ export function AgentMetricsCard() {
             variant="ghost"
             className="p-1 text-neutral-10 hover:text-neutral-11 rounded"
             onClick={() => refetch()}
-            aria-label="Refresh metrics">
+            aria-label="Refresh metrics"
+          >
             <RefreshCw size={16} />
           </Button>
         </div>
@@ -153,33 +150,25 @@ export function AgentMetricsCard() {
               <div className="text-2xl font-bold text-neutral-12">
                 {formatNumber(data.orchestrator.totalExecutions)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Total Executions
-              </div>
+              <div className="text-xs text-neutral-10">Total Executions</div>
             </div>
             <div className="p-3 bg-neutral-1 rounded">
               <div className="text-2xl font-bold text-success-10">
                 {formatPercent(successRate)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Success Rate
-              </div>
+              <div className="text-xs text-neutral-10">Success Rate</div>
             </div>
             <div className="p-3 bg-neutral-1 rounded">
               <div className="text-2xl font-bold text-neutral-12">
                 {data.orchestrator.avgDurationMs.toFixed(1)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Avg Duration (ms)
-              </div>
+              <div className="text-xs text-neutral-10">Avg Duration (ms)</div>
             </div>
             <div className="p-3 bg-neutral-1 rounded">
               <div className="text-2xl font-bold text-error-10">
                 {formatNumber(data.orchestrator.failedExecutions)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Failed
-              </div>
+              <div className="text-xs text-neutral-10">Failed</div>
             </div>
           </div>
         </div>
@@ -195,9 +184,7 @@ export function AgentMetricsCard() {
               <div className="text-2xl font-bold text-neutral-12">
                 {formatNumber(data.hitl.totalRequests)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Total Requests
-              </div>
+              <div className="text-xs text-neutral-10">Total Requests</div>
             </div>
             <div className="p-3 bg-neutral-1 rounded flex items-center gap-2">
               <CheckCircle size={20} className="text-success-9" />
@@ -205,9 +192,7 @@ export function AgentMetricsCard() {
                 <div className="text-xl font-bold text-success-10">
                   {formatNumber(data.hitl.approvedCount)}
                 </div>
-                <div className="text-xs text-neutral-10">
-                  Approved
-                </div>
+                <div className="text-xs text-neutral-10">Approved</div>
               </div>
             </div>
             <div className="p-3 bg-neutral-1 rounded flex items-center gap-2">
@@ -216,9 +201,7 @@ export function AgentMetricsCard() {
                 <div className="text-xl font-bold text-error-10">
                   {formatNumber(data.hitl.rejectedCount)}
                 </div>
-                <div className="text-xs text-neutral-10">
-                  Rejected
-                </div>
+                <div className="text-xs text-neutral-10">Rejected</div>
               </div>
             </div>
             <div className="p-3 bg-neutral-1 rounded flex items-center gap-2">
@@ -227,9 +210,7 @@ export function AgentMetricsCard() {
                 <div className="text-xl font-bold text-warning-9">
                   {formatNumber(data.hitl.pendingCount)}
                 </div>
-                <div className="text-xs text-neutral-10">
-                  Pending
-                </div>
+                <div className="text-xs text-neutral-10">Pending</div>
               </div>
             </div>
           </div>
@@ -246,25 +227,19 @@ export function AgentMetricsCard() {
               <div className="text-2xl font-bold text-neutral-12">
                 {formatCurrency(data.cost.totalCostUsd)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Total Cost
-              </div>
+              <div className="text-xs text-neutral-10">Total Cost</div>
             </div>
             <div className="p-3 bg-neutral-1 rounded">
               <div className="text-2xl font-bold text-neutral-12">
                 {formatNumber(data.cost.totalTokens)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Total Tokens
-              </div>
+              <div className="text-xs text-neutral-10">Total Tokens</div>
             </div>
             <div className="p-3 bg-neutral-1 rounded">
               <div className="text-2xl font-bold text-neutral-12">
                 {formatCurrency(data.cost.avgCostPerRequestUsd)}
               </div>
-              <div className="text-xs text-neutral-10">
-                Avg/Request
-              </div>
+              <div className="text-xs text-neutral-10">Avg/Request</div>
             </div>
           </div>
         </div>

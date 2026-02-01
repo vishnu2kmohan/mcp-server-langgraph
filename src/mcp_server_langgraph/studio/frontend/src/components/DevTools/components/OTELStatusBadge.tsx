@@ -118,7 +118,8 @@ export type OTELStatusBadgeVariants = VariantProps<
 // =============================================================================
 
 export interface OTELStatusBadgeProps
-  extends Omit<HTMLAttributes<HTMLSpanElement>, "children">,
+  extends
+    Omit<HTMLAttributes<HTMLSpanElement>, "children">,
     Omit<OTELStatusBadgeVariants, "colorVariant"> {
   /** Type of status badge */
   type: OTELStatusType;

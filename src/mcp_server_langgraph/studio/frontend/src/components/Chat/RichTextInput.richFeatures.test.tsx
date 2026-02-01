@@ -181,7 +181,9 @@ describe("RichTextInput - Rich Features", () => {
       // Select "world"
       input.setSelectionRange(6, 11);
 
-      const strikeButton = screen.getByRole("button", { name: /strikethrough/i });
+      const strikeButton = screen.getByRole("button", {
+        name: /strikethrough/i,
+      });
       await user.click(strikeButton);
 
       expect(input.value).toContain("~~world~~");

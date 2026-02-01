@@ -86,7 +86,8 @@ const initialState: ChatConnectionState = {
   connectorSuggestions: {
     visible: false,
     templates: [],
-    query: "" },
+    query: "",
+  },
   configuredTemplateIds: [],
 };
 
@@ -225,21 +226,21 @@ export const {
 // Selectors
 // Use a generic type that accepts any state containing chatConnection
 // This allows compatibility with both RootState and partial test states
-export const selectPendingAuthRequirements = (
-  state: { chatConnection: ChatConnectionState },
-) => state.chatConnection.pendingAuthRequirements;
+export const selectPendingAuthRequirements = (state: {
+  chatConnection: ChatConnectionState;
+}) => state.chatConnection.pendingAuthRequirements;
 
-export const selectActiveConnectionSetup = (
-  state: { chatConnection: ChatConnectionState },
-) => state.chatConnection.activeConnectionSetup;
+export const selectActiveConnectionSetup = (state: {
+  chatConnection: ChatConnectionState;
+}) => state.chatConnection.activeConnectionSetup;
 
-export const selectConnectorSuggestions = (
-  state: { chatConnection: ChatConnectionState },
-) => state.chatConnection.connectorSuggestions;
+export const selectConnectorSuggestions = (state: {
+  chatConnection: ChatConnectionState;
+}) => state.chatConnection.connectorSuggestions;
 
-export const selectConfiguredTemplateIds = (
-  state: { chatConnection: ChatConnectionState },
-) => state.chatConnection.configuredTemplateIds;
+export const selectConfiguredTemplateIds = (state: {
+  chatConnection: ChatConnectionState;
+}) => state.chatConnection.configuredTemplateIds;
 
 // Export reducer as default
 export default chatConnectionSlice.reducer;

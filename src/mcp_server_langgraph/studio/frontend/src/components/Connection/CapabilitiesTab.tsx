@@ -59,7 +59,9 @@ export function CapabilitiesTab({ className }: CapabilitiesTabProps) {
 
   // Pre-selected items from panel actions
   const [selectedTool, setSelectedTool] = useState<string | undefined>();
-  const [selectedResource, setSelectedResource] = useState<string | undefined>();
+  const [selectedResource, setSelectedResource] = useState<
+    string | undefined
+  >();
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>();
 
   // Panel action handlers
@@ -104,7 +106,7 @@ export function CapabilitiesTab({ className }: CapabilitiesTabProps) {
       ? "bg-success-9"
       : mcpWsStatus === "connecting" || mcpWsStatus === "reconnecting"
         ? "bg-warning-9 animate-pulse"
-        : "bg-neutral-4"
+        : "bg-neutral-4",
   );
 
   // WebSocket status tooltip

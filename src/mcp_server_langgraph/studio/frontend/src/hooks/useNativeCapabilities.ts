@@ -63,7 +63,9 @@ export interface UseNativeCapabilitiesResult {
   /** Check if a specific tool is supported and enabled */
   isToolAvailable: (toolName: string) => boolean;
   /** Get capability for a specific tool */
-  getCapability: (toolName: string) => NativeToolCapabilityCamelCase | undefined;
+  getCapability: (
+    toolName: string,
+  ) => NativeToolCapabilityCamelCase | undefined;
 }
 
 // =============================================================================
@@ -77,21 +79,18 @@ export interface UseNativeCapabilitiesResult {
  * @returns Capability data, loading state, and utilities
  */
 export function useNativeCapabilities(
-  options: UseNativeCapabilitiesOptions
+  options: UseNativeCapabilitiesOptions,
 ): UseNativeCapabilitiesResult {
   const { modelId, skip = false } = options;
 
   // Fetch capabilities from API
   const { data, isLoading, isFetching, isError, error, refetch } =
-    useGetNativeCapabilitiesQuery(
-      { modelId },
-      { skip: skip || !modelId }
-    );
+    useGetNativeCapabilitiesQuery({ modelId }, { skip: skip || !modelId });
 
   // Extract capabilities from response
   const capabilities = useMemo(
     () => data?.capabilities ?? [],
-    [data?.capabilities]
+    [data?.capabilities],
   );
 
   // Check if web search is supported and enabled
@@ -125,9 +124,7 @@ export function useNativeCapabilities(
 
   // Get capability for a specific tool
   const getCapability = useMemo(() => {
-    return (
-      toolName: string
-    ): NativeToolCapabilityCamelCase | undefined => {
+    return (toolName: string): NativeToolCapabilityCamelCase | undefined => {
       return capabilities.find((c) => c.toolName === toolName);
     };
   }, [capabilities]);

@@ -93,9 +93,7 @@ export function ExecutableCanvas({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-5 bg-neutral-1">
         <div className="flex items-center gap-3">
-          <h3 className="font-medium text-neutral-12">
-            {config.title}
-          </h3>
+          <h3 className="font-medium text-neutral-12">{config.title}</h3>
           <span className="px-2 py-0.5 text-xs rounded bg-neutral-3 text-neutral-11">
             {config.language}
           </span>
@@ -111,11 +109,10 @@ export function ExecutableCanvas({
               onClick={() => setViewMode("split")}
               className={cn(
                 "p-1.5",
-                viewMode === "split"
-                  ? "bg-neutral-3"
-                  : "hover:bg-neutral-2",
+                viewMode === "split" ? "bg-neutral-3" : "hover:bg-neutral-2",
               )}
-              aria-label="Split view">
+              aria-label="Split view"
+            >
               <Columns size={14} />
             </Button>
             <Button
@@ -125,11 +122,10 @@ export function ExecutableCanvas({
               onClick={() => setViewMode("code")}
               className={cn(
                 "p-1.5",
-                viewMode === "code"
-                  ? "bg-neutral-3"
-                  : "hover:bg-neutral-2",
+                viewMode === "code" ? "bg-neutral-3" : "hover:bg-neutral-2",
               )}
-              aria-label="Code only">
+              aria-label="Code only"
+            >
               <Code size={14} />
             </Button>
             <Button
@@ -139,11 +135,10 @@ export function ExecutableCanvas({
               onClick={() => setViewMode("preview")}
               className={cn(
                 "p-1.5",
-                viewMode === "preview"
-                  ? "bg-neutral-3"
-                  : "hover:bg-neutral-2",
+                viewMode === "preview" ? "bg-neutral-3" : "hover:bg-neutral-2",
               )}
-              aria-label="Preview only">
+              aria-label="Preview only"
+            >
               <Eye size={14} />
             </Button>
           </div>
@@ -248,15 +243,12 @@ export function ExecutableCanvas({
       )}
       {/* Console Panel */}
       {consoleOutput.length > 0 && (
-        <div
-          data-testid="console-panel"
-          className="border-t border-neutral-5"
-        >
+        <div data-testid="console-panel" className="border-t border-neutral-5">
           <div className="flex items-center justify-between px-4 py-1 bg-neutral-2">
-            <span className="text-xs font-medium text-neutral-10">
-              Console
-            </span>
-            <Button size="icon" variant="ghost"
+            <span className="text-xs font-medium text-neutral-10">Console</span>
+            <Button
+              size="icon"
+              variant="ghost"
               className="p-1 text-neutral-9 hover:text-neutral-11"
               data-testid="clear-console"
               type="button"

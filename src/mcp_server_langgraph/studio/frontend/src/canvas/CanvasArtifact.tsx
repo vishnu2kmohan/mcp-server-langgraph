@@ -323,8 +323,7 @@ export function CanvasArtifact({
 
   // Phase 4: Use new EditMetadata structure for AI detection
   const isAIGenerated =
-    artifact.editMetadata?.origin === "ai" &&
-    !artifact.editMetadata?.modified;
+    artifact.editMetadata?.origin === "ai" && !artifact.editMetadata?.modified;
 
   const aiConfidence = artifact.editMetadata?.aiConfidence;
   const language =
@@ -871,9 +870,7 @@ _altair_spec
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-11">
-            v{artifact.version}
-          </span>
+          <span className="text-xs text-neutral-11">v{artifact.version}</span>
           {editable && !isEditing && (
             <Button
               variant="ghost"
@@ -885,13 +882,16 @@ _altair_spec
                 "p-1.5 rounded transition-colors",
                 "text-neutral-11 hover:text-neutral-11",
                 "hover:bg-neutral-2",
-              )}>
+              )}
+            >
               <Edit2 size={14} />
             </Button>
           )}
           {isEditing && (
             <>
-              <Button size="icon" variant="ghost"
+              <Button
+                size="icon"
+                variant="ghost"
                 data-testid="save-button"
                 type="button"
                 onClick={handleSave}
@@ -904,7 +904,9 @@ _altair_spec
               >
                 <Save size={14} />
               </Button>
-              <Button size="icon" variant="ghost"
+              <Button
+                size="icon"
+                variant="ghost"
                 data-testid="cancel-button"
                 type="button"
                 onClick={handleCancel}
@@ -949,7 +951,8 @@ _altair_spec
                   "bg-primary-3 text-primary-11 hover:bg-primary-4",
                   "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                   "transition-colors",
-                )}>
+                )}
+              >
                 <Sparkles size={12} />
                 Analyze
               </Button>
@@ -960,7 +963,8 @@ _altair_spec
                 size="sm"
                 className="text-xs text-primary-11 hover:text-primary-11 dark:text-primary-11"
                 type="button"
-                onClick={() => refetchAI()}>
+                onClick={() => refetchAI()}
+              >
                 Retry
               </Button>
             )}
@@ -973,9 +977,7 @@ _altair_spec
           )}
 
           {aiLoading && (
-            <p className="text-sm text-neutral-11">
-              Analyzing code...
-            </p>
+            <p className="text-sm text-neutral-11">Analyzing code...</p>
           )}
 
           {aiError && hasTriggeredAnalysis && (
@@ -993,9 +995,7 @@ _altair_spec
                     data-testid="complexity-score"
                     className="flex items-center gap-1.5"
                   >
-                    <span className="text-xs text-neutral-11">
-                      Complexity:
-                    </span>
+                    <span className="text-xs text-neutral-11">Complexity:</span>
                     <span
                       className={cn(
                         "px-1.5 py-0.5 text-xs font-medium rounded",
@@ -1016,9 +1016,7 @@ _altair_spec
                     data-testid="quality-score"
                     className="flex items-center gap-1.5"
                   >
-                    <span className="text-xs text-neutral-11">
-                      Quality:
-                    </span>
+                    <span className="text-xs text-neutral-11">Quality:</span>
                     <div className="flex items-center gap-1">
                       {aiQualityScore >= 0.8 ? (
                         <CheckCircle2 size={12} className="text-success-9" />
@@ -1097,9 +1095,7 @@ _altair_spec
         <div className="border-t border-neutral-5 px-4 py-3 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-11">
-                Runtime:
-              </span>
+              <span className="text-xs text-neutral-11">Runtime:</span>
               <div className="flex items-center gap-1">
                 <Button
                   variant="primary"
@@ -1110,7 +1106,8 @@ _altair_spec
                     runtime === "sandbox"
                       ? "bg-primary-1 bg-primary-4 border-primary-4 dark:border-primary-7 text-primary-11 dark:text-primary-11"
                       : "border-neutral-5 text-neutral-11 hover:bg-neutral-2",
-                  )}>
+                  )}
+                >
                   Server sandbox
                 </Button>
                 {language?.toLowerCase() === "python" && (
@@ -1123,7 +1120,8 @@ _altair_spec
                       runtime === "pyodide"
                         ? "bg-primary-1 bg-primary-4 border-primary-4 dark:border-primary-7 text-primary-11 dark:text-primary-11"
                         : "border-neutral-5 text-neutral-11 hover:bg-neutral-2",
-                    )}>
+                    )}
+                  >
                     Pyodide (browser)
                   </Button>
                 )}
@@ -1143,7 +1141,8 @@ _altair_spec
                 "flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium",
                 "bg-success-10 text-neutral-12 hover:bg-success-11",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-              )}>
+              )}
+            >
               {runtime === "pyodide" ? (
                 isRunningPython ? (
                   <>

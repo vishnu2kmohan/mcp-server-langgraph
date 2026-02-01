@@ -48,7 +48,7 @@ export function FormErrorSummary({
 
   const handleClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    fieldName: string
+    fieldName: string,
   ) => {
     e.preventDefault();
     const element = document.getElementById(fieldName);
@@ -68,7 +68,7 @@ export function FormErrorSummary({
         transition={prefersReducedMotion ? undefined : { duration: 0.15 }}
         className={cn(
           "rounded-md bg-error-2 border border-error-6 p-4",
-          className
+          className,
         )}
       >
         <div className="flex items-start gap-3">

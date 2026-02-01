@@ -5,10 +5,15 @@
  * Tests update display, apply actions, and up-to-date state.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UpdatesContent } from "./UpdatesContent";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("UpdatesContent", () => {
   const mockUpdates = [

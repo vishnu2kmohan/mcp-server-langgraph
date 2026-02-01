@@ -118,7 +118,12 @@ export function OrganizationManager({
         data-testid="org-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className={cn("w-8 h-8 text-primary-9", !prefersReducedMotion && "animate-spin")} />
+        <Loader2
+          className={cn(
+            "w-8 h-8 text-primary-9",
+            !prefersReducedMotion && "animate-spin",
+          )}
+        />
       </div>
     );
   }
@@ -127,9 +132,7 @@ export function OrganizationManager({
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-neutral-12">
-          Organizations
-        </h2>
+        <h2 className="text-xl font-semibold text-neutral-12">Organizations</h2>
         <Button
           variant="primary"
           className="flex px-4 py-2 bg-primary-10 text-neutral-12 rounded-lg hover:bg-primary-11"
@@ -169,9 +172,7 @@ export function OrganizationManager({
               )}
             >
               <div className="flex-1">
-                <h3 className="font-medium text-neutral-12">
-                  {org.name}
-                </h3>
+                <h3 className="font-medium text-neutral-12">{org.name}</h3>
                 <div className="flex items-center gap-4 mt-1 text-sm text-neutral-10">
                   <span>{org.memberCount} members</span>
                   <span className="px-2 py-0.5 bg-neutral-2 rounded text-xs">
@@ -187,7 +188,8 @@ export function OrganizationManager({
                     e.stopPropagation();
                     handleEdit(org);
                   }}
-                  aria-label="Edit">
+                  aria-label="Edit"
+                >
                   <Edit2 className="w-4 h-4" />
                 </Button>
                 <Button
@@ -197,7 +199,8 @@ export function OrganizationManager({
                     e.stopPropagation();
                     handleDeleteClick(org.id);
                   }}
-                  aria-label="Delete">
+                  aria-label="Delete"
+                >
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>

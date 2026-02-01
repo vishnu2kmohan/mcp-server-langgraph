@@ -211,7 +211,9 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // Tool selector should be visible
-      expect(screen.getByRole("button", { name: /tools/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /tools/i }),
+      ).toBeInTheDocument();
     });
 
     it("should NOT show ToolSelector when feature flag is disabled", () => {
@@ -224,7 +226,9 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // Tool selector should NOT be visible
-      expect(screen.queryByRole("button", { name: /tools/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /tools/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -266,7 +270,9 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
       await user.click(manualButton);
 
       // Should update to show selection count or "Select"
-      expect(screen.getByRole("button", { name: /tools/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /tools/i }),
+      ).toBeInTheDocument();
     });
 
     it("should allow switching to none mode", async () => {
@@ -288,7 +294,9 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
       await user.click(noneButton);
 
       // Should show "None"
-      expect(screen.getByRole("button", { name: /tools/i })).toHaveTextContent("None");
+      expect(screen.getByRole("button", { name: /tools/i })).toHaveTextContent(
+        "None",
+      );
     });
   });
 
@@ -306,10 +314,7 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
       });
 
       render(
-        <ConnectedChatInputForm
-          {...defaultProps}
-          toolSelectionMode="manual"
-        />
+        <ConnectedChatInputForm {...defaultProps} toolSelectionMode="manual" />,
       );
 
       // Open dropdown - already in manual mode
@@ -368,7 +373,7 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
           {...defaultProps}
           selectedTools={["calculator", "web_search"]}
           toolSelectionMode="manual"
-        />
+        />,
       );
 
       // Should show count of selected tools
@@ -390,7 +395,7 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
           {...defaultProps}
           toolSelectionMode="manual"
           onSelectedToolsChange={mockOnSelectedToolsChange}
-        />
+        />,
       );
 
       // Open dropdown
@@ -415,7 +420,7 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
         <ConnectedChatInputForm
           {...defaultProps}
           onToolSelectionModeChange={mockOnToolSelectionModeChange}
-        />
+        />,
       );
 
       // Open dropdown

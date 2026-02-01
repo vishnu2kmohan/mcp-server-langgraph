@@ -24,26 +24,23 @@ import { badgeVariants as motionBadgeVariants } from "@/design-system/micro-inte
  * Confidence indicator variants based on confidence level
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export const confidenceIndicatorVariants = cva(
-  "inline-flex items-center",
-  {
-    variants: {
-      level: {
-        high: "text-success-10",
-        medium: "text-warning-9",
-        low: "text-error-10",
-      },
-      size: {
-        compact: "",
-        full: "gap-1 text-sm",
-      },
+export const confidenceIndicatorVariants = cva("inline-flex items-center", {
+  variants: {
+    level: {
+      high: "text-success-10",
+      medium: "text-warning-9",
+      low: "text-error-10",
     },
-    defaultVariants: {
-      level: "high",
-      size: "full",
+    size: {
+      compact: "",
+      full: "gap-1 text-sm",
     },
   },
-);
+  defaultVariants: {
+    level: "high",
+    size: "full",
+  },
+});
 
 /**
  * Warning badge variant for low confidence
@@ -78,7 +75,6 @@ function getConfidenceLevel(score: number): "high" | "medium" | "low" {
   if (score >= 0.6) return "medium";
   return "low";
 }
-
 
 /**
  * Clamp score to valid range [0, 1]

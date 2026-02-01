@@ -110,11 +110,10 @@ function TemplateCard({
       variant="primary"
       className="w-full text-left p-4 rounded-lg border"
       type="button"
-      onClick={onClick}>
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="font-medium text-neutral-12">
-          {template.name}
-        </h4>
+        <h4 className="font-medium text-neutral-12">{template.name}</h4>
         <span className="text-xs px-2 py-1 rounded-full bg-neutral-2 text-neutral-11">
           {template.orchestrator}
         </span>
@@ -160,14 +159,15 @@ function EmptyState({ onClearFilters }: { onClearFilters: () => void }) {
   return (
     <div className="text-center p-8">
       <Search className="w-12 h-12 mx-auto text-neutral-9 mb-4" />
-      <p className="text-neutral-11 mb-4">
-        No templates found
-      </p>
-      <Button variant="secondary"
+      <p className="text-neutral-11 mb-4">No templates found</p>
+      <Button
+        variant="secondary"
         className="text-primary-9 hover:text-primary-10 text-sm"
         type="button"
         onClick={onClearFilters}
-      >Clear filters</Button>
+      >
+        Clear filters
+      </Button>
     </div>
   );
 }
@@ -389,7 +389,8 @@ export function PlanSearch({
                 key={tag}
                 type="button"
                 onClick={() => handleTagToggle(tag)}
-                disabled={isLoading}>
+                disabled={isLoading}
+              >
                 {tag}
               </Button>
             ))}

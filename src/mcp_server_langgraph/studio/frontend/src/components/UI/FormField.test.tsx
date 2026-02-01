@@ -28,7 +28,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       expect(screen.getByLabelText("Email")).toBeInTheDocument();
@@ -38,7 +38,7 @@ describe("FormField", () => {
       render(
         <FormField label="Username" name="username">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const label = screen.getByText("Username");
@@ -49,7 +49,7 @@ describe("FormField", () => {
       render(
         <FormField label="Password" name="password">
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -60,7 +60,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email">
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -77,7 +77,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" required>
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       expect(screen.getByText("*")).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" required>
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const asterisk = screen.getByText("*");
@@ -98,7 +98,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" required>
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       expect(screen.getByText("(required)")).toHaveClass("sr-only");
@@ -108,7 +108,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" required>
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -123,9 +123,13 @@ describe("FormField", () => {
   describe("hint text", () => {
     it("renders hint text when provided", () => {
       render(
-        <FormField label="Password" name="password" hint="Must be 8+ characters">
+        <FormField
+          label="Password"
+          name="password"
+          hint="Must be 8+ characters"
+        >
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       expect(screen.getByText("Must be 8+ characters")).toBeInTheDocument();
@@ -133,9 +137,13 @@ describe("FormField", () => {
 
     it("associates hint with input via aria-describedby", () => {
       render(
-        <FormField label="Password" name="password" hint="Must be 8+ characters">
+        <FormField
+          label="Password"
+          name="password"
+          hint="Must be 8+ characters"
+        >
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -144,9 +152,13 @@ describe("FormField", () => {
 
     it("hint has correct id for association", () => {
       render(
-        <FormField label="Password" name="password" hint="Must be 8+ characters">
+        <FormField
+          label="Password"
+          name="password"
+          hint="Must be 8+ characters"
+        >
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const hint = screen.getByText("Must be 8+ characters");
@@ -162,10 +174,12 @@ describe("FormField", () => {
           error="Password is too short"
         >
           <Input />
-        </FormField>
+        </FormField>,
       );
 
-      expect(screen.queryByText("Must be 8+ characters")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Must be 8+ characters"),
+      ).not.toBeInTheDocument();
       expect(screen.getByText("Password is too short")).toBeInTheDocument();
     });
   });
@@ -179,7 +193,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email address">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       expect(screen.getByText("Invalid email address")).toBeInTheDocument();
@@ -189,7 +203,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email address">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const error = screen.getByRole("alert");
@@ -200,7 +214,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email address">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const error = screen.getByRole("alert");
@@ -211,7 +225,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email address">
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -222,7 +236,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email address">
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -233,7 +247,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email address">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const error = screen.getByRole("alert");
@@ -244,7 +258,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email address">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       // Error should have an icon, not just color
@@ -262,7 +276,7 @@ describe("FormField", () => {
       render(
         <FormField label="Full Name" name="fullName">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByLabelText("Full Name");
@@ -273,7 +287,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email">
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -284,7 +298,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email">
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -301,7 +315,7 @@ describe("FormField", () => {
       render(
         <FormField label="Email" name="email" error="Invalid">
           <Input data-testid="input" />
-        </FormField>
+        </FormField>,
       );
 
       const input = screen.getByTestId("input");
@@ -312,7 +326,7 @@ describe("FormField", () => {
       const { container } = render(
         <FormField label="Email" name="email" hint="Hint text">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const wrapper = container.firstChild;
@@ -329,7 +343,7 @@ describe("FormField", () => {
       const { container } = render(
         <FormField label="Email" name="email" className="custom-wrapper">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       const wrapper = container.firstChild;

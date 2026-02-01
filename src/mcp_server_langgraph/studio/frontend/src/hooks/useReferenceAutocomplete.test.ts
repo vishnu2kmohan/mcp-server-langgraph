@@ -5,18 +5,18 @@
  * WCAG 2.2 AA accessibility requirements included.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useReferenceAutocomplete } from './useReferenceAutocomplete';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { useReferenceAutocomplete } from "./useReferenceAutocomplete";
 
 // Use vi.spyOn for fetch mocking (recommended per test/setup.ts)
 let fetchSpy: ReturnType<typeof vi.spyOn>;
 
-describe('useReferenceAutocomplete', () => {
+describe("useReferenceAutocomplete", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Create spy for each test
-    fetchSpy = vi.spyOn(global, 'fetch');
+    fetchSpy = vi.spyOn(global, "fetch");
   });
 
   afterEach(() => {
@@ -24,195 +24,195 @@ describe('useReferenceAutocomplete', () => {
     fetchSpy.mockRestore();
   });
 
-  describe('trigger detection', () => {
-    it('should detect [[ trigger and activate autocomplete', () => {
+  describe("trigger detection", () => {
+    it("should detect [[ trigger and activate autocomplete", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello [[',
+          inputValue: "Hello [[",
           cursorPosition: 8,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(true);
       expect(result.current.triggerStart).toBe(6);
     });
 
-    it('should detect [[ with partial type prefix', () => {
+    it("should detect [[ with partial type prefix", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello [[tool',
+          inputValue: "Hello [[tool",
           cursorPosition: 12,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(true);
-      expect(result.current.query).toBe('tool');
+      expect(result.current.query).toBe("tool");
     });
 
-    it('should detect [[ with type prefix and colon', () => {
+    it("should detect [[ with type prefix and colon", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello [[tool:read',
+          inputValue: "Hello [[tool:read",
           cursorPosition: 17,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(true);
-      expect(result.current.query).toBe('tool:read');
+      expect(result.current.query).toBe("tool:read");
     });
 
-    it('should not activate without [[ trigger', () => {
+    it("should not activate without [[ trigger", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello world',
+          inputValue: "Hello world",
           cursorPosition: 11,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(false);
     });
 
-    it('should not activate with single [', () => {
+    it("should not activate with single [", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello [world',
+          inputValue: "Hello [world",
           cursorPosition: 12,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(false);
     });
 
-    it('should deactivate on ]] close', () => {
+    it("should deactivate on ]] close", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello [[tool:read]]',
+          inputValue: "Hello [[tool:read]]",
           cursorPosition: 19,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(false);
     });
 
-    it('should deactivate when cursor moves before trigger', () => {
+    it("should deactivate when cursor moves before trigger", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello [[tool',
+          inputValue: "Hello [[tool",
           cursorPosition: 3, // cursor before [[
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(false);
     });
 
-    it('should respect enabled flag', () => {
+    it("should respect enabled flag", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello [[',
+          inputValue: "Hello [[",
           cursorPosition: 8,
           enabled: false,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(false);
     });
   });
 
-  describe('query parsing', () => {
-    it('should parse type-only query', () => {
+  describe("query parsing", () => {
+    it("should parse type-only query", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool',
+          inputValue: "Use [[tool",
           cursorPosition: 10,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.parsedQuery).toEqual({
-        type: 'tool',
+        type: "tool",
         qualifier: undefined,
         id: undefined,
       });
     });
 
-    it('should parse type:qualifier query for tools', () => {
+    it("should parse type:qualifier query for tools", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:filesystem',
+          inputValue: "Use [[tool:filesystem",
           cursorPosition: 21,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.parsedQuery).toEqual({
-        type: 'tool',
-        qualifier: 'filesystem',
+        type: "tool",
+        qualifier: "filesystem",
         id: undefined,
       });
     });
 
-    it('should parse type:qualifier:id query for tools', () => {
+    it("should parse type:qualifier:id query for tools", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:filesystem:read',
+          inputValue: "Use [[tool:filesystem:read",
           cursorPosition: 26,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.parsedQuery).toEqual({
-        type: 'tool',
-        qualifier: 'filesystem',
-        id: 'read',
+        type: "tool",
+        qualifier: "filesystem",
+        id: "read",
       });
     });
 
-    it('should parse skill:id query', () => {
+    it("should parse skill:id query", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[skill:code-review',
+          inputValue: "Use [[skill:code-review",
           cursorPosition: 23,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.parsedQuery).toEqual({
-        type: 'skill',
-        qualifier: 'code-review',
-        id: 'code-review',
+        type: "skill",
+        qualifier: "code-review",
+        id: "code-review",
       });
     });
 
-    it('should parse artifact:id query', () => {
+    it("should parse artifact:id query", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'See [[artifact:chart-123',
+          inputValue: "See [[artifact:chart-123",
           cursorPosition: 24,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.parsedQuery).toEqual({
-        type: 'artifact',
-        qualifier: 'chart-123',
-        id: 'chart-123',
+        type: "artifact",
+        qualifier: "chart-123",
+        id: "chart-123",
       });
     });
 
-    it('should handle empty query', () => {
+    it("should handle empty query", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.parsedQuery).toEqual({
@@ -223,180 +223,200 @@ describe('useReferenceAutocomplete', () => {
     });
   });
 
-  describe('suggestions', () => {
-    it('should show type suggestions when no type is entered', () => {
+  describe("suggestions", () => {
+    it("should show type suggestions when no type is entered", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.suggestions).toContainEqual(
-        expect.objectContaining({ value: 'tool', type: 'type' })
+        expect.objectContaining({ value: "tool", type: "type" }),
       );
       expect(result.current.suggestions).toContainEqual(
-        expect.objectContaining({ value: 'skill', type: 'type' })
+        expect.objectContaining({ value: "skill", type: "type" }),
       );
       expect(result.current.suggestions).toContainEqual(
-        expect.objectContaining({ value: 'artifact', type: 'type' })
+        expect.objectContaining({ value: "artifact", type: "type" }),
       );
     });
 
-    it('should filter type suggestions based on input', () => {
+    it("should filter type suggestions based on input", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[to',
+          inputValue: "Use [[to",
           cursorPosition: 8,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.suggestions).toContainEqual(
-        expect.objectContaining({ value: 'tool', type: 'type' })
+        expect.objectContaining({ value: "tool", type: "type" }),
       );
       expect(result.current.suggestions).not.toContainEqual(
-        expect.objectContaining({ value: 'skill', type: 'type' })
+        expect.objectContaining({ value: "skill", type: "type" }),
       );
     });
 
-    it('should provide available tools when tool type is complete', async () => {
+    it("should provide available tools when tool type is complete", async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           tools: [
-            { server: 'filesystem', name: 'read_file', description: 'Read a file' },
-            { server: 'filesystem', name: 'write_file', description: 'Write a file' },
+            {
+              server: "filesystem",
+              name: "read_file",
+              description: "Read a file",
+            },
+            {
+              server: "filesystem",
+              name: "write_file",
+              description: "Write a file",
+            },
           ],
         }),
       } as Response);
 
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:',
+          inputValue: "Use [[tool:",
           cursorPosition: 11,
           enabled: true,
           availableTools: [
-            { server: 'filesystem', name: 'read_file', description: 'Read a file' },
-            { server: 'filesystem', name: 'write_file', description: 'Write a file' },
+            {
+              server: "filesystem",
+              name: "read_file",
+              description: "Read a file",
+            },
+            {
+              server: "filesystem",
+              name: "write_file",
+              description: "Write a file",
+            },
           ],
-        })
+        }),
       );
 
       await waitFor(() => {
         expect(result.current.suggestions).toContainEqual(
           expect.objectContaining({
-            value: 'filesystem:read_file',
-            label: 'read_file',
-            description: 'Read a file',
-            type: 'tool',
-          })
+            value: "filesystem:read_file",
+            label: "read_file",
+            description: "Read a file",
+            type: "tool",
+          }),
         );
       });
     });
 
-    it('should filter tools based on qualifier input', async () => {
+    it("should filter tools based on qualifier input", async () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:file',
+          inputValue: "Use [[tool:file",
           cursorPosition: 15,
           enabled: true,
           availableTools: [
-            { server: 'filesystem', name: 'read_file', description: 'Read a file' },
-            { server: 'database', name: 'query', description: 'Run SQL query' },
+            {
+              server: "filesystem",
+              name: "read_file",
+              description: "Read a file",
+            },
+            { server: "database", name: "query", description: "Run SQL query" },
           ],
-        })
+        }),
       );
 
       await waitFor(() => {
         expect(result.current.suggestions).toContainEqual(
-          expect.objectContaining({ value: 'filesystem:read_file' })
+          expect.objectContaining({ value: "filesystem:read_file" }),
         );
         expect(result.current.suggestions).not.toContainEqual(
-          expect.objectContaining({ value: 'database:query' })
+          expect.objectContaining({ value: "database:query" }),
         );
       });
     });
   });
 
-  describe('selection', () => {
-    it('should call onSelect when suggestion is selected', () => {
+  describe("selection", () => {
+    it("should call onSelect when suggestion is selected", () => {
       const onSelect = vi.fn();
 
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
           onSelect,
-        })
+        }),
       );
 
       act(() => {
         result.current.selectSuggestion({
-          value: 'tool',
-          label: 'Tool',
-          type: 'type',
+          value: "tool",
+          label: "Tool",
+          type: "type",
         });
       });
 
       expect(onSelect).toHaveBeenCalledWith({
-        newText: 'Use [[tool:',
+        newText: "Use [[tool:",
         newCursorPosition: 11,
-        suggestion: expect.objectContaining({ value: 'tool' }),
+        suggestion: expect.objectContaining({ value: "tool" }),
       });
     });
 
-    it('should complete the reference when final suggestion is selected', () => {
+    it("should complete the reference when final suggestion is selected", () => {
       const onSelect = vi.fn();
 
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:filesystem:',
+          inputValue: "Use [[tool:filesystem:",
           cursorPosition: 22,
           enabled: true,
           onSelect,
-        })
+        }),
       );
 
       act(() => {
         result.current.selectSuggestion({
-          value: 'read_file',
-          label: 'Read File',
-          type: 'tool',
+          value: "read_file",
+          label: "Read File",
+          type: "tool",
           isComplete: true,
         });
       });
 
       expect(onSelect).toHaveBeenCalledWith({
-        newText: 'Use [[tool:filesystem:read_file]]',
+        newText: "Use [[tool:filesystem:read_file]]",
         newCursorPosition: 33, // "Use [[tool:filesystem:read_file]]".length = 33
-        suggestion: expect.objectContaining({ value: 'read_file' }),
+        suggestion: expect.objectContaining({ value: "read_file" }),
       });
     });
   });
 
-  describe('keyboard navigation', () => {
-    it('should expose selectedIndex state', () => {
+  describe("keyboard navigation", () => {
+    it("should expose selectedIndex state", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.selectedIndex).toBe(0);
     });
 
-    it('should navigate down with setSelectedIndex', () => {
+    it("should navigate down with setSelectedIndex", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
-        })
+        }),
       );
 
       act(() => {
@@ -406,13 +426,13 @@ describe('useReferenceAutocomplete', () => {
       expect(result.current.selectedIndex).toBe(1);
     });
 
-    it('should not exceed suggestions length', () => {
+    it("should not exceed suggestions length", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
-        })
+        }),
       );
 
       const maxIndex = result.current.suggestions.length - 1;
@@ -424,16 +444,16 @@ describe('useReferenceAutocomplete', () => {
       expect(result.current.selectedIndex).toBeLessThanOrEqual(maxIndex);
     });
 
-    it('should reset selectedIndex when suggestions change', async () => {
+    it("should reset selectedIndex when suggestions change", async () => {
       const { result, rerender } = renderHook(
         (props) => useReferenceAutocomplete(props),
         {
           initialProps: {
-            inputValue: 'Use [[',
+            inputValue: "Use [[",
             cursorPosition: 6,
             enabled: true,
           },
-        }
+        },
       );
 
       act(() => {
@@ -443,7 +463,7 @@ describe('useReferenceAutocomplete', () => {
       expect(result.current.selectedIndex).toBe(2);
 
       rerender({
-        inputValue: 'Use [[to',
+        inputValue: "Use [[to",
         cursorPosition: 8,
         enabled: true,
       });
@@ -452,14 +472,14 @@ describe('useReferenceAutocomplete', () => {
     });
   });
 
-  describe('dismiss', () => {
-    it('should expose dismiss function', () => {
+  describe("dismiss", () => {
+    it("should expose dismiss function", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.isActive).toBe(true);
@@ -471,16 +491,16 @@ describe('useReferenceAutocomplete', () => {
       expect(result.current.isActive).toBe(false);
     });
 
-    it('should re-activate when trigger is typed again', () => {
+    it("should re-activate when trigger is typed again", () => {
       const { result, rerender } = renderHook(
         (props) => useReferenceAutocomplete(props),
         {
           initialProps: {
-            inputValue: 'Use [[',
+            inputValue: "Use [[",
             cursorPosition: 6,
             enabled: true,
           },
-        }
+        },
       );
 
       act(() => {
@@ -491,7 +511,7 @@ describe('useReferenceAutocomplete', () => {
 
       // Type more
       rerender({
-        inputValue: 'Use [[ and [[',
+        inputValue: "Use [[ and [[",
         cursorPosition: 13,
         enabled: true,
       });
@@ -500,40 +520,40 @@ describe('useReferenceAutocomplete', () => {
     });
   });
 
-  describe('accessibility', () => {
-    it('should provide aria attributes for autocomplete', () => {
+  describe("accessibility", () => {
+    it("should provide aria attributes for autocomplete", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[',
+          inputValue: "Use [[",
           cursorPosition: 6,
           enabled: true,
-        })
+        }),
       );
 
       expect(result.current.ariaProps).toEqual({
-        role: 'combobox',
-        'aria-expanded': true,
-        'aria-haspopup': 'listbox',
-        'aria-controls': 'reference-autocomplete-listbox',
-        'aria-activedescendant': expect.stringMatching(/^ref-suggestion-/),
+        role: "combobox",
+        "aria-expanded": true,
+        "aria-haspopup": "listbox",
+        "aria-controls": "reference-autocomplete-listbox",
+        "aria-activedescendant": expect.stringMatching(/^ref-suggestion-/),
       });
     });
 
-    it('should provide aria-expanded false when inactive', () => {
+    it("should provide aria-expanded false when inactive", () => {
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Hello world',
+          inputValue: "Hello world",
           cursorPosition: 11,
           enabled: true,
-        })
+        }),
       );
 
-      expect(result.current.ariaProps['aria-expanded']).toBe(false);
+      expect(result.current.ariaProps["aria-expanded"]).toBe(false);
     });
   });
 
-  describe('semantic search integration', () => {
-    it('should use semantic search API when enableSemanticSearch is true', async () => {
+  describe("semantic search integration", () => {
+    it("should use semantic search API when enableSemanticSearch is true", async () => {
       // Mock semantic search API response
       fetchSpy.mockResolvedValueOnce({
         ok: true,
@@ -541,24 +561,24 @@ describe('useReferenceAutocomplete', () => {
           Promise.resolve({
             results: [
               {
-                tool_id: 'tool-1',
-                name: 'read_file',
-                description: 'Read file contents',
+                tool_id: "tool-1",
+                name: "read_file",
+                description: "Read file contents",
                 score: 0.95,
               },
             ],
-            query: 'read file',
+            query: "read file",
             total_results: 1,
           }),
       } as Response);
 
       const { result: _result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:read file',
+          inputValue: "Use [[tool:read file",
           cursorPosition: 20,
           enabled: true,
           enableSemanticSearch: true,
-        })
+        }),
       );
 
       // Wait for debounced API call
@@ -566,33 +586,33 @@ describe('useReferenceAutocomplete', () => {
         () => {
           expect(fetchSpy).toHaveBeenCalled();
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       // Verify API was called with semantic search endpoint
       expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/tools/semantic-search'),
+        expect.stringContaining("/api/v1/tools/semantic-search"),
         expect.objectContaining({
-          method: 'POST',
-          body: expect.stringContaining('read file'),
-        })
+          method: "POST",
+          body: expect.stringContaining("read file"),
+        }),
       );
     });
 
-    it('should fallback to substring matching when enableSemanticSearch is false', () => {
+    it("should fallback to substring matching when enableSemanticSearch is false", () => {
       const mockTools = [
-        { server: 'filesystem', name: 'read_file', description: 'Read file' },
-        { server: 'filesystem', name: 'write_file', description: 'Write file' },
+        { server: "filesystem", name: "read_file", description: "Read file" },
+        { server: "filesystem", name: "write_file", description: "Write file" },
       ];
 
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:filesystem:read',
+          inputValue: "Use [[tool:filesystem:read",
           cursorPosition: 26,
           enabled: true,
           enableSemanticSearch: false,
           availableTools: mockTools,
-        })
+        }),
       );
 
       // Should not call API
@@ -601,17 +621,17 @@ describe('useReferenceAutocomplete', () => {
       // Should show filtered suggestion based on substring
       expect(result.current.suggestions.length).toBeGreaterThanOrEqual(1);
       expect(
-        result.current.suggestions.some((s) => s.value.includes('read_file'))
+        result.current.suggestions.some((s) => s.value.includes("read_file")),
       ).toBe(true);
     });
 
-    it('should debounce semantic search API calls', async () => {
+    it("should debounce semantic search API calls", async () => {
       fetchSpy.mockResolvedValue({
         ok: true,
         json: () =>
           Promise.resolve({
             results: [],
-            query: '',
+            query: "",
             total_results: 0,
           }),
       } as Response);
@@ -626,40 +646,40 @@ describe('useReferenceAutocomplete', () => {
           }),
         {
           initialProps: {
-            inputValue: 'Use [[tool:r',
+            inputValue: "Use [[tool:r",
             cursorPosition: 12,
           },
-        }
+        },
       );
 
       // Quickly update input multiple times
-      rerender({ inputValue: 'Use [[tool:re', cursorPosition: 13 });
-      rerender({ inputValue: 'Use [[tool:rea', cursorPosition: 14 });
-      rerender({ inputValue: 'Use [[tool:read', cursorPosition: 15 });
+      rerender({ inputValue: "Use [[tool:re", cursorPosition: 13 });
+      rerender({ inputValue: "Use [[tool:rea", cursorPosition: 14 });
+      rerender({ inputValue: "Use [[tool:read", cursorPosition: 15 });
 
       // Wait for debounce to settle
       await waitFor(
         () => {
           expect(fetchSpy).toHaveBeenCalled();
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       // Should only call API once due to debouncing
       expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle semantic search API errors gracefully', async () => {
+    it("should handle semantic search API errors gracefully", async () => {
       // Mock API error
-      fetchSpy.mockRejectedValueOnce(new Error('Network error'));
+      fetchSpy.mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:read',
+          inputValue: "Use [[tool:read",
           cursorPosition: 15,
           enabled: true,
           enableSemanticSearch: true,
-        })
+        }),
       );
 
       // Wait for API call to complete
@@ -667,7 +687,7 @@ describe('useReferenceAutocomplete', () => {
         () => {
           expect(fetchSpy).toHaveBeenCalled();
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       // Should still be active (error doesn't crash the hook)
@@ -676,44 +696,44 @@ describe('useReferenceAutocomplete', () => {
       expect(result.current.suggestions).toBeDefined();
     });
 
-    it('should include score in suggestions from semantic search', async () => {
+    it("should include score in suggestions from semantic search", async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
             results: [
               {
-                tool_id: 'tool-1',
-                name: 'calculator',
-                description: 'Math operations',
+                tool_id: "tool-1",
+                name: "calculator",
+                description: "Math operations",
                 score: 0.92,
               },
               {
-                tool_id: 'tool-2',
-                name: 'add',
-                description: 'Add numbers',
+                tool_id: "tool-2",
+                name: "add",
+                description: "Add numbers",
                 score: 0.85,
               },
             ],
-            query: 'math',
+            query: "math",
             total_results: 2,
           }),
       } as Response);
 
       const { result } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[tool:math',
+          inputValue: "Use [[tool:math",
           cursorPosition: 15,
           enabled: true,
           enableSemanticSearch: true,
-        })
+        }),
       );
 
       await waitFor(
         () => {
           expect(fetchSpy).toHaveBeenCalled();
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       // Wait for suggestions to be populated
@@ -723,54 +743,54 @@ describe('useReferenceAutocomplete', () => {
 
       // Results should be ordered by score (highest first)
       const scores = result.current.suggestions
-        .filter((s) => 'score' in s)
+        .filter((s) => "score" in s)
         .map((s) => (s as { score: number }).score);
       for (let i = 1; i < scores.length; i++) {
         expect(scores[i - 1]).toBeGreaterThanOrEqual(scores[i]);
       }
     });
 
-    it('should use skill semantic search for skill references', async () => {
+    it("should use skill semantic search for skill references", async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
             results: [
               {
-                skill_id: 'skill-1',
-                name: 'code-review',
-                description: 'Review code quality',
+                skill_id: "skill-1",
+                name: "code-review",
+                description: "Review code quality",
                 score: 0.88,
-                tags: ['development'],
+                tags: ["development"],
               },
             ],
-            query: 'review code',
+            query: "review code",
             total_results: 1,
           }),
       } as Response);
 
       const { result: _result2 } = renderHook(() =>
         useReferenceAutocomplete({
-          inputValue: 'Use [[skill:review code',
+          inputValue: "Use [[skill:review code",
           cursorPosition: 23,
           enabled: true,
           enableSemanticSearch: true,
-        })
+        }),
       );
 
       await waitFor(
         () => {
           expect(fetchSpy).toHaveBeenCalled();
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       // Verify API was called with skill semantic search endpoint
       expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/admin/skills/semantic-search'),
+        expect.stringContaining("/api/v1/admin/skills/semantic-search"),
         expect.objectContaining({
-          method: 'POST',
-        })
+          method: "POST",
+        }),
       );
     });
   });

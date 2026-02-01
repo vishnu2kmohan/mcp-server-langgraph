@@ -173,7 +173,9 @@ describe("CanvasWorkspace - Tabs", () => {
 
       const viewTabs = within(screen.getByTestId("canvas-tabs"));
       expect(viewTabs.getByRole("tab", { name: /code/i })).toBeInTheDocument();
-      expect(viewTabs.getByRole("tab", { name: /preview/i })).toBeInTheDocument();
+      expect(
+        viewTabs.getByRole("tab", { name: /preview/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show Code and Data tabs for JSON artifacts", () => {

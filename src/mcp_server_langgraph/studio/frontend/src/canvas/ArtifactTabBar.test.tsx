@@ -3,8 +3,8 @@
  *
  * TDD: Tests written first to define expected behavior
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArtifactTabBar } from "./ArtifactTabBar";
 import type { CanvasArtifact } from "../types/artifacts";
@@ -44,7 +44,7 @@ vi.mock("@dnd-kit/utilities", () => ({
 const createMockArtifact = (
   id: string,
   title: string,
-  origin: "ai" | "user" = "user"
+  origin: "ai" | "user" = "user",
 ): CanvasArtifact => ({
   id,
   type: "code",
@@ -60,6 +60,11 @@ const createMockArtifact = (
     modified: false,
     lastEditedBy: origin,
   },
+});
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
 });
 
 describe("ArtifactTabBar", () => {
@@ -113,7 +118,7 @@ describe("ArtifactTabBar", () => {
     it("should have accessible label on tablist", () => {
       render(<ArtifactTabBar {...defaultProps} />);
       expect(screen.getByRole("tablist")).toHaveAccessibleName(
-        /artifact tabs/i
+        /artifact tabs/i,
       );
     });
   });
@@ -160,16 +165,14 @@ describe("ArtifactTabBar", () => {
 
       expect(defaultProps.onRename).toHaveBeenCalledWith(
         "artifact-1",
-        "Renamed"
+        "Renamed",
       );
     });
   });
 
   describe("empty state", () => {
     it("should render empty message when no artifacts", () => {
-      render(
-        <ArtifactTabBar {...defaultProps} artifacts={[]} tabOrder={[]} />
-      );
+      render(<ArtifactTabBar {...defaultProps} artifacts={[]} tabOrder={[]} />);
       expect(screen.getByText(/no artifacts/i)).toBeInTheDocument();
     });
   });

@@ -4,7 +4,7 @@
  * Verifies toast ID constants and helper functions for deduplication.
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getConnectionToastId,
   getCriticalAlertToastId,
@@ -29,6 +29,10 @@ import {
   TOAST_ID_HALLUCINATION_REPORT,
   TOAST_ID_GOAL,
 } from "./toastIds";
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("Toast ID Constants", () => {
   describe("Connection Health Toast IDs", () => {

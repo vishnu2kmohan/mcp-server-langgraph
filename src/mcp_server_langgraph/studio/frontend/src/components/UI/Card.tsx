@@ -20,12 +20,8 @@ export const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: [
-          "border border-neutral-5 bg-neutral-1",
-        ],
-        elevated: [
-          "border border-neutral-5 bg-neutral-1 shadow-elevated",
-        ],
+        default: ["border border-neutral-5 bg-neutral-1"],
+        elevated: ["border border-neutral-5 bg-neutral-1 shadow-elevated"],
         ghost: [
           "border border-transparent bg-transparent",
           "dark:bg-transparent",
@@ -114,10 +110,7 @@ export type CardTitleProps = HTMLAttributes<HTMLHeadingElement>;
 export function CardTitle({ className, children, ...props }: CardTitleProps) {
   return (
     <h3
-      className={cn(
-        "text-lg font-semibold text-neutral-12",
-        className,
-      )}
+      className={cn("text-lg font-semibold text-neutral-12", className)}
       {...props}
     >
       {children}
@@ -136,10 +129,7 @@ export function CardContent({
   ...props
 }: CardContentProps) {
   return (
-    <div
-      className={cn("text-neutral-11", className)}
-      {...props}
-    >
+    <div className={cn("text-neutral-11", className)} {...props}>
       {children}
     </div>
   );

@@ -228,7 +228,9 @@ export function KeyboardShortcutOverlay({
           >
             Keyboard Shortcuts
           </h2>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             data-testid="close-button"
             type="button"
             onClick={onClose}

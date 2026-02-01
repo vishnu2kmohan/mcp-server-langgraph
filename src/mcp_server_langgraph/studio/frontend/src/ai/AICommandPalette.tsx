@@ -185,10 +185,7 @@ export function AICommandPalette({
       <div className="w-full max-w-xl bg-neutral-1 rounded-xl shadow-2xl overflow-hidden">
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-5">
-          <Search
-            size={18}
-            className="text-neutral-9"
-          />
+          <Search size={18} className="text-neutral-9" />
           <Input
             className="flex-1 bg-transparent text-neutral-12 placeholder-neutral-9"
             ref={inputRef}
@@ -245,10 +242,7 @@ export function AICommandPalette({
                         )}
                       >
                         <div className="flex items-center gap-3">
-                          <CommandIcon
-                            size={16}
-                            className="text-neutral-9"
-                          />
+                          <CommandIcon size={16} className="text-neutral-9" />
                           <div>
                             <div className="text-sm font-medium text-neutral-12">
                               {cmd.name}
@@ -278,15 +272,11 @@ export function AICommandPalette({
                   className={cn(
                     "flex items-center justify-between px-4 py-2 cursor-pointer",
                     "hover:bg-neutral-2",
-                    index === selectedIndex &&
-                      "selected bg-neutral-2",
+                    index === selectedIndex && "selected bg-neutral-2",
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <CommandIcon
-                      size={16}
-                      className="text-neutral-9"
-                    />
+                    <CommandIcon size={16} className="text-neutral-9" />
                     <div>
                       <div className="text-sm font-medium text-neutral-12">
                         {cmd.name}

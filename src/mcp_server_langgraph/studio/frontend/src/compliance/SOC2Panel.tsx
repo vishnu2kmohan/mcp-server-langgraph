@@ -57,12 +57,7 @@ function getStatusIcon(status: ControlStatus) {
     case "non-compliant":
       return <XCircle size={14} className="text-error-9" />;
     default:
-      return (
-        <AlertCircle
-          size={14}
-          className="text-neutral-9"
-        />
-      );
+      return <AlertCircle size={14} className="text-neutral-9" />;
   }
 }
 
@@ -121,7 +116,10 @@ export function SOC2Panel({
         )}
       >
         <div className="flex items-center gap-2 text-neutral-10">
-          <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
+          <Loader2
+            size={16}
+            className={cn(!prefersReducedMotion && "animate-spin")}
+          />
           <span>Loading SOC-2 controls...</span>
         </div>
       </div>
@@ -141,9 +139,7 @@ export function SOC2Panel({
       <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
           <Shield size={18} className="text-primary-9" />
-          <h3 className="font-semibold text-neutral-12">
-            SOC-2
-          </h3>
+          <h3 className="font-semibold text-neutral-12">SOC-2</h3>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-2xl font-bold text-neutral-12">
@@ -193,9 +189,7 @@ export function SOC2Panel({
                       {control.status}
                     </span>
                   </div>
-                  <p className="text-sm text-neutral-11">
-                    {control.name}
-                  </p>
+                  <p className="text-sm text-neutral-11">{control.name}</p>
                   <div className="flex items-center gap-4 mt-1 text-xs text-neutral-9">
                     <span>Assessed: {formatDate(control.lastAssessed)}</span>
                     {control.remediationDue && (

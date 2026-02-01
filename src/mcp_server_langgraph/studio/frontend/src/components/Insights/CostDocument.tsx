@@ -227,9 +227,7 @@ export function CostDocument({
                           )
                         : "$0.00"}
                     </span>
-                    <span className="text-sm text-neutral-10">
-                      /1K
-                    </span>
+                    <span className="text-sm text-neutral-10">/1K</span>
                   </div>
                   <div className="mt-2 text-sm text-neutral-10">
                     Past {period}

@@ -5,7 +5,15 @@
  * Validates API contracts and mock behavior.
  */
 
-import { describe, it, expect, afterEach, beforeAll, afterAll } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import {
   skillsHandlers,
@@ -20,6 +28,7 @@ const server = setupServer(...skillsHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
+  vi.clearAllMocks();
   server.resetHandlers();
   resetSkillsState();
 });

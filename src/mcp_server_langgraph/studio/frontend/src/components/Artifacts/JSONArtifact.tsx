@@ -71,27 +71,16 @@ function JSONTreeNode({
   const indentSize = depth * 20;
 
   const keyColor = theme === "dark" ? "text-primary-7" : "text-primary-10";
-  const stringColor =
-    theme === "dark" ? "text-success-7" : "text-success-10";
-  const numberColor =
-    theme === "dark" ? "text-grafana-5" : "text-grafana-10";
-  const booleanColor =
-    theme === "dark" ? "text-insight-9" : "text-insight-10";
-  const nullColor =
-    theme === "dark"
-      ? "text-neutral-9"
-      : "text-neutral-10";
-  const bracketColor =
-    theme === "dark"
-      ? "text-neutral-9"
-      : "text-neutral-11";
+  const stringColor = theme === "dark" ? "text-success-7" : "text-success-10";
+  const numberColor = theme === "dark" ? "text-grafana-5" : "text-grafana-10";
+  const booleanColor = theme === "dark" ? "text-insight-9" : "text-insight-10";
+  const nullColor = theme === "dark" ? "text-neutral-9" : "text-neutral-10";
+  const bracketColor = theme === "dark" ? "text-neutral-9" : "text-neutral-11";
 
   // Primitive values
   if (!isObject(value) && !isArray(value)) {
     return (
-      <div
-        className={cn("font-mono text-sm", getIndentClass(indentSize))}
-      >
+      <div className={cn("font-mono text-sm", getIndentClass(indentSize))}>
         {keyName && (
           <>
             <span className={keyColor}>"{keyName}"</span>
@@ -128,14 +117,18 @@ function JSONTreeNode({
   return (
     <div className="font-mono text-sm">
       <div
-        className={cn("flex items-start hover:bg-opacity-10", getIndentClass(indentSize))}
+        className={cn(
+          "flex items-start hover:bg-opacity-10",
+          getIndentClass(indentSize),
+        )}
       >
         {!isEmpty && (
           <Button
             variant="primary"
             className="mr-1 mt-0.5 hover:opacity-70"
             onClick={toggleCollapse}
-            aria-label="Toggle collapse">
+            aria-label="Toggle collapse"
+          >
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4" />
             ) : (
@@ -172,7 +165,10 @@ function JSONTreeNode({
             />
           ))}
           <div
-            className={cn(`${bracketColor} font-mono text-sm`, getIndentClass(indentSize))}
+            className={cn(
+              `${bracketColor} font-mono text-sm`,
+              getIndentClass(indentSize),
+            )}
           >
             {closeBracket}
             {!isLast && <span>,</span>}
@@ -265,7 +261,8 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
             size="sm"
             className="flex px-3 py-1 text-sm rounded"
             onClick={handleCopy}
-            aria-label="Copy JSON">
+            aria-label="Copy JSON"
+          >
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-success-9" />
@@ -278,7 +275,9 @@ export function JSONArtifact({ artifact }: JSONArtifactProps) {
               </>
             )}
           </Button>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-1.5 rounded"
             onClick={handleDownload}
             aria-label="Download JSON"

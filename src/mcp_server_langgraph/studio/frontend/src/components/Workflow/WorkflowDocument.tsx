@@ -189,10 +189,7 @@ export function WorkflowDocument({
         {/* Toolbar */}
         <div className="flex items-center justify-between px-4 py-2 bg-neutral-1 border-b border-neutral-5">
           <div className="flex items-center gap-3">
-            <GitBranch
-              size={18}
-              className="text-neutral-10"
-            />
+            <GitBranch size={18} className="text-neutral-10" />
             <h2 className="text-base font-semibold text-neutral-12">
               {metadata?.name || "Workflow"}
               {isDirty && <span className="text-warning-9 ml-1">*</span>}
@@ -241,7 +238,8 @@ export function WorkflowDocument({
               className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded"
               onClick={() => dispatch(undo())}
               disabled={!canUndo || isReadOnly}
-              title="Undo">
+              title="Undo"
+            >
               <Undo size={16} />
             </Button>
             <Button
@@ -249,7 +247,8 @@ export function WorkflowDocument({
               className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded"
               onClick={() => dispatch(redo())}
               disabled={!canRedo || isReadOnly}
-              title="Redo">
+              title="Redo"
+            >
               <Redo size={16} />
             </Button>
 

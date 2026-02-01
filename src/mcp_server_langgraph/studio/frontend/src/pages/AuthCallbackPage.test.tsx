@@ -373,7 +373,9 @@ describe("AuthCallbackPage", () => {
     it("shows error when API call fails", async () => {
       // Override /api/v1/me to return an error
       server.use(
-        http.get("/api/v1/me", () => HttpResponse.json({ detail: "Unauthorized" }, { status: 401 })),
+        http.get("/api/v1/me", () =>
+          HttpResponse.json({ detail: "Unauthorized" }, { status: 401 }),
+        ),
       );
 
       const mockToken = createMockJWT(mockUserPayload);
@@ -388,9 +390,7 @@ describe("AuthCallbackPage", () => {
 
     it("shows error when API returns network error", async () => {
       // Override /api/v1/me to return network error
-      server.use(
-        http.get("/api/v1/me", () => HttpResponse.error()),
-      );
+      server.use(http.get("/api/v1/me", () => HttpResponse.error()));
 
       const mockToken = createMockJWT(mockUserPayload);
       const hash = `#access_token=${mockToken}`;
@@ -706,7 +706,9 @@ describe("AuthCallbackPage", () => {
       // 1. isAuthenticated (derived as user !== null via selectIsAuthenticated)
       // 2. websocketPermissions?.connections_health (from auth.user)
       expect(authState.user).not.toBeNull(); // selectIsAuthenticated checks user !== null
-      expect(authState.user?.websocketPermissions?.connections_health).toBe(true);
+      expect(authState.user?.websocketPermissions?.connections_health).toBe(
+        true,
+      );
     });
   });
 

@@ -148,7 +148,7 @@ export function WorkflowsListPage() {
 
   // Bulk selection state (for table view)
   const [selectedWorkflows, setSelectedWorkflows] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
 
@@ -181,7 +181,7 @@ export function WorkflowsListPage() {
       setWorkflowToDelete(null);
     } catch (err) {
       setMutationError(
-        err instanceof Error ? err.message : "Failed to delete workflow"
+        err instanceof Error ? err.message : "Failed to delete workflow",
       );
     } finally {
       setIsDeleting(false);
@@ -234,7 +234,7 @@ export function WorkflowsListPage() {
       setSelectedWorkflows(new Set());
     } catch (err) {
       setMutationError(
-        err instanceof Error ? err.message : "Failed to delete workflows"
+        err instanceof Error ? err.message : "Failed to delete workflows",
       );
     } finally {
       setIsDeleting(false);
@@ -471,7 +471,11 @@ export function WorkflowsListPage() {
                       {selectedWorkflows.size} workflow
                       {selectedWorkflows.size > 1 ? "s" : ""} selected
                     </span>
-                    <Button variant="danger" size="sm" onClick={handleBulkDelete}>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                    >
                       <Trash2 className="w-4 h-4" />
                       Delete Selected
                     </Button>

@@ -13,12 +13,16 @@
  * - memory: Memory note by ID (Phase 4)
  * - plan: Execution plan by ID (Phase 4)
  */
-export type ReferenceType = 'tool' | 'skill' | 'artifact' | 'memory' | 'plan';
+export type ReferenceType = "tool" | "skill" | "artifact" | "memory" | "plan";
 
 /**
  * Reference status after resolution.
  */
-export type ReferenceStatus = 'valid' | 'not_found' | 'unauthorized' | 'loading';
+export type ReferenceStatus =
+  | "valid"
+  | "not_found"
+  | "unauthorized"
+  | "loading";
 
 /**
  * Parsed reference from markdown text.
@@ -41,7 +45,7 @@ export interface ParsedReference {
  * Resolved reference with display information.
  * Returned from the /references/resolve API.
  */
-export interface ResolvedReference extends Omit<ParsedReference, 'raw'> {
+export interface ResolvedReference extends Omit<ParsedReference, "raw"> {
   /** Human-readable display name */
   displayName: string;
   /** Description for tooltip/popover */
@@ -123,7 +127,9 @@ export interface ReferenceResolverContextValue {
  * Create a unique key for a reference.
  * Used for caching and deduplication.
  */
-export function getReferenceKey(ref: Pick<ParsedReference, 'type' | 'qualifier' | 'id'>): string {
+export function getReferenceKey(
+  ref: Pick<ParsedReference, "type" | "qualifier" | "id">,
+): string {
   return `${ref.type}:${ref.qualifier}:${ref.id}`;
 }
 
@@ -135,14 +141,14 @@ export function getReferenceKey(ref: Pick<ParsedReference, 'type' | 'qualifier' 
  * @returns Parsed reference data or null if invalid
  */
 export function parseReferenceUrl(
-  url: string
+  url: string,
 ): { type: ReferenceType; qualifier: string; id: string } | null {
-  if (!url.startsWith('ref://')) {
+  if (!url.startsWith("ref://")) {
     return null;
   }
 
   const path = url.slice(6); // Remove "ref://"
-  const slashIndex = path.indexOf('/');
+  const slashIndex = path.indexOf("/");
   if (slashIndex === -1) {
     return null;
   }
@@ -151,14 +157,14 @@ export function parseReferenceUrl(
   const rest = path.slice(slashIndex + 1);
 
   // Validate type
-  if (!['tool', 'skill', 'artifact', 'memory', 'plan'].includes(type)) {
+  if (!["tool", "skill", "artifact", "memory", "plan"].includes(type)) {
     return null;
   }
 
   // For tools: qualifier:id (e.g., filesystem:read_file)
   // For skills/artifacts: just id (qualifier === id)
-  if (type === 'tool') {
-    const colonIndex = rest.indexOf(':');
+  if (type === "tool") {
+    const colonIndex = rest.indexOf(":");
     if (colonIndex === -1) {
       return null;
     }

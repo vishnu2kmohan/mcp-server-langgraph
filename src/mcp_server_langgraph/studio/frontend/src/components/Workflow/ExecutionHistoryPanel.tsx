@@ -132,7 +132,8 @@ export function ExecutionHistoryPanel({
                 size="sm"
                 className="px-3 py-1 text-sm rounded-full"
                 key={filter}
-                onClick={() => setStatusFilter(filter)}>
+                onClick={() => setStatusFilter(filter)}
+              >
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
               </Button>
             ),
@@ -144,9 +145,7 @@ export function ExecutionHistoryPanel({
         {filteredExecutions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center">
             <Clock className="w-12 h-12 text-neutral-9 mb-4" />
-            <p className="text-neutral-11 font-medium">
-              No executions yet
-            </p>
+            <p className="text-neutral-11 font-medium">No executions yet</p>
             <p className="text-sm text-neutral-10 mt-1">
               Run this workflow to see execution history
             </p>

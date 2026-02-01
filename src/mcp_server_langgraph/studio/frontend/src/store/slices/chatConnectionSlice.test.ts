@@ -5,7 +5,7 @@
  * Handles auth_required events, connection setup state, and connector suggestions.
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import chatConnectionReducer, {
   addAuthRequirement,
   dismissAuthRequirement,
@@ -23,6 +23,10 @@ import chatConnectionReducer, {
   type ChatConnectionState,
 } from "./chatConnectionSlice";
 
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("chatConnectionSlice", () => {
   const initialState: ChatConnectionState = {
     pendingAuthRequirements: [],
@@ -30,7 +34,8 @@ describe("chatConnectionSlice", () => {
     connectorSuggestions: {
       visible: false,
       templates: [],
-      query: "" },
+      query: "",
+    },
     configuredTemplateIds: [],
   };
 
@@ -57,9 +62,7 @@ describe("chatConnectionSlice", () => {
       );
 
       expect(state.pendingAuthRequirements).toHaveLength(1);
-      expect(state.pendingAuthRequirements[0].toolName).toBe(
-        "github:list_prs",
-      );
+      expect(state.pendingAuthRequirements[0].toolName).toBe("github:list_prs");
       expect(state.pendingAuthRequirements[0].templateId).toBe("github");
       expect(state.pendingAuthRequirements[0].id).toBeDefined();
       expect(state.pendingAuthRequirements[0].timestamp).toBeDefined();
@@ -89,9 +92,7 @@ describe("chatConnectionSlice", () => {
       );
 
       expect(state.pendingAuthRequirements).toHaveLength(2);
-      expect(state.pendingAuthRequirements[0].toolName).toBe(
-        "github:list_prs",
-      );
+      expect(state.pendingAuthRequirements[0].toolName).toBe("github:list_prs");
       expect(state.pendingAuthRequirements[1].toolName).toBe(
         "slack:post_message",
       );

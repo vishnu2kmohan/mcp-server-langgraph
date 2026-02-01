@@ -618,9 +618,7 @@ export function ChatInputForm({
             >
               <span className="truncate max-w-[150px]">{file.file.name}</span>
               {file.status === "uploading" && (
-                <span className="text-primary-9 text-xs">
-                  {file.progress}%
-                </span>
+                <span className="text-primary-9 text-xs">{file.progress}%</span>
               )}
               {file.status === "error" && (
                 <span className="text-error-9 text-xs">{file.error}</span>
@@ -630,7 +628,8 @@ export function ChatInputForm({
                 className="text-neutral-9 hover:text-error-9"
                 type="button"
                 onClick={() => onRemoveFile(file.id)}
-                aria-label="Remove file">
+                aria-label="Remove file"
+              >
                 <X className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -662,7 +661,8 @@ export function ChatInputForm({
             className="p-1 text-warning-9 hover:text-warning-11"
             type="button"
             onClick={() => setIsVoiceBannerDismissed(true)}
-            aria-label="Dismiss">
+            aria-label="Dismiss"
+          >
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -1104,7 +1104,8 @@ export function ChatInputForm({
                     disabled={isProcessing}
                     aria-label={
                       isListening ? "Stop voice input" : "Start voice input"
-                    }>
+                    }
+                  >
                     {isListening ? (
                       <MicOff className="w-5 h-5" />
                     ) : (
@@ -1126,18 +1127,20 @@ export function ChatInputForm({
                 )}
 
                 {/* Tool Selector (Manual Tool Selection) */}
-                {showToolSelector && onSelectedToolsChange && onToolSelectionModeChange && (
-                  <ToolSelector
-                    selectedTools={selectedTools}
-                    onSelectionChange={onSelectedToolsChange}
-                    mode={toolSelectionMode}
-                    onModeChange={onToolSelectionModeChange}
-                    availableTools={availableTools}
-                    isLoading={isToolsLoading}
-                    disabled={isProcessing}
-                    compact={toolSelectorCompact}
-                  />
-                )}
+                {showToolSelector &&
+                  onSelectedToolsChange &&
+                  onToolSelectionModeChange && (
+                    <ToolSelector
+                      selectedTools={selectedTools}
+                      onSelectionChange={onSelectedToolsChange}
+                      mode={toolSelectionMode}
+                      onModeChange={onToolSelectionModeChange}
+                      availableTools={availableTools}
+                      isLoading={isToolsLoading}
+                      disabled={isProcessing}
+                      compact={toolSelectorCompact}
+                    />
+                  )}
 
                 {/* Reasoning Effort Selector in controls row (RichText mode only) */}
                 {modelSupportsThinking &&
@@ -1156,7 +1159,8 @@ export function ChatInputForm({
               {/* Right: Send/Stop button */}
               <div className="flex items-center gap-2">
                 {isStreaming && onStopStreaming ? (
-                  <Button size="icon"
+                  <Button
+                    size="icon"
                     variant="danger"
                     className="p-2 bg-error-9 text-neutral-12 rounded-lg hover:bg-error-10"
                     type="button"
@@ -1190,7 +1194,7 @@ export function ChatInputForm({
           </div>
         ) : (
           /* Legacy Mode: Plain textarea with existing styling */
-          (<div
+          <div
             data-testid="input-wrapper"
             className="flex items-end gap-2 p-2 bg-neutral-1 border border-neutral-5 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary-7 focus-within:border-transparent transition-all"
           >
@@ -1289,7 +1293,8 @@ export function ChatInputForm({
                   disabled={isProcessing}
                   aria-label={
                     isListening ? "Stop voice input" : "Start voice input"
-                  }>
+                  }
+                >
                   {isListening ? (
                     <MicOff className="w-5 h-5" />
                   ) : (
@@ -1300,7 +1305,8 @@ export function ChatInputForm({
 
               {/* Stop button when streaming, otherwise Send button */}
               {isStreaming && onStopStreaming ? (
-                <Button size="icon"
+                <Button
+                  size="icon"
                   variant="danger"
                   className="p-2 bg-error-9 text-neutral-12 rounded-lg hover:bg-error-10"
                   type="button"
@@ -1330,7 +1336,7 @@ export function ChatInputForm({
                 </Button>
               )}
             </div>
-          </div>)
+          </div>
         )}
       </form>
       {/* Reasoning Effort Selector and Thinking Toggle - only in Legacy mode */}
@@ -1339,7 +1345,8 @@ export function ChatInputForm({
         <div className="flex items-center justify-between mt-3 px-1">
           {/* Enable Thinking Toggle */}
           {onEnableThinkingChange && (
-            <Button variant="ghost"
+            <Button
+              variant="ghost"
               size="sm"
               className="flex text-xs focus:ring-insight-9 rounded-lg p-1"
               type="button"

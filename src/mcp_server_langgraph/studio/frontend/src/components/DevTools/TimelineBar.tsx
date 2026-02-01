@@ -151,7 +151,6 @@ export const timelineButtonVariants = cva(
   },
 );
 
-
 // =============================================================================
 // Sub-Components
 // =============================================================================
@@ -232,7 +231,9 @@ function TimelineMinimap({
             key={i}
             data-density-bar
             className="flex-1 bg-primary-a7 rounded-t dynamic-height"
-            style={{ "--height": `${Math.max(d * 100, 2)}%` } as React.CSSProperties}
+            style={
+              { "--height": `${Math.max(d * 100, 2)}%` } as React.CSSProperties
+            }
           />
         ))}
       </div>

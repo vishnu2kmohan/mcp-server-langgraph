@@ -108,10 +108,10 @@ export function GuidedTour({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
-          <h3 className="font-semibold text-neutral-12">
-            {currentStep.title}
-          </h3>
-          <Button size="icon" variant="ghost"
+          <h3 className="font-semibold text-neutral-12">{currentStep.title}</h3>
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
             onClick={handleSkip}
             aria-label="Skip"
@@ -122,9 +122,7 @@ export function GuidedTour({
 
         {/* Content */}
         <div className="px-4 py-3">
-          <p className="text-sm text-neutral-11">
-            {currentStep.content}
-          </p>
+          <p className="text-sm text-neutral-11">{currentStep.content}</p>
         </div>
 
         {/* Progress Dots */}
@@ -157,7 +155,8 @@ export function GuidedTour({
                 variant="ghost"
                 className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12"
                 onClick={handlePrevious}
-                aria-label="Previous">
+                aria-label="Previous"
+              >
                 <ArrowLeft className="w-3 h-3" />
                 Previous
               </Button>

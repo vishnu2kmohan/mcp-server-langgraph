@@ -192,7 +192,9 @@ export function HallucinationIndicator({
                   Report Inaccuracy
                 </h2>
               </div>
-              <Button size="icon" variant="ghost"
+              <Button
+                size="icon"
+                variant="ghost"
                 ref={closeButtonRef}
                 className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
                 onClick={handleCancel}
@@ -224,7 +226,8 @@ export function HallucinationIndicator({
                       key={option.id}
                       onClick={() => setSelectedCategory(option.id)}
                       role="radio"
-                      aria-checked={selectedCategory === option.id}>
+                      aria-checked={selectedCategory === option.id}
+                    >
                       <div className="font-medium text-sm text-neutral-12">
                         {option.label}
                       </div>
@@ -256,17 +259,23 @@ export function HallucinationIndicator({
 
             {/* Footer */}
             <div className="px-5 py-4 border-t border-neutral-5 flex justify-end gap-3">
-              <Button variant="secondary"
+              <Button
+                variant="secondary"
                 className="px-4 py-2 text-sm text-neutral-11 hover:text-neutral-12"
                 onClick={handleCancel}
                 aria-label="Cancel"
-              >Cancel</Button>
-              <Button variant="primary"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
                 className="px-4 py-2 text-sm rounded-lg"
                 onClick={handleSubmit}
                 disabled={!selectedCategory}
                 aria-label="Submit"
-              >Submit</Button>
+              >
+                Submit
+              </Button>
             </div>
           </div>
         </div>

@@ -66,8 +66,7 @@ const getAuthTypeLabel = (authType: string): string => {
 const getAuthTypeBadgeClass = (authType: string): string => {
   const classes: Record<string, string> = {
     oauth2: "bg-primary-3 text-primary-11",
-    api_key:
-      "bg-warning-3 text-warning-11",
+    api_key: "bg-warning-3 text-warning-11",
     none: "bg-neutral-2 text-neutral-11",
   };
   return classes[authType] || classes.none;
@@ -94,7 +93,7 @@ export function ConnectorCard({
         "relative flex flex-col rounded-lg border bg-neutral-1 p-4",
         "border-neutral-6",
         "transition-shadow duration-fast",
-        className
+        className,
       )}
       variants={variants}
       initial="rest"
@@ -139,7 +138,7 @@ export function ConnectorCard({
         <span
           className={cn(
             "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-            getAuthTypeBadgeClass(template.authType)
+            getAuthTypeBadgeClass(template.authType),
           )}
         >
           {getAuthTypeLabel(template.authType)}
@@ -171,8 +170,8 @@ export function ConnectorCard({
             className={cn(
               "inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium",
               "text-neutral-11 hover:bg-neutral-2 hover:text-neutral-12",
-              
-              "transition-colors duration-fast"
+
+              "transition-colors duration-fast",
             )}
             aria-label="Docs (opens in new tab)"
           >

@@ -372,9 +372,7 @@ export function AdminDashboard({
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-12">
-          Admin Dashboard
-        </h1>
+        <h1 className="text-2xl font-bold text-neutral-12">Admin Dashboard</h1>
         <Button
           variant="primary"
           className="min-h-[44px] min-w-[44px] flex items-center gap-2"
@@ -386,10 +384,7 @@ export function AdminDashboard({
         </Button>
       </div>
       {/* Tabs */}
-      <div
-        role="tablist"
-        className="flex border-b border-neutral-5"
-      >
+      <div role="tablist" className="flex border-b border-neutral-5">
         {tabs.map((tab) => (
           <Button
             variant="ghost"
@@ -435,9 +430,7 @@ export function AdminDashboard({
                     data-testid="health-status"
                     className={`w-3 h-3 rounded-full ${getHealthColor(systemHealth.status)}`}
                   />
-                  <span className="text-sm text-neutral-11">
-                    Status
-                  </span>
+                  <span className="text-sm text-neutral-11">Status</span>
                 </div>
                 <span className="text-lg font-semibold text-neutral-12 capitalize">
                   {systemHealth.status}
@@ -598,9 +591,7 @@ function MetricCard({ label, value }: MetricCardProps) {
 
   return (
     <div className="bg-neutral-1 rounded-lg p-4">
-      <span className="text-sm text-neutral-11 block mb-2">
-        {label}
-      </span>
+      <span className="text-sm text-neutral-11 block mb-2">{label}</span>
       <span className={cn("text-lg font-semibold", getColor(value))}>
         {value}%
       </span>

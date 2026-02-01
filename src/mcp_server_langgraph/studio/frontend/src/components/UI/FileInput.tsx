@@ -171,9 +171,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
               <Upload
                 className={cn(
                   "w-8 h-8 mb-2",
-                  error
-                    ? "text-error-9"
-                    : "text-neutral-9",
+                  error ? "text-error-9" : "text-neutral-9",
                 )}
               />
               <p className="text-sm text-neutral-11">
@@ -183,9 +181,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
                 or drag and drop
               </p>
               {accept && (
-                <p className="text-xs text-neutral-10 mt-1">
-                  {accept}
-                </p>
+                <p className="text-xs text-neutral-10 mt-1">{accept}</p>
               )}
             </div>
           ) : (
@@ -237,9 +233,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
         {/* Helper text */}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-neutral-10">
-            {helperText}
-          </p>
+          <p className="mt-1 text-sm text-neutral-10">{helperText}</p>
         )}
 
         {/* Error message */}

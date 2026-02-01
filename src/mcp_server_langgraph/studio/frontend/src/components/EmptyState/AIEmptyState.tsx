@@ -92,7 +92,8 @@ function AISuggestionTrigger({
         "bg-primary-10 hover:bg-primary-11 text-neutral-12",
         "transition-colors duration-150",
         "focus:outline-none focus:ring-2 focus:ring-primary-9 focus:ring-offset-2",
-      )}>
+      )}
+    >
       {showConfidence && suggestion.confidence >= 0.85 && (
         <Sparkles
           size={16}
@@ -129,7 +130,8 @@ function FallbackTrigger({
         "transition-colors duration-150",
         "focus:outline-none focus:ring-2 focus:ring-neutral-8 focus:ring-offset-2",
       )}
-      data-target={target}>
+      data-target={target}
+    >
       <span>{action}</span>
       <ArrowRight size={16} />
     </Button>
@@ -239,7 +241,8 @@ export function AIEmptyState({
           "text-neutral-11",
           "hover:bg-neutral-1",
           "transition-colors duration-150",
-        )}>
+        )}
+      >
         <span>{secondSuggestion.text}</span>
       </Button>
     ) : undefined;

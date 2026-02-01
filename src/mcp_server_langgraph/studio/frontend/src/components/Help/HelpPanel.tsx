@@ -120,7 +120,9 @@ export function HelpPanel({
             {contextTitle || "Help"}
           </h2>
         </div>
-        <Button size="icon" variant="ghost"
+        <Button
+          size="icon"
+          variant="ghost"
           className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
           onClick={onClose}
           aria-label="Close"
@@ -161,13 +163,8 @@ export function HelpPanel({
             </h3>
             <div className="space-y-2">
               {filteredTips.map((tip) => (
-                <div
-                  key={tip.id}
-                  className="p-3 bg-neutral-1 rounded-lg"
-                >
-                  <p className="text-sm text-neutral-11">
-                    {tip.content}
-                  </p>
+                <div key={tip.id} className="p-3 bg-neutral-1 rounded-lg">
+                  <p className="text-sm text-neutral-11">{tip.content}</p>
                   {tip.details && (
                     <>
                       <Button
@@ -175,7 +172,8 @@ export function HelpPanel({
                         size="sm"
                         className="flex mt-2 text-xs text-primary-10 dark:text-primary-7 hover:text-primary-11"
                         onClick={() => toggleTipExpanded(tip.id)}
-                        aria-label="More">
+                        aria-label="More"
+                      >
                         {expandedTips.has(tip.id) ? (
                           <>
                             <ChevronUp className="w-3 h-3" />

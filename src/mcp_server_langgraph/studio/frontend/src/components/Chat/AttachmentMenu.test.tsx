@@ -10,7 +10,13 @@
  * TDD RED Phase: Write failing tests first.
  */
 
-import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { AttachmentMenu, type AttachmentMenuProps } from "./AttachmentMenu";
@@ -46,7 +52,9 @@ describe("AttachmentMenu", () => {
     it("should render plus button", () => {
       render(<AttachmentMenu {...defaultProps} />);
 
-      const button = screen.getByRole("button", { name: /add attachment or action/i });
+      const button = screen.getByRole("button", {
+        name: /add attachment or action/i,
+      });
       expect(button).toBeInTheDocument();
     });
 
@@ -65,14 +73,18 @@ describe("AttachmentMenu", () => {
     it("should disable button when disabled prop is true", () => {
       render(<AttachmentMenu {...defaultProps} disabled={true} />);
 
-      const button = screen.getByRole("button", { name: /add attachment or action/i });
+      const button = screen.getByRole("button", {
+        name: /add attachment or action/i,
+      });
       expect(button).toBeDisabled();
     });
 
     it("should disable button when uploading", () => {
       render(<AttachmentMenu {...defaultProps} isUploading={true} />);
 
-      const button = screen.getByRole("button", { name: /add attachment or action/i });
+      const button = screen.getByRole("button", {
+        name: /add attachment or action/i,
+      });
       expect(button).toBeDisabled();
     });
   });
@@ -156,7 +168,9 @@ describe("AttachmentMenu", () => {
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
-      expect(screen.queryByText(/knowledge base focus/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/knowledge base focus/i),
+      ).not.toBeInTheDocument();
     });
 
     it("should show Code snippet option", async () => {
@@ -198,7 +212,9 @@ describe("AttachmentMenu", () => {
       render(<AttachmentMenu {...defaultProps} />);
 
       const fileInput = screen.getByTestId("attachment-file-input");
-      const file = new File(["test content"], "test.txt", { type: "text/plain" });
+      const file = new File(["test content"], "test.txt", {
+        type: "text/plain",
+      });
 
       fireEvent.change(fileInput, { target: { files: [file] } });
 
@@ -248,8 +264,12 @@ describe("AttachmentMenu", () => {
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/knowledge base focus/i));
 
-      const kbOnlyOption = screen.getByText(/knowledge base only/i).closest("[role='menuitem']");
-      expect(kbOnlyOption).toContainElement(screen.getByTestId("kb-focus-check-kb_only"));
+      const kbOnlyOption = screen
+        .getByText(/knowledge base only/i)
+        .closest("[role='menuitem']");
+      expect(kbOnlyOption).toContainElement(
+        screen.getByTestId("kb-focus-check-kb_only"),
+      );
     });
 
     it("should close menu after KB Focus mode selection", async () => {

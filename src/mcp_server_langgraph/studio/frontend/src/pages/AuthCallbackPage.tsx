@@ -183,9 +183,7 @@ export function AuthCallbackPage() {
               <h2 className="text-xl font-semibold text-neutral-12 mb-2">
                 Sign in successful!
               </h2>
-              <p className="text-neutral-11">
-                Redirecting to Agent Studio...
-              </p>
+              <p className="text-neutral-11">Redirecting to Agent Studio...</p>
             </>
           )}
 
@@ -195,9 +193,7 @@ export function AuthCallbackPage() {
               <h2 className="text-xl font-semibold text-neutral-12 mb-2">
                 Sign in failed
               </h2>
-              <p className="text-error-10 mb-4">
-                {errorMessage}
-              </p>
+              <p className="text-error-10 mb-4">{errorMessage}</p>
               <Button
                 variant="primary"
                 onClick={() => navigate("/login", { replace: true })}

@@ -5,8 +5,8 @@
  * Tests skill grid rendering, pagination, error handling, and user interactions.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowseContent } from "./BrowseContent";
 import type { SkillMetadata } from "../../types/skills";
@@ -35,6 +35,11 @@ const mockSkills: SkillMetadata[] = [
     tags: ["data", "analytics"],
   },
 ];
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("BrowseContent", () => {
   const defaultProps = {

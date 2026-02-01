@@ -32,7 +32,7 @@ export function extractDomain(url: string): string {
  */
 export function truncateSnippet(
   snippet: string | null | undefined,
-  maxLength = 120
+  maxLength = 120,
 ): string | null {
   if (!snippet) return null;
   if (snippet.length <= maxLength) return snippet;

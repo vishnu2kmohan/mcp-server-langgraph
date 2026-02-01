@@ -60,7 +60,8 @@ function FormatButton({
       data-testid={`format-${format}`}
       role="radio"
       aria-checked={selected}
-      onClick={onClick}>
+      onClick={onClick}
+    >
       {icon}
       <span className="font-medium">{label}</span>
     </Button>
@@ -209,7 +210,8 @@ export function ExportDialog({
           >
             Export Conversation
           </h2>
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-2 focus:ring-primary-7"
             type="button"

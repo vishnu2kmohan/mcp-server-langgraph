@@ -40,7 +40,7 @@ function renderWithProviders(ui: React.ReactElement) {
   return render(
     <Provider store={store}>
       <MemoryRouter>{ui}</MemoryRouter>
-    </Provider>
+    </Provider>,
   );
 }
 

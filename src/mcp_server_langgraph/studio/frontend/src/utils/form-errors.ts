@@ -74,15 +74,13 @@ export const ERROR_MESSAGES = {
    * @param field1 - First field name
    * @param field2 - Second field name
    */
-  match: (field1: string, field2: string) =>
-    `${field1} must match ${field2}`,
+  match: (field1: string, field2: string) => `${field1} must match ${field2}`,
 
   /**
    * Value already exists (uniqueness constraint)
    * @param field - Human-readable field name
    */
-  unique: (field: string) =>
-    `This ${field.toLowerCase()} is already taken`,
+  unique: (field: string) => `This ${field.toLowerCase()} is already taken`,
 
   /**
    * Invalid URL format
@@ -171,12 +169,22 @@ export const ERROR_MESSAGES = {
  */
 export const PASSWORD_ERRORS = {
   tooShort: ERROR_MESSAGES.minLength("Password", 8),
-  noUppercase: ERROR_MESSAGES.pattern("Password", "must include an uppercase letter"),
-  noLowercase: ERROR_MESSAGES.pattern("Password", "must include a lowercase letter"),
+  noUppercase: ERROR_MESSAGES.pattern(
+    "Password",
+    "must include an uppercase letter",
+  ),
+  noLowercase: ERROR_MESSAGES.pattern(
+    "Password",
+    "must include a lowercase letter",
+  ),
   noNumber: ERROR_MESSAGES.pattern("Password", "must include a number"),
-  noSpecial: ERROR_MESSAGES.pattern("Password", "must include a special character (!@#$%^&*)"),
+  noSpecial: ERROR_MESSAGES.pattern(
+    "Password",
+    "must include a special character (!@#$%^&*)",
+  ),
   common: "This password is too common. Please choose a stronger password.",
-  compromised: "This password has been exposed in a data breach. Please choose a different password.",
+  compromised:
+    "This password has been exposed in a data breach. Please choose a different password.",
 } as const;
 
 // =============================================================================
@@ -189,8 +197,14 @@ export const PASSWORD_ERRORS = {
 export const USERNAME_ERRORS = {
   tooShort: ERROR_MESSAGES.minLength("Username", 3),
   tooLong: ERROR_MESSAGES.maxLength("Username", 30),
-  invalidChars: ERROR_MESSAGES.pattern("Username", "can only contain letters, numbers, and underscores"),
-  startsWithNumber: ERROR_MESSAGES.pattern("Username", "must start with a letter"),
+  invalidChars: ERROR_MESSAGES.pattern(
+    "Username",
+    "can only contain letters, numbers, and underscores",
+  ),
+  startsWithNumber: ERROR_MESSAGES.pattern(
+    "Username",
+    "must start with a letter",
+  ),
   reserved: "This username is not available",
   taken: ERROR_MESSAGES.unique("Username"),
 } as const;

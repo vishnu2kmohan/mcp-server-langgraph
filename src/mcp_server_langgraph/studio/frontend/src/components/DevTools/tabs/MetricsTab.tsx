@@ -211,21 +211,15 @@ function MetricCard({ metric }: MetricCardProps): React.ReactElement {
     >
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-sm text-neutral-10">
-            {displayName}
-          </div>
+          <div className="text-sm text-neutral-10">{displayName}</div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-2xl font-semibold text-neutral-12">
               {formattedValue}
             </span>
             {metric.unit !== "%" ? (
-              <span className="text-sm text-neutral-10">
-                {metric.unit}
-              </span>
+              <span className="text-sm text-neutral-10">{metric.unit}</span>
             ) : (
-              <span className="text-2xl font-semibold text-neutral-12">
-                %
-              </span>
+              <span className="text-2xl font-semibold text-neutral-12">%</span>
             )}
           </div>
         </div>
@@ -414,9 +408,13 @@ export function MetricsTab({
                 type="button"
                 onClick={() => handleTimeRangeChange(range)}
                 data-active={timeRange === range}
-                className={timeRangeButtonVariants({ active: timeRange === range })}
+                className={timeRangeButtonVariants({
+                  active: timeRange === range,
+                })}
                 aria-label={range}
-                variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                variants={
+                  prefersReducedMotion ? undefined : motionButtonVariants
+                }
                 initial="rest"
                 whileHover="hover"
                 whileTap="pressed"
@@ -441,7 +439,8 @@ export function MetricsTab({
               variant="primary"
               className="px-3 py-1.5 text-sm bg-grafana-9 text-neutral-12 rounded-md hover:bg-grafana-10 flex"
               onClick={handleOpenGrafana}
-              aria-label="View in Grafana">
+              aria-label="View in Grafana"
+            >
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -499,9 +498,7 @@ export function MetricsTab({
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
-            <p className="text-neutral-10">
-              No metrics available
-            </p>
+            <p className="text-neutral-10">No metrics available</p>
             <p className="text-sm text-neutral-9 mt-1">
               Metrics will appear when data is collected
             </p>

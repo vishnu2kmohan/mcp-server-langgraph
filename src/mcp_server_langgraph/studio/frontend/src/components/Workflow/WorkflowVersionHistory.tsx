@@ -154,9 +154,7 @@ export function WorkflowVersionHistory({
         )}
       >
         <AlertCircle size={24} className="text-error-9" />
-        <p className="text-sm text-neutral-10">
-          Failed to load versions
-        </p>
+        <p className="text-sm text-neutral-10">Failed to load versions</p>
       </div>
     );
   }
@@ -173,9 +171,7 @@ export function WorkflowVersionHistory({
         )}
       >
         <History size={24} className="text-neutral-9" />
-        <p className="text-sm text-neutral-10">
-          No versions yet
-        </p>
+        <p className="text-sm text-neutral-10">No versions yet</p>
       </div>
     );
   }
@@ -191,11 +187,9 @@ export function WorkflowVersionHistory({
           variant="primary"
           className="flex text-left"
           type="button"
-          data-testid="version-history-button">
-          <History
-            size={16}
-            className="text-neutral-10"
-          />
+          data-testid="version-history-button"
+        >
+          <History size={16} className="text-neutral-10" />
           <h3 className="text-sm font-medium text-neutral-12">
             Version History
           </h3>
@@ -305,7 +299,8 @@ export function WorkflowVersionHistory({
                         "text-neutral-11",
                         "hover:bg-neutral-2",
                         "disabled:opacity-50 disabled:cursor-not-allowed",
-                      )}>
+                      )}
+                    >
                       <RotateCcw size={12} />
                       Restore
                     </Button>

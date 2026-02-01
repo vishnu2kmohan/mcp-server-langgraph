@@ -66,6 +66,11 @@ KNOWN_UNMATCHED_TESTIDS: frozenset[str] = frozenset(
         # Hallucination reporting e2e tests
         "assistant-message",  # hallucination-reporting.spec.ts - fallback selector
         "user-message",  # hallucination-reporting.spec.ts - fallback selector
+        # PWA offline testing
+        "offline-banner",  # ios-pwa.spec.ts - offline indicator
+        # Tool selection components
+        "tool-selector-dropdown",  # tool-selection.spec.ts - ToolSelector component
+        "tool-selector-list",  # tool-selection.spec.ts - ToolSelector component
     }
 )
 

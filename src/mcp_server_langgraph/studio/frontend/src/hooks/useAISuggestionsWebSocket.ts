@@ -355,7 +355,11 @@ export function useAISuggestionsWebSocket(
     debouncedRequestRef.current?.cancel();
 
     const debouncedFn = debounce(
-      (inputText: string, cursorPosition: number, contextWindow: number = 500) => {
+      (
+        inputText: string,
+        cursorPosition: number,
+        contextWindow: number = 500,
+      ) => {
         requestSuggestion(inputText, cursorPosition, contextWindow);
       },
       debounceMs,

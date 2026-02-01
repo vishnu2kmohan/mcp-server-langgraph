@@ -93,8 +93,9 @@ const modeConfig: Record<
 // Types
 // =============================================================================
 
-export interface ExecutionModeIndicatorProps
-  extends VariantProps<typeof executionModeIndicatorVariants> {
+export interface ExecutionModeIndicatorProps extends VariantProps<
+  typeof executionModeIndicatorVariants
+> {
   /** Current execution mode */
   mode: ExecutionMode;
   /** Callback when indicator is clicked to cycle modes */

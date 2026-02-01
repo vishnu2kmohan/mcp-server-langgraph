@@ -185,7 +185,9 @@ export function MobileDrawer({
   const allowedItems = useAppSelector(selectSidebarItems);
 
   // Get sessions from route loader data
-  const loaderData = useRouteLoaderData("studio") as SessionsLoaderData | undefined;
+  const loaderData = useRouteLoaderData("studio") as
+    | SessionsLoaderData
+    | undefined;
   const sessions = loaderData?.sessions ?? [];
 
   // Handle session click
@@ -272,7 +274,8 @@ export function MobileDrawer({
           "border-r border-neutral-5",
           "shadow-xl",
           "drawer-safe-area",
-          !prefersReducedMotion && "transform transition-transform duration-200 ease-out",
+          !prefersReducedMotion &&
+            "transform transition-transform duration-200 ease-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
           className,
         )}
@@ -282,7 +285,9 @@ export function MobileDrawer({
           <span className="text-lg font-semibold text-neutral-12">
             Navigation
           </span>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             type="button"
             data-testid="mobile-drawer-close"
             onClick={onClose}
@@ -330,7 +335,8 @@ export function MobileDrawer({
                       !prefersReducedMotion && "transition-colors",
                       "focus:outline-none focus:ring-2 focus:ring-primary-9",
                       "text-neutral-11 hover:bg-neutral-3",
-                    )}>
+                    )}
+                  >
                     <MessageSquare className="w-4 h-4 text-neutral-9 flex-shrink-0" />
                     <span className="text-sm truncate">
                       {session.name || `Session ${session.id.slice(0, 8)}`}
@@ -346,7 +352,8 @@ export function MobileDrawer({
         <nav className="flex flex-col flex-1 overflow-y-auto py-4">
           <div className="flex flex-col gap-1 px-2">
             {visibleNavItems.map((item) => (
-              <Button variant="ghost"
+              <Button
+                variant="ghost"
                 key={item.id}
                 type="button"
                 data-testid={`mobile-nav-${item.id}`}
@@ -373,7 +380,8 @@ export function MobileDrawer({
           {/* Bottom Items */}
           <div className="flex flex-col gap-1 px-2 pt-4 mt-4 border-t border-neutral-5">
             {visibleBottomItems.map((item) => (
-              <Button variant="ghost"
+              <Button
+                variant="ghost"
                 key={item.id}
                 type="button"
                 data-testid={`mobile-nav-${item.id}`}

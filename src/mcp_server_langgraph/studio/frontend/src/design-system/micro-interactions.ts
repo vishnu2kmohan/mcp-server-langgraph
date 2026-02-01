@@ -7,7 +7,7 @@
  * @see https://motion.dev/docs/react-animation#variants
  */
 
-import type { Variants } from 'motion/react';
+import type { Variants } from "motion/react";
 
 /**
  * Button press effect - subtle scale on hover/press.
@@ -32,7 +32,7 @@ export const checkboxVariants: Variants = {
   checked: {
     pathLength: 1,
     opacity: 1,
-    transition: { duration: 0.2, ease: 'easeOut' },
+    transition: { duration: 0.2, ease: "easeOut" },
   },
 };
 
@@ -65,7 +65,7 @@ export const listItemVariants: Variants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
 };
 
@@ -81,7 +81,7 @@ export const toastVariants: Variants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: 'spring', stiffness: 400, damping: 30 },
+    transition: { type: "spring", stiffness: 400, damping: 30 },
   },
   exit: {
     opacity: 0,
@@ -103,7 +103,7 @@ export const modalVariants: Variants = {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
 };
 
@@ -135,7 +135,7 @@ export const dropdownVariants: Variants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: 'spring', stiffness: 400, damping: 30 },
+    transition: { type: "spring", stiffness: 400, damping: 30 },
   },
 };
 
@@ -151,7 +151,7 @@ export const skeletonVariants: Variants = {
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      ease: 'easeInOut',
+      ease: "easeInOut",
     },
   },
 };
@@ -173,11 +173,11 @@ export const skeletonVariants: Variants = {
  */
 export const shimmerVariants: Variants = {
   shimmer: {
-    backgroundPosition: ['200% 0', '-200% 0'],
+    backgroundPosition: ["200% 0", "-200% 0"],
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      ease: 'linear',
+      ease: "linear",
     },
   },
 };
@@ -191,12 +191,12 @@ export const shimmerVariants: Variants = {
 export const cardHoverVariants: Variants = {
   rest: {
     y: 0,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
   },
   hover: {
     y: -2,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-    transition: { type: 'spring', stiffness: 400, damping: 25 },
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+    transition: { type: "spring", stiffness: 400, damping: 25 },
   },
 };
 
@@ -210,12 +210,12 @@ export const accordionVariants: Variants = {
   collapsed: {
     height: 0,
     opacity: 0,
-    transition: { duration: 0.2, ease: 'easeInOut' },
+    transition: { duration: 0.2, ease: "easeInOut" },
   },
   expanded: {
-    height: 'auto',
+    height: "auto",
     opacity: 1,
-    transition: { duration: 0.2, ease: 'easeInOut' },
+    transition: { duration: 0.2, ease: "easeInOut" },
   },
 };
 
@@ -241,7 +241,7 @@ export const badgeVariants: Variants = {
   visible: {
     scale: 1,
     opacity: 1,
-    transition: { type: 'spring', stiffness: 500, damping: 15 },
+    transition: { type: "spring", stiffness: 500, damping: 15 },
   },
 };
 
@@ -254,7 +254,7 @@ export const badgeVariants: Variants = {
 export const spinnerTransition = {
   repeat: Infinity,
   duration: 1,
-  ease: 'linear',
+  ease: "linear",
 } as const;
 
 /**
@@ -269,16 +269,16 @@ export const spinnerTransition = {
 export const traceNodeVariants: Variants = {
   default: {
     scale: 1,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
   },
   selected: {
     scale: 1.02,
-    boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
   hover: {
     scale: 1.01,
-    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
   },
 };
 
@@ -303,7 +303,7 @@ export const chipVariants: Variants = {
     opacity: 1,
     scale: 1,
     x: 0,
-    transition: { type: 'spring', stiffness: 400, damping: 25 },
+    transition: { type: "spring", stiffness: 400, damping: 25 },
   },
   exit: {
     opacity: 0,
@@ -325,7 +325,7 @@ export const sessionItemVariants: Variants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
   exit: {
     opacity: 0,
@@ -349,7 +349,7 @@ export const panelSlideVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
 };
 
@@ -362,19 +362,19 @@ export const panelSlideVariants: Variants = {
 export const voiceRecordingVariants: Variants = {
   idle: {
     scale: 1,
-    boxShadow: '0 0 0 0 rgba(239, 68, 68, 0)',
+    boxShadow: "0 0 0 0 rgba(239, 68, 68, 0)",
   },
   recording: {
     scale: [1, 1.05, 1],
     boxShadow: [
-      '0 0 0 0 rgba(239, 68, 68, 0.4)',
-      '0 0 0 8px rgba(239, 68, 68, 0)',
-      '0 0 0 0 rgba(239, 68, 68, 0.4)',
+      "0 0 0 0 rgba(239, 68, 68, 0.4)",
+      "0 0 0 8px rgba(239, 68, 68, 0)",
+      "0 0 0 0 rgba(239, 68, 68, 0.4)",
     ],
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      ease: 'easeInOut',
+      ease: "easeInOut",
     },
   },
 };
@@ -412,12 +412,12 @@ export const devToolsPanelVariants: Variants = {
   collapsed: {
     height: 0,
     opacity: 0,
-    transition: { duration: 0.2, ease: 'easeInOut' },
+    transition: { duration: 0.2, ease: "easeInOut" },
   },
   expanded: {
-    height: 'auto',
+    height: "auto",
     opacity: 1,
-    transition: { type: 'spring', stiffness: 300, damping: 30 },
+    transition: { type: "spring", stiffness: 300, damping: 30 },
   },
 };
 
@@ -438,7 +438,7 @@ export const tabContentVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
   exit: {
     opacity: 0,
@@ -459,7 +459,7 @@ export const logEntryVariants: Variants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { type: 'spring', stiffness: 400, damping: 30 },
+    transition: { type: "spring", stiffness: 400, damping: 30 },
   },
 };
 
@@ -476,7 +476,7 @@ export const alertBadgePulseVariants: Variants = {
     transition: {
       duration: 0.6,
       repeat: 2,
-      ease: 'easeInOut',
+      ease: "easeInOut",
     },
   },
 };
@@ -490,15 +490,15 @@ export const alertBadgePulseVariants: Variants = {
 export const timelineScrubberVariants: Variants = {
   rest: {
     scale: 1,
-    boxShadow: '0 0 0 0 rgba(99, 102, 241, 0)',
+    boxShadow: "0 0 0 0 rgba(99, 102, 241, 0)",
   },
   hover: {
     scale: 1.1,
-    boxShadow: '0 0 0 4px rgba(99, 102, 241, 0.2)',
+    boxShadow: "0 0 0 4px rgba(99, 102, 241, 0.2)",
   },
   dragging: {
     scale: 1.15,
-    boxShadow: '0 0 0 6px rgba(99, 102, 241, 0.3)',
+    boxShadow: "0 0 0 6px rgba(99, 102, 241, 0.3)",
   },
 };
 
@@ -513,10 +513,10 @@ export const networkRowVariants: Variants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
   hover: {
-    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    backgroundColor: "rgba(99, 102, 241, 0.05)",
   },
 };
 
@@ -544,16 +544,16 @@ export const problemIndicatorVariants: Variants = {
 export const resizeHandleVariants: Variants = {
   rest: {
     scaleX: 1,
-    backgroundColor: 'rgba(99, 102, 241, 0)',
+    backgroundColor: "rgba(99, 102, 241, 0)",
   },
   hover: {
     scaleX: 1.5,
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    backgroundColor: "rgba(99, 102, 241, 0.2)",
     transition: { duration: 0.15 },
   },
   dragging: {
     scaleX: 2,
-    backgroundColor: 'rgba(99, 102, 241, 0.4)',
+    backgroundColor: "rgba(99, 102, 241, 0.4)",
     transition: { duration: 0.1 },
   },
 };
@@ -568,12 +568,12 @@ export const devToolsTabVariants: Variants = {
   rest: { scale: 1 },
   hover: {
     scale: 1.02,
-    transition: { type: 'spring', stiffness: 400, damping: 25 },
+    transition: { type: "spring", stiffness: 400, damping: 25 },
   },
   pressed: { scale: 0.98 },
   active: {
     scale: 1,
-    transition: { type: 'spring', stiffness: 300, damping: 25 },
+    transition: { type: "spring", stiffness: 300, damping: 25 },
   },
 };
 
@@ -587,7 +587,7 @@ export const filterButtonVariants: Variants = {
   rest: { scale: 1 },
   hover: {
     scale: 1.02,
-    transition: { type: 'spring', stiffness: 400, damping: 30 },
+    transition: { type: "spring", stiffness: 400, damping: 30 },
   },
   pressed: { scale: 0.98 },
 };
@@ -601,12 +601,12 @@ export const filterButtonVariants: Variants = {
 export const insightCardVariants: Variants = {
   rest: {
     y: 0,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
   },
   hover: {
     y: -1,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-    transition: { type: 'spring', stiffness: 400, damping: 25 },
+    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+    transition: { type: "spring", stiffness: 400, damping: 25 },
   },
 };
 
@@ -623,7 +623,7 @@ export const spinnerVariants: Variants = {
     transition: {
       duration: 1,
       repeat: Infinity,
-      ease: 'linear',
+      ease: "linear",
     },
   },
 };

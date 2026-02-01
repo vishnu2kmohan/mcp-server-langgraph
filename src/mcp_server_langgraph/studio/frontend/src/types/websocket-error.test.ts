@@ -4,7 +4,7 @@
  * TDD tests for unified WebSocket error types and factory utilities.
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createWebSocketError,
   isRetryableError,
@@ -14,10 +14,17 @@ import {
   type HookErrorCode,
 } from "./websocket-error";
 
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("websocket-error types", () => {
   describe("createWebSocketError", () => {
     it("should create an error with required fields", () => {
-      const error = createWebSocketError("missing_session_id", "Session ID is required");
+      const error = createWebSocketError(
+        "missing_session_id",
+        "Session ID is required",
+      );
 
       expect(error.code).toBe("missing_session_id");
       expect(error.message).toBe("Session ID is required");
@@ -26,53 +33,49 @@ describe("websocket-error types", () => {
     });
 
     it("should set retryable based on error code", () => {
-      const networkError = createWebSocketError("network_error", "Connection lost");
+      const networkError = createWebSocketError(
+        "network_error",
+        "Connection lost",
+      );
       expect(networkError.retryable).toBe(true);
 
       const authError = createWebSocketError("token_expired", "Token expired");
       expect(authError.retryable).toBe(true);
 
-      const invalidRequest = createWebSocketError("invalid_request", "Bad request");
+      const invalidRequest = createWebSocketError(
+        "invalid_request",
+        "Bad request",
+      );
       expect(invalidRequest.retryable).toBe(false);
     });
 
     it("should allow overriding retryable", () => {
-      const error = createWebSocketError(
-        "network_error",
-        "Connection lost",
-        { retryable: false }
-      );
+      const error = createWebSocketError("network_error", "Connection lost", {
+        retryable: false,
+      });
 
       expect(error.retryable).toBe(false);
     });
 
     it("should include optional context", () => {
-      const error = createWebSocketError(
-        "rate_limited",
-        "Too many requests",
-        {
-          context: {
-            retryAfter: 60,
-            traceId: "trace-123",
-          },
-        }
-      );
+      const error = createWebSocketError("rate_limited", "Too many requests", {
+        context: {
+          retryAfter: 60,
+          traceId: "trace-123",
+        },
+      });
 
       expect(error.context?.retryAfter).toBe(60);
       expect(error.context?.traceId).toBe("trace-123");
     });
 
     it("should include optional details", () => {
-      const error = createWebSocketError(
-        "validation_error",
-        "Invalid input",
-        {
-          details: {
-            field: "session_id",
-            expected: "string",
-          },
-        }
-      );
+      const error = createWebSocketError("validation_error", "Invalid input", {
+        details: {
+          field: "session_id",
+          expected: "string",
+        },
+      });
 
       expect(error.details?.field).toBe("session_id");
     });
@@ -105,7 +108,9 @@ describe("websocket-error types", () => {
     });
 
     it("should respect explicit retryable override", () => {
-      const error = createWebSocketError("network_error", "Error", { retryable: false });
+      const error = createWebSocketError("network_error", "Error", {
+        retryable: false,
+      });
       expect(isRetryableError(error)).toBe(false);
     });
   });

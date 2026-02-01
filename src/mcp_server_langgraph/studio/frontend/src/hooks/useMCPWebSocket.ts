@@ -23,14 +23,8 @@ import {
   selectWebSocketPermissions,
 } from "../store/slices/authSlice";
 import { addNotification } from "../store/slices/notificationSlice";
-import {
-  addElicitation,
-  addSamplingRequest,
-} from "../store/slices/mcpSlice";
-import type {
-  PendingElicitation,
-  PendingSamplingRequest,
-} from "../types/mcp";
+import { addElicitation, addSamplingRequest } from "../store/slices/mcpSlice";
+import type { PendingElicitation, PendingSamplingRequest } from "../types/mcp";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../utils/websocket";
 import {
   PROTOCOL_VERSION_MISMATCH_NOTIFICATION,
@@ -232,11 +226,7 @@ export interface UseMCPWebSocketReturn {
    * @param result - The result payload (if success)
    * @param error - The error payload (if error)
    */
-  sendResponse: (
-    id: JSONRPCId,
-    result: unknown,
-    error?: MCPError,
-  ) => void;
+  sendResponse: (id: JSONRPCId, result: unknown, error?: MCPError) => void;
   /** Disconnect */
   disconnect: () => void;
   /** Reconnect */
@@ -295,10 +285,7 @@ function isMCPRequest(data: unknown): data is MCPInboundRequest {
   if (typeof data !== "object" || data === null) return false;
   const msg = data as Record<string, unknown>;
   return (
-    msg.jsonrpc === "2.0" &&
-    "method" in msg &&
-    "id" in msg &&
-    msg.id != null
+    msg.jsonrpc === "2.0" && "method" in msg && "id" in msg && msg.id != null
   );
 }
 
@@ -410,85 +397,97 @@ export function useMCPWebSocket(
   const prevEnabledRef = useRef(effectiveEnabled);
 
   // Handle incoming messages
-  const handleMessage = useCallback((data: unknown) => {
-    // JSON-RPC Request (server-initiated, has method AND id)
-    // These are inbound requests like elicitation/sampling that need a response
-    if (isMCPRequest(data)) {
-      const { id, method, params = {} } = data;
+  const handleMessage = useCallback(
+    (data: unknown) => {
+      // JSON-RPC Request (server-initiated, has method AND id)
+      // These are inbound requests like elicitation/sampling that need a response
+      if (isMCPRequest(data)) {
+        const { id, method, params = {} } = data;
 
-      switch (method) {
-        case "elicitation/create": {
-          // Server is requesting user input via elicitation
-          const elicitation: PendingElicitation = {
-            id,
-            serverId: "primary", // TODO: Get from connection context when available
-            message: (params.message as string) ?? "",
-            requestedSchema: (params.requestedSchema as PendingElicitation["requestedSchema"]) ?? { type: "object" },
-            createdAt: Date.now(),
-            mode: (params.mode as PendingElicitation["mode"]) ?? "inline",
-            url: params.url as string | undefined,
-          };
-          dispatch(addElicitation(elicitation));
-          break;
+        switch (method) {
+          case "elicitation/create": {
+            // Server is requesting user input via elicitation
+            const elicitation: PendingElicitation = {
+              id,
+              serverId: "primary", // TODO: Get from connection context when available
+              message: (params.message as string) ?? "",
+              requestedSchema:
+                (params.requestedSchema as PendingElicitation["requestedSchema"]) ?? {
+                  type: "object",
+                },
+              createdAt: Date.now(),
+              mode: (params.mode as PendingElicitation["mode"]) ?? "inline",
+              url: params.url as string | undefined,
+            };
+            dispatch(addElicitation(elicitation));
+            break;
+          }
+          case "sampling/createMessage": {
+            // Server is requesting LLM sampling
+            const samplingRequest: PendingSamplingRequest = {
+              id,
+              serverId: "primary", // TODO: Get from connection context when available
+              messages:
+                (params.messages as PendingSamplingRequest["messages"]) ?? [],
+              modelPreferences:
+                params.modelPreferences as PendingSamplingRequest["modelPreferences"],
+              systemPrompt: params.systemPrompt as string | undefined,
+              includeContext:
+                params.includeContext as PendingSamplingRequest["includeContext"],
+              maxTokens: (params.maxTokens as number) ?? 1000,
+              createdAt: Date.now(),
+              tools: params.tools as PendingSamplingRequest["tools"],
+              toolChoice:
+                params.toolChoice as PendingSamplingRequest["toolChoice"],
+            };
+            dispatch(addSamplingRequest(samplingRequest));
+            break;
+          }
+          default:
+            // Unknown method - log for debugging
+            console.warn(
+              `[useMCPWebSocket] Unknown inbound request method: ${method}`,
+            );
         }
-        case "sampling/createMessage": {
-          // Server is requesting LLM sampling
-          const samplingRequest: PendingSamplingRequest = {
-            id,
-            serverId: "primary", // TODO: Get from connection context when available
-            messages: (params.messages as PendingSamplingRequest["messages"]) ?? [],
-            modelPreferences: params.modelPreferences as PendingSamplingRequest["modelPreferences"],
-            systemPrompt: params.systemPrompt as string | undefined,
-            includeContext: params.includeContext as PendingSamplingRequest["includeContext"],
-            maxTokens: (params.maxTokens as number) ?? 1000,
-            createdAt: Date.now(),
-            tools: params.tools as PendingSamplingRequest["tools"],
-            toolChoice: params.toolChoice as PendingSamplingRequest["toolChoice"],
-          };
-          dispatch(addSamplingRequest(samplingRequest));
-          break;
-        }
-        default:
-          // Unknown method - log for debugging
-          console.warn(`[useMCPWebSocket] Unknown inbound request method: ${method}`);
+        return;
       }
-      return;
-    }
 
-    // JSON-RPC Response (response to our requests)
-    if (isMCPResponse(data)) {
-      // Handle response to a request
-      const id = data.id;
-      if (id !== null && pendingRequestsRef.current.has(id)) {
-        const { resolve, reject } = pendingRequestsRef.current.get(id)!;
-        pendingRequestsRef.current.delete(id);
+      // JSON-RPC Response (response to our requests)
+      if (isMCPResponse(data)) {
+        // Handle response to a request
+        const id = data.id;
+        if (id !== null && pendingRequestsRef.current.has(id)) {
+          const { resolve, reject } = pendingRequestsRef.current.get(id)!;
+          pendingRequestsRef.current.delete(id);
 
-        if (data.error) {
-          reject(new Error(`${data.error.code}: ${data.error.message}`));
-        } else {
-          resolve(data.result);
+          if (data.error) {
+            reject(new Error(`${data.error.code}: ${data.error.message}`));
+          } else {
+            resolve(data.result);
+          }
+        }
+      } else if (isMCPNotification(data)) {
+        // Handle notifications (streaming, etc.)
+        const method = data.method;
+        const params = data.params ?? {};
+
+        if (method === "$/streaming/start") {
+          callbacksRef.current.onStreamingStart?.(
+            params.streamId as string,
+            params.toolCallId as number,
+          );
+        } else if (method === "$/streaming/chunk") {
+          callbacksRef.current.onStreamingChunk?.({
+            streamId: params.streamId as string,
+            content: params.content as MCPToolContent,
+          });
+        } else if (method === "$/streaming/end") {
+          callbacksRef.current.onStreamingEnd?.(params.streamId as string);
         }
       }
-    } else if (isMCPNotification(data)) {
-      // Handle notifications (streaming, etc.)
-      const method = data.method;
-      const params = data.params ?? {};
-
-      if (method === "$/streaming/start") {
-        callbacksRef.current.onStreamingStart?.(
-          params.streamId as string,
-          params.toolCallId as number,
-        );
-      } else if (method === "$/streaming/chunk") {
-        callbacksRef.current.onStreamingChunk?.({
-          streamId: params.streamId as string,
-          content: params.content as MCPToolContent,
-        });
-      } else if (method === "$/streaming/end") {
-        callbacksRef.current.onStreamingEnd?.(params.streamId as string);
-      }
-    }
-  }, [dispatch]);
+    },
+    [dispatch],
+  );
 
   // Use the underlying realtimeSync hook
   // Enable exponential backoff for better reconnection behavior

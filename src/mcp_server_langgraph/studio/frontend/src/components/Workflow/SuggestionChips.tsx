@@ -112,11 +112,14 @@ export function SuggestionChips({
       <div className="p-4 bg-error-1 dark:bg-error-a3 rounded-lg border border-error-4 dark:border-error-11">
         <div className="flex items-center justify-between">
           <span className="text-error-10 dark:text-error-7">{error}</span>
-          <Button variant="primary"
+          <Button
+            variant="primary"
             className="text-sm text-error-10 dark:text-error-7 hover:underline"
             onClick={onRefresh}
             aria-label="Retry"
-          >Retry</Button>
+          >
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -127,10 +130,10 @@ export function SuggestionChips({
     return (
       <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
         <div className="flex items-center justify-between">
-          <span className="text-neutral-10">
-            No suggestions available
-          </span>
-          <Button size="icon" variant="ghost"
+          <span className="text-neutral-10">No suggestions available</span>
+          <Button
+            size="icon"
+            variant="ghost"
             className="text-sm text-primary-10 dark:text-primary-7 hover:underline"
             onClick={onRefresh}
             aria-label="Refresh suggestions"
@@ -162,7 +165,9 @@ export function SuggestionChips({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-1 text-neutral-10 hover:text-neutral-11"
             onClick={onRefresh}
             aria-label="Refresh suggestions"
@@ -175,7 +180,8 @@ export function SuggestionChips({
             onClick={() => setIsExpanded(!isExpanded)}
             aria-label={
               isExpanded ? "Collapse suggestions" : "Expand suggestions"
-            }>
+            }
+          >
             {isExpanded ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
@@ -236,7 +242,8 @@ export function SuggestionChips({
               <Button
                 variant="primary"
                 className="text-sm text-primary-10 dark:text-primary-7 hover:underline"
-                onClick={() => setShowAll(true)}>
+                onClick={() => setShowAll(true)}
+              >
                 Show {hiddenCount} more
               </Button>
             </li>

@@ -41,10 +41,8 @@ export const tierBadgeVariants = cva(
       tier: {
         dedicated:
           "bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-9",
-        hybrid:
-          "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7",
-        shared:
-          "bg-neutral-2 text-neutral-11",
+        hybrid: "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7",
+        shared: "bg-neutral-2 text-neutral-11",
       },
     },
     defaultVariants: {
@@ -149,7 +147,9 @@ export function TierUsageBar({
               "h-full transition-all duration-300",
               getProgressColor(percentage, isUnlimited),
             )}
-            style={{ '--progress': `${clampedPercentage}%` } as React.CSSProperties}
+            style={
+              { "--progress": `${clampedPercentage}%` } as React.CSSProperties
+            }
           />
         </div>
 
@@ -165,9 +165,7 @@ export function TierUsageBar({
           {isUnlimited ? (
             <>
               <span className="font-medium">{current}</span>
-              <span className="text-neutral-9">
-                / Unlimited
-              </span>
+              <span className="text-neutral-9">/ Unlimited</span>
             </>
           ) : (
             <span className="font-medium">

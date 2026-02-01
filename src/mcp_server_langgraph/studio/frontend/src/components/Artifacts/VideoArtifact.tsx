@@ -57,9 +57,7 @@ export function VideoArtifact({
     <div className="bg-neutral-1 rounded-lg overflow-hidden">
       {title && (
         <div className="px-4 py-2 border-b border-neutral-5">
-          <h4 className="text-sm font-medium text-neutral-11">
-            {title}
-          </h4>
+          <h4 className="text-sm font-medium text-neutral-11">{title}</h4>
         </div>
       )}
       <div className="p-4">

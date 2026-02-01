@@ -621,7 +621,9 @@ describe("useStreamingChat", () => {
         await vi.waitFor(() => !result.current.isStreaming);
       });
 
-      expect(result.current.thinkingContent).toBe("Structured thinking content");
+      expect(result.current.thinkingContent).toBe(
+        "Structured thinking content",
+      );
       expect(result.current.thinkingTokens).toBe(250);
     });
 
@@ -970,7 +972,9 @@ describe("useStreamingChat", () => {
       });
 
       // Content should still accumulate
-      expect(result.current.streamingContent).toContain("I need to access GitHub");
+      expect(result.current.streamingContent).toContain(
+        "I need to access GitHub",
+      );
     });
 
     it("should handle auth_required event with null connection_id (new connection needed)", async () => {

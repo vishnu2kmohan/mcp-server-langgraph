@@ -10,8 +10,14 @@
  * - Set-and-forget usage pattern
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HeaderModelSelector, type ModelOption } from "./HeaderModelSelector";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
@@ -22,7 +28,9 @@ vi.mock("@/hooks", () => ({
 }));
 
 import { useNativeCapabilities } from "@/hooks";
-const mockUseNativeCapabilities = useNativeCapabilities as ReturnType<typeof vi.fn>;
+const mockUseNativeCapabilities = useNativeCapabilities as ReturnType<
+  typeof vi.fn
+>;
 
 // =============================================================================
 // Test Data
@@ -71,6 +79,11 @@ const mockModels: ModelOption[] = [
 // Tests
 // =============================================================================
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("HeaderModelSelector", () => {
   const defaultProps = {
     selectedModel: "claude-opus-4.5",
@@ -116,9 +129,7 @@ describe("HeaderModelSelector", () => {
     });
 
     it("hides thinking level for models that don't support it", () => {
-      render(
-        <HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />
-      );
+      render(<HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />);
 
       // Should show only model name, no thinking level
       expect(screen.getByText(/GPT-4o/)).toBeInTheDocument();
@@ -156,7 +167,7 @@ describe("HeaderModelSelector", () => {
         <div>
           <HeaderModelSelector {...defaultProps} />
           <button data-testid="outside-button">Outside</button>
-        </div>
+        </div>,
       );
 
       // Open dropdown
@@ -208,7 +219,7 @@ describe("HeaderModelSelector", () => {
         name: /Claude Opus 4.5/,
       });
       expect(
-        within(selectedOption).getByTestId("model-selected-check")
+        within(selectedOption).getByTestId("model-selected-check"),
       ).toBeInTheDocument();
     });
 
@@ -216,7 +227,7 @@ describe("HeaderModelSelector", () => {
       const user = userEvent.setup();
       const onModelChange = vi.fn();
       render(
-        <HeaderModelSelector {...defaultProps} onModelChange={onModelChange} />
+        <HeaderModelSelector {...defaultProps} onModelChange={onModelChange} />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -244,12 +255,18 @@ describe("HeaderModelSelector", () => {
       await user.click(screen.getByTestId("header-model-selector"));
 
       // Models with thinking support should have a brain icon
-      const opusOption = screen.getByRole("option", { name: /Claude Opus 4.5/ });
-      expect(within(opusOption).getByTestId("thinking-badge")).toBeInTheDocument();
+      const opusOption = screen.getByRole("option", {
+        name: /Claude Opus 4.5/,
+      });
+      expect(
+        within(opusOption).getByTestId("thinking-badge"),
+      ).toBeInTheDocument();
 
       // GPT-4o doesn't support thinking
       const gptOption = screen.getByRole("option", { name: /GPT-4o/ });
-      expect(within(gptOption).queryByTestId("thinking-badge")).not.toBeInTheDocument();
+      expect(
+        within(gptOption).queryByTestId("thinking-badge"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -265,13 +282,13 @@ describe("HeaderModelSelector", () => {
 
     it("hides thinking level section for non-thinking models", async () => {
       const user = userEvent.setup();
-      render(
-        <HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />
-      );
+      render(<HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />);
 
       await user.click(screen.getByTestId("header-model-selector"));
 
-      expect(screen.queryByTestId("thinking-level-section")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("thinking-level-section"),
+      ).not.toBeInTheDocument();
     });
 
     it("displays all thinking levels (Low, Medium, High)", async () => {
@@ -281,7 +298,9 @@ describe("HeaderModelSelector", () => {
       await user.click(screen.getByTestId("header-model-selector"));
 
       expect(screen.getByRole("radio", { name: /Low/i })).toBeInTheDocument();
-      expect(screen.getByRole("radio", { name: /Medium/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: /Medium/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("radio", { name: /High/i })).toBeInTheDocument();
     });
 
@@ -302,7 +321,7 @@ describe("HeaderModelSelector", () => {
         <HeaderModelSelector
           {...defaultProps}
           onThinkingLevelChange={onThinkingLevelChange}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -340,7 +359,7 @@ describe("HeaderModelSelector", () => {
       const user = userEvent.setup();
       const onModelChange = vi.fn();
       render(
-        <HeaderModelSelector {...defaultProps} onModelChange={onModelChange} />
+        <HeaderModelSelector {...defaultProps} onModelChange={onModelChange} />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -377,7 +396,7 @@ describe("HeaderModelSelector", () => {
       const pill = screen.getByTestId("header-model-selector");
       expect(pill).toHaveAttribute(
         "aria-label",
-        expect.stringContaining("Claude Opus 4.5")
+        expect.stringContaining("Claude Opus 4.5"),
       );
     });
 
@@ -409,7 +428,9 @@ describe("HeaderModelSelector", () => {
 
       await user.click(screen.getByTestId("header-model-selector"));
 
-      const geminiOption = screen.getByRole("option", { name: /Gemini 2.5 Pro/ });
+      const geminiOption = screen.getByRole("option", {
+        name: /Gemini 2.5 Pro/,
+      });
       expect(within(geminiOption).getByText("Preview")).toBeInTheDocument();
     });
   });
@@ -438,8 +459,18 @@ describe("HeaderModelSelector", () => {
     it("shows native tools section when native tools are available", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "web_search", supported: true, providerType: "web_search_20250305", enabled: true },
-          { toolName: "code_execution", supported: true, providerType: "code_execution_20250825", enabled: true },
+          {
+            toolName: "web_search",
+            supported: true,
+            providerType: "web_search_20250305",
+            enabled: true,
+          },
+          {
+            toolName: "code_execution",
+            supported: true,
+            providerType: "code_execution_20250825",
+            enabled: true,
+          },
         ],
         nativeProvider: "anthropic",
         masterEnabled: true,
@@ -450,7 +481,8 @@ describe("HeaderModelSelector", () => {
         supportsWebSearch: true,
         supportsCodeExecution: true,
         hasNativeTools: true,
-        isToolAvailable: (name: string) => name === "web_search" || name === "code_execution",
+        isToolAvailable: (name: string) =>
+          name === "web_search" || name === "code_execution",
         getCapability: () => undefined,
       });
 
@@ -483,13 +515,20 @@ describe("HeaderModelSelector", () => {
 
       await user.click(screen.getByTestId("header-model-selector"));
 
-      expect(screen.queryByTestId("native-tools-section")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("native-tools-section"),
+      ).not.toBeInTheDocument();
     });
 
     it("hides native tools section when master switch is disabled", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "web_search", supported: true, providerType: "web_search_20250305", enabled: true },
+          {
+            toolName: "web_search",
+            supported: true,
+            providerType: "web_search_20250305",
+            enabled: true,
+          },
         ],
         nativeProvider: "anthropic",
         masterEnabled: false, // Master switch off
@@ -510,13 +549,20 @@ describe("HeaderModelSelector", () => {
       await user.click(screen.getByTestId("header-model-selector"));
 
       // Should not show because masterEnabled is false
-      expect(screen.queryByTestId("native-tools-section")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("native-tools-section"),
+      ).not.toBeInTheDocument();
     });
 
     it("shows web search badge when web search is available", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "web_search", supported: true, providerType: "web_search_20250305", enabled: true },
+          {
+            toolName: "web_search",
+            supported: true,
+            providerType: "web_search_20250305",
+            enabled: true,
+          },
         ],
         nativeProvider: "anthropic",
         masterEnabled: true,
@@ -543,7 +589,12 @@ describe("HeaderModelSelector", () => {
     it("shows code execution badge when code execution is available", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "code_execution", supported: true, providerType: "code_execution_20250825", enabled: true },
+          {
+            toolName: "code_execution",
+            supported: true,
+            providerType: "code_execution_20250825",
+            enabled: true,
+          },
         ],
         nativeProvider: "anthropic",
         masterEnabled: true,
@@ -563,15 +614,27 @@ describe("HeaderModelSelector", () => {
 
       await user.click(screen.getByTestId("header-model-selector"));
 
-      expect(screen.getByTestId("native-code-execution-badge")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("native-code-execution-badge"),
+      ).toBeInTheDocument();
       expect(screen.getByText("Code Execution")).toBeInTheDocument();
     });
 
     it("shows both badges when both capabilities are available", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "web_search", supported: true, providerType: "web_search_20250305", enabled: true },
-          { toolName: "code_execution", supported: true, providerType: "code_execution_20250825", enabled: true },
+          {
+            toolName: "web_search",
+            supported: true,
+            providerType: "web_search_20250305",
+            enabled: true,
+          },
+          {
+            toolName: "code_execution",
+            supported: true,
+            providerType: "code_execution_20250825",
+            enabled: true,
+          },
         ],
         nativeProvider: "anthropic",
         masterEnabled: true,
@@ -592,13 +655,20 @@ describe("HeaderModelSelector", () => {
       await user.click(screen.getByTestId("header-model-selector"));
 
       expect(screen.getByTestId("native-web-search-badge")).toBeInTheDocument();
-      expect(screen.getByTestId("native-code-execution-badge")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("native-code-execution-badge"),
+      ).toBeInTheDocument();
     });
 
     it("shows provider name in native tools section", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "web_search", supported: true, providerType: "web_search_20250305", enabled: true },
+          {
+            toolName: "web_search",
+            supported: true,
+            providerType: "web_search_20250305",
+            enabled: true,
+          },
         ],
         nativeProvider: "anthropic",
         masterEnabled: true,
@@ -626,7 +696,12 @@ describe("HeaderModelSelector", () => {
     it("shows Google provider for Gemini models", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "web_search", supported: true, providerType: "googleSearch", enabled: true },
+          {
+            toolName: "web_search",
+            supported: true,
+            providerType: "googleSearch",
+            enabled: true,
+          },
         ],
         nativeProvider: "google",
         masterEnabled: true,
@@ -643,7 +718,10 @@ describe("HeaderModelSelector", () => {
 
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector {...defaultProps} selectedModel="gemini-2.5-pro" />
+        <HeaderModelSelector
+          {...defaultProps}
+          selectedModel="gemini-2.5-pro"
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -656,8 +734,18 @@ describe("HeaderModelSelector", () => {
     it("does not show code execution badge for Google models", async () => {
       mockUseNativeCapabilities.mockReturnValue({
         capabilities: [
-          { toolName: "web_search", supported: true, providerType: "googleSearch", enabled: true },
-          { toolName: "code_execution", supported: false, providerType: null, enabled: false },
+          {
+            toolName: "web_search",
+            supported: true,
+            providerType: "googleSearch",
+            enabled: true,
+          },
+          {
+            toolName: "code_execution",
+            supported: false,
+            providerType: null,
+            enabled: false,
+          },
         ],
         nativeProvider: "google",
         masterEnabled: true,
@@ -674,26 +762,66 @@ describe("HeaderModelSelector", () => {
 
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector {...defaultProps} selectedModel="gemini-2.5-pro" />
+        <HeaderModelSelector
+          {...defaultProps}
+          selectedModel="gemini-2.5-pro"
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
       expect(screen.getByTestId("native-web-search-badge")).toBeInTheDocument();
-      expect(screen.queryByTestId("native-code-execution-badge")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("native-code-execution-badge"),
+      ).not.toBeInTheDocument();
     });
   });
 
   // Issue 4: Model Selector Search functionality tests
   describe("Model Search", () => {
     const manyModels: ModelOption[] = [
-      { id: "claude-opus-4.5", name: "Claude Opus 4.5", provider: "anthropic", supportsThinking: true },
-      { id: "claude-sonnet-4", name: "Claude Sonnet 4", provider: "anthropic", supportsThinking: true },
-      { id: "claude-haiku-3.5", name: "Claude Haiku 3.5", provider: "anthropic", supportsThinking: false },
-      { id: "gpt-4o", name: "GPT-4o", provider: "openai", supportsThinking: false },
-      { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "openai", supportsThinking: false },
-      { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", provider: "google", supportsThinking: true },
-      { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "google", supportsThinking: true },
+      {
+        id: "claude-opus-4.5",
+        name: "Claude Opus 4.5",
+        provider: "anthropic",
+        supportsThinking: true,
+      },
+      {
+        id: "claude-sonnet-4",
+        name: "Claude Sonnet 4",
+        provider: "anthropic",
+        supportsThinking: true,
+      },
+      {
+        id: "claude-haiku-3.5",
+        name: "Claude Haiku 3.5",
+        provider: "anthropic",
+        supportsThinking: false,
+      },
+      {
+        id: "gpt-4o",
+        name: "GPT-4o",
+        provider: "openai",
+        supportsThinking: false,
+      },
+      {
+        id: "gpt-4o-mini",
+        name: "GPT-4o Mini",
+        provider: "openai",
+        supportsThinking: false,
+      },
+      {
+        id: "gemini-2.5-pro",
+        name: "Gemini 2.5 Pro",
+        provider: "google",
+        supportsThinking: true,
+      },
+      {
+        id: "gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        provider: "google",
+        supportsThinking: true,
+      },
     ];
 
     it("shows search input when enableSearch prop is true and many models", async () => {
@@ -703,7 +831,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={manyModels}
           enableSearch
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -719,7 +847,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={manyModels}
           enableSearch
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -729,11 +857,15 @@ describe("HeaderModelSelector", () => {
       // Should only show Claude models in dropdown
       expect(within(dropdown).getByText("Claude Opus 4.5")).toBeInTheDocument();
       expect(within(dropdown).getByText("Claude Sonnet 4")).toBeInTheDocument();
-      expect(within(dropdown).getByText("Claude Haiku 3.5")).toBeInTheDocument();
+      expect(
+        within(dropdown).getByText("Claude Haiku 3.5"),
+      ).toBeInTheDocument();
 
       // Should not show other models in dropdown
       expect(within(dropdown).queryByText("GPT-4o")).not.toBeInTheDocument();
-      expect(within(dropdown).queryByText("Gemini 2.5 Pro")).not.toBeInTheDocument();
+      expect(
+        within(dropdown).queryByText("Gemini 2.5 Pro"),
+      ).not.toBeInTheDocument();
     });
 
     it("filters by provider name", async () => {
@@ -743,7 +875,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={manyModels}
           enableSearch
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -752,10 +884,14 @@ describe("HeaderModelSelector", () => {
 
       // Should show Google models in dropdown
       expect(within(dropdown).getByText("Gemini 2.5 Pro")).toBeInTheDocument();
-      expect(within(dropdown).getByText("Gemini 2.5 Flash")).toBeInTheDocument();
+      expect(
+        within(dropdown).getByText("Gemini 2.5 Flash"),
+      ).toBeInTheDocument();
 
       // Should not show other models in dropdown
-      expect(within(dropdown).queryByText("Claude Opus 4.5")).not.toBeInTheDocument();
+      expect(
+        within(dropdown).queryByText("Claude Opus 4.5"),
+      ).not.toBeInTheDocument();
       expect(within(dropdown).queryByText("GPT-4o")).not.toBeInTheDocument();
     });
 
@@ -766,7 +902,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={manyModels}
           enableSearch
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -782,7 +918,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={manyModels}
           enableSearch
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -805,12 +941,14 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={manyModels}
           enableSearch={false}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
-      expect(screen.queryByTestId("model-search-input")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("model-search-input"),
+      ).not.toBeInTheDocument();
     });
 
     it("is case-insensitive", async () => {
@@ -820,7 +958,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={manyModels}
           enableSearch
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -868,13 +1006,15 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={modelsWithVendor}
           selectedModel="gemini-2.5-flash"
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
       const dropdown = screen.getByTestId("model-dropdown");
 
-      expect(within(dropdown).getByText("Google (Vertex AI)")).toBeInTheDocument();
+      expect(
+        within(dropdown).getByText("Google (Vertex AI)"),
+      ).toBeInTheDocument();
     });
 
     it("shows 'Anthropic (Vertex AI)' for Anthropic via Vertex AI", async () => {
@@ -884,13 +1024,15 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={modelsWithVendor}
           selectedModel="claude-opus-vertex"
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
       const dropdown = screen.getByTestId("model-dropdown");
 
-      expect(within(dropdown).getByText("Anthropic (Vertex AI)")).toBeInTheDocument();
+      expect(
+        within(dropdown).getByText("Anthropic (Vertex AI)"),
+      ).toBeInTheDocument();
     });
 
     it("shows 'OpenAI (Azure)' for Azure OpenAI models", async () => {
@@ -900,7 +1042,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={modelsWithVendor}
           selectedModel="gpt-4o-azure"
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -916,7 +1058,7 @@ describe("HeaderModelSelector", () => {
           {...defaultProps}
           availableModels={modelsWithVendor}
           selectedModel="claude-opus-native"
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));

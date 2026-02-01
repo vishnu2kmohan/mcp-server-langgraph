@@ -30,13 +30,13 @@ export const ANIMATION_DURATION = {
  */
 export const ANIMATION_SPRING = {
   /** Snappy, responsive feel - buttons, toggles */
-  snappy: { type: 'spring' as const, stiffness: 400, damping: 30 },
+  snappy: { type: "spring" as const, stiffness: 400, damping: 30 },
   /** Smooth, natural feel - most UI elements */
-  smooth: { type: 'spring' as const, stiffness: 300, damping: 25 },
+  smooth: { type: "spring" as const, stiffness: 300, damping: 25 },
   /** Gentle, slow settle - large elements, modals */
-  gentle: { type: 'spring' as const, stiffness: 200, damping: 20 },
+  gentle: { type: "spring" as const, stiffness: 200, damping: 20 },
   /** Bouncy, playful feel - success states, celebrations */
-  bouncy: { type: 'spring' as const, stiffness: 400, damping: 10 },
+  bouncy: { type: "spring" as const, stiffness: 400, damping: 10 },
 } as const;
 
 /**
@@ -94,7 +94,7 @@ export const ANIMATION_PRESETS = {
   /** Expand/collapse - accordions, expandable sections */
   expand: {
     initial: { height: 0, opacity: 0 },
-    animate: { height: 'auto', opacity: 1 },
+    animate: { height: "auto", opacity: 1 },
     exit: { height: 0, opacity: 0 },
     transition: { duration: ANIMATION_DURATION.normal },
   },
@@ -132,14 +132,14 @@ export const REDUCED_MOTION_PRESET = {
  * Use in Tailwind config or global CSS.
  */
 export const ANIMATION_CSS_VARS = {
-  '--duration-instant': `${ANIMATION_DURATION.instant * 1000}ms`,
-  '--duration-fast': `${ANIMATION_DURATION.fast * 1000}ms`,
-  '--duration-normal': `${ANIMATION_DURATION.normal * 1000}ms`,
-  '--duration-slow': `${ANIMATION_DURATION.slow * 1000}ms`,
-  '--duration-slower': `${ANIMATION_DURATION.slower * 1000}ms`,
-  '--ease-out': `cubic-bezier(${ANIMATION_EASING.easeOut.join(', ')})`,
-  '--ease-in': `cubic-bezier(${ANIMATION_EASING.easeIn.join(', ')})`,
-  '--ease-in-out': `cubic-bezier(${ANIMATION_EASING.easeInOut.join(', ')})`,
+  "--duration-instant": `${ANIMATION_DURATION.instant * 1000}ms`,
+  "--duration-fast": `${ANIMATION_DURATION.fast * 1000}ms`,
+  "--duration-normal": `${ANIMATION_DURATION.normal * 1000}ms`,
+  "--duration-slow": `${ANIMATION_DURATION.slow * 1000}ms`,
+  "--duration-slower": `${ANIMATION_DURATION.slower * 1000}ms`,
+  "--ease-out": `cubic-bezier(${ANIMATION_EASING.easeOut.join(", ")})`,
+  "--ease-in": `cubic-bezier(${ANIMATION_EASING.easeIn.join(", ")})`,
+  "--ease-in-out": `cubic-bezier(${ANIMATION_EASING.easeInOut.join(", ")})`,
 } as const;
 
 export type AnimationPreset = keyof typeof ANIMATION_PRESETS;

@@ -33,7 +33,9 @@ vi.mock("../contexts/TelemetryContext", () => ({
     getHistory: vi.fn(),
     reset: vi.fn(),
   }),
-  TelemetryProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 // =============================================================================
@@ -70,7 +72,9 @@ vi.mock("../store/slices/uiSlice", () => ({
 vi.mock("../store/slices/executionModeSlice", () => ({
   selectExecutionMode: () => "default",
   selectCanBypass: () => true, // Alice has permission
-  cycleExecutionMode: vi.fn(() => ({ type: "executionMode/cycleExecutionMode" })),
+  cycleExecutionMode: vi.fn(() => ({
+    type: "executionMode/cycleExecutionMode",
+  })),
   setExecutionMode: vi.fn((mode: string) => ({
     type: "executionMode/setExecutionMode",
     payload: mode,
@@ -225,7 +229,9 @@ describe("ConnectedChatInputForm Telemetry Integration", () => {
     vi.clearAllMocks();
     mockExecutionMode = "default";
     // Enable execution mode toggle by default
-    mockIsEnabled.mockImplementation((flag: string) => flag === "execution_mode_toggle");
+    mockIsEnabled.mockImplementation(
+      (flag: string) => flag === "execution_mode_toggle",
+    );
   });
 
   afterEach(() => {
@@ -268,14 +274,16 @@ describe("ConnectedChatInputForm Telemetry Integration", () => {
       expect(mockTrackExecutionModeChange).toHaveBeenCalledWith(
         expect.objectContaining({
           trigger: "keyboard",
-        })
+        }),
       );
     });
 
     it("should include sessionId in telemetry event", async () => {
       const user = userEvent.setup();
 
-      render(<ConnectedChatInputForm {...defaultProps} sessionId="my-session-456" />);
+      render(
+        <ConnectedChatInputForm {...defaultProps} sessionId="my-session-456" />,
+      );
 
       const planSegment = screen.getByRole("radio", { name: /plan mode/i });
       await user.click(planSegment);
@@ -283,7 +291,7 @@ describe("ConnectedChatInputForm Telemetry Integration", () => {
       expect(mockTrackExecutionModeChange).toHaveBeenCalledWith(
         expect.objectContaining({
           sessionId: "my-session-456",
-        })
+        }),
       );
     });
 
@@ -300,7 +308,7 @@ describe("ConnectedChatInputForm Telemetry Integration", () => {
       expect(mockTrackExecutionModeChange).toHaveBeenCalledWith(
         expect.objectContaining({
           toMode: "auto_accept",
-        })
+        }),
       );
     });
 
@@ -311,7 +319,9 @@ describe("ConnectedChatInputForm Telemetry Integration", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // SegmentedControl shouldn't be visible when disabled
-      expect(screen.queryByRole("radio", { name: /plan mode/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("radio", { name: /plan mode/i }),
+      ).not.toBeInTheDocument();
 
       // Type in textarea and verify no telemetry
       const textarea = screen.getByRole("textbox");

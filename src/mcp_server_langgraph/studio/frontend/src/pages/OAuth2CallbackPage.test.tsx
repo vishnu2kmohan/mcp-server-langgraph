@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -67,6 +67,8 @@ describe("OAuth2CallbackPage", () => {
   });
 
   afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
     global.fetch = originalFetch;
   });
 
@@ -412,7 +414,9 @@ describe("OAuth2CallbackPage", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/authorization successful/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/authorization successful/i),
+        ).toBeInTheDocument();
       });
 
       // postMessage should not be called (window.opener is null)

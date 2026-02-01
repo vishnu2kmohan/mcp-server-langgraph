@@ -189,17 +189,13 @@ export function PlanEditor({
         {/* Plan ID and Session */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-neutral-10">
-              Plan ID:
-            </span>
+            <span className="text-neutral-10">Plan ID:</span>
             <span className="ml-2 font-mono text-neutral-12">
               {plan.planId}
             </span>
           </div>
           <div>
-            <span className="text-neutral-10">
-              Session:
-            </span>
+            <span className="text-neutral-10">Session:</span>
             <span className="ml-2 font-mono text-neutral-12">
               {plan.sessionId}
             </span>
@@ -210,18 +206,14 @@ export function PlanEditor({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-warning-9" />
-            <span className="text-sm text-neutral-11">
-              Complexity:
-            </span>
+            <span className="text-sm text-neutral-11">Complexity:</span>
             <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7">
               {plan.complexity}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-warning-9" />
-            <span className="text-sm text-neutral-11">
-              Risk:
-            </span>
+            <span className="text-sm text-neutral-11">Risk:</span>
             <span
               className={`px-2 py-0.5 rounded text-xs font-medium ${getRiskLevelColor(plan.riskLevel)}`}
             >
@@ -234,18 +226,14 @@ export function PlanEditor({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-success-9" />
-            <span className="text-sm text-neutral-11">
-              Estimated Cost:
-            </span>
+            <span className="text-sm text-neutral-11">Estimated Cost:</span>
             <span className="font-mono text-sm text-neutral-12">
               ${plan.estimatedCost}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Brain className="w-4 h-4 text-insight-9" />
-            <span className="text-sm text-neutral-11">
-              Executor:
-            </span>
+            <span className="text-sm text-neutral-11">Executor:</span>
             <span className="font-mono text-sm text-neutral-12">
               {plan.executorModel}
             </span>

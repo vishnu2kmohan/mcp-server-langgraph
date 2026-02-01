@@ -107,9 +107,7 @@ export function NodeInspector() {
   return (
     <div className="absolute top-4 right-4 w-80 bg-neutral-1 rounded-lg shadow-lg border border-neutral-5 z-10">
       <div className="flex items-center justify-between p-4 border-b border-neutral-5">
-        <h3 className="font-semibold text-neutral-12">
-          Node Inspector
-        </h3>
+        <h3 className="font-semibold text-neutral-12">Node Inspector</h3>
         <Button
           variant="secondary"
           className="p-1 hover:bg-neutral-2 rounded"
@@ -200,7 +198,8 @@ export function NodeInspector() {
           variant="ghost"
           className="w-full flex px-4 py-2 rounded-md text-sm"
           data-testid="ask-ai-button"
-          onClick={() => setShowAiChat(!showAiChat)}>
+          onClick={() => setShowAiChat(!showAiChat)}
+        >
           <Sparkles size={16} />
           Ask AI
         </Button>
@@ -222,10 +221,7 @@ export function NodeInspector() {
                 onClick={() => setShowAiChat(false)}
                 aria-label="Close AI assistant panel"
               >
-                <X
-                  size={14}
-                  className="text-neutral-10"
-                />
+                <X size={14} className="text-neutral-10" />
               </Button>
             </div>
 
@@ -248,7 +244,8 @@ export function NodeInspector() {
                 data-testid="send-ai-question"
                 onClick={handleAskAi}
                 disabled={!question.trim() || isLoadingAi}
-                aria-label="Send question to AI assistant">
+                aria-label="Send question to AI assistant"
+              >
                 {isLoadingAi ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
@@ -281,9 +278,7 @@ export function NodeInspector() {
             {/* AI Response */}
             {aiResponse && !isLoadingAi && (
               <div className="mt-3 space-y-2">
-                <p className="text-sm text-neutral-11">
-                  {aiResponse.answer}
-                </p>
+                <p className="text-sm text-neutral-11">{aiResponse.answer}</p>
 
                 {/* Examples */}
                 {aiResponse.examples && aiResponse.examples.length > 0 && (

@@ -33,9 +33,7 @@ export function LLMProvidersCard({ providers }: LLMProvidersCardProps) {
     <div className="bg-neutral-1 rounded-lg border border-neutral-5 p-6">
       <div className="flex items-center gap-3 mb-4">
         <Cloud size={24} className="text-info-9" />
-        <h2 className="text-xl font-semibold text-neutral-12">
-          LLM Providers
-        </h2>
+        <h2 className="text-xl font-semibold text-neutral-12">LLM Providers</h2>
         <span className="px-2 py-1 text-xs bg-info-3 bg-info-4 text-info-10 dark:text-info-11 rounded-full">
           {providers.length} providers
         </span>

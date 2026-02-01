@@ -513,7 +513,9 @@ describe("ObservabilityPage - Core", () => {
         </TestProvider>,
       );
 
-      const loadingContainer = screen.getByTestId("observability-loading-container");
+      const loadingContainer = screen.getByTestId(
+        "observability-loading-container",
+      );
       expect(loadingContainer).toHaveAttribute("aria-busy", "true");
     });
 
@@ -531,8 +533,13 @@ describe("ObservabilityPage - Core", () => {
         </TestProvider>,
       );
 
-      const loadingContainer = screen.getByTestId("observability-loading-container");
-      expect(loadingContainer).toHaveAttribute("aria-label", "Loading observability data");
+      const loadingContainer = screen.getByTestId(
+        "observability-loading-container",
+      );
+      expect(loadingContainer).toHaveAttribute(
+        "aria-label",
+        "Loading observability data",
+      );
     });
   });
 });

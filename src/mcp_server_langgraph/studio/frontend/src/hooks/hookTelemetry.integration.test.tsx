@@ -163,7 +163,10 @@ describe("hookTelemetry integration", () => {
 
     // Default mock that captures callbacks
     mockUseRealtimeSync.mockImplementation(
-      (options?: { onMessage?: (data: unknown) => void; onConnect?: () => void }) => {
+      (options?: {
+        onMessage?: (data: unknown) => void;
+        onConnect?: () => void;
+      }) => {
         if (options?.onMessage) {
           capturedCallbacks.onMessage = options.onMessage;
         }

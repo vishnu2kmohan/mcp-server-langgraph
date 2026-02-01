@@ -54,9 +54,7 @@ export const EndNode = memo(
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <CircleStop className="w-5 h-5 text-error-9" />
-              <span className="font-medium text-neutral-12">
-                {label}
-              </span>
+              <span className="font-medium text-neutral-12">{label}</span>
             </div>
             <StatusIcon />
           </div>

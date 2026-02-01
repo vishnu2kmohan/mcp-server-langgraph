@@ -5,7 +5,7 @@
  * Tests human-friendly data formatting for various value types.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { SmartValue } from "./SmartValue";
 
@@ -22,6 +22,8 @@ describe("SmartValue", () => {
   });
 
   afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
     vi.useRealTimers();
   });
 

@@ -61,14 +61,11 @@ const categoryColors: Record<string, string> = {
     "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-5",
   authorization:
     "bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-5",
-  data_access:
-    "bg-success-3 text-success-11 bg-success-4 dark:text-success-5",
+  data_access: "bg-success-3 text-success-11 bg-success-4 dark:text-success-5",
   data_modification:
     "bg-warning-3 text-warning-11 dark:bg-warning-a4 dark:text-warning-6",
-  system:
-    "bg-neutral-2 text-neutral-12",
-  security:
-    "bg-error-3 text-error-11 bg-error-4 dark:text-error-9",
+  system: "bg-neutral-2 text-neutral-12",
+  security: "bg-error-3 text-error-11 bg-error-4 dark:text-error-9",
 };
 
 function formatTimestamp(timestamp: string): string {
@@ -181,9 +178,7 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
       <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-insight-10" />
-          <h3 className="font-semibold text-neutral-12">
-            Audit Events
-          </h3>
+          <h3 className="font-semibold text-neutral-12">Audit Events</h3>
         </div>
 
         <div className="flex items-center gap-3">
@@ -215,7 +210,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
           {/* Reconnect button (when disconnected) */}
           {!isConnected && !isConnecting && !isReconnecting && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="primary"
               className="p-1.5 text-primary-10 hover:bg-primary-1 dark:hover:bg-primary-a4 rounded"
               data-testid="reconnect-button"
@@ -237,7 +233,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
                 ? "text-primary-10 bg-primary-1 bg-primary-4"
                 : "text-neutral-11 hover:bg-neutral-2",
             )}
-            title="Filter events">
+            title="Filter events"
+          >
             <Filter className="w-4 h-4" />
             {hasActiveFilter && (
               <span
@@ -249,7 +246,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
           {/* Clear filter button (when filter is active) */}
           {hasActiveFilter && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1.5 text-neutral-11 hover:bg-neutral-2 rounded"
               data-testid="clear-filter-button"
@@ -271,7 +269,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
                 ? "text-success-10 hover:bg-success-1 dark:hover:bg-success-a4"
                 : "text-neutral-11 hover:bg-neutral-2",
             )}
-            title={isPaused ? "Resume" : "Pause"}>
+            title={isPaused ? "Resume" : "Pause"}
+          >
             {isPaused ? (
               <Play className="w-4 h-4" />
             ) : (
@@ -281,7 +280,8 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
 
           {/* Clear button */}
           {events.length > 0 && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="danger"
               className="p-1.5 text-error-10 hover:bg-error-1 dark:hover:bg-error-a4 rounded"
               data-testid="clear-button"
@@ -322,7 +322,11 @@ export function AuditEventPanel({ maxHeight = "400px" }: AuditEventPanelProps) {
           <p className="text-sm text-warning-10 dark:text-warning-6 flex items-center gap-2">
             <Pause className="w-4 h-4" />
             Event streaming paused. Click{" "}
-            <Button variant="ghost" className="underline hover:no-underline" onClick={resume}>
+            <Button
+              variant="ghost"
+              className="underline hover:no-underline"
+              onClick={resume}
+            >
               resume
             </Button>{" "}
             to continue.
@@ -386,18 +390,14 @@ function AuditEventItem({ event }: AuditEventItemProps) {
             >
               {event.category}
             </span>
-            <span className="text-xs text-neutral-10">
-              {event.eventType}
-            </span>
+            <span className="text-xs text-neutral-10">{event.eventType}</span>
             {event.regulation && (
               <span className="px-1.5 py-0.5 text-xs font-medium bg-insight-2 text-insight-11 dark:bg-insight-a4 dark:text-insight-5 rounded">
                 {event.regulation}
               </span>
             )}
           </div>
-          <div className="text-sm text-neutral-12">
-            {event.actor}
-          </div>
+          <div className="text-sm text-neutral-12">{event.actor}</div>
           {event.resource && (
             <div className="text-xs text-neutral-10 font-mono truncate">
               {event.resource}

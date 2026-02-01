@@ -18,14 +18,27 @@ import React from "react";
 // Mock motion/react before importing components that use it
 vi.mock("motion/react", () => ({
   motion: {
-    div: React.forwardRef((props: React.HTMLAttributes<HTMLDivElement>, ref: React.Ref<HTMLDivElement>) =>
-      React.createElement("div", { ...props, ref })),
-    button: React.forwardRef((props: React.ButtonHTMLAttributes<HTMLButtonElement>, ref: React.Ref<HTMLButtonElement>) =>
-      React.createElement("button", { ...props, ref })),
-    span: React.forwardRef((props: React.HTMLAttributes<HTMLSpanElement>, ref: React.Ref<HTMLSpanElement>) =>
-      React.createElement("span", { ...props, ref })),
+    div: React.forwardRef(
+      (
+        props: React.HTMLAttributes<HTMLDivElement>,
+        ref: React.Ref<HTMLDivElement>,
+      ) => React.createElement("div", { ...props, ref }),
+    ),
+    button: React.forwardRef(
+      (
+        props: React.ButtonHTMLAttributes<HTMLButtonElement>,
+        ref: React.Ref<HTMLButtonElement>,
+      ) => React.createElement("button", { ...props, ref }),
+    ),
+    span: React.forwardRef(
+      (
+        props: React.HTMLAttributes<HTMLSpanElement>,
+        ref: React.Ref<HTMLSpanElement>,
+      ) => React.createElement("span", { ...props, ref }),
+    ),
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
+  AnimatePresence: ({ children }: { children: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
   useReducedMotion: vi.fn(() => false),
 }));
 
@@ -125,7 +138,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <Dialog open onClose={() => {}} title="Test Dialog">
           Dialog content
-        </Dialog>
+        </Dialog>,
       );
 
       // Dialog should be visible
@@ -142,7 +155,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <Dialog open onClose={() => {}} title="Test Dialog">
           Dialog content
-        </Dialog>
+        </Dialog>,
       );
 
       // Dialog should be visible
@@ -169,7 +182,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <ContextMenu items={mockItems} aria-label="Test menu">
           <div data-testid="trigger">Right click me</div>
-        </ContextMenu>
+        </ContextMenu>,
       );
 
       // Open context menu
@@ -194,7 +207,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <ContextMenu items={mockItems} aria-label="Test menu">
           <div data-testid="trigger">Right click me</div>
-        </ContextMenu>
+        </ContextMenu>,
       );
 
       await user.pointer({
@@ -218,7 +231,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       // Error should be visible
@@ -235,7 +248,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <FormField label="Email" name="email" error="Invalid email">
           <Input />
-        </FormField>
+        </FormField>,
       );
 
       // Error should be visible
@@ -296,7 +309,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <Dialog open onClose={onClose} title="Test">
           Content
-        </Dialog>
+        </Dialog>,
       );
 
       // Press Escape to close
@@ -317,7 +330,7 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <ContextMenu items={items} aria-label="Test menu">
           <div data-testid="trigger">Right click me</div>
-        </ContextMenu>
+        </ContextMenu>,
       );
 
       // Open menu

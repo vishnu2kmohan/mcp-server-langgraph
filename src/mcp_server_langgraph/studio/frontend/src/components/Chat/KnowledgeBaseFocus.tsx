@@ -233,7 +233,8 @@ export function KnowledgeBaseFocus({
           "focus:outline-none focus:ring-2 focus:ring-primary-7",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           compact ? "p-2" : "px-3 py-1.5 text-sm",
-        )}>
+        )}
+      >
         {/* Status indicator (only when kbStatus provided) */}
         {kbStatus && (
           <span
@@ -301,7 +302,8 @@ export function KnowledgeBaseFocus({
                   isFocused && "bg-neutral-2",
                   isSelected &&
                     "bg-primary-1 bg-primary-4 text-primary-11 dark:text-primary-11",
-                )}>
+                )}
+              >
                 <Icon
                   className={cn(
                     "w-4 h-4 flex-shrink-0",

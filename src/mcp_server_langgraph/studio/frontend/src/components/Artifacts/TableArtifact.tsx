@@ -158,9 +158,7 @@ export function TableArtifact({
       <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Table size={16} className="text-neutral-10" />
-          <h3 className="font-medium text-neutral-12">
-            {title}
-          </h3>
+          <h3 className="font-medium text-neutral-12">{title}</h3>
           <span className="text-xs text-neutral-10">
             ({sortedData.length} rows)
           </span>
@@ -200,9 +198,7 @@ export function TableArtifact({
                   <th
                     key={column.key}
                     className={`px-4 py-3 text-left text-xs font-semibold text-neutral-10 uppercase tracking-wider ${
-                      column.sortable
-                        ? "cursor-pointer hover:bg-neutral-2"
-                        : ""
+                      column.sortable ? "cursor-pointer hover:bg-neutral-2" : ""
                     }`}
                     onClick={() => handleSort(column.key)}
                   >
@@ -219,9 +215,7 @@ export function TableArtifact({
                 <tr
                   key={rowIndex}
                   className={`${
-                    onRowClick
-                      ? "cursor-pointer hover:bg-neutral-a6"
-                      : ""
+                    onRowClick ? "cursor-pointer hover:bg-neutral-a6" : ""
                   }`}
                   onClick={() => onRowClick?.(row)}
                 >

@@ -21,7 +21,9 @@ import { ChatInput } from "./ChatInput";
 import type { ChatInputProps } from "./ChatInput";
 
 // Mock props factory
-const createMockProps = (overrides: Partial<ChatInputProps> = {}): ChatInputProps => ({
+const createMockProps = (
+  overrides: Partial<ChatInputProps> = {},
+): ChatInputProps => ({
   value: "",
   onChange: vi.fn(),
   onSubmit: vi.fn(),
@@ -43,7 +45,7 @@ describe("ChatInput", () => {
       render(<ChatInput {...createMockProps()} />);
 
       expect(
-        screen.getByPlaceholderText("Type your message...")
+        screen.getByPlaceholderText("Type your message..."),
       ).toBeInTheDocument();
     });
 
@@ -68,9 +70,7 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({ value: "test message", onSubmit })}
-        />
+        <ChatInput {...createMockProps({ value: "test message", onSubmit })} />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -107,9 +107,7 @@ describe("ChatInput", () => {
     it("creates newline on Shift+Enter", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
-      render(
-        <ChatInput {...createMockProps({ value: "test", onSubmit })} />
-      );
+      render(<ChatInput {...createMockProps({ value: "test", onSubmit })} />);
 
       const textarea = screen.getByPlaceholderText("Type your message...");
       await user.click(textarea);
@@ -122,7 +120,7 @@ describe("ChatInput", () => {
       render(<ChatInput {...createMockProps({ disabled: true })} />);
 
       expect(
-        screen.getByPlaceholderText("Type your message...")
+        screen.getByPlaceholderText("Type your message..."),
       ).toBeDisabled();
     });
   });
@@ -164,12 +162,10 @@ describe("ChatInput", () => {
             isStreaming: true,
             onStopStreaming: vi.fn(),
           })}
-        />
+        />,
       );
 
-      expect(
-        screen.getByRole("button", { name: /stop/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /stop/i })).toBeInTheDocument();
     });
 
     it("calls onStopStreaming when stop button is clicked", async () => {
@@ -182,7 +178,7 @@ describe("ChatInput", () => {
             isStreaming: true,
             onStopStreaming,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /stop/i }));
@@ -196,7 +192,7 @@ describe("ChatInput", () => {
       render(<ChatInput {...createMockProps()} />);
 
       expect(
-        screen.getByRole("button", { name: /attach/i })
+        screen.getByRole("button", { name: /attach/i }),
       ).toBeInTheDocument();
     });
 
@@ -237,19 +233,17 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModels,
           })}
-        />
+        />,
       );
 
-      expect(
-        screen.getByTestId("model-settings-button")
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("model-settings-button")).toBeInTheDocument();
     });
 
     it("does not render model settings when showModelSelector is false", () => {
       render(<ChatInput {...createMockProps({ showModelSelector: false })} />);
 
       expect(
-        screen.queryByTestId("model-settings-button")
+        screen.queryByTestId("model-settings-button"),
       ).not.toBeInTheDocument();
     });
 
@@ -261,7 +255,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModels,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText("Claude Opus 4.5")).toBeInTheDocument();
@@ -275,7 +269,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModels,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText("anthropic")).toBeInTheDocument();
@@ -290,7 +284,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModels,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -307,7 +301,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModels,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -327,7 +321,7 @@ describe("ChatInput", () => {
             availableModels: mockModels,
             onModelChange,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -348,7 +342,7 @@ describe("ChatInput", () => {
             reasoningEffort: "medium",
             onReasoningEffortChange: vi.fn(),
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -366,14 +360,12 @@ describe("ChatInput", () => {
             availableModels: mockModels,
             modelSupportsThinking: false,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
 
-      expect(
-        screen.queryByTestId("thinking-controls")
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("thinking-controls")).not.toBeInTheDocument();
     });
 
     it("calls onReasoningEffortChange when thinking level is changed", async () => {
@@ -389,7 +381,7 @@ describe("ChatInput", () => {
             reasoningEffort: "medium",
             onReasoningEffortChange,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -407,7 +399,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModels,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -415,7 +407,7 @@ describe("ChatInput", () => {
 
       await user.keyboard("{Escape}");
       expect(
-        screen.queryByTestId("model-settings-dropdown")
+        screen.queryByTestId("model-settings-dropdown"),
       ).not.toBeInTheDocument();
     });
   });
@@ -431,7 +423,7 @@ describe("ChatInput", () => {
             toolSelectionMode: "auto",
             onToolSelectionModeChange: vi.fn(),
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("tool-selector")).toBeInTheDocument();
@@ -453,7 +445,7 @@ describe("ChatInput", () => {
             kbFocusValue: "all",
             onKBFocusChange: vi.fn(),
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("kb-focus-selector")).toBeInTheDocument();
@@ -476,21 +468,19 @@ describe("ChatInput", () => {
             onStartListening: vi.fn(),
             onStopListening: vi.fn(),
           })}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("button", { name: /voice/i })
+        screen.getByRole("button", { name: /voice/i }),
       ).toBeInTheDocument();
     });
 
     it("does not render voice button when voice is not supported", () => {
-      render(
-        <ChatInput {...createMockProps({ isVoiceSupported: false })} />
-      );
+      render(<ChatInput {...createMockProps({ isVoiceSupported: false })} />);
 
       expect(
-        screen.queryByRole("button", { name: /voice/i })
+        screen.queryByRole("button", { name: /voice/i }),
       ).not.toBeInTheDocument();
     });
 
@@ -505,7 +495,7 @@ describe("ChatInput", () => {
             onStartListening,
             onStopListening: vi.fn(),
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /voice/i }));
@@ -524,7 +514,7 @@ describe("ChatInput", () => {
             onStartListening: vi.fn(),
             onStopListening,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /stop.*voice/i }));
@@ -542,7 +532,7 @@ describe("ChatInput", () => {
             enableInlineSuggestions: true,
             inlineSuggestion: " world",
           })}
-        />
+        />,
       );
 
       const suggestion = screen.getByTestId("inline-suggestion");
@@ -561,7 +551,7 @@ describe("ChatInput", () => {
             inlineSuggestion: " world",
             onAcceptSuggestion,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -582,7 +572,7 @@ describe("ChatInput", () => {
             inlineSuggestion: " world",
             onDismissSuggestion,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -603,7 +593,7 @@ describe("ChatInput", () => {
             value: "test",
             onChange,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -615,7 +605,7 @@ describe("ChatInput", () => {
       // The call should wrap with **
       const calls = onChange.mock.calls;
       const hasStars = calls.some(
-        (call) => typeof call[0] === "string" && call[0].includes("**")
+        (call) => typeof call[0] === "string" && call[0].includes("**"),
       );
       expect(hasStars).toBe(true);
     });
@@ -629,7 +619,7 @@ describe("ChatInput", () => {
             value: "test",
             onChange,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -648,7 +638,7 @@ describe("ChatInput", () => {
             value: "test",
             onChange,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -682,12 +672,12 @@ describe("ChatInput", () => {
               },
             ],
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("model-settings-button")).toHaveAttribute(
         "aria-haspopup",
-        "true"
+        "true",
       );
     });
 
@@ -706,7 +696,7 @@ describe("ChatInput", () => {
               },
             ],
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -717,9 +707,9 @@ describe("ChatInput", () => {
     it("send button has aria-label", () => {
       render(<ChatInput {...createMockProps()} />);
 
-      expect(
-        screen.getByRole("button", { name: /send/i })
-      ).toHaveAttribute("aria-label");
+      expect(screen.getByRole("button", { name: /send/i })).toHaveAttribute(
+        "aria-label",
+      );
     });
   });
 
@@ -744,7 +734,7 @@ describe("ChatInput", () => {
             onStartListening: vi.fn(),
             onStopListening: vi.fn(),
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("controls-row")).toBeInTheDocument();
@@ -754,9 +744,11 @@ describe("ChatInput", () => {
       render(<ChatInput {...createMockProps()} />);
 
       expect(
-        screen.queryByRole("button", { name: /formatting/i })
+        screen.queryByRole("button", { name: /formatting/i }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByTestId("formatting-toolbar")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("formatting-toolbar"),
+      ).not.toBeInTheDocument();
     });
 
     it("renders pill container with rounded styling", () => {
@@ -778,7 +770,7 @@ describe("ChatInput", () => {
               onDrop: vi.fn(),
             },
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("drop-zone-overlay")).toBeInTheDocument();
@@ -790,7 +782,7 @@ describe("ChatInput", () => {
           {...createMockProps({
             isDragging: false,
           })}
-        />
+        />,
       );
 
       expect(screen.queryByTestId("drop-zone-overlay")).not.toBeInTheDocument();
@@ -812,7 +804,7 @@ describe("ChatInput", () => {
             ],
             onRemoveFile: vi.fn(),
           })}
-        />
+        />,
       );
 
       expect(screen.getByText("test.pdf")).toBeInTheDocument();
@@ -834,7 +826,7 @@ describe("ChatInput", () => {
             ],
             onRemoveFile,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /remove/i }));
@@ -852,15 +844,19 @@ describe("ChatInput", () => {
           {...createMockProps({
             onSelectFiles,
           })}
-        />
+        />,
       );
 
       // Find the hidden file input
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
       expect(fileInput).toBeInTheDocument();
 
       // Create a test file
-      const testFile = new File(["test content"], "test.txt", { type: "text/plain" });
+      const testFile = new File(["test content"], "test.txt", {
+        type: "text/plain",
+      });
 
       // Simulate file selection
       await user.upload(fileInput, testFile);
@@ -877,10 +873,12 @@ describe("ChatInput", () => {
             onSelectFiles,
             acceptMultipleFiles: true,
           })}
-        />
+        />,
       );
 
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
       expect(fileInput).toHaveAttribute("multiple");
 
       const file1 = new File(["content1"], "file1.txt", { type: "text/plain" });
@@ -899,7 +897,7 @@ describe("ChatInput", () => {
           {...createMockProps({
             autoFocus: true,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox", { name: /message/i });
@@ -912,7 +910,7 @@ describe("ChatInput", () => {
           {...createMockProps({
             autoFocus: false,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox", { name: /message/i });
@@ -940,7 +938,7 @@ describe("ChatInput", () => {
             availableModels: mockModels,
             isModelsLoading: true,
           })}
-        />
+        />,
       );
 
       // Open dropdown
@@ -959,7 +957,7 @@ describe("ChatInput", () => {
             availableModels: mockModels,
             isModelsLoading: false,
           })}
-        />
+        />,
       );
 
       // Open dropdown
@@ -985,7 +983,7 @@ describe("ChatInput", () => {
             onChange,
             slashCommands: mockSlashCommands,
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("slash-command-menu")).toBeInTheDocument();
@@ -1001,7 +999,7 @@ describe("ChatInput", () => {
             slashCommands: mockSlashCommands,
             onSlashCommandSelect,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByText("/help"));
@@ -1021,7 +1019,7 @@ describe("ChatInput", () => {
             isVoiceSupported: true,
             voiceError: "Microphone access denied",
           })}
-        />
+        />,
       );
 
       expect(screen.getByText("Microphone access denied")).toBeInTheDocument();
@@ -1033,7 +1031,7 @@ describe("ChatInput", () => {
           {...createMockProps({
             fileError: "File too large (max 10MB)",
           })}
-        />
+        />,
       );
 
       expect(screen.getByText("File too large (max 10MB)")).toBeInTheDocument();
@@ -1047,13 +1045,17 @@ describe("ChatInput", () => {
             isVoiceSupported: true,
             voiceError: "Microphone access denied",
           })}
-        />
+        />,
       );
 
-      const dismissButton = screen.getByRole("button", { name: /dismiss.*error/i });
+      const dismissButton = screen.getByRole("button", {
+        name: /dismiss.*error/i,
+      });
       await user.click(dismissButton);
 
-      expect(screen.queryByText("Microphone access denied")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Microphone access denied"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -1067,7 +1069,7 @@ describe("ChatInput", () => {
           {...createMockProps({
             isUploading: true,
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("upload-indicator")).toBeInTheDocument();
@@ -1080,7 +1082,7 @@ describe("ChatInput", () => {
             enableInlineSuggestions: true,
             isSuggestionLoading: true,
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("suggestion-loading")).toBeInTheDocument();
@@ -1101,7 +1103,7 @@ describe("ChatInput", () => {
             onSubmit,
             submitOnEnter: true,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1123,7 +1125,7 @@ describe("ChatInput", () => {
             onChange,
             submitOnEnter: false,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1143,7 +1145,7 @@ describe("ChatInput", () => {
             onSubmit,
             submitOnEnter: false,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1163,7 +1165,7 @@ describe("ChatInput", () => {
             onSubmit,
             submitOnEnter: true,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1187,7 +1189,7 @@ describe("ChatInput", () => {
             value: "hello world",
             onCursorPositionChange,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1202,7 +1204,12 @@ describe("ChatInput", () => {
   // ===========================================================================
   describe("thinking toggle", () => {
     const mockModels = [
-      { id: "claude-opus-4-5", name: "Claude Opus 4.5", provider: "anthropic", supportsThinking: true },
+      {
+        id: "claude-opus-4-5",
+        name: "Claude Opus 4.5",
+        provider: "anthropic",
+        supportsThinking: true,
+      },
     ];
 
     it("shows thinking toggle when enableThinking prop is provided", async () => {
@@ -1217,7 +1224,7 @@ describe("ChatInput", () => {
             enableThinking: true,
             onEnableThinkingChange: vi.fn(),
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1238,7 +1245,7 @@ describe("ChatInput", () => {
             enableThinking: true,
             onEnableThinkingChange,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1259,7 +1266,7 @@ describe("ChatInput", () => {
             enableUrlFetch: true,
             urlFetchLoading: ["https://example.com"],
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("url-fetch-loading")).toBeInTheDocument();
@@ -1271,10 +1278,14 @@ describe("ChatInput", () => {
           {...createMockProps({
             enableUrlFetch: true,
             fetchedUrls: [
-              { url: "https://example.com", title: "Example Site", content: "..." },
+              {
+                url: "https://example.com",
+                title: "Example Site",
+                content: "...",
+              },
             ],
           })}
-        />
+        />,
       );
 
       expect(screen.getByText("Example Site")).toBeInTheDocument();
@@ -1288,11 +1299,15 @@ describe("ChatInput", () => {
           {...createMockProps({
             enableUrlFetch: true,
             fetchedUrls: [
-              { url: "https://example.com", title: "Example Site", content: "..." },
+              {
+                url: "https://example.com",
+                title: "Example Site",
+                content: "...",
+              },
             ],
             onRemoveFetchedUrl,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /remove.*url/i }));
@@ -1306,7 +1321,11 @@ describe("ChatInput", () => {
   // ===========================================================================
   describe("mentions system", () => {
     const mockMentionOptions = [
-      { type: "model" as const, value: "claude-opus-4-5", label: "Claude Opus 4.5" },
+      {
+        type: "model" as const,
+        value: "claude-opus-4-5",
+        label: "Claude Opus 4.5",
+      },
       { type: "file" as const, value: "readme.md", label: "readme.md" },
     ];
 
@@ -1320,7 +1339,7 @@ describe("ChatInput", () => {
             onChange,
             mentionOptions: mockMentionOptions,
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("mention-suggestions")).toBeInTheDocument();
@@ -1336,12 +1355,14 @@ describe("ChatInput", () => {
             onChange,
             mentionOptions: mockMentionOptions,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByText("Claude Opus 4.5"));
 
-      expect(onChange).toHaveBeenCalledWith(expect.stringContaining("@claude-opus-4-5"));
+      expect(onChange).toHaveBeenCalledWith(
+        expect.stringContaining("@claude-opus-4-5"),
+      );
     });
   });
 
@@ -1365,7 +1386,7 @@ describe("ChatInput", () => {
             availableModels: mockModels,
             recentModels: ["gpt-4o", "claude-sonnet-4"],
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1383,7 +1404,7 @@ describe("ChatInput", () => {
             availableModels: mockModels,
             enableModelSearch: true,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1401,7 +1422,7 @@ describe("ChatInput", () => {
             availableModels: mockModels,
             enableModelSearch: true,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1412,7 +1433,9 @@ describe("ChatInput", () => {
       // Claude models should be filtered out from the dropdown list
       // (Claude Opus 4.5 will still appear on the button as the selected model)
       const dropdown = screen.getByTestId("model-settings-dropdown");
-      expect(dropdown.querySelector('[role="option"]')?.textContent).toContain("GPT-4o");
+      expect(dropdown.querySelector('[role="option"]')?.textContent).toContain(
+        "GPT-4o",
+      );
       // Verify Claude Sonnet 4 is not in the dropdown (it was never the selected model)
       expect(screen.queryByText("Claude Sonnet 4")).not.toBeInTheDocument();
     });
@@ -1429,7 +1452,7 @@ describe("ChatInput", () => {
             value: "Hello",
             maxLength: 100,
           })}
-        />
+        />,
       );
 
       expect(screen.getByText("5 / 100")).toBeInTheDocument();
@@ -1445,7 +1468,7 @@ describe("ChatInput", () => {
             onChange,
             maxLength: 5,
           })}
-        />
+        />,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1462,7 +1485,7 @@ describe("ChatInput", () => {
             value: "a".repeat(95),
             maxLength: 100,
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("char-count-warning")).toBeInTheDocument();
@@ -1483,7 +1506,7 @@ describe("ChatInput", () => {
             kbStatus: "ready",
             kbStatusMessage: "Knowledge base is ready",
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("kb-status-indicator")).toBeInTheDocument();
@@ -1500,7 +1523,7 @@ describe("ChatInput", () => {
             kbStatus: "misconfigured",
             kbStatusMessage: "API key not configured",
           })}
-        />
+        />,
       );
 
       await user.hover(screen.getByTestId("kb-status-indicator"));
@@ -1514,9 +1537,25 @@ describe("ChatInput", () => {
   // ===========================================================================
   describe("model lifecycle badges", () => {
     const mockModelsWithStatus = [
-      { id: "claude-opus-4-5", name: "Claude Opus 4.5", provider: "anthropic", status: "current" as const },
-      { id: "claude-3-opus", name: "Claude 3 Opus", provider: "anthropic", status: "deprecated" as const, sunsetDate: "2025-06-01" },
-      { id: "gpt-4-preview", name: "GPT-4 Preview", provider: "openai", status: "preview" as const },
+      {
+        id: "claude-opus-4-5",
+        name: "Claude Opus 4.5",
+        provider: "anthropic",
+        status: "current" as const,
+      },
+      {
+        id: "claude-3-opus",
+        name: "Claude 3 Opus",
+        provider: "anthropic",
+        status: "deprecated" as const,
+        sunsetDate: "2025-06-01",
+      },
+      {
+        id: "gpt-4-preview",
+        name: "GPT-4 Preview",
+        provider: "openai",
+        status: "preview" as const,
+      },
     ];
 
     it("shows lifecycle badge for deprecated models", async () => {
@@ -1528,7 +1567,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModelsWithStatus,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1545,7 +1584,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModelsWithStatus,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1562,7 +1601,7 @@ describe("ChatInput", () => {
             selectedModel: "claude-opus-4-5",
             availableModels: mockModelsWithStatus,
           })}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1584,7 +1623,7 @@ describe("ChatInput", () => {
             onSelectedToolsChange: vi.fn(),
             onToolSelectionModeChange: vi.fn(),
           })}
-        />
+        />,
       );
 
       expect(screen.getByTestId("tools-loading")).toBeInTheDocument();

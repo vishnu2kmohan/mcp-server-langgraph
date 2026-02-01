@@ -139,10 +139,7 @@ export function WorkflowDiffViewer({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-5">
         <div className="flex items-center gap-2">
-          <GitCompare
-            size={16}
-            className="text-neutral-10"
-          />
+          <GitCompare size={16} className="text-neutral-10" />
           <h3 className="text-sm font-medium text-neutral-12">
             Compare Versions
           </h3>
@@ -164,7 +161,8 @@ export function WorkflowDiffViewer({
                 mode === "side-by-side"
                   ? "bg-neutral-1 text-neutral-12 shadow-sm"
                   : "text-neutral-10 hover:text-neutral-11",
-              )}>
+              )}
+            >
               <Columns size={12} />
               Split
             </Button>
@@ -179,7 +177,8 @@ export function WorkflowDiffViewer({
                 mode === "unified"
                   ? "bg-neutral-1 text-neutral-12 shadow-sm"
                   : "text-neutral-10 hover:text-neutral-11",
-              )}>
+              )}
+            >
               <List size={12} />
               Unified
             </Button>
@@ -187,7 +186,8 @@ export function WorkflowDiffViewer({
 
           {/* Close button */}
           {onClose && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1 rounded hover:bg-neutral-2 text-neutral-10"
               type="button"

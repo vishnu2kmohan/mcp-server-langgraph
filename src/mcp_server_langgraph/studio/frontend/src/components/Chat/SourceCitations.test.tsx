@@ -4,8 +4,8 @@
  * TDD tests for the reusable SourceCitations component.
  * Tests rendering, accessibility, and edge cases.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { SourceCitations } from "./SourceCitations";
 import type { SourceCitation } from "../../types/session";
 
@@ -52,6 +52,11 @@ const sourcesWithRelevance: SourceCitation[] = [
 // Rendering Tests
 // =============================================================================
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("SourceCitations", () => {
   describe("rendering", () => {
     it("should render sources section with correct count", () => {
@@ -70,15 +75,15 @@ describe("SourceCitations", () => {
 
       expect(links[0]).toHaveAttribute(
         "href",
-        "https://docs.python.org/3/tutorial"
+        "https://docs.python.org/3/tutorial",
       );
       expect(links[1]).toHaveAttribute(
         "href",
-        "https://realpython.com/python-basics/"
+        "https://realpython.com/python-basics/",
       );
       expect(links[2]).toHaveAttribute(
         "href",
-        "https://stackoverflow.com/questions/tagged/python"
+        "https://stackoverflow.com/questions/tagged/python",
       );
     });
 
@@ -107,7 +112,7 @@ describe("SourceCitations", () => {
 
     it("should return null for undefined sources", () => {
       const { container } = render(
-        <SourceCitations sources={undefined as unknown as SourceCitation[]} />
+        <SourceCitations sources={undefined as unknown as SourceCitation[]} />,
       );
       expect(container.firstChild).toBeNull();
     });
@@ -131,11 +136,11 @@ describe("SourceCitations", () => {
       const links = screen.getAllByRole("link");
       expect(links[0]).toHaveAttribute(
         "aria-label",
-        "Source: Python Documentation (opens in new tab)"
+        "Source: Python Documentation (opens in new tab)",
       );
       expect(links[1]).toHaveAttribute(
         "aria-label",
-        "Source: Real Python (opens in new tab)"
+        "Source: Real Python (opens in new tab)",
       );
     });
 
@@ -204,7 +209,7 @@ describe("SourceCitations", () => {
       const links = screen.getAllByRole("link");
       expect(links[0]).toHaveAttribute(
         "title",
-        "The Python Tutorial — Python 3.13 documentation"
+        "The Python Tutorial — Python 3.13 documentation",
       );
     });
 
@@ -229,10 +234,13 @@ describe("SourceCitations", () => {
 
   describe("maxVisible prop", () => {
     it("should limit displayed sources to maxVisible", () => {
-      const manySources: SourceCitation[] = Array.from({ length: 10 }, (_, i) => ({
-        title: `Source ${i + 1}`,
-        url: `https://example${i + 1}.com`,
-      }));
+      const manySources: SourceCitation[] = Array.from(
+        { length: 10 },
+        (_, i) => ({
+          title: `Source ${i + 1}`,
+          url: `https://example${i + 1}.com`,
+        }),
+      );
 
       render(<SourceCitations sources={manySources} maxVisible={5} />);
 
@@ -241,10 +249,13 @@ describe("SourceCitations", () => {
     });
 
     it("should show overflow indicator when sources exceed maxVisible", () => {
-      const manySources: SourceCitation[] = Array.from({ length: 7 }, (_, i) => ({
-        title: `Source ${i + 1}`,
-        url: `https://example${i + 1}.com`,
-      }));
+      const manySources: SourceCitation[] = Array.from(
+        { length: 7 },
+        (_, i) => ({
+          title: `Source ${i + 1}`,
+          url: `https://example${i + 1}.com`,
+        }),
+      );
 
       render(<SourceCitations sources={manySources} maxVisible={5} />);
 
@@ -263,10 +274,13 @@ describe("SourceCitations", () => {
     });
 
     it("should use default maxVisible of 5", () => {
-      const manySources: SourceCitation[] = Array.from({ length: 8 }, (_, i) => ({
-        title: `Source ${i + 1}`,
-        url: `https://example${i + 1}.com`,
-      }));
+      const manySources: SourceCitation[] = Array.from(
+        { length: 8 },
+        (_, i) => ({
+          title: `Source ${i + 1}`,
+          url: `https://example${i + 1}.com`,
+        }),
+      );
 
       render(<SourceCitations sources={manySources} />);
 
@@ -305,7 +319,9 @@ describe("SourceCitations", () => {
 
   describe("className prop", () => {
     it("should apply custom className", () => {
-      render(<SourceCitations sources={mockSources} className="custom-class" />);
+      render(
+        <SourceCitations sources={mockSources} className="custom-class" />,
+      );
 
       const section = screen.getByTestId("sources-section");
       expect(section).toHaveClass("custom-class");

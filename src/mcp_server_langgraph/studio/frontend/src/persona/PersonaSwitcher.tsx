@@ -178,10 +178,7 @@ export function PersonaSwitcher({
           isSubPersona && "sub-persona pl-8",
         )}
       >
-        <PersonaIcon
-          size={16}
-          className="text-neutral-10"
-        />
+        <PersonaIcon size={16} className="text-neutral-10" />
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-neutral-12">
             {persona.name}
@@ -214,11 +211,9 @@ export function PersonaSwitcher({
           "transition-colors",
         )}
         aria-haspopup="listbox"
-        aria-expanded={isOpen}>
-        <CurrentIcon
-          size={16}
-          className="text-neutral-10"
-        />
+        aria-expanded={isOpen}
+      >
+        <CurrentIcon size={16} className="text-neutral-10" />
         <span className="text-sm font-medium text-neutral-12">
           {currentPersona.name}
         </span>

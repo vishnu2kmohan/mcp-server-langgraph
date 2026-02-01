@@ -16,9 +16,9 @@
  * - Title attribute contains custom label if provided
  */
 
-import { visit } from 'unist-util-visit';
-import type { Plugin } from 'unified';
-import type { Text, Link, Root, Parent } from 'mdast';
+import { visit } from "unist-util-visit";
+import type { Plugin } from "unified";
+import type { Text, Link, Root, Parent } from "mdast";
 
 /**
  * Regex to match [[type:qualifier:id]] or [[type:id]] patterns.
@@ -44,9 +44,9 @@ const REFERENCE_REGEX =
  * - Skills/artifacts just need an id
  */
 function isValidReference(type: string, id: string): boolean {
-  if (type === 'tool') {
+  if (type === "tool") {
     // Tools require at least one colon (server:name)
-    return id.includes(':') && !id.endsWith(':') && !id.startsWith(':');
+    return id.includes(":") && !id.endsWith(":") && !id.startsWith(":");
   }
   // Skills and artifacts just need a non-empty id
   return id.length > 0;
@@ -75,20 +75,20 @@ function buildRefUrl(type: string, id: string): string {
 function getDisplayText(
   label: string | undefined,
   type: string,
-  id: string
+  id: string,
 ): string {
   // Use custom label if provided and non-empty
   if (label && label.trim()) {
     return label.trim();
   }
   // For tools, extract just the tool name (after the last colon)
-  if (type === 'tool' && id.includes(':')) {
-    const parts = id.split(':');
+  if (type === "tool" && id.includes(":")) {
+    const parts = id.split(":");
     return parts[parts.length - 1];
   }
   // For version-pinned skills, strip the @version suffix for display
-  if (type === 'skill' && id.includes('@')) {
-    return id.split('@')[0];
+  if (type === "skill" && id.includes("@")) {
+    return id.split("@")[0];
   }
   // For skills/artifacts, use the id
   return id;
@@ -105,78 +105,82 @@ function getDisplayText(
  */
 export const remarkReferences: Plugin<[], Root> = () => {
   return (tree) => {
-    visit(tree, 'text', (node: Text, index: number | undefined, parent: Parent | undefined) => {
-      // Safety checks
-      if (!parent || index === undefined) return;
+    visit(
+      tree,
+      "text",
+      (node: Text, index: number | undefined, parent: Parent | undefined) => {
+        // Safety checks
+        if (!parent || index === undefined) return;
 
-      // Skip code blocks (parent is 'code') and inline code (parent is 'inlineCode')
-      // Also check grandparent for code context
-      if (parent.type === 'code' || parent.type === 'inlineCode') {
-        return;
-      }
-
-      const text = node.value;
-      const matches = [...text.matchAll(REFERENCE_REGEX)];
-
-      if (matches.length === 0) {
-        return;
-      }
-
-      // Build new nodes to replace the text node
-      const newNodes: (Text | Link)[] = [];
-      let lastIndex = 0;
-
-      for (const match of matches) {
-        const [fullMatch, type, id, label] = match;
-        const startIndex = match.index!;
-
-        // Skip invalid references (leave as plain text)
-        if (!isValidReference(type, id)) {
-          continue;
+        // Skip code blocks (parent is 'code') and inline code (parent is 'inlineCode')
+        // Also check grandparent for code context
+        if (parent.type === "code" || parent.type === "inlineCode") {
+          return;
         }
 
-        // Add text before this match
-        if (startIndex > lastIndex) {
+        const text = node.value;
+        const matches = [...text.matchAll(REFERENCE_REGEX)];
+
+        if (matches.length === 0) {
+          return;
+        }
+
+        // Build new nodes to replace the text node
+        const newNodes: (Text | Link)[] = [];
+        let lastIndex = 0;
+
+        for (const match of matches) {
+          const [fullMatch, type, id, label] = match;
+          const startIndex = match.index!;
+
+          // Skip invalid references (leave as plain text)
+          if (!isValidReference(type, id)) {
+            continue;
+          }
+
+          // Add text before this match
+          if (startIndex > lastIndex) {
+            newNodes.push({
+              type: "text",
+              value: text.slice(lastIndex, startIndex),
+            });
+          }
+
+          // Create link node with ref:// URL
+          const displayText = getDisplayText(label, type, id);
+          const url = buildRefUrl(type, id);
+
+          const linkNode: Link = {
+            type: "link",
+            url,
+            title: label?.trim() || null,
+            children: [{ type: "text", value: displayText }],
+          };
+
+          newNodes.push(linkNode);
+          lastIndex = startIndex + fullMatch.length;
+        }
+
+        // If no valid matches were found, don't modify the node
+        if (newNodes.length === 0) {
+          return;
+        }
+
+        // Add remaining text after last match
+        if (lastIndex < text.length) {
           newNodes.push({
-            type: 'text',
-            value: text.slice(lastIndex, startIndex),
+            type: "text",
+            value: text.slice(lastIndex),
           });
         }
 
-        // Create link node with ref:// URL
-        const displayText = getDisplayText(label, type, id);
-        const url = buildRefUrl(type, id);
+        // Replace the original text node with the new nodes
+        parent.children.splice(index, 1, ...newNodes);
 
-        const linkNode: Link = {
-          type: 'link',
-          url,
-          title: label?.trim() || null,
-          children: [{ type: 'text', value: displayText }],
-        };
-
-        newNodes.push(linkNode);
-        lastIndex = startIndex + fullMatch.length;
-      }
-
-      // If no valid matches were found, don't modify the node
-      if (newNodes.length === 0) {
-        return;
-      }
-
-      // Add remaining text after last match
-      if (lastIndex < text.length) {
-        newNodes.push({
-          type: 'text',
-          value: text.slice(lastIndex),
-        });
-      }
-
-      // Replace the original text node with the new nodes
-      parent.children.splice(index, 1, ...newNodes);
-
-      // Return the index to skip processing of newly inserted nodes
-      // This prevents infinite loops and double-processing
-      return index + newNodes.length;
-    });
+        // Return the index to skip processing of newly inserted nodes
+        // This prevents infinite loops and double-processing
+        return index + newNodes.length;
+      },
+    );
   };
 };

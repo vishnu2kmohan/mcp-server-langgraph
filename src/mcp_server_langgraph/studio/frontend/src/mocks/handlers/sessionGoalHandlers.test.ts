@@ -7,7 +7,15 @@
  * Written FIRST per TDD methodology (RED phase).
  */
 
-import { describe, it, expect, afterEach, beforeAll, afterAll } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { setupServer } from "msw/node";
 import { sessionGoalHandlers, createMockGoal } from "./sessionGoalHandlers";
 import { transformSnakeToCamel } from "../../api/transforms";
@@ -15,7 +23,10 @@ import { transformSnakeToCamel } from "../../api/transforms";
 const server = setupServer(...sessionGoalHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  vi.clearAllMocks();
+  server.resetHandlers();
+});
 afterAll(() => server.close());
 
 describe("sessionGoalHandlers", () => {
@@ -56,14 +67,17 @@ describe("sessionGoalHandlers", () => {
 
   describe("POST /api/v1/sessions/:session_id/goal", () => {
     it("creates a new goal for any session ID", async () => {
-      const response = await fetch("/api/v1/sessions/dynamic-session-456/goal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          goal: "Test goal",
-          set_at: Date.now(),
-        }),
-      });
+      const response = await fetch(
+        "/api/v1/sessions/dynamic-session-456/goal",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            goal: "Test goal",
+            set_at: Date.now(),
+          }),
+        },
+      );
 
       expect(response.status).toBe(201);
       const data = await response.json();
@@ -168,7 +182,10 @@ describe("sessionGoalHandlers", () => {
       const response = await fetch("/api/v1/sessions/test-session/goal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal: "Complete the implementation", set_at: Date.now() }),
+        body: JSON.stringify({
+          goal: "Complete the implementation",
+          set_at: Date.now(),
+        }),
       });
       expect(response.status).toBe(201);
       const rawData = await response.json();

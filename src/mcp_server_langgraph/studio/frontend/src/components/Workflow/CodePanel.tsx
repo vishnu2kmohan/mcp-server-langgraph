@@ -40,9 +40,7 @@ export function CodePanel({
     >
       <div
         className={`p-4 border-b flex items-center justify-between ${
-          isDarkMode
-            ? "border-neutral-7"
-            : "border-neutral-5"
+          isDarkMode ? "border-neutral-7" : "border-neutral-5"
         }`}
       >
         <h2
@@ -53,7 +51,9 @@ export function CodePanel({
           Generated Code
         </h2>
         <div className="flex gap-2">
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-2 rounded-lg"
             onClick={onCopy}
             title="Copy to clipboard"
@@ -61,7 +61,9 @@ export function CodePanel({
           >
             <Copy size={18} />
           </Button>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-2 rounded-lg"
             onClick={onClose}
             title="Close panel"
@@ -75,9 +77,7 @@ export function CodePanel({
         {isEmpty ? (
           <div
             className={`text-center py-8 ${
-              isDarkMode
-                ? "text-neutral-9"
-                : "text-neutral-10"
+              isDarkMode ? "text-neutral-9" : "text-neutral-10"
             }`}
           >
             <p>No code generated yet.</p>

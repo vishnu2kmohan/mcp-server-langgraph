@@ -207,15 +207,14 @@ export function LaTeXArtifact({
             {title}
           </span>
         ) : (
-          <span className="text-sm text-neutral-10">
-            LaTeX
-          </span>
+          <span className="text-sm text-neutral-10">LaTeX</span>
         )}
 
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
           <div className="flex items-center gap-1">
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1 text-neutral-11 hover:bg-neutral-3 rounded"
               onClick={handleZoomOut}
@@ -226,7 +225,8 @@ export function LaTeXArtifact({
             <span className="text-xs text-neutral-10 w-10 text-center">
               {Math.round(zoom * 100)}%
             </span>
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1 text-neutral-11 hover:bg-neutral-3 rounded"
               onClick={handleZoomIn}
@@ -234,7 +234,8 @@ export function LaTeXArtifact({
             >
               <ZoomIn size={14} />
             </Button>
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1 text-neutral-11 hover:bg-neutral-3 rounded"
               onClick={handleResetZoom}

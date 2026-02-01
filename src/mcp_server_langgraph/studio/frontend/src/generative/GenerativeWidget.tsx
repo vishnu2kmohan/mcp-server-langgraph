@@ -102,15 +102,9 @@ function TableWidget({ data }: { data: TableData }) {
         </thead>
         <tbody>
           {data.rows.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className="border-b border-neutral-5"
-            >
+            <tr key={rowIndex} className="border-b border-neutral-5">
               {row.map((cell, cellIndex) => (
-                <td
-                  key={cellIndex}
-                  className="px-2 py-1 text-neutral-12"
-                >
+                <td key={cellIndex} className="px-2 py-1 text-neutral-12">
                   {cell}
                 </td>
               ))}
@@ -170,16 +164,15 @@ export function GenerativeWidget({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-medium text-neutral-12">
-          {config.title}
-        </h3>
+        <h3 className="font-medium text-neutral-12">{config.title}</h3>
         <Button
           variant="ghost"
           className="p-1 text-neutral-9 hover:text-neutral-11"
           data-testid="refresh-button"
           type="button"
           onClick={() => onRefresh?.(config.id)}
-          aria-label="Refresh widget">
+          aria-label="Refresh widget"
+        >
           <RefreshCw size={14} />
         </Button>
       </div>

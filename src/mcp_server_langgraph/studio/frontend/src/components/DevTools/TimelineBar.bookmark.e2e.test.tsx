@@ -10,12 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  render,
-  screen,
-  cleanup,
-  waitFor,
-} from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 import { TimelineBar } from "./TimelineBar";
@@ -26,8 +21,17 @@ import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
 // =============================================================================
 
 interface RenderOptions {
-  initialEvents?: Array<{ id: string; type: string; timestamp: number; data: unknown }>;
-  onBookmarkAdd?: (bookmark: { id: string; time: number; label: string }) => void;
+  initialEvents?: Array<{
+    id: string;
+    type: string;
+    timestamp: number;
+    data: unknown;
+  }>;
+  onBookmarkAdd?: (bookmark: {
+    id: string;
+    time: number;
+    label: string;
+  }) => void;
   onBookmarkRemove?: (id: string) => void;
 }
 
@@ -78,7 +82,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
       const { onBookmarkAdd, onBookmarkRemove } = renderTimelineBar();
 
       // Step 1: Open bookmark menu
-      const bookmarkButton = screen.getByRole("button", { name: /add bookmark/i });
+      const bookmarkButton = screen.getByRole("button", {
+        name: /add bookmark/i,
+      });
       await user.click(bookmarkButton);
 
       // Step 2: Verify empty state
@@ -103,7 +109,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
       expect(screen.getByTestId("bookmark-item")).toBeInTheDocument();
 
       // Step 6: Click on bookmark to jump
-      await user.click(screen.getByRole("button", { name: /jump to bookmark 1/i }));
+      await user.click(
+        screen.getByRole("button", { name: /jump to bookmark 1/i }),
+      );
       // Menu should close after jump (wait for AnimatePresence exit animation)
       await waitFor(() => {
         expect(screen.queryByTestId("bookmark-menu")).not.toBeInTheDocument();
@@ -111,7 +119,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
 
       // Step 7: Reopen menu and remove bookmark
       await user.click(bookmarkButton);
-      const removeButton = screen.getByRole("button", { name: /remove bookmark 1/i });
+      const removeButton = screen.getByRole("button", {
+        name: /remove bookmark 1/i,
+      });
       await user.click(removeButton);
 
       // Step 8: Verify removal callback
@@ -123,7 +133,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
       renderTimelineBar();
 
       // Initially no count shown
-      const bookmarkButton = screen.getByRole("button", { name: /add bookmark/i });
+      const bookmarkButton = screen.getByRole("button", {
+        name: /add bookmark/i,
+      });
       expect(bookmarkButton).not.toHaveTextContent(/\d+/);
 
       // Add first bookmark
@@ -143,7 +155,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
       const user = userEvent.setup();
       const { onBookmarkAdd } = renderTimelineBar();
 
-      const bookmarkButton = screen.getByRole("button", { name: /add bookmark/i });
+      const bookmarkButton = screen.getByRole("button", {
+        name: /add bookmark/i,
+      });
 
       // Add first bookmark
       await user.click(bookmarkButton);
@@ -204,7 +218,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
 
       // Remove it
       await user.click(screen.getByRole("button", { name: /add bookmark/i }));
-      await user.click(screen.getByRole("button", { name: /remove bookmark 1/i }));
+      await user.click(
+        screen.getByRole("button", { name: /remove bookmark 1/i }),
+      );
 
       expect(removeBookmarkCallback).toHaveBeenCalledWith(expect.any(String));
     });
@@ -216,7 +232,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
       renderTimelineBar();
 
       // Tab to bookmark button and activate with Enter
-      const bookmarkButton = screen.getByRole("button", { name: /add bookmark/i });
+      const bookmarkButton = screen.getByRole("button", {
+        name: /add bookmark/i,
+      });
       bookmarkButton.focus();
       await user.keyboard("{Enter}");
 
@@ -265,7 +283,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
       const user = userEvent.setup();
       const { onBookmarkAdd, onBookmarkRemove } = renderTimelineBar();
 
-      const bookmarkButton = screen.getByRole("button", { name: /add bookmark/i });
+      const bookmarkButton = screen.getByRole("button", {
+        name: /add bookmark/i,
+      });
 
       // Add a bookmark
       await user.click(bookmarkButton);
@@ -280,7 +300,9 @@ describe("TimelineBar Bookmark Management E2E", () => {
       expect(screen.getByTestId("bookmark-item")).toBeInTheDocument();
 
       // Remove the bookmark
-      const removeButton = screen.getByRole("button", { name: /remove bookmark 1/i });
+      const removeButton = screen.getByRole("button", {
+        name: /remove bookmark 1/i,
+      });
       await user.click(removeButton);
 
       expect(onBookmarkRemove).toHaveBeenCalledTimes(1);

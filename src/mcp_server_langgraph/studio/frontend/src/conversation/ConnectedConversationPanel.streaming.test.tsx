@@ -431,7 +431,10 @@ describe("ConnectedConversationPanel - Streaming Sources Display", () => {
     render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
 
     const sourceLink = screen.getByText("Python Tutorial").closest("a");
-    expect(sourceLink).toHaveAttribute("href", "https://docs.python.org/3/tutorial");
+    expect(sourceLink).toHaveAttribute(
+      "href",
+      "https://docs.python.org/3/tutorial",
+    );
     expect(sourceLink).toHaveAttribute("target", "_blank");
     expect(sourceLink).toHaveAttribute("rel", "noopener noreferrer");
   });
@@ -453,7 +456,7 @@ describe("ConnectedConversationPanel - Streaming Sources Display", () => {
     const sourceLink = screen.getByText("MDN Web Docs").closest("a");
     expect(sourceLink).toHaveAttribute(
       "aria-label",
-      "Source: MDN Web Docs (opens in new tab)"
+      "Source: MDN Web Docs (opens in new tab)",
     );
   });
 

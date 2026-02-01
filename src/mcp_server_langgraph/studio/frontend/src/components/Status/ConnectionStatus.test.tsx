@@ -78,9 +78,7 @@ describe("ConnectionStatus", () => {
       render(<ConnectionStatus status="disconnected" />);
 
       expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
-      expect(screen.getByTestId("status-indicator")).toHaveClass(
-        "bg-error-9",
-      );
+      expect(screen.getByTestId("status-indicator")).toHaveClass("bg-error-9");
     });
 
     it("should show reconnecting state with pulsing yellow indicator", () => {

@@ -31,8 +31,7 @@ import { Button } from "@/components/UI";
 const statusColors: Record<string, string> = {
   connected:
     "bg-success-3 text-success-11 dark:bg-success-12 dark:text-success-5",
-  disconnected:
-    "bg-neutral-2 text-neutral-12",
+  disconnected: "bg-neutral-2 text-neutral-12",
   connecting:
     "bg-primary-3 text-primary-11 dark:bg-primary-12 dark:text-primary-5",
   error: "bg-error-3 text-error-11 dark:bg-error-12 dark:text-error-9",
@@ -43,9 +42,7 @@ const statusColors: Record<string, string> = {
 // Status icons
 const statusIcons: Record<string, React.ReactNode> = {
   connected: <CheckCircle className="w-4 h-4 text-success-9" />,
-  disconnected: (
-    <XCircle className="w-4 h-4 text-neutral-9" />
-  ),
+  disconnected: <XCircle className="w-4 h-4 text-neutral-9" />,
   connecting: <Loader2 className="w-4 h-4 text-primary-9 animate-spin" />,
   error: <AlertCircle className="w-4 h-4 text-error-9" />,
   auth_required: <AlertCircle className="w-4 h-4 text-warning-9" />,
@@ -119,7 +116,8 @@ export function ConnectionHealthDashboard({
 
           {/* Reconnect or Refresh Button */}
           {isConnected ? (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-2 text-neutral-11 hover:bg-neutral-2 rounded-md"
               onClick={refresh}
@@ -152,9 +150,7 @@ export function ConnectionHealthDashboard({
           <div className="text-2xl font-bold text-neutral-12">
             {summary.total}
           </div>
-          <div className="text-sm text-neutral-10">
-            Total
-          </div>
+          <div className="text-sm text-neutral-10">Total</div>
         </div>
 
         <div
@@ -164,9 +160,7 @@ export function ConnectionHealthDashboard({
           <div className="text-2xl font-bold text-success-10 dark:text-success-7">
             {summary.connected}
           </div>
-          <div className="text-sm text-neutral-10">
-            Connected
-          </div>
+          <div className="text-sm text-neutral-10">Connected</div>
         </div>
 
         <div
@@ -176,9 +170,7 @@ export function ConnectionHealthDashboard({
           <div className="text-2xl font-bold text-neutral-11">
             {summary.disconnected}
           </div>
-          <div className="text-sm text-neutral-10">
-            Disconnected
-          </div>
+          <div className="text-sm text-neutral-10">Disconnected</div>
         </div>
 
         <div
@@ -188,9 +180,7 @@ export function ConnectionHealthDashboard({
           <div className="text-2xl font-bold text-error-10 dark:text-error-7">
             {summary.error}
           </div>
-          <div className="text-sm text-neutral-10">
-            Error
-          </div>
+          <div className="text-sm text-neutral-10">Error</div>
         </div>
 
         <div
@@ -200,9 +190,7 @@ export function ConnectionHealthDashboard({
           <div className="text-2xl font-bold text-warning-9 dark:text-warning-9">
             {summary.authRequired}
           </div>
-          <div className="text-sm text-neutral-10">
-            Auth Required
-          </div>
+          <div className="text-sm text-neutral-10">Auth Required</div>
         </div>
       </div>
       {/* Last Heartbeat */}
@@ -215,9 +203,7 @@ export function ConnectionHealthDashboard({
       {connections.length === 0 ? (
         <div className="text-center py-8">
           <Server className="w-12 h-12 text-neutral-9 mx-auto mb-3" />
-          <p className="text-neutral-10">
-            No connections configured
-          </p>
+          <p className="text-neutral-10">No connections configured</p>
         </div>
       ) : (
         <div

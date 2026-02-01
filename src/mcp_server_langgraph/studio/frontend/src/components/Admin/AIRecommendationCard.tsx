@@ -105,7 +105,11 @@ function isStale(generatedAt: string, thresholdMs: number): boolean {
 // Sub-Components
 // =============================================================================
 
-function LoadingSkeleton({ prefersReducedMotion }: { prefersReducedMotion: boolean | null }) {
+function LoadingSkeleton({
+  prefersReducedMotion,
+}: {
+  prefersReducedMotion: boolean | null;
+}) {
   return (
     <div
       data-testid="recommendation-skeleton"
@@ -166,9 +170,7 @@ function StepCard({ step }: StepCardProps) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-neutral-11 mb-2">
-        {step.description}
-      </p>
+      <p className="text-sm text-neutral-11 mb-2">{step.description}</p>
 
       {/* Command */}
       {step.command ? (
@@ -226,11 +228,14 @@ export function AIRecommendationCard({
           <AlertCircle className="w-5 h-5 text-error-9 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-error-11 dark:text-error-7">{error}</p>
-            <Button variant="primary"
+            <Button
+              variant="primary"
               className="mt-2 text-sm text-error-10 dark:text-error-7 underline hover:no-underline"
               data-testid="retry-button"
               onClick={onRegenerate}
-            >Retry</Button>
+            >
+              Retry
+            </Button>
           </div>
         </div>
       </div>
@@ -247,10 +252,13 @@ export function AIRecommendationCard({
         <div className="flex flex-col items-center justify-center py-8 text-neutral-10">
           <Bot className="w-10 h-10 mb-2 opacity-50" />
           <p>No recommendation available</p>
-          <Button variant="primary"
+          <Button
+            variant="primary"
             className="mt-2 text-sm text-primary-10 dark:text-primary-7 underline hover:no-underline"
             onClick={onRegenerate}
-          >Generate recommendation</Button>
+          >
+            Generate recommendation
+          </Button>
         </div>
       </div>
     );
@@ -267,9 +275,7 @@ export function AIRecommendationCard({
       <div className="flex items-center justify-between p-4 border-b border-neutral-5">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-insight-9" />
-          <h3 className="font-medium text-neutral-12">
-            AI Recommendation
-          </h3>
+          <h3 className="font-medium text-neutral-12">AI Recommendation</h3>
           <span className="text-xs text-neutral-10">
             via {recommendation.modelUsed}
           </span>
@@ -324,9 +330,7 @@ export function AIRecommendationCard({
           </h4>
           <div className="bg-neutral-1 p-3 rounded-lg space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-neutral-11">
-                Overall Risk:
-              </span>
+              <span className="text-sm text-neutral-11">Overall Risk:</span>
               <span
                 data-testid="overall-risk-badge"
                 className={`text-xs px-2 py-0.5 rounded-full text-neutral-12 ${getRiskBgColor(
@@ -337,17 +341,13 @@ export function AIRecommendationCard({
               </span>
             </div>
             <div>
-              <span className="text-sm text-neutral-11">
-                Impact:{" "}
-              </span>
+              <span className="text-sm text-neutral-11">Impact: </span>
               <span className="text-sm text-neutral-11">
                 {recommendation.riskAssessment.impactAnalysis}
               </span>
             </div>
             <div>
-              <span className="text-sm text-neutral-11">
-                Rollback:{" "}
-              </span>
+              <span className="text-sm text-neutral-11">Rollback: </span>
               <code className="text-xs bg-neutral-2 px-1 py-0.5 rounded">
                 {recommendation.riskAssessment.rollbackPlan}
               </code>

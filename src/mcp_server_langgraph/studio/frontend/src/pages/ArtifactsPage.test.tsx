@@ -545,7 +545,9 @@ describe("ArtifactsPage", () => {
 
       // Find the confirm delete button in the modal by text
       const modal = screen.getByTestId("delete-confirm-modal");
-      const confirmButton = within(modal).getByRole("button", { name: "Delete" });
+      const confirmButton = within(modal).getByRole("button", {
+        name: "Delete",
+      });
       fireEvent.click(confirmButton);
 
       await waitFor(() => {

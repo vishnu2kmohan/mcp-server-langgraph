@@ -214,9 +214,7 @@ export function ChatMessage({
           className="flex items-center gap-2"
         >
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-neutral-10">
-            Thinking...
-          </span>
+          <span className="text-neutral-10">Thinking...</span>
         </div>
       );
     }
@@ -314,9 +312,7 @@ export function ChatMessage({
         className={messageBubbleVariants({ role })}
       >
         <div className="flex items-center justify-between mb-1">
-          <span className={roleLabelVariants({ role })}>
-            {roleLabel}
-          </span>
+          <span className={roleLabelVariants({ role })}>{roleLabel}</span>
           {showTimestamp && (
             <span
               data-testid="timestamp"
@@ -326,9 +322,7 @@ export function ChatMessage({
             </span>
           )}
         </div>
-        <div className="text-neutral-12">
-          {renderContent()}
-        </div>
+        <div className="text-neutral-12">{renderContent()}</div>
 
         {/* Selected Tools Display - only for assistant messages (ADR-0099) */}
         {isAssistant &&

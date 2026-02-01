@@ -159,7 +159,8 @@ export function ConnectedComplianceDashboard({
             "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
             "bg-error-10 text-neutral-12 hover:bg-error-11",
             "transition-colors",
-          )}>
+          )}
+        >
           <RefreshCw size={16} />
           Retry
         </Button>

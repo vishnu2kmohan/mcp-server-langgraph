@@ -279,11 +279,16 @@ export function OnboardingWizard({
               >
                 <div
                   className="h-full bg-primary-9 transition-all duration-300"
-                  style={{ '--progress': `${(currentStep / totalSteps) * 100}%` } as React.CSSProperties}
+                  style={
+                    {
+                      "--progress": `${(currentStep / totalSteps) * 100}%`,
+                    } as React.CSSProperties
+                  }
                 />
               </div>
             </div>
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-2 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-3"
               onClick={onSkip}
@@ -315,21 +320,15 @@ export function OnboardingWizard({
               <div className="grid grid-cols-3 gap-4 max-w-md mx-auto text-center">
                 <div className="p-4">
                   <Bot className="w-8 h-8 mx-auto text-primary-9 mb-2" />
-                  <p className="text-sm text-neutral-11">
-                    AI Agents
-                  </p>
+                  <p className="text-sm text-neutral-11">AI Agents</p>
                 </div>
                 <div className="p-4">
                   <GitBranch className="w-8 h-8 mx-auto text-success-9 mb-2" />
-                  <p className="text-sm text-neutral-11">
-                    Workflows
-                  </p>
+                  <p className="text-sm text-neutral-11">Workflows</p>
                 </div>
                 <div className="p-4">
                   <Server className="w-8 h-8 mx-auto text-insight-9 mb-2" />
-                  <p className="text-sm text-neutral-11">
-                    Integrations
-                  </p>
+                  <p className="text-sm text-neutral-11">Integrations</p>
                 </div>
               </div>
             </div>

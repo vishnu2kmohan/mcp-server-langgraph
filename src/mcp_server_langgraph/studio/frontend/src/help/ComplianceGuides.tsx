@@ -62,8 +62,7 @@ const FRAMEWORK_LABELS: Record<ComplianceFramework, string> = {
 
 const FRAMEWORK_COLORS: Record<ComplianceFramework, string> = {
   soc2: "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5",
-  hipaa:
-    "bg-success-3 bg-success-4 text-success-11 dark:text-success-5",
+  hipaa: "bg-success-3 bg-success-4 text-success-11 dark:text-success-5",
   gdpr: "bg-insight-2 dark:bg-insight-a4 text-insight-11 dark:text-insight-5",
   fedramp:
     "bg-grafana-2 dark:bg-grafana-12/30 text-grafana-11 dark:text-grafana-4",
@@ -238,9 +237,7 @@ export function ComplianceGuides({
                       {FRAMEWORK_LABELS[guide.framework]}
                     </span>
                   </div>
-                  <p className="text-xs text-neutral-10">
-                    {guide.summary}
-                  </p>
+                  <p className="text-xs text-neutral-10">{guide.summary}</p>
                   {enableProgress && completedCount > 0 && (
                     <p className="text-xs text-primary-10 dark:text-primary-7 mt-1">
                       {completedCount} of {guide.steps.length} steps complete

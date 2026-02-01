@@ -4,11 +4,15 @@
  * TDD tests for animation delay and dynamic styling utilities.
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 // =============================================================================
 // Animation Delay Utilities
 // =============================================================================
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("Animation Delay Classes", () => {
   it("should have animation-delay-0 class defined in Tailwind config", async () => {

@@ -75,20 +75,24 @@ function LayoutPreview({ layout }: { layout: WorkspaceLayout }) {
       {layout.sessionNav > 0 && (
         <div
           className="bg-neutral-3 flex items-center justify-center border-r border-neutral-5"
-          style={{ '--progress': `${layout.sessionNav}%` } as React.CSSProperties}
+          style={
+            { "--progress": `${layout.sessionNav}%` } as React.CSSProperties
+          }
         >
           {layout.sessionNav}%
         </div>
       )}
       <div
         className="bg-primary-3 bg-primary-4 flex items-center justify-center border-r border-neutral-5"
-        style={{ '--progress': `${layout.conversation}%` } as React.CSSProperties}
+        style={
+          { "--progress": `${layout.conversation}%` } as React.CSSProperties
+        }
       >
         {layout.conversation}%
       </div>
       <div
         className="bg-insight-2 dark:bg-insight-a4 flex items-center justify-center"
-        style={{ '--progress': `${layout.canvas}%` } as React.CSSProperties}
+        style={{ "--progress": `${layout.canvas}%` } as React.CSSProperties}
       >
         {layout.canvas}%
       </div>
@@ -211,11 +215,7 @@ export function WorkspacePresets({
             <div className="flex items-center gap-2 mb-1">
               <PresetIcon
                 size={16}
-                className={cn(
-                  isSelected
-                    ? "text-primary-9"
-                    : "text-neutral-9",
-                )}
+                className={cn(isSelected ? "text-primary-9" : "text-neutral-9")}
               />
               <span
                 className={cn(
@@ -228,9 +228,7 @@ export function WorkspacePresets({
                 {preset.name}
               </span>
             </div>
-            <p className="text-xs text-neutral-10 mb-2">
-              {preset.description}
-            </p>
+            <p className="text-xs text-neutral-10 mb-2">{preset.description}</p>
 
             {/* Layout Preview on Hover */}
             {showPreview && isHovered && (
@@ -252,7 +250,8 @@ export function WorkspacePresets({
             "text-neutral-10",
             "hover:border-primary-7 hover:text-primary-9",
             "transition-colors",
-          )}>
+          )}
+        >
           <Save size={16} />
           <span className="text-sm">Save Current Layout</span>
         </Button>

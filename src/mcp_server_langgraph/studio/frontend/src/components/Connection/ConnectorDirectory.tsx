@@ -83,14 +83,19 @@ export function ConnectorDirectory({
     return uniqueCategories.map((id) => ({
       id,
       name: id.charAt(0).toUpperCase() + id.slice(1),
-      description: "" }));
+      description: "",
+    }));
   }, [categories, templates]);
 
   return (
     <div className={cn("space-y-4", className)}>
       {/* Category Filter Chips */}
       {displayCategories.length > 0 && (
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Category filters">
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label="Category filters"
+        >
           <Button
             type="button"
             variant={selectedCategory === null ? "primary" : "secondary"}
@@ -99,7 +104,7 @@ export function ConnectorDirectory({
               "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
               selectedCategory === null
                 ? "bg-primary-10 text-neutral-12"
-                : "bg-neutral-2 text-neutral-11 hover:bg-neutral-4"
+                : "bg-neutral-2 text-neutral-11 hover:bg-neutral-4",
             )}
             aria-pressed={selectedCategory === null}
           >
@@ -109,13 +114,15 @@ export function ConnectorDirectory({
             <Button
               key={category.id}
               type="button"
-              variant={selectedCategory === category.id ? "primary" : "secondary"}
+              variant={
+                selectedCategory === category.id ? "primary" : "secondary"
+              }
               onClick={() => setSelectedCategory(category.id)}
               className={cn(
                 "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
                 selectedCategory === category.id
                   ? "bg-primary-10 text-neutral-12"
-                  : "bg-neutral-2 text-neutral-11 hover:bg-neutral-4"
+                  : "bg-neutral-2 text-neutral-11 hover:bg-neutral-4",
               )}
               aria-pressed={selectedCategory === category.id}
             >

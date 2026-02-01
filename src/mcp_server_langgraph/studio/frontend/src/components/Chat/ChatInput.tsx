@@ -56,7 +56,10 @@ import { PreferencesMenu } from "./PreferencesMenu";
 import type { KBFocusMode } from "./KnowledgeBaseFocus";
 
 import { Button, Textarea, Input } from "@/components/UI";
-import { SegmentedControl, SegmentedControlItem } from "@/components/UI/SegmentedControl";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@/components/UI/SegmentedControl";
 import { ShieldCheck } from "lucide-react";
 import { cn } from "../../utils/cn";
 
@@ -273,7 +276,9 @@ export interface ChatInputProps {
   /** Callback to cycle execution mode (Ctrl/Cmd+Shift+M keyboard shortcut) */
   onCycleExecutionMode?: () => void;
   /** Callback when execution mode changes directly via SegmentedControl */
-  onExecutionModeChange?: (mode: "default" | "plan" | "auto_accept" | "bypass") => void;
+  onExecutionModeChange?: (
+    mode: "default" | "plan" | "auto_accept" | "bypass",
+  ) => void;
   /** Whether user has bypass permission (OpenFGA bypass_executor on system:global) */
   hasBypassPermission?: boolean;
 
@@ -491,8 +496,7 @@ export function ChatInput({
     .filter(Boolean) as ModelOption[];
 
   // Character count warning threshold (95% of max)
-  const isApproachingMaxLength =
-    maxLength && value.length >= maxLength * 0.95;
+  const isApproachingMaxLength = maxLength && value.length >= maxLength * 0.95;
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -805,7 +809,9 @@ export function ChatInput({
           data-testid="upload-indicator"
           className="px-3 pt-3 flex items-center gap-2 text-sm text-neutral-11"
         >
-          <Loader2 className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")} />
+          <Loader2
+            className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+          />
           <span>Uploading...</span>
         </div>
       )}
@@ -815,7 +821,9 @@ export function ChatInput({
           data-testid="url-fetch-loading"
           className="px-3 pt-3 flex items-center gap-2 text-sm text-neutral-11"
         >
-          <Loader2 className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")} />
+          <Loader2
+            className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+          />
           <span>Fetching URL content...</span>
         </div>
       )}
@@ -920,7 +928,12 @@ export function ChatInput({
             data-testid="suggestion-loading"
             className="absolute right-3 top-3"
           >
-            <Loader2 className={cn("w-4 h-4 text-neutral-9", !prefersReducedMotion && "animate-spin")} />
+            <Loader2
+              className={cn(
+                "w-4 h-4 text-neutral-9",
+                !prefersReducedMotion && "animate-spin",
+              )}
+            />
           </div>
         )}
 
@@ -974,7 +987,9 @@ export function ChatInput({
         <div className="px-3 flex justify-end">
           <span
             className={`text-xs ${isApproachingMaxLength ? "text-warning-11" : "text-neutral-10"}`}
-            data-testid={isApproachingMaxLength ? "char-count-warning" : undefined}
+            data-testid={
+              isApproachingMaxLength ? "char-count-warning" : undefined
+            }
           >
             {value.length} / {maxLength}
           </span>
@@ -1018,7 +1033,9 @@ export function ChatInput({
               <SegmentedControl
                 value={executionMode}
                 onValueChange={(value) =>
-                  onExecutionModeChange(value as "default" | "plan" | "auto_accept" | "bypass")
+                  onExecutionModeChange(
+                    value as "default" | "plan" | "auto_accept" | "bypass",
+                  )
                 }
                 aria-label="Execution mode (Ctrl/Cmd+Shift+M to cycle)"
                 size="sm"
@@ -1030,7 +1047,10 @@ export function ChatInput({
                 <SegmentedControlItem value="plan" aria-label="Plan mode">
                   Plan
                 </SegmentedControlItem>
-                <SegmentedControlItem value="auto_accept" aria-label="Auto mode">
+                <SegmentedControlItem
+                  value="auto_accept"
+                  aria-label="Auto mode"
+                >
                   Auto
                 </SegmentedControlItem>
                 <SegmentedControlItem
@@ -1097,7 +1117,8 @@ export function ChatInput({
                           className="pl-8 pr-2 py-1.5 text-sm bg-neutral-2 focus:ring-primary-7"
                           placeholder="Search models..."
                           value={modelSearchQuery}
-                          onChange={(e) => setModelSearchQuery(e.target.value)} />
+                          onChange={(e) => setModelSearchQuery(e.target.value)}
+                        />
                       </div>
                     </div>
                   )}
@@ -1142,49 +1163,56 @@ export function ChatInput({
                         data-testid="models-loading"
                         className="flex items-center justify-center py-4"
                       >
-                        <Loader2 className={cn("w-5 h-5 text-neutral-9", !prefersReducedMotion && "animate-spin")} />
+                        <Loader2
+                          className={cn(
+                            "w-5 h-5 text-neutral-9",
+                            !prefersReducedMotion && "animate-spin",
+                          )}
+                        />
                       </div>
                     )}
-                    {!isModelsLoading && filteredModels.map((model) => (
-                      <Button
-                        key={model.id}
-                        variant="secondary"
-                        role="option"
-                        aria-selected={model.id === selectedModel}
-                        className="w-full min-h-[44px] flex items-center justify-between px-2 py-2 text-sm hover:bg-neutral-2 rounded"
-                        type="button"
-                        onClick={() => handleModelSelect(model.id)}
-                      >
-                        <div className="flex flex-col items-start gap-0.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{model.name}</span>
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
-                              {model.provider}
-                            </span>
-                            {/* P3: Lifecycle badges */}
-                            {model.status === "deprecated" && (
-                              <span className="text-xs px-1.5 py-0.5 rounded bg-warning-3 text-warning-11">
-                                Deprecated
+                    {!isModelsLoading &&
+                      filteredModels.map((model) => (
+                        <Button
+                          key={model.id}
+                          variant="secondary"
+                          role="option"
+                          aria-selected={model.id === selectedModel}
+                          className="w-full min-h-[44px] flex items-center justify-between px-2 py-2 text-sm hover:bg-neutral-2 rounded"
+                          type="button"
+                          onClick={() => handleModelSelect(model.id)}
+                        >
+                          <div className="flex flex-col items-start gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.name}</span>
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
+                                {model.provider}
                               </span>
-                            )}
-                            {model.status === "preview" && (
-                              <span className="text-xs px-1.5 py-0.5 rounded bg-primary-3 text-primary-11">
-                                Preview
-                              </span>
-                            )}
+                              {/* P3: Lifecycle badges */}
+                              {model.status === "deprecated" && (
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-warning-3 text-warning-11">
+                                  Deprecated
+                                </span>
+                              )}
+                              {model.status === "preview" && (
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-primary-3 text-primary-11">
+                                  Preview
+                                </span>
+                              )}
+                            </div>
+                            {/* P3: Sunset date */}
+                            {model.status === "deprecated" &&
+                              model.sunsetDate && (
+                                <span className="text-xs text-warning-10">
+                                  Sunset: {model.sunsetDate}
+                                </span>
+                              )}
                           </div>
-                          {/* P3: Sunset date */}
-                          {model.status === "deprecated" && model.sunsetDate && (
-                            <span className="text-xs text-warning-10">
-                              Sunset: {model.sunsetDate}
-                            </span>
+                          {model.id === selectedModel && (
+                            <Check className="w-4 h-4 text-success-9" />
                           )}
-                        </div>
-                        {model.id === selectedModel && (
-                          <Check className="w-4 h-4 text-success-9" />
-                        )}
-                      </Button>
-                    ))}
+                        </Button>
+                      ))}
                   </div>
 
                   {/* Thinking controls */}
@@ -1194,25 +1222,34 @@ export function ChatInput({
                       className="border-t border-neutral-5 px-2 pt-2"
                     >
                       {/* P1: Thinking toggle */}
-                      {enableThinking !== undefined && onEnableThinkingChange && (
-                        <div className="px-2 py-2 flex items-center justify-between">
-                          <span className="text-sm text-neutral-11">Enable Thinking</span>
-                          <Button
-                            data-testid="thinking-toggle"
-                            type="button"
-                            variant="ghost"
-                            onClick={() => onEnableThinkingChange(!enableThinking)}
-                            className="min-h-[44px] min-w-[44px] text-neutral-11 hover:text-neutral-12 p-0"
-                            aria-label={enableThinking ? "Disable thinking" : "Enable thinking"}
-                          >
-                            {enableThinking ? (
-                              <ToggleRight className="w-6 h-6 text-success-9" />
-                            ) : (
-                              <ToggleLeft className="w-6 h-6" />
-                            )}
-                          </Button>
-                        </div>
-                      )}
+                      {enableThinking !== undefined &&
+                        onEnableThinkingChange && (
+                          <div className="px-2 py-2 flex items-center justify-between">
+                            <span className="text-sm text-neutral-11">
+                              Enable Thinking
+                            </span>
+                            <Button
+                              data-testid="thinking-toggle"
+                              type="button"
+                              variant="ghost"
+                              onClick={() =>
+                                onEnableThinkingChange(!enableThinking)
+                              }
+                              className="min-h-[44px] min-w-[44px] text-neutral-11 hover:text-neutral-12 p-0"
+                              aria-label={
+                                enableThinking
+                                  ? "Disable thinking"
+                                  : "Enable thinking"
+                              }
+                            >
+                              {enableThinking ? (
+                                <ToggleRight className="w-6 h-6 text-success-9" />
+                              ) : (
+                                <ToggleLeft className="w-6 h-6" />
+                              )}
+                            </Button>
+                          </div>
+                        )}
 
                       {/* Thinking level buttons */}
                       {onReasoningEffortChange && (
@@ -1221,29 +1258,33 @@ export function ChatInput({
                             Thinking Level
                           </div>
                           <div className="flex items-center gap-1 px-2">
-                            {(["low", "medium", "high"] as ReasoningEffortLevel[]).map(
-                              (level) => (
-                                <Button
-                                  key={level}
-                                  variant={
-                                    reasoningEffort === level
-                                      ? "primary"
-                                      : "secondary"
-                                  }
-                                  className={cn(
-                                    "flex-1 min-h-[44px] px-3 py-1.5 text-sm rounded capitalize",
-                                    reasoningEffort === level
-                                      ? "bg-insight-9 text-insight-contrast"
-                                      : "bg-neutral-2 text-neutral-11 hover:bg-neutral-3"
-                                  )}
-                                  type="button"
-                                  onClick={() => onReasoningEffortChange(level)}
-                                  aria-label={`Set thinking level to ${level}`}
-                                >
-                                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                                </Button>
-                              ),
-                            )}
+                            {(
+                              [
+                                "low",
+                                "medium",
+                                "high",
+                              ] as ReasoningEffortLevel[]
+                            ).map((level) => (
+                              <Button
+                                key={level}
+                                variant={
+                                  reasoningEffort === level
+                                    ? "primary"
+                                    : "secondary"
+                                }
+                                className={cn(
+                                  "flex-1 min-h-[44px] px-3 py-1.5 text-sm rounded capitalize",
+                                  reasoningEffort === level
+                                    ? "bg-insight-9 text-insight-contrast"
+                                    : "bg-neutral-2 text-neutral-11 hover:bg-neutral-3",
+                                )}
+                                type="button"
+                                onClick={() => onReasoningEffortChange(level)}
+                                aria-label={`Set thinking level to ${level}`}
+                              >
+                                {level.charAt(0).toUpperCase() + level.slice(1)}
+                              </Button>
+                            ))}
                           </div>
                         </>
                       )}
@@ -1284,25 +1325,39 @@ export function ChatInput({
           )}
 
           {/* Tool selector - only shown when PreferencesMenu is hidden */}
-          {!showPreferencesMenu && showToolSelector && onSelectedToolsChange && onToolSelectionModeChange && (
-            <div data-testid="tool-selector" className="flex items-center gap-1">
-              {/* P3: Tools loading indicator */}
-              {isToolsLoading && (
-                <div data-testid="tools-loading" className="flex items-center">
-                  <Loader2 className={cn("w-4 h-4 text-neutral-9", !prefersReducedMotion && "animate-spin")} />
-                </div>
-              )}
-              <ToolSelector
-                selectedTools={selectedTools}
-                onSelectionChange={onSelectedToolsChange}
-                mode={toolSelectionMode}
-                onModeChange={onToolSelectionModeChange}
-                availableTools={availableTools}
-                disabled={disabled}
-                compact
-              />
-            </div>
-          )}
+          {!showPreferencesMenu &&
+            showToolSelector &&
+            onSelectedToolsChange &&
+            onToolSelectionModeChange && (
+              <div
+                data-testid="tool-selector"
+                className="flex items-center gap-1"
+              >
+                {/* P3: Tools loading indicator */}
+                {isToolsLoading && (
+                  <div
+                    data-testid="tools-loading"
+                    className="flex items-center"
+                  >
+                    <Loader2
+                      className={cn(
+                        "w-4 h-4 text-neutral-9",
+                        !prefersReducedMotion && "animate-spin",
+                      )}
+                    />
+                  </div>
+                )}
+                <ToolSelector
+                  selectedTools={selectedTools}
+                  onSelectionChange={onSelectedToolsChange}
+                  mode={toolSelectionMode}
+                  onModeChange={onToolSelectionModeChange}
+                  availableTools={availableTools}
+                  disabled={disabled}
+                  compact
+                />
+              </div>
+            )}
 
           {/* KB Focus selector - only shown when PreferencesMenu is hidden */}
           {!showPreferencesMenu && showKBFocus && onKBFocusChange && (
@@ -1338,8 +1393,12 @@ export function ChatInput({
                       "w-2 h-2 rounded-full",
                       kbStatus === "ready" && "bg-success-9",
                       kbStatus === "indexing" && "bg-warning-9",
-                      kbStatus === "indexing" && !prefersReducedMotion && "animate-pulse",
-                      kbStatus !== "ready" && kbStatus !== "indexing" && "bg-error-9"
+                      kbStatus === "indexing" &&
+                        !prefersReducedMotion &&
+                        "animate-pulse",
+                      kbStatus !== "ready" &&
+                        kbStatus !== "indexing" &&
+                        "bg-error-9",
                     )}
                   />
                   {/* Tooltip */}
@@ -1361,7 +1420,9 @@ export function ChatInput({
               type="button"
               onClick={isListening ? onStopListening : onStartListening}
               disabled={disabled}
-              aria-label={isListening ? "Stop voice input" : "Start voice input"}
+              aria-label={
+                isListening ? "Stop voice input" : "Start voice input"
+              }
             >
               {isListening ? (
                 <MicOff className="w-5 h-5 text-error-9" />
@@ -1375,7 +1436,8 @@ export function ChatInput({
         {/* Right controls - Send/Stop */}
         <div className="flex items-center gap-2">
           {isStreaming && onStopStreaming ? (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="danger"
               className="min-h-[44px] min-w-[44px] p-2 bg-error-9 text-error-contrast rounded-lg hover:bg-error-10"
               type="button"
@@ -1397,7 +1459,12 @@ export function ChatInput({
               whileTap={canSend ? "pressed" : undefined}
             >
               {disabled ? (
-                <Loader2 className={cn("w-5 h-5", !prefersReducedMotion && "animate-spin")} />
+                <Loader2
+                  className={cn(
+                    "w-5 h-5",
+                    !prefersReducedMotion && "animate-spin",
+                  )}
+                />
               ) : (
                 <Send className="w-5 h-5" />
               )}

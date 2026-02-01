@@ -208,13 +208,9 @@ export function OAuth2CallbackPage() {
         </h1>
         {error && (
           <>
-            <p className="text-error-10 mb-2">
-              {error.message}
-            </p>
+            <p className="text-error-10 mb-2">{error.message}</p>
             {error.detail && (
-              <p className="text-neutral-11 text-sm mb-4">
-                {error.detail}
-              </p>
+              <p className="text-neutral-11 text-sm mb-4">{error.detail}</p>
             )}
           </>
         )}

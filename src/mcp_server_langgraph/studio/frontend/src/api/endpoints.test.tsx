@@ -7,7 +7,7 @@
  * Following TDD: Tests verify endpoint behavior before backend implementation.
  */
 
-import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -76,19 +76,22 @@ const handlers = [
   }),
 
   // POST /api/v1/sessions/{session_id}/goal
-  http.post("/api/v1/sessions/:session_id/goal", async ({ params, request }) => {
-    const { session_id } = params;
-    const body = (await request.json()) as { goal: string; set_at: number };
+  http.post(
+    "/api/v1/sessions/:session_id/goal",
+    async ({ params, request }) => {
+      const { session_id } = params;
+      const body = (await request.json()) as { goal: string; set_at: number };
 
-    return HttpResponse.json(
-      {
-        session_id,
-        goal: body.goal,
-        set_at: body.set_at,
-      },
-      { status: 201 },
-    );
-  }),
+      return HttpResponse.json(
+        {
+          session_id,
+          goal: body.goal,
+          set_at: body.set_at,
+        },
+        { status: 201 },
+      );
+    },
+  ),
 
   // POST /api/v1/sessions/{session_id}/goal/complete
   http.post(
@@ -193,6 +196,7 @@ describe("Predictions API", () => {
 
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
     server.resetHandlers();
   });
 
@@ -230,7 +234,9 @@ describe("Predictions API", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(result.current.data?.predictions).toHaveLength(1);
-      expect(result.current.data?.predictions[0].confidence).toBeGreaterThanOrEqual(0.8);
+      expect(
+        result.current.data?.predictions[0].confidence,
+      ).toBeGreaterThanOrEqual(0.8);
     });
 
     it("returns prediction with factors array", async () => {
@@ -256,6 +262,7 @@ describe("Session Goal API", () => {
 
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
     server.resetHandlers();
   });
 
@@ -433,6 +440,7 @@ describe("Error Response Handling", () => {
 
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
     server.resetHandlers();
   });
 
@@ -539,7 +547,8 @@ describe("Error Response Handling", () => {
       await expect(
         setGoal({
           session_id: "session-123",
-          goal: "", set_at: Date.now(),
+          goal: "",
+          set_at: Date.now(),
         }).unwrap(),
       ).rejects.toMatchObject({
         status: 400,

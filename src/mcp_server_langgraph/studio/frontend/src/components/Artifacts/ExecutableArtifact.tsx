@@ -151,9 +151,7 @@ export function ExecutableArtifact({
       <div className="px-4 py-2 bg-neutral-2 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {title && (
-            <span className="text-sm font-medium text-neutral-11">
-              {title}
-            </span>
+            <span className="text-sm font-medium text-neutral-11">{title}</span>
           )}
           <span className="text-xs font-mono bg-neutral-3 px-2 py-0.5 rounded text-neutral-11">
             {config.language}
@@ -193,9 +191,7 @@ export function ExecutableArtifact({
       {result && (
         <div className="border-t border-neutral-5">
           <div className="px-4 py-2 bg-neutral-2 flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-11">
-              Output
-            </span>
+            <span className="text-xs font-medium text-neutral-11">Output</span>
             <div className="flex items-center gap-3 text-xs text-neutral-10">
               {result.executionTime !== undefined && (
                 <span className="flex items-center gap-1">

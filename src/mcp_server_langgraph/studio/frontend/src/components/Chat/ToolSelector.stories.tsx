@@ -286,7 +286,8 @@ export const Compact: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Compact mode for use in tight spaces like the chat input controls row.",
+        story:
+          "Compact mode for use in tight spaces like the chat input controls row.",
       },
     },
   },
@@ -369,11 +370,14 @@ export const AccessibilityShowcase: Story = {
           selectedTools={[]}
           mode="manual"
           availableTools={SAMPLE_TOOLS}
-          onSelectionChange={(tools) => console.log("Selection changed:", tools)}
+          onSelectionChange={(tools) =>
+            console.log("Selection changed:", tools)
+          }
           onModeChange={(mode) => console.log("Mode changed:", mode)}
         />
         <p className="mt-3 text-xs text-neutral-10">
-          Try: Tab to focus → Enter to open → Tab through options → Space to toggle
+          Try: Tab to focus → Enter to open → Tab through options → Space to
+          toggle
         </p>
       </div>
     </div>

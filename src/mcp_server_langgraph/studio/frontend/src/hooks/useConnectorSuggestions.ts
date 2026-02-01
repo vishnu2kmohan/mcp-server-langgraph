@@ -7,7 +7,10 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useGetTemplateSuggestionsQuery, useListConnectionsQuery } from "../api";
+import {
+  useGetTemplateSuggestionsQuery,
+  useListConnectionsQuery,
+} from "../api";
 import type { ConnectionTemplate } from "../types/connectionTemplate";
 
 export interface UseConnectorSuggestionsOptions {
@@ -61,7 +64,9 @@ export function useConnectorSuggestions({
   minInputLength = 5,
   debounceMs = 300,
 }: UseConnectorSuggestionsOptions = {}): UseConnectorSuggestionsResult {
-  const [debouncedQuery, setDebouncedQuery] = useState<string | undefined>(undefined);
+  const [debouncedQuery, setDebouncedQuery] = useState<string | undefined>(
+    undefined,
+  );
   const [isDismissed, setIsDismissed] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastInputRef = useRef<string | undefined>(undefined);
@@ -69,15 +74,20 @@ export function useConnectorSuggestions({
   // Fetch configured connections to filter out already-connected templates
   const { data: connectionsData } = useListConnectionsQuery(
     { limit: 100 },
-    { skip: !enabled }
+    { skip: !enabled },
   );
 
   // Fetch template suggestions based on debounced query
-  const { data: suggestionsData, isLoading, isFetching } = useGetTemplateSuggestionsQuery(
+  const {
+    data: suggestionsData,
+    isLoading,
+    isFetching,
+  } = useGetTemplateSuggestionsQuery(
     { query: debouncedQuery ?? "" },
     {
-      skip: !enabled || !debouncedQuery || debouncedQuery.length < minInputLength,
-    }
+      skip:
+        !enabled || !debouncedQuery || debouncedQuery.length < minInputLength,
+    },
   );
 
   // Extract template IDs that are already configured
@@ -85,12 +95,14 @@ export function useConnectorSuggestions({
     (connectionsData?.items || [])
       .filter((c) => c.status === "connected")
       // Try to match connection name/url to template id (heuristic)
-      .map((c) => c.name?.toLowerCase().replace(/\s+/g, "-"))
+      .map((c) => c.name?.toLowerCase().replace(/\s+/g, "-")),
   );
 
   // Filter and transform suggestions to exclude already-configured connections
   // Transform API response to match ConnectionTemplate type (undefined -> null)
-  const filteredSuggestions: ConnectionTemplate[] = (suggestionsData?.templates || [])
+  const filteredSuggestions: ConnectionTemplate[] = (
+    suggestionsData?.templates || []
+  )
     .filter((template) => !configuredTemplateIds.has(template.id))
     .map((t) => ({
       ...t,
@@ -128,7 +140,7 @@ export function useConnectorSuggestions({
         setDebouncedQuery(input);
       }, debounceMs);
     },
-    [debounceMs, minInputLength, debouncedQuery]
+    [debounceMs, minInputLength, debouncedQuery],
   );
 
   // Cleanup timer on unmount

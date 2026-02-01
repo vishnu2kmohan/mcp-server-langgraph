@@ -134,9 +134,7 @@ export function ResourceBrowser({
                       {resource.serverName}
                     </Badge>
                   </div>
-                  <p className="text-sm text-neutral-11 mb-1">
-                    {resource.uri}
-                  </p>
+                  <p className="text-sm text-neutral-11 mb-1">{resource.uri}</p>
                   {resource.description && (
                     <p className="text-sm text-neutral-10 line-clamp-1">
                       {resource.description}
@@ -160,7 +158,8 @@ export function ResourceBrowser({
                     "hover:bg-neutral-3",
                     "focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2",
                     "transition-colors",
-                  )}>
+                  )}
+                >
                   View
                 </Button>
               </div>

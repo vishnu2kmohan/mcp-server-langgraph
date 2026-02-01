@@ -101,7 +101,7 @@ export interface UseFormValidationReturn {
  * @returns Form validation state and helpers
  */
 export function useFormValidation(
-  options: UseFormValidationOptions = {}
+  options: UseFormValidationOptions = {},
 ): UseFormValidationReturn {
   const { mode = "onBlur", revalidateOnChange = true } = options;
 
@@ -141,15 +141,9 @@ export function useFormValidation(
   }, []);
 
   // Helpers
-  const hasError = useCallback(
-    (field: string) => field in errors,
-    [errors]
-  );
+  const hasError = useCallback((field: string) => field in errors, [errors]);
 
-  const getError = useCallback(
-    (field: string) => errors[field],
-    [errors]
-  );
+  const getError = useCallback((field: string) => errors[field], [errors]);
 
   const getFieldProps = useCallback(
     (field: string): FieldProps => {
@@ -166,7 +160,7 @@ export function useFormValidation(
 
       return {};
     },
-    [errors, touched]
+    [errors, touched],
   );
 
   // Reset

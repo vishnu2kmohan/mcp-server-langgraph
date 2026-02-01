@@ -119,9 +119,7 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
               {agent.name}
             </h4>
           </div>
-          <p className="mt-1 text-xs text-neutral-10 truncate">
-            {agent.task}
-          </p>
+          <p className="mt-1 text-xs text-neutral-10 truncate">{agent.task}</p>
           {agent.error && (
             <p className="mt-1 text-xs text-error-9">{agent.error}</p>
           )}
@@ -138,7 +136,8 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
                 "p-1 rounded",
                 "text-neutral-9 hover:text-neutral-11",
                 "hover:bg-neutral-2",
-              )}>
+              )}
+            >
               <X className="h-4 w-4" />
             </Button>
           )}
@@ -152,7 +151,8 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
                 "p-1 rounded",
                 "text-neutral-9 hover:text-neutral-11",
                 "hover:bg-neutral-2",
-              )}>
+              )}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
@@ -174,7 +174,9 @@ function TaskItem({ agent, onCancel, onDismiss }: TaskItemProps) {
           >
             <div
               className="h-full bg-primary-9 transition-all duration-300"
-              style={{ '--progress': `${agent.progress}%` } as React.CSSProperties}
+              style={
+                { "--progress": `${agent.progress}%` } as React.CSSProperties
+              }
             />
           </div>
         </div>
@@ -237,10 +239,7 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
         <div>
-          <h3
-            className="text-sm font-semibold text-neutral-12"
-            role="heading"
-          >
+          <h3 className="text-sm font-semibold text-neutral-12" role="heading">
             Task Queue
           </h3>
           <p className="text-xs text-neutral-10">
@@ -250,7 +249,8 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
         </div>
 
         {hasCompletedOrFailed && (
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             type="button"
             onClick={handleClearCompleted}
             className={cn(
@@ -258,7 +258,9 @@ export function AgentTaskQueue({ onCancel, className }: AgentTaskQueueProps) {
               "text-neutral-10 hover:text-neutral-11",
               "hover:bg-neutral-2",
             )}
-          >Clear completed</Button>
+          >
+            Clear completed
+          </Button>
         )}
       </div>
       {/* Task list */}

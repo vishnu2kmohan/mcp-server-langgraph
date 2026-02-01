@@ -5,7 +5,7 @@
  * Replaces the floating CanvasShortcutsMenu with a non-intrusive footer.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen,  cleanup } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SuggestionsFooterBar } from "./SuggestionsFooterBar";
 import type { AISuggestion } from "../types/artifacts";
@@ -59,7 +59,9 @@ describe("SuggestionsFooterBar", () => {
 
     it("should show collapsed state by default", () => {
       render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
-      expect(screen.queryByTestId("suggestions-content")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("suggestions-content"),
+      ).not.toBeInTheDocument();
     });
 
     it("should display suggestion count badge", () => {
@@ -102,7 +104,9 @@ describe("SuggestionsFooterBar", () => {
       await user.click(header); // expand
       await user.click(header); // collapse
 
-      expect(screen.queryByTestId("suggestions-content")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("suggestions-content"),
+      ).not.toBeInTheDocument();
     });
 
     it("should have aria-expanded attribute", async () => {
@@ -149,7 +153,7 @@ describe("SuggestionsFooterBar", () => {
       await user.click(screen.getByTestId("suggestions-header"));
 
       expect(
-        screen.getByText("Extract repeated logic into a reusable function")
+        screen.getByText("Extract repeated logic into a reusable function"),
       ).toBeInTheDocument();
     });
 
@@ -171,7 +175,7 @@ describe("SuggestionsFooterBar", () => {
         <SuggestionsFooterBar
           suggestions={mockSuggestions}
           onAccept={onAccept}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("suggestions-header"));
@@ -187,7 +191,7 @@ describe("SuggestionsFooterBar", () => {
         <SuggestionsFooterBar
           suggestions={mockSuggestions}
           onDismiss={onDismiss}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("suggestions-header"));
@@ -228,16 +232,16 @@ describe("SuggestionsFooterBar", () => {
     it("should have border-t for visual separation", () => {
       render(<SuggestionsFooterBar suggestions={[]} />);
       expect(screen.getByTestId("suggestions-footer-bar")).toHaveClass(
-        "border-t"
+        "border-t",
       );
     });
 
     it("should apply custom className", () => {
       render(
-        <SuggestionsFooterBar suggestions={[]} className="custom-class" />
+        <SuggestionsFooterBar suggestions={[]} className="custom-class" />,
       );
       expect(screen.getByTestId("suggestions-footer-bar")).toHaveClass(
-        "custom-class"
+        "custom-class",
       );
     });
 
@@ -248,16 +252,14 @@ describe("SuggestionsFooterBar", () => {
       await user.click(screen.getByTestId("suggestions-header"));
 
       expect(screen.getByTestId("suggestions-content")).toHaveClass(
-        "max-h-[200px]"
+        "max-h-[200px]",
       );
     });
   });
 
   describe("Controlled Mode", () => {
     it("should respect isExpanded prop", () => {
-      render(
-        <SuggestionsFooterBar suggestions={mockSuggestions} isExpanded />
-      );
+      render(<SuggestionsFooterBar suggestions={mockSuggestions} isExpanded />);
       expect(screen.getByTestId("suggestions-content")).toBeInTheDocument();
     });
 
@@ -269,7 +271,7 @@ describe("SuggestionsFooterBar", () => {
           suggestions={mockSuggestions}
           isExpanded={false}
           onToggle={onToggle}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("suggestions-header"));

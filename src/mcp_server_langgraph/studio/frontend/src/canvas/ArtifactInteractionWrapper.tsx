@@ -70,7 +70,7 @@ export function ArtifactInteractionWrapper({
       e.preventDefault();
       handleOpenInCanvas();
     },
-    [handleOpenInCanvas]
+    [handleOpenInCanvas],
   );
 
   const handlePopoutClick = useCallback(
@@ -78,7 +78,7 @@ export function ArtifactInteractionWrapper({
       e.stopPropagation();
       handleOpenInCanvas();
     },
-    [handleOpenInCanvas]
+    [handleOpenInCanvas],
   );
 
   return (
@@ -107,7 +107,7 @@ export function ArtifactInteractionWrapper({
             "shadow-sm",
             "min-w-[32px] min-h-[32px]",
             "flex items-center justify-center",
-            "focus:outline-none focus:ring-2 focus:ring-primary-7"
+            "focus:outline-none focus:ring-2 focus:ring-primary-7",
           )}
           aria-label="Open in canvas"
         >

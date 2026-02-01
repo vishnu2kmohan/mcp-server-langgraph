@@ -48,11 +48,7 @@ function TrendIcon({ trend }: { trend: TrendType }) {
     case "decreasing":
       return <TrendingDown className={`${className} text-success-9`} />;
     case "stable":
-      return (
-        <Minus
-          className={`${className} text-neutral-10`}
-        />
-      );
+      return <Minus className={`${className} text-neutral-10`} />;
   }
 }
 
@@ -140,9 +136,7 @@ export function BudgetForecastChart({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-neutral-12">
-          Cost Forecast
-        </h3>
+        <h3 className="text-lg font-semibold text-neutral-12">Cost Forecast</h3>
         <span
           className={`text-sm font-medium px-2 py-1 rounded ${trendStyles.textColor} ${trendStyles.bgColor}`}
         >
@@ -183,7 +177,11 @@ export function BudgetForecastChart({
             className={`h-full transition-all duration-300 ${
               isOverBudget ? "bg-error-9" : "bg-primary-9"
             }`}
-            style={{ '--progress': `${Math.min(projectedPercent, 100)}%` } as React.CSSProperties}
+            style={
+              {
+                "--progress": `${Math.min(projectedPercent, 100)}%`,
+              } as React.CSSProperties
+            }
           />
           {/* Budget limit marker */}
           <div
@@ -196,17 +194,13 @@ export function BudgetForecastChart({
       {/* Projections */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="text-center">
-          <p className="text-xs text-neutral-10 uppercase">
-            Low Estimate
-          </p>
+          <p className="text-xs text-neutral-10 uppercase">Low Estimate</p>
           <p className="text-lg font-semibold text-neutral-11">
             {formatCurrency(forecast.confidenceLow)}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-neutral-10 uppercase">
-            Projected
-          </p>
+          <p className="text-xs text-neutral-10 uppercase">Projected</p>
           <p
             className={`text-2xl font-bold ${
               isOverBudget
@@ -218,9 +212,7 @@ export function BudgetForecastChart({
           </p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-neutral-10 uppercase">
-            High Estimate
-          </p>
+          <p className="text-xs text-neutral-10 uppercase">High Estimate</p>
           <p className="text-lg font-semibold text-neutral-11">
             {formatCurrency(forecast.confidenceHigh)}
           </p>

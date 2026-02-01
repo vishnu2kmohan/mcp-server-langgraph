@@ -105,7 +105,9 @@ export function ExportButton({
         // Download the file
         downloadBlob(result, filename);
 
-        toast.success(`Session exported as ${format.toUpperCase()}`, { id: TOAST_ID_EXPORT });
+        toast.success(`Session exported as ${format.toUpperCase()}`, {
+          id: TOAST_ID_EXPORT,
+        });
         setIsOpen(false);
       } catch {
         toast.error("Failed to export session", { id: TOAST_ID_EXPORT });
@@ -139,7 +141,8 @@ export function ExportButton({
         )}
         aria-label="Export session"
         aria-expanded={isOpen}
-        aria-haspopup="true">
+        aria-haspopup="true"
+      >
         <Download size={16} className={isLoading ? "animate-pulse" : ""} />
         {!compact && <span>Export</span>}
         <ChevronDown
@@ -182,7 +185,8 @@ export function ExportButton({
                   "hover:bg-neutral-2",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
-                role="menuitem">
+                role="menuitem"
+              >
                 <Icon size={16} />
                 <span>{label}</span>
               </Button>
@@ -192,12 +196,7 @@ export function ExportButton({
             <div className="my-1 border-t border-neutral-5" />
 
             {/* Include Metadata Toggle */}
-            <div
-              className={cn(
-                "px-4 py-2",
-                "hover:bg-neutral-2",
-              )}
-            >
+            <div className={cn("px-4 py-2", "hover:bg-neutral-2")}>
               <Checkbox
                 checked={includeMetadata}
                 onChange={setIncludeMetadata}

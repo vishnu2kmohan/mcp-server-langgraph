@@ -129,7 +129,11 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
         <div className="w-full bg-neutral-3 rounded-full h-2">
           <div
             className="bg-primary-9 h-2 rounded-full transition-all"
-            style={{ '--progress': `${(answeredCount / 10) * 100}%` } as React.CSSProperties}
+            style={
+              {
+                "--progress": `${(answeredCount / 10) * 100}%`,
+              } as React.CSSProperties
+            }
           />
         </div>
       </div>
@@ -141,10 +145,7 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
       {/* Questions - scrollable area */}
       <div className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-2">
         {SUS_QUESTIONS.map((question, index) => (
-          <div
-            key={index}
-            className="border-b border-neutral-5 pb-4"
-          >
+          <div key={index} className="border-b border-neutral-5 pb-4">
             <p
               id={`question-${index}`}
               className="text-sm text-neutral-11 mb-3"
@@ -171,16 +172,22 @@ export function SUSSurvey({ onSubmit, onDismiss }: SUSSurveyProps) {
       </div>
       {/* Actions */}
       <div className="flex justify-between mt-4 pt-4 border-t border-neutral-5 flex-shrink-0">
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           className="px-4 py-2 text-sm text-neutral-11 hover:text-neutral-12"
           onClick={onDismiss}
-        >Maybe Later</Button>
-        <Button variant="primary"
+        >
+          Maybe Later
+        </Button>
+        <Button
+          variant="primary"
           size="lg"
           className="px-6 py-2 text-sm rounded-md"
           onClick={handleSubmit}
           disabled={!allAnswered}
-        >Submit</Button>
+        >
+          Submit
+        </Button>
       </div>
     </div>
   );

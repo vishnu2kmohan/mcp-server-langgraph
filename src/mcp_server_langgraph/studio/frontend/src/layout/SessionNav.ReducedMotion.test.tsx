@@ -99,7 +99,7 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <MemoryRouter>
           <SessionNav />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       expect(screen.getByText("Test Session 1")).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <MemoryRouter>
           <SessionNav />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       expect(mockUseReducedMotion).toHaveBeenCalled();
@@ -126,7 +126,7 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <MemoryRouter>
           <SessionNav />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       expect(screen.getByText("Test Session 1")).toBeInTheDocument();
@@ -137,7 +137,7 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <MemoryRouter>
           <SessionNav />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       expect(mockUseReducedMotion).toHaveBeenCalled();
@@ -151,7 +151,7 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <MemoryRouter>
           <SessionNav />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const searchInput = screen.getByPlaceholderText("Search sessions...");
@@ -164,7 +164,7 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       render(
         <MemoryRouter>
           <SessionNav />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       const newChatButton = screen.getByTestId("new-chat-button");

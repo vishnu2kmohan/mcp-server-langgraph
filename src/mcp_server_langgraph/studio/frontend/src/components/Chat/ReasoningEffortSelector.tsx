@@ -172,13 +172,9 @@ export function ReasoningEffortSelector({
           className="text-insight-10 dark:text-insight-11"
           data-testid="brain-icon"
         />
-        <span className="text-xs font-medium text-neutral-11">
-          Thinking
-        </span>
+        <span className="text-xs font-medium text-neutral-11">Thinking</span>
         {modelName && (
-          <span className="text-xs text-neutral-9">
-            ({modelName})
-          </span>
+          <span className="text-xs text-neutral-9">({modelName})</span>
         )}
         {!modelSupportsThinking && (
           <span className="text-xs text-warning-9 dark:text-warning-9">
@@ -203,7 +199,8 @@ export function ReasoningEffortSelector({
               onKeyDown={(e) => handleKeyDown(e, level.value)}
               disabled={isDisabled}
               title={level.tooltip}
-              aria-pressed={isSelected}>
+              aria-pressed={isSelected}
+            >
               {compact ? level.shortLabel : level.label}
             </Button>
           );
@@ -211,10 +208,7 @@ export function ReasoningEffortSelector({
       </div>
       {/* Description */}
       {showDescription && selectedLevel && (
-        <p
-          data-testid="effort-description"
-          className="text-xs text-neutral-10"
-        >
+        <p data-testid="effort-description" className="text-xs text-neutral-10">
           {selectedLevel.description}
         </p>
       )}

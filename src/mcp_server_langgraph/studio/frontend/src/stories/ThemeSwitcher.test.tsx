@@ -10,8 +10,13 @@
  * @see docs-internal/frontend/STYLE.md#dark-mode-architecture
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { render, screen, within as _within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  render,
+  screen,
+  within as _within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // Import story components for testing
@@ -21,7 +26,9 @@ import * as ThemeSwitcherStories from "./ThemeSwitcher.stories";
 describe("ThemeSwitcher Stories", () => {
   describe("DarkVsLight - Side-by-Side Comparison", () => {
     it("should render both light and dark mode panels", () => {
-      const { container: _container } = render(<ThemeSwitcherStories.DarkVsLight.render />);
+      const { container: _container } = render(
+        <ThemeSwitcherStories.DarkVsLight.render />,
+      );
 
       // Both panels should be present
       expect(screen.getByText("Light Mode")).toBeInTheDocument();
@@ -37,7 +44,9 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should have different background colors for light vs dark panels", () => {
-      const { container: _container } = render(<ThemeSwitcherStories.DarkVsLight.render />);
+      const { container: _container } = render(
+        <ThemeSwitcherStories.DarkVsLight.render />,
+      );
 
       const lightPanel = screen.getByText("Light Mode").closest("div");
       const darkPanel = screen.getByText("Dark Mode").closest("div");
@@ -90,6 +99,8 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     afterEach(() => {
+      cleanup();
+      vi.clearAllMocks();
       // Restore original document state
       document.documentElement.classList.remove("dark", "light");
       Object.keys(document.documentElement.dataset).forEach((key) => {
@@ -102,10 +113,12 @@ describe("ThemeSwitcher Stories", () => {
       render(<ThemeSwitcherStories.Interactive.render />);
 
       expect(screen.getByText("Appearance")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /Light/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Light/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Dark/i })).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /System/i })
+        screen.getByRole("button", { name: /System/i }),
       ).toBeInTheDocument();
     });
 
@@ -114,10 +127,10 @@ describe("ThemeSwitcher Stories", () => {
 
       expect(screen.getByText("Color Theme")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Violet \+ Sage/i })
+        screen.getByRole("button", { name: /Violet \+ Sage/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Teal \+ Sage/i })
+        screen.getByRole("button", { name: /Teal \+ Sage/i }),
       ).toBeInTheDocument();
     });
 
@@ -126,10 +139,10 @@ describe("ThemeSwitcher Stories", () => {
 
       expect(screen.getByText("Code Font")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /JetBrains Mono/i })
+        screen.getByRole("button", { name: /JetBrains Mono/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Fira Code/i })
+        screen.getByRole("button", { name: /Fira Code/i }),
       ).toBeInTheDocument();
     });
 
@@ -193,16 +206,16 @@ describe("ThemeSwitcher Stories", () => {
       const { container } = render(<ThemeSwitcherStories.Comparison.render />);
 
       const violetSagePanel = container.querySelector(
-        '[data-color-theme="violet-sage"]'
+        '[data-color-theme="violet-sage"]',
       );
       const tealSagePanel = container.querySelector(
-        '[data-color-theme="teal-sage"]'
+        '[data-color-theme="teal-sage"]',
       );
       const violetOlivePanel = container.querySelector(
-        '[data-color-theme="violet-olive"]'
+        '[data-color-theme="violet-olive"]',
       );
       const tealOlivePanel = container.querySelector(
-        '[data-color-theme="teal-olive"]'
+        '[data-color-theme="teal-olive"]',
       );
 
       expect(violetSagePanel).toBeInTheDocument();
@@ -252,7 +265,7 @@ describe("Theme CSS Variable Scoping", () => {
         <div className="dark" data-testid="dark-container">
           <div className="bg-neutral-1" data-testid="dark-bg" />
         </div>
-      </div>
+      </div>,
     );
 
     const lightContainer = screen.getByTestId("light-container");

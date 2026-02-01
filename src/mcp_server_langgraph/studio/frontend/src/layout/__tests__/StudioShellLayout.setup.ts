@@ -591,8 +591,9 @@ export const mockImplementations = {
       reducerPath: "api",
       reducer: (state = {}) => state,
       // RTK Query middleware is a function: store => next => action => result
-      middleware:
-        (() => (next: (action: unknown) => unknown) => (action: unknown) =>
+      middleware: (() =>
+        (next: (action: unknown) => unknown) =>
+        (action: unknown) =>
           next(action)) as unknown,
     },
   },

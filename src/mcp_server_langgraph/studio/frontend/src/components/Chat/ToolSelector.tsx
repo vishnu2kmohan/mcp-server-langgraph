@@ -67,9 +67,21 @@ export interface ToolSelectorProps {
 // Constants
 // =============================================================================
 
-const MODE_OPTIONS: { value: ToolSelectionMode; label: string; description: string }[] = [
-  { value: "auto", label: "Auto", description: "Semantic search selects tools" },
-  { value: "manual", label: "Manual", description: "You choose which tools to use" },
+const MODE_OPTIONS: {
+  value: ToolSelectionMode;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "auto",
+    label: "Auto",
+    description: "Semantic search selects tools",
+  },
+  {
+    value: "manual",
+    label: "Manual",
+    description: "You choose which tools to use",
+  },
   { value: "none", label: "None", description: "No tools available" },
 ];
 
@@ -113,7 +125,7 @@ export function ToolSelector({
         tool.name.toLowerCase().includes(term) ||
         tool.displayName.toLowerCase().includes(term) ||
         (tool.description && tool.description.toLowerCase().includes(term)) ||
-        (tool.serverName && tool.serverName.toLowerCase().includes(term))
+        (tool.serverName && tool.serverName.toLowerCase().includes(term)),
     );
   }, [availableTools, searchTerm]);
 
@@ -204,7 +216,7 @@ export function ToolSelector({
         onSelectionChange([]);
       }
     },
-    [onModeChange, onSelectionChange]
+    [onModeChange, onSelectionChange],
   );
 
   // Handle tool toggle (v7: uses toolId for unique identification)
@@ -215,7 +227,7 @@ export function ToolSelector({
         : [...selectedTools, toolId];
       onSelectionChange(newSelection);
     },
-    [selectedTools, onSelectionChange]
+    [selectedTools, onSelectionChange],
   );
 
   return (
@@ -236,7 +248,7 @@ export function ToolSelector({
           "text-neutral-12 transition-colors duration-200",
           "focus:outline-none focus:ring-2 focus:ring-primary-8 focus:ring-offset-1",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          compact ? "text-xs" : "text-sm"
+          compact ? "text-xs" : "text-sm",
         )}
       >
         {isLoading ? (
@@ -251,7 +263,7 @@ export function ToolSelector({
         <ChevronDown
           className={cn(
             "h-3.5 w-3.5 transition-transform duration-200",
-            isOpen && "rotate-180"
+            isOpen && "rotate-180",
           )}
         />
       </button>
@@ -265,7 +277,7 @@ export function ToolSelector({
             "absolute left-0 top-full mt-1 z-dropdown",
             "w-72 max-h-96 overflow-y-auto",
             "bg-neutral-1 border border-neutral-6 rounded-lg shadow-lg",
-            "animate-in fade-in-0 zoom-in-95 duration-150"
+            "animate-in fade-in-0 zoom-in-95 duration-150",
           )}
         >
           {/* Mode Selector */}
@@ -288,7 +300,7 @@ export function ToolSelector({
                     "transition-colors duration-150",
                     mode === option.value
                       ? "bg-primary-9 text-neutral-12"
-                      : "bg-neutral-3 text-neutral-11 hover:bg-neutral-4"
+                      : "bg-neutral-3 text-neutral-11 hover:bg-neutral-4",
                   )}
                 >
                   {option.label}
@@ -314,8 +326,9 @@ export function ToolSelector({
                       "w-full pl-8 pr-3 py-1.5 text-sm",
                       "bg-neutral-2 border border-neutral-6 rounded",
                       "text-neutral-12 placeholder:text-neutral-9",
-                      "focus:outline-none focus:ring-1 focus:ring-primary-8"
-                    )} />
+                      "focus:outline-none focus:ring-1 focus:ring-primary-8",
+                    )}
+                  />
                 </div>
               </div>
 
@@ -345,38 +358,42 @@ export function ToolSelector({
                     )}
 
                     {/* Native Tools by Provider (v7) */}
-                    {Object.entries(groupedTools.native).map(([provider, tools]) => (
-                      <div key={`native-${provider}`} className="mb-3">
-                        <div className="text-xs font-medium text-neutral-9 mb-1 px-1 capitalize">
-                          {provider} Native
+                    {Object.entries(groupedTools.native).map(
+                      ([provider, tools]) => (
+                        <div key={`native-${provider}`} className="mb-3">
+                          <div className="text-xs font-medium text-neutral-9 mb-1 px-1 capitalize">
+                            {provider} Native
+                          </div>
+                          {tools.map((tool) => (
+                            <ToolCheckboxItem
+                              key={tool.toolId}
+                              tool={tool}
+                              isSelected={selectedTools.includes(tool.toolId)}
+                              onToggle={() => handleToolToggle(tool.toolId)}
+                            />
+                          ))}
                         </div>
-                        {tools.map((tool) => (
-                          <ToolCheckboxItem
-                            key={tool.toolId}
-                            tool={tool}
-                            isSelected={selectedTools.includes(tool.toolId)}
-                            onToggle={() => handleToolToggle(tool.toolId)}
-                          />
-                        ))}
-                      </div>
-                    ))}
+                      ),
+                    )}
 
                     {/* MCP Tools by Server */}
-                    {Object.entries(groupedTools.mcp).map(([serverName, tools]) => (
-                      <div key={serverName} className="mb-3">
-                        <div className="text-xs font-medium text-neutral-9 mb-1 px-1 capitalize">
-                          {serverName}
+                    {Object.entries(groupedTools.mcp).map(
+                      ([serverName, tools]) => (
+                        <div key={serverName} className="mb-3">
+                          <div className="text-xs font-medium text-neutral-9 mb-1 px-1 capitalize">
+                            {serverName}
+                          </div>
+                          {tools.map((tool) => (
+                            <ToolCheckboxItem
+                              key={tool.toolId}
+                              tool={tool}
+                              isSelected={selectedTools.includes(tool.toolId)}
+                              onToggle={() => handleToolToggle(tool.toolId)}
+                            />
+                          ))}
                         </div>
-                        {tools.map((tool) => (
-                          <ToolCheckboxItem
-                            key={tool.toolId}
-                            tool={tool}
-                            isSelected={selectedTools.includes(tool.toolId)}
-                            onToggle={() => handleToolToggle(tool.toolId)}
-                          />
-                        ))}
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </>
                 )}
               </div>
@@ -388,12 +405,14 @@ export function ToolSelector({
             <div className="p-3 text-sm text-neutral-11">
               {mode === "auto" && (
                 <p>
-                  Tools are automatically selected based on your message content.
+                  Tools are automatically selected based on your message
+                  content.
                 </p>
               )}
               {mode === "none" && (
                 <p>
-                  No tools will be used. The AI will respond without tool access.
+                  No tools will be used. The AI will respond without tool
+                  access.
                 </p>
               )}
             </div>
@@ -414,12 +433,16 @@ interface ToolCheckboxItemProps {
   onToggle: () => void;
 }
 
-function ToolCheckboxItem({ tool, isSelected, onToggle }: ToolCheckboxItemProps) {
+function ToolCheckboxItem({
+  tool,
+  isSelected,
+  onToggle,
+}: ToolCheckboxItemProps) {
   return (
     <label
       className={cn(
         "flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer",
-        "hover:bg-neutral-3 transition-colors duration-150"
+        "hover:bg-neutral-3 transition-colors duration-150",
       )}
     >
       <input
@@ -429,7 +452,7 @@ function ToolCheckboxItem({ tool, isSelected, onToggle }: ToolCheckboxItemProps)
         aria-label={tool.displayName}
         className={cn(
           "h-3.5 w-3.5 rounded border-neutral-6",
-          "text-primary-9 focus:ring-primary-8 focus:ring-offset-0"
+          "text-primary-9 focus:ring-primary-8 focus:ring-offset-0",
         )}
       />
       <div className="flex-1 min-w-0">
@@ -437,7 +460,9 @@ function ToolCheckboxItem({ tool, isSelected, onToggle }: ToolCheckboxItemProps)
           {tool.displayName}
         </div>
         {tool.description && (
-          <div className="text-xs text-neutral-9 truncate">{tool.description}</div>
+          <div className="text-xs text-neutral-9 truncate">
+            {tool.description}
+          </div>
         )}
       </div>
     </label>

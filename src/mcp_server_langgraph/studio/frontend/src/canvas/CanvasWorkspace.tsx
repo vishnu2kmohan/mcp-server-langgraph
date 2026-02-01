@@ -83,7 +83,6 @@ export interface CanvasWorkspaceProps {
   enableAI?: boolean;
 }
 
-
 // =============================================================================
 // Component
 // =============================================================================
@@ -316,10 +315,7 @@ export function CanvasWorkspace({
           className,
         )}
       >
-        <FileCode2
-          size={48}
-          className="text-neutral-11 mb-4"
-        />
+        <FileCode2 size={48} className="text-neutral-11 mb-4" />
         <p className="text-neutral-11">No artifacts</p>
         <p className="text-sm text-neutral-11">
           Artifacts will appear here when generated
@@ -382,7 +378,8 @@ export function CanvasWorkspace({
                           "bg-primary-3 text-primary-11 hover:bg-primary-4",
                           "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                           "transition-colors",
-                        )}>
+                        )}
+                      >
                         <Sparkles size={12} aria-hidden="true" />
                         Analyze
                       </Button>
@@ -464,7 +461,8 @@ export function CanvasWorkspace({
                           "bg-primary-3 text-primary-11 hover:bg-primary-4",
                           "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                           "transition-colors",
-                        )}>
+                        )}
+                      >
                         <Sparkles size={12} aria-hidden="true" />
                         Validate
                       </Button>

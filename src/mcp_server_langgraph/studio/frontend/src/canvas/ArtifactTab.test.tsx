@@ -3,8 +3,8 @@
  *
  * TDD: Tests written first to define expected behavior
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArtifactTab } from "./ArtifactTab";
 import type { CanvasArtifact } from "../types/artifacts";
@@ -46,6 +46,11 @@ const mockArtifact: CanvasArtifact = {
     lastEditedBy: "ai",
   },
 };
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ArtifactTab", () => {
   const defaultProps = {

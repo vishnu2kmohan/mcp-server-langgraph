@@ -122,10 +122,7 @@ function matchesSearch<T>(
 /**
  * Check if item matches all active filters
  */
-function matchesFilters<T>(
-  item: T,
-  filters: Record<string, string>,
-): boolean {
+function matchesFilters<T>(item: T, filters: Record<string, string>): boolean {
   const filterEntries = Object.entries(filters);
   if (filterEntries.length === 0) return true;
 
@@ -243,7 +240,14 @@ export function useTabFiltering<T>(
 
       return true;
     });
-  }, [data, timeline?.timeWindow, timestampKey, filters, debouncedSearchTerm, searchFields]);
+  }, [
+    data,
+    timeline?.timeWindow,
+    timestampKey,
+    filters,
+    debouncedSearchTerm,
+    searchFields,
+  ]);
 
   // ---------------------------------------------------------------------------
   // Return

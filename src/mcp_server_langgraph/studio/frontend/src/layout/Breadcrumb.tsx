@@ -60,10 +60,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
           >
             {/* Separator (except for first item) */}
             {index > 0 && (
-              <span
-                className="text-neutral-9"
-                aria-hidden="true"
-              >
+              <span className="text-neutral-9" aria-hidden="true">
                 /
               </span>
             )}

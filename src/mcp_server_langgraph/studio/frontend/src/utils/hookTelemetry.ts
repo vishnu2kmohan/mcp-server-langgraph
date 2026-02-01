@@ -99,7 +99,10 @@ export interface HookTelemetry {
    * Log a graceful degradation event.
    * Use when the hook falls back to a safe default due to missing data or errors.
    */
-  logDegradation: (reason: DegradationReason, context: Record<string, unknown>) => void;
+  logDegradation: (
+    reason: DegradationReason,
+    context: Record<string, unknown>,
+  ) => void;
 
   /**
    * Log a retry attempt.
@@ -156,7 +159,7 @@ export interface HookTelemetry {
  */
 export function createHookTelemetry(
   hookName: string,
-  options: HookTelemetryOptions = {}
+  options: HookTelemetryOptions = {},
 ): HookTelemetry {
   const { maxEvents = 100 } = options;
   const logger = devLogger.withPrefix(`[${hookName}]`);
@@ -178,7 +181,10 @@ export function createHookTelemetry(
   };
 
   return {
-    logDegradation(reason: DegradationReason, context: Record<string, unknown>) {
+    logDegradation(
+      reason: DegradationReason,
+      context: Record<string, unknown>,
+    ) {
       logger.debug("Graceful degradation", {
         reason,
         ...context,
@@ -296,12 +302,12 @@ export function createHookTelemetry(
  */
 export function useHookTelemetry(
   hookName: string,
-  options: HookTelemetryOptions = {}
+  options: HookTelemetryOptions = {},
 ): HookTelemetry {
   // Create stable telemetry instance
   return useMemo(
     () => createHookTelemetry(hookName, options),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hookName] // Only recreate if hookName changes
+    [hookName], // Only recreate if hookName changes
   );
 }

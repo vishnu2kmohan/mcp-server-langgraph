@@ -268,9 +268,7 @@ export function UserMenuDropdown({
         <p className="text-sm font-medium text-neutral-12 truncate">
           {username || "Unknown User"}
         </p>
-        <p className="text-xs text-neutral-10 capitalize">
-          {currentPersona}
-        </p>
+        <p className="text-xs text-neutral-10 capitalize">{currentPersona}</p>
       </div>
       {/* Persona switcher */}
       <div className="py-1 border-b border-neutral-5">
@@ -284,7 +282,8 @@ export function UserMenuDropdown({
             "text-neutral-11",
             "hover:bg-neutral-2",
           )}
-          role="menuitem">
+          role="menuitem"
+        >
           <span className="flex items-center gap-2">
             <Users size={16} />
             Switch Persona
@@ -314,7 +313,8 @@ export function UserMenuDropdown({
                   option.id === currentPersona &&
                     "text-primary-10 dark:text-primary-7 font-medium",
                 )}
-                role="menuitem">
+                role="menuitem"
+              >
                 {option.label}
               </Button>
             ))}
@@ -336,7 +336,8 @@ export function UserMenuDropdown({
                 ? "text-error-10 dark:text-error-7 hover:bg-error-1 dark:hover:bg-error-a3"
                 : "text-neutral-11 hover:bg-neutral-2",
             )}
-            role="menuitem">
+            role="menuitem"
+          >
             {item.icon}
             {item.label}
           </Button>

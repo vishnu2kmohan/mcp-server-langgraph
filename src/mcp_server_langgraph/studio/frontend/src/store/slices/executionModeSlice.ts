@@ -72,7 +72,12 @@ export interface ExecutionPlan {
   /** Session this plan belongs to */
   sessionId: string;
   /** Current plan status */
-  status: "awaiting_approval" | "approved" | "rejected" | "executed" | "expired";
+  status:
+    | "awaiting_approval"
+    | "approved"
+    | "rejected"
+    | "executed"
+    | "expired";
 
   // Classification
   /** Task complexity level */

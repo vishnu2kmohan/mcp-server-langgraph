@@ -85,7 +85,8 @@ function TemplateChip({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-pressed={isSelected}>
+      aria-pressed={isSelected}
+    >
       {template.name}
     </Button>
   );
@@ -101,16 +102,12 @@ function TemplatePreview({
   return (
     <div className="mt-3 p-3 bg-neutral-1 rounded-lg border border-neutral-5">
       {!compact && (
-        <p className="text-sm text-neutral-11 mb-3">
-          {template.description}
-        </p>
+        <p className="text-sm text-neutral-11 mb-3">{template.description}</p>
       )}
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="flex items-center gap-1.5">
-          <span className="text-neutral-10">
-            Orchestrator:
-          </span>
+          <span className="text-neutral-10">Orchestrator:</span>
           <span className="font-medium text-neutral-12">
             {template.orchestrator}
           </span>
@@ -118,9 +115,7 @@ function TemplatePreview({
 
         <div className="flex items-center gap-1.5">
           <Brain className="w-3 h-3 text-neutral-9" />
-          <span className="text-neutral-10">
-            Thinking:
-          </span>
+          <span className="text-neutral-10">Thinking:</span>
           <span className="font-medium text-neutral-12">
             {template.thinkingBudget}
           </span>
@@ -128,9 +123,7 @@ function TemplatePreview({
 
         <div className="flex items-center gap-1.5">
           <MessageSquare className="w-3 h-3 text-neutral-9" />
-          <span className="text-neutral-10">
-            Critique:
-          </span>
+          <span className="text-neutral-10">Critique:</span>
           <span className="font-medium text-neutral-12">
             {template.critiqueRounds} rounds
           </span>
@@ -138,9 +131,7 @@ function TemplatePreview({
 
         <div className="flex items-center gap-1.5">
           <CheckCircle className="w-3 h-3 text-neutral-9" />
-          <span className="text-neutral-10">
-            Success:
-          </span>
+          <span className="text-neutral-10">Success:</span>
           <span className="font-medium text-success-10 dark:text-success-7">
             {Math.round(template.successRate * 100)}%
           </span>
@@ -211,7 +202,9 @@ export function TemplateSelector({
           </span>
         </div>
 
-        <Button size="icon" variant="ghost"
+        <Button
+          size="icon"
+          variant="ghost"
           className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
           type="button"
           onClick={onDismiss}

@@ -242,26 +242,32 @@ describe("useFormValidation", () => {
 
   describe("validation mode", () => {
     it("supports onBlur validation mode (default)", () => {
-      const { result } = renderHook(() => useFormValidation({ mode: "onBlur" }));
+      const { result } = renderHook(() =>
+        useFormValidation({ mode: "onBlur" }),
+      );
 
       expect(result.current.mode).toBe("onBlur");
     });
 
     it("supports onChange validation mode", () => {
-      const { result } = renderHook(() => useFormValidation({ mode: "onChange" }));
+      const { result } = renderHook(() =>
+        useFormValidation({ mode: "onChange" }),
+      );
 
       expect(result.current.mode).toBe("onChange");
     });
 
     it("supports onSubmit validation mode", () => {
-      const { result } = renderHook(() => useFormValidation({ mode: "onSubmit" }));
+      const { result } = renderHook(() =>
+        useFormValidation({ mode: "onSubmit" }),
+      );
 
       expect(result.current.mode).toBe("onSubmit");
     });
 
     it("supports revalidateOnChange option", () => {
       const { result } = renderHook(() =>
-        useFormValidation({ mode: "onBlur", revalidateOnChange: true })
+        useFormValidation({ mode: "onBlur", revalidateOnChange: true }),
       );
 
       expect(result.current.revalidateOnChange).toBe(true);

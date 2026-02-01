@@ -224,7 +224,9 @@ vi.mock("../store/slices/chatConnectionSlice", () => ({
 vi.mock("../store/slices/executionModeSlice", () => ({
   selectExecutionMode: () => "default",
   selectCanBypass: () => false,
-  cycleExecutionMode: vi.fn(() => ({ type: "executionMode/cycleExecutionMode" })),
+  cycleExecutionMode: vi.fn(() => ({
+    type: "executionMode/cycleExecutionMode",
+  })),
   setExecutionMode: vi.fn((mode: string) => ({
     type: "executionMode/setExecutionMode",
     payload: mode,
@@ -266,7 +268,9 @@ vi.mock("../contexts/TelemetryContext", () => ({
     getHistory: vi.fn(),
     reset: vi.fn(),
   }),
-  TelemetryProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 // =============================================================================
@@ -746,9 +750,7 @@ describe("ConnectedChatInputForm", () => {
     });
 
     it("should pass submitOnEnter=true from uiSlice (ChatGPT style)", () => {
-      mockIsEnabled.mockImplementation(
-        () => false,
-      );
+      mockIsEnabled.mockImplementation(() => false);
       mockSubmitOnEnter.current = true;
 
       render(<ConnectedChatInputForm {...defaultProps} value="Hello" />);
@@ -759,9 +761,7 @@ describe("ConnectedChatInputForm", () => {
     });
 
     it("should pass submitOnEnter=false from uiSlice (Legacy style)", () => {
-      mockIsEnabled.mockImplementation(
-        () => false,
-      );
+      mockIsEnabled.mockImplementation(() => false);
       mockSubmitOnEnter.current = false;
 
       render(<ConnectedChatInputForm {...defaultProps} value="Hello" />);
@@ -772,9 +772,7 @@ describe("ConnectedChatInputForm", () => {
     });
 
     it("should preserve voice input integration in RichText mode", () => {
-      mockIsEnabled.mockImplementation(
-        () => false,
-      );
+      mockIsEnabled.mockImplementation(() => false);
       mockVoiceInputReturn.isSupported = true;
 
       render(<ConnectedChatInputForm {...defaultProps} />);
@@ -786,9 +784,7 @@ describe("ConnectedChatInputForm", () => {
     });
 
     it("should preserve file upload integration in RichText mode", () => {
-      mockIsEnabled.mockImplementation(
-        () => false,
-      );
+      mockIsEnabled.mockImplementation(() => false);
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
@@ -799,9 +795,7 @@ describe("ConnectedChatInputForm", () => {
     });
 
     it("should preserve slash commands in RichText mode", () => {
-      mockIsEnabled.mockImplementation(
-        () => false,
-      );
+      mockIsEnabled.mockImplementation(() => false);
 
       render(<ConnectedChatInputForm {...defaultProps} value="/" />);
 
@@ -952,7 +946,9 @@ describe("ConnectedChatInputForm", () => {
         <ConnectedChatInputForm {...defaultProps} showModelSelector={false} />,
       );
 
-      expect(screen.queryByTestId("model-settings-button")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("model-settings-button"),
+      ).not.toBeInTheDocument();
     });
 
     it("should display selected model in selector", () => {
@@ -995,7 +991,9 @@ describe("ConnectedChatInputForm", () => {
     it("should default showModelSelector to false when not provided", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      expect(screen.queryByTestId("model-settings-button")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("model-settings-button"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -1005,9 +1003,7 @@ describe("ConnectedChatInputForm", () => {
 
   describe("Reasoning Effort", () => {
     beforeEach(() => {
-      mockIsEnabled.mockImplementation(
-        () => false,
-      );
+      mockIsEnabled.mockImplementation(() => false);
     });
 
     it("should pass reasoning effort props when model supports thinking", async () => {
@@ -1018,7 +1014,12 @@ describe("ConnectedChatInputForm", () => {
           {...defaultProps}
           showModelSelector={true}
           availableModels={[
-            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+            {
+              id: "test-model",
+              name: "Test Model",
+              provider: "test",
+              supportsThinking: true,
+            },
           ]}
           selectedModel="test-model"
           modelSupportsThinking={true}
@@ -1032,9 +1033,7 @@ describe("ConnectedChatInputForm", () => {
       await user.click(screen.getByTestId("model-settings-button"));
 
       // Thinking controls should be visible when model supports thinking
-      expect(
-        screen.getByTestId("thinking-controls"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("thinking-controls")).toBeInTheDocument();
     });
 
     it("should hide thinking controls when model does not support thinking", async () => {
@@ -1044,7 +1043,12 @@ describe("ConnectedChatInputForm", () => {
           {...defaultProps}
           showModelSelector={true}
           availableModels={[
-            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: false },
+            {
+              id: "test-model",
+              name: "Test Model",
+              provider: "test",
+              supportsThinking: false,
+            },
           ]}
           selectedModel="test-model"
           modelSupportsThinking={false}
@@ -1054,9 +1058,7 @@ describe("ConnectedChatInputForm", () => {
       // Open model dropdown
       await user.click(screen.getByTestId("model-settings-button"));
 
-      expect(
-        screen.queryByTestId("thinking-controls"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("thinking-controls")).not.toBeInTheDocument();
     });
 
     it("should call onReasoningEffortChange when effort level changes", async () => {
@@ -1068,7 +1070,12 @@ describe("ConnectedChatInputForm", () => {
           {...defaultProps}
           showModelSelector={true}
           availableModels={[
-            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+            {
+              id: "test-model",
+              name: "Test Model",
+              provider: "test",
+              supportsThinking: true,
+            },
           ]}
           selectedModel="test-model"
           modelSupportsThinking={true}
@@ -1096,7 +1103,12 @@ describe("ConnectedChatInputForm", () => {
           {...defaultProps}
           showModelSelector={true}
           availableModels={[
-            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+            {
+              id: "test-model",
+              name: "Test Model",
+              provider: "test",
+              supportsThinking: true,
+            },
           ]}
           selectedModel="test-model"
           modelSupportsThinking={true}
@@ -1122,7 +1134,12 @@ describe("ConnectedChatInputForm", () => {
           {...defaultProps}
           showModelSelector={true}
           availableModels={[
-            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: true },
+            {
+              id: "test-model",
+              name: "Test Model",
+              provider: "test",
+              supportsThinking: true,
+            },
           ]}
           selectedModel="test-model"
           modelSupportsThinking={true}
@@ -1147,7 +1164,12 @@ describe("ConnectedChatInputForm", () => {
           {...defaultProps}
           showModelSelector={true}
           availableModels={[
-            { id: "test-model", name: "Test Model", provider: "test", supportsThinking: false },
+            {
+              id: "test-model",
+              name: "Test Model",
+              provider: "test",
+              supportsThinking: false,
+            },
           ]}
           selectedModel="test-model"
         />,
@@ -1156,9 +1178,7 @@ describe("ConnectedChatInputForm", () => {
       // Open model dropdown
       await user.click(screen.getByTestId("model-settings-button"));
 
-      expect(
-        screen.queryByTestId("thinking-controls"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("thinking-controls")).not.toBeInTheDocument();
     });
   });
 
@@ -1168,9 +1188,7 @@ describe("ConnectedChatInputForm", () => {
 
   describe("URL Fetch Integration", () => {
     beforeEach(() => {
-      mockIsEnabled.mockImplementation(
-        () => false,
-      );
+      mockIsEnabled.mockImplementation(() => false);
     });
 
     it("should enable URL fetch when enableUrlFetch is true", () => {
@@ -1201,9 +1219,7 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      expect(
-        screen.queryByTestId("url-fetch-loading"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("url-fetch-loading")).not.toBeInTheDocument();
     });
 
     it("should show loading state while URL is being fetched", () => {
@@ -1259,9 +1275,7 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      expect(
-        screen.queryByTestId("url-fetch-loading"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("url-fetch-loading")).not.toBeInTheDocument();
     });
   });
 
@@ -1271,7 +1285,9 @@ describe("ConnectedChatInputForm", () => {
 
   describe("Preferences Menu Integration", () => {
     const enablePreferencesMenuFlags = () => {
-      mockIsEnabled.mockImplementation((flag: string) => flag === "preferences_menu");
+      mockIsEnabled.mockImplementation(
+        (flag: string) => flag === "preferences_menu",
+      );
     };
 
     it("should call useFeatureFlag with preferences_menu flag", () => {
@@ -1300,8 +1316,9 @@ describe("ConnectedChatInputForm", () => {
 
     it("should hide ToolSelector when PreferencesMenu is shown", () => {
       // Enable both preferences_menu and manual_tool_selection
-      mockIsEnabled.mockImplementation((flag: string) =>
-        flag === "preferences_menu" || flag === "manual_tool_selection"
+      mockIsEnabled.mockImplementation(
+        (flag: string) =>
+          flag === "preferences_menu" || flag === "manual_tool_selection",
       );
 
       render(<ConnectedChatInputForm {...defaultProps} />);
@@ -1314,8 +1331,8 @@ describe("ConnectedChatInputForm", () => {
 
     it("should hide KB Focus selector when PreferencesMenu is shown", () => {
       // Enable both preferences_menu and kb_focus
-      mockIsEnabled.mockImplementation((flag: string) =>
-        flag === "preferences_menu" || flag === "kb_focus"
+      mockIsEnabled.mockImplementation(
+        (flag: string) => flag === "preferences_menu" || flag === "kb_focus",
       );
 
       render(<ConnectedChatInputForm {...defaultProps} />);

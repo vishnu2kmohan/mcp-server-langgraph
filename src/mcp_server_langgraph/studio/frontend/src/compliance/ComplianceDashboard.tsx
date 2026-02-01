@@ -128,9 +128,7 @@ function FrameworkCard({ name, icon, summary }: FrameworkCardProps) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="font-semibold text-neutral-12">
-            {name}
-          </h3>
+          <h3 className="font-semibold text-neutral-12">{name}</h3>
         </div>
         {getStatusIcon(summary.status)}
       </div>
@@ -194,7 +192,10 @@ export function ComplianceDashboard({
     return (
       <div data-testid="compliance-dashboard" className={cn("p-6", className)}>
         <div className="flex items-center gap-2 text-neutral-10">
-          <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
+          <Loader2
+            size={16}
+            className={cn(!prefersReducedMotion && "animate-spin")}
+          />
           <span>Loading compliance data...</span>
         </div>
       </div>
@@ -212,13 +213,8 @@ export function ComplianceDashboard({
           className,
         )}
       >
-        <LayoutDashboard
-          size={32}
-          className="mx-auto mb-3 text-neutral-9"
-        />
-        <p className="text-neutral-10">
-          No compliance data available
-        </p>
+        <LayoutDashboard size={32} className="mx-auto mb-3 text-neutral-9" />
+        <p className="text-neutral-10">No compliance data available</p>
       </div>
     );
   }

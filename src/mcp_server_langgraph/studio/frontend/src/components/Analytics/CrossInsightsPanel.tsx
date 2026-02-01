@@ -142,7 +142,8 @@ export function CrossInsightsPanel({
             variant="primary"
             className="flex text-neutral-11 hover:text-neutral-12 dark:hover:text-neutral-12"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            aria-label="Toggle insights panel">
+            aria-label="Toggle insights panel"
+          >
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4" />
             ) : (
@@ -168,7 +169,9 @@ export function CrossInsightsPanel({
 
         {/* Dismiss button */}
         {onDismiss && (
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="text-neutral-9 hover:text-neutral-11"
             onClick={onDismiss}
             aria-label="Dismiss insights panel"
@@ -186,7 +189,12 @@ export function CrossInsightsPanel({
               className="flex items-center justify-center py-8"
               data-testid="insights-loading"
             >
-              <Loader2 className={cn("w-6 h-6 text-primary-9", !prefersReducedMotion && "animate-spin")} />
+              <Loader2
+                className={cn(
+                  "w-6 h-6 text-primary-9",
+                  !prefersReducedMotion && "animate-spin",
+                )}
+              />
               <span className="ml-2 text-sm text-neutral-10">
                 Analyzing patterns...
               </span>

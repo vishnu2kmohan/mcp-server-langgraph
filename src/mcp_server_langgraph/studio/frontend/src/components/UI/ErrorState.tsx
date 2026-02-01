@@ -71,12 +71,8 @@ export function ErrorState({
       className={cn(errorStateVariants({ variant }), className)}
     >
       <AlertCircle size={48} className="text-error-9 mb-4" />
-      <h3 className="text-lg font-medium text-neutral-12 mb-2">
-        {title}
-      </h3>
-      <p className="text-neutral-10 mb-4 max-w-md">
-        {message}
-      </p>
+      <h3 className="text-lg font-medium text-neutral-12 mb-2">{title}</h3>
+      <p className="text-neutral-10 mb-4 max-w-md">{message}</p>
       {onRetry && (
         <Button
           variant="primary"

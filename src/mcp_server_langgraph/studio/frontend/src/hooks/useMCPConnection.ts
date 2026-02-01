@@ -302,7 +302,9 @@ export function useMCPConnection(
           .then((result) => {
             if (!isMountedRef.current) return;
             // Transform snake_case response to camelCase (e.g., input_schema -> inputSchema)
-            const transformed = transformSnakeToCamel(result as { tools: unknown[] });
+            const transformed = transformSnakeToCamel(
+              result as { tools: unknown[] },
+            );
             setTools((transformed.tools || []) as Tool[]);
           })
           .catch(() => {

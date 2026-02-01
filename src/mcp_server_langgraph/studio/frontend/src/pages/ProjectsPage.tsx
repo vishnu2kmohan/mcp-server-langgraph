@@ -336,12 +336,8 @@ export function ProjectsPage() {
     return (
       <div className="h-full p-6 bg-neutral-1">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-neutral-12">
-            Projects
-          </h1>
-          <p className="text-sm text-neutral-11">
-            Loading your projects...
-          </p>
+          <h1 className="text-2xl font-bold text-neutral-12">Projects</h1>
+          <p className="text-sm text-neutral-11">Loading your projects...</p>
         </div>
         <SkeletonList items={5} />
       </div>
@@ -369,12 +365,8 @@ export function ProjectsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FolderKanban className="w-6 h-6 text-primary-11" />
-            <h1 className="text-xl font-semibold text-neutral-12">
-              Projects
-            </h1>
-            <span className="text-sm text-neutral-11">
-              ({total})
-            </span>
+            <h1 className="text-xl font-semibold text-neutral-12">Projects</h1>
+            <span className="text-sm text-neutral-11">({total})</span>
           </div>
           <div className="flex items-center gap-3">
             {/* Search input with debouncing */}
@@ -429,10 +421,7 @@ export function ProjectsPage() {
               />
             </Button>
             {/* Create button - primary action */}
-            <Button
-              variant="primary"
-              onClick={() => setShowCreateDialog(true)}
-            >
+            <Button variant="primary" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4" />
               Create Project
             </Button>
@@ -443,16 +432,16 @@ export function ProjectsPage() {
       <div className="flex-1 overflow-y-auto p-6">
         {projects.length === 0 ? (
           // Empty state - AI-enhanced (Sprint 3 Migration)
-          (<AIEmptyState
+          <AIEmptyState
             context="projects"
             onAction={() => setShowCreateDialog(true)}
             actionLabel="Create Project"
-          />)
+          />
         ) : (
           <>
             {viewMode === "grid" ? (
               /* Grid View */
-              (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {projects.map((project) => (
                   <div
                     key={project.id}
@@ -534,10 +523,10 @@ export function ProjectsPage() {
                     </div>
                   </div>
                 ))}
-              </div>)
+              </div>
             ) : (
               /* Table View */
-              (<div className="bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden">
+              <div className="bg-neutral-1 border border-neutral-5 rounded-lg overflow-hidden">
                 {/* Bulk action bar */}
                 {selectedProjects.size > 0 && (
                   <div className="px-4 py-2 bg-primary-2 border-b border-primary-5 flex items-center justify-between">
@@ -625,9 +614,7 @@ export function ProjectsPage() {
                       <tr
                         key={project.id}
                         className={`hover:bg-neutral-a6 transition-colors ${
-                          selectedProjects.has(project.id)
-                            ? "bg-primary-1"
-                            : ""
+                          selectedProjects.has(project.id) ? "bg-primary-1" : ""
                         }`}
                       >
                         {/* Row checkbox */}
@@ -722,7 +709,7 @@ export function ProjectsPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>)
+              </div>
             )}
 
             {/* Pagination */}
@@ -754,7 +741,8 @@ export function ProjectsPage() {
               <Button
                 variant="secondary"
                 className="p-1 text-neutral-9 hover:text-neutral-11"
-                onClick={() => setShowCreateDialog(false)}>
+                onClick={() => setShowCreateDialog(false)}
+              >
                 <X className="w-5 h-5" />
               </Button>
             </div>

@@ -196,10 +196,7 @@ export function AuditExporter({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Download
-            size={18}
-            className="text-neutral-10"
-          />
+          <Download size={18} className="text-neutral-10" />
           <h3 className="text-sm font-medium text-neutral-12">
             Export Audit Logs
           </h3>
@@ -208,9 +205,7 @@ export function AuditExporter({
           <span
             className={cn(
               "text-xs",
-              isRateLimited
-                ? "text-error-9"
-                : "text-neutral-10",
+              isRateLimited ? "text-error-9" : "text-neutral-10",
             )}
           >
             {isRateLimited
@@ -258,7 +253,8 @@ export function AuditExporter({
                 selectedFormat === value
                   ? "selected border-primary-9 bg-primary-1 dark:bg-primary-a3 text-primary-11 dark:text-primary-5"
                   : "border-neutral-5 text-neutral-11 hover:border-neutral-5 dark:hover:border-neutral-6",
-              )}>
+              )}
+            >
               <Icon size={16} />
               <span className="text-sm font-medium">{label}</span>
             </Button>
@@ -307,7 +303,8 @@ export function AuditExporter({
           canExport
             ? "bg-primary-9 text-neutral-12 hover:bg-primary-10"
             : "bg-neutral-3 text-neutral-10 cursor-not-allowed",
-        )}>
+        )}
+      >
         {isExporting ? (
           <>
             <Loader2

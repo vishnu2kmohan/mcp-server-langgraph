@@ -4,8 +4,8 @@
  * TDD tests for the skill installation confirmation dialog.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { InstallDialog } from "./InstallDialog";
 import type { SkillMetadata } from "../../types/skills";
 
@@ -16,6 +16,11 @@ const mockSkill: SkillMetadata = {
   author: "Anthropic",
   tags: ["research", "web"],
 };
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("InstallDialog", () => {
   it("should not render when skill is null", () => {

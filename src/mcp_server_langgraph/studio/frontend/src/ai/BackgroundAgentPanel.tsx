@@ -73,9 +73,7 @@ function StatusIcon({ status }: { status: AgentStatus }) {
     case "running":
       return <Loader2 size={14} className="animate-spin text-primary-9" />;
     case "queued":
-      return (
-        <Clock size={14} className="text-neutral-9" />
-      );
+      return <Clock size={14} className="text-neutral-9" />;
     case "completed":
       return <CheckCircle size={14} className="text-success-9" />;
     case "failed":
@@ -85,9 +83,7 @@ function StatusIcon({ status }: { status: AgentStatus }) {
     case "awaiting_clarification":
       return <HelpCircle size={14} className="text-insight-9" />;
     default:
-      return (
-        <Circle size={14} className="text-neutral-9" />
-      );
+      return <Circle size={14} className="text-neutral-9" />;
   }
 }
 
@@ -142,7 +138,8 @@ export function BackgroundAgentPanel({
           "w-full flex items-center justify-between px-3 py-2",
           "hover:bg-neutral-1",
           "transition-colors",
-        )}>
+        )}
+      >
         <div className="flex items-center gap-2">
           <Bot size={16} className="text-primary-9" />
           <span className="text-sm font-medium text-neutral-11">
@@ -159,15 +156,9 @@ export function BackgroundAgentPanel({
           </span>
         </div>
         {collapsed ? (
-          <ChevronDown
-            size={16}
-            className="text-neutral-9"
-          />
+          <ChevronDown size={16} className="text-neutral-9" />
         ) : (
-          <ChevronUp
-            size={16}
-            className="text-neutral-9"
-          />
+          <ChevronUp size={16} className="text-neutral-9" />
         )}
       </Button>
       {/* Content */}
@@ -212,7 +203,11 @@ export function BackgroundAgentPanel({
                         <div className="flex-1 h-1.5 bg-neutral-3 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-primary-9 transition-all"
-                            style={{ '--progress': `${agent.progress}%` } as React.CSSProperties}
+                            style={
+                              {
+                                "--progress": `${agent.progress}%`,
+                              } as React.CSSProperties
+                            }
                           />
                         </div>
                         <span className="text-xs text-neutral-10">
@@ -223,9 +218,7 @@ export function BackgroundAgentPanel({
 
                     {/* Error message for failed */}
                     {agent.status === "failed" && agent.error && (
-                      <p className="mt-1 text-xs text-error-9">
-                        {agent.error}
-                      </p>
+                      <p className="mt-1 text-xs text-error-9">{agent.error}</p>
                     )}
 
                     {/* Elapsed time */}
@@ -248,7 +241,8 @@ export function BackgroundAgentPanel({
                           "text-neutral-9 hover:text-error-9",
                           "hover:bg-error-3 dark:hover:bg-error-a4",
                           "transition-colors",
-                        )}>
+                        )}
+                      >
                         <X size={14} />
                       </Button>
                     )}
@@ -263,7 +257,8 @@ export function BackgroundAgentPanel({
                           "text-neutral-9 hover:text-primary-9",
                           "hover:bg-primary-3 dark:hover:bg-primary-a4",
                           "transition-colors",
-                        )}>
+                        )}
+                      >
                         <RefreshCw size={14} />
                       </Button>
                     )}

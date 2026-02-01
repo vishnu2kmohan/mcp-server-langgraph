@@ -38,12 +38,8 @@ function NotificationTypeToggle({
   return (
     <div className="flex items-center justify-between p-4 bg-neutral-1 rounded-lg border border-neutral-5">
       <div>
-        <p className="font-medium text-neutral-12">
-          {label}
-        </p>
-        <p className="text-sm text-neutral-10">
-          {description}
-        </p>
+        <p className="font-medium text-neutral-12">{label}</p>
+        <p className="text-sm text-neutral-10">{description}</p>
       </div>
       <Toggle
         checked={enabled}
@@ -139,7 +135,8 @@ export function NotificationPreferencesSettings() {
           className="flex px-3 py-1.5 text-sm text-neutral-11 hover:text-neutral-12"
           onClick={handleReset}
           disabled={isDisabled}
-          aria-label="Reset to defaults">
+          aria-label="Reset to defaults"
+        >
           <RotateCcw size={14} className={isResetting ? "animate-spin" : ""} />
           Reset to Defaults
         </Button>

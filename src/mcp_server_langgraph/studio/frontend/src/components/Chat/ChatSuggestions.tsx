@@ -106,9 +106,7 @@ export function ChatSuggestions({
 
   return (
     <div className={`px-4 py-3 ${className}`}>
-      <p className="text-sm text-neutral-10 mb-2">
-        {title}
-      </p>
+      <p className="text-sm text-neutral-10 mb-2">{title}</p>
       <ul
         role="list"
         className={`flex flex-wrap ${compact ? "gap-2" : "gap-3"} ${className}`}
@@ -128,10 +126,7 @@ export function ChatSuggestions({
                   }
                 }}
               >
-                <Icon
-                  size={compact ? 14 : 16}
-                  className="text-neutral-9"
-                />
+                <Icon size={compact ? 14 : 16} className="text-neutral-9" />
                 <span>{suggestion.text}</span>
               </Button>
             </li>

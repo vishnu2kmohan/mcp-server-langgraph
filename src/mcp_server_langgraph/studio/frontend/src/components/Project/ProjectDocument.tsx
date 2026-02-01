@@ -93,11 +93,7 @@ export function ProjectDocument({
     return (
       <div
         data-testid="project-document"
-        className={cn(
-          "flex flex-col h-full",
-          "bg-neutral-1",
-          className,
-        )}
+        className={cn("flex flex-col h-full", "bg-neutral-1", className)}
       >
         <header className="px-6 py-4 bg-neutral-1 border-b border-neutral-5">
           <Skeleton className="h-6 w-1/3 mb-2" />
@@ -116,11 +112,7 @@ export function ProjectDocument({
     return (
       <div
         data-testid="project-document"
-        className={cn(
-          "flex flex-col h-full",
-          "bg-neutral-1",
-          className,
-        )}
+        className={cn("flex flex-col h-full", "bg-neutral-1", className)}
       >
         <ErrorState
           title="Failed to load project"
@@ -190,9 +182,7 @@ export function ProjectDocument({
                 {project?.name || "Project"}
               </h2>
               {project?.description && (
-                <p className="text-sm text-neutral-10">
-                  {project.description}
-                </p>
+                <p className="text-sm text-neutral-10">{project.description}</p>
               )}
             </div>
           </div>
@@ -227,37 +217,22 @@ export function ProjectDocument({
             </h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <User
-                  size={16}
-                  className="text-neutral-9"
-                />
-                <span className="text-neutral-11">
-                  Owner:
-                </span>
+                <User size={16} className="text-neutral-9" />
+                <span className="text-neutral-11">Owner:</span>
                 <span className="text-neutral-12">
                   {project?.ownerName || project?.ownerId || "Unknown"}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Calendar
-                  size={16}
-                  className="text-neutral-9"
-                />
-                <span className="text-neutral-11">
-                  Created:
-                </span>
+                <Calendar size={16} className="text-neutral-9" />
+                <span className="text-neutral-11">Created:</span>
                 <span className="text-neutral-12">
                   {formatDate(project?.createdAt)}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Calendar
-                  size={16}
-                  className="text-neutral-9"
-                />
-                <span className="text-neutral-11">
-                  Updated:
-                </span>
+                <Calendar size={16} className="text-neutral-9" />
+                <span className="text-neutral-11">Updated:</span>
                 <span className="text-neutral-12">
                   {formatDate(project?.updatedAt)}
                 </span>
@@ -280,15 +255,13 @@ export function ProjectDocument({
                     "p-4 rounded-lg border border-neutral-5",
                     "bg-neutral-1 hover:shadow-md transition-shadow",
                     "text-left",
-                  )}>
+                  )}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div className={cn("p-2 rounded-lg", resource.bgColor)}>
                       <resource.icon size={20} className={resource.color} />
                     </div>
-                    <ExternalLink
-                      size={14}
-                      className="text-neutral-9"
-                    />
+                    <ExternalLink size={14} className="text-neutral-9" />
                   </div>
                   <div className="text-2xl font-bold text-neutral-12">
                     {resource.count}
@@ -320,7 +293,8 @@ export function ProjectDocument({
                 className="flex px-3 py-2 text-sm bg-insight-1 text-insight-11 dark:bg-insight-a3 dark:text-insight-9 rounded-lg hover:bg-insight-2 dark:hover:bg-insight-a4"
                 onClick={() =>
                   navigate(`/studio/workflows?project=${projectId}`)
-                }>
+                }
+              >
                 <GitBranch size={16} />
                 Create Workflow
               </Button>

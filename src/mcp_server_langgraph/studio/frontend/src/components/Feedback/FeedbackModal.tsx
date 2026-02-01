@@ -89,7 +89,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           >
             Share Your Feedback
           </h2>
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1 hover:bg-neutral-2 rounded"
             data-testid="close-feedback-modal"
@@ -111,7 +112,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 className="w-10 h-10 rounded-lg"
                 key={score}
                 data-testid={`nps-score-${score}`}
-                onClick={() => setNpsScore(score)}>
+                onClick={() => setNpsScore(score)}
+              >
                 {score}
               </Button>
             ))}
@@ -134,7 +136,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 className="p-2"
                 key={star}
                 data-testid={`csat-star-${star}`}
-                onClick={() => setCsatRating(star)}>
+                onClick={() => setCsatRating(star)}
+              >
                 <Star
                   size={32}
                   fill={

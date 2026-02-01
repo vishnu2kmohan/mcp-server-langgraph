@@ -145,13 +145,9 @@ export function AgentExecutionTracePanel({
                         : "bg-neutral-4"
                   }`}
                 />
-                <span className="text-neutral-11">
-                  {step.name}
-                </span>
+                <span className="text-neutral-11">{step.name}</span>
                 {step.duration !== undefined && (
-                  <span className="text-neutral-9">
-                    ({step.duration}ms)
-                  </span>
+                  <span className="text-neutral-9">({step.duration}ms)</span>
                 )}
               </li>
             ))}
@@ -196,9 +192,7 @@ export function AgentExecutionTracePanel({
                   <span className="w-3 h-3 border-2 border-primary-9 border-t-transparent rounded-full animate-spin" />
                 )}
               </div>
-              <p className="text-neutral-11 font-sans text-xs">
-                {aiSummary}
-              </p>
+              <p className="text-neutral-11 font-sans text-xs">{aiSummary}</p>
 
               {/* Key Actions */}
               {keyActions && keyActions.length > 0 && (
@@ -228,9 +222,7 @@ export function AgentExecutionTracePanel({
               className="mt-2 flex items-center gap-2"
               data-testid="ai-health-score"
             >
-              <span className="text-neutral-10 text-xs font-sans">
-                Health:
-              </span>
+              <span className="text-neutral-10 text-xs font-sans">Health:</span>
               <div className="flex items-center gap-1">
                 <div className="w-16 h-2 bg-neutral-3 rounded-full overflow-hidden">
                   <div
@@ -241,7 +233,11 @@ export function AgentExecutionTracePanel({
                           ? "bg-warning-9"
                           : "bg-error-9"
                     }`}
-                    style={{ '--progress': `${healthScore * 100}%` } as React.CSSProperties}
+                    style={
+                      {
+                        "--progress": `${healthScore * 100}%`,
+                      } as React.CSSProperties
+                    }
                   />
                 </div>
                 <span

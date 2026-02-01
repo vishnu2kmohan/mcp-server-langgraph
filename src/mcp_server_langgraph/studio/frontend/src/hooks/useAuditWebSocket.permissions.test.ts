@@ -75,7 +75,8 @@ vi.mock("../store/hooks", () => ({
   useAppDispatch: () => mockDispatch,
   useAppSelector: vi.fn((selector) => {
     if (selector.name?.includes("Authenticated")) return mockIsAuthenticated;
-    if (selector.name?.includes("WebSocketPermissions")) return mockWsPermissions;
+    if (selector.name?.includes("WebSocketPermissions"))
+      return mockWsPermissions;
     return true;
   }),
 }));

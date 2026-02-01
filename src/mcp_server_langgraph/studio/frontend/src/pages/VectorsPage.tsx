@@ -401,10 +401,7 @@ export function VectorsPage() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  variant="primary"
-                  type="submit"
-                >
+                <Button variant="primary" type="submit">
                   Create
                 </Button>
               </div>

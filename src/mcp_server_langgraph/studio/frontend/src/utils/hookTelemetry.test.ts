@@ -56,7 +56,8 @@ describe("hookTelemetry", () => {
   describe("logDegradation", () => {
     it("should log degradation with reason and context", () => {
       const telemetry = createHookTelemetry("TestHook");
-      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock.results[0].value;
+      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock
+        .results[0].value;
 
       telemetry.logDegradation("missing_session_id", {
         inputLength: 10,
@@ -67,7 +68,7 @@ describe("hookTelemetry", () => {
         expect.objectContaining({
           reason: "missing_session_id",
           inputLength: 10,
-        })
+        }),
       );
     });
 
@@ -89,7 +90,8 @@ describe("hookTelemetry", () => {
   describe("logRetry", () => {
     it("should log retry attempt with attempt number", () => {
       const telemetry = createHookTelemetry("TestHook");
-      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock.results[0].value;
+      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock
+        .results[0].value;
 
       telemetry.logRetry(2, 3, new Error("Network error"));
 
@@ -99,7 +101,7 @@ describe("hookTelemetry", () => {
           attempt: 2,
           maxAttempts: 3,
           error: "Network error",
-        })
+        }),
       );
     });
 
@@ -123,7 +125,8 @@ describe("hookTelemetry", () => {
   describe("logBackoff", () => {
     it("should log backoff with delay", () => {
       const telemetry = createHookTelemetry("TestHook");
-      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock.results[0].value;
+      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock
+        .results[0].value;
 
       telemetry.logBackoff(2, 2000);
 
@@ -132,7 +135,7 @@ describe("hookTelemetry", () => {
         expect.objectContaining({
           attempt: 2,
           delayMs: 2000,
-        })
+        }),
       );
     });
   });
@@ -140,7 +143,8 @@ describe("hookTelemetry", () => {
   describe("logFallback", () => {
     it("should log fallback usage", () => {
       const telemetry = createHookTelemetry("TestHook");
-      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock.results[0].value;
+      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock
+        .results[0].value;
 
       telemetry.logFallback("cache_stale", { cachedValue: "test" });
 
@@ -149,7 +153,7 @@ describe("hookTelemetry", () => {
         expect.objectContaining({
           reason: "cache_stale",
           fallback: { cachedValue: "test" },
-        })
+        }),
       );
     });
 
@@ -167,7 +171,8 @@ describe("hookTelemetry", () => {
   describe("logError", () => {
     it("should log errors with context", () => {
       const telemetry = createHookTelemetry("TestHook");
-      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock.results[0].value;
+      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock
+        .results[0].value;
 
       const error = new Error("Connection failed");
       telemetry.logError(error, { endpoint: "/api/test" });
@@ -177,13 +182,14 @@ describe("hookTelemetry", () => {
         expect.objectContaining({
           error: "Connection failed",
           endpoint: "/api/test",
-        })
+        }),
       );
     });
 
     it("should handle non-Error objects", () => {
       const telemetry = createHookTelemetry("TestHook");
-      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock.results[0].value;
+      const mockLogger = (devLogger.withPrefix as ReturnType<typeof vi.fn>).mock
+        .results[0].value;
 
       telemetry.logError("string error", {});
 
@@ -191,7 +197,7 @@ describe("hookTelemetry", () => {
         "Error occurred",
         expect.objectContaining({
           error: "string error",
-        })
+        }),
       );
     });
   });
@@ -231,7 +237,7 @@ describe("hookTelemetry", () => {
   describe("useHookTelemetry hook", () => {
     it("should create stable telemetry instance", () => {
       const { result, rerender } = renderHook(() =>
-        useHookTelemetry("StableHook")
+        useHookTelemetry("StableHook"),
       );
 
       const firstInstance = result.current;

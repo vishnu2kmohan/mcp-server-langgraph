@@ -88,7 +88,7 @@ const INITIAL_METRICS: AnimationMetrics = {
  * ```
  */
 export function useAnimationPerformance(
-  options: UseAnimationPerformanceOptions = {}
+  options: UseAnimationPerformanceOptions = {},
 ): UseAnimationPerformanceReturn {
   const {
     enabled = false,
@@ -143,7 +143,7 @@ export function useAnimationPerformance(
         onJankRef.current(entry);
       }
     },
-    [jankThresholdMs]
+    [jankThresholdMs],
   );
 
   /**
@@ -158,7 +158,7 @@ export function useAnimationPerformance(
     // Check if PerformanceObserver and long-animation-frame are supported
     if (typeof PerformanceObserver === "undefined") {
       console.warn(
-        "useAnimationPerformance: PerformanceObserver not supported"
+        "useAnimationPerformance: PerformanceObserver not supported",
       );
       return;
     }
@@ -182,7 +182,10 @@ export function useAnimationPerformance(
       observerRef.current = observer;
       setIsMonitoring(true);
     } catch (error) {
-      console.warn("useAnimationPerformance: Failed to start monitoring", error);
+      console.warn(
+        "useAnimationPerformance: Failed to start monitoring",
+        error,
+      );
     }
   }, [devOnly, processEntry]);
 

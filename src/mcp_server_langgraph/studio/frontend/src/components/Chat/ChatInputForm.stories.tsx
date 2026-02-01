@@ -27,7 +27,7 @@ const createUploadFile = (
   type: string,
   size: number,
   progress: number = 100,
-  status: UploadFile["status"] = "complete"
+  status: UploadFile["status"] = "complete",
 ): UploadFile => ({
   id,
   file: createMockFile(name, type, size),
@@ -36,19 +36,60 @@ const createUploadFile = (
 });
 
 const SAMPLE_MODELS: ModelOption[] = [
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google", supportsThinking: true },
-  { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", provider: "Google", supportsThinking: true },
-  { id: "claude-sonnet-4-5", name: "Claude 4.5 Sonnet", provider: "Anthropic", supportsThinking: true },
-  { id: "claude-opus-4-5", name: "Claude 4.5 Opus", provider: "Anthropic", supportsThinking: true },
+  {
+    id: "gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    provider: "Google",
+    supportsThinking: true,
+  },
+  {
+    id: "gemini-2.5-pro",
+    name: "Gemini 2.5 Pro",
+    provider: "Google",
+    supportsThinking: true,
+  },
+  {
+    id: "claude-sonnet-4-5",
+    name: "Claude 4.5 Sonnet",
+    provider: "Anthropic",
+    supportsThinking: true,
+  },
+  {
+    id: "claude-opus-4-5",
+    name: "Claude 4.5 Opus",
+    provider: "Anthropic",
+    supportsThinking: true,
+  },
   { id: "gpt-5.1-instant", name: "GPT-5.1 Instant", provider: "OpenAI" },
-  { id: "gpt-5.1-thinking", name: "GPT-5.1 Thinking", provider: "OpenAI", supportsThinking: true },
+  {
+    id: "gpt-5.1-thinking",
+    name: "GPT-5.1 Thinking",
+    provider: "OpenAI",
+    supportsThinking: true,
+  },
 ];
 
 const SAMPLE_SLASH_COMMANDS = [
-  { name: "help", description: "Show available commands", category: "general" as const },
-  { name: "clear", description: "Clear conversation", category: "general" as const },
-  { name: "copy", description: "Copy last response", category: "general" as const },
-  { name: "export", description: "Export conversation", category: "general" as const },
+  {
+    name: "help",
+    description: "Show available commands",
+    category: "general" as const,
+  },
+  {
+    name: "clear",
+    description: "Clear conversation",
+    category: "general" as const,
+  },
+  {
+    name: "copy",
+    description: "Copy last response",
+    category: "general" as const,
+  },
+  {
+    name: "export",
+    description: "Export conversation",
+    category: "general" as const,
+  },
 ];
 
 const SAMPLE_MENTION_OPTIONS = [
@@ -63,7 +104,11 @@ const SAMPLE_UPLOAD_FILES: UploadFile[] = [
 ];
 
 const SAMPLE_FETCHED_URLS = [
-  { url: "https://example.com/article", title: "Example Article", content: "..." },
+  {
+    url: "https://example.com/article",
+    title: "Example Article",
+    content: "...",
+  },
 ];
 
 // Default drag handlers (no-op for stories)
@@ -115,7 +160,8 @@ type Story = StoryObj<typeof ChatInputForm>;
 
 export const Default: Story = {
   args: {
-    input: "", onInputChange: (v) => console.log("Input:", v),
+    input: "",
+    onInputChange: (v) => console.log("Input:", v),
     onSubmit: () => console.log("Submit"),
     isProcessing: false,
     isListening: false,
@@ -135,7 +181,8 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Default state with rich text mode enabled. Clean, minimal interface.",
+        story:
+          "Default state with rich text mode enabled. Clean, minimal interface.",
       },
     },
   },
@@ -195,7 +242,8 @@ export const Processing: Story = {
 export const Streaming: Story = {
   args: {
     ...Default.args,
-    input: "", isProcessing: true,
+    input: "",
+    isProcessing: true,
     isStreaming: true,
     onStopStreaming: () => console.log("Stop streaming"),
   },
@@ -273,7 +321,8 @@ export const WithThinkingModel: Story = {
   parameters: {
     docs: {
       description: {
-        story: "With a thinking model selected - reasoning effort selector shown.",
+        story:
+          "With a thinking model selected - reasoning effort selector shown.",
       },
     },
   },
@@ -365,7 +414,14 @@ export const Uploading: Story = {
     ...Default.args,
     isUploading: true,
     uploadFiles: [
-      createUploadFile("1", "large-file.zip", "application/zip", 10485760, 45, "uploading"),
+      createUploadFile(
+        "1",
+        "large-file.zip",
+        "application/zip",
+        10485760,
+        45,
+        "uploading",
+      ),
     ],
   },
   parameters: {
@@ -391,7 +447,8 @@ export const RichTextMode: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Rich text mode with formatting toolbar, mentions, and character limit.",
+        story:
+          "Rich text mode with formatting toolbar, mentions, and character limit.",
       },
     },
   },
@@ -501,7 +558,9 @@ export const Interactive: Story = {
           selectedModel={selectedModel}
           availableModels={SAMPLE_MODELS}
           onModelChange={setSelectedModel}
-          modelSupportsThinking={selectedModel.includes("opus") || selectedModel.includes("thinking")}
+          modelSupportsThinking={
+            selectedModel.includes("opus") || selectedModel.includes("thinking")
+          }
           enableThinking={true}
           reasoningEffort="medium"
           onReasoningEffortChange={(l) => console.log("Reasoning:", l)}
@@ -517,7 +576,8 @@ export const Interactive: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Fully interactive story with state management. Type, attach files, change models.",
+        story:
+          "Fully interactive story with state management. Type, attach files, change models.",
       },
     },
   },
@@ -529,7 +589,8 @@ export const Interactive: Story = {
 
 export const FullFeatured: Story = {
   args: {
-    input: "", onInputChange: (v) => console.log("Input:", v),
+    input: "",
+    onInputChange: (v) => console.log("Input:", v),
     onSubmit: () => console.log("Submit"),
     isProcessing: false,
     isStreaming: false,
@@ -580,7 +641,8 @@ export const FullFeatured: Story = {
   parameters: {
     docs: {
       description: {
-        story: "All features enabled: model selector, attachments, rich text, thinking, KB focus, slash commands.",
+        story:
+          "All features enabled: model selector, attachments, rich text, thinking, KB focus, slash commands.",
       },
     },
   },
@@ -595,7 +657,8 @@ export const DarkMode: Story = {
     <div className="dark bg-neutral-2 p-8 rounded-lg">
       <div className="w-full max-w-2xl mx-auto">
         <ChatInputForm
-          input="" onInputChange={(v) => console.log("Input:", v)}
+          input=""
+          onInputChange={(v) => console.log("Input:", v)}
           onSubmit={() => console.log("Submit")}
           isProcessing={false}
           isListening={false}
@@ -649,12 +712,16 @@ export const AccessibilityShowcase: Story = {
           <li>Focus management in dropdown menus</li>
           <li>Screen reader announcements for state changes</li>
           <li>Escape closes all dropdowns/menus</li>
-          <li>Tab cycles through: + menu, Aa toggle, textarea, voice, reasoning, send</li>
+          <li>
+            Tab cycles through: + menu, Aa toggle, textarea, voice, reasoning,
+            send
+          </li>
           <li>Arrow keys navigate within menus</li>
         </ul>
       </div>
       <ChatInputForm
-        input="" onInputChange={(v) => console.log("Input:", v)}
+        input=""
+        onInputChange={(v) => console.log("Input:", v)}
         onSubmit={() => console.log("Submit")}
         isProcessing={false}
         isListening={false}
@@ -687,7 +754,8 @@ export const AccessibilityShowcase: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Demonstrates accessibility features of the complete ChatInputForm.",
+        story:
+          "Demonstrates accessibility features of the complete ChatInputForm.",
       },
     },
   },

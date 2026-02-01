@@ -50,19 +50,13 @@ function StepStatusIcon({ status, stepId }: StepStatusIconProps) {
         <Play {...iconProps} className="text-primary-9 animate-pulse" />
       )}
       {status === "pending" && (
-        <Clock
-          {...iconProps}
-          className="text-neutral-9"
-        />
+        <Clock {...iconProps} className="text-neutral-9" />
       )}
       {status === "error" && (
         <AlertCircle {...iconProps} className="text-error-9" />
       )}
       {status === "skipped" && (
-        <SkipForward
-          {...iconProps}
-          className="text-neutral-9"
-        />
+        <SkipForward {...iconProps} className="text-neutral-9" />
       )}
     </span>
   );
@@ -115,28 +109,18 @@ function ExecutionStepRow({
         }
       >
         {isExpanded ? (
-          <ChevronDown
-            size={12}
-            className="text-neutral-10"
-          />
+          <ChevronDown size={12} className="text-neutral-10" />
         ) : (
-          <ChevronRight
-            size={12}
-            className="text-neutral-10"
-          />
+          <ChevronRight size={12} className="text-neutral-10" />
         )}
       </Button>
       {/* Status icon */}
       <StepStatusIcon status={step.status} stepId={step.id} />
       {/* Step name */}
-      <span className="flex-1 text-sm text-neutral-11">
-        {step.nodeName}
-      </span>
+      <span className="flex-1 text-sm text-neutral-11">{step.nodeName}</span>
       {/* Duration */}
       {step.duration > 0 && (
-        <span className="text-xs text-neutral-10">
-          {step.duration}ms
-        </span>
+        <span className="text-xs text-neutral-10">{step.duration}ms</span>
       )}
     </div>
   );
@@ -156,9 +140,7 @@ function StepDetails({ step }: StepDetailsProps) {
         {/* Input */}
         {step.input && (
           <div data-testid={`step-input-${step.id}`}>
-            <span className="text-neutral-10 font-medium">
-              Input:
-            </span>
+            <span className="text-neutral-10 font-medium">Input:</span>
             <pre className="mt-1 p-2 bg-neutral-2 rounded text-neutral-11 overflow-x-auto">
               {JSON.stringify(step.input, null, 2)}
             </pre>
@@ -168,9 +150,7 @@ function StepDetails({ step }: StepDetailsProps) {
         {/* Output */}
         {step.output && (
           <div data-testid={`step-output-${step.id}`}>
-            <span className="text-neutral-10 font-medium">
-              Output:
-            </span>
+            <span className="text-neutral-10 font-medium">Output:</span>
             <pre className="mt-1 p-2 bg-neutral-2 rounded text-neutral-11 overflow-x-auto">
               {JSON.stringify(step.output, null, 2)}
             </pre>
@@ -189,9 +169,7 @@ function StepDetails({ step }: StepDetailsProps) {
         <div className="grid grid-cols-2 gap-2 text-neutral-10">
           <div>
             <span>Node ID:</span>
-            <span className="ml-2 text-neutral-11">
-              {step.nodeId}
-            </span>
+            <span className="ml-2 text-neutral-11">{step.nodeId}</span>
           </div>
           <div>
             <span>Status:</span>
@@ -331,14 +309,8 @@ export function ExecutionTraceTab({
       <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Workflow indicator */}
         <div className="flex items-center gap-1.5">
-          <Workflow
-            size={14}
-            className="text-neutral-10"
-            aria-hidden="true"
-          />
-          <h3 className="text-xs text-neutral-11">
-            Execution
-          </h3>
+          <Workflow size={14} className="text-neutral-10" aria-hidden="true" />
+          <h3 className="text-xs text-neutral-11">Execution</h3>
           <span className="text-xs text-neutral-10 ml-1 px-1.5 py-0.5 bg-neutral-2 rounded">
             {workflowId}
           </span>
@@ -352,14 +324,13 @@ export function ExecutionTraceTab({
           {filteredSteps.filter((s) => s.status === "completed").length}/
           {filteredSteps.length} steps
           {timeline.timeWindow && filteredSteps.length !== steps.length && (
-            <span className="ml-1 text-neutral-9">
-              ({steps.length} total)
-            </span>
+            <span className="ml-1 text-neutral-9">({steps.length} total)</span>
           )}
         </span>
 
         {/* Refresh button */}
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="refresh-execution-button"

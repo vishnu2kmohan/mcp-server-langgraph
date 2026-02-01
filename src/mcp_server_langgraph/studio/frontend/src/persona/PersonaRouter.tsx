@@ -156,9 +156,7 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
         )}
       >
         <ShieldX className="h-16 w-16 text-error-7" />
-        <h2 className="text-xl font-semibold text-neutral-12">
-          Access Denied
-        </h2>
+        <h2 className="text-xl font-semibold text-neutral-12">Access Denied</h2>
         <p className="text-sm text-center max-w-md">
           You don&apos;t have permission to access this page. Your current role
           ({subPersona || persona}) doesn&apos;t include access to this module.
@@ -171,7 +169,8 @@ export function PersonaRouter({ children, className }: PersonaRouterProps) {
               "flex items-center gap-2 px-4 py-2 rounded-md",
               "bg-primary-10 text-neutral-12",
               "hover:bg-primary-11 transition-colors",
-            )}>
+            )}
+          >
             Go to Home
             <ArrowRight className="h-4 w-4" />
           </Button>

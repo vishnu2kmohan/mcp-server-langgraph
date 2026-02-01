@@ -12,15 +12,15 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
-import { useResolveReferencesMutation } from '@/api';
+} from "react";
+import { useResolveReferencesMutation } from "@/api";
 import type {
   ParsedReference,
   ResolvedReference,
   ReferenceResolverContextValue,
   ReferenceResolveRequest,
-} from '@/types/references';
-import { getReferenceKey } from '@/types/references';
+} from "@/types/references";
+import { getReferenceKey } from "@/types/references";
 
 /**
  * Default context value (used when not wrapped in provider).
@@ -35,9 +35,8 @@ const defaultContextValue: ReferenceResolverContextValue = {
 /**
  * Context for reference resolution.
  */
-const ReferenceResolverContext = createContext<ReferenceResolverContextValue>(
-  defaultContextValue
-);
+const ReferenceResolverContext =
+  createContext<ReferenceResolverContextValue>(defaultContextValue);
 
 /**
  * Hook to access reference resolver context.
@@ -71,9 +70,9 @@ export function ReferenceResolverProvider({
   references,
   children,
 }: ReferenceResolverProviderProps) {
-  const [resolvedRefs, setResolvedRefs] = useState<Map<string, ResolvedReference>>(
-    new Map()
-  );
+  const [resolvedRefs, setResolvedRefs] = useState<
+    Map<string, ResolvedReference>
+  >(new Map());
   const [resolveRefs, { isLoading, error }] = useResolveReferencesMutation();
 
   // Resolve references when they change
@@ -97,7 +96,7 @@ export function ReferenceResolverProvider({
 
     // Skip if all refs are already resolved
     const unresolvedRefs = [...uniqueRefs.values()].filter(
-      (ref) => !resolvedRefs.has(getReferenceKey(ref))
+      (ref) => !resolvedRefs.has(getReferenceKey(ref)),
     );
 
     if (unresolvedRefs.length === 0) {
@@ -120,7 +119,7 @@ export function ReferenceResolverProvider({
         });
       })
       .catch((err) => {
-        console.error('Failed to resolve references:', err);
+        console.error("Failed to resolve references:", err);
       });
   }, [messageId, references, resolveRefs, resolvedRefs]);
 
@@ -149,11 +148,11 @@ export function ReferenceResolverProvider({
             return next;
           });
         } catch (err) {
-          console.error('Failed to resolve references:', err);
+          console.error("Failed to resolve references:", err);
         }
       },
     }),
-    [resolvedRefs, isLoading, error, resolveRefs]
+    [resolvedRefs, isLoading, error, resolveRefs],
   );
 
   return (

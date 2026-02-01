@@ -45,9 +45,7 @@ export function WorkflowHeader({
           </h1>
           <p
             className={`text-sm ${
-              isDarkMode
-                ? "text-neutral-9"
-                : "text-neutral-10"
+              isDarkMode ? "text-neutral-9" : "text-neutral-10"
             }`}
           >
             MCP Server with LangGraph - Build agents visually, export to code
@@ -70,10 +68,13 @@ export function WorkflowHeader({
             title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
             aria-label={
               isDarkMode ? "Switch to light mode" : "Switch to dark mode"
-            }>
+            }
+          >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </Button>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-2 rounded-lg"
             onClick={onOpenSettings}
             title="Settings"
@@ -81,7 +82,9 @@ export function WorkflowHeader({
           >
             <Settings size={20} />
           </Button>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-2 rounded-lg"
             onClick={onOpenHelp}
             title="Help"

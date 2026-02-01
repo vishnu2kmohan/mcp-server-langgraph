@@ -1,4 +1,3 @@
- 
 /**
  * Design Token Validation Stories
  *
@@ -50,9 +49,7 @@ function TokenStatus({ name, value, status, description }: TokenStatusProps) {
         <code className="font-mono text-sm">{name}</code>
       </div>
       <div className="text-xs mt-1 opacity-80">{value}</div>
-      {description && (
-        <div className="text-xs mt-1 italic">{description}</div>
-      )}
+      {description && <div className="text-xs mt-1 italic">{description}</div>}
     </div>
   );
 }
@@ -89,7 +86,8 @@ function ZIndexValidation() {
           Z-Index Token Scale
         </h2>
         <p className="text-neutral-11">
-          Stacking context tokens for consistent layering. Higher values overlay lower values.
+          Stacking context tokens for consistent layering. Higher values overlay
+          lower values.
         </p>
       </div>
 
@@ -117,19 +115,31 @@ function ZIndexValidation() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-6">
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Token</th>
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Value</th>
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Usage</th>
-              <th className="text-left py-2 px-4 font-medium text-neutral-11">Status</th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Token
+              </th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Value
+              </th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Usage
+              </th>
+              <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                Status
+              </th>
             </tr>
           </thead>
           <tbody>
             {zIndexTokens.map((token) => (
               <tr key={token.name} className="border-b border-neutral-5">
                 <td className="py-2 px-4">
-                  <code className="text-primary-11 bg-primary-3 px-1 rounded">{token.name}</code>
+                  <code className="text-primary-11 bg-primary-3 px-1 rounded">
+                    {token.name}
+                  </code>
                 </td>
-                <td className="py-2 px-4 font-mono text-neutral-11">{token.value}</td>
+                <td className="py-2 px-4 font-mono text-neutral-11">
+                  {token.value}
+                </td>
                 <td className="py-2 px-4 text-neutral-10">{token.usage}</td>
                 <td className="py-2 px-4">
                   <span className="text-success-11">✓ Valid</span>
@@ -147,8 +157,13 @@ function ZIndexValidation() {
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {invalidPatterns.map((p) => (
-            <div key={p.pattern} className="bg-error-3 border border-error-6 rounded-lg p-3">
-              <code className="text-error-11 font-mono line-through">{p.pattern}</code>
+            <div
+              key={p.pattern}
+              className="bg-error-3 border border-error-6 rounded-lg p-3"
+            >
+              <code className="text-error-11 font-mono line-through">
+                {p.pattern}
+              </code>
               <div className="text-xs text-error-10 mt-1">{p.reason}</div>
             </div>
           ))}
@@ -229,9 +244,14 @@ function AnimationValidation() {
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {easingTokens.map((token) => (
-            <div key={token.name} className="bg-neutral-2 border border-neutral-6 rounded-lg p-3">
+            <div
+              key={token.name}
+              className="bg-neutral-2 border border-neutral-6 rounded-lg p-3"
+            >
               <code className="text-sm text-neutral-12">{token.name}</code>
-              <div className="text-xs text-neutral-10 mt-1">{token.description}</div>
+              <div className="text-xs text-neutral-10 mt-1">
+                {token.description}
+              </div>
             </div>
           ))}
         </div>
@@ -243,12 +263,19 @@ function AnimationValidation() {
           Invalid Patterns (ESLint will error)
         </h3>
         <div className="flex flex-wrap gap-2">
-          <code className="text-error-11 bg-error-4 px-2 py-1 rounded line-through">duration-[200ms]</code>
-          <code className="text-error-11 bg-error-4 px-2 py-1 rounded line-through">duration-[0.3s]</code>
-          <code className="text-error-11 bg-error-4 px-2 py-1 rounded line-through">delay-[150ms]</code>
+          <code className="text-error-11 bg-error-4 px-2 py-1 rounded line-through">
+            duration-[200ms]
+          </code>
+          <code className="text-error-11 bg-error-4 px-2 py-1 rounded line-through">
+            duration-[0.3s]
+          </code>
+          <code className="text-error-11 bg-error-4 px-2 py-1 rounded line-through">
+            delay-[150ms]
+          </code>
         </div>
         <p className="text-xs text-error-10 mt-2">
-          Use token values instead of arbitrary values. Example: duration-300 not duration-[300ms]
+          Use token values instead of arbitrary values. Example: duration-300
+          not duration-[300ms]
         </p>
       </div>
     </div>
@@ -278,7 +305,12 @@ function SizingValidation() {
     },
     {
       category: "WCAG Touch Targets",
-      patterns: ["min-h-[44px]", "min-w-[44px]", "min-h-[32px]", "min-w-[32px]"],
+      patterns: [
+        "min-h-[44px]",
+        "min-w-[44px]",
+        "min-h-[32px]",
+        "min-w-[32px]",
+      ],
       reason: "Accessibility requirement (WCAG 2.5.8)",
     },
     {
@@ -288,7 +320,12 @@ function SizingValidation() {
     },
     {
       category: "Table Columns",
-      patterns: ["min-w-[60px]", "min-w-[100px]", "min-w-[200px]", "max-w-[300px]"],
+      patterns: [
+        "min-w-[60px]",
+        "min-w-[100px]",
+        "min-w-[200px]",
+        "max-w-[300px]",
+      ],
       reason: "Data display consistency",
     },
     {
@@ -338,8 +375,11 @@ function SizingValidation() {
           Sizing Pattern Validation
         </h2>
         <p className="text-neutral-11">
-          Certain arbitrary sizing values are intentionally allowed when they serve specific purposes.
-          See <code className="bg-neutral-3 px-1 rounded">docs-internal/frontend/STYLE.md#sizing-decisions</code>
+          Certain arbitrary sizing values are intentionally allowed when they
+          serve specific purposes. See{" "}
+          <code className="bg-neutral-3 px-1 rounded">
+            docs-internal/frontend/STYLE.md#sizing-decisions
+          </code>
         </p>
       </div>
 
@@ -350,11 +390,19 @@ function SizingValidation() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {legitimatePatterns.map((category) => (
-            <div key={category.category} className="bg-success-2 border border-success-6 rounded-lg p-4">
-              <h4 className="font-medium text-success-11 mb-2">{category.category}</h4>
+            <div
+              key={category.category}
+              className="bg-success-2 border border-success-6 rounded-lg p-4"
+            >
+              <h4 className="font-medium text-success-11 mb-2">
+                {category.category}
+              </h4>
               <div className="flex flex-wrap gap-1 mb-2">
                 {category.patterns.map((p) => (
-                  <code key={p} className="text-xs bg-success-3 text-success-11 px-1.5 py-0.5 rounded">
+                  <code
+                    key={p}
+                    className="text-xs bg-success-3 text-success-11 px-1.5 py-0.5 rounded"
+                  >
                     {p}
                   </code>
                 ))}
@@ -374,18 +422,26 @@ function SizingValidation() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-6">
-                <th className="text-left py-2 px-4 font-medium text-neutral-11">Pattern</th>
-                <th className="text-left py-2 px-4 font-medium text-neutral-11">Fix</th>
+                <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                  Pattern
+                </th>
+                <th className="text-left py-2 px-4 font-medium text-neutral-11">
+                  Fix
+                </th>
               </tr>
             </thead>
             <tbody>
               {invalidPatterns.map((p) => (
                 <tr key={p.pattern} className="border-b border-neutral-5">
                   <td className="py-2 px-4">
-                    <code className="text-error-11 bg-error-3 px-1 rounded line-through">{p.pattern}</code>
+                    <code className="text-error-11 bg-error-3 px-1 rounded line-through">
+                      {p.pattern}
+                    </code>
                   </td>
                   <td className="py-2 px-4">
-                    <code className="text-success-11 bg-success-3 px-1 rounded">{p.fix}</code>
+                    <code className="text-success-11 bg-success-3 px-1 rounded">
+                      {p.fix}
+                    </code>
                   </td>
                 </tr>
               ))}
@@ -415,28 +471,42 @@ function AuditReference() {
 
       <div className="space-y-4">
         <div className="bg-neutral-3 rounded-lg p-4 font-mono text-sm">
-          <div className="text-neutral-10 mb-2"># Full audit (shows all violations)</div>
+          <div className="text-neutral-10 mb-2">
+            # Full audit (shows all violations)
+          </div>
           <div className="text-neutral-12">npm run audit:design-system</div>
         </div>
 
         <div className="bg-neutral-3 rounded-lg p-4 font-mono text-sm">
-          <div className="text-neutral-10 mb-2"># Strict mode (fails on errors - for CI)</div>
-          <div className="text-neutral-12">npm run audit:design-system:strict</div>
+          <div className="text-neutral-10 mb-2">
+            # Strict mode (fails on errors - for CI)
+          </div>
+          <div className="text-neutral-12">
+            npm run audit:design-system:strict
+          </div>
         </div>
 
         <div className="bg-neutral-3 rounded-lg p-4 font-mono text-sm">
           <div className="text-neutral-10 mb-2"># With fix suggestions</div>
-          <div className="text-neutral-12">npm run audit:design-system -- --fix</div>
+          <div className="text-neutral-12">
+            npm run audit:design-system -- --fix
+          </div>
         </div>
 
         <div className="bg-neutral-3 rounded-lg p-4 font-mono text-sm">
           <div className="text-neutral-10 mb-2"># Specific category only</div>
-          <div className="text-neutral-12">npm run audit:design-system -- --category=color</div>
+          <div className="text-neutral-12">
+            npm run audit:design-system -- --category=color
+          </div>
         </div>
 
         <div className="bg-neutral-3 rounded-lg p-4 font-mono text-sm">
-          <div className="text-neutral-10 mb-2"># JSON output for CI integration</div>
-          <div className="text-neutral-12">npm run audit:design-system -- --json</div>
+          <div className="text-neutral-10 mb-2">
+            # JSON output for CI integration
+          </div>
+          <div className="text-neutral-12">
+            npm run audit:design-system -- --json
+          </div>
         </div>
       </div>
 
@@ -496,7 +566,11 @@ function ValidationDashboard() {
     { name: "Typography", status: "valid" as const, count: "7 sizes" },
     { name: "Border Radius", status: "valid" as const, count: "7 tokens" },
     { name: "Shadows", status: "valid" as const, count: "6 tokens" },
-    { name: "Sizing Patterns", status: "valid" as const, count: "12 categories" },
+    {
+      name: "Sizing Patterns",
+      status: "valid" as const,
+      count: "12 categories",
+    },
   ];
 
   return (
@@ -524,23 +598,33 @@ function ValidationDashboard() {
 
       {/* Quick Links */}
       <div className="bg-neutral-2 border border-neutral-6 rounded-lg p-4">
-        <h3 className="font-medium text-neutral-12 mb-3">Documentation Links</h3>
+        <h3 className="font-medium text-neutral-12 mb-3">
+          Documentation Links
+        </h3>
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-neutral-10">Style Guide:</span>
-            <code className="text-primary-11 bg-primary-3 px-1 rounded">docs-internal/frontend/STYLE.md</code>
+            <code className="text-primary-11 bg-primary-3 px-1 rounded">
+              docs-internal/frontend/STYLE.md
+            </code>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-neutral-10">Audit Script:</span>
-            <code className="text-primary-11 bg-primary-3 px-1 rounded">scripts/audit-design-system.ts</code>
+            <code className="text-primary-11 bg-primary-3 px-1 rounded">
+              scripts/audit-design-system.ts
+            </code>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-neutral-10">Audit Patterns:</span>
-            <code className="text-primary-11 bg-primary-3 px-1 rounded">scripts/lib/audit-patterns.ts</code>
+            <code className="text-primary-11 bg-primary-3 px-1 rounded">
+              scripts/lib/audit-patterns.ts
+            </code>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-neutral-10">Tailwind Config:</span>
-            <code className="text-primary-11 bg-primary-3 px-1 rounded">tailwind.config.ts</code>
+            <code className="text-primary-11 bg-primary-3 px-1 rounded">
+              tailwind.config.ts
+            </code>
           </div>
         </div>
       </div>
@@ -574,7 +658,8 @@ export const Dashboard: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Overview of all design token categories and their validation status.",
+        story:
+          "Overview of all design token categories and their validation status.",
       },
     },
   },

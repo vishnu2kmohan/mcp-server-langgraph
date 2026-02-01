@@ -90,12 +90,8 @@ export function MetricCard({
     >
       {/* Header with label and icon */}
       <div className="flex items-center gap-2 mb-2">
-        {icon && (
-          <span className="text-neutral-10">{icon}</span>
-        )}
-        <span className="text-sm text-neutral-11">
-          {label}
-        </span>
+        {icon && <span className="text-neutral-10">{icon}</span>}
+        <span className="text-sm text-neutral-11">{label}</span>
       </div>
 
       {/* Value and trend */}
@@ -132,9 +128,7 @@ export function MetricCard({
 
       {/* Description */}
       {description && (
-        <p className="text-xs text-neutral-10 mt-1">
-          {description}
-        </p>
+        <p className="text-xs text-neutral-10 mt-1">{description}</p>
       )}
     </div>
   );

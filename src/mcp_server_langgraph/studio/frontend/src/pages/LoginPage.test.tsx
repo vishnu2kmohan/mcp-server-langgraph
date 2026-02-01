@@ -260,7 +260,9 @@ describe("LoginPage", () => {
       renderWithProviders(<LoginPage />);
 
       // The version should be prefixed with 'v' (e.g., "v2.9.0-dev")
-      expect(screen.getByText(/Agent Studio v\d+\.\d+\.\d+/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Agent Studio v\d+\.\d+\.\d+/),
+      ).toBeInTheDocument();
     });
   });
 

@@ -162,9 +162,7 @@ export function InlineSuggestions({
               </span>
             </div>
             {/* Suggestion text */}
-            <p className="text-sm text-neutral-11">
-              {suggestion.content}
-            </p>
+            <p className="text-sm text-neutral-11">{suggestion.content}</p>
           </div>
 
           {/* Actions */}
@@ -178,7 +176,8 @@ export function InlineSuggestions({
                 "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                 "text-success-10 hover:bg-success-3 dark:hover:bg-success-a4",
                 "transition-colors",
-              )}>
+              )}
+            >
               <Check size={16} />
             </Button>
             <Button
@@ -190,7 +189,8 @@ export function InlineSuggestions({
                 "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                 "text-neutral-9 hover:text-error-9 hover:bg-error-3 dark:hover:bg-error-a4",
                 "transition-colors",
-              )}>
+              )}
+            >
               <X size={16} />
             </Button>
           </div>

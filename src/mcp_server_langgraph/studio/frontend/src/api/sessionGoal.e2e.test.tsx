@@ -11,7 +11,7 @@
  * - api/index.ts (RTK Query hooks)
  */
 
-import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor, cleanup, act } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -50,29 +50,32 @@ const generateGoalId = () => `goal-${++goalIdCounter}`;
 
 const handlers = [
   // POST /api/v1/sessions/{session_id}/goal
-  http.post("/api/v1/sessions/:session_id/goal", async ({ params, request }) => {
-    const { session_id } = params as { session_id: string };
-    const body = (await request.json()) as { goal: string; set_at: number };
+  http.post(
+    "/api/v1/sessions/:session_id/goal",
+    async ({ params, request }) => {
+      const { session_id } = params as { session_id: string };
+      const body = (await request.json()) as { goal: string; set_at: number };
 
-    // Store the goal
-    const goals = sessionGoalStore.get(session_id) ?? [];
-    const newGoal: StoredGoal = {
-      id: generateGoalId(),
-      goal: body.goal,
-      set_at: body.set_at,
-    };
-    goals.push(newGoal);
-    sessionGoalStore.set(session_id, goals);
-
-    return HttpResponse.json(
-      {
-        session_id,
+      // Store the goal
+      const goals = sessionGoalStore.get(session_id) ?? [];
+      const newGoal: StoredGoal = {
+        id: generateGoalId(),
         goal: body.goal,
         set_at: body.set_at,
-      },
-      { status: 201 },
-    );
-  }),
+      };
+      goals.push(newGoal);
+      sessionGoalStore.set(session_id, goals);
+
+      return HttpResponse.json(
+        {
+          session_id,
+          goal: body.goal,
+          set_at: body.set_at,
+        },
+        { status: 201 },
+      );
+    },
+  ),
 
   // POST /api/v1/sessions/{session_id}/goal/complete
   http.post(
@@ -142,37 +145,31 @@ const handlers = [
   }),
 
   // DELETE /api/v1/sessions/{session_id}/goals/{goal_id}
-  http.delete(
-    "/api/v1/sessions/:session_id/goals/:goal_id",
-    ({ params }) => {
-      const { session_id, goal_id } = params as {
-        session_id: string;
-        goal_id: string;
-      };
+  http.delete("/api/v1/sessions/:session_id/goals/:goal_id", ({ params }) => {
+    const { session_id, goal_id } = params as {
+      session_id: string;
+      goal_id: string;
+    };
 
-      const goals = sessionGoalStore.get(session_id);
-      if (!goals) {
-        return HttpResponse.json(
-          { detail: "Session not found" },
-          { status: 404 },
-        );
-      }
+    const goals = sessionGoalStore.get(session_id);
+    if (!goals) {
+      return HttpResponse.json(
+        { detail: "Session not found" },
+        { status: 404 },
+      );
+    }
 
-      const goalIndex = goals.findIndex((g) => g.id === goal_id);
-      if (goalIndex === -1) {
-        return HttpResponse.json(
-          { detail: "Goal not found" },
-          { status: 404 },
-        );
-      }
+    const goalIndex = goals.findIndex((g) => g.id === goal_id);
+    if (goalIndex === -1) {
+      return HttpResponse.json({ detail: "Goal not found" }, { status: 404 });
+    }
 
-      // Remove the goal
-      goals.splice(goalIndex, 1);
-      sessionGoalStore.set(session_id, goals);
+    // Remove the goal
+    goals.splice(goalIndex, 1);
+    sessionGoalStore.set(session_id, goals);
 
-      return new HttpResponse(null, { status: 204 });
-    },
-  ),
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
 
 // E2E handlers array for use with server.use()
@@ -224,6 +221,7 @@ describe("Session Goal E2E Flow", () => {
   afterEach(() => {
     console.error = originalConsoleError;
     cleanup();
+    vi.clearAllMocks();
     server.resetHandlers();
     sessionGoalStore.clear();
     goalIdCounter = 0;
@@ -487,7 +485,10 @@ describe("Session Goal E2E Flow", () => {
       server.use(
         http.post("/api/v1/sessions/:session_id/goal", async ({ request }) => {
           await new Promise((resolve) => setTimeout(resolve, 50));
-          const body = (await request.json()) as { goal: string; set_at: number };
+          const body = (await request.json()) as {
+            goal: string;
+            set_at: number;
+          };
           return HttpResponse.json(
             {
               session_id: "test",
@@ -749,13 +750,10 @@ describe("Session Goal E2E Flow", () => {
 
       // Add delay to delete handler
       server.use(
-        http.delete(
-          "/api/v1/sessions/:session_id/goals/:goal_id",
-          async () => {
-            await new Promise((resolve) => setTimeout(resolve, 50));
-            return new HttpResponse(null, { status: 204 });
-          },
-        ),
+        http.delete("/api/v1/sessions/:session_id/goals/:goal_id", async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          return new HttpResponse(null, { status: 204 });
+        }),
       );
 
       const { result } = renderHook(() => useDeleteSessionGoalMutation(), {
@@ -926,16 +924,10 @@ describe("Session Goal E2E Flow", () => {
 
       // Make delete handler return an error
       server.use(
-        http.delete(
-          "/api/v1/sessions/:session_id/goals/:goal_id",
-          async () => {
-            await new Promise((resolve) => setTimeout(resolve, 50));
-            return HttpResponse.json(
-              { detail: "Server error" },
-              { status: 500 },
-            );
-          },
-        ),
+        http.delete("/api/v1/sessions/:session_id/goals/:goal_id", async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          return HttpResponse.json({ detail: "Server error" }, { status: 500 });
+        }),
       );
 
       // First, fetch the goal history to populate the cache

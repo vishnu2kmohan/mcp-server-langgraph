@@ -116,11 +116,11 @@ describe("WorkflowsListPage - CRUD", () => {
       await waitFor(() => {
         // Confirmation dialog should appear
         expect(
-          screen.getByText(/are you sure you want to delete/i)
+          screen.getByText(/are you sure you want to delete/i),
         ).toBeInTheDocument();
         // Dialog should mention the workflow name in the message
         expect(
-          screen.getByText(/are you sure you want to delete.*workflow alpha/i)
+          screen.getByText(/are you sure you want to delete.*workflow alpha/i),
         ).toBeInTheDocument();
       });
     });
@@ -139,10 +139,10 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /^cancel$/i })
+          screen.getByRole("button", { name: /^cancel$/i }),
         ).toBeInTheDocument();
         expect(
-          screen.getByRole("button", { name: /^delete$/i })
+          screen.getByRole("button", { name: /^delete$/i }),
         ).toBeInTheDocument();
       });
     });
@@ -161,7 +161,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /^cancel$/i })
+          screen.getByRole("button", { name: /^cancel$/i }),
         ).toBeInTheDocument();
       });
 
@@ -170,7 +170,7 @@ describe("WorkflowsListPage - CRUD", () => {
       await waitFor(() => {
         // Dialog should be closed - confirmation text should not be visible
         expect(
-          screen.queryByText(/are you sure you want to delete/i)
+          screen.queryByText(/are you sure you want to delete/i),
         ).not.toBeInTheDocument();
       });
     });
@@ -189,7 +189,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /^delete$/i })
+          screen.getByRole("button", { name: /^delete$/i }),
         ).toBeInTheDocument();
       });
 
@@ -224,7 +224,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /delete selected/i })
+          screen.getByRole("button", { name: /delete selected/i }),
         ).toBeInTheDocument();
       });
 
@@ -233,7 +233,7 @@ describe("WorkflowsListPage - CRUD", () => {
       await waitFor(() => {
         // Dialog should appear asking to confirm deletion
         expect(
-          screen.getByText(/are you sure you want to delete 2 workflow/i)
+          screen.getByText(/are you sure you want to delete 2 workflow/i),
         ).toBeInTheDocument();
       });
     });
@@ -260,7 +260,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /delete selected/i })
+          screen.getByRole("button", { name: /delete selected/i }),
         ).toBeInTheDocument();
       });
 
@@ -269,12 +269,14 @@ describe("WorkflowsListPage - CRUD", () => {
       await waitFor(() => {
         // Dialog appears
         expect(
-          screen.getByRole("button", { name: /delete 2 workflows/i })
+          screen.getByRole("button", { name: /delete 2 workflows/i }),
         ).toBeInTheDocument();
       });
 
       // Click the confirm button in the dialog
-      fireEvent.click(screen.getByRole("button", { name: /delete 2 workflows/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /delete 2 workflows/i }),
+      );
 
       await waitFor(() => {
         // Should have called delete for both workflows
@@ -304,7 +306,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /delete selected/i })
+          screen.getByRole("button", { name: /delete selected/i }),
         ).toBeInTheDocument();
       });
 
@@ -312,16 +314,18 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /delete 2 workflows/i })
+          screen.getByRole("button", { name: /delete 2 workflows/i }),
         ).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByRole("button", { name: /delete 2 workflows/i }));
+      fireEvent.click(
+        screen.getByRole("button", { name: /delete 2 workflows/i }),
+      );
 
       await waitFor(() => {
         // Selection should be cleared - no bulk action bar
         expect(
-          screen.queryByText(/workflows? selected/i)
+          screen.queryByText(/workflows? selected/i),
         ).not.toBeInTheDocument();
       });
     });
@@ -340,7 +344,9 @@ describe("WorkflowsListPage - CRUD", () => {
       renderWithRouter(<WorkflowsListPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/failed to load workflows/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/failed to load workflows/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -358,7 +364,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /retry/i })
+          screen.getByRole("button", { name: /retry/i }),
         ).toBeInTheDocument();
       });
     });
@@ -377,7 +383,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /retry/i })
+          screen.getByRole("button", { name: /retry/i }),
         ).toBeInTheDocument();
       });
 
@@ -399,7 +405,7 @@ describe("WorkflowsListPage - CRUD", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/unable to connect to the server/i)
+          screen.getByText(/unable to connect to the server/i),
         ).toBeInTheDocument();
       });
     });

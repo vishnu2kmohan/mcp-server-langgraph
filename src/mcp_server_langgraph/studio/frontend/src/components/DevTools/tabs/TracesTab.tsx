@@ -28,14 +28,21 @@ import {
 
 import { motion, useReducedMotion, AnimatePresence } from "motion/react";
 import { cva } from "class-variance-authority";
-import { buttonVariants as motionButtonVariants, dropdownVariants } from "@/design-system/micro-interactions";
+import {
+  buttonVariants as motionButtonVariants,
+  dropdownVariants,
+} from "@/design-system/micro-interactions";
 import { cn } from "../../../utils/cn";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
-import { getIndentClass } from '@/utils/indent';
+import { getIndentClass } from "@/utils/indent";
 import { STATUS_TEXT_COLORS } from "../utils/devToolsColors";
 
 // Shared OTEL components
-import { HumanTimestamp, OTELStatusBadge, OTELDetailsPanel } from "../components";
+import {
+  HumanTimestamp,
+  OTELStatusBadge,
+  OTELDetailsPanel,
+} from "../components";
 import { useLGTMIntegration } from "../hooks/useLGTMIntegration";
 
 import { Button, Input } from "@/components/UI";
@@ -54,7 +61,8 @@ export const traceFilterButtonVariants = cva(
     variants: {
       open: {
         true: "bg-primary-2 border-primary-7 text-primary-11",
-        false: "bg-neutral-1 border-neutral-5 hover:bg-neutral-2 text-neutral-11",
+        false:
+          "bg-neutral-1 border-neutral-5 hover:bg-neutral-2 text-neutral-11",
       },
     },
     defaultVariants: {
@@ -257,7 +265,8 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium">{span.name}</h3>
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded"
           type="button"
@@ -291,10 +300,7 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
       </dl>
       {hasAttributes && (
         <div className="mt-4">
-          <OTELDetailsPanel
-            data={span.attributes}
-            title="Attributes"
-          />
+          <OTELDetailsPanel data={span.attributes} title="Attributes" />
         </div>
       )}
     </div>
@@ -442,9 +448,7 @@ export function TracesTab({
         data-testid="traces-tab"
         className={cn("flex items-center justify-center h-full", className)}
       >
-        <div className="text-neutral-10">
-          Loading traces...
-        </div>
+        <div className="text-neutral-10">Loading traces...</div>
       </div>
     );
   }
@@ -515,12 +519,16 @@ export function TracesTab({
                   type="button"
                   role="option"
                   aria-selected={serviceFilter === "all"}
-                  className={traceFilterOptionVariants({ selected: serviceFilter === "all" })}
+                  className={traceFilterOptionVariants({
+                    selected: serviceFilter === "all",
+                  })}
                   onClick={() => {
                     setServiceFilter("all");
                     setShowServiceMenu(false);
                   }}
-                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  variants={
+                    prefersReducedMotion ? undefined : motionButtonVariants
+                  }
                   initial="rest"
                   whileHover="hover"
                   whileTap="pressed"
@@ -533,12 +541,16 @@ export function TracesTab({
                     type="button"
                     role="option"
                     aria-selected={serviceFilter === service}
-                    className={traceFilterOptionVariants({ selected: serviceFilter === service })}
+                    className={traceFilterOptionVariants({
+                      selected: serviceFilter === service,
+                    })}
                     onClick={() => {
                       setServiceFilter(service);
                       setShowServiceMenu(false);
                     }}
-                    variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                    variants={
+                      prefersReducedMotion ? undefined : motionButtonVariants
+                    }
                     initial="rest"
                     whileHover="hover"
                     whileTap="pressed"
@@ -565,7 +577,12 @@ export function TracesTab({
             whileHover="hover"
             whileTap="pressed"
           >
-            Status: {statusFilter === "all" ? "All" : statusFilter === "ok" ? "OK" : "Error"}
+            Status:{" "}
+            {statusFilter === "all"
+              ? "All"
+              : statusFilter === "ok"
+                ? "OK"
+                : "Error"}
           </motion.button>
           <AnimatePresence>
             {showStatusMenu && (
@@ -582,12 +599,16 @@ export function TracesTab({
                   type="button"
                   role="option"
                   aria-selected={statusFilter === "all"}
-                  className={traceFilterOptionVariants({ selected: statusFilter === "all" })}
+                  className={traceFilterOptionVariants({
+                    selected: statusFilter === "all",
+                  })}
                   onClick={() => {
                     setStatusFilter("all");
                     setShowStatusMenu(false);
                   }}
-                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  variants={
+                    prefersReducedMotion ? undefined : motionButtonVariants
+                  }
                   initial="rest"
                   whileHover="hover"
                   whileTap="pressed"
@@ -598,12 +619,16 @@ export function TracesTab({
                   type="button"
                   role="option"
                   aria-selected={statusFilter === "ok"}
-                  className={traceFilterOptionVariants({ selected: statusFilter === "ok" })}
+                  className={traceFilterOptionVariants({
+                    selected: statusFilter === "ok",
+                  })}
                   onClick={() => {
                     setStatusFilter("ok");
                     setShowStatusMenu(false);
                   }}
-                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  variants={
+                    prefersReducedMotion ? undefined : motionButtonVariants
+                  }
                   initial="rest"
                   whileHover="hover"
                   whileTap="pressed"
@@ -614,12 +639,16 @@ export function TracesTab({
                   type="button"
                   role="option"
                   aria-selected={statusFilter === "error"}
-                  className={traceFilterOptionVariants({ selected: statusFilter === "error" })}
+                  className={traceFilterOptionVariants({
+                    selected: statusFilter === "error",
+                  })}
                   onClick={() => {
                     setStatusFilter("error");
                     setShowStatusMenu(false);
                   }}
-                  variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                  variants={
+                    prefersReducedMotion ? undefined : motionButtonVariants
+                  }
                   initial="rest"
                   whileHover="hover"
                   whileTap="pressed"
@@ -653,7 +682,8 @@ export function TracesTab({
           <div className="flex flex-col h-full">
             {/* Selected trace header */}
             <div className="flex items-center gap-2 p-2 bg-neutral-1 border-b border-neutral-5">
-              <Button size="icon"
+              <Button
+                size="icon"
                 variant="secondary"
                 className="p-1 hover:bg-neutral-3 rounded"
                 type="button"
@@ -726,12 +756,15 @@ export function TracesTab({
                   data-status={trace.status}
                   className={cn(
                     "flex items-center gap-4 p-3 border-b border-neutral-5 hover:bg-neutral-a6 cursor-pointer",
-                    trace.status === "error" &&
-                      "bg-error-1 dark:bg-error-a2",
+                    trace.status === "error" && "bg-error-1 dark:bg-error-a2",
                   )}
                   onClick={() => handleTraceSelect(trace.traceId)}
                 >
-                  <OTELStatusBadge type="span-status" value={trace.status} size="sm" />
+                  <OTELStatusBadge
+                    type="span-status"
+                    value={trace.status}
+                    size="sm"
+                  />
 
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{trace.name}</div>
@@ -741,7 +774,10 @@ export function TracesTab({
                     </div>
                   </div>
 
-                  <HumanTimestamp timestamp={trace.startTime} format="relative" />
+                  <HumanTimestamp
+                    timestamp={trace.startTime}
+                    format="relative"
+                  />
 
                   <div className="text-sm text-neutral-10">
                     {formatDuration(trace.durationMs)}

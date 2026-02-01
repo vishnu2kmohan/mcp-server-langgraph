@@ -68,7 +68,9 @@ export function SelectionCard<T = void>({
     >
       <div
         className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-          selected ? "bg-primary-4 text-primary-11" : "bg-neutral-4 text-neutral-11"
+          selected
+            ? "bg-primary-4 text-primary-11"
+            : "bg-neutral-4 text-neutral-11"
         }`}
       >
         {icon}

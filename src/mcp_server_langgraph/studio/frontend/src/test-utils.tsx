@@ -84,8 +84,8 @@ export const MOTION_PROPS = new Set([
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export function filterMotionProps<T extends Record<string, unknown>>(
-  props: T
-): Omit<T, (typeof MOTION_PROPS extends Set<infer U> ? U : never)> {
+  props: T,
+): Omit<T, typeof MOTION_PROPS extends Set<infer U> ? U : never> {
   const filtered = { ...props };
   for (const key of Object.keys(filtered)) {
     if (MOTION_PROPS.has(key)) {
@@ -119,7 +119,7 @@ export function createMotionMock() {
         ...props
       }: React.ComponentProps<"button"> & Record<string, unknown>) => (
         // eslint-disable-next-line react/forbid-elements -- motion component mock requires raw element
-        (<button {...filterMotionProps(props)}>{children}</button>)
+        <button {...filterMotionProps(props)}>{children}</button>
       ),
       span: ({
         children,
@@ -181,14 +181,12 @@ export function createMotionMock() {
       }: React.ComponentProps<"form"> & Record<string, unknown>) => (
         <form {...filterMotionProps(props)}>{children}</form>
       ),
-      input: (props: React.ComponentProps<"input"> & Record<string, unknown>) => (
-         
-        (<Input {...filterMotionProps(props)} />)
-      ),
-      textarea: (props: React.ComponentProps<"textarea"> & Record<string, unknown>) => (
-         
-        (<Textarea {...filterMotionProps(props)} />)
-      ),
+      input: (
+        props: React.ComponentProps<"input"> & Record<string, unknown>,
+      ) => <Input {...filterMotionProps(props)} />,
+      textarea: (
+        props: React.ComponentProps<"textarea"> & Record<string, unknown>,
+      ) => <Textarea {...filterMotionProps(props)} />,
       label: ({
         children,
         ...props
@@ -231,9 +229,9 @@ export function createMotionMock() {
       }: React.SVGProps<SVGSVGElement> & Record<string, unknown>) => (
         <svg {...filterMotionProps(props)}>{children}</svg>
       ),
-      path: (props: React.SVGProps<SVGPathElement> & Record<string, unknown>) => (
-        <path {...filterMotionProps(props)} />
-      ),
+      path: (
+        props: React.SVGProps<SVGPathElement> & Record<string, unknown>,
+      ) => <path {...filterMotionProps(props)} />,
     },
     useReducedMotion: () => false,
     AnimatePresence: ({ children }: { children: React.ReactNode }) => (
@@ -242,7 +240,9 @@ export function createMotionMock() {
     LayoutGroup: ({ children }: { children: React.ReactNode }) => (
       <>{children}</>
     ),
-    LazyMotion: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    LazyMotion: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
     domAnimation: {},
     domMax: {},
   };

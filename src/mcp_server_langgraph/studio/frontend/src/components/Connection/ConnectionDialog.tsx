@@ -215,9 +215,7 @@ export function ConnectionDialog({
             if (errors.name) setErrors({ ...errors, name: undefined });
           }}
           className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
-            errors.name
-              ? "border-error-9"
-              : "border-neutral-5"
+            errors.name ? "border-error-9" : "border-neutral-5"
           }`}
           placeholder="My MCP Server"
         />
@@ -241,9 +239,7 @@ export function ConnectionDialog({
             if (errors.url) setErrors({ ...errors, url: undefined });
           }}
           className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
-            errors.url
-              ? "border-error-9"
-              : "border-neutral-5"
+            errors.url ? "border-error-9" : "border-neutral-5"
           }`}
           placeholder="https://mcp.example.com"
         />
@@ -293,11 +289,7 @@ export function ConnectionDialog({
         <label className="block text-sm font-medium text-neutral-11 mb-2">
           Access Scope
         </label>
-        <ScopeSelector
-          value={scope}
-          onChange={setScope}
-          disabled={isEditing}
-        />
+        <ScopeSelector value={scope} onChange={setScope} disabled={isEditing} />
         {isEditing && (
           <p className="mt-1 text-xs text-neutral-10">
             Scope cannot be changed after creation
@@ -323,9 +315,7 @@ export function ConnectionDialog({
               if (errors.apiKey) setErrors({ ...errors, apiKey: undefined });
             }}
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
-              errors.apiKey
-                ? "border-error-9"
-                : "border-neutral-5"
+              errors.apiKey ? "border-error-9" : "border-neutral-5"
             }`}
             placeholder="Enter your API key"
           />
@@ -353,9 +343,7 @@ export function ConnectionDialog({
                   setErrors({ ...errors, clientId: undefined });
               }}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary-7 ${
-                errors.clientId
-                  ? "border-error-9"
-                  : "border-neutral-5"
+                errors.clientId ? "border-error-9" : "border-neutral-5"
               }`}
               placeholder="OAuth2 client ID"
             />

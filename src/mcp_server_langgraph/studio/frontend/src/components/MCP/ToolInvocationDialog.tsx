@@ -163,9 +163,7 @@ export function ToolInvocationDialog({
         {/* Loading state */}
         {isLoadingTools && (
           <div className="flex items-center justify-center py-8">
-            <span className="text-neutral-10">
-              Loading tools...
-            </span>
+            <span className="text-neutral-10">Loading tools...</span>
           </div>
         )}
 
@@ -222,9 +220,7 @@ export function ToolInvocationDialog({
                       className="mb-1 block text-sm font-medium text-neutral-11"
                     >
                       {arg.name}
-                      {arg.required && (
-                        <span className="text-error-9">*</span>
-                      )}
+                      {arg.required && <span className="text-error-9">*</span>}
                     </label>
                     {arg.description && (
                       <p className="mb-1 text-xs text-neutral-10">

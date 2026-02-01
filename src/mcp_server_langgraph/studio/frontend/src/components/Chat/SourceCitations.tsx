@@ -167,7 +167,7 @@ export function SourceCitations({
 
     // Tooltip content: snippet if available, otherwise title
     const tooltipContent = source.snippet
-      ? truncateSnippet(source.snippet) ?? source.title
+      ? (truncateSnippet(source.snippet) ?? source.title)
       : source.title;
 
     return (
@@ -223,9 +223,9 @@ export function SourceCitations({
               <span>Web ({web.length})</span>
             </div>
             <nav className="flex flex-wrap gap-2" aria-label="Web sources">
-              {web.slice(0, maxVisible).map((source, index) =>
-                renderSourceLink(source, index)
-              )}
+              {web
+                .slice(0, maxVisible)
+                .map((source, index) => renderSourceLink(source, index))}
               {web.length > maxVisible && (
                 <span className="text-xs text-neutral-10 px-2 py-1">
                   +{web.length - maxVisible} more
@@ -242,10 +242,13 @@ export function SourceCitations({
               <BookOpen size={10} />
               <span>Knowledge Base ({kb.length})</span>
             </div>
-            <nav className="flex flex-wrap gap-2" aria-label="Knowledge base sources">
-              {kb.slice(0, maxVisible).map((source, index) =>
-                renderSourceLink(source, index)
-              )}
+            <nav
+              className="flex flex-wrap gap-2"
+              aria-label="Knowledge base sources"
+            >
+              {kb
+                .slice(0, maxVisible)
+                .map((source, index) => renderSourceLink(source, index))}
               {kb.length > maxVisible && (
                 <span className="text-xs text-neutral-10 px-2 py-1">
                   +{kb.length - maxVisible} more

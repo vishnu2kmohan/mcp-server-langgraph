@@ -59,16 +59,15 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-overlay-6" onClick={onClose} />
       <div className="relative bg-neutral-2 rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-3">
-          <h3 className="text-lg font-medium text-neutral-12">
-            {title}
-          </h3>
+          <h3 className="text-lg font-medium text-neutral-12">{title}</h3>
           <Button
             variant="secondary"
             className="p-1 text-neutral-8 hover:text-neutral-10 dark:hover:text-neutral-3"
-            onClick={onClose}>
+            onClick={onClose}
+          >
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -387,11 +386,7 @@ export function ProjectDetailPage() {
         <div className="text-error-9">
           Error: {error || "Project not found"}
         </div>
-        <Button
-          variant="primary"
-          
-          onClick={handleBack}
-        >
+        <Button variant="primary" onClick={handleBack}>
           Back to Projects
         </Button>
       </div>
@@ -415,9 +410,7 @@ export function ProjectDetailPage() {
               {project.name}
             </h1>
             {project.description && (
-              <p className="text-sm text-neutral-8">
-                {project.description}
-              </p>
+              <p className="text-sm text-neutral-8">{project.description}</p>
             )}
           </div>
           <Button
@@ -449,7 +442,8 @@ export function ProjectDetailPage() {
               size="lg"
               className="flex px-4 py-3 text-sm border-b-2"
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}>
+              onClick={() => setActiveTab(tab.id)}
+            >
               {tab.icon}
               <span>{tab.label}</span>
               {tab.count !== undefined && (
@@ -539,12 +533,11 @@ function ConnectionsTab({
         onSubmit={handleAddConnection}
       />
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-neutral-12">
-          Connections
-        </h2>
+        <h2 className="text-lg font-medium text-neutral-12">Connections</h2>
         <Button
           variant="primary"
-          size="sm" className="gap-2"
+          size="sm"
+          className="gap-2"
           onClick={() => setShowDialog(true)}
         >
           <Plus className="w-4 h-4" />
@@ -567,9 +560,7 @@ function ConnectionsTab({
                 <div className="font-medium text-neutral-12">
                   {connection.name}
                 </div>
-                <div className="text-sm text-neutral-8">
-                  {connection.type}
-                </div>
+                <div className="text-sm text-neutral-8">{connection.type}</div>
               </div>
               <span
                 className={`px-2 py-0.5 text-xs rounded-full ${
@@ -627,11 +618,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
         <div className="text-error-9">{error}</div>
-        <Button
-          variant="primary"
-          
-          onClick={() => refetchObservability()}
-        >
+        <Button variant="primary" onClick={() => refetchObservability()}>
           Retry
         </Button>
       </div>
@@ -679,9 +666,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
       {/* Navigation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-neutral-2 border border-neutral-3 rounded-lg p-4">
-          <h3 className="font-medium text-neutral-12 mb-2">
-            Traces
-          </h3>
+          <h3 className="font-medium text-neutral-12 mb-2">Traces</h3>
           <p className="text-sm text-neutral-8 mb-4">
             View traces from sessions and workflows in this project.
           </p>
@@ -693,9 +678,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </a>
         </div>
         <div className="bg-neutral-2 border border-neutral-3 rounded-lg p-4">
-          <h3 className="font-medium text-neutral-12 mb-2">
-            Metrics
-          </h3>
+          <h3 className="font-medium text-neutral-12 mb-2">Metrics</h3>
           <p className="text-sm text-neutral-8 mb-4">
             View aggregated metrics for this project.
           </p>
@@ -707,9 +690,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </a>
         </div>
         <div className="bg-neutral-2 border border-neutral-3 rounded-lg p-4">
-          <h3 className="font-medium text-neutral-12 mb-2">
-            Logs
-          </h3>
+          <h3 className="font-medium text-neutral-12 mb-2">Logs</h3>
           <p className="text-sm text-neutral-8 mb-4">
             View logs from sessions and workflows.
           </p>
@@ -721,9 +702,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
           </a>
         </div>
         <div className="bg-neutral-2 border border-neutral-3 rounded-lg p-4">
-          <h3 className="font-medium text-neutral-12 mb-2">
-            Alerts
-          </h3>
+          <h3 className="font-medium text-neutral-12 mb-2">Alerts</h3>
           <p className="text-sm text-neutral-8 mb-4">
             View active alerts for this project.
           </p>
@@ -739,9 +718,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
       {/* Recent Logs */}
       <div className="bg-neutral-2 border border-neutral-3 rounded-lg">
         <div className="px-4 py-3 border-b border-neutral-3 flex items-center justify-between">
-          <h3 className="font-medium text-neutral-12">
-            Recent Logs
-          </h3>
+          <h3 className="font-medium text-neutral-12">Recent Logs</h3>
           <a
             href={`/studio/observability?project=${projectId}&tab=logs`}
             className="text-primary-10 text-sm hover:underline"
@@ -775,9 +752,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
                   <span className="text-neutral-8 whitespace-nowrap text-xs">
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </span>
-                  <span className="text-neutral-12 flex-1">
-                    {log.message}
-                  </span>
+                  <span className="text-neutral-12 flex-1">{log.message}</span>
                 </div>
               ))}
             </div>
@@ -788,9 +763,7 @@ function ObservabilityTab({ projectId }: { projectId: string }) {
       {/* Active Alerts */}
       <div className="bg-neutral-2 border border-neutral-3 rounded-lg">
         <div className="px-4 py-3 border-b border-neutral-3 flex items-center justify-between">
-          <h3 className="font-medium text-neutral-12">
-            Active Alerts
-          </h3>
+          <h3 className="font-medium text-neutral-12">Active Alerts</h3>
           <a
             href={`/studio/observability?project=${projectId}&tab=alerts`}
             className="text-primary-10 text-sm hover:underline"
@@ -873,11 +846,7 @@ function CostTab({ projectId }: { projectId: string }) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
         <div className="text-error-9">{error}</div>
-        <Button
-          variant="primary"
-          
-          onClick={() => refetchCost()}
-        >
+        <Button variant="primary" onClick={() => refetchCost()}>
           Retry
         </Button>
       </div>
@@ -902,9 +871,7 @@ function CostTab({ projectId }: { projectId: string }) {
           <div className="text-2xl font-semibold text-neutral-12">
             {formattedCost}
           </div>
-          <p className="text-xs text-neutral-6 mt-1">
-            This month
-          </p>
+          <p className="text-xs text-neutral-6 mt-1">This month</p>
         </div>
         <div className="bg-neutral-2 border border-neutral-3 rounded-lg p-4">
           <h3 className="text-sm font-medium text-neutral-8 mb-1">
@@ -913,29 +880,21 @@ function CostTab({ projectId }: { projectId: string }) {
           <div className="text-2xl font-semibold text-neutral-12">
             {formattedTokens}
           </div>
-          <p className="text-xs text-neutral-6 mt-1">
-            Prompt + Completion
-          </p>
+          <p className="text-xs text-neutral-6 mt-1">Prompt + Completion</p>
         </div>
         <div className="bg-neutral-2 border border-neutral-3 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-neutral-8 mb-1">
-            Sessions
-          </h3>
+          <h3 className="text-sm font-medium text-neutral-8 mb-1">Sessions</h3>
           <div className="text-2xl font-semibold text-neutral-12">
             {data?.session_count || 0}
           </div>
-          <p className="text-xs text-neutral-6 mt-1">
-            Active this month
-          </p>
+          <p className="text-xs text-neutral-6 mt-1">Active this month</p>
         </div>
       </div>
 
       {/* Cost by Model */}
       <div className="bg-neutral-2 border border-neutral-3 rounded-lg">
         <div className="px-4 py-3 border-b border-neutral-3">
-          <h3 className="text-lg font-medium text-neutral-12">
-            Cost by Model
-          </h3>
+          <h3 className="text-lg font-medium text-neutral-12">Cost by Model</h3>
         </div>
         <div className="p-4">
           {(modelCosts || []).length === 0 ? (
@@ -1028,12 +987,11 @@ function MembersTab({
         onSubmit={handleAddMember}
       />
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-neutral-12">
-          Members
-        </h2>
+        <h2 className="text-lg font-medium text-neutral-12">Members</h2>
         <Button
           variant="primary"
-          size="sm" className="gap-2"
+          size="sm"
+          className="gap-2"
           onClick={() => setShowDialog(true)}
         >
           <Plus className="w-4 h-4" />

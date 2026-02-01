@@ -315,9 +315,7 @@ export function ChatMessages({
 
               <p
                 className={`text-xs mt-1 ${
-                  message.role === "user"
-                    ? "text-primary-4"
-                    : "text-neutral-9"
+                  message.role === "user" ? "text-primary-4" : "text-neutral-9"
                 }`}
               >
                 {new Date(message.timestamp).toLocaleTimeString()}

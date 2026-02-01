@@ -81,8 +81,7 @@ export const STATUS_BG_COLORS = {
  * Used by LogsTab LevelBadge and ConsoleTab level indicators.
  */
 export const LEVEL_BADGE_STYLES = {
-  debug:
-    "bg-neutral-2 text-neutral-11",
+  debug: "bg-neutral-2 text-neutral-11",
   info: "bg-primary-3 text-primary-11 dark:bg-primary-a6 dark:text-primary-5",
   warning:
     "bg-warning-3 text-warning-10 dark:bg-warning-a6 dark:text-warning-6",
@@ -184,8 +183,7 @@ export const AI_INSIGHT_COLORS = {
   /** Background styles for AI insight containers */
   bg: "bg-insight-1 dark:bg-insight-a4",
   /** Badge styles for AI insight indicators */
-  badge:
-    "bg-insight-2 text-insight-11 dark:bg-insight-a6 dark:text-insight-5",
+  badge: "bg-insight-2 text-insight-11 dark:bg-insight-a6 dark:text-insight-5",
 } as const;
 
 // =============================================================================

@@ -449,7 +449,7 @@ describe("CostPage", () => {
       // Chart should have accessible description of data points
       expect(chart).toHaveAttribute(
         "aria-label",
-        expect.stringMatching(/7 data points/i)
+        expect.stringMatching(/7 data points/i),
       );
     });
 
@@ -603,24 +603,33 @@ describe("CostPage", () => {
 
       renderWithProviders(<CostPage />);
       const loadingContainer = screen.getByTestId("cost-loading-container");
-      expect(loadingContainer).toHaveAttribute("aria-label", "Loading cost data");
+      expect(loadingContainer).toHaveAttribute(
+        "aria-label",
+        "Loading cost data",
+      );
     });
 
     it("should have role=group on admin view toggle container", () => {
       renderWithProviders(<CostPage />, { persona: "admin" });
-      const toggleGroup = screen.getByRole("group", { name: /dashboard view/i });
+      const toggleGroup = screen.getByRole("group", {
+        name: /dashboard view/i,
+      });
       expect(toggleGroup).toBeInTheDocument();
     });
 
     it("should have aria-pressed on active admin toggle button", () => {
       renderWithProviders(<CostPage />, { persona: "admin" });
-      const personalButton = screen.getByRole("button", { name: /personal costs/i });
+      const personalButton = screen.getByRole("button", {
+        name: /personal costs/i,
+      });
       expect(personalButton).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should update aria-pressed when switching views", () => {
       renderWithProviders(<CostPage />, { persona: "admin" });
-      const orgButton = screen.getByRole("button", { name: /organizational view/i });
+      const orgButton = screen.getByRole("button", {
+        name: /organizational view/i,
+      });
 
       // Initially personal is pressed
       expect(orgButton).toHaveAttribute("aria-pressed", "false");

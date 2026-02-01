@@ -321,10 +321,7 @@ export const mcpHandlers = [
     const content = RESOURCE_CONTENT[decodedUri];
 
     if (!content) {
-      return apiJsonResponse(
-        { error: "Resource not found" },
-        { status: 404 },
-      );
+      return apiJsonResponse({ error: "Resource not found" }, { status: 404 });
     }
 
     return apiJsonResponse({

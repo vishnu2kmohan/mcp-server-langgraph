@@ -64,10 +64,10 @@ describe("WorkflowsListPage - Views", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("radio", { name: /grid view/i })
+          screen.getByRole("radio", { name: /grid view/i }),
         ).toBeInTheDocument();
         expect(
-          screen.getByRole("radio", { name: /table view/i })
+          screen.getByRole("radio", { name: /table view/i }),
         ).toBeInTheDocument();
       });
     });
@@ -158,7 +158,7 @@ describe("WorkflowsListPage - Views", () => {
         expect(screen.getByText("Workflow Beta")).toBeInTheDocument();
         // Check descriptions are shown
         expect(
-          screen.getByText("First workflow for data processing")
+          screen.getByText("First workflow for data processing"),
         ).toBeInTheDocument();
       });
     });
@@ -183,9 +183,7 @@ describe("WorkflowsListPage - Views", () => {
 
       // Headers should be clickable (cursor-pointer class)
       // Find the Name header specifically
-      const nameHeader = headers.find((h) =>
-        h.textContent?.includes("Name")
-      );
+      const nameHeader = headers.find((h) => h.textContent?.includes("Name"));
       expect(nameHeader).toBeDefined();
     });
   });
@@ -203,7 +201,7 @@ describe("WorkflowsListPage - Views", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("checkbox", { name: /select all/i })
+          screen.getByRole("checkbox", { name: /select all/i }),
         ).toBeInTheDocument();
       });
     });
@@ -221,10 +219,10 @@ describe("WorkflowsListPage - Views", () => {
       await waitFor(() => {
         // Each workflow should have a checkbox
         expect(
-          screen.getByRole("checkbox", { name: /select workflow alpha/i })
+          screen.getByRole("checkbox", { name: /select workflow alpha/i }),
         ).toBeInTheDocument();
         expect(
-          screen.getByRole("checkbox", { name: /select workflow beta/i })
+          screen.getByRole("checkbox", { name: /select workflow beta/i }),
         ).toBeInTheDocument();
       });
     });
@@ -273,7 +271,7 @@ describe("WorkflowsListPage - Views", () => {
         // Bulk action bar should appear
         expect(screen.getByText(/1 workflow selected/i)).toBeInTheDocument();
         expect(
-          screen.getByRole("button", { name: /delete selected/i })
+          screen.getByRole("button", { name: /delete selected/i }),
         ).toBeInTheDocument();
       });
     });
@@ -332,7 +330,7 @@ describe("WorkflowsListPage - Views", () => {
       await waitFor(() => {
         // Bulk action bar should be gone
         expect(
-          screen.queryByText(/workflows? selected/i)
+          screen.queryByText(/workflows? selected/i),
         ).not.toBeInTheDocument();
       });
     });
@@ -346,7 +344,7 @@ describe("WorkflowsListPage - Views", () => {
         expect(screen.getByText("Workflow Alpha")).toBeInTheDocument();
         expect(screen.getByText("Workflow Beta")).toBeInTheDocument();
         expect(
-          screen.getByText("First workflow for data processing")
+          screen.getByText("First workflow for data processing"),
         ).toBeInTheDocument();
       });
     });

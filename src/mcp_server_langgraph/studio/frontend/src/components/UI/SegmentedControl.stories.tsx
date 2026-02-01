@@ -7,7 +7,16 @@
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { LayoutGrid, List, Columns, Table, AlignLeft, AlignCenter, AlignRight, AlignJustify } from "lucide-react";
+import {
+  LayoutGrid,
+  List,
+  Columns,
+  Table,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+} from "lucide-react";
 import { SegmentedControl, SegmentedControlItem } from "./SegmentedControl";
 
 const meta: Meta<typeof SegmentedControl> = {
@@ -266,7 +275,11 @@ export const WithDisabledItem: Story = {
         <SegmentedControlItem value="list" aria-label="List view">
           <List size={16} />
         </SegmentedControlItem>
-        <SegmentedControlItem value="table" aria-label="Table view (premium)" disabled>
+        <SegmentedControlItem
+          value="table"
+          aria-label="Table view (premium)"
+          disabled
+        >
           <Table size={16} />
         </SegmentedControlItem>
       </SegmentedControl>
@@ -282,8 +295,8 @@ export const KeyboardNavigation: Story = {
     <div className="flex flex-col gap-4 items-center">
       <SegmentedControlDemo />
       <p className="text-sm text-neutral-11 text-center max-w-xs">
-        Focus the control and use Arrow keys to navigate, Home/End to jump to first/last,
-        Enter/Space to select.
+        Focus the control and use Arrow keys to navigate, Home/End to jump to
+        first/last, Enter/Space to select.
       </p>
     </div>
   ),

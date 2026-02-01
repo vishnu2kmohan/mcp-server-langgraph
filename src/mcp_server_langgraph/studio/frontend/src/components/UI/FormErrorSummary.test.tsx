@@ -29,9 +29,7 @@ describe("FormErrorSummary", () => {
     });
 
     it("renders when errors are present", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email address" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email address" }} />);
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
@@ -44,7 +42,7 @@ describe("FormErrorSummary", () => {
             password: "Password is too short",
             username: "Username is already taken",
           }}
-        />
+        />,
       );
 
       expect(screen.getByText("Invalid email address")).toBeInTheDocument();
@@ -53,19 +51,15 @@ describe("FormErrorSummary", () => {
     });
 
     it("renders heading text", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       expect(
-        screen.getByText("Please fix the following errors:")
+        screen.getByText("Please fix the following errors:"),
       ).toBeInTheDocument();
     });
 
     it("renders error icon for visual indication", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       const alert = screen.getByRole("alert");
       expect(alert.querySelector("svg")).toBeInTheDocument();
@@ -78,17 +72,13 @@ describe("FormErrorSummary", () => {
 
   describe("accessibility", () => {
     it("has role=alert for screen readers", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("has aria-live=polite for non-intrusive announcement", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       const alert = screen.getByRole("alert");
       expect(alert).toHaveAttribute("aria-live", "polite");
@@ -101,7 +91,7 @@ describe("FormErrorSummary", () => {
             email: "Invalid email",
             password: "Too short",
           }}
-        />
+        />,
       );
 
       expect(screen.getByRole("list")).toBeInTheDocument();
@@ -109,9 +99,7 @@ describe("FormErrorSummary", () => {
     });
 
     it("error links are anchor elements for keyboard navigation", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       const link = screen.getByRole("link");
       expect(link).toHaveAttribute("href", "#email");
@@ -130,7 +118,7 @@ describe("FormErrorSummary", () => {
             email: "Invalid email",
             password: "Too short",
           }}
-        />
+        />,
       );
 
       const links = screen.getAllByRole("link");
@@ -145,13 +133,13 @@ describe("FormErrorSummary", () => {
       const mockFocus = vi.fn();
       const mockElement = { focus: mockFocus };
       vi.spyOn(document, "getElementById").mockReturnValue(
-        mockElement as unknown as HTMLElement
+        mockElement as unknown as HTMLElement,
       );
 
       render(
         <>
           <FormErrorSummary errors={{ email: "Invalid email" }} />
-        </>
+        </>,
       );
 
       const link = screen.getByRole("link");
@@ -168,27 +156,21 @@ describe("FormErrorSummary", () => {
 
   describe("styling", () => {
     it("has error background styling", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       const alert = screen.getByRole("alert");
       expect(alert).toHaveClass("bg-error-2");
     });
 
     it("has error border styling", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       const alert = screen.getByRole("alert");
       expect(alert).toHaveClass("border-error-6");
     });
 
     it("has error text color", () => {
-      render(
-        <FormErrorSummary errors={{ email: "Invalid email" }} />
-      );
+      render(<FormErrorSummary errors={{ email: "Invalid email" }} />);
 
       const heading = screen.getByText("Please fix the following errors:");
       expect(heading).toHaveClass("text-error-11");
@@ -205,7 +187,7 @@ describe("FormErrorSummary", () => {
         <FormErrorSummary
           errors={{ email: "Invalid email" }}
           className="custom-class"
-        />
+        />,
       );
 
       const alert = screen.getByRole("alert");
@@ -217,11 +199,11 @@ describe("FormErrorSummary", () => {
         <FormErrorSummary
           errors={{ email: "Invalid email" }}
           heading="There are errors in your form:"
-        />
+        />,
       );
 
       expect(
-        screen.getByText("There are errors in your form:")
+        screen.getByText("There are errors in your form:"),
       ).toBeInTheDocument();
     });
   });

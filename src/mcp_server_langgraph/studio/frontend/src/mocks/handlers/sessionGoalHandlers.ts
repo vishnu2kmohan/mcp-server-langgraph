@@ -36,7 +36,9 @@ let goalIdCounter = 0;
 /**
  * Create a mock goal with default values
  */
-export const createMockGoal = (overrides: Partial<MockGoal> = {}): MockGoal => ({
+export const createMockGoal = (
+  overrides: Partial<MockGoal> = {},
+): MockGoal => ({
   id: `goal-${++goalIdCounter}`,
   goal: "Complete the task",
   achieved: true,
@@ -84,23 +86,26 @@ const defaultGoals: MockGoal[] = [
 export const sessionGoalHandlers = [
   // GET /api/v1/sessions/:session_id/goals - Get goal history
   // Supports any session ID (dynamic matching with :session_id param)
-  http.get("/api/v1/sessions/:session_id/goals", async ({ params, request }) => {
-    await delay(50);
+  http.get(
+    "/api/v1/sessions/:session_id/goals",
+    async ({ params, request }) => {
+      await delay(50);
 
-    const { session_id } = params as { session_id: string };
-    const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
-    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+      const { session_id } = params as { session_id: string };
+      const url = new URL(request.url);
+      const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+      const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
 
-    // Return default goals paginated
-    const paginatedGoals = defaultGoals.slice(offset, offset + limit);
+      // Return default goals paginated
+      const paginatedGoals = defaultGoals.slice(offset, offset + limit);
 
-    return apiJsonResponse({
-      session_id,
-      goals: paginatedGoals,
-      total: defaultGoals.length,
-    });
-  }),
+      return apiJsonResponse({
+        session_id,
+        goals: paginatedGoals,
+        total: defaultGoals.length,
+      });
+    },
+  ),
 
   // POST /api/v1/sessions/:session_id/goal - Set a new goal
   http.post(
@@ -148,13 +153,10 @@ export const sessionGoalHandlers = [
   ),
 
   // DELETE /api/v1/sessions/:session_id/goals/:goal_id - Delete a goal
-  http.delete(
-    "/api/v1/sessions/:session_id/goals/:goal_id",
-    async () => {
-      await delay(50);
-      return new HttpResponse(null, { status: 204 });
-    },
-  ),
+  http.delete("/api/v1/sessions/:session_id/goals/:goal_id", async () => {
+    await delay(50);
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
 
 export default sessionGoalHandlers;

@@ -33,7 +33,7 @@
 export function getIndentClass(depth: number, baseUnit: number = 4): string {
   // Handle invalid inputs
   if (depth < 0 || !Number.isFinite(depth)) {
-    return 'pl-0';
+    return "pl-0";
   }
 
   // Standard Tailwind spacing values (in 4px units)
@@ -58,9 +58,12 @@ export function getIndentClass(depth: number, baseUnit: number = 4): string {
  * @param baseUnit - Base spacing multiplier in Tailwind units (default: 4 = 16px)
  * @returns Tailwind margin-left class string
  */
-export function getIndentMarginClass(depth: number, baseUnit: number = 4): string {
+export function getIndentMarginClass(
+  depth: number,
+  baseUnit: number = 4,
+): string {
   if (depth < 0 || !Number.isFinite(depth)) {
-    return 'ml-0';
+    return "ml-0";
   }
 
   const standardUnits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 24];
@@ -86,7 +89,7 @@ export function getIndentMarginClass(depth: number, baseUnit: number = 4): strin
  */
 export function getIndentStyle(
   depth: number,
-  pxPerLevel: number = 16
+  pxPerLevel: number = 16,
 ): React.CSSProperties {
   return {
     paddingLeft: `${Math.max(0, depth) * pxPerLevel}px`,
@@ -102,13 +105,13 @@ export function getIndentStyle(
  * Deep nesting (7+) falls back to getIndentClass() with arbitrary values.
  */
 export const INDENT_CLASSES: Record<number, string> = {
-  0: 'pl-0',
-  1: 'pl-4',
-  2: 'pl-8',
-  3: 'pl-12',
-  4: 'pl-16',
-  5: 'pl-20',
-  6: 'pl-24',
+  0: "pl-0",
+  1: "pl-4",
+  2: "pl-8",
+  3: "pl-12",
+  4: "pl-16",
+  5: "pl-20",
+  6: "pl-24",
 };
 
 /**
@@ -118,5 +121,7 @@ export const INDENT_CLASSES: Record<number, string> = {
  * @returns Tailwind padding-left class string
  */
 export function getIndentClassFast(depth: number): string {
-  return INDENT_CLASSES[Math.min(Math.max(0, depth), 10)] ?? getIndentClass(depth);
+  return (
+    INDENT_CLASSES[Math.min(Math.max(0, depth), 10)] ?? getIndentClass(depth)
+  );
 }

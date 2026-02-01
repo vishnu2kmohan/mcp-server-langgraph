@@ -56,7 +56,7 @@ describe("ToolSelector", () => {
           {...defaultProps}
           mode="manual"
           selectedTools={["calculator", "web_search"]}
-        />
+        />,
       );
 
       const button = screen.getByRole("button", { name: /tools/i });
@@ -123,7 +123,7 @@ describe("ToolSelector", () => {
         <div>
           <ToolSelector {...defaultProps} />
           <button data-testid="outside">Outside</button>
-        </div>
+        </div>,
       );
 
       const button = screen.getByRole("button", { name: /tools/i });
@@ -147,7 +147,9 @@ describe("ToolSelector", () => {
       await user.click(screen.getByRole("button", { name: /tools/i }));
 
       expect(screen.getByRole("option", { name: /auto/i })).toBeInTheDocument();
-      expect(screen.getByRole("option", { name: /manual/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: /manual/i }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("option", { name: /none/i })).toBeInTheDocument();
     });
 
@@ -179,9 +181,25 @@ describe("ToolSelector", () => {
 
   describe("tool list", () => {
     const mockTools = [
-      { toolId: "builtin:calculator", name: "calculator", displayName: "Calculator", source: "builtin" as const },
-      { toolId: "builtin:web_search", name: "web_search", displayName: "Web Search", source: "builtin" as const },
-      { toolId: "mcp:github:create_issue", name: "github_create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
+      {
+        toolId: "builtin:calculator",
+        name: "calculator",
+        displayName: "Calculator",
+        source: "builtin" as const,
+      },
+      {
+        toolId: "builtin:web_search",
+        name: "web_search",
+        displayName: "Web Search",
+        source: "builtin" as const,
+      },
+      {
+        toolId: "mcp:github:create_issue",
+        name: "github_create_issue",
+        displayName: "Create Issue",
+        source: "mcp" as const,
+        serverName: "github",
+      },
     ];
 
     it("should show tool list when mode is manual", async () => {
@@ -191,7 +209,7 @@ describe("ToolSelector", () => {
           {...defaultProps}
           mode="manual"
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -207,7 +225,7 @@ describe("ToolSelector", () => {
           {...defaultProps}
           mode="manual"
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -223,7 +241,7 @@ describe("ToolSelector", () => {
           {...defaultProps}
           mode="manual"
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -238,14 +256,16 @@ describe("ToolSelector", () => {
         <ToolSelector
           {...defaultProps}
           mode="manual"
-          selectedTools={["builtin:calculator"]}  // v7: Uses toolId
+          selectedTools={["builtin:calculator"]} // v7: Uses toolId
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
 
-      const calculatorCheckbox = screen.getByRole("checkbox", { name: /calculator/i });
+      const calculatorCheckbox = screen.getByRole("checkbox", {
+        name: /calculator/i,
+      });
       expect(calculatorCheckbox).toBeChecked();
     });
   });
@@ -256,8 +276,18 @@ describe("ToolSelector", () => {
 
   describe("tool selection", () => {
     const mockTools = [
-      { toolId: "builtin:calculator", name: "calculator", displayName: "Calculator", source: "builtin" as const },
-      { toolId: "builtin:web_search", name: "web_search", displayName: "Web Search", source: "builtin" as const },
+      {
+        toolId: "builtin:calculator",
+        name: "calculator",
+        displayName: "Calculator",
+        source: "builtin" as const,
+      },
+      {
+        toolId: "builtin:web_search",
+        name: "web_search",
+        displayName: "Web Search",
+        source: "builtin" as const,
+      },
     ];
 
     it("should call onSelectionChange when tool is selected", async () => {
@@ -269,7 +299,7 @@ describe("ToolSelector", () => {
           mode="manual"
           onSelectionChange={onSelectionChange}
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -286,10 +316,10 @@ describe("ToolSelector", () => {
         <ToolSelector
           {...defaultProps}
           mode="manual"
-          selectedTools={["builtin:calculator"]}  // v7: Uses toolId
+          selectedTools={["builtin:calculator"]} // v7: Uses toolId
           onSelectionChange={onSelectionChange}
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -305,17 +335,20 @@ describe("ToolSelector", () => {
         <ToolSelector
           {...defaultProps}
           mode="manual"
-          selectedTools={["builtin:calculator"]}  // v7: Uses toolId
+          selectedTools={["builtin:calculator"]} // v7: Uses toolId
           onSelectionChange={onSelectionChange}
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
       await user.click(screen.getByRole("checkbox", { name: /web search/i }));
 
       // v7: Uses toolIds for selection
-      expect(onSelectionChange).toHaveBeenCalledWith(["builtin:calculator", "builtin:web_search"]);
+      expect(onSelectionChange).toHaveBeenCalledWith([
+        "builtin:calculator",
+        "builtin:web_search",
+      ]);
     });
   });
 
@@ -325,9 +358,25 @@ describe("ToolSelector", () => {
 
   describe("search filtering", () => {
     const mockTools = [
-      { toolId: "builtin:calculator", name: "calculator", displayName: "Calculator", source: "builtin" as const },
-      { toolId: "builtin:web_search", name: "web_search", displayName: "Web Search", source: "builtin" as const },
-      { toolId: "mcp:github:create_issue", name: "github_create_issue", displayName: "Create Issue", source: "mcp" as const, serverName: "github" },
+      {
+        toolId: "builtin:calculator",
+        name: "calculator",
+        displayName: "Calculator",
+        source: "builtin" as const,
+      },
+      {
+        toolId: "builtin:web_search",
+        name: "web_search",
+        displayName: "Web Search",
+        source: "builtin" as const,
+      },
+      {
+        toolId: "mcp:github:create_issue",
+        name: "github_create_issue",
+        displayName: "Create Issue",
+        source: "mcp" as const,
+        serverName: "github",
+      },
     ];
 
     it("should show search input in dropdown", async () => {
@@ -337,7 +386,7 @@ describe("ToolSelector", () => {
           {...defaultProps}
           mode="manual"
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -352,7 +401,7 @@ describe("ToolSelector", () => {
           {...defaultProps}
           mode="manual"
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -369,7 +418,7 @@ describe("ToolSelector", () => {
           {...defaultProps}
           mode="manual"
           availableTools={mockTools}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));

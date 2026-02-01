@@ -78,7 +78,8 @@ const sampleGoals: SessionGoalHistory[] = [
     id: "goal-1",
     goal: "Complete the data analysis for Q4 report",
     achieved: true,
-    feedback: "All analysis completed successfully. Charts and insights ready for review.",
+    feedback:
+      "All analysis completed successfully. Charts and insights ready for review.",
     setAt: Date.now() - 3600000 * 24, // 24 hours ago
     completedAt: Date.now() - 3600000 * 20, // 20 hours ago
   },

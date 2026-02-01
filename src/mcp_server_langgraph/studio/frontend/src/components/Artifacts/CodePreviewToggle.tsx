@@ -75,7 +75,8 @@ export function CodePreviewToggle({
           mode === "code"
             ? "bg-primary-9 text-neutral-12 shadow-sm"
             : "text-neutral-11 hover:text-neutral-12",
-        )}>
+        )}
+      >
         Code
       </Button>
       <Button
@@ -92,7 +93,8 @@ export function CodePreviewToggle({
             ? "bg-primary-9 text-neutral-12 shadow-sm"
             : "text-neutral-11 hover:text-neutral-12",
           !previewSupported && "opacity-50 cursor-not-allowed",
-        )}>
+        )}
+      >
         Preview
       </Button>
     </div>

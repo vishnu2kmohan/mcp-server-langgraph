@@ -69,14 +69,14 @@ export function SuggestionsFooterBar({
     (suggestion: AISuggestion) => {
       onAccept?.(suggestion);
     },
-    [onAccept]
+    [onAccept],
   );
 
   const handleDismiss = useCallback(
     (suggestion: AISuggestion) => {
       onDismiss?.(suggestion);
     },
-    [onDismiss]
+    [onDismiss],
   );
 
   const handleRefresh = useCallback(() => {
@@ -93,7 +93,7 @@ export function SuggestionsFooterBar({
         className={cn(
           "w-full h-8 px-3",
           "flex items-center justify-between",
-          "text-sm text-neutral-11"
+          "text-sm text-neutral-11",
         )}
       >
         {/* Clickable header section */}
@@ -109,7 +109,7 @@ export function SuggestionsFooterBar({
             "hover:bg-neutral-2",
             "transition-colors duration-150",
             "focus:outline-none focus:ring-2 focus:ring-primary-7 focus:ring-inset",
-            "-ml-3 pl-3" // Extend click area to left edge
+            "-ml-3 pl-3", // Extend click area to left edge
           )}
         >
           <Sparkles
@@ -122,7 +122,7 @@ export function SuggestionsFooterBar({
               className={cn(
                 "px-1.5 py-0.5 rounded-full",
                 "bg-insight-3 text-insight-11",
-                "text-xs font-medium"
+                "text-xs font-medium",
               )}
             >
               {suggestions.length}
@@ -154,7 +154,7 @@ export function SuggestionsFooterBar({
               "transition-colors duration-150",
               "min-w-[24px] min-h-[24px]",
               "flex items-center justify-center",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
+              "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
             aria-label="Refresh suggestions"
           >
@@ -183,7 +183,7 @@ export function SuggestionsFooterBar({
           className={cn(
             "max-h-[200px] overflow-y-auto",
             "border-t border-neutral-6",
-            "bg-neutral-2"
+            "bg-neutral-2",
           )}
         >
           {suggestions.length === 0 ? (
@@ -229,7 +229,7 @@ function SuggestionItem({
         "flex items-center justify-between gap-3",
         "p-2 rounded-md",
         "bg-neutral-1 hover:bg-neutral-3",
-        "transition-colors duration-150"
+        "transition-colors duration-150",
       )}
     >
       <div className="flex-1 min-w-0">
@@ -250,7 +250,7 @@ function SuggestionItem({
             "text-success-11 hover:bg-success-3",
             "transition-colors duration-150",
             "min-w-7 min-h-7",
-            "flex items-center justify-center"
+            "flex items-center justify-center",
           )}
           aria-label={`Accept ${suggestion.label}`}
         >
@@ -265,7 +265,7 @@ function SuggestionItem({
             "text-neutral-11 hover:text-neutral-11 hover:bg-neutral-4",
             "transition-colors duration-150",
             "min-w-7 min-h-7",
-            "flex items-center justify-center"
+            "flex items-center justify-center",
           )}
           aria-label={`Dismiss ${suggestion.label}`}
         >

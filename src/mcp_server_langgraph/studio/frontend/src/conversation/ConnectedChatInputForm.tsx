@@ -152,7 +152,9 @@ export interface ConnectedChatInputFormProps {
   /** Controlled tool preference (for lifting state to parent) */
   toolPreference?: "auto" | "native" | "builtin" | "mcp";
   /** Callback when tool preference changes (for lifting state to parent) */
-  onToolPreferenceChange?: (preference: "auto" | "native" | "builtin" | "mcp") => void;
+  onToolPreferenceChange?: (
+    preference: "auto" | "native" | "builtin" | "mcp",
+  ) => void;
 }
 
 // =============================================================================
@@ -253,13 +255,16 @@ export function ConnectedChatInputForm({
   }, [bypassPermission?.allowed, dispatch]);
 
   // Helper to get next mode in cycle (for telemetry before dispatch)
-  const getNextCycleMode = useCallback((currentMode: ExecutionMode): ExecutionMode => {
-    const modes: ExecutionMode[] = canBypass
-      ? ["default", "plan", "auto_accept", "bypass"]
-      : ["default", "plan", "auto_accept"];
-    const currentIndex = modes.indexOf(currentMode);
-    return modes[(currentIndex + 1) % modes.length];
-  }, [canBypass]);
+  const getNextCycleMode = useCallback(
+    (currentMode: ExecutionMode): ExecutionMode => {
+      const modes: ExecutionMode[] = canBypass
+        ? ["default", "plan", "auto_accept", "bypass"]
+        : ["default", "plan", "auto_accept"];
+      const currentIndex = modes.indexOf(currentMode);
+      return modes[(currentIndex + 1) % modes.length];
+    },
+    [canBypass],
+  );
 
   const handleCycleExecutionMode = useCallback(() => {
     const fromMode = executionMode;
@@ -276,19 +281,22 @@ export function ConnectedChatInputForm({
     dispatch(cycleExecutionMode());
   }, [dispatch, executionMode, getNextCycleMode, sessionId, telemetry]);
 
-  const handleExecutionModeChange = useCallback((mode: ExecutionMode) => {
-    const fromMode = executionMode;
+  const handleExecutionModeChange = useCallback(
+    (mode: ExecutionMode) => {
+      const fromMode = executionMode;
 
-    // Track telemetry before dispatch (click trigger)
-    telemetry.trackExecutionModeChange({
-      fromMode,
-      toMode: mode,
-      sessionId,
-      trigger: "click",
-    });
+      // Track telemetry before dispatch (click trigger)
+      telemetry.trackExecutionModeChange({
+        fromMode,
+        toMode: mode,
+        sessionId,
+        trigger: "click",
+      });
 
-    dispatch(setExecutionMode(mode));
-  }, [dispatch, executionMode, sessionId, telemetry]);
+      dispatch(setExecutionMode(mode));
+    },
+    [dispatch, executionMode, sessionId, telemetry],
+  );
 
   // Track previous sessionId for context updates
   const prevSessionIdRef = useRef<string | undefined>(undefined);
@@ -296,14 +304,22 @@ export function ConnectedChatInputForm({
   // =============================================================================
   // Tool Selection State & Hook (Manual Tool Selection)
   // =============================================================================
-  const [internalSelectedTools, setInternalSelectedTools] = useState<string[]>([]);
-  const [internalToolSelectionMode, setInternalToolSelectionMode] = useState<ToolSelectionMode>("auto");
+  const [internalSelectedTools, setInternalSelectedTools] = useState<string[]>(
+    [],
+  );
+  const [internalToolSelectionMode, setInternalToolSelectionMode] =
+    useState<ToolSelectionMode>("auto");
 
   // v7: Tool preference with persistence (native vs builtin)
   // Get persisted preference from preferences context
-  const { toolPreference: persistedToolPreference, setToolPreference: persistToolPreference } = useToolPreference();
+  const {
+    toolPreference: persistedToolPreference,
+    setToolPreference: persistToolPreference,
+  } = useToolPreference();
   // Internal state initialized from persisted preference
-  const [internalToolPreference, setInternalToolPreference] = useState<"auto" | "native" | "builtin" | "mcp">(persistedToolPreference);
+  const [internalToolPreference, setInternalToolPreference] = useState<
+    "auto" | "native" | "builtin" | "mcp"
+  >(persistedToolPreference);
 
   // Sync internal state when persisted preference changes (e.g., from settings page)
   useEffect(() => {
@@ -319,9 +335,10 @@ export function ConnectedChatInputForm({
   const toolPreference = toolPreferenceProp ?? internalToolPreference;
 
   // Fetch available tools (only when feature is enabled)
-  const { tools: availableToolsData, isLoading: isToolsLoading } = useAvailableTools({
-    skip: !enableManualToolSelection,
-  });
+  const { tools: availableToolsData, isLoading: isToolsLoading } =
+    useAvailableTools({
+      skip: !enableManualToolSelection,
+    });
 
   // Transform tools to ToolOption format for ToolSelector
   const availableTools: ToolOption[] = useMemo(() => {
@@ -521,7 +538,12 @@ export function ConnectedChatInputForm({
       // Request suggestion (hook handles debouncing internally)
       wsRequestSuggestionDebounced(value, cursorPositionRef.current);
     }
-  }, [value, useWebSocketForSuggestions, wsStatus, wsRequestSuggestionDebounced]);
+  }, [
+    value,
+    useWebSocketForSuggestions,
+    wsStatus,
+    wsRequestSuggestionDebounced,
+  ]);
 
   // Update context when session changes
   useEffect(() => {
@@ -749,9 +771,7 @@ export function ConnectedChatInputForm({
         showKBFocus={enableKBFocus}
         kbFocusValue={kbFocusMode}
         onKBFocusChange={handleKBFocusModeChange as (mode: string) => void}
-        kbStatus={
-          kbStatusForUI === "unavailable" ? "error" : kbStatusForUI
-        }
+        kbStatus={kbStatusForUI === "unavailable" ? "error" : kbStatusForUI}
         kbStatusMessage={kbStatusMessage}
         // Model selection (Sprint 1 - Chat Input Gap Fix)
         showModelSelector={showModelSelector}
@@ -793,8 +813,12 @@ export function ConnectedChatInputForm({
         }}
         // Execution mode (Ctrl/Cmd+Shift+M toggle)
         executionMode={executionMode}
-        onCycleExecutionMode={enableExecutionModeToggle ? handleCycleExecutionMode : undefined}
-        onExecutionModeChange={enableExecutionModeToggle ? handleExecutionModeChange : undefined}
+        onCycleExecutionMode={
+          enableExecutionModeToggle ? handleCycleExecutionMode : undefined
+        }
+        onExecutionModeChange={
+          enableExecutionModeToggle ? handleExecutionModeChange : undefined
+        }
         hasBypassPermission={canBypass}
         // Preferences menu (consolidated settings)
         showPreferencesMenu={enablePreferencesMenu}

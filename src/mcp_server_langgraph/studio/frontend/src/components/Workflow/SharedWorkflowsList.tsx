@@ -291,10 +291,7 @@ export function SharedWorkflowsList({
         {/* Empty State */}
         {!isLoading && !error && workflows.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Inbox
-              size={48}
-              className="text-neutral-9 mb-4"
-            />
+            <Inbox size={48} className="text-neutral-9 mb-4" />
             <h3 className="text-lg font-medium text-neutral-12 mb-2">
               No workflows shared with you
             </h3>
@@ -310,10 +307,7 @@ export function SharedWorkflowsList({
           workflows.length > 0 &&
           filteredWorkflows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Search
-                size={48}
-                className="text-neutral-9 mb-4"
-              />
+              <Search size={48} className="text-neutral-9 mb-4" />
               <h3 className="text-lg font-medium text-neutral-12 mb-2">
                 No workflows match your filters
               </h3>
@@ -401,7 +395,8 @@ export function SharedWorkflowsList({
                       canEdit(workflow.permission)
                         ? "Edit workflow"
                         : "Shared with you as read-only"
-                    }>
+                    }
+                  >
                     <Edit3 size={14} />
                     Edit
                   </Button>

@@ -185,45 +185,23 @@ export function EmptyState({
       </div>
 
       {/* Title */}
-      <h3
-        className={cn(
-          "text-neutral-12",
-          TITLE_STYLES[variant],
-        )}
-      >
-        {title}
-      </h3>
+      <h3 className={cn("text-neutral-12", TITLE_STYLES[variant])}>{title}</h3>
 
       {/* Description (optional) */}
       {description && (
-        <p
-          className={cn(
-            "text-neutral-11 max-w-md",
-            TEXT_STYLES[variant],
-          )}
-        >
+        <p className={cn("text-neutral-11 max-w-md", TEXT_STYLES[variant])}>
           {description}
         </p>
       )}
 
       {/* Motivation (Fogg Model) */}
-      <p
-        className={cn(
-          "text-neutral-10",
-          TEXT_STYLES[variant],
-        )}
-      >
+      <p className={cn("text-neutral-10", TEXT_STYLES[variant])}>
         {motivation}
       </p>
 
       {/* Ability indicator (Fogg Model - optional) */}
       {ability && (
-        <p
-          className={cn(
-            "text-neutral-9 italic",
-            TEXT_STYLES[variant],
-          )}
-        >
+        <p className={cn("text-neutral-9 italic", TEXT_STYLES[variant])}>
           {ability}
         </p>
       )}

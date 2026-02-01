@@ -363,10 +363,7 @@ export function ObservabilityPage() {
   );
 
   // Fetch selected trace details
-  const {
-    data: selectedTraceData,
-    isLoading: isTraceDetailLoading,
-  } =
+  const { data: selectedTraceData, isLoading: isTraceDetailLoading } =
     useGetTraceQuery(selectedTraceId ?? "", {
       skip: !selectedTraceId,
       pollingInterval: traceDetailPollingInterval,
@@ -595,7 +592,8 @@ export function ObservabilityPage() {
               variant="primary"
               className="flex px-4 py-2 rounded-lg"
               key={tab.id}
-              onClick={() => handleTabChange(tab.id)}>
+              onClick={() => handleTabChange(tab.id)}
+            >
               <tab.icon size={16} />
               {tab.label}
             </Button>
@@ -613,7 +611,8 @@ export function ObservabilityPage() {
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("")}
-                aria-pressed={statusFilter === ""}>
+                aria-pressed={statusFilter === ""}
+              >
                 All
               </Button>
               <Button
@@ -621,7 +620,8 @@ export function ObservabilityPage() {
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("success")}
-                aria-pressed={statusFilter === "success"}>
+                aria-pressed={statusFilter === "success"}
+              >
                 Success
               </Button>
               <Button
@@ -629,7 +629,8 @@ export function ObservabilityPage() {
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("error")}
-                aria-pressed={statusFilter === "error"}>
+                aria-pressed={statusFilter === "error"}
+              >
                 Error
               </Button>
               <Button
@@ -637,7 +638,8 @@ export function ObservabilityPage() {
                 size="sm"
                 className="px-2 py-1 text-xs rounded"
                 onClick={() => setStatusFilter("running")}
-                aria-pressed={statusFilter === "running"}>
+                aria-pressed={statusFilter === "running"}
+              >
                 Running
               </Button>
             </div>
@@ -771,10 +773,7 @@ export function ObservabilityPage() {
                               {session.status}
                             </span>
                           )}
-                          <ExternalLink
-                            size={16}
-                            className="text-neutral-6"
-                          />
+                          <ExternalLink size={16} className="text-neutral-6" />
                         </div>
                       </div>
                     </div>
@@ -835,10 +834,7 @@ export function ObservabilityPage() {
                           <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-neutral-2 text-neutral-10/30">
                             {workflow.edgeCount} edges
                           </span>
-                          <ExternalLink
-                            size={16}
-                            className="text-neutral-6"
-                          />
+                          <ExternalLink size={16} className="text-neutral-6" />
                         </div>
                       </div>
                     </div>
@@ -866,7 +862,8 @@ export function ObservabilityPage() {
                   <Button
                     variant="primary"
                     className="px-4 py-2 rounded-lg text-sm"
-                    onClick={() => setShowTraceCanvas(!showTraceCanvas)}>
+                    onClick={() => setShowTraceCanvas(!showTraceCanvas)}
+                  >
                     {showTraceCanvas ? "Hide Canvas" : "Show Canvas"}
                   </Button>
                 </div>
@@ -958,7 +955,8 @@ export function ObservabilityPage() {
                           <Button
                             variant="secondary"
                             className="text-sm text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-3"
-                            onClick={() => setSelectedTraceId(null)}>
+                            onClick={() => setSelectedTraceId(null)}
+                          >
                             Close
                           </Button>
                         </div>
@@ -1202,9 +1200,7 @@ export function ObservabilityPage() {
                           >
                             {log.level}
                           </span>
-                          <span className="text-neutral-12">
-                            {log.message}
-                          </span>
+                          <span className="text-neutral-12">{log.message}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-neutral-11">
                           {log.service && (
@@ -1300,36 +1296,38 @@ export function ObservabilityPage() {
                 <div className="flex items-center gap-4 flex-wrap p-4 bg-neutral-2 rounded-lg border border-neutral-6">
                   {/* State filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-11">
-                      State:
-                    </span>
+                    <span className="text-sm text-neutral-11">State:</span>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("")}>
+                        onClick={() => setAlertStateFilter("")}
+                      >
                         All
                       </Button>
                       <Button
                         variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("firing")}>
+                        onClick={() => setAlertStateFilter("firing")}
+                      >
                         Firing
                       </Button>
                       <Button
                         variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("pending")}>
+                        onClick={() => setAlertStateFilter("pending")}
+                      >
                         Pending
                       </Button>
                       <Button
                         variant="primary"
                         size="sm"
                         className="px-2 py-1 text-xs rounded"
-                        onClick={() => setAlertStateFilter("resolved")}>
+                        onClick={() => setAlertStateFilter("resolved")}
+                      >
                         Resolved
                       </Button>
                     </div>
@@ -1337,9 +1335,7 @@ export function ObservabilityPage() {
 
                   {/* Severity filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-11">
-                      Severity:
-                    </span>
+                    <span className="text-sm text-neutral-11">Severity:</span>
                     <Select
                       size="sm"
                       className="px-2 py-1 text-sm text-neutral-12 focus:ring-primary-7"

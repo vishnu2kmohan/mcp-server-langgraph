@@ -88,7 +88,7 @@ export function ArtifactTab({
       e.stopPropagation();
       onClose();
     },
-    [onClose]
+    [onClose],
   );
 
   const handleRenameSubmit = useCallback(() => {
@@ -108,7 +108,7 @@ export function ArtifactTab({
         setIsRenaming(false);
       }
     },
-    [handleRenameSubmit]
+    [handleRenameSubmit],
   );
 
   const handleRenameBlur = useCallback(() => {
@@ -136,7 +136,7 @@ export function ArtifactTab({
           ? "bg-neutral-1 text-neutral-12 border-b-2 border-primary-9"
           : "bg-neutral-2 text-neutral-11 hover:bg-neutral-3 hover:text-neutral-12",
         isDragging && "opacity-50 shadow-lg z-dropdown",
-        className
+        className,
       )}
     >
       {/* Drag handle */}
@@ -150,7 +150,7 @@ export function ArtifactTab({
           "text-neutral-11 hover:text-neutral-11",
           "cursor-grab active:cursor-grabbing",
           "transition-opacity duration-150",
-          "flex items-center justify-center"
+          "flex items-center justify-center",
         )}
         aria-label="Drag to reorder"
         tabIndex={-1}
@@ -181,10 +181,11 @@ export function ArtifactTab({
             "text-sm font-medium min-w-[60px] max-w-[120px]",
             "bg-transparent border-b border-primary-7",
             "focus:outline-none focus:border-primary-9",
-            "text-neutral-12"
+            "text-neutral-12",
           )}
           autoFocus
-          onClick={(e) => e.stopPropagation()} />
+          onClick={(e) => e.stopPropagation()}
+        />
       ) : (
         <span className="truncate max-w-[120px]">{displayTitle}</span>
       )}
@@ -199,7 +200,7 @@ export function ArtifactTab({
           "hover:bg-neutral-4",
           "transition-all duration-150",
           "min-w-6 min-h-6",
-          "flex items-center justify-center"
+          "flex items-center justify-center",
         )}
         aria-label={`Close ${displayTitle}`}
         tabIndex={-1}

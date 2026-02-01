@@ -24,7 +24,8 @@ vi.mock("../utils/authenticatedFetch", () => ({
 const mockSetIntendedRoute = vi.fn();
 vi.mock("../utils/intendedRoute", () => ({
   setIntendedRoute: (...args: unknown[]) => mockSetIntendedRoute(...args),
-  saveCurrentRouteAsIntended: (...args: unknown[]) => mockSetIntendedRoute(...args),
+  saveCurrentRouteAsIntended: (...args: unknown[]) =>
+    mockSetIntendedRoute(...args),
 }));
 
 import { useInlineSuggestions } from "./useInlineSuggestions";

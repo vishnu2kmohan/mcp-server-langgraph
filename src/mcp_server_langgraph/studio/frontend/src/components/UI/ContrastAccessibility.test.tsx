@@ -19,7 +19,8 @@
  * @see docs-internal/frontend/STYLE.md
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 /**
  * Radix semantic text colors that meet WCAG 2.2 AA.
@@ -63,6 +64,11 @@ const LEGACY_TAILWIND_PATTERNS = [
 const CONTRAST_SAFE_BG_OPACITY = ["/40", "/50", "/60", "/70", "/80", "/90"];
 const LOW_CONTRAST_BG_OPACITY = ["/10", "/20", "/30"];
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("Contrast Accessibility Guidelines", () => {
   describe("Radix Semantic Text Colors", () => {
     it("should document WCAG-compliant Radix text colors", () => {
@@ -99,7 +105,9 @@ describe("Radix Semantic Color Compliance", () => {
    */
   function usesRadixSemanticColors(className: string): boolean {
     // Check for Radix semantic text colors (11-12 for text)
-    return /text-(neutral|primary|success|warning|error|info)-(11|12)/.test(className);
+    return /text-(neutral|primary|success|warning|error|info)-(11|12)/.test(
+      className,
+    );
   }
 
   /**
@@ -110,7 +118,10 @@ describe("Radix Semantic Color Compliance", () => {
   function hasLowContrastOpacity(className: string): boolean {
     // Check for Tailwind opacity modifiers
     for (const opacity of LOW_CONTRAST_BG_OPACITY) {
-      const regex = new RegExp(`(dark:)?bg-[a-z]+-\\d+${opacity.replace("/", "\\/")}`, "g");
+      const regex = new RegExp(
+        `(dark:)?bg-[a-z]+-\\d+${opacity.replace("/", "\\/")}`,
+        "g",
+      );
       if (regex.test(className)) {
         return true;
       }
@@ -195,9 +206,9 @@ describe("Persona Navigation Items", () => {
       "cost",
       "settings",
       "admin",
-      "skills",      // Must be included
-      "audit",       // ID must match NAV_ITEMS
-      "compliance",  // Must be included
+      "skills", // Must be included
+      "audit", // ID must match NAV_ITEMS
+      "compliance", // Must be included
       "help",
     ];
 

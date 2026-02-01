@@ -365,21 +365,20 @@ describe("cacheHandlers", () => {
     });
   });
 
-describe("API Contract Transformation", () => {
-  it("should return cache data in snake_case and transform to camelCase", async () => {
-    await fetch("/api/v1/cache/test-key", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ value: "test-value", ttl: 300 }),
+  describe("API Contract Transformation", () => {
+    it("should return cache data in snake_case and transform to camelCase", async () => {
+      await fetch("/api/v1/cache/test-key", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: "test-value", ttl: 300 }),
+      });
+
+      const response = await fetch("/api/v1/cache/test-key");
+      const rawData = await response.json();
+
+      // Verify transformation works
+      const transformedData = transformSnakeToCamel(rawData);
+      expect(transformedData).toBeDefined();
     });
-
-    const response = await fetch("/api/v1/cache/test-key");
-    const rawData = await response.json();
-
-    // Verify transformation works
-    const transformedData = transformSnakeToCamel(rawData);
-    expect(transformedData).toBeDefined();
   });
-});
-
 });

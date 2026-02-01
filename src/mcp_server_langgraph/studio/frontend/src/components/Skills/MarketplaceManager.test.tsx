@@ -10,8 +10,8 @@
  * - Accessible dialogs with proper ARIA attributes
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MarketplaceManager } from "./MarketplaceManager";
 import type { MarketplaceInfo } from "../../types/skills";
@@ -35,6 +35,11 @@ const mockMarketplaces: MarketplaceInfo[] = [
     requiresApproval: true,
   },
 ];
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("MarketplaceManager", () => {
   const defaultProps = {

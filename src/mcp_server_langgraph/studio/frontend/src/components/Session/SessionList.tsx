@@ -449,10 +449,7 @@ export function SessionList({
       data-testid={`group-header-${group.topic.toLowerCase().replace(/\s+/g, "-")}`}
     >
       <div className="flex items-center gap-2">
-        <FolderOpen
-          size={14}
-          className="text-neutral-10"
-        />
+        <FolderOpen size={14} className="text-neutral-10" />
         <span className="text-xs font-semibold text-neutral-11 uppercase tracking-wide">
           {group.topic}
         </span>
@@ -531,10 +528,7 @@ export function SessionList({
             role="presentation"
           >
             <div className="flex items-center gap-2">
-              <MessageSquare
-                size={14}
-                className="text-neutral-10"
-              />
+              <MessageSquare size={14} className="text-neutral-10" />
               <span className="text-xs font-semibold text-neutral-11 uppercase tracking-wide">
                 Other
               </span>

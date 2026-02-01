@@ -7,8 +7,14 @@
  * @see ADR-0102 - Connections Page Redesign
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -26,9 +32,18 @@ vi.mock("../api", () => ({
   useListConnectionsQuery: () => mockListConnections(),
   useListConnectionTemplatesQuery: () => mockListTemplates(),
   useTestConnectionMutation: () => [mockTestConnection, { isLoading: false }],
-  useDeleteConnectionMutation: () => [mockDeleteConnection, { isLoading: false }],
-  useCreateConnectionMutation: () => [mockCreateConnection, { isLoading: false }],
-  useUpdateConnectionMutation: () => [mockUpdateConnection, { isLoading: false }],
+  useDeleteConnectionMutation: () => [
+    mockDeleteConnection,
+    { isLoading: false },
+  ],
+  useCreateConnectionMutation: () => [
+    mockCreateConnection,
+    { isLoading: false },
+  ],
+  useUpdateConnectionMutation: () => [
+    mockUpdateConnection,
+    { isLoading: false },
+  ],
   // Export transformSnakeToCamel as identity function since mock data is already camelCase
   transformSnakeToCamel: <T,>(obj: T): T => obj,
 }));
@@ -55,7 +70,9 @@ vi.mock("../hooks/useMCPWebSocket", () => ({
 
 // Mock lazy components
 vi.mock("../components/MCP", () => ({
-  LazyAggregatedCapabilitiesPanel: () => <div data-testid="aggregated-capabilities-panel" />,
+  LazyAggregatedCapabilitiesPanel: () => (
+    <div data-testid="aggregated-capabilities-panel" />
+  ),
   LazyToolInvocationDialog: () => null,
   LazyResourceViewer: () => null,
   LazyPromptTester: () => null,
@@ -76,7 +93,7 @@ const renderWithProviders = (ui: React.ReactNode) => {
   return render(
     <Provider store={store}>
       <MemoryRouter>{ui}</MemoryRouter>
-    </Provider>
+    </Provider>,
   );
 };
 
@@ -130,6 +147,11 @@ const mockTemplatesData = {
   ],
 };
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("ConnectionsPage Tab Layout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -151,15 +173,23 @@ describe("ConnectionsPage Tab Layout", () => {
     it("should render three tabs: Discover, My Connectors, Capabilities", () => {
       renderWithProviders(<ConnectionsPage />);
 
-      expect(screen.getByRole("tab", { name: /discover/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /my connectors/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /capabilities/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /discover/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /my connectors/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: /capabilities/i }),
+      ).toBeInTheDocument();
     });
 
     it("should default to My Connectors tab", () => {
       renderWithProviders(<ConnectionsPage />);
 
-      const myConnectorsTab = screen.getByRole("tab", { name: /my connectors/i });
+      const myConnectorsTab = screen.getByRole("tab", {
+        name: /my connectors/i,
+      });
       expect(myConnectorsTab).toHaveAttribute("aria-selected", "true");
     });
 
@@ -180,7 +210,7 @@ describe("ConnectionsPage Tab Layout", () => {
       await waitFor(() => {
         expect(screen.getByRole("tab", { name: /discover/i })).toHaveAttribute(
           "aria-selected",
-          "true"
+          "true",
         );
       });
     });
@@ -192,7 +222,9 @@ describe("ConnectionsPage Tab Layout", () => {
 
       await waitFor(() => {
         // Should show connector templates in grid layout
-        expect(screen.getByRole("list", { name: /connector templates/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("list", { name: /connector templates/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -202,10 +234,9 @@ describe("ConnectionsPage Tab Layout", () => {
       fireEvent.click(screen.getByRole("tab", { name: /capabilities/i }));
 
       await waitFor(() => {
-        expect(screen.getByRole("tab", { name: /capabilities/i })).toHaveAttribute(
-          "aria-selected",
-          "true"
-        );
+        expect(
+          screen.getByRole("tab", { name: /capabilities/i }),
+        ).toHaveAttribute("aria-selected", "true");
       });
     });
 
@@ -215,7 +246,9 @@ describe("ConnectionsPage Tab Layout", () => {
       fireEvent.click(screen.getByRole("tab", { name: /capabilities/i }));
 
       await waitFor(() => {
-        expect(screen.getByTestId("aggregated-capabilities-panel")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("aggregated-capabilities-panel"),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -239,8 +272,12 @@ describe("ConnectionsPage Tab Layout", () => {
       fireEvent.click(screen.getByRole("tab", { name: /discover/i }));
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /all/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /development/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /all/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /development/i }),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -262,7 +299,9 @@ describe("ConnectionsPage Tab Layout", () => {
     it("should show Add Connection button", () => {
       renderWithProviders(<ConnectionsPage />);
 
-      expect(screen.getByRole("button", { name: /add connection/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /add connection/i }),
+      ).toBeInTheDocument();
     });
   });
 

@@ -107,9 +107,7 @@ export function ConfirmDialog({
           </div>
         )}
         <div className="flex-1">
-          <p className="text-sm text-neutral-11">
-            {message}
-          </p>
+          <p className="text-sm text-neutral-11">{message}</p>
         </div>
       </div>
     </Dialog>

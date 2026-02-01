@@ -72,10 +72,18 @@ vi.mock("@/components/Chat/ResponseRating", () => ({
     currentRating?: string;
   }) => (
     <div data-testid="response-rating" data-message-id={messageId}>
-      <button type="button" aria-label="thumbs up" data-rating={currentRating === "up" ? "active" : ""}>
+      <button
+        type="button"
+        aria-label="thumbs up"
+        data-rating={currentRating === "up" ? "active" : ""}
+      >
         Up
       </button>
-      <button type="button" aria-label="thumbs down" data-rating={currentRating === "down" ? "active" : ""}>
+      <button
+        type="button"
+        aria-label="thumbs down"
+        data-rating={currentRating === "down" ? "active" : ""}
+      >
         Down
       </button>
     </div>
@@ -99,7 +107,13 @@ vi.mock("@/components/Chat/TokenUsageDisplay", () => ({
 }));
 
 vi.mock("@/components/Chat/ConfidenceIndicator", () => ({
-  ConfidenceIndicator: ({ score, compact }: { score: number; compact?: boolean }) => (
+  ConfidenceIndicator: ({
+    score,
+    compact,
+  }: {
+    score: number;
+    compact?: boolean;
+  }) => (
     <div data-testid="confidence-indicator" data-compact={compact}>
       {Math.round(score * 100)}%
     </div>
@@ -164,9 +178,21 @@ vi.mock("@/components/Chat/MessageActions", () => ({
     onRegenerate?: (id: string) => void;
   }) => (
     <div data-testid="message-actions" data-message-id={messageId}>
-      {onEdit && <button type="button" onClick={() => onEdit(messageId)}>Edit</button>}
-      {onDelete && <button type="button" onClick={() => onDelete(messageId)}>Delete</button>}
-      {onRegenerate && <button type="button" onClick={() => onRegenerate(messageId)}>Regenerate</button>}
+      {onEdit && (
+        <button type="button" onClick={() => onEdit(messageId)}>
+          Edit
+        </button>
+      )}
+      {onDelete && (
+        <button type="button" onClick={() => onDelete(messageId)}>
+          Delete
+        </button>
+      )}
+      {onRegenerate && (
+        <button type="button" onClick={() => onRegenerate(messageId)}>
+          Regenerate
+        </button>
+      )}
     </div>
   ),
 }));
@@ -243,13 +269,13 @@ describe("UnifiedMessageList", () => {
   describe("Auto-Scroll", () => {
     it("should scroll when new message arrives", async () => {
       const { rerender } = render(
-        <UnifiedMessageList messages={[]} showEmptyState={false} />
+        <UnifiedMessageList messages={[]} showEmptyState={false} />,
       );
 
       rerender(
         <UnifiedMessageList
           messages={[createMockMessage({ content: "Hello" })]}
-        />
+        />,
       );
 
       await waitFor(() => {
@@ -263,7 +289,7 @@ describe("UnifiedMessageList", () => {
         <UnifiedMessageList
           messages={[createMockMessage({ content: "Hello" })]}
           isScrolledUp={true}
-        />
+        />,
       );
 
       expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
@@ -281,7 +307,7 @@ describe("UnifiedMessageList", () => {
             }),
           ]}
           isStreaming={true}
-        />
+        />,
       );
 
       vi.clearAllMocks();
@@ -297,7 +323,7 @@ describe("UnifiedMessageList", () => {
             }),
           ]}
           isStreaming={true}
-        />
+        />,
       );
 
       await waitFor(() => {
@@ -319,7 +345,7 @@ describe("UnifiedMessageList", () => {
             }),
           ]}
           isStreaming={true}
-        />
+        />,
       );
 
       expect(screen.getByLabelText("Generating response")).toBeInTheDocument();
@@ -331,7 +357,7 @@ describe("UnifiedMessageList", () => {
           messages={[]}
           isStreaming={true}
           showEmptyState={false}
-        />
+        />,
       );
 
       expect(screen.getByTestId("typing-indicator")).toBeInTheDocument();
@@ -348,7 +374,7 @@ describe("UnifiedMessageList", () => {
             }),
           ]}
           isStreaming={true}
-        />
+        />,
       );
 
       expect(screen.queryByTestId("typing-indicator")).not.toBeInTheDocument();
@@ -365,7 +391,7 @@ describe("UnifiedMessageList", () => {
             }),
           ]}
           isStreaming={true}
-        />
+        />,
       );
 
       expect(screen.getByText("Processing...")).toBeInTheDocument();
@@ -379,7 +405,7 @@ describe("UnifiedMessageList", () => {
           messages={[createMockMessage()]}
           isLoading={true}
           isStreaming={false}
-        />
+        />,
       );
       expect(screen.getByText("Processing...")).toBeInTheDocument();
     });
@@ -454,7 +480,9 @@ describe("UnifiedMessageList", () => {
       ];
 
       render(<UnifiedMessageList messages={messages} />);
-      expect(screen.queryByTestId("llm-thinking-trace")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("llm-thinking-trace"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -475,7 +503,7 @@ describe("UnifiedMessageList", () => {
           onRateMessage={onRateMessage}
           messageRatings={{ "msg-1": "up" }}
           showRating
-        />
+        />,
       );
 
       const rating = screen.getByTestId("response-rating");
@@ -522,7 +550,7 @@ describe("UnifiedMessageList", () => {
       render(<UnifiedMessageList messages={messages} showTokenUsage />);
       expect(screen.getByTestId("token-usage-display")).toHaveAttribute(
         "data-compact",
-        "true"
+        "true",
       );
     });
   });
@@ -559,7 +587,7 @@ describe("UnifiedMessageList", () => {
           messages={messages}
           enableHallucinationReporting
           onReportHallucination={onReportHallucination}
-        />
+        />,
       );
 
       expect(screen.getByTestId("hallucination-indicator")).toBeInTheDocument();
@@ -581,7 +609,7 @@ describe("UnifiedMessageList", () => {
           messages={messages}
           enableHallucinationReporting
           onReportHallucination={onReportHallucination}
-        />
+        />,
       );
 
       expect(screen.getByText("Reported")).toBeInTheDocument();
@@ -604,9 +632,7 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(
-        <UnifiedMessageList messages={messages} showAgentTraces={true} />
-      );
+      render(<UnifiedMessageList messages={messages} showAgentTraces={true} />);
 
       expect(screen.getByTestId("agent-trace-toggle")).toBeInTheDocument();
     });
@@ -627,16 +653,14 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(
-        <UnifiedMessageList messages={messages} showAgentTraces={true} />
-      );
+      render(<UnifiedMessageList messages={messages} showAgentTraces={true} />);
 
       const toggle = screen.getByTestId("agent-trace-toggle");
       await user.click(toggle);
 
       await waitFor(() => {
         expect(
-          screen.getByTestId("agent-execution-trace-panel")
+          screen.getByTestId("agent-execution-trace-panel"),
         ).toBeInTheDocument();
       });
     });
@@ -668,7 +692,7 @@ describe("UnifiedMessageList", () => {
           messages={messages}
           showAvatars
           userInitials="JD"
-        />
+        />,
       );
       expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
       expect(screen.getByText("JD")).toBeInTheDocument();
@@ -682,7 +706,7 @@ describe("UnifiedMessageList", () => {
           messages={[createMockMessage()]}
           isScrolledUp
           onScrollToBottom={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByLabelText("Scroll to bottom")).toBeInTheDocument();
@@ -697,7 +721,7 @@ describe("UnifiedMessageList", () => {
           messages={[createMockMessage()]}
           isScrolledUp
           onScrollToBottom={onScrollToBottom}
-        />
+        />,
       );
 
       await user.click(screen.getByLabelText("Scroll to bottom"));
@@ -716,7 +740,7 @@ describe("UnifiedMessageList", () => {
         <UnifiedMessageList
           messages={[createMockMessage()]}
           followUpSuggestions={suggestions}
-        />
+        />,
       );
 
       expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
@@ -734,7 +758,7 @@ describe("UnifiedMessageList", () => {
           messages={[createMockMessage()]}
           followUpSuggestions={suggestions}
           onSuggestionSelect={onSuggestionSelect}
-        />
+        />,
       );
 
       await user.click(screen.getByText("Click me"));
@@ -742,18 +766,20 @@ describe("UnifiedMessageList", () => {
     });
 
     it("should not show suggestions when streaming", () => {
-      const suggestions = [{ id: "s1", text: "Suggestion", category: "general" }];
+      const suggestions = [
+        { id: "s1", text: "Suggestion", category: "general" },
+      ];
 
       render(
         <UnifiedMessageList
           messages={[createMockMessage()]}
           followUpSuggestions={suggestions}
           isStreaming
-        />
+        />,
       );
 
       expect(
-        screen.queryByTestId("follow-up-suggestions")
+        screen.queryByTestId("follow-up-suggestions"),
       ).not.toBeInTheDocument();
     });
   });
@@ -799,9 +825,7 @@ describe("UnifiedMessageList", () => {
         createMockMessage({ id: "1", role: "user", content: "Hello" }),
         createMockMessage({ id: "2", role: "assistant", content: "Hi there!" }),
       ];
-      const { container } = render(
-        <UnifiedMessageList messages={messages} />,
-      );
+      const { container } = render(<UnifiedMessageList messages={messages} />);
       await waitForSuspense();
       const results = await axe(container);
       expect(results).toHaveNoViolations();

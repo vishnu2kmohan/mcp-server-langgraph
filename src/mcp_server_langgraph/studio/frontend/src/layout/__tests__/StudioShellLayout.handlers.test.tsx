@@ -227,9 +227,11 @@ describe("StudioShellLayout Handlers", () => {
         });
 
         // Simulate connection update
-        const onConnectionUpdate = connectionHealthOptions.onConnectionUpdate as (
-          conn: { name: string; status: string },
-        ) => void;
+        const onConnectionUpdate =
+          connectionHealthOptions.onConnectionUpdate as (conn: {
+            name: string;
+            status: string;
+          }) => void;
         onConnectionUpdate({ name: "test-connection", status: "disconnected" });
 
         expect(toast.warning).toHaveBeenCalledWith(
@@ -244,9 +246,11 @@ describe("StudioShellLayout Handlers", () => {
           await flushPromises();
         });
 
-        const onConnectionUpdate = connectionHealthOptions.onConnectionUpdate as (
-          conn: { name: string; status: string },
-        ) => void;
+        const onConnectionUpdate =
+          connectionHealthOptions.onConnectionUpdate as (conn: {
+            name: string;
+            status: string;
+          }) => void;
         onConnectionUpdate({ name: "test-connection", status: "connected" });
 
         expect(toast.success).toHaveBeenCalledWith(
@@ -278,9 +282,11 @@ describe("StudioShellLayout Handlers", () => {
           await flushPromises();
         });
 
-        const onConnectionUpdate = connectionHealthOptions.onConnectionUpdate as (
-          conn: { name: string; status: string },
-        ) => void;
+        const onConnectionUpdate =
+          connectionHealthOptions.onConnectionUpdate as (conn: {
+            name: string;
+            status: string;
+          }) => void;
 
         // Simulate rapid connection status changes
         onConnectionUpdate({ name: "test-connection", status: "disconnected" });
@@ -323,9 +329,10 @@ describe("StudioShellLayout Handlers", () => {
           await flushPromises();
         });
 
-        const onBudgetWarning = costTrackingOptions.onBudgetWarning as (
-          warning: { message: string },
-        ) => void;
+        const onBudgetWarning =
+          costTrackingOptions.onBudgetWarning as (warning: {
+            message: string;
+          }) => void;
         onBudgetWarning({ message: "Budget 80% consumed" });
 
         expect(toast.warning).toHaveBeenCalledWith(
@@ -351,9 +358,12 @@ describe("StudioShellLayout Handlers", () => {
         });
 
         // onCostEvent should be wired and callable
-        const onCostEvent = costTrackingOptions.onCostEvent as (
-          event: { sessionId: string; cost: number; model: string; tokens: { input: number; output: number } },
-        ) => void;
+        const onCostEvent = costTrackingOptions.onCostEvent as (event: {
+          sessionId: string;
+          cost: number;
+          model: string;
+          tokens: { input: number; output: number };
+        }) => void;
 
         // Call should not throw
         expect(() => {
@@ -383,8 +393,8 @@ describe("StudioShellLayout Handlers", () => {
 
       renderStudioShell(store);
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // The TopBar should receive onAlertClick when persona is admin
       // This will be verified by checking if alert badge is clickable
@@ -400,8 +410,8 @@ describe("StudioShellLayout Handlers", () => {
     it("should pass onDeleteSession handler to SessionNav", async () => {
       renderStudioShell();
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // SessionNav should receive onDeleteSession prop
       // Verify StudioShell renders correctly (SessionNav is rendered as child of panel)
@@ -413,8 +423,8 @@ describe("StudioShellLayout Handlers", () => {
       mockFeatureFlags.enabledFlags.push("session_ai");
       renderStudioShell();
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // SessionNav should receive enableAI=true when flag enabled
       const studioShell = screen.getByTestId("studio-shell");
@@ -425,8 +435,8 @@ describe("StudioShellLayout Handlers", () => {
       mockFeatureFlags.enabledFlags.push("session_summary");
       renderStudioShell();
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       const studioShell = screen.getByTestId("studio-shell");
       expect(studioShell).toBeInTheDocument();
@@ -436,8 +446,8 @@ describe("StudioShellLayout Handlers", () => {
       mockFeatureFlags.enabledFlags.push("session_topics");
       renderStudioShell();
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       const studioShell = screen.getByTestId("studio-shell");
       expect(studioShell).toBeInTheDocument();
@@ -448,8 +458,8 @@ describe("StudioShellLayout Handlers", () => {
     it("should pass modelProvider to StatusBar", async () => {
       renderStudioShell();
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // StatusBar should be rendered with modelProvider
       // The model icon should show provider-specific styling
@@ -463,8 +473,8 @@ describe("StudioShellLayout Handlers", () => {
 
       renderStudioShell();
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // StatusBar should show active state when approvals panel is open
       const statusBar = screen.getByTestId("status-bar");
@@ -485,7 +495,9 @@ describe("StudioShellLayout Handlers", () => {
           renameError: null,
           isArchiving: false,
           archiveError: null,
-        } as unknown as ReturnType<typeof import("../../store/slices/sessionSlice").default>,
+        } as unknown as ReturnType<
+          typeof import("../../store/slices/sessionSlice").default
+        >,
       });
 
       renderStudioShell(store);
@@ -505,8 +517,8 @@ describe("StudioShellLayout Handlers", () => {
       const store = createTestStore();
       renderStudioShell(store);
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // The confirmation dialog should appear when handleDeleteSession is called
       // This is tested indirectly through the store state and UI
@@ -515,17 +527,15 @@ describe("StudioShellLayout Handlers", () => {
 
       // Look for delete confirmation dialog elements (will be rendered when triggered)
       // The dialog should not be visible initially
-      expect(
-        screen.queryByText("Delete Session"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText("Delete Session")).not.toBeInTheDocument();
     });
 
     it("should not delete session without confirmation", async () => {
       const store = createTestStore();
       renderStudioShell(store);
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // Session should still exist - no delete action dispatched
       const initialState = store.getState();
@@ -538,8 +548,8 @@ describe("StudioShellLayout Handlers", () => {
       const store = createTestStore();
       renderStudioShell(store);
       await act(async () => {
-          await flushPromises();
-        });
+        await flushPromises();
+      });
 
       // The implementation should show a success toast after deletion
       // This is verified by checking toast.success is called with session delete message

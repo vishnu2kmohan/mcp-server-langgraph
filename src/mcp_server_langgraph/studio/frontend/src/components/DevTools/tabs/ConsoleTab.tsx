@@ -342,10 +342,7 @@ export function ConsoleTab({
         )}
         {/* Structured data */}
         {hasStructuredData && (
-          <OTELDetailsPanel
-            data={entry.structuredData}
-            variant="json"
-          />
+          <OTELDetailsPanel data={entry.structuredData} variant="json" />
         )}
         {/* Stack trace */}
         {entry.stackTrace && (
@@ -406,10 +403,7 @@ export function ConsoleTab({
         </Select>
 
         {/* Entry count */}
-        <span
-          data-testid="entry-count"
-          className="text-xs text-neutral-10"
-        >
+        <span data-testid="entry-count" className="text-xs text-neutral-10">
           {filteredEntries.length}
         </span>
 
@@ -440,7 +434,8 @@ export function ConsoleTab({
 
         {/* Export dropdown */}
         <div className="relative group">
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
             data-testid="export-console-button"

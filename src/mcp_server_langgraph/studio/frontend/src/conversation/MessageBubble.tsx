@@ -57,7 +57,8 @@ export const avatarVariants = cva(
     variants: {
       role: {
         user: "bg-primary-3 bg-primary-4 text-primary-10 dark:text-primary-7",
-        assistant: "bg-insight-2 dark:bg-insight-a4 text-insight-10 dark:text-insight-9",
+        assistant:
+          "bg-insight-2 dark:bg-insight-a4 text-insight-10 dark:text-insight-9",
       },
     },
     defaultVariants: {
@@ -343,7 +344,8 @@ function MessageBubbleImpl({
                   "bg-neutral-1 shadow-md",
                   "text-neutral-10 hover:text-neutral-11",
                   "transition-all",
-                )}>
+                )}
+              >
                 {copied ? <Check size={12} /> : <Copy size={12} />}
               </Button>
             )}

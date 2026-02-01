@@ -5,27 +5,65 @@
  * WCAG 2.2 AA accessibility verified.
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { ReferenceAutocompleteMenu } from './ReferenceAutocompleteMenu';
-import type { ReferenceSuggestion } from '@/hooks/useReferenceAutocomplete';
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { ReferenceAutocompleteMenu } from "./ReferenceAutocompleteMenu";
+import type { ReferenceSuggestion } from "@/hooks/useReferenceAutocomplete";
 
 // Test fixtures
 const typeSuggestions: ReferenceSuggestion[] = [
-  { value: 'tool', label: 'Tool', description: 'Reference an MCP tool', type: 'type' },
-  { value: 'skill', label: 'Skill', description: 'Reference a skill', type: 'type' },
-  { value: 'artifact', label: 'Artifact', description: 'Reference an artifact', type: 'type' },
+  {
+    value: "tool",
+    label: "Tool",
+    description: "Reference an MCP tool",
+    type: "type",
+  },
+  {
+    value: "skill",
+    label: "Skill",
+    description: "Reference a skill",
+    type: "type",
+  },
+  {
+    value: "artifact",
+    label: "Artifact",
+    description: "Reference an artifact",
+    type: "type",
+  },
 ];
 
 const toolSuggestions: ReferenceSuggestion[] = [
-  { value: 'filesystem:read_file', label: 'read_file', description: 'Read a file', type: 'tool', isComplete: true },
-  { value: 'filesystem:write_file', label: 'write_file', description: 'Write a file', type: 'tool', isComplete: true },
-  { value: 'database:query', label: 'query', description: 'Run SQL query', type: 'tool', isComplete: true },
+  {
+    value: "filesystem:read_file",
+    label: "read_file",
+    description: "Read a file",
+    type: "tool",
+    isComplete: true,
+  },
+  {
+    value: "filesystem:write_file",
+    label: "write_file",
+    description: "Write a file",
+    type: "tool",
+    isComplete: true,
+  },
+  {
+    value: "database:query",
+    label: "query",
+    description: "Run SQL query",
+    type: "tool",
+    isComplete: true,
+  },
 ];
 
-describe('ReferenceAutocompleteMenu', () => {
-  describe('rendering', () => {
-    it('should render nothing when closed', () => {
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+describe("ReferenceAutocompleteMenu", () => {
+  describe("rendering", () => {
+    it("should render nothing when closed", () => {
       const { container } = render(
         <ReferenceAutocompleteMenu
           isOpen={false}
@@ -34,13 +72,13 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
       expect(container.firstChild).toBeNull();
     });
 
-    it('should render nothing when no suggestions', () => {
+    it("should render nothing when no suggestions", () => {
       const { container } = render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -49,13 +87,13 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
       expect(container.firstChild).toBeNull();
     });
 
-    it('should render listbox when open with suggestions', () => {
+    it("should render listbox when open with suggestions", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -64,13 +102,13 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
-    it('should display all suggestions', () => {
+    it("should display all suggestions", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -79,15 +117,15 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByText('Tool')).toBeInTheDocument();
-      expect(screen.getByText('Skill')).toBeInTheDocument();
-      expect(screen.getByText('Artifact')).toBeInTheDocument();
+      expect(screen.getByText("Tool")).toBeInTheDocument();
+      expect(screen.getByText("Skill")).toBeInTheDocument();
+      expect(screen.getByText("Artifact")).toBeInTheDocument();
     });
 
-    it('should display descriptions', () => {
+    it("should display descriptions", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -96,13 +134,13 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByText('Reference an MCP tool')).toBeInTheDocument();
+      expect(screen.getByText("Reference an MCP tool")).toBeInTheDocument();
     });
 
-    it('should highlight selected suggestion', () => {
+    it("should highlight selected suggestion", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -111,17 +149,17 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      const options = screen.getAllByRole('option');
-      expect(options[1]).toHaveAttribute('aria-selected', 'true');
-      expect(options[0]).toHaveAttribute('aria-selected', 'false');
+      const options = screen.getAllByRole("option");
+      expect(options[1]).toHaveAttribute("aria-selected", "true");
+      expect(options[0]).toHaveAttribute("aria-selected", "false");
     });
   });
 
-  describe('keyboard navigation', () => {
-    it('should call onSelectedIndexChange on ArrowDown', () => {
+  describe("keyboard navigation", () => {
+    it("should call onSelectedIndexChange on ArrowDown", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
@@ -132,14 +170,14 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={onSelectedIndexChange}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowDown" });
       expect(onSelectedIndexChange).toHaveBeenCalledWith(1);
     });
 
-    it('should call onSelectedIndexChange on ArrowUp', () => {
+    it("should call onSelectedIndexChange on ArrowUp", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
@@ -150,14 +188,14 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={onSelectedIndexChange}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowUp' });
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowUp" });
       expect(onSelectedIndexChange).toHaveBeenCalledWith(1);
     });
 
-    it('should not go below 0 on ArrowUp at start', () => {
+    it("should not go below 0 on ArrowUp at start", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
@@ -168,14 +206,14 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={onSelectedIndexChange}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowUp' });
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowUp" });
       expect(onSelectedIndexChange).toHaveBeenCalledWith(0);
     });
 
-    it('should not exceed max on ArrowDown at end', () => {
+    it("should not exceed max on ArrowDown at end", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
@@ -186,14 +224,14 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={onSelectedIndexChange}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowDown" });
       expect(onSelectedIndexChange).toHaveBeenCalledWith(2);
     });
 
-    it('should call onSelect on Enter', () => {
+    it("should call onSelect on Enter", () => {
       const onSelect = vi.fn();
 
       render(
@@ -204,14 +242,14 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={onSelect}
           onClose={() => {}}
-        />
+        />,
       );
 
-      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Enter' });
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "Enter" });
       expect(onSelect).toHaveBeenCalledWith(typeSuggestions[1]);
     });
 
-    it('should call onClose on Escape', () => {
+    it("should call onClose on Escape", () => {
       const onClose = vi.fn();
 
       render(
@@ -222,14 +260,14 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={onClose}
-        />
+        />,
       );
 
-      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" });
       expect(onClose).toHaveBeenCalled();
     });
 
-    it('should call onClose on Tab', () => {
+    it("should call onClose on Tab", () => {
       const onClose = vi.fn();
 
       render(
@@ -240,16 +278,16 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={onClose}
-        />
+        />,
       );
 
-      fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Tab' });
+      fireEvent.keyDown(screen.getByRole("listbox"), { key: "Tab" });
       expect(onClose).toHaveBeenCalled();
     });
   });
 
-  describe('mouse interaction', () => {
-    it('should call onSelect when suggestion is clicked', () => {
+  describe("mouse interaction", () => {
+    it("should call onSelect when suggestion is clicked", () => {
       const onSelect = vi.fn();
 
       render(
@@ -260,16 +298,16 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={onSelect}
           onClose={() => {}}
-        />
+        />,
       );
 
-      fireEvent.click(screen.getByText('write_file'));
+      fireEvent.click(screen.getByText("write_file"));
       expect(onSelect).toHaveBeenCalledWith(toolSuggestions[1]);
     });
   });
 
-  describe('accessibility', () => {
-    it('should have listbox role', () => {
+  describe("accessibility", () => {
+    it("should have listbox role", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -278,13 +316,13 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
-    it('should have aria-label', () => {
+    it("should have aria-label", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -293,16 +331,16 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByRole('listbox')).toHaveAttribute(
-        'aria-label',
-        'Reference suggestions'
+      expect(screen.getByRole("listbox")).toHaveAttribute(
+        "aria-label",
+        "Reference suggestions",
       );
     });
 
-    it('should have option role on each suggestion', () => {
+    it("should have option role on each suggestion", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -311,14 +349,14 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      const options = screen.getAllByRole('option');
+      const options = screen.getAllByRole("option");
       expect(options).toHaveLength(3);
     });
 
-    it('should have unique ids for each option', () => {
+    it("should have unique ids for each option", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -327,16 +365,16 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
-      const options = screen.getAllByRole('option');
+      const options = screen.getAllByRole("option");
       const ids = options.map((o) => o.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(options.length);
     });
 
-    it('should show keyboard hints in footer', () => {
+    it("should show keyboard hints in footer", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -345,7 +383,7 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
       // Check for the footer with keyboard hints using partial text matching
@@ -355,8 +393,8 @@ describe('ReferenceAutocompleteMenu', () => {
     });
   });
 
-  describe('icons', () => {
-    it('should render correct icon for tool suggestions', () => {
+  describe("icons", () => {
+    it("should render correct icon for tool suggestions", () => {
       render(
         <ReferenceAutocompleteMenu
           isOpen={true}
@@ -365,12 +403,12 @@ describe('ReferenceAutocompleteMenu', () => {
           onSelectedIndexChange={() => {}}
           onSelect={() => {}}
           onClose={() => {}}
-        />
+        />,
       );
 
       // Lucide icons are SVGs, check they're rendered
-      const options = screen.getAllByRole('option');
-      expect(options[0].querySelector('svg')).toBeInTheDocument();
+      const options = screen.getAllByRole("option");
+      expect(options[0].querySelector("svg")).toBeInTheDocument();
     });
   });
 });

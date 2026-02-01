@@ -491,7 +491,8 @@ export function StatusBar({
               "hover:bg-neutral-3",
               !prefersReducedMotion && "transition-colors",
               agentQueueOpen && "bg-primary-3 bg-primary-4",
-            )}>
+            )}
+          >
             <ListTodo size={12} aria-hidden="true" />
             <span className="font-medium">{agentCount}</span>
           </Button>
@@ -515,7 +516,8 @@ export function StatusBar({
                   ? "bg-warning-6 dark:bg-warning-a6"
                   : "bg-warning-3 dark:bg-warning-a4",
                 "hover:bg-warning-6 dark:hover:bg-warning-a6",
-              )}>
+              )}
+            >
               <AlertTriangle
                 size={12}
                 className="text-warning-11"
@@ -542,7 +544,8 @@ export function StatusBar({
               "hover:bg-neutral-3",
               !prefersReducedMotion && "transition-colors",
               !devToolsCollapsed && "bg-primary-3 bg-primary-4",
-            )}>
+            )}
+          >
             <Terminal size={12} aria-hidden="true" />
             {problemCount !== undefined && problemCount > 0 && (
               <Badge

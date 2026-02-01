@@ -85,7 +85,8 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Default state with collapsed toolbar. Click 'Aa' to expand formatting options.",
+        story:
+          "Default state with collapsed toolbar. Click 'Aa' to expand formatting options.",
       },
     },
   },
@@ -100,7 +101,8 @@ export const ToolbarExpanded: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Toolbar expanded showing all formatting options: Bold, Italic, Strikethrough, Code, Lists, Quote, Code Block.",
+        story:
+          "Toolbar expanded showing all formatting options: Bold, Italic, Strikethrough, Code, Lists, Quote, Code Block.",
       },
     },
   },
@@ -207,7 +209,8 @@ export const WithMentions: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Type @ to see mention suggestions. Supports @model, @file, and @user mentions.",
+        story:
+          "Type @ to see mention suggestions. Supports @model, @file, and @user mentions.",
       },
     },
   },
@@ -230,7 +233,8 @@ export const WithInlineSuggestion: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Inline AI suggestion shown as ghost text. Press Tab to accept, Escape to dismiss.",
+        story:
+          "Inline AI suggestion shown as ghost text. Press Tab to accept, Escape to dismiss.",
       },
     },
   },
@@ -302,14 +306,30 @@ export const FormattingShowcase: Story = {
           Formatting Options
         </h3>
         <ul className="text-xs text-neutral-11 space-y-1">
-          <li><strong>Bold:</strong> **text** or Ctrl+B</li>
-          <li><strong>Italic:</strong> *text* or Ctrl+I</li>
-          <li><strong>Strikethrough:</strong> ~~text~~ or Ctrl+Shift+X</li>
-          <li><strong>Code:</strong> `text` or Ctrl+`</li>
-          <li><strong>Ordered List:</strong> 1. item (auto-continues on Enter)</li>
-          <li><strong>Bullet List:</strong> - item (auto-continues on Enter)</li>
-          <li><strong>Quote:</strong> &gt; text (auto-continues on Enter)</li>
-          <li><strong>Code Block:</strong> ```code```</li>
+          <li>
+            <strong>Bold:</strong> **text** or Ctrl+B
+          </li>
+          <li>
+            <strong>Italic:</strong> *text* or Ctrl+I
+          </li>
+          <li>
+            <strong>Strikethrough:</strong> ~~text~~ or Ctrl+Shift+X
+          </li>
+          <li>
+            <strong>Code:</strong> `text` or Ctrl+`
+          </li>
+          <li>
+            <strong>Ordered List:</strong> 1. item (auto-continues on Enter)
+          </li>
+          <li>
+            <strong>Bullet List:</strong> - item (auto-continues on Enter)
+          </li>
+          <li>
+            <strong>Quote:</strong> &gt; text (auto-continues on Enter)
+          </li>
+          <li>
+            <strong>Code Block:</strong> ```code```
+          </li>
         </ul>
       </div>
       <RichTextInput
@@ -322,7 +342,8 @@ export const FormattingShowcase: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Complete reference of all formatting options and keyboard shortcuts.",
+        story:
+          "Complete reference of all formatting options and keyboard shortcuts.",
       },
     },
   },
@@ -338,9 +359,14 @@ export const ListAutoContinue: Story = {
     return (
       <div className="w-96 space-y-4">
         <div className="text-xs text-neutral-10 space-y-1">
-          <p><strong>Auto-continue lists:</strong></p>
+          <p>
+            <strong>Auto-continue lists:</strong>
+          </p>
           <ul className="list-disc list-inside">
-            <li>Type in a list item and press Shift+Enter (or Enter in legacy mode)</li>
+            <li>
+              Type in a list item and press Shift+Enter (or Enter in legacy
+              mode)
+            </li>
             <li>The next list number/bullet is auto-inserted</li>
             <li>Press Enter on empty item to exit list mode</li>
           </ul>
@@ -362,7 +388,8 @@ export const ListAutoContinue: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Demonstrates Slack-style auto-continue for ordered lists, bullet lists, and quotes.",
+        story:
+          "Demonstrates Slack-style auto-continue for ordered lists, bullet lists, and quotes.",
       },
     },
   },
@@ -420,14 +447,16 @@ export const AccessibilityShowcase: Story = {
         mentionOptions={SAMPLE_MENTION_OPTIONS}
       />
       <p className="text-xs text-neutral-10">
-        Press Ctrl+Shift+F to toggle toolbar, Tab through buttons, type @ for mentions.
+        Press Ctrl+Shift+F to toggle toolbar, Tab through buttons, type @ for
+        mentions.
       </p>
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: "Demonstrates accessibility features including keyboard navigation and ARIA support.",
+        story:
+          "Demonstrates accessibility features including keyboard navigation and ARIA support.",
       },
     },
   },
@@ -455,7 +484,9 @@ export const FullFeatured: Story = {
           maxLength={500}
           submitOnEnter={true}
           enableInlineSuggestions={true}
-          inlineSuggestion={value.length > 10 ? " - here's a suggestion" : undefined}
+          inlineSuggestion={
+            value.length > 10 ? " - here's a suggestion" : undefined
+          }
           onAcceptSuggestion={(suggestion) => setValue(value + suggestion)}
           onDismissSuggestion={() => console.log("Dismissed")}
         />
@@ -465,7 +496,8 @@ export const FullFeatured: Story = {
   parameters: {
     docs: {
       description: {
-        story: "All features enabled: formatting, mentions, character limit, inline suggestions.",
+        story:
+          "All features enabled: formatting, mentions, character limit, inline suggestions.",
       },
     },
   },

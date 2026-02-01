@@ -78,15 +78,11 @@ import { Select } from "@/components/UI/Select";
 
 // Status badge colors
 const statusColors: Record<ConnectionStatus, string> = {
-  connected:
-    "bg-success-3 text-success-11",
-  disconnected:
-    "bg-neutral-2 text-neutral-11",
-  connecting:
-    "bg-primary-3 text-primary-11",
+  connected: "bg-success-3 text-success-11",
+  disconnected: "bg-neutral-2 text-neutral-11",
+  connecting: "bg-primary-3 text-primary-11",
   error: "bg-error-3 text-error-11",
-  auth_required:
-    "bg-warning-3 text-warning-11",
+  auth_required: "bg-warning-3 text-warning-11",
 };
 
 // Auth type icons
@@ -99,9 +95,7 @@ const authIcons: Record<AuthType, React.ReactNode> = {
 // Status icons
 const statusIcons: Record<ConnectionStatus, React.ReactNode> = {
   connected: <CheckCircle className="w-4 h-4 text-success-9" />,
-  disconnected: (
-    <XCircle className="w-4 h-4 text-neutral-6" />
-  ),
+  disconnected: <XCircle className="w-4 h-4 text-neutral-6" />,
   connecting: <Loader2 className="w-4 h-4 text-primary-9 animate-spin" />,
   error: <AlertCircle className="w-4 h-4 text-error-9" />,
   auth_required: <AlertCircle className="w-4 h-4 text-warning-9" />,
@@ -379,9 +373,7 @@ export function ConnectionsPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-primary-9" />
-        <span className="ml-2 text-neutral-9">
-          Loading connections...
-        </span>
+        <span className="ml-2 text-neutral-9">Loading connections...</span>
       </div>
     );
   }
@@ -391,14 +383,8 @@ export function ConnectionsPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <AlertCircle className="w-12 h-12 text-error-9 mb-4" />
-        <p className="text-error-10">
-          Failed to fetch connections
-        </p>
-        <Button
-          variant="primary"
-          className="mt-4"
-          onClick={() => refetch()}
-        >
+        <p className="text-error-10">Failed to fetch connections</p>
+        <Button variant="primary" className="mt-4" onClick={() => refetch()}>
           Retry
         </Button>
       </div>
@@ -560,7 +546,8 @@ export function ConnectionsPage() {
               pollingSpeed !== "off"
                 ? "Pause auto-refresh"
                 : "Enable auto-refresh"
-            }>
+            }
+          >
             {pollingSpeed !== "off" ? (
               <Pause className="w-4 h-4" />
             ) : (
@@ -712,7 +699,8 @@ export function ConnectionsPage() {
                     variant="ghost"
                     className="p-2 text-insight-10 hover:bg-insight-1 dark:hover:bg-insight-12/50 rounded-md"
                     onClick={() => handleViewAuditLog(connection.id)}
-                    aria-label="Audit Log">
+                    aria-label="Audit Log"
+                  >
                     <FileText className="w-4 h-4" />
                   </Button>
                   <Button
@@ -779,7 +767,7 @@ export function ConnectionsPage() {
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-overlay-6"
             onClick={() => setDeleteConfirmId(null)}
           />
           <div className="relative bg-neutral-2 rounded-lg shadow-xl p-6 max-w-md mx-4">
@@ -800,7 +788,6 @@ export function ConnectionsPage() {
               </Button>
               <Button
                 variant="danger"
-                
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
               >
@@ -814,7 +801,7 @@ export function ConnectionsPage() {
       {templateSelectorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-overlay-6"
             onClick={() => setTemplateSelectorOpen(false)}
           />
           <div className="relative bg-neutral-2 rounded-lg shadow-xl p-6 max-w-4xl mx-4 max-h-[80vh] overflow-y-auto">
@@ -830,7 +817,8 @@ export function ConnectionsPage() {
               variant="secondary"
               className="absolute top-4 right-4 p-2 text-neutral-8 hover:text-neutral-10 dark:hover:text-neutral-5"
               onClick={() => setTemplateSelectorOpen(false)}
-              aria-label="Close">
+              aria-label="Close"
+            >
               ×
             </Button>
           </div>
@@ -840,7 +828,7 @@ export function ConnectionsPage() {
       {auditLogConnectionId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-overlay-6"
             onClick={() => setAuditLogConnectionId(null)}
           />
           <div className="relative bg-neutral-2 rounded-lg shadow-xl p-6 max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
@@ -849,7 +837,8 @@ export function ConnectionsPage() {
               variant="secondary"
               className="absolute top-4 right-4 p-2 text-neutral-8 hover:text-neutral-10 dark:hover:text-neutral-5"
               onClick={() => setAuditLogConnectionId(null)}
-              aria-label="Close">
+              aria-label="Close"
+            >
               ×
             </Button>
           </div>

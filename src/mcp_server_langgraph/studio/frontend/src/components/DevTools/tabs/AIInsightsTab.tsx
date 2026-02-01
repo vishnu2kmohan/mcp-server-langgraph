@@ -84,9 +84,11 @@ export const severityCardVariants = cva(
   {
     variants: {
       severity: {
-        critical: "bg-error-3 dark:bg-error-4 border-error-9 dark:border-error-11",
+        critical:
+          "bg-error-3 dark:bg-error-4 border-error-9 dark:border-error-11",
         high: "bg-warning-3 dark:bg-warning-a4 border-warning-6 dark:border-warning-10",
-        medium: "bg-warning-3 dark:bg-warning-3 border-warning-6 dark:border-warning-11",
+        medium:
+          "bg-warning-3 dark:bg-warning-3 border-warning-6 dark:border-warning-11",
         low: "bg-primary-3 dark:bg-primary-4 border-primary-5 dark:border-primary-11",
         default: "bg-neutral-2 border-neutral-5",
       },
@@ -129,10 +131,13 @@ export const typeBadgeVariants = cva(
     variants: {
       type: {
         anomaly: "bg-error-3 dark:bg-error-a6 text-error-11 dark:text-error-9",
-        performance: "bg-insight-2 dark:bg-insight-a6 text-insight-11 dark:text-insight-5",
+        performance:
+          "bg-insight-2 dark:bg-insight-a6 text-insight-11 dark:text-insight-5",
         cost: "bg-success-3 dark:bg-success-a6 text-success-11 dark:text-success-5",
-        suggestion: "bg-primary-3 dark:bg-primary-a6 text-primary-11 dark:text-primary-5",
-        warning: "bg-warning-3 dark:bg-warning-a6 text-warning-10 dark:text-warning-6",
+        suggestion:
+          "bg-primary-3 dark:bg-primary-a6 text-primary-11 dark:text-primary-5",
+        warning:
+          "bg-warning-3 dark:bg-warning-a6 text-warning-10 dark:text-warning-6",
         default: "bg-neutral-2 text-neutral-11",
       },
     },
@@ -171,7 +176,8 @@ export const priorityBadgeVariants = cva(
     variants: {
       priority: {
         high: "bg-error-3 dark:bg-error-a6 text-error-11 dark:text-error-9",
-        medium: "bg-warning-3 dark:bg-warning-a6 text-warning-10 dark:text-warning-6",
+        medium:
+          "bg-warning-3 dark:bg-warning-a6 text-warning-10 dark:text-warning-6",
         low: "bg-primary-3 dark:bg-primary-a6 text-primary-11 dark:text-primary-5",
       },
     },
@@ -237,14 +243,26 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
   const Icon = getInsightIcon(insight.type);
 
   // Map severity string to CVA variant key
-  const severityKey = (["critical", "high", "medium", "low"].includes(insight.severity)
-    ? insight.severity
-    : "default") as "critical" | "high" | "medium" | "low" | "default";
+  const severityKey = (
+    ["critical", "high", "medium", "low"].includes(insight.severity)
+      ? insight.severity
+      : "default"
+  ) as "critical" | "high" | "medium" | "low" | "default";
 
   // Map type string to CVA variant key
-  const typeKey = (["anomaly", "performance", "cost", "suggestion", "warning"].includes(insight.type)
-    ? insight.type
-    : "default") as "anomaly" | "performance" | "cost" | "suggestion" | "warning" | "default";
+  const typeKey = (
+    ["anomaly", "performance", "cost", "suggestion", "warning"].includes(
+      insight.type,
+    )
+      ? insight.type
+      : "default"
+  ) as
+    | "anomaly"
+    | "performance"
+    | "cost"
+    | "suggestion"
+    | "warning"
+    | "default";
 
   return (
     <motion.div
@@ -264,10 +282,7 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
       />
       {/* Header row */}
       <div className="flex items-start gap-2 pl-2">
-        <Icon
-          size={16}
-          className="mt-0.5 flex-shrink-0 text-neutral-11"
-        />
+        <Icon size={16} className="mt-0.5 flex-shrink-0 text-neutral-11" />
         <div className="flex-1 min-w-0">
           {/* Title and badges */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -280,9 +295,7 @@ function InsightCard({ insight, onDismiss }: InsightCardProps) {
           </div>
 
           {/* Description */}
-          <p className="text-xs text-neutral-11 mt-1">
-            {insight.description}
-          </p>
+          <p className="text-xs text-neutral-11 mt-1">{insight.description}</p>
 
           {/* Suggested action */}
           {insight.suggestedAction && (
@@ -347,10 +360,7 @@ function LayoutSuggestionBanner({
       )}
     >
       <div className="flex items-center gap-2">
-        <Sparkles
-          size={16}
-          className="text-primary-9 dark:text-primary-7"
-        />
+        <Sparkles size={16} className="text-primary-9 dark:text-primary-7" />
         <div>
           <p className="text-sm font-medium text-primary-11 dark:text-primary-5">
             AI Layout Suggestion
@@ -361,7 +371,8 @@ function LayoutSuggestionBanner({
           </p>
         </div>
       </div>
-      <Button variant="primary"
+      <Button
+        variant="primary"
         type="button"
         data-testid="apply-layout-button"
         onClick={onApply}
@@ -370,7 +381,9 @@ function LayoutSuggestionBanner({
           "bg-primary-9 hover:bg-primary-10",
           "text-neutral-12",
         )}
-      >Apply</Button>
+      >
+        Apply
+      </Button>
     </div>
   );
 }
@@ -609,9 +622,7 @@ function ObservabilityPanel({
               ))}
             </div>
             <div className="mt-2">
-              <div className="text-neutral-10 mb-1">
-                Suggested Actions:
-              </div>
+              <div className="text-neutral-10 mb-1">Suggested Actions:</div>
               {insights.rootCauseAnalysis.suggestedActions.map(
                 (action, idx) => (
                   <div
@@ -725,7 +736,8 @@ function NLQueryInput({
           className={cn(
             "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded",
             "text-neutral-9 hover:text-primary-9 disabled:opacity-50",
-          )}>
+          )}
+        >
           {state.isLoading ? (
             <Loader2 size={16} className="animate-spin" />
           ) : (
@@ -774,7 +786,8 @@ function NLQueryInput({
               "bg-neutral-2",
               "hover:bg-neutral-3",
               "text-neutral-11",
-            )}>
+            )}
+          >
             {suggestion}
           </Button>
         ))}
@@ -839,11 +852,11 @@ function SuggestedActionsPanel({ actions }: SuggestedActionsPanelProps) {
           >
             <div className="flex-1">
               <div className="font-medium">{action.title}</div>
-              <div className="text-neutral-11">
-                {action.description}
-              </div>
+              <div className="text-neutral-11">{action.description}</div>
             </div>
-            <span className={priorityBadgeVariants({ priority: action.priority })}>
+            <span
+              className={priorityBadgeVariants({ priority: action.priority })}
+            >
               {action.priority}
             </span>
           </div>
@@ -1028,9 +1041,7 @@ export function AIInsightsTab({
         >
           <AlertCircle size={32} className="mb-2 opacity-70" />
           <p className="text-sm font-medium">Error loading insights</p>
-          <p className="text-xs text-neutral-10 mt-1">
-            {error.message}
-          </p>
+          <p className="text-xs text-neutral-10 mt-1">{error.message}</p>
         </div>
       </div>
     );
@@ -1045,10 +1056,7 @@ export function AIInsightsTab({
       >
         {/* Toolbar */}
         <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
-          <h2
-            role="heading"
-            className="text-sm font-medium text-neutral-11"
-          >
+          <h2 role="heading" className="text-sm font-medium text-neutral-11">
             AI Insights
           </h2>
           {enableObservability && (
@@ -1060,13 +1068,15 @@ export function AIInsightsTab({
               className={cn(
                 "px-2 py-1 text-xs rounded flex items-center gap-1",
                 "hover:bg-neutral-3 text-neutral-10",
-              )}>
+              )}
+            >
               <Activity size={12} />
               Observability
             </Button>
           )}
           <div className="flex-1" />
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
             type="button"
@@ -1108,10 +1118,7 @@ export function AIInsightsTab({
     >
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
-        <h2
-          role="heading"
-          className="text-sm font-medium text-neutral-11"
-        >
+        <h2 role="heading" className="text-sm font-medium text-neutral-11">
           AI Insights
         </h2>
 
@@ -1131,7 +1138,8 @@ export function AIInsightsTab({
               viewMode === "observability"
                 ? "bg-primary-3 bg-primary-4 text-primary-10"
                 : "hover:bg-neutral-3 text-neutral-10",
-            )}>
+            )}
+          >
             <Activity size={12} />
             Observability
           </Button>
@@ -1168,7 +1176,9 @@ export function AIInsightsTab({
               data-testid="filter-suggestion"
               type="button"
               onClick={() => setFilter("suggestion")}
-              className={filterButtonVariants({ active: filter === "suggestion" })}
+              className={filterButtonVariants({
+                active: filter === "suggestion",
+              })}
               variants={prefersReducedMotion ? undefined : motionButtonVariants}
               initial="rest"
               whileHover="hover"
@@ -1182,7 +1192,8 @@ export function AIInsightsTab({
         <div className="flex-1" />
 
         {/* Refresh button */}
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           type="button"

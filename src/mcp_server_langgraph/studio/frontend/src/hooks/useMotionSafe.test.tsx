@@ -4,7 +4,7 @@
  * Tests for reduced motion accessibility support in animations.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { cleanup, renderHook } from "@testing-library/react";
 import {
   useMotionSafe,
   usePrefersReducedMotion,
@@ -23,6 +23,7 @@ describe("useMotionSafe", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.clearAllMocks();
   });
 
@@ -74,7 +75,7 @@ describe("useMotionSafe", () => {
       };
 
       const { result } = renderHook(() =>
-        useMotionSafe(fullMotion, reducedMotion)
+        useMotionSafe(fullMotion, reducedMotion),
       );
 
       expect(result.current.transition).toEqual({ duration: 0.25 });

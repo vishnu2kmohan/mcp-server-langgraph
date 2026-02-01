@@ -41,13 +41,13 @@ function createTestStore(preloadedState = {}) {
 
 function renderWithProviders(
   ui: React.ReactElement,
-  { store = createTestStore(), ...options } = {}
+  { store = createTestStore(), ...options } = {},
 ) {
   return render(
     <Provider store={store}>
       <MemoryRouter>{ui}</MemoryRouter>
     </Provider>,
-    options
+    options,
   );
 }
 
@@ -69,7 +69,7 @@ describe("ArtifactInteractionWrapper", () => {
       renderWithProviders(
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div data-testid="child-content">Artifact Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       expect(screen.getByTestId("child-content")).toBeInTheDocument();
@@ -79,11 +79,11 @@ describe("ArtifactInteractionWrapper", () => {
       renderWithProviders(
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       expect(
-        screen.getByTestId("artifact-interaction-wrapper")
+        screen.getByTestId("artifact-interaction-wrapper"),
       ).toBeInTheDocument();
     });
 
@@ -94,11 +94,11 @@ describe("ArtifactInteractionWrapper", () => {
           className="custom-class"
         >
           <div>Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       expect(screen.getByTestId("artifact-interaction-wrapper")).toHaveClass(
-        "custom-class"
+        "custom-class",
       );
     });
   });
@@ -110,7 +110,7 @@ describe("ArtifactInteractionWrapper", () => {
       renderWithProviders(
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       const wrapper = screen.getByTestId("artifact-interaction-wrapper");
@@ -123,7 +123,7 @@ describe("ArtifactInteractionWrapper", () => {
       renderWithProviders(
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       // Button should be present but visually hidden (opacity-0)
@@ -135,7 +135,7 @@ describe("ArtifactInteractionWrapper", () => {
       renderWithProviders(
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       const button = screen.getByTestId("popout-button");
@@ -167,7 +167,7 @@ describe("ArtifactInteractionWrapper", () => {
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
         </ArtifactInteractionWrapper>,
-        { store }
+        { store },
       );
 
       const button = screen.getByTestId("popout-button");
@@ -199,13 +199,15 @@ describe("ArtifactInteractionWrapper", () => {
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
         </ArtifactInteractionWrapper>,
-        { store }
+        { store },
       );
 
       const button = screen.getByTestId("popout-button");
       await user.click(button);
 
-      expect(store.getState().canvas.selectedArtifactId).toBe("test-artifact-1");
+      expect(store.getState().canvas.selectedArtifactId).toBe(
+        "test-artifact-1",
+      );
     });
 
     it("should add artifact to tab order when popout clicked", async () => {
@@ -231,7 +233,7 @@ describe("ArtifactInteractionWrapper", () => {
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
         </ArtifactInteractionWrapper>,
-        { store }
+        { store },
       );
 
       const button = screen.getByTestId("popout-button");
@@ -264,7 +266,7 @@ describe("ArtifactInteractionWrapper", () => {
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
         </ArtifactInteractionWrapper>,
-        { store }
+        { store },
       );
 
       const wrapper = screen.getByTestId("artifact-interaction-wrapper");
@@ -295,13 +297,15 @@ describe("ArtifactInteractionWrapper", () => {
         <ArtifactInteractionWrapper artifact={mockArtifact}>
           <div>Content</div>
         </ArtifactInteractionWrapper>,
-        { store }
+        { store },
       );
 
       const wrapper = screen.getByTestId("artifact-interaction-wrapper");
       fireEvent.dblClick(wrapper);
 
-      expect(store.getState().canvas.selectedArtifactId).toBe("test-artifact-1");
+      expect(store.getState().canvas.selectedArtifactId).toBe(
+        "test-artifact-1",
+      );
     });
   });
 
@@ -316,7 +320,7 @@ describe("ArtifactInteractionWrapper", () => {
           onOpenInCanvas={onOpenInCanvas}
         >
           <div>Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       const button = screen.getByTestId("popout-button");
@@ -331,7 +335,7 @@ describe("ArtifactInteractionWrapper", () => {
       renderWithProviders(
         <ArtifactInteractionWrapper artifact={mockArtifact} disabled>
           <div>Content</div>
-        </ArtifactInteractionWrapper>
+        </ArtifactInteractionWrapper>,
       );
 
       expect(screen.queryByTestId("popout-button")).not.toBeInTheDocument();
@@ -359,7 +363,7 @@ describe("ArtifactInteractionWrapper", () => {
         <ArtifactInteractionWrapper artifact={mockArtifact} disabled>
           <div>Content</div>
         </ArtifactInteractionWrapper>,
-        { store }
+        { store },
       );
 
       const wrapper = screen.getByTestId("artifact-interaction-wrapper");

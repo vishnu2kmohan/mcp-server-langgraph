@@ -63,10 +63,7 @@ function NodeStatusIcon({ status, nodeId }: NodeStatusIconProps) {
         <Loader2 {...iconProps} className="text-primary-9 animate-spin" />
       )}
       {status === "pending" && (
-        <Clock
-          {...iconProps}
-          className="text-neutral-9"
-        />
+        <Clock {...iconProps} className="text-neutral-9" />
       )}
       {status === "error" && (
         <AlertCircle {...iconProps} className="text-error-9" />
@@ -120,28 +117,18 @@ function TraceNodeRow({
         }
       >
         {isExpanded ? (
-          <ChevronDown
-            size={12}
-            className="text-neutral-10"
-          />
+          <ChevronDown size={12} className="text-neutral-10" />
         ) : (
-          <ChevronRight
-            size={12}
-            className="text-neutral-10"
-          />
+          <ChevronRight size={12} className="text-neutral-10" />
         )}
       </Button>
       {/* Status icon */}
       <NodeStatusIcon status={node.status} nodeId={node.id} />
       {/* Node name */}
-      <span className="flex-1 text-sm text-neutral-11">
-        {node.name}
-      </span>
+      <span className="flex-1 text-sm text-neutral-11">{node.name}</span>
       {/* Duration */}
       {node.duration !== undefined && node.duration > 0 && (
-        <span className="text-xs text-neutral-10">
-          {node.duration}ms
-        </span>
+        <span className="text-xs text-neutral-10">{node.duration}ms</span>
       )}
     </div>
   );
@@ -160,23 +147,15 @@ function NodeDetails({ node }: NodeDetailsProps) {
       <div className="grid grid-cols-2 gap-2">
         <div>
           <span className="text-neutral-10">ID:</span>
-          <span className="ml-2 text-neutral-11">
-            {node.id}
-          </span>
+          <span className="ml-2 text-neutral-11">{node.id}</span>
         </div>
         <div>
-          <span className="text-neutral-10">
-            Status:
-          </span>
-          <span className="ml-2 text-neutral-11 capitalize">
-            {node.status}
-          </span>
+          <span className="text-neutral-10">Status:</span>
+          <span className="ml-2 text-neutral-11 capitalize">{node.status}</span>
         </div>
         {node.startTime && (
           <div>
-            <span className="text-neutral-10">
-              Start:
-            </span>
+            <span className="text-neutral-10">Start:</span>
             <span className="ml-2 text-neutral-11">
               {new Date(node.startTime).toISOString()}
             </span>
@@ -216,9 +195,7 @@ function TimelineNode({ node, totalDuration, startOffset }: TimelineNodeProps) {
 
   return (
     <div className="flex items-center gap-2 py-1">
-      <span className="w-24 text-xs text-neutral-11 truncate">
-        {node.name}
-      </span>
+      <span className="w-24 text-xs text-neutral-11 truncate">{node.name}</span>
       <div className="flex-1 h-4 bg-neutral-2 rounded relative">
         <div
           className={cn("h-full rounded", statusColors[node.status])}
@@ -411,14 +388,8 @@ export function AgentTraceTab({
       <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
         {/* Session indicator */}
         <div className="flex items-center gap-1.5">
-          <Activity
-            size={14}
-            className="text-neutral-10"
-            aria-hidden="true"
-          />
-          <h3 className="text-xs text-neutral-11">
-            Trace
-          </h3>
+          <Activity size={14} className="text-neutral-10" aria-hidden="true" />
+          <h3 className="text-xs text-neutral-11">Trace</h3>
           <span className="text-xs text-neutral-10 ml-1 px-1.5 py-0.5 bg-neutral-2 rounded">
             {sessionId}
           </span>
@@ -437,17 +408,13 @@ export function AgentTraceTab({
             </span>
             <span className="flex items-center gap-1 text-neutral-10">
               <span data-testid="token-output">{trace.tokens.output}</span>
-              <span className="text-neutral-9">
-                out
-              </span>
+              <span className="text-neutral-9">out</span>
             </span>
             <span className="flex items-center gap-1 text-neutral-10">
               <span data-testid="token-total">
                 {trace.tokens.input + trace.tokens.output}
               </span>
-              <span className="text-neutral-9">
-                total
-              </span>
+              <span className="text-neutral-9">total</span>
             </span>
           </div>
         )}
@@ -466,7 +433,8 @@ export function AgentTraceTab({
                 : "hover:bg-neutral-3 text-neutral-10",
             )}
             aria-label="List view"
-            aria-pressed={viewMode === "list"}>
+            aria-pressed={viewMode === "list"}
+          >
             <List size={14} />
           </Button>
           <Button
@@ -481,13 +449,15 @@ export function AgentTraceTab({
                 : "hover:bg-neutral-3 text-neutral-10",
             )}
             aria-label="Timeline view"
-            aria-pressed={viewMode === "timeline"}>
+            aria-pressed={viewMode === "timeline"}
+          >
             <Activity size={14} />
           </Button>
         </div>
 
         {/* Refresh button */}
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="refresh-trace-button"

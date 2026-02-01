@@ -41,9 +41,7 @@ function ColorSwatch({ name, shades, description }: ColorSwatchProps) {
           {name}
         </h3>
         {description && (
-          <p className="text-sm text-neutral-10">
-            {description}
-          </p>
+          <p className="text-sm text-neutral-10">{description}</p>
         )}
       </div>
       <div className="flex flex-wrap gap-1">
@@ -53,9 +51,7 @@ function ColorSwatch({ name, shades, description }: ColorSwatchProps) {
               className={`w-16 h-16 rounded-lg shadow-sm border border-neutral-6 ${className}`}
               title={hex}
             />
-            <span className="text-xs text-neutral-11 mt-1 block">
-              {shade}
-            </span>
+            <span className="text-xs text-neutral-11 mt-1 block">{shade}</span>
           </div>
         ))}
       </div>
@@ -236,32 +232,20 @@ function UsageExamples() {
 
       {/* Text Colors */}
       <div className="space-y-2">
-        <h3 className="font-semibold text-neutral-12">
-          Text Colors
-        </h3>
+        <h3 className="font-semibold text-neutral-12">Text Colors</h3>
         <div className="flex flex-wrap gap-4">
-          <span className="text-primary-11">
-            Primary link
-          </span>
-          <span className="text-success-11">
-            Success text
-          </span>
-          <span className="text-warning-11">
-            Warning text
-          </span>
+          <span className="text-primary-11">Primary link</span>
+          <span className="text-success-11">Success text</span>
+          <span className="text-warning-11">Warning text</span>
           <span className="text-error-11">Error text</span>
           <span className="text-info-11">Info text</span>
-          <span className="text-insight-11">
-            AI insight
-          </span>
+          <span className="text-insight-11">AI insight</span>
         </div>
       </div>
 
       {/* Backgrounds */}
       <div className="space-y-2">
-        <h3 className="font-semibold text-neutral-12">
-          Background Colors
-        </h3>
+        <h3 className="font-semibold text-neutral-12">Background Colors</h3>
         <div className="flex flex-wrap gap-2">
           <div className="px-3 py-2 bg-primary-3 text-primary-11 rounded">
             Primary
@@ -275,9 +259,7 @@ function UsageExamples() {
           <div className="px-3 py-2 bg-error-3 text-error-11 rounded">
             Error
           </div>
-          <div className="px-3 py-2 bg-info-3 text-info-11 rounded">
-            Info
-          </div>
+          <div className="px-3 py-2 bg-info-3 text-info-11 rounded">Info</div>
           <div className="px-3 py-2 bg-insight-3 text-insight-11 rounded">
             Insight
           </div>
@@ -286,9 +268,7 @@ function UsageExamples() {
 
       {/* Borders */}
       <div className="space-y-2">
-        <h3 className="font-semibold text-neutral-12">
-          Border Colors
-        </h3>
+        <h3 className="font-semibold text-neutral-12">Border Colors</h3>
         <div className="flex flex-wrap gap-2">
           <div className="px-3 py-2 border-2 border-primary-9 rounded">
             Primary
@@ -299,9 +279,7 @@ function UsageExamples() {
           <div className="px-3 py-2 border-2 border-warning-9 rounded">
             Warning
           </div>
-          <div className="px-3 py-2 border-2 border-error-9 rounded">
-            Error
-          </div>
+          <div className="px-3 py-2 border-2 border-error-9 rounded">Error</div>
           <div className="px-3 py-2 border-2 border-info-9 rounded">Info</div>
           <div className="px-3 py-2 border-2 border-insight-9 rounded">
             Insight
@@ -311,33 +289,23 @@ function UsageExamples() {
 
       {/* Status Indicators */}
       <div className="space-y-2">
-        <h3 className="font-semibold text-neutral-12">
-          Status Indicators
-        </h3>
+        <h3 className="font-semibold text-neutral-12">Status Indicators</h3>
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-success-9" />
-            <span className="text-neutral-11">
-              Active
-            </span>
+            <span className="text-neutral-11">Active</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-warning-9" />
-            <span className="text-neutral-11">
-              Pending
-            </span>
+            <span className="text-neutral-11">Pending</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-error-9" />
-            <span className="text-neutral-11">
-              Failed
-            </span>
+            <span className="text-neutral-11">Failed</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-neutral-4" />
-            <span className="text-neutral-11">
-              Inactive
-            </span>
+            <span className="text-neutral-11">Inactive</span>
           </div>
         </div>
       </div>
@@ -382,39 +350,25 @@ function WCAGCompliance() {
               <td className="py-2 px-4 text-neutral-12">
                 Normal text contrast
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                4.5:1
-              </td>
+              <td className="py-2 px-4 text-neutral-11">4.5:1</td>
               <td className="py-2 px-4">
-                <span className="text-success-11">
-                  Pass
-                </span>
+                <span className="text-success-11">Pass</span>
               </td>
             </tr>
             <tr className="border-b border-neutral-5">
-              <td className="py-2 px-4 text-neutral-12">
-                Large text contrast
-              </td>
-              <td className="py-2 px-4 text-neutral-11">
-                3:1
-              </td>
+              <td className="py-2 px-4 text-neutral-12">Large text contrast</td>
+              <td className="py-2 px-4 text-neutral-11">3:1</td>
               <td className="py-2 px-4">
-                <span className="text-success-11">
-                  Pass
-                </span>
+                <span className="text-success-11">Pass</span>
               </td>
             </tr>
             <tr className="border-b border-neutral-5">
               <td className="py-2 px-4 text-neutral-12">
                 UI component contrast
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                3:1
-              </td>
+              <td className="py-2 px-4 text-neutral-11">3:1</td>
               <td className="py-2 px-4">
-                <span className="text-success-11">
-                  Pass
-                </span>
+                <span className="text-success-11">Pass</span>
               </td>
             </tr>
           </tbody>
@@ -477,9 +431,7 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">error-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                Errors, destructive
-              </td>
+              <td className="py-2 px-4 text-neutral-11">Errors, destructive</td>
             </tr>
             <tr className="border-b border-neutral-5">
               <td className="py-2 px-4">
@@ -490,9 +442,7 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">success-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                Success, positive
-              </td>
+              <td className="py-2 px-4 text-neutral-11">Success, positive</td>
             </tr>
             <tr className="border-b border-neutral-5">
               <td className="py-2 px-4">
@@ -503,9 +453,7 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">warning-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                Warnings, cautions
-              </td>
+              <td className="py-2 px-4 text-neutral-11">Warnings, cautions</td>
             </tr>
             <tr className="border-b border-neutral-5">
               <td className="py-2 px-4">
@@ -516,9 +464,7 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">primary-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                Primary actions
-              </td>
+              <td className="py-2 px-4 text-neutral-11">Primary actions</td>
             </tr>
             <tr className="border-b border-neutral-5">
               <td className="py-2 px-4">
@@ -529,9 +475,7 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">info-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                Informational
-              </td>
+              <td className="py-2 px-4 text-neutral-11">Informational</td>
             </tr>
             <tr className="border-b border-neutral-5">
               <td className="py-2 px-4">
@@ -542,9 +486,7 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">insight-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                AI features
-              </td>
+              <td className="py-2 px-4 text-neutral-11">AI features</td>
             </tr>
             <tr className="border-b border-neutral-5">
               <td className="py-2 px-4">
@@ -555,9 +497,7 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">neutral-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                General UI
-              </td>
+              <td className="py-2 px-4 text-neutral-11">General UI</td>
             </tr>
             <tr>
               <td className="py-2 px-4">
@@ -566,18 +506,14 @@ function MigrationGuide() {
               <td className="py-2 px-4">
                 <code className="text-success-10">grafana-*</code>
               </td>
-              <td className="py-2 px-4 text-neutral-11">
-                Observability
-              </td>
+              <td className="py-2 px-4 text-neutral-11">Observability</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div className="bg-warning-3 border border-warning-6 rounded-lg p-4">
-        <h3 className="font-medium text-warning-11 mb-2">
-          ESLint Enforcement
-        </h3>
+        <h3 className="font-medium text-warning-11 mb-2">ESLint Enforcement</h3>
         <p className="text-sm text-warning-11">
           Raw Tailwind colors are blocked by ESLint. If you see a lint error
           about color usage, refer to this guide for the correct semantic

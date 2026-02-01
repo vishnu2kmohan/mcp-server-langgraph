@@ -12,7 +12,7 @@
  * @see ADR-0102 - Connections Page Redesign (revealed this gap)
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { NAV_ITEMS, BOTTOM_ITEMS } from "../../../layout/ActivityBar";
 
 // =============================================================================
@@ -76,17 +76,15 @@ const EXPECTED_DEVELOPER_ITEMS = [
 /**
  * User persona has limited access.
  */
-const EXPECTED_USER_ITEMS = [
-  "projects",
-  "chat",
-  "workflows",
-  "cost",
-  "help",
-];
+const EXPECTED_USER_ITEMS = ["projects", "chat", "workflows", "cost", "help"];
 
 // =============================================================================
 // Tests
 // =============================================================================
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("Navigation Item Sync Validation", () => {
   describe("ActivityBar NAV_ITEMS", () => {
@@ -131,7 +129,7 @@ describe("Navigation Item Sync Validation", () => {
       for (const itemId of EXPECTED_ADMIN_ITEMS) {
         expect(
           ALL_ITEM_IDS,
-          `Expected "${itemId}" to be in NAV_ITEMS or BOTTOM_ITEMS`
+          `Expected "${itemId}" to be in NAV_ITEMS or BOTTOM_ITEMS`,
         ).toContain(itemId);
       }
     });
@@ -154,7 +152,7 @@ describe("Navigation Item Sync Validation", () => {
       for (const itemId of EXPECTED_DEVELOPER_ITEMS) {
         expect(
           ALL_ITEM_IDS,
-          `Expected "${itemId}" to be in NAV_ITEMS or BOTTOM_ITEMS`
+          `Expected "${itemId}" to be in NAV_ITEMS or BOTTOM_ITEMS`,
         ).toContain(itemId);
       }
     });
@@ -169,7 +167,7 @@ describe("Navigation Item Sync Validation", () => {
       for (const itemId of EXPECTED_USER_ITEMS) {
         expect(
           ALL_ITEM_IDS,
-          `Expected "${itemId}" to be in NAV_ITEMS or BOTTOM_ITEMS`
+          `Expected "${itemId}" to be in NAV_ITEMS or BOTTOM_ITEMS`,
         ).toContain(itemId);
       }
     });
@@ -193,7 +191,7 @@ describe("Navigation Item Sync Validation", () => {
       for (const item of NAV_ITEMS) {
         expect(item.path, `${item.id} should have a path`).toBeDefined();
         expect(item.path, `${item.id} path should start with /studio/`).toMatch(
-          /^\/studio\//
+          /^\/studio\//,
         );
       }
     });
@@ -202,10 +200,9 @@ describe("Navigation Item Sync Validation", () => {
       for (const item of NAV_ITEMS) {
         // Path should be /studio/{id}
         const expectedPath = `/studio/${item.id}`;
-        expect(
-          item.path,
-          `${item.id} path should be ${expectedPath}`
-        ).toBe(expectedPath);
+        expect(item.path, `${item.id} path should be ${expectedPath}`).toBe(
+          expectedPath,
+        );
       }
     });
   });
@@ -219,10 +216,10 @@ describe("Persona Configuration Integration", () => {
   it("documents expected persona configurations", () => {
     // This is a documentation test - it passes if expectations match
     expect(EXPECTED_ADMIN_ITEMS.length).toBeGreaterThan(
-      EXPECTED_DEVELOPER_ITEMS.length
+      EXPECTED_DEVELOPER_ITEMS.length,
     );
     expect(EXPECTED_DEVELOPER_ITEMS.length).toBeGreaterThan(
-      EXPECTED_USER_ITEMS.length
+      EXPECTED_USER_ITEMS.length,
     );
   });
 

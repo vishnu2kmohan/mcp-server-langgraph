@@ -10,7 +10,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within, waitFor, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  within,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HeaderModelSelector, type ModelOption } from "./HeaderModelSelector";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
@@ -90,9 +96,15 @@ function SessionHeaderWithModelSelector({
   };
 
   return (
-    <div data-testid="session-header" className="flex items-center justify-between px-4 py-2 border-b">
+    <div
+      data-testid="session-header"
+      className="flex items-center justify-between px-4 py-2 border-b"
+    >
       <div className="flex items-center gap-3 min-w-0">
-        <h2 className="text-sm font-medium truncate" data-testid="session-title">
+        <h2
+          className="text-sm font-medium truncate"
+          data-testid="session-title"
+        >
           {title}
         </h2>
         <HeaderModelSelector
@@ -138,7 +150,9 @@ describe("HeaderModelSelector Integration", () => {
       render(<SessionHeaderWithModelSelector {...defaultProps} />);
 
       expect(screen.getByTestId("session-header")).toBeInTheDocument();
-      expect(screen.getByTestId("session-title")).toHaveTextContent("New Conversation");
+      expect(screen.getByTestId("session-title")).toHaveTextContent(
+        "New Conversation",
+      );
       expect(screen.getByTestId("header-model-selector")).toBeInTheDocument();
     });
 
@@ -151,7 +165,10 @@ describe("HeaderModelSelector Integration", () => {
 
     it("displays thinking level for thinking-capable models", () => {
       render(
-        <SessionHeaderWithModelSelector {...defaultProps} thinkingLevel="high" />
+        <SessionHeaderWithModelSelector
+          {...defaultProps}
+          thinkingLevel="high"
+        />,
       );
 
       expect(screen.getByText(/High/i)).toBeInTheDocument();
@@ -159,7 +176,10 @@ describe("HeaderModelSelector Integration", () => {
 
     it("hides thinking level for non-thinking models", () => {
       render(
-        <SessionHeaderWithModelSelector {...defaultProps} selectedModel="gpt-4o" />
+        <SessionHeaderWithModelSelector
+          {...defaultProps}
+          selectedModel="gpt-4o"
+        />,
       );
 
       // GPT-4o doesn't support thinking, so no level should be shown
@@ -178,7 +198,7 @@ describe("HeaderModelSelector Integration", () => {
         <SessionHeaderWithModelSelector
           {...defaultProps}
           onModelChange={onModelChange}
-        />
+        />,
       );
 
       // Open dropdown
@@ -200,7 +220,7 @@ describe("HeaderModelSelector Integration", () => {
           selectedModel="gemini-2.5-pro"
           thinkingLevel="high"
           onSendMessage={onSendMessage}
-        />
+        />,
       );
 
       // Click send
@@ -221,7 +241,7 @@ describe("HeaderModelSelector Integration", () => {
           {...defaultProps}
           selectedModel={selectedModel}
           onModelChange={onModelChange}
-        />
+        />,
       );
 
       // Initial state - Opus shown
@@ -237,7 +257,7 @@ describe("HeaderModelSelector Integration", () => {
           {...defaultProps}
           selectedModel={selectedModel}
           onModelChange={onModelChange}
-        />
+        />,
       );
 
       // GPT-4o should now be displayed
@@ -254,7 +274,7 @@ describe("HeaderModelSelector Integration", () => {
         <SessionHeaderWithModelSelector
           {...defaultProps}
           onThinkingLevelChange={onThinkingLevelChange}
-        />
+        />,
       );
 
       // Open dropdown
@@ -275,7 +295,7 @@ describe("HeaderModelSelector Integration", () => {
           {...defaultProps}
           thinkingLevel="low"
           onSendMessage={onSendMessage}
-        />
+        />,
       );
 
       await user.click(screen.getByTestId("send-button"));
@@ -297,12 +317,17 @@ describe("HeaderModelSelector Integration", () => {
       const user = userEvent.setup();
 
       render(
-        <SessionHeaderWithModelSelector {...defaultProps} selectedModel="gpt-4o" />
+        <SessionHeaderWithModelSelector
+          {...defaultProps}
+          selectedModel="gpt-4o"
+        />,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
-      expect(screen.queryByTestId("thinking-level-section")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("thinking-level-section"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -319,7 +344,7 @@ describe("HeaderModelSelector Integration", () => {
           {...defaultProps}
           selectedModel={selectedModel}
           onModelChange={onModelChange}
-        />
+        />,
       );
 
       // Initially thinking level should be visible
@@ -334,7 +359,7 @@ describe("HeaderModelSelector Integration", () => {
           {...defaultProps}
           selectedModel={selectedModel}
           onModelChange={onModelChange}
-        />
+        />,
       );
 
       // Thinking level should now be hidden
@@ -353,7 +378,7 @@ describe("HeaderModelSelector Integration", () => {
           {...defaultProps}
           selectedModel={selectedModel}
           onModelChange={onModelChange}
-        />
+        />,
       );
 
       // Initially thinking level should be hidden
@@ -368,7 +393,7 @@ describe("HeaderModelSelector Integration", () => {
           {...defaultProps}
           selectedModel={selectedModel}
           onModelChange={onModelChange}
-        />
+        />,
       );
 
       // Thinking level should now be visible
@@ -397,7 +422,7 @@ describe("HeaderModelSelector Integration", () => {
           onModelChange={onModelChange}
           onThinkingLevelChange={onThinkingLevelChange}
           onSendMessage={onSendMessage}
-        />
+        />,
       );
 
       // Step 1: Open dropdown
@@ -414,7 +439,7 @@ describe("HeaderModelSelector Integration", () => {
           onModelChange={onModelChange}
           onThinkingLevelChange={onThinkingLevelChange}
           onSendMessage={onSendMessage}
-        />
+        />,
       );
 
       // Step 3: Open dropdown again and set thinking level to high
@@ -429,7 +454,7 @@ describe("HeaderModelSelector Integration", () => {
           onModelChange={onModelChange}
           onThinkingLevelChange={onThinkingLevelChange}
           onSendMessage={onSendMessage}
-        />
+        />,
       );
 
       // Close dropdown by clicking outside
@@ -489,7 +514,9 @@ describe("HeaderModelSelector Integration", () => {
 
       await user.click(screen.getByTestId("header-model-selector"));
 
-      const geminiOption = screen.getByRole("option", { name: /Gemini 2.5 Pro/ });
+      const geminiOption = screen.getByRole("option", {
+        name: /Gemini 2.5 Pro/,
+      });
       expect(within(geminiOption).getByText("Preview")).toBeInTheDocument();
     });
 
@@ -501,12 +528,18 @@ describe("HeaderModelSelector Integration", () => {
       await user.click(screen.getByTestId("header-model-selector"));
 
       // Claude models should have thinking badge
-      const opusOption = screen.getByRole("option", { name: /Claude Opus 4.5/ });
-      expect(within(opusOption).getByTestId("thinking-badge")).toBeInTheDocument();
+      const opusOption = screen.getByRole("option", {
+        name: /Claude Opus 4.5/,
+      });
+      expect(
+        within(opusOption).getByTestId("thinking-badge"),
+      ).toBeInTheDocument();
 
       // GPT-4o should not have thinking badge
       const gptOption = screen.getByRole("option", { name: /GPT-4o/ });
-      expect(within(gptOption).queryByTestId("thinking-badge")).not.toBeInTheDocument();
+      expect(
+        within(gptOption).queryByTestId("thinking-badge"),
+      ).not.toBeInTheDocument();
     });
   });
 });

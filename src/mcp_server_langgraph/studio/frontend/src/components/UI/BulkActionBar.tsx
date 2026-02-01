@@ -116,18 +116,18 @@ export function BulkActionBar({
     >
       {/* Selection count */}
       <div className="flex items-center gap-4">
-        <span
-          role="status"
-          className="text-sm font-medium text-neutral-11"
-        >
+        <span role="status" className="text-sm font-medium text-neutral-11">
           {selectedCount} selected
         </span>
-        <Button variant="danger"
+        <Button
+          variant="danger"
           className="text-sm text-neutral-10 hover:text-neutral-11"
           type="button"
           aria-label="Clear selection"
           onClick={onClearSelection}
-        >Clear</Button>
+        >
+          Clear
+        </Button>
       </div>
       {/* Actions */}
       <div className="flex items-center gap-2">

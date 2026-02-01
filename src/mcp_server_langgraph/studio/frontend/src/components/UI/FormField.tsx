@@ -86,8 +86,9 @@ export function FormField({
         "aria-describedby": ariaDescribedBy,
         "aria-required": required ? "true" : undefined,
         className: cn(
-          (children as React.ReactElement<{ className?: string }>).props.className,
-          error && "border-error-7 focus:ring-error-7"
+          (children as React.ReactElement<{ className?: string }>).props
+            .className,
+          error && "border-error-7 focus:ring-error-7",
         ),
       })
     : children;
@@ -127,10 +128,16 @@ export function FormField({
             id={errorId}
             role="alert"
             aria-live="assertive"
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            initial={
+              prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }
+            }
+            animate={
+              prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
+            }
             exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-            transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.15 }}
+            transition={
+              prefersReducedMotion ? { duration: 0.1 } : { duration: 0.15 }
+            }
             className="flex items-center gap-1.5 text-sm text-error-11"
           >
             <Icon icon={AlertCircle} size="sm" aria-hidden />

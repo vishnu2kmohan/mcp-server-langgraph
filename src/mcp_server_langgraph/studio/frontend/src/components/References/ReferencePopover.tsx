@@ -8,11 +8,11 @@
  * - Deep link to relevant page (e.g., Connections for tools)
  */
 
-import { useState } from 'react';
-import { Link } from 'react-router';
-import { Copy, ExternalLink, Check } from 'lucide-react';
-import { Button } from '@/components/UI';
-import type { ResolvedReference, ReferenceType } from '@/types/references';
+import { useState } from "react";
+import { Link } from "react-router";
+import { Copy, ExternalLink, Check } from "lucide-react";
+import { Button } from "@/components/UI";
+import type { ResolvedReference, ReferenceType } from "@/types/references";
 
 export interface ReferencePopoverProps {
   /** The resolved reference to display */
@@ -27,7 +27,7 @@ export interface ReferencePopoverProps {
  * Build the [[type:qualifier:id]] syntax string for copying.
  */
 function buildReferenceSyntax(ref: ResolvedReference): string {
-  if (ref.type === 'tool') {
+  if (ref.type === "tool") {
     return `[[tool:${ref.qualifier}:${ref.id}]]`;
   }
   return `[[${ref.type}:${ref.id}]]`;
@@ -38,15 +38,15 @@ function buildReferenceSyntax(ref: ResolvedReference): string {
  */
 function getDeepLinkUrl(ref: ResolvedReference): string | null {
   switch (ref.type) {
-    case 'tool':
+    case "tool":
       // Navigate to Connections page with connection selected
       if (ref.metadata?.connectionId) {
         return `/connections?selected=${ref.metadata.connectionId}&tab=capabilities`;
       }
-      return '/connections';
-    case 'skill':
+      return "/connections";
+    case "skill":
       return `/skills?skill=${ref.id}`;
-    case 'artifact':
+    case "artifact":
       return `/artifacts?artifact=${ref.id}`;
     default:
       return null;
@@ -58,14 +58,14 @@ function getDeepLinkUrl(ref: ResolvedReference): string | null {
  */
 function getDeepLinkLabel(type: ReferenceType): string {
   switch (type) {
-    case 'tool':
-      return 'View in Connections';
-    case 'skill':
-      return 'View in Skills';
-    case 'artifact':
-      return 'View in Artifacts';
+    case "tool":
+      return "View in Connections";
+    case "skill":
+      return "View in Skills";
+    case "artifact":
+      return "View in Artifacts";
     default:
-      return 'View Details';
+      return "View Details";
   }
 }
 
@@ -94,7 +94,7 @@ export function ReferencePopover({
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for browsers without clipboard API
-      console.error('Failed to copy to clipboard');
+      console.error("Failed to copy to clipboard");
     }
   };
 
@@ -129,13 +129,11 @@ export function ReferencePopover({
 
       {/* Description */}
       {reference.description && (
-        <p className="text-sm text-neutral-11 mb-3">
-          {reference.description}
-        </p>
+        <p className="text-sm text-neutral-11 mb-3">{reference.description}</p>
       )}
 
       {/* Metadata display for tools */}
-      {reference.type === 'tool' && reference.metadata?.inputSchema && (
+      {reference.type === "tool" && reference.metadata?.inputSchema && (
         <div className="text-xs text-neutral-10 mb-3">
           <span className="font-medium">Parameters: </span>
           {Object.keys(reference.metadata.inputSchema).length} defined
@@ -143,12 +141,12 @@ export function ReferencePopover({
       )}
 
       {/* Metadata display for skills */}
-      {reference.type === 'skill' &&
+      {reference.type === "skill" &&
         reference.metadata?.tags &&
         (reference.metadata.tags as string[]).length > 0 && (
           <div className="text-xs text-neutral-10 mb-3">
             <span className="font-medium">Tags: </span>
-            {(reference.metadata.tags as string[]).join(', ')}
+            {(reference.metadata.tags as string[]).join(", ")}
           </div>
         )}
 
@@ -175,7 +173,7 @@ export function ReferencePopover({
         </Button>
 
         {/* Deep link */}
-        {deepLinkUrl && reference.status === 'valid' && (
+        {deepLinkUrl && reference.status === "valid" && (
           <Link
             to={deepLinkUrl}
             className="inline-flex items-center gap-1 text-xs text-primary-11 hover:text-primary-12"

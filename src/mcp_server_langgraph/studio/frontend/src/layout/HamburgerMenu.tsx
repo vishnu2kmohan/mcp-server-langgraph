@@ -47,7 +47,8 @@ export const HamburgerMenu = forwardRef<HTMLButtonElement, HamburgerMenuProps>(
           "hover:bg-neutral-2",
           "focus:outline-none focus:ring-2 focus:ring-primary-7",
           className,
-        )}>
+        )}
+      >
         {isOpen ? (
           <X size={24} data-testid="hamburger-close-icon" />
         ) : (

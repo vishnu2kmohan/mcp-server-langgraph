@@ -5,12 +5,17 @@
  * @see ADR-0102 Phase 6
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScopeSelector } from "./ScopeSelector";
 import type { ConnectionScope } from "@/types/connection";
 
 // Motion mock is provided globally in src/test/setup.ts
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ScopeSelector", () => {
   describe("Rendering", () => {
@@ -24,7 +29,9 @@ describe("ScopeSelector", () => {
     it("should render descriptions for each scope", () => {
       render(<ScopeSelector value="user" onChange={vi.fn()} />);
       expect(screen.getByText(/only you can access/i)).toBeInTheDocument();
-      expect(screen.getByText(/project members can access/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/project members can access/i),
+      ).toBeInTheDocument();
       expect(screen.getByText(/temporary, not saved/i)).toBeInTheDocument();
     });
 

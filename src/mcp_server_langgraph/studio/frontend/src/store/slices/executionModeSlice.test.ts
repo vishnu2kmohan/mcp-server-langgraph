@@ -6,7 +6,7 @@
  * with OpenFGA permission enforcement for bypass mode.
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import executionModeReducer, {
   setExecutionMode,
   cycleExecutionMode,
@@ -25,6 +25,10 @@ import executionModeReducer, {
   type ExecutionModeState,
   type ExecutionPlan,
 } from "./executionModeSlice";
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("executionModeSlice", () => {
   const initialState: ExecutionModeState = {
@@ -113,7 +117,10 @@ describe("executionModeSlice", () => {
 
     it("should set execution mode to 'bypass' when user is admin", () => {
       const adminState = { ...initialState, userIsAdmin: true };
-      const state = executionModeReducer(adminState, setExecutionMode("bypass"));
+      const state = executionModeReducer(
+        adminState,
+        setExecutionMode("bypass"),
+      );
       expect(state.executionMode).toBe("bypass");
     });
 

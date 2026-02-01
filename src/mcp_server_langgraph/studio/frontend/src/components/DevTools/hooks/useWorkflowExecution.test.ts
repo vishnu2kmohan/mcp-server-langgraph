@@ -54,7 +54,11 @@ const createMockApiStep = (overrides: Record<string, unknown> = {}) => ({
 const mockApiResponse = {
   steps: [
     createMockApiStep({ id: "step-1", node_id: "node-1", node_name: "Start" }),
-    createMockApiStep({ id: "step-2", node_id: "node-2", node_name: "Process" }),
+    createMockApiStep({
+      id: "step-2",
+      node_id: "node-2",
+      node_name: "Process",
+    }),
     createMockApiStep({ id: "step-3", node_id: "node-3", node_name: "End" }),
   ],
   current_step_id: "step-2",

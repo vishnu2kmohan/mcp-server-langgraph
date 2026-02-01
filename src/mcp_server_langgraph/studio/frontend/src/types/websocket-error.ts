@@ -191,7 +191,7 @@ export interface CreateWebSocketErrorOptions {
 export function createWebSocketError(
   code: HookErrorCode,
   message: string,
-  options: CreateWebSocketErrorOptions = {}
+  options: CreateWebSocketErrorOptions = {},
 ): HookWebSocketError {
   const retryable = options.retryable ?? RETRYABLE_CODES[code] ?? false;
   const category = ERROR_CATEGORIES[code] ?? "unknown";
@@ -282,7 +282,7 @@ export function closeCodeToErrorCode(closeCode: number): HookErrorCode {
  */
 export function createErrorFromCloseEvent(
   closeCode: number,
-  reason?: string
+  reason?: string,
 ): HookWebSocketError {
   const code = closeCodeToErrorCode(closeCode);
   const message = reason || `WebSocket closed with code ${closeCode}`;

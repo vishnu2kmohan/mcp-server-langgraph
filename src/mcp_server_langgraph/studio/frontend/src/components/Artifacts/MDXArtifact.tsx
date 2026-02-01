@@ -51,18 +51,10 @@ function Accordion({
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        {icon && (
-          <span className="text-neutral-10">{icon}</span>
-        )}
-        <span className="font-medium text-neutral-12">
-          {title}
-        </span>
+        {icon && <span className="text-neutral-10">{icon}</span>}
+        <span className="font-medium text-neutral-12">{title}</span>
       </Button>
-      {isOpen && (
-        <div className="p-3 pt-0 text-neutral-11">
-          {children}
-        </div>
-      )}
+      {isOpen && <div className="p-3 pt-0 text-neutral-11">{children}</div>}
     </div>
   );
 }
@@ -95,10 +87,7 @@ const calloutStyles: Record<
     bg: "bg-warning-3 bg-warning-3",
     border: "border-warning-6 dark:border-warning-11",
     icon: (
-      <AlertTriangle
-        size={18}
-        className="text-warning-9 dark:text-warning-9"
-      />
+      <AlertTriangle size={18} className="text-warning-9 dark:text-warning-9" />
     ),
   },
   info: {
@@ -118,9 +107,7 @@ const calloutStyles: Record<
   check: {
     bg: "bg-success-1 dark:bg-success-a3",
     border: "border-success-4 dark:border-success-11",
-    icon: (
-      <Check size={18} className="text-success-10 dark:text-success-7" />
-    ),
+    icon: <Check size={18} className="text-success-10 dark:text-success-7" />,
   },
 };
 
@@ -135,13 +122,9 @@ function Callout({ type = "note", emoji, title, children }: CalloutProps) {
         </span>
         <div className="flex-1">
           {title && (
-            <div className="font-semibold text-neutral-12 mb-1">
-              {title}
-            </div>
+            <div className="font-semibold text-neutral-12 mb-1">{title}</div>
           )}
-          <div className="text-neutral-11">
-            {children}
-          </div>
+          <div className="text-neutral-11">{children}</div>
         </div>
       </div>
     </div>
@@ -170,24 +153,19 @@ function Card({ title, icon, href, children }: CardProps) {
   const content = (
     <div className="p-4 border border-neutral-5 rounded-lg hover:border-primary-9 dark:hover:border-primary-7 transition-colors">
       <div className="flex items-center gap-2 mb-2">
-        {icon && (
-          <span className="text-neutral-10">{icon}</span>
-        )}
-        <h4 className="font-semibold text-neutral-12">
-          {title}
-        </h4>
+        {icon && <span className="text-neutral-10">{icon}</span>}
+        <h4 className="font-semibold text-neutral-12">{title}</h4>
       </div>
-      {children && (
-        <p className="text-sm text-neutral-11">
-          {children}
-        </p>
-      )}
+      {children && <p className="text-sm text-neutral-11">{children}</p>}
     </div>
   );
 
   if (href) {
     return (
-      <a href={href} className="block no-underline focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-offset-2 rounded">
+      <a
+        href={href}
+        className="block no-underline focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-offset-2 rounded"
+      >
         {content}
       </a>
     );
@@ -243,7 +221,8 @@ function Tabs({ children }: TabsProps) {
             variant="primary"
             className="px-4 py-2 text-sm border-b-2"
             key={index}
-            onClick={() => setActiveTab(index)}>
+            onClick={() => setActiveTab(index)}
+          >
             {tab.title}
           </Button>
         ))}
@@ -287,9 +266,7 @@ function Step({
         </span>
       </div>
       <div className="flex-1 pb-4 border-l-2 border-neutral-5 pl-4 -ml-4 relative before:absolute before:left-0 before:top-4 before:w-4 before:h-0.5 before:bg-neutral-3 dark:before:bg-neutral-4">
-        <h4 className="font-semibold text-neutral-12 mb-1">
-          {title}
-        </h4>
+        <h4 className="font-semibold text-neutral-12 mb-1">{title}</h4>
         <div className="text-neutral-11">{children}</div>
       </div>
     </div>
@@ -359,15 +336,12 @@ function Expandable({ title, children }: ExpandableProps) {
       <Button
         variant="primary"
         className="flex text-primary-10 dark:text-primary-7 hover:underline"
-        onClick={() => setIsOpen(!isOpen)}>
+        onClick={() => setIsOpen(!isOpen)}
+      >
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         <span>{title}</span>
       </Button>
-      {isOpen && (
-        <div className="mt-2 pl-6 text-neutral-11">
-          {children}
-        </div>
-      )}
+      {isOpen && <div className="mt-2 pl-6 text-neutral-11">{children}</div>}
     </div>
   );
 }
@@ -411,22 +385,14 @@ function ResponseField({ name, type, required, children }: ResponseFieldProps) {
         <code className="px-2 py-0.5 bg-neutral-2 text-primary-10 dark:text-primary-7 rounded">
           {name}
         </code>
-        {type && (
-          <span className="text-sm text-neutral-10">
-            {type}
-          </span>
-        )}
+        {type && <span className="text-sm text-neutral-10">{type}</span>}
         {required && (
           <span className="px-2 py-0.5 text-xs bg-error-3 bg-error-4 text-error-10 dark:text-error-7 rounded">
             required
           </span>
         )}
       </div>
-      {children && (
-        <div className="text-sm text-neutral-11">
-          {children}
-        </div>
-      )}
+      {children && <div className="text-sm text-neutral-11">{children}</div>}
     </div>
   );
 }
@@ -460,22 +426,14 @@ function ParamField({
         <span className="px-2 py-0.5 text-xs bg-neutral-2 text-neutral-11 rounded">
           {paramType}
         </span>
-        {type && (
-          <span className="text-sm text-neutral-10">
-            {type}
-          </span>
-        )}
+        {type && <span className="text-sm text-neutral-10">{type}</span>}
         {required && (
           <span className="px-2 py-0.5 text-xs bg-error-3 bg-error-4 text-error-10 dark:text-error-7 rounded">
             required
           </span>
         )}
       </div>
-      {children && (
-        <div className="text-sm text-neutral-11">
-          {children}
-        </div>
-      )}
+      {children && <div className="text-sm text-neutral-11">{children}</div>}
     </div>
   );
 }
@@ -652,9 +610,7 @@ export function MDXArtifact({
       >
         {title && (
           <div className="px-4 py-2 border-b border-neutral-5 bg-neutral-2">
-            <h4 className="text-sm font-medium text-neutral-11">
-              {title}
-            </h4>
+            <h4 className="text-sm font-medium text-neutral-11">{title}</h4>
           </div>
         )}
         <div className="p-4 prose dark:prose-invert max-w-none">
@@ -673,9 +629,7 @@ export function MDXArtifact({
       {title && (
         <div className="px-4 py-2 border-b border-neutral-5 bg-neutral-2 flex items-center gap-2">
           <InfoIcon size={14} className="text-primary-9" />
-          <h4 className="text-sm font-medium text-neutral-11">
-            {title}
-          </h4>
+          <h4 className="text-sm font-medium text-neutral-11">{title}</h4>
           <span className="ml-auto px-2 py-0.5 text-xs bg-primary-3 bg-primary-4 text-primary-10 dark:text-primary-7 rounded">
             Interactive
           </span>

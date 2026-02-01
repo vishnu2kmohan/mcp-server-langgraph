@@ -227,24 +227,32 @@ export function RetryIndicator({
         >
           <div
             className="retry-progress-fill"
-            style={{ '--progress': `${progressPercent}%` } as React.CSSProperties}
+            style={
+              { "--progress": `${progressPercent}%` } as React.CSSProperties
+            }
           />
         </div>
       )}
       {/* Action buttons */}
       <div className="retry-actions">
-        <Button variant="secondary"
+        <Button
+          variant="secondary"
           className="retry-button retry-button-cancel"
           type="button"
           onClick={handleCancel}
           aria-label="Cancel retry"
-        >Cancel</Button>
-        <Button variant="secondary"
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="secondary"
           className="retry-button retry-button-force"
           type="button"
           onClick={handleForceRetry}
           aria-label="Retry now"
-        >Retry Now</Button>
+        >
+          Retry Now
+        </Button>
       </div>
     </div>
   );

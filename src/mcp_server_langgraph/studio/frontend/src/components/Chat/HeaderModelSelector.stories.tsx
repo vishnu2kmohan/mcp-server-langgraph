@@ -427,7 +427,8 @@ export const AccessibilityShowcase: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Demonstrates accessibility features of the HeaderModelSelector.",
+        story:
+          "Demonstrates accessibility features of the HeaderModelSelector.",
       },
     },
   },

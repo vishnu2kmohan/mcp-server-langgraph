@@ -234,9 +234,7 @@ export const InlineEdit = forwardRef<HTMLDivElement, InlineEditProps>(
           )}
         >
           {value || (
-            <span className="text-neutral-9 italic">
-              {placeholder}
-            </span>
+            <span className="text-neutral-9 italic">{placeholder}</span>
           )}
         </Button>
       </div>

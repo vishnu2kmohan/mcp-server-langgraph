@@ -4,12 +4,16 @@
  * Tests for JSON Schema to form field parsing utilities.
  */
 
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   parseSchemaToFields,
   getInputType,
   type JSONSchema,
 } from "./schemaForm";
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("schemaForm", () => {
   describe("parseSchemaToFields", () => {

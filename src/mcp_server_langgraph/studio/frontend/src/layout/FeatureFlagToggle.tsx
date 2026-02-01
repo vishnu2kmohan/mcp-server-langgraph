@@ -94,10 +94,9 @@ export function FeatureFlagToggle({
         className={cn(
           "relative flex items-center w-10 h-5 rounded-full",
           !prefersReducedMotion && "transition-colors",
-          isHybridEnabled
-            ? "bg-primary-9"
-            : "bg-neutral-3",
-        )}>
+          isHybridEnabled ? "bg-primary-9" : "bg-neutral-3",
+        )}
+      >
         <span
           className={cn(
             "absolute w-4 h-4 rounded-full bg-neutral-1 shadow-sm",

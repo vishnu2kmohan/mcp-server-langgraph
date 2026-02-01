@@ -149,9 +149,7 @@ export function ChatHeader({
                     {sessionName}
                   </h1>
                 )}
-                <p className="text-sm text-neutral-10">
-                  {messageLabel}
-                </p>
+                <p className="text-sm text-neutral-10">{messageLabel}</p>
               </div>
             )}
           </div>
@@ -172,11 +170,14 @@ export function ChatHeader({
           <p className="text-grafana-11 dark:text-grafana-11 text-sm">
             {mcpError}
           </p>
-          <Button variant="primary"
+          <Button
+            variant="primary"
             className="text-grafana-10 hover:text-grafana-11 text-sm"
             onClick={onConnect}
             aria-label="Retry connection"
-          >Retry</Button>
+          >
+            Retry
+          </Button>
         </div>
       )}
       {/* Session Error Banner */}
@@ -186,11 +187,14 @@ export function ChatHeader({
             {sessionError}
           </p>
           {onClearError && (
-            <Button variant="secondary"
+            <Button
+              variant="secondary"
               className="text-error-10 hover:text-error-11 text-sm"
               onClick={onClearError}
               aria-label="Dismiss error"
-            >Dismiss</Button>
+            >
+              Dismiss
+            </Button>
           )}
         </div>
       )}

@@ -202,10 +202,7 @@ export function GenericCommandPalette({
       <div className="relative w-full max-w-lg bg-neutral-1 rounded-xl shadow-2xl overflow-hidden">
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-5">
-          <Search
-            size={18}
-            className="text-neutral-9"
-          />
+          <Search size={18} className="text-neutral-9" />
           <Input
             className="flex-1 bg-transparent text-neutral-12 placeholder-neutral-9"
             ref={inputRef}
@@ -257,10 +254,7 @@ export function GenericCommandPalette({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <CommandIcon
-                        size={16}
-                        className="text-neutral-9"
-                      />
+                      <CommandIcon size={16} className="text-neutral-9" />
                       <span className="text-sm text-neutral-12">
                         {cmd.label}
                       </span>
@@ -313,10 +307,7 @@ export function GenericCommandPalette({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <CommandIcon
-                        size={16}
-                        className="text-neutral-9"
-                      />
+                      <CommandIcon size={16} className="text-neutral-9" />
                       <span className="text-sm text-neutral-12">
                         {cmd.label}
                       </span>
@@ -336,22 +327,13 @@ export function GenericCommandPalette({
         {/* Footer */}
         <div className="px-4 py-2 border-t border-neutral-5 text-xs text-neutral-10 flex gap-4">
           <span>
-            <kbd className="px-1 py-0.5 bg-neutral-2 rounded">
-              ↑↓
-            </kbd>{" "}
-            Navigate
+            <kbd className="px-1 py-0.5 bg-neutral-2 rounded">↑↓</kbd> Navigate
           </span>
           <span>
-            <kbd className="px-1 py-0.5 bg-neutral-2 rounded">
-              ↵
-            </kbd>{" "}
-            Execute
+            <kbd className="px-1 py-0.5 bg-neutral-2 rounded">↵</kbd> Execute
           </span>
           <span>
-            <kbd className="px-1 py-0.5 bg-neutral-2 rounded">
-              ESC
-            </kbd>{" "}
-            Close
+            <kbd className="px-1 py-0.5 bg-neutral-2 rounded">ESC</kbd> Close
           </span>
         </div>
       </div>

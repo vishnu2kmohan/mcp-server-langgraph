@@ -154,11 +154,7 @@ interface AlertItemProps {
   onClick: () => void;
 }
 
-function AlertItem({
-  alert,
-  isSelected,
-  onClick,
-}: AlertItemProps) {
+function AlertItem({ alert, isSelected, onClick }: AlertItemProps) {
   const stateStyle = getStateStyle(alert.state);
   const serviceLabel = alert.labels.service || alert.labels.pod || null;
 
@@ -170,7 +166,8 @@ function AlertItem({
         isSelected && "border-primary-9 bg-primary-a2",
       )}
       data-testid={`alert-item-${alert.alertId}`}
-      onClick={onClick}>
+      onClick={onClick}
+    >
       <div className="flex items-start gap-3">
         {/* Severity Indicator */}
         <div
@@ -362,7 +359,11 @@ export function AlertsPanel({
             data-testid="sound-toggle"
             onClick={onSoundToggle}
             aria-pressed={soundEnabled}
-            aria-label={soundEnabled ? "Sound enabled, click to disable" : "Sound disabled, click to enable"}
+            aria-label={
+              soundEnabled
+                ? "Sound enabled, click to disable"
+                : "Sound disabled, click to enable"
+            }
           >
             {soundEnabled ? (
               <Volume2 className="w-4 h-4" />
@@ -376,9 +377,7 @@ export function AlertsPanel({
       <div className="flex items-center gap-4 px-4 py-2 bg-neutral-1">
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-error-9" />
-          <span className="text-sm text-neutral-11">
-            Critical:
-          </span>
+          <span className="text-sm text-neutral-11">Critical:</span>
           <span
             data-testid="critical-count"
             className="text-sm font-medium text-error-10 dark:text-error-7"
@@ -388,9 +387,7 @@ export function AlertsPanel({
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-warning-9" />
-          <span className="text-sm text-neutral-11">
-            Warning:
-          </span>
+          <span className="text-sm text-neutral-11">Warning:</span>
           <span
             data-testid="warning-count"
             className="text-sm font-medium text-warning-9 dark:text-warning-9"
@@ -408,7 +405,8 @@ export function AlertsPanel({
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleSeverityToggle("critical")}
-            aria-pressed={filters.severity.includes("critical")}>
+            aria-pressed={filters.severity.includes("critical")}
+          >
             Critical
           </Button>
           <Button
@@ -416,7 +414,8 @@ export function AlertsPanel({
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleSeverityToggle("warning")}
-            aria-pressed={filters.severity.includes("warning")}>
+            aria-pressed={filters.severity.includes("warning")}
+          >
             Warning
           </Button>
         </div>
@@ -430,7 +429,8 @@ export function AlertsPanel({
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleStateToggle("firing")}
-            aria-pressed={filters.state.includes("firing")}>
+            aria-pressed={filters.state.includes("firing")}
+          >
             Firing
           </Button>
           <Button
@@ -438,7 +438,8 @@ export function AlertsPanel({
             size="sm"
             className="min-h-8 px-2 py-1 text-xs rounded-full"
             onClick={() => handleStateToggle("resolved")}
-            aria-pressed={filters.state.includes("resolved")}>
+            aria-pressed={filters.state.includes("resolved")}
+          >
             Resolved
           </Button>
         </div>
@@ -447,28 +448,32 @@ export function AlertsPanel({
       <div className="flex-1 overflow-y-auto p-4">
         {viewMode === "grouped" ? (
           // Grouped View
-          (// No matches in grouped view - AI-enhanced (Sprint 3 Migration)
-          filteredGroups.length === 0 ? (<AIEmptyState
-            context="alerts"
-            emptyType="no-matches"
-            variant="compact"
-            enableAI={false}
-          />) : (<AlertGroupsPanel
-            groups={filteredGroups}
-            selectedAlertId={selectedAlertId}
-            onSelectAlert={onSelectAlert}
-            expandedGroups={expandedGroups}
-            onToggleGroup={handleToggleGroup}
-          />))
+          // No matches in grouped view - AI-enhanced (Sprint 3 Migration)
+          filteredGroups.length === 0 ? (
+            <AIEmptyState
+              context="alerts"
+              emptyType="no-matches"
+              variant="compact"
+              enableAI={false}
+            />
+          ) : (
+            <AlertGroupsPanel
+              groups={filteredGroups}
+              selectedAlertId={selectedAlertId}
+              onSelectAlert={onSelectAlert}
+              expandedGroups={expandedGroups}
+              onToggleGroup={handleToggleGroup}
+            />
+          )
         ) : // Flat View
         filteredAlerts.length === 0 ? (
           // No matches in flat view - AI-enhanced (Sprint 3 Migration)
-          (<AIEmptyState
+          <AIEmptyState
             context="alerts"
             emptyType="no-matches"
             variant="compact"
             enableAI={false}
-          />)
+          />
         ) : (
           <div className="space-y-2">
             {filteredAlerts.map((alert) => (

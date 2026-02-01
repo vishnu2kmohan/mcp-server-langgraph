@@ -31,15 +31,10 @@ interface NativeToolComparisonProps {
 export function NativeToolComparison({
   pollingInterval = 30000,
 }: NativeToolComparisonProps) {
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useGetToolMetricsComparisonQuery(undefined, {
-    pollingInterval,
-  });
+  const { data, isLoading, isError, error, refetch } =
+    useGetToolMetricsComparisonQuery(undefined, {
+      pollingInterval,
+    });
 
   // Transform data for charts
   const chartData = useMemo(() => {
@@ -48,7 +43,9 @@ export function NativeToolComparison({
     return data.tools
       .filter((tool) => tool.native || tool.builtin)
       .map((tool) => ({
-        name: tool.toolName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        name: tool.toolName
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
         nativeLatency: tool.native?.avgLatencyMs ?? 0,
         builtinLatency: tool.builtin?.avgLatencyMs ?? 0,
         nativeP95: tool.native?.p95LatencyMs ?? 0,
@@ -84,7 +81,9 @@ export function NativeToolComparison({
     return (
       <ErrorState
         title="Failed to load tool metrics"
-        message={(error as { message?: string })?.message || "Unable to fetch metrics"}
+        message={
+          (error as { message?: string })?.message || "Unable to fetch metrics"
+        }
         onRetry={refetch}
       />
     );
@@ -110,12 +109,14 @@ export function NativeToolComparison({
 
   const { summary } = data;
   const totalSelections = summary.nativeSelections + summary.builtinSelections;
-  const nativePercent = totalSelections > 0
-    ? (summary.nativeSelections / totalSelections) * 100
-    : 0;
-  const builtinPercent = totalSelections > 0
-    ? (summary.builtinSelections / totalSelections) * 100
-    : 0;
+  const nativePercent =
+    totalSelections > 0
+      ? (summary.nativeSelections / totalSelections) * 100
+      : 0;
+  const builtinPercent =
+    totalSelections > 0
+      ? (summary.builtinSelections / totalSelections) * 100
+      : 0;
 
   return (
     <div className="bg-neutral-2 rounded-lg border border-neutral-6">
@@ -140,10 +141,14 @@ export function NativeToolComparison({
         <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
           <div className="flex items-center gap-2 mb-2">
             <Activity size={16} className="text-primary-9" />
-            <h3 className="text-sm font-medium text-neutral-11">Selection Distribution</h3>
+            <h3 className="text-sm font-medium text-neutral-11">
+              Selection Distribution
+            </h3>
           </div>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-2xl font-bold text-neutral-12">{totalSelections}</span>
+            <span className="text-2xl font-bold text-neutral-12">
+              {totalSelections}
+            </span>
             <span className="text-sm text-neutral-11">total</span>
           </div>
           <div className="flex gap-2 text-xs">
@@ -164,11 +169,15 @@ export function NativeToolComparison({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-xl font-bold text-neutral-12">{summary.nativeErrors}</div>
+              <div className="text-xl font-bold text-neutral-12">
+                {summary.nativeErrors}
+              </div>
               <div className="text-xs text-neutral-11">Native</div>
             </div>
             <div>
-              <div className="text-xl font-bold text-neutral-12">{summary.builtinErrors}</div>
+              <div className="text-xl font-bold text-neutral-12">
+                {summary.builtinErrors}
+              </div>
               <div className="text-xs text-neutral-11">Builtin</div>
             </div>
           </div>
@@ -178,13 +187,16 @@ export function NativeToolComparison({
         <div className="p-4 bg-neutral-1 rounded-lg border border-neutral-5">
           <div className="flex items-center gap-2 mb-2">
             <Clock size={16} className="text-success-9" />
-            <h3 className="text-sm font-medium text-neutral-11">Latency Comparison</h3>
+            <h3 className="text-sm font-medium text-neutral-11">
+              Latency Comparison
+            </h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-xl font-bold text-neutral-12">
                 {formatMs(
-                  chartData.reduce((sum, d) => sum + d.nativeLatency, 0) / (chartData.length || 1)
+                  chartData.reduce((sum, d) => sum + d.nativeLatency, 0) /
+                    (chartData.length || 1),
                 )}
               </div>
               <div className="text-xs text-neutral-11">Native avg</div>
@@ -192,7 +204,8 @@ export function NativeToolComparison({
             <div>
               <div className="text-xl font-bold text-neutral-12">
                 {formatMs(
-                  chartData.reduce((sum, d) => sum + d.builtinLatency, 0) / (chartData.length || 1)
+                  chartData.reduce((sum, d) => sum + d.builtinLatency, 0) /
+                    (chartData.length || 1),
                 )}
               </div>
               <div className="text-xs text-neutral-11">Builtin avg</div>
@@ -243,7 +256,9 @@ export function NativeToolComparison({
               />
               <Legend
                 formatter={(value) =>
-                  value === "nativeLatency" ? "Native (Provider)" : "Builtin (Server)"
+                  value === "nativeLatency"
+                    ? "Native (Provider)"
+                    : "Builtin (Server)"
                 }
               />
               <Bar
@@ -303,10 +318,14 @@ export function NativeToolComparison({
                       {tool.name}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-neutral-12">
-                      {tool.nativeLatency > 0 ? formatMs(tool.nativeLatency) : "-"}
+                      {tool.nativeLatency > 0
+                        ? formatMs(tool.nativeLatency)
+                        : "-"}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-neutral-12">
-                      {tool.builtinLatency > 0 ? formatMs(tool.builtinLatency) : "-"}
+                      {tool.builtinLatency > 0
+                        ? formatMs(tool.builtinLatency)
+                        : "-"}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-neutral-11">
                       {tool.nativeP95 > 0 ? formatMs(tool.nativeP95) : "-"}

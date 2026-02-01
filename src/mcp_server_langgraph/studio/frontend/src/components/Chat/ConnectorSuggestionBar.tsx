@@ -88,7 +88,8 @@ export function ConnectorSuggestionBar({
           >
             Connect {displayName}
           </Button>
-          <Button size="icon"
+          <Button
+            size="icon"
             type="button"
             variant="ghost"
             onClick={onDismiss}

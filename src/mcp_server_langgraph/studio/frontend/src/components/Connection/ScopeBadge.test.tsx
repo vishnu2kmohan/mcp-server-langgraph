@@ -5,12 +5,17 @@
  * @see ADR-0102 Phase 6
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScopeBadge } from "./ScopeBadge";
 import type { ConnectionScope } from "@/types/connection";
 
 // Motion mock is provided globally in src/test/setup.ts
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ScopeBadge", () => {
   describe("Rendering", () => {
@@ -19,7 +24,7 @@ describe("ScopeBadge", () => {
       expect(screen.getByText("Personal")).toBeInTheDocument();
       expect(screen.getByTestId("scope-badge")).toHaveAttribute(
         "data-scope",
-        "user"
+        "user",
       );
     });
 
@@ -28,7 +33,7 @@ describe("ScopeBadge", () => {
       expect(screen.getByText("Shared")).toBeInTheDocument();
       expect(screen.getByTestId("scope-badge")).toHaveAttribute(
         "data-scope",
-        "project"
+        "project",
       );
     });
 
@@ -37,7 +42,7 @@ describe("ScopeBadge", () => {
       expect(screen.getByText("Session")).toBeInTheDocument();
       expect(screen.getByTestId("scope-badge")).toHaveAttribute(
         "data-scope",
-        "session"
+        "session",
       );
     });
   });

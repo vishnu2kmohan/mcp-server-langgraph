@@ -53,9 +53,7 @@ function SettingToggle({
 }: SettingToggleProps) {
   return (
     <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-1">
-      <div className="text-neutral-10 mt-0.5">
-        {icon}
-      </div>
+      <div className="text-neutral-10 mt-0.5">{icon}</div>
       <div className="flex-1 min-w-0">
         <Toggle
           id={id}
@@ -112,7 +110,8 @@ function FontSizeSelector({ value, onChange }: FontSizeSelectorProps) {
               role="radio"
               aria-checked={value === size.key}
               data-testid={`font-size-${size.key}`}
-              onClick={() => onChange(size.key)}>
+              onClick={() => onChange(size.key)}
+            >
               <span
                 className={`font-medium ${
                   size.key === "small"
@@ -160,9 +159,7 @@ export function AccessibilitySettings({
       className={`space-y-6 ${className}`}
     >
       <div>
-        <h2 className="text-lg font-semibold text-neutral-12">
-          Accessibility
-        </h2>
+        <h2 className="text-lg font-semibold text-neutral-12">Accessibility</h2>
         <p className="text-sm text-neutral-10 mt-1">
           Customize accessibility features to improve your experience
         </p>

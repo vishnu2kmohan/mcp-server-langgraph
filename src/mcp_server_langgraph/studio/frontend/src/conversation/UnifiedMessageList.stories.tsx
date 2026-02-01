@@ -39,7 +39,10 @@ const SAMPLE_MESSAGES: ChatMessage[] = [
     },
     usage: { promptTokens: 45, completionTokens: 180, totalTokens: 225 },
     sources: [
-      { title: "React Documentation", url: "https://react.dev/reference/react/hooks" },
+      {
+        title: "React Documentation",
+        url: "https://react.dev/reference/react/hooks",
+      },
       { title: "React Hooks Guide", url: "https://react.dev/learn" },
     ],
   },
@@ -140,16 +143,14 @@ export const Streaming: Story = {
 
 export const StreamingEmpty: Story = {
   args: {
-    messages: [
-      SAMPLE_MESSAGES[0],
-      { ...STREAMING_MESSAGE, content: "" },
-    ],
+    messages: [SAMPLE_MESSAGES[0], { ...STREAMING_MESSAGE, content: "" }],
     isStreaming: true,
   },
   parameters: {
     docs: {
       description: {
-        story: "Shows typing indicator when streaming starts but no content yet",
+        story:
+          "Shows typing indicator when streaming starts but no content yet",
       },
     },
   },

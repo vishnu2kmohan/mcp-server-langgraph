@@ -196,7 +196,8 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                             "text-neutral-10",
                             "hover:bg-neutral-2",
                             "focus:outline-none focus:ring-2 focus:ring-brand-primary",
-                          )}>
+                          )}
+                        >
                           <ChevronIcon expanded={isExpanded} />
                         </Button>
                       )}
@@ -210,7 +211,8 @@ export function PromptLibrary({ serverFilter, onTest }: PromptLibraryProps) {
                           "hover:bg-success-10",
                           "focus:outline-none focus:ring-2 focus:ring-success-7 focus:ring-offset-2",
                           "transition-colors",
-                        )}>
+                        )}
+                      >
                         Test
                       </Button>
                     </div>

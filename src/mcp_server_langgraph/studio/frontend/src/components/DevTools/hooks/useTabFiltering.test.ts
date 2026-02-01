@@ -80,7 +80,11 @@ interface MockTimelineOptions {
 }
 
 function createMockTimeline(options: MockTimelineOptions = {}) {
-  const { timeWindow = null, currentTime = Date.now(), isLiveMode = true } = options;
+  const {
+    timeWindow = null,
+    currentTime = Date.now(),
+    isLiveMode = true,
+  } = options;
 
   return {
     timeWindow,
@@ -103,6 +107,7 @@ describe("useTabFiltering", () => {
   });
 
   afterEach(() => {
+    vi.clearAllMocks();
     vi.useRealTimers();
   });
 
@@ -169,7 +174,11 @@ describe("useTabFiltering", () => {
 
       expect(result.current.debouncedSearchTerm).toBe("api-gateway");
       expect(result.current.filteredData).toHaveLength(2);
-      expect(result.current.filteredData.every((log) => log.service === "api-gateway")).toBe(true);
+      expect(
+        result.current.filteredData.every(
+          (log) => log.service === "api-gateway",
+        ),
+      ).toBe(true);
     });
 
     it("should be case-insensitive when searching", async () => {
@@ -211,7 +220,9 @@ describe("useTabFiltering", () => {
       });
 
       expect(result.current.filteredData).toHaveLength(2);
-      expect(result.current.filteredData.every((log) => log.traceId === "trace-abc")).toBe(true);
+      expect(
+        result.current.filteredData.every((log) => log.traceId === "trace-abc"),
+      ).toBe(true);
     });
 
     it("should debounce search input", async () => {
@@ -326,7 +337,10 @@ describe("useTabFiltering", () => {
         result.current.setFilter("service", "api-gateway");
       });
 
-      expect(result.current.filters).toEqual({ level: "info", service: "api-gateway" });
+      expect(result.current.filters).toEqual({
+        level: "info",
+        service: "api-gateway",
+      });
       expect(result.current.filteredData).toHaveLength(1);
       expect(result.current.filteredData[0].id).toBe("log-1");
     });

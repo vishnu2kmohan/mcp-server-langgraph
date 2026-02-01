@@ -72,8 +72,7 @@ function MetricCard({
 }: MetricCardProps) {
   const colorClasses = {
     blue: "text-primary-10 dark:text-primary-7 bg-primary-1 bg-primary-4",
-    green:
-      "text-success-10 dark:text-success-7 bg-success-1 bg-success-4",
+    green: "text-success-10 dark:text-success-7 bg-success-1 bg-success-4",
     purple:
       "text-insight-10 dark:text-insight-9 bg-insight-1 dark:bg-insight-a4",
     orange:
@@ -86,18 +85,10 @@ function MetricCard({
         {icon && (
           <div className={`p-1.5 rounded ${colorClasses[color]}`}>{icon}</div>
         )}
-        <span className="text-sm text-neutral-10">
-          {label}
-        </span>
+        <span className="text-sm text-neutral-10">{label}</span>
       </div>
-      <div className="text-2xl font-bold text-neutral-12">
-        {value}
-      </div>
-      {subtext && (
-        <div className="text-xs text-neutral-10 mt-1">
-          {subtext}
-        </div>
-      )}
+      <div className="text-2xl font-bold text-neutral-12">{value}</div>
+      {subtext && <div className="text-xs text-neutral-10 mt-1">{subtext}</div>}
     </div>
   );
 }
@@ -125,9 +116,7 @@ function ProgressBar({ value, max, label, showWarning }: ProgressBarProps) {
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
         <span className="text-neutral-11">{label}</span>
-        <span className="text-neutral-12">
-          {formatPercentage(percentage)}
-        </span>
+        <span className="text-neutral-12">{formatPercentage(percentage)}</span>
       </div>
       <div
         data-testid="context-window-progress"
@@ -140,7 +129,7 @@ function ProgressBar({ value, max, label, showWarning }: ProgressBarProps) {
       >
         <div
           className={`h-full ${barColor} transition-all duration-300`}
-          style={{ '--progress': `${percentage}%` } as React.CSSProperties}
+          style={{ "--progress": `${percentage}%` } as React.CSSProperties}
         />
       </div>
     </div>
@@ -168,9 +157,7 @@ function HistoryChart({ history }: HistoryChartProps) {
 
   return (
     <div data-testid="usage-history-chart" className="space-y-2">
-      <h4 className="text-sm font-medium text-neutral-11">
-        Usage Over Time
-      </h4>
+      <h4 className="text-sm font-medium text-neutral-11">Usage Over Time</h4>
       <div className="flex items-end gap-1 h-24">
         {history.map((entry, index) => {
           const height = (entry.tokens / maxTokens) * 100;
@@ -240,10 +227,9 @@ export function TokenUsageDashboard({
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-neutral-12">
-          Token Usage
-        </h3>
-        <Button size="icon"
+        <h3 className="text-lg font-semibold text-neutral-12">Token Usage</h3>
+        <Button
+          size="icon"
           variant="secondary"
           className="p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg focus:ring-primary-7"
           type="button"

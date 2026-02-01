@@ -4,8 +4,8 @@
  * TDD tests for the React Router error boundary component.
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { RouteErrorBoundary } from "./RouteErrorBoundary";
 
@@ -18,6 +18,11 @@ function ThrowingComponent(): JSX.Element {
 function NormalComponent(): JSX.Element {
   return <div data-testid="normal-content">Normal content</div>;
 }
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("RouteErrorBoundary", () => {
   it("should display error message when route throws", () => {

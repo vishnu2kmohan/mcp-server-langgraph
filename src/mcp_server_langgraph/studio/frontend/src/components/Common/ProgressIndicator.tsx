@@ -123,11 +123,7 @@ export function ProgressIndicator({
           className={`flex items-center justify-between ${sizeClasses.text} text-neutral-11`}
         >
           {status && <span>{status}</span>}
-          {eta && (
-            <span className="text-neutral-10">
-              {eta}
-            </span>
-          )}
+          {eta && <span className="text-neutral-10">{eta}</span>}
         </div>
       )}
       {/* Progress bar / Spinner container */}
@@ -160,7 +156,9 @@ export function ProgressIndicator({
               <div
                 data-testid="progress-fill"
                 className={`progress-bar-fill rounded-full ${colorClasses.fill}`}
-                style={{ '--progress': `${percentage}%` } as React.CSSProperties}
+                style={
+                  { "--progress": `${percentage}%` } as React.CSSProperties
+                }
               />
             </div>
             {/* Percentage text */}
@@ -176,7 +174,8 @@ export function ProgressIndicator({
 
         {/* Cancel button */}
         {onCancel && (
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1 rounded-md text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 focus:ring-primary-7"
             type="button"

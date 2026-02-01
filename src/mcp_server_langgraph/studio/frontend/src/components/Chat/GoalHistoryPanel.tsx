@@ -6,7 +6,15 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
-import { History, ChevronDown, ChevronUp, Check, X, AlertCircle, Trash2 } from "lucide-react";
+import {
+  History,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  X,
+  AlertCircle,
+  Trash2,
+} from "lucide-react";
 
 import { Button, Dialog } from "@/components/UI";
 
@@ -200,15 +208,20 @@ export function GoalHistoryPanel({
   showDeleteConfirmation = false,
 }: GoalHistoryPanelProps) {
   // Internal state for uncontrolled mode
-  const [internalIsCollapsed, setInternalIsCollapsed] = useState(defaultCollapsed);
+  const [internalIsCollapsed, setInternalIsCollapsed] =
+    useState(defaultCollapsed);
   const [showAll, setShowAll] = useState(false);
-  const [deleteConfirmGoalId, setDeleteConfirmGoalId] = useState<string | null>(null);
+  const [deleteConfirmGoalId, setDeleteConfirmGoalId] = useState<string | null>(
+    null,
+  );
 
   // Determine if controlled mode (isCollapsed prop is explicitly provided)
   const isControlled = controlledIsCollapsed !== undefined;
 
   // Use controlled value if provided, otherwise use internal state
-  const isCollapsed = isControlled ? controlledIsCollapsed : internalIsCollapsed;
+  const isCollapsed = isControlled
+    ? controlledIsCollapsed
+    : internalIsCollapsed;
 
   const toggleCollapsed = useCallback(() => {
     const newValue = !isCollapsed;
@@ -251,7 +264,8 @@ export function GoalHistoryPanel({
   const filteredGoals = useMemo(() => {
     if (filter === "all") return goals;
     if (filter === "achieved") return goals.filter((g) => g.achieved === true);
-    if (filter === "partial") return goals.filter((g) => g.achieved === "partial");
+    if (filter === "partial")
+      return goals.filter((g) => g.achieved === "partial");
     return goals.filter((g) => g.achieved === false);
   }, [goals, filter]);
 
@@ -271,7 +285,8 @@ export function GoalHistoryPanel({
     return sortedGoals.slice(0, maxItems);
   }, [sortedGoals, maxItems, showAll]);
 
-  const hiddenCount = maxItems && !showAll ? Math.max(0, sortedGoals.length - maxItems) : 0;
+  const hiddenCount =
+    maxItems && !showAll ? Math.max(0, sortedGoals.length - maxItems) : 0;
 
   const containerClass = compact
     ? "p-2 bg-neutral-1 rounded compact"
@@ -400,7 +415,8 @@ export function GoalHistoryPanel({
         }
       >
         <p className="text-neutral-11">
-          Are you sure you want to delete this goal? This action cannot be undone.
+          Are you sure you want to delete this goal? This action cannot be
+          undone.
         </p>
       </Dialog>
     </div>

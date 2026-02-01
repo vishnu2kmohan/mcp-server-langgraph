@@ -12,16 +12,13 @@
  * @see https://www.radix-ui.com/colors
  */
 
-import {
-  Sun,
-  Moon,
-  Monitor,
-  Palette,
-  Code2,
-  RotateCcw,
-} from "lucide-react";
+import { Sun, Moon, Monitor, Palette, Code2, RotateCcw } from "lucide-react";
 import { usePreferences, useTheme } from "../../contexts/PreferencesContext";
-import type { ColorTheme, CodeFontTheme, ThemeMode } from "../../types/preferences";
+import type {
+  ColorTheme,
+  CodeFontTheme,
+  ThemeMode,
+} from "../../types/preferences";
 
 import { Button } from "@/components/UI";
 
@@ -85,7 +82,7 @@ const COLOR_THEMES: ColorThemeOption[] = [
     label: "Violet & Slate",
     description: "Purple accent with cool blue-gray neutrals (default)",
     primaryColor: "var(--violet-9)",
-    neutralColor: "var(--slate-8)",  // Use step 8 for more visible difference
+    neutralColor: "var(--slate-8)", // Use step 8 for more visible difference
   },
   {
     value: "teal-sage",
@@ -99,7 +96,7 @@ const COLOR_THEMES: ColorThemeOption[] = [
     label: "Violet & Olive",
     description: "Purple accent with warm green-gray neutrals",
     primaryColor: "var(--violet-9)",
-    neutralColor: "var(--olive-8)",  // Use step 8 for more visible difference
+    neutralColor: "var(--olive-8)", // Use step 8 for more visible difference
   },
   {
     value: "teal-olive",
@@ -152,7 +149,11 @@ interface ColorSwatchProps {
   isSelected: boolean;
 }
 
-function ColorSwatch({ primaryColor, neutralColor, isSelected }: ColorSwatchProps) {
+function ColorSwatch({
+  primaryColor,
+  neutralColor,
+  isSelected,
+}: ColorSwatchProps) {
   return (
     <div
       className={`
@@ -160,14 +161,8 @@ function ColorSwatch({ primaryColor, neutralColor, isSelected }: ColorSwatchProp
         ${isSelected ? "border-primary-9" : "border-neutral-6"}
       `}
     >
-      <div
-        className="w-1/2 h-full"
-        style={{ backgroundColor: primaryColor }}
-      />
-      <div
-        className="w-1/2 h-full"
-        style={{ backgroundColor: neutralColor }}
-      />
+      <div className="w-1/2 h-full" style={{ backgroundColor: primaryColor }} />
+      <div className="w-1/2 h-full" style={{ backgroundColor: neutralColor }} />
     </div>
   );
 }
@@ -188,11 +183,7 @@ function ThemeModeSelector({ value, onChange }: ThemeModeSelectorProps) {
         <Sun size={18} />
         <span className="text-sm font-medium">Appearance</span>
       </div>
-      <div
-        className="flex gap-2"
-        role="radiogroup"
-        aria-label="Theme mode"
-      >
+      <div className="flex gap-2" role="radiogroup" aria-label="Theme mode">
         {THEME_MODES.map((mode) => (
           <Button
             key={mode.value}
@@ -205,13 +196,18 @@ function ThemeModeSelector({ value, onChange }: ThemeModeSelectorProps) {
             className={`
               flex flex-col items-center gap-2 px-4 py-3 rounded-lg border-2
               transition-colors duration-fast
-              ${value === mode.value
-                ? "border-primary-9 bg-primary-3 text-primary-11"
-                : "border-neutral-6 bg-neutral-2 text-neutral-11 hover:bg-neutral-3"
+              ${
+                value === mode.value
+                  ? "border-primary-9 bg-primary-3 text-primary-11"
+                  : "border-neutral-6 bg-neutral-2 text-neutral-11 hover:bg-neutral-3"
               }
             `}
           >
-            <span className={value === mode.value ? "text-primary-11" : "text-neutral-11"}>
+            <span
+              className={
+                value === mode.value ? "text-primary-11" : "text-neutral-11"
+              }
+            >
               {mode.icon}
             </span>
             <span className="text-sm font-medium text-neutral-12">
@@ -257,9 +253,10 @@ function ColorThemeSelector({ value, onChange }: ColorThemeSelectorProps) {
             className={`
               flex items-center gap-3 p-3 rounded-lg border-2
               transition-colors duration-fast text-left
-              ${value === theme.value
-                ? "border-primary-9 bg-primary-3"
-                : "border-neutral-6 bg-neutral-2 hover:bg-neutral-3"
+              ${
+                value === theme.value
+                  ? "border-primary-9 bg-primary-3"
+                  : "border-neutral-6 bg-neutral-2 hover:bg-neutral-3"
               }
             `}
           >
@@ -299,11 +296,7 @@ function CodeFontSelector({ value, onChange }: CodeFontSelectorProps) {
         <Code2 size={18} />
         <span className="text-sm font-medium">Code Font</span>
       </div>
-      <div
-        className="space-y-2"
-        role="radiogroup"
-        aria-label="Code font"
-      >
+      <div className="space-y-2" role="radiogroup" aria-label="Code font">
         {CODE_FONTS.map((font) => (
           <Button
             key={font.value}
@@ -317,9 +310,10 @@ function CodeFontSelector({ value, onChange }: CodeFontSelectorProps) {
             className={`
               flex items-center gap-4 p-3 rounded-lg border-2
               transition-colors duration-fast text-left justify-start
-              ${value === font.value
-                ? "border-primary-9 bg-primary-3"
-                : "border-neutral-6 bg-neutral-2 hover:bg-neutral-3"
+              ${
+                value === font.value
+                  ? "border-primary-9 bg-primary-3"
+                  : "border-neutral-6 bg-neutral-2 hover:bg-neutral-3"
               }
             `}
           >
@@ -351,7 +345,8 @@ function CodeFontSelector({ value, onChange }: CodeFontSelectorProps) {
 
 export function ThemeSettings({ className = "" }: ThemeSettingsProps) {
   const { theme, setTheme } = useTheme();
-  const { preferences, updateGeneralPreferences, resetToDefaults } = usePreferences();
+  const { preferences, updateGeneralPreferences, resetToDefaults } =
+    usePreferences();
 
   const handleColorThemeChange = (colorTheme: ColorTheme) => {
     updateGeneralPreferences({ colorTheme });
@@ -362,10 +357,7 @@ export function ThemeSettings({ className = "" }: ThemeSettingsProps) {
   };
 
   return (
-    <div
-      data-testid="theme-settings"
-      className={`space-y-8 ${className}`}
-    >
+    <div data-testid="theme-settings" className={`space-y-8 ${className}`}>
       <div>
         <h2 className="text-lg font-semibold text-neutral-12">
           Theme & Appearance

@@ -76,10 +76,7 @@ export function StatusFilter({
   };
 
   // Convert StatusOptions to SelectOptions
-  const selectOptions = [
-    { value: "", label: allLabel },
-    ...options,
-  ];
+  const selectOptions = [{ value: "", label: allLabel }, ...options];
 
   return (
     <div data-testid="status-filter" className={cn("inline-block", className)}>

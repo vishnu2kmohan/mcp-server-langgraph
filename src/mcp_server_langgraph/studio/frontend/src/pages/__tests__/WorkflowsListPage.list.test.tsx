@@ -126,10 +126,10 @@ describe("WorkflowsListPage - List View", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("First workflow for data processing")
+          screen.getByText("First workflow for data processing"),
         ).toBeInTheDocument();
         expect(
-          screen.getByText("Second workflow for analysis")
+          screen.getByText("Second workflow for analysis"),
         ).toBeInTheDocument();
       });
     });
@@ -195,7 +195,7 @@ describe("WorkflowsListPage - List View", () => {
       await waitFor(() => {
         // Should have Next button enabled
         expect(
-          screen.getByRole("button", { name: /next/i })
+          screen.getByRole("button", { name: /next/i }),
         ).toBeInTheDocument();
       });
     });
@@ -232,7 +232,7 @@ describe("WorkflowsListPage - List View", () => {
       await waitFor(() => {
         // Look for the specific sort dropdown (select element)
         expect(
-          screen.getByRole("combobox", { name: /sort/i })
+          screen.getByRole("combobox", { name: /sort/i }),
         ).toBeInTheDocument();
       });
     });
@@ -244,7 +244,7 @@ describe("WorkflowsListPage - List View", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /sort order/i })
+          screen.getByRole("button", { name: /sort order/i }),
         ).toBeInTheDocument();
       });
     });

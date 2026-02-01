@@ -152,11 +152,14 @@ export function UpgradePrompt({
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Button variant="primary"
+          <Button
+            variant="primary"
             className="px-3 py-1.5 text-sm rounded-lg"
             type="button"
             onClick={onUpgrade}
-          >Upgrade</Button>
+          >
+            Upgrade
+          </Button>
           <Button
             variant="secondary"
             className="p-1.5 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-3"

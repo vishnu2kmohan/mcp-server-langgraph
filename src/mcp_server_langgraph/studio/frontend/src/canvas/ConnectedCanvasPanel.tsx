@@ -622,7 +622,8 @@ export const ConnectedCanvasPanel = forwardRef<
               "text-primary-11 hover:text-primary-11 dark:hover:text-primary-7",
               "hover:bg-primary-1 dark:hover:bg-primary-a3",
               "transition-colors",
-            )}>
+            )}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -750,17 +751,19 @@ export const ConnectedCanvasPanel = forwardRef<
         enableAI={aiSuggestionsEnabled}
       />
       {/* Suggestions Footer Bar (Phase 4) - replaces floating panel when enabled */}
-      {suggestionsFooterEnabled && aiSuggestionsEnabled && selectedArtifactId && (
-        <SuggestionsFooterBar
-          suggestions={footerSuggestions}
-          onAccept={handleFooterAccept}
-          onDismiss={handleFooterDismiss}
-          onRefresh={handleSuggestionsPanelRefresh}
-          isLoading={suggestionsLoading}
-          isExpanded={suggestionsPanelExpanded}
-          onToggle={handleSuggestionsPanelToggle}
-        />
-      )}
+      {suggestionsFooterEnabled &&
+        aiSuggestionsEnabled &&
+        selectedArtifactId && (
+          <SuggestionsFooterBar
+            suggestions={footerSuggestions}
+            onAccept={handleFooterAccept}
+            onDismiss={handleFooterDismiss}
+            onRefresh={handleSuggestionsPanelRefresh}
+            isLoading={suggestionsLoading}
+            isExpanded={suggestionsPanelExpanded}
+            onToggle={handleSuggestionsPanelToggle}
+          />
+        )}
       {/* Note: No <Outlet /> needed - chat routes don't render components.
           StudioShellLayout provides the full 3-panel UI for chat routes.
           The chatLoader provides data, but UI comes from SessionNav + ConversationPanel + CanvasPanel. */}

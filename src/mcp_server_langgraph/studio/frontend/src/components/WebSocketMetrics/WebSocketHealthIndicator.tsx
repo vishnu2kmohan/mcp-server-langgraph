@@ -131,9 +131,7 @@ export function WebSocketHealthIndicator({
           data-testid="ws-health-status"
           className="w-2.5 h-2.5 rounded-full bg-neutral-4"
         />
-        <span className="text-sm text-neutral-10">
-          No connections
-        </span>
+        <span className="text-sm text-neutral-10">No connections</span>
       </div>
     );
   }

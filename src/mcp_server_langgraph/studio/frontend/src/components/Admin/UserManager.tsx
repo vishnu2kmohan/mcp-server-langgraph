@@ -127,7 +127,12 @@ export function UserManager({
         data-testid="user-loading"
         className="flex items-center justify-center h-full"
       >
-        <Loader2 className={cn("w-8 h-8 text-primary-9", !prefersReducedMotion && "animate-spin")} />
+        <Loader2
+          className={cn(
+            "w-8 h-8 text-primary-9",
+            !prefersReducedMotion && "animate-spin",
+          )}
+        />
       </div>
     );
   }
@@ -167,9 +172,7 @@ export function UserManager({
           >
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium text-neutral-12">
-                  {user.name}
-                </h3>
+                <h3 className="font-medium text-neutral-12">{user.name}</h3>
                 <div
                   data-testid={
                     user.isActive ? "status-active" : "status-inactive"
@@ -180,9 +183,7 @@ export function UserManager({
                   )}
                 />
               </div>
-              <p className="text-sm text-neutral-10">
-                {user.email}
-              </p>
+              <p className="text-sm text-neutral-10">{user.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 {user.roles.map((role) => (
                   <span

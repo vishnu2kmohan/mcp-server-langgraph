@@ -12,13 +12,13 @@
  * - WCAG 2.2 AA accessible aria attributes
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type ReferenceType = 'tool' | 'skill' | 'artifact' | 'memory' | 'plan';
+export type ReferenceType = "tool" | "skill" | "artifact" | "memory" | "plan";
 
 export interface ReferenceSuggestion {
   /** Value to insert */
@@ -28,7 +28,7 @@ export interface ReferenceSuggestion {
   /** Optional description */
   description?: string;
   /** Type of suggestion */
-  type: 'type' | ReferenceType;
+  type: "type" | ReferenceType;
   /** Whether this completes the reference (adds ]]) */
   isComplete?: boolean;
   /** Icon name for display */
@@ -126,25 +126,25 @@ export interface UseReferenceAutocompleteResult {
 
 const REFERENCE_TYPES: ReferenceSuggestion[] = [
   {
-    value: 'tool',
-    label: 'Tool',
-    description: 'Reference an MCP tool',
-    type: 'type',
-    icon: 'wrench',
+    value: "tool",
+    label: "Tool",
+    description: "Reference an MCP tool",
+    type: "type",
+    icon: "wrench",
   },
   {
-    value: 'skill',
-    label: 'Skill',
-    description: 'Reference a skill',
-    type: 'type',
-    icon: 'sparkles',
+    value: "skill",
+    label: "Skill",
+    description: "Reference a skill",
+    type: "type",
+    icon: "sparkles",
   },
   {
-    value: 'artifact',
-    label: 'Artifact',
-    description: 'Reference an artifact',
-    type: 'type',
-    icon: 'file',
+    value: "artifact",
+    label: "Artifact",
+    description: "Reference an artifact",
+    type: "type",
+    icon: "file",
   },
 ];
 
@@ -158,7 +158,7 @@ const REFERENCE_TYPES: ReferenceSuggestion[] = [
 function findTriggerPosition(text: string, cursorPos: number): number | null {
   // Look backwards from cursor for [[
   const textBeforeCursor = text.slice(0, cursorPos);
-  const lastOpenBrackets = textBeforeCursor.lastIndexOf('[[');
+  const lastOpenBrackets = textBeforeCursor.lastIndexOf("[[");
 
   if (lastOpenBrackets === -1) {
     return null;
@@ -166,7 +166,7 @@ function findTriggerPosition(text: string, cursorPos: number): number | null {
 
   // Check if there's a ]] between [[ and cursor (reference already closed)
   const textBetween = text.slice(lastOpenBrackets, cursorPos);
-  if (textBetween.includes(']]')) {
+  if (textBetween.includes("]]")) {
     return null;
   }
 
@@ -181,11 +181,17 @@ function parseQuery(query: string): ParsedQuery {
     return { type: undefined, qualifier: undefined, id: undefined };
   }
 
-  const parts = query.split(':');
+  const parts = query.split(":");
   const typePart = parts[0]?.toLowerCase();
 
   // Check if type is valid
-  const validTypes: ReferenceType[] = ['tool', 'skill', 'artifact', 'memory', 'plan'];
+  const validTypes: ReferenceType[] = [
+    "tool",
+    "skill",
+    "artifact",
+    "memory",
+    "plan",
+  ];
   const type = validTypes.includes(typePart as ReferenceType)
     ? (typePart as ReferenceType)
     : undefined;
@@ -196,7 +202,7 @@ function parseQuery(query: string): ParsedQuery {
   }
 
   // For tools: [[tool:server:tool_name]]
-  if (type === 'tool') {
+  if (type === "tool") {
     return {
       type,
       qualifier: parts[1],
@@ -232,8 +238,11 @@ export function useReferenceAutocomplete({
   const [isDismissed, setIsDismissed] = useState(false);
   const [selectedIndex, setSelectedIndexRaw] = useState(0);
   const [lastTriggerPos, setLastTriggerPos] = useState<number | null>(null);
-  const [semanticResults, setSemanticResults] = useState<ReferenceSuggestion[]>([]);
-  const [_isLoadingSemanticSearch, setIsLoadingSemanticSearch] = useState(false);
+  const [semanticResults, setSemanticResults] = useState<ReferenceSuggestion[]>(
+    [],
+  );
+  const [_isLoadingSemanticSearch, setIsLoadingSemanticSearch] =
+    useState(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Find trigger position
@@ -253,7 +262,7 @@ export function useReferenceAutocomplete({
 
   // Extract query string after [[
   const query = useMemo(() => {
-    if (triggerStart === null) return '';
+    if (triggerStart === null) return "";
     return inputValue.slice(triggerStart + 2, cursorPosition);
   }, [inputValue, cursorPosition, triggerStart]);
 
@@ -272,7 +281,7 @@ export function useReferenceAutocomplete({
     }
 
     // Only tools and skills support semantic search
-    if (parsedQuery.type !== 'tool' && parsedQuery.type !== 'skill') {
+    if (parsedQuery.type !== "tool" && parsedQuery.type !== "skill") {
       setSemanticResults([]);
       return;
     }
@@ -288,17 +297,18 @@ export function useReferenceAutocomplete({
       const searchType = parsedQuery.type;
 
       // Determine API endpoint based on type
-      const endpoint = searchType === 'tool'
-        ? '/api/v1/tools/semantic-search'
-        : '/api/v1/admin/skills/semantic-search';
+      const endpoint =
+        searchType === "tool"
+          ? "/api/v1/tools/semantic-search"
+          : "/api/v1/admin/skills/semantic-search";
 
       setIsLoadingSemanticSearch(true);
 
       try {
         const response = await fetch(endpoint, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             query: searchQuery,
@@ -325,7 +335,7 @@ export function useReferenceAutocomplete({
             description: result.description,
             type: searchType as ReferenceType,
             isComplete: true,
-            icon: searchType === 'tool' ? 'wrench' : 'sparkles',
+            icon: searchType === "tool" ? "wrench" : "sparkles",
             score: result.score,
           }));
 
@@ -354,23 +364,23 @@ export function useReferenceAutocomplete({
     if (!parsedQuery.type) {
       const lowerQuery = query.toLowerCase();
       return REFERENCE_TYPES.filter((t) =>
-        t.value.toLowerCase().startsWith(lowerQuery)
+        t.value.toLowerCase().startsWith(lowerQuery),
       );
     }
 
     // Use semantic results if available (for tools and skills with semantic search enabled)
     if (
       enableSemanticSearch &&
-      (parsedQuery.type === 'tool' || parsedQuery.type === 'skill') &&
+      (parsedQuery.type === "tool" || parsedQuery.type === "skill") &&
       semanticResults.length > 0
     ) {
       return semanticResults;
     }
 
     // Type is complete, need qualifier/id - fallback to substring matching
-    const lowerQualifier = (parsedQuery.qualifier || '').toLowerCase();
+    const lowerQualifier = (parsedQuery.qualifier || "").toLowerCase();
 
-    if (parsedQuery.type === 'tool') {
+    if (parsedQuery.type === "tool") {
       // Filter tools based on qualifier input
       return availableTools
         .filter((tool) => {
@@ -381,28 +391,26 @@ export function useReferenceAutocomplete({
           value: `${tool.server}:${tool.name}`,
           label: tool.name,
           description: tool.description,
-          type: 'tool' as const,
+          type: "tool" as const,
           isComplete: true,
-          icon: 'wrench',
+          icon: "wrench",
         }));
     }
 
-    if (parsedQuery.type === 'skill') {
+    if (parsedQuery.type === "skill") {
       return availableSkills
-        .filter((skill) =>
-          skill.name.toLowerCase().includes(lowerQualifier)
-        )
+        .filter((skill) => skill.name.toLowerCase().includes(lowerQualifier))
         .map((skill) => ({
           value: skill.name,
           label: skill.name,
           description: skill.description,
-          type: 'skill' as const,
+          type: "skill" as const,
           isComplete: true,
-          icon: 'sparkles',
+          icon: "sparkles",
         }));
     }
 
-    if (parsedQuery.type === 'artifact') {
+    if (parsedQuery.type === "artifact") {
       return availableArtifacts
         .filter((artifact) => {
           const searchText = (artifact.name || artifact.id).toLowerCase();
@@ -412,9 +420,9 @@ export function useReferenceAutocomplete({
           value: artifact.id,
           label: artifact.name || artifact.id,
           description: artifact.description,
-          type: 'artifact' as const,
+          type: "artifact" as const,
           isComplete: true,
-          icon: 'file',
+          icon: "file",
         }));
     }
 
@@ -441,7 +449,7 @@ export function useReferenceAutocomplete({
       const maxIndex = Math.max(0, suggestions.length - 1);
       setSelectedIndexRaw(Math.min(Math.max(0, index), maxIndex));
     },
-    [suggestions.length]
+    [suggestions.length],
   );
 
   // Select a suggestion
@@ -455,25 +463,25 @@ export function useReferenceAutocomplete({
       const beforeTrigger = inputValue.slice(0, triggerStart);
       const afterCursor = inputValue.slice(cursorPosition);
 
-      if (suggestion.type === 'type') {
+      if (suggestion.type === "type") {
         // Insert type and continue (add colon)
         newText = `${beforeTrigger}[[${suggestion.value}:${afterCursor}`;
         newCursorPos = triggerStart + 2 + suggestion.value.length + 1;
       } else if (suggestion.isComplete) {
         // Complete the reference with ]]
-        const parts = query.split(':');
+        const parts = query.split(":");
         const existingType = parts[0] || parsedQuery.type;
 
-        if (parsedQuery.type === 'tool') {
+        if (parsedQuery.type === "tool") {
           // For tools, check if we have a partial qualifier already typed
           // If suggestion.value contains server:name, use it directly
           // Otherwise, preserve what the user typed as qualifier
-          if (suggestion.value.includes(':')) {
+          if (suggestion.value.includes(":")) {
             // Suggestion is server:name format - use as-is
             newText = `${beforeTrigger}[[${existingType}:${suggestion.value}]]${afterCursor}`;
           } else {
             // Suggestion is just the tool name, preserve existing qualifier
-            const existingQualifier = parts[1] || '';
+            const existingQualifier = parts[1] || "";
             if (existingQualifier) {
               newText = `${beforeTrigger}[[${existingType}:${existingQualifier}:${suggestion.value}]]${afterCursor}`;
             } else {
@@ -488,7 +496,8 @@ export function useReferenceAutocomplete({
       } else {
         // Partial - add colon and continue
         newText = `${beforeTrigger}[[${query}${suggestion.value}:${afterCursor}`;
-        newCursorPos = triggerStart + 2 + query.length + suggestion.value.length + 1;
+        newCursorPos =
+          triggerStart + 2 + query.length + suggestion.value.length + 1;
       }
 
       onSelect({
@@ -497,7 +506,7 @@ export function useReferenceAutocomplete({
         suggestion,
       });
     },
-    [inputValue, cursorPosition, triggerStart, query, parsedQuery, onSelect]
+    [inputValue, cursorPosition, triggerStart, query, parsedQuery, onSelect],
   );
 
   // Dismiss autocomplete
@@ -511,11 +520,11 @@ export function useReferenceAutocomplete({
     const activeId = isActive ? `ref-suggestion-${selectedIndex}` : undefined;
 
     return {
-      role: 'combobox',
-      'aria-expanded': isActive,
-      'aria-haspopup': 'listbox' as const,
-      'aria-controls': 'reference-autocomplete-listbox',
-      'aria-activedescendant': activeId || '',
+      role: "combobox",
+      "aria-expanded": isActive,
+      "aria-haspopup": "listbox" as const,
+      "aria-controls": "reference-autocomplete-listbox",
+      "aria-activedescendant": activeId || "",
     };
   }, [triggerStart, suggestions.length, selectedIndex]);
 

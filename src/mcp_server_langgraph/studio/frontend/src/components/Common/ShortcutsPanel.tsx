@@ -146,18 +146,13 @@ export function ShortcutsPanel({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-5">
           <div className="flex items-center gap-2">
-            <Keyboard
-              className="h-5 w-5 text-neutral-10"
-              aria-hidden="true"
-            />
-            <h2
-              id={titleId}
-              className="text-lg font-semibold text-neutral-12"
-            >
+            <Keyboard className="h-5 w-5 text-neutral-10" aria-hidden="true" />
+            <h2 id={titleId} className="text-lg font-semibold text-neutral-12">
               Keyboard Shortcuts
             </h2>
           </div>
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1 rounded text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 focus:ring-primary-7"
             type="button"
@@ -190,7 +185,8 @@ export function ShortcutsPanel({
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-neutral-9 hover:text-neutral-11"
                 type="button"
                 onClick={() => setSearchQuery("")}
-                aria-label="Clear search">
+                aria-label="Clear search"
+              >
                 <X size={14} />
               </Button>
             )}

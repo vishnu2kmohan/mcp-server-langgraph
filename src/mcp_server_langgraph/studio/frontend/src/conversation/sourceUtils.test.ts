@@ -3,7 +3,7 @@
  *
  * Tests for source citation utility functions.
  */
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   extractDomain,
   truncateSnippet,
@@ -20,10 +20,14 @@ import type { SourceCitation } from "../types/session";
 // extractDomain Tests
 // =============================================================================
 
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("extractDomain", () => {
   it("should extract domain from valid URL", () => {
     expect(extractDomain("https://docs.python.org/3/tutorial")).toBe(
-      "docs.python.org"
+      "docs.python.org",
     );
   });
 
@@ -32,7 +36,9 @@ describe("extractDomain", () => {
   });
 
   it("should handle URLs without www", () => {
-    expect(extractDomain("https://realpython.com/guide")).toBe("realpython.com");
+    expect(extractDomain("https://realpython.com/guide")).toBe(
+      "realpython.com",
+    );
   });
 
   it("should handle URLs with ports", () => {
@@ -40,7 +46,9 @@ describe("extractDomain", () => {
   });
 
   it("should handle URLs with subdomains", () => {
-    expect(extractDomain("https://api.github.com/repos")).toBe("api.github.com");
+    expect(extractDomain("https://api.github.com/repos")).toBe(
+      "api.github.com",
+    );
   });
 
   it("should return original string for invalid URLs", () => {
@@ -53,7 +61,7 @@ describe("extractDomain", () => {
 
   it("should handle URLs with authentication", () => {
     expect(extractDomain("https://user:pass@example.com/path")).toBe(
-      "example.com"
+      "example.com",
     );
   });
 
@@ -64,26 +72,26 @@ describe("extractDomain", () => {
 
   it("should handle URLs with query parameters", () => {
     expect(extractDomain("https://example.com/search?q=test&page=1")).toBe(
-      "example.com"
+      "example.com",
     );
   });
 
   it("should handle URLs with fragments", () => {
     expect(extractDomain("https://docs.python.org/guide#section-1")).toBe(
-      "docs.python.org"
+      "docs.python.org",
     );
   });
 
   it("should handle international domain names (punycode)", () => {
     // URL class converts IDN to punycode
     expect(extractDomain("https://münchen.example.de/page")).toBe(
-      "xn--mnchen-3ya.example.de"
+      "xn--mnchen-3ya.example.de",
     );
   });
 
   it("should handle URLs with encoded characters", () => {
     expect(extractDomain("https://example.com/path%20with%20spaces")).toBe(
-      "example.com"
+      "example.com",
     );
   });
 });
@@ -248,7 +256,7 @@ describe("getSourceAriaLabel", () => {
       title: "Example Site",
     };
     expect(getSourceAriaLabel(source)).toBe(
-      "Source: Example Site (opens in new tab)"
+      "Source: Example Site (opens in new tab)",
     );
   });
 
@@ -258,7 +266,7 @@ describe("getSourceAriaLabel", () => {
       title: "",
     };
     expect(getSourceAriaLabel(source)).toBe(
-      "Source: docs.python.org (opens in new tab)"
+      "Source: docs.python.org (opens in new tab)",
     );
   });
 

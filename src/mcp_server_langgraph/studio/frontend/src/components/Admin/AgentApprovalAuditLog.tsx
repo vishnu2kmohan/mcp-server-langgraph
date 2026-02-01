@@ -99,9 +99,7 @@ export function AgentApprovalAuditLog({
           <div className="h-4 bg-neutral-3 rounded w-full mb-2"></div>
           <div className="h-4 bg-neutral-3 rounded w-3/4"></div>
         </div>
-        <p className="text-neutral-10 mt-2">
-          Loading...
-        </p>
+        <p className="text-neutral-10 mt-2">Loading...</p>
       </div>
     );
   }

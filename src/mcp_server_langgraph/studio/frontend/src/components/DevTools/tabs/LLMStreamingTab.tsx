@@ -182,9 +182,7 @@ function StreamCard({ stream }: StreamCardProps): React.ReactElement {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {getStatusIcon(stream.status)}
-          <span className="font-medium text-neutral-12">
-            {stream.model}
-          </span>
+          <span className="font-medium text-neutral-12">{stream.model}</span>
           <span className="text-xs text-neutral-10 px-1.5 py-0.5 bg-neutral-3 rounded">
             {stream.provider}
           </span>
@@ -265,9 +263,7 @@ export function LLMStreamingTab({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-5">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-medium text-neutral-12">
-            LLM Streaming
-          </h3>
+          <h3 className="text-sm font-medium text-neutral-12">LLM Streaming</h3>
           {sessionId && (
             <span className="text-xs text-neutral-10 px-2 py-0.5 bg-neutral-2 rounded">
               {sessionId}

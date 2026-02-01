@@ -256,13 +256,16 @@ export function VersionDiff({
                 "bg-primary-1 text-primary-11 hover:bg-primary-3",
                 "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                 "transition-colors",
-              )}>
+              )}
+            >
               <RotateCcw size={14} />
               Restore v{baseVersion.version}
             </Button>
           )}
           {onClose && (
-            <Button size="icon" variant="ghost"
+            <Button
+              size="icon"
+              variant="ghost"
               type="button"
               onClick={onClose}
               aria-label="Close diff view"
@@ -288,7 +291,10 @@ export function VersionDiff({
               AI Analysis
             </span>
             {aiLoading && (
-              <Loader2 size={14} className="motion-safe:animate-spin text-primary-11" />
+              <Loader2
+                size={14}
+                className="motion-safe:animate-spin text-primary-11"
+              />
             )}
             {!hasTriggeredAnalysis && !aiLoading && (
               <Button
@@ -304,7 +310,8 @@ export function VersionDiff({
                   "bg-primary-3 text-primary-11 hover:bg-primary-4",
                   "bg-primary-4 dark:text-primary-11 dark:hover:bg-primary-a6",
                   "transition-colors",
-                )}>
+                )}
+              >
                 <Sparkles size={12} />
                 Analyze
               </Button>
@@ -315,7 +322,8 @@ export function VersionDiff({
                 size="sm"
                 className="text-xs text-primary-11 hover:text-primary-11 dark:text-primary-11"
                 type="button"
-                onClick={() => refetchAI()}>
+                onClick={() => refetchAI()}
+              >
                 Retry
               </Button>
             )}
@@ -328,9 +336,7 @@ export function VersionDiff({
           )}
 
           {aiLoading && (
-            <p className="text-sm text-neutral-11">
-              Analyzing changes...
-            </p>
+            <p className="text-sm text-neutral-11">Analyzing changes...</p>
           )}
 
           {aiError && hasTriggeredAnalysis && (
@@ -341,9 +347,7 @@ export function VersionDiff({
 
           {hasTriggeredAnalysis && !aiLoading && !aiError && aiSummary && (
             <div className="space-y-2">
-              <p className="text-sm text-neutral-11">
-                {aiSummary}
-              </p>
+              <p className="text-sm text-neutral-11">{aiSummary}</p>
 
               {aiChanges && aiChanges.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
@@ -410,8 +414,7 @@ export function VersionDiff({
                 key={index}
                 className={cn(
                   "flex",
-                  line.type === "added" &&
-                    "bg-success-1 dark:bg-success-a3",
+                  line.type === "added" && "bg-success-1 dark:bg-success-a3",
                   line.type === "removed" && "bg-error-1 dark:bg-error-a3",
                 )}
               >
@@ -435,8 +438,7 @@ export function VersionDiff({
                       "text-success-11 dark:text-success-11",
                     line.type === "removed" &&
                       "text-error-11 dark:text-error-11",
-                    line.type === "unchanged" &&
-                      "text-neutral-11",
+                    line.type === "unchanged" && "text-neutral-11",
                   )}
                 >
                   {line.content}
@@ -446,7 +448,7 @@ export function VersionDiff({
           </div>
         ) : (
           // Split view
-          (<>
+          <>
             <div className="border-r border-neutral-5 pr-4">
               <div className="text-xs text-neutral-11 mb-2">
                 v{baseVersion.version}
@@ -460,8 +462,7 @@ export function VersionDiff({
                       "whitespace-pre",
                       line.type === "removed" &&
                         "bg-error-1 dark:bg-error-a3 text-error-11 dark:text-error-11",
-                      line.type === "unchanged" &&
-                        "text-neutral-11",
+                      line.type === "unchanged" && "text-neutral-11",
                     )}
                   >
                     {line.content}
@@ -481,15 +482,14 @@ export function VersionDiff({
                       "whitespace-pre",
                       line.type === "added" &&
                         "bg-success-1 dark:bg-success-a3 text-success-11 dark:text-success-11",
-                      line.type === "unchanged" &&
-                        "text-neutral-11",
+                      line.type === "unchanged" && "text-neutral-11",
                     )}
                   >
                     {line.content}
                   </div>
                 ))}
             </div>
-          </>)
+          </>
         )}
       </div>
     </div>

@@ -131,9 +131,7 @@ export function DataExplorer({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-neutral-5">
-        <h2 className="font-semibold text-neutral-12">
-          {config.title}
-        </h2>
+        <h2 className="font-semibold text-neutral-12">{config.title}</h2>
 
         <div className="flex items-center gap-3">
           {/* Search */}
@@ -152,7 +150,9 @@ export function DataExplorer({
           </div>
 
           {/* Export */}
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-2 text-neutral-10 hover:text-neutral-11"
             data-testid="export-button"
             type="button"
@@ -207,8 +207,7 @@ export function DataExplorer({
                     onClick={() => handleSort(column.id)}
                     className={cn(
                       "px-4 py-3 text-left font-medium text-neutral-11",
-                      column.sortable &&
-                        "cursor-pointer hover:bg-neutral-a6",
+                      column.sortable && "cursor-pointer hover:bg-neutral-a6",
                     )}
                   >
                     <div className="flex items-center gap-1">
@@ -232,10 +231,7 @@ export function DataExplorer({
                   className="border-b border-neutral-5 hover:bg-neutral-a4"
                 >
                   {config.columns.map((column) => (
-                    <td
-                      key={column.id}
-                      className="px-4 py-3 text-neutral-12"
-                    >
+                    <td key={column.id} className="px-4 py-3 text-neutral-12">
                       {String(row[column.id] ?? "")}
                     </td>
                   ))}
@@ -262,7 +258,8 @@ export function DataExplorer({
               data-testid="prev-page"
               type="button"
               onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}>
+              disabled={currentPage === 1}
+            >
               <ChevronLeft size={18} />
             </Button>
             <Button
@@ -271,7 +268,8 @@ export function DataExplorer({
               data-testid="next-page"
               type="button"
               onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}>
+              disabled={currentPage === totalPages}
+            >
               <ChevronRight size={18} />
             </Button>
           </div>

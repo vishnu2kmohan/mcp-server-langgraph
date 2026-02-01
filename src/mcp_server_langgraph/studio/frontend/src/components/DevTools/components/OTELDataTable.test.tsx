@@ -4,8 +4,8 @@
  * TDD: Tests written FIRST, then implementation.
  * Tests virtualized table wrapper with TanStack Table + React Virtual.
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -27,11 +27,36 @@ interface TestLogEntry {
 // =============================================================================
 
 const mockLogs: TestLogEntry[] = [
-  { id: "1", timestamp: "2026-01-15T10:00:00Z", level: "info", message: "Request received" },
-  { id: "2", timestamp: "2026-01-15T10:00:01Z", level: "debug", message: "Processing started" },
-  { id: "3", timestamp: "2026-01-15T10:00:02Z", level: "error", message: "Connection failed" },
-  { id: "4", timestamp: "2026-01-15T10:00:03Z", level: "warning", message: "Slow response" },
-  { id: "5", timestamp: "2026-01-15T10:00:04Z", level: "info", message: "Request completed" },
+  {
+    id: "1",
+    timestamp: "2026-01-15T10:00:00Z",
+    level: "info",
+    message: "Request received",
+  },
+  {
+    id: "2",
+    timestamp: "2026-01-15T10:00:01Z",
+    level: "debug",
+    message: "Processing started",
+  },
+  {
+    id: "3",
+    timestamp: "2026-01-15T10:00:02Z",
+    level: "error",
+    message: "Connection failed",
+  },
+  {
+    id: "4",
+    timestamp: "2026-01-15T10:00:03Z",
+    level: "warning",
+    message: "Slow response",
+  },
+  {
+    id: "5",
+    timestamp: "2026-01-15T10:00:04Z",
+    level: "info",
+    message: "Request completed",
+  },
 ];
 
 const testColumns: ColumnDef<TestLogEntry>[] = [
@@ -43,6 +68,11 @@ const testColumns: ColumnDef<TestLogEntry>[] = [
 // =============================================================================
 // Basic Rendering Tests
 // =============================================================================
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("OTELDataTable", () => {
   describe("basic rendering", () => {
@@ -76,14 +106,18 @@ describe("OTELDataTable", () => {
 
   describe("sorting", () => {
     it("should render sortable header buttons", () => {
-      render(<OTELDataTable data={mockLogs} columns={testColumns} enableSorting />);
+      render(
+        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+      );
       const headers = screen.getAllByRole("columnheader");
       expect(headers.length).toBeGreaterThan(0);
     });
 
     it("should sort by column when header clicked", async () => {
       const user = userEvent.setup();
-      render(<OTELDataTable data={mockLogs} columns={testColumns} enableSorting />);
+      render(
+        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+      );
 
       // Click Level header to sort
       const levelHeader = screen.getByText("Level");
@@ -96,7 +130,9 @@ describe("OTELDataTable", () => {
 
     it("should toggle sort direction on repeated click", async () => {
       const user = userEvent.setup();
-      render(<OTELDataTable data={mockLogs} columns={testColumns} enableSorting />);
+      render(
+        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+      );
 
       const levelHeader = screen.getByText("Level");
 
@@ -106,7 +142,9 @@ describe("OTELDataTable", () => {
       await user.click(levelHeader);
 
       // Sort indicator should change
-      expect(levelHeader.closest("[data-sorted]") || levelHeader).toBeInTheDocument();
+      expect(
+        levelHeader.closest("[data-sorted]") || levelHeader,
+      ).toBeInTheDocument();
     });
 
     it("should use defaultSort when provided", () => {
@@ -307,11 +345,7 @@ describe("OTELDataTable", () => {
       }));
 
       render(
-        <OTELDataTable
-          data={largeData}
-          columns={testColumns}
-          enableAutoTail
-        />,
+        <OTELDataTable data={largeData} columns={testColumns} enableAutoTail />,
       );
 
       // Should have table rendered
@@ -374,14 +408,12 @@ describe("OTELDataTable", () => {
   describe("export functionality", () => {
     it("should show export button when enableExport is true", () => {
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          enableExport
-        />,
+        <OTELDataTable data={mockLogs} columns={testColumns} enableExport />,
       );
 
-      expect(screen.getByRole("button", { name: /export/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /export/i }),
+      ).toBeInTheDocument();
     });
 
     it("should hide export button when enableExport is false", () => {
@@ -393,7 +425,9 @@ describe("OTELDataTable", () => {
         />,
       );
 
-      expect(screen.queryByRole("button", { name: /export/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /export/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -406,7 +440,9 @@ describe("OTELDataTable", () => {
       render(<OTELDataTable data={mockLogs} columns={testColumns} />);
 
       const table = screen.getByRole("table");
-      expect(within(table).getAllByRole("rowgroup").length).toBeGreaterThanOrEqual(1);
+      expect(
+        within(table).getAllByRole("rowgroup").length,
+      ).toBeGreaterThanOrEqual(1);
       expect(within(table).getAllByRole("columnheader").length).toBe(3);
     });
 
@@ -432,7 +468,9 @@ describe("OTELDataTable", () => {
 
     it("should announce sort order changes to screen readers", async () => {
       const user = userEvent.setup();
-      render(<OTELDataTable data={mockLogs} columns={testColumns} enableSorting />);
+      render(
+        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+      );
 
       const levelHeader = screen.getByText("Level");
       await user.click(levelHeader);

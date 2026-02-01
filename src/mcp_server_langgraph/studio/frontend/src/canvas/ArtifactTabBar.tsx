@@ -69,7 +69,7 @@ export function ArtifactTabBar({
       activationConstraint: {
         distance: 8, // 8px drag distance before activating
       },
-    })
+    }),
   );
 
   // Sort artifacts by tabOrder
@@ -87,7 +87,7 @@ export function ArtifactTabBar({
         onReorder(arrayMove(tabOrder, oldIndex, newIndex));
       }
     },
-    [tabOrder, onReorder]
+    [tabOrder, onReorder],
   );
 
   // Empty state
@@ -103,7 +103,7 @@ export function ArtifactTabBar({
           "border-b border-neutral-6",
           "text-sm text-neutral-11",
           "h-10",
-          className
+          className,
         )}
       >
         <span>No artifacts</span>
@@ -127,7 +127,7 @@ export function ArtifactTabBar({
           "border-b border-neutral-6",
           "overflow-x-auto",
           "scrollbar-thin scrollbar-thumb-neutral-6",
-          className
+          className,
         )}
       >
         <SortableContext

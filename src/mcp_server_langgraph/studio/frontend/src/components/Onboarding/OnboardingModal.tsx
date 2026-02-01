@@ -101,7 +101,8 @@ export function OnboardingModal({
                 Choose a template to get started, or start from scratch
               </p>
             </div>
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-2 rounded-lg text-neutral-9 hover:text-neutral-11 hover:bg-neutral-3"
               onClick={onClose}
@@ -125,7 +126,8 @@ export function OnboardingModal({
                 }`}
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                aria-label={cat === "all" ? "All categories" : cat}>
+                aria-label={cat === "all" ? "All categories" : cat}
+              >
                 {cat === "all"
                   ? "All"
                   : cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -143,9 +145,7 @@ export function OnboardingModal({
                 data-testid="loading-spinner"
                 className="w-8 h-8 animate-spin text-primary-9"
               />
-              <p className="mt-4 text-neutral-11">
-                Loading templates...
-              </p>
+              <p className="mt-4 text-neutral-11">Loading templates...</p>
             </div>
           )}
 

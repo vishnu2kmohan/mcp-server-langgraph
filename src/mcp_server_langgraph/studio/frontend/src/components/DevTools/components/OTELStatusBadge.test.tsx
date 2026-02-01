@@ -4,8 +4,8 @@
  * TDD: Tests written FIRST, then implementation.
  * Tests status badge variants for logs, alerts, spans, HTTP status/methods.
  */
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 
 import { OTELStatusBadge } from "./OTELStatusBadge";
 
@@ -24,6 +24,11 @@ function hasClassStartingWith(element: HTMLElement, prefix: string): boolean {
 // =============================================================================
 // Log Level Tests
 // =============================================================================
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("OTELStatusBadge", () => {
   describe("log-level type", () => {
@@ -63,9 +68,13 @@ describe("OTELStatusBadge", () => {
     });
 
     it("should hide icon when showIcon is false", () => {
-      render(<OTELStatusBadge type="log-level" value="error" showIcon={false} />);
+      render(
+        <OTELStatusBadge type="log-level" value="error" showIcon={false} />,
+      );
       const badge = screen.getByRole("status");
-      expect(badge.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
+      expect(
+        badge.querySelector('[aria-hidden="true"]'),
+      ).not.toBeInTheDocument();
     });
   });
 

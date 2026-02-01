@@ -4,8 +4,8 @@
  * TDD: Tests written FIRST, then implementation.
  * Tests expandable panel for JSON attributes, headers, and payloads.
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { OTELDetailsPanel } from "./OTELDetailsPanel";
@@ -13,6 +13,11 @@ import { OTELDetailsPanel } from "./OTELDetailsPanel";
 // =============================================================================
 // Basic Rendering Tests
 // =============================================================================
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("OTELDetailsPanel", () => {
   describe("basic rendering", () => {
@@ -165,9 +170,7 @@ describe("OTELDetailsPanel", () => {
     });
 
     it("should hide toggle button when showViewToggle is false", () => {
-      render(
-        <OTELDetailsPanel data={{ test: true }} showViewToggle={false} />,
-      );
+      render(<OTELDetailsPanel data={{ test: true }} showViewToggle={false} />);
       expect(
         screen.queryByRole("button", { name: /raw/i }),
       ).not.toBeInTheDocument();
@@ -215,7 +218,11 @@ describe("OTELDetailsPanel", () => {
   describe("tabbed variant", () => {
     it("should render tabs when variant is tabbed", () => {
       const tabs = [
-        { key: "headers", label: "Headers", data: { "Content-Type": "application/json" } },
+        {
+          key: "headers",
+          label: "Headers",
+          data: { "Content-Type": "application/json" },
+        },
         { key: "body", label: "Body", data: { message: "Hello" } },
       ];
       render(<OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />);
@@ -227,7 +234,11 @@ describe("OTELDetailsPanel", () => {
 
     it("should show first tab content by default", () => {
       const tabs = [
-        { key: "headers", label: "Headers", data: { "Content-Type": "application/json" } },
+        {
+          key: "headers",
+          label: "Headers",
+          data: { "Content-Type": "application/json" },
+        },
         { key: "body", label: "Body", data: { message: "Hello" } },
       ];
       render(<OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />);
@@ -239,7 +250,11 @@ describe("OTELDetailsPanel", () => {
     it("should switch tab content when clicking tabs", async () => {
       const user = userEvent.setup();
       const tabs = [
-        { key: "headers", label: "Headers", data: { "Content-Type": "application/json" } },
+        {
+          key: "headers",
+          label: "Headers",
+          data: { "Content-Type": "application/json" },
+        },
         { key: "body", label: "Body", data: { message: "Hello" } },
       ];
       render(<OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />);
@@ -259,9 +274,7 @@ describe("OTELDetailsPanel", () => {
   describe("copy functionality", () => {
     it("should show copy button", () => {
       render(<OTELDetailsPanel data={{ test: true }} />);
-      expect(
-        screen.getByRole("button", { name: /copy/i }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     });
 
     it("should call onCopy callback when copy button clicked", async () => {
@@ -348,7 +361,9 @@ describe("OTELDetailsPanel", () => {
     });
 
     it("should handle null data gracefully", () => {
-      render(<OTELDetailsPanel data={null as unknown as Record<string, unknown>} />);
+      render(
+        <OTELDetailsPanel data={null as unknown as Record<string, unknown>} />,
+      );
       expect(screen.getByText(/no data/i)).toBeInTheDocument();
     });
   });
@@ -405,7 +420,7 @@ describe("OTELDetailsPanel", () => {
     it("should render headers in key-value format", () => {
       const data = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer token123",
+        Authorization: "Bearer token123",
         "X-Request-ID": "abc-123",
       };
       render(<OTELDetailsPanel data={data} variant="headers" />);

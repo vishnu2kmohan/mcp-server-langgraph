@@ -56,12 +56,8 @@ export const ToolNode = memo(
             <div className="flex items-center gap-2">
               <Wrench className="w-5 h-5 text-grafana-9" />
               <div className="flex flex-col">
-                <span className="font-medium text-neutral-12">
-                  {label}
-                </span>
-                <span className="text-xs text-neutral-10">
-                  {toolName}
-                </span>
+                <span className="font-medium text-neutral-12">{label}</span>
+                <span className="text-xs text-neutral-10">{toolName}</span>
               </div>
             </div>
             <StatusIcon />

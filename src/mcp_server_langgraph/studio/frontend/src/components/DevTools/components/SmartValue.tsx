@@ -32,8 +32,10 @@ export type SmartValueType =
   | "id"
   | "json";
 
-export interface SmartValueProps
-  extends Omit<HTMLAttributes<HTMLSpanElement>, "children"> {
+export interface SmartValueProps extends Omit<
+  HTMLAttributes<HTMLSpanElement>,
+  "children"
+> {
   /** The value to format */
   value: unknown;
   /** Type hint for formatting (default: auto-detect) */
@@ -196,7 +198,8 @@ function formatJson(value: unknown): string {
  */
 function isIsoTimestamp(value: string): boolean {
   // Quick regex check for ISO 8601 format
-  const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+  const isoRegex =
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
   if (!isoRegex.test(value)) return false;
   // Verify it's a valid date
   const parsed = Date.parse(value);
@@ -247,9 +250,10 @@ export function SmartValue({
   const handleCopy = useCallback(async () => {
     if (!copyable) return;
     try {
-      const textValue = typeof value === "object"
-        ? JSON.stringify(value, null, 2)
-        : String(value);
+      const textValue =
+        typeof value === "object"
+          ? JSON.stringify(value, null, 2)
+          : String(value);
       await navigator.clipboard.writeText(textValue);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -307,10 +311,7 @@ export function SmartValue({
       }
 
       case "id": {
-        const { display, isTruncated } = truncateId(
-          String(value),
-          truncateAt,
-        );
+        const { display, isTruncated } = truncateId(String(value), truncateAt);
         displayText = display;
         if (isTruncated) {
           tooltip = String(value);
@@ -341,10 +342,7 @@ export function SmartValue({
     >
       <span
         title={tooltip}
-        className={cn(
-          "font-mono text-sm",
-          tooltip && "cursor-help",
-        )}
+        className={cn("font-mono text-sm", tooltip && "cursor-help")}
       >
         {displayText}
       </span>

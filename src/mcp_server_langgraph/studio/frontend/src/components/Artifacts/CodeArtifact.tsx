@@ -178,7 +178,8 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
             size="sm"
             className="flex px-3 py-1 text-sm rounded"
             onClick={handleCopy}
-            aria-label="Copy code">
+            aria-label="Copy code"
+          >
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-success-9" />
@@ -191,7 +192,9 @@ export function CodeArtifact({ artifact }: CodeArtifactProps) {
               </>
             )}
           </Button>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-1.5 rounded"
             onClick={handleDownload}
             aria-label="Download code"

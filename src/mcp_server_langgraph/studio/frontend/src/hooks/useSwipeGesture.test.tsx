@@ -36,36 +36,28 @@ describe("useSwipeGesture", () => {
   describe("default behavior", () => {
     it("returns horizontal drag axis by default", () => {
       const onDismiss = vi.fn();
-      const { result } = renderHook(() =>
-        useSwipeGesture({ onDismiss }),
-      );
+      const { result } = renderHook(() => useSwipeGesture({ onDismiss }));
 
       expect(result.current.drag).toBe("x");
     });
 
     it("starts with zero dragOffset", () => {
       const onDismiss = vi.fn();
-      const { result } = renderHook(() =>
-        useSwipeGesture({ onDismiss }),
-      );
+      const { result } = renderHook(() => useSwipeGesture({ onDismiss }));
 
       expect(result.current.dragOffset).toBe(0);
     });
 
     it("starts with isDragging false", () => {
       const onDismiss = vi.fn();
-      const { result } = renderHook(() =>
-        useSwipeGesture({ onDismiss }),
-      );
+      const { result } = renderHook(() => useSwipeGesture({ onDismiss }));
 
       expect(result.current.isDragging).toBe(false);
     });
 
     it("starts with full opacity", () => {
       const onDismiss = vi.fn();
-      const { result } = renderHook(() =>
-        useSwipeGesture({ onDismiss }),
-      );
+      const { result } = renderHook(() => useSwipeGesture({ onDismiss }));
 
       expect(result.current.opacity).toBe(1);
     });
@@ -283,9 +275,7 @@ describe("useSwipeGesture", () => {
   describe("props structure", () => {
     it("returns drag constraints", () => {
       const onDismiss = vi.fn();
-      const { result } = renderHook(() =>
-        useSwipeGesture({ onDismiss }),
-      );
+      const { result } = renderHook(() => useSwipeGesture({ onDismiss }));
 
       expect(result.current.dragConstraints).toEqual({
         left: 0,
@@ -297,18 +287,14 @@ describe("useSwipeGesture", () => {
 
     it("returns dragElastic value", () => {
       const onDismiss = vi.fn();
-      const { result } = renderHook(() =>
-        useSwipeGesture({ onDismiss }),
-      );
+      const { result } = renderHook(() => useSwipeGesture({ onDismiss }));
 
       expect(result.current.dragElastic).toBe(0.7);
     });
 
     it("returns onDragEnd handler", () => {
       const onDismiss = vi.fn();
-      const { result } = renderHook(() =>
-        useSwipeGesture({ onDismiss }),
-      );
+      const { result } = renderHook(() => useSwipeGesture({ onDismiss }));
 
       expect(typeof result.current.onDragEnd).toBe("function");
     });

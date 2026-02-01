@@ -46,12 +46,9 @@ interface ConnectionAuditLogProps {
 
 // Action badge colors
 const actionColors: Record<string, string> = {
-  create:
-    "bg-success-3 text-success-11 dark:bg-success-a6 dark:text-success-5",
-  update:
-    "bg-primary-3 text-primary-11 dark:bg-primary-a6 dark:text-primary-5",
-  delete:
-    "bg-error-3 text-error-11 dark:bg-error-a6 dark:text-error-9",
+  create: "bg-success-3 text-success-11 dark:bg-success-a6 dark:text-success-5",
+  update: "bg-primary-3 text-primary-11 dark:bg-primary-a6 dark:text-primary-5",
+  delete: "bg-error-3 text-error-11 dark:bg-error-a6 dark:text-error-9",
   test: "bg-insight-2 text-insight-11 dark:bg-insight-a6 dark:text-insight-5",
   authorize:
     "bg-warning-3 text-warning-11 dark:bg-warning-a6 dark:text-warning-6",
@@ -115,10 +112,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
   };
 
   const getActionColor = (action: string) => {
-    return (
-      actionColors[action] ||
-      "bg-neutral-2 text-neutral-12"
-    );
+    return actionColors[action] || "bg-neutral-2 text-neutral-12";
   };
 
   if (isLoading) {
@@ -128,9 +122,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
         className="flex items-center justify-center gap-3 py-12"
       >
         <Loader2 className="h-6 w-6 animate-spin text-primary-9" />
-        <span className="text-neutral-11">
-          Loading audit logs...
-        </span>
+        <span className="text-neutral-11">Loading audit logs...</span>
       </div>
     );
   }
@@ -164,9 +156,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-insight-10" />
-          <h3 className="text-lg font-semibold text-neutral-12">
-            Audit Log
-          </h3>
+          <h3 className="text-lg font-semibold text-neutral-12">Audit Log</h3>
         </div>
         <div className="flex items-center gap-3">
           {/* Event Type Filter */}
@@ -233,9 +223,7 @@ export function ConnectionAuditLog({ connectionId }: ConnectionAuditLogProps) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-neutral-10">
-                    {log.actorId}
-                  </span>
+                  <span className="text-sm text-neutral-10">{log.actorId}</span>
                   <span className="text-sm text-neutral-9">
                     {formatDate(log.timestamp)}
                   </span>

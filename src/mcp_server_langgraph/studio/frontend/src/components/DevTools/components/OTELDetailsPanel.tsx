@@ -12,7 +12,13 @@
  * - Headers variant for HTTP header display
  */
 
-import { useState, useCallback, useMemo, type HTMLAttributes, type KeyboardEvent } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  type HTMLAttributes,
+  type KeyboardEvent,
+} from "react";
 import { Copy, Check, X, Code, List } from "lucide-react";
 
 import { cn } from "../../../utils/cn";
@@ -32,8 +38,10 @@ export interface OTELDetailsPanelTab {
   data: unknown;
 }
 
-export interface OTELDetailsPanelProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+export interface OTELDetailsPanelProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "children"
+> {
   /** Data to display */
   data: Record<string, unknown>;
   /** Panel title */
@@ -113,7 +121,7 @@ export function OTELDetailsPanel({
   // Get current data for tabbed variant
   const currentData = useMemo(() => {
     if (variant === "tabbed" && tabs && tabs.length > 0) {
-      return tabs[activeTabIndex]?.data as Record<string, unknown> ?? {};
+      return (tabs[activeTabIndex]?.data as Record<string, unknown>) ?? {};
     }
     return data ?? {};
   }, [variant, tabs, activeTabIndex, data]);
@@ -160,7 +168,8 @@ export function OTELDetailsPanel({
       if (newIndex !== index) {
         setActiveTabIndex(newIndex);
         // Focus the new tab
-        const tabButtons = e.currentTarget.parentElement?.querySelectorAll('[role="tab"]');
+        const tabButtons =
+          e.currentTarget.parentElement?.querySelectorAll('[role="tab"]');
         (tabButtons?.[newIndex] as HTMLElement)?.focus();
       }
     },
@@ -170,21 +179,21 @@ export function OTELDetailsPanel({
   // Render summary view
   const renderSummaryView = () => {
     if (isEmpty) {
-      return (
-        <div className="text-xs text-neutral-9 italic py-2">No data</div>
-      );
+      return <div className="text-xs text-neutral-9 italic py-2">No data</div>;
     }
 
     return (
       <div className="space-y-0.5">
-        {Object.entries(currentData as Record<string, unknown>).map(([key, value]) => (
-          <KeyValueRow
-            key={key}
-            keyName={key}
-            value={value}
-            formatHint={formatHints[key]}
-          />
-        ))}
+        {Object.entries(currentData as Record<string, unknown>).map(
+          ([key, value]) => (
+            <KeyValueRow
+              key={key}
+              keyName={key}
+              value={value}
+              formatHint={formatHints[key]}
+            />
+          ),
+        )}
       </div>
     );
   };
@@ -192,9 +201,7 @@ export function OTELDetailsPanel({
   // Render raw JSON view
   const renderRawView = () => {
     if (isEmpty) {
-      return (
-        <div className="text-xs text-neutral-9 italic py-2">No data</div>
-      );
+      return <div className="text-xs text-neutral-9 italic py-2">No data</div>;
     }
 
     return (
@@ -207,23 +214,23 @@ export function OTELDetailsPanel({
   // Render headers variant (specialized key-value display)
   const renderHeadersView = () => {
     if (isEmpty) {
-      return (
-        <div className="text-xs text-neutral-9 italic py-2">No data</div>
-      );
+      return <div className="text-xs text-neutral-9 italic py-2">No data</div>;
     }
 
     return (
       <div className="space-y-0.5">
-        {Object.entries(currentData as Record<string, unknown>).map(([key, value]) => (
-          <div key={key} className="flex items-start gap-3 py-1.5">
-            <span className="text-xs font-medium text-neutral-10 min-w-0 shrink-0">
-              {key}
-            </span>
-            <span className="text-xs font-mono text-neutral-11 min-w-0 break-all">
-              {String(value)}
-            </span>
-          </div>
-        ))}
+        {Object.entries(currentData as Record<string, unknown>).map(
+          ([key, value]) => (
+            <div key={key} className="flex items-start gap-3 py-1.5">
+              <span className="text-xs font-medium text-neutral-10 min-w-0 shrink-0">
+                {key}
+              </span>
+              <span className="text-xs font-mono text-neutral-11 min-w-0 break-all">
+                {String(value)}
+              </span>
+            </div>
+          ),
+        )}
       </div>
     );
   };
@@ -316,7 +323,11 @@ export function OTELDetailsPanel({
                 "inline-flex items-center gap-1 px-2 py-1 text-xs font-medium",
                 "text-neutral-10 hover:text-neutral-12",
               )}
-              aria-label={view === "summary" ? "Switch to raw view" : "Switch to summary view"}
+              aria-label={
+                view === "summary"
+                  ? "Switch to raw view"
+                  : "Switch to summary view"
+              }
             >
               {view === "summary" ? (
                 <>

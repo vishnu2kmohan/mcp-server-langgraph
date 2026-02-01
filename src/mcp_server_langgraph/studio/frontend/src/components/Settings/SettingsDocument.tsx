@@ -121,9 +121,7 @@ export function SettingsDocument({
       <header className="px-6 py-4 bg-neutral-1 border-b border-neutral-5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-neutral-12">
-              Settings
-            </h2>
+            <h2 className="text-xl font-bold text-neutral-12">Settings</h2>
             <p className="text-sm text-neutral-10">
               Manage your account and preferences
             </p>
@@ -158,7 +156,8 @@ export function SettingsDocument({
         <aside className="w-48 bg-neutral-1 border-r border-neutral-5 p-3">
           <nav className="space-y-1">
             {tabs.map((tab) => (
-              <Button variant="ghost"
+              <Button
+                variant="ghost"
                 className="w-full flex px-3 py-2 text-sm rounded-lg"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -306,7 +305,8 @@ export function SettingsDocument({
                       variant="primary"
                       className="p-4 rounded-lg border-2"
                       key={t}
-                      onClick={() => setTheme(t)}>
+                      onClick={() => setTheme(t)}
+                    >
                       <div className="text-center">
                         <Palette size={24} className="mx-auto mb-2" />
                         <span className="capitalize text-sm">{t}</span>

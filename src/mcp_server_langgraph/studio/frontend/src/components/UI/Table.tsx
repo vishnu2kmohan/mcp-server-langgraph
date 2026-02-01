@@ -71,7 +71,8 @@ const tableVariants = cva("w-full text-sm", {
 // =============================================================================
 
 export interface TableProps
-  extends React.TableHTMLAttributes<HTMLTableElement>,
+  extends
+    React.TableHTMLAttributes<HTMLTableElement>,
     VariantProps<typeof tableVariants> {
   striped?: boolean;
   hoverable?: boolean;
@@ -135,8 +136,7 @@ TableHead.displayName = "TableHead";
 // TableBody Component
 // =============================================================================
 
-export interface TableBodyProps
-  extends React.HTMLAttributes<HTMLTableSectionElement> {
+export interface TableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   striped?: boolean;
 }
 
@@ -162,8 +162,7 @@ TableBody.displayName = "TableBody";
 // TableRow Component
 // =============================================================================
 
-export interface TableRowProps
-  extends React.HTMLAttributes<HTMLTableRowElement> {
+export interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   selected?: boolean;
 }
 
@@ -219,7 +218,8 @@ const headerCellVariants = cva(
 );
 
 export interface TableHeaderCellProps
-  extends React.ThHTMLAttributes<HTMLTableCellElement>,
+  extends
+    React.ThHTMLAttributes<HTMLTableCellElement>,
     Omit<VariantProps<typeof headerCellVariants>, "size"> {
   align?: "left" | "center" | "right";
 }
@@ -263,7 +263,8 @@ const cellVariants = cva("text-neutral-12", {
 });
 
 export interface TableCellProps
-  extends React.TdHTMLAttributes<HTMLTableCellElement>,
+  extends
+    React.TdHTMLAttributes<HTMLTableCellElement>,
     Omit<VariantProps<typeof cellVariants>, "size"> {
   align?: "left" | "center" | "right";
 }

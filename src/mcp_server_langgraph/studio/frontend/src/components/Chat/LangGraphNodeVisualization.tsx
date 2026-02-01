@@ -129,12 +129,9 @@ export function getNodeColor(
   type: LangGraphNodeType,
   status: LangGraphNodeStatus,
 ): string {
-  if (status === "error")
-    return "bg-error-3 border-error-7";
-  if (status === "running")
-    return "bg-primary-3 border-primary-7";
-  if (status === "completed")
-    return "bg-success-3 border-success-7";
+  if (status === "error") return "bg-error-3 border-error-7";
+  if (status === "running") return "bg-primary-3 border-primary-7";
+  if (status === "completed") return "bg-success-3 border-success-7";
 
   switch (type) {
     case "start":

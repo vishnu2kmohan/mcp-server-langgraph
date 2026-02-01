@@ -262,9 +262,7 @@ export function ShareWorkflowDialog({
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm text-neutral-12">
-                          {share.email}
-                        </p>
+                        <p className="text-sm text-neutral-12">{share.email}</p>
                         <p className="text-xs text-neutral-10">
                           {share.permission}
                         </p>
@@ -274,7 +272,8 @@ export function ShareWorkflowDialog({
                       variant="danger"
                       className="p-1 text-neutral-10 hover:text-error-10 dark:hover:text-error-7 rounded"
                       onClick={() => handleRemoveShare(share.userId)}
-                      aria-label="Remove">
+                      aria-label="Remove"
+                    >
                       <Trash2 size={16} />
                     </Button>
                   </div>
@@ -290,10 +289,7 @@ export function ShareWorkflowDialog({
                 {isPublic ? (
                   <Globe size={18} className="text-success-9" />
                 ) : (
-                  <Lock
-                    size={18}
-                    className="text-neutral-10"
-                  />
+                  <Lock size={18} className="text-neutral-10" />
                 )}
                 <span className="text-sm font-medium text-neutral-11">
                   {isPublic ? "Public access enabled" : "Private"}
@@ -303,7 +299,8 @@ export function ShareWorkflowDialog({
                 variant="primary"
                 className="relative h-6 w-11 rounded-full"
                 data-testid="public-toggle"
-                onClick={handleTogglePublic}>
+                onClick={handleTogglePublic}
+              >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-neutral-1 transition-transform ${
                     isPublic ? "translate-x-6" : "translate-x-1"
@@ -334,10 +331,7 @@ export function ShareWorkflowDialog({
                   {linkCopied ? (
                     <Check size={16} className="text-success-9" />
                   ) : (
-                    <Copy
-                      size={16}
-                      className="text-neutral-10"
-                    />
+                    <Copy size={16} className="text-neutral-10" />
                   )}
                   Copy
                 </Button>

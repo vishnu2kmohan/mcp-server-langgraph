@@ -67,8 +67,7 @@ export const STATUS_BADGE_STYLES = {
     "bg-warning-3 text-warning-10 dark:bg-warning-a6 dark:text-warning-6",
   error: "bg-error-3 text-error-11 dark:bg-error-a6 dark:text-error-9",
   info: "bg-primary-3 text-primary-11 dark:bg-primary-a6 dark:text-primary-5",
-  neutral:
-    "bg-neutral-2 text-neutral-11",
+  neutral: "bg-neutral-2 text-neutral-11",
 } as const;
 
 // =============================================================================
@@ -86,11 +85,9 @@ export const MODEL_LIFECYCLE_BADGE_STYLES = {
   /** Preview models (new/experimental) - cyan for "fresh/new" connotation */
   preview: "bg-info-3 bg-info-4 text-info-9 dark:text-info-11",
   /** Legacy models (older but supported) - amber for caution */
-  legacy:
-    "bg-warning-3 dark:bg-warning-a4 text-warning-9 dark:text-warning-9",
+  legacy: "bg-warning-3 dark:bg-warning-a4 text-warning-9 dark:text-warning-9",
   /** Deprecated models (will be removed) - red for warning */
-  deprecated:
-    "bg-error-3 bg-error-4 text-error-10 dark:text-error-7",
+  deprecated: "bg-error-3 bg-error-4 text-error-10 dark:text-error-7",
 } as const;
 
 /**

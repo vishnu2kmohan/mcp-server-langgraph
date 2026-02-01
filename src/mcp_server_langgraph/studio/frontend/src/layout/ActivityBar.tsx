@@ -431,151 +431,155 @@ export const ActivityBar = forwardRef<HTMLElement, ActivityBarProps>(
       >
         {/* Primary nav - scrollable */}
         <div className="flex-1 min-h-0 overflow-y-auto py-2 w-full flex flex-col items-center">
-        {/* Main navigation icons - RBAC filtered */}
-        {/* Sprint 4.2: Render as collapsible groups or flat list */}
-        {enableCollapsibleGroups ? (
-          /* Collapsible Groups Mode */
-          <div
-            className="flex flex-col gap-0.5"
-            role="group"
-            aria-label="Primary navigation"
-          >
-            {visibleGroups.map((group) => {
-              const isCollapsed = collapsedGroups[group.id] ?? false;
-              return (
-                <div key={group.id} className="flex flex-col gap-0.5">
-                  {/* Group Header (collapsible) */}
+          {/* Main navigation icons - RBAC filtered */}
+          {/* Sprint 4.2: Render as collapsible groups or flat list */}
+          {enableCollapsibleGroups ? (
+            /* Collapsible Groups Mode */
+            <div
+              className="flex flex-col gap-0.5"
+              role="group"
+              aria-label="Primary navigation"
+            >
+              {visibleGroups.map((group) => {
+                const isCollapsed = collapsedGroups[group.id] ?? false;
+                return (
+                  <div key={group.id} className="flex flex-col gap-0.5">
+                    {/* Group Header (collapsible) */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      data-testid={`nav-group-${group.id}`}
+                      aria-label={`${group.label} group`}
+                      aria-expanded={!isCollapsed}
+                      aria-controls={`nav-group-items-${group.id}`}
+                      title={`${group.label} (${isCollapsed ? "Expand" : "Collapse"})`}
+                      onClick={() => toggleGroupCollapse(group.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleGroupCollapse(group.id);
+                        }
+                      }}
+                      className={cn(
+                        "p-1.5 rounded-lg flex items-center justify-center",
+                        "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
+                        !prefersReducedMotion && "transition-all",
+                        "text-neutral-9",
+                        "hover:bg-neutral-3",
+                        "focus:outline-none focus:ring-2 focus:ring-primary-7",
+                      )}
+                    >
+                      {isCollapsed ? (
+                        <ChevronRight size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </Button>
+                    {/* Group Items (shown when expanded) */}
+                    {!isCollapsed && (
+                      <div
+                        id={`nav-group-items-${group.id}`}
+                        className="flex flex-col gap-0.5"
+                      >
+                        {group.visibleItems.map((item) => {
+                          const isPredicted = predictedItemIds.has(item.id);
+                          return (
+                            <Button
+                              key={item.id}
+                              type="button"
+                              variant="ghost"
+                              data-testid={`nav-${item.id}`}
+                              aria-label={item.label}
+                              title={
+                                isPredicted
+                                  ? `${item.label} (Suggested)`
+                                  : item.label
+                              }
+                              onClick={() => handleNavClick(item)}
+                              className={cn(
+                                "p-2 rounded-lg relative",
+                                "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
+                                !prefersReducedMotion && "transition-all",
+                                "focus:outline-none focus:ring-2 focus:ring-primary-7",
+                                activeNavItem === item.id &&
+                                  "bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-9",
+                                activeNavItem !== item.id &&
+                                  "text-neutral-10 hover:bg-neutral-3",
+                              )}
+                            >
+                              {item.icon}
+                              {/* AI Prediction Indicator */}
+                              {enableAI &&
+                                isPredicted &&
+                                !predictionsLoading && (
+                                  <span
+                                    data-testid="nav-prediction-indicator"
+                                    className={cn(
+                                      "absolute -top-0.5 -right-0.5 w-2 h-2",
+                                      "bg-primary-9 dark:bg-primary-9 rounded-full",
+                                      !prefersReducedMotion && "animate-pulse",
+                                    )}
+                                    aria-label="AI suggested"
+                                  />
+                                )}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Flat List Mode (default) */
+            <div
+              className="flex flex-col gap-1"
+              role="group"
+              aria-label="Primary navigation"
+            >
+              {visibleNavItems.map((item) => {
+                const isPredicted = predictedItemIds.has(item.id);
+                return (
                   <Button
+                    key={item.id}
                     type="button"
                     variant="ghost"
-                    data-testid={`nav-group-${group.id}`}
-                    aria-label={`${group.label} group`}
-                    aria-expanded={!isCollapsed}
-                    aria-controls={`nav-group-items-${group.id}`}
-                    title={`${group.label} (${isCollapsed ? "Expand" : "Collapse"})`}
-                    onClick={() => toggleGroupCollapse(group.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        toggleGroupCollapse(group.id);
-                      }
-                    }}
+                    data-testid={`nav-${item.id}`}
+                    aria-label={item.label}
+                    title={
+                      isPredicted ? `${item.label} (Suggested)` : item.label
+                    }
+                    onClick={() => handleNavClick(item)}
                     className={cn(
-                      "p-1.5 rounded-lg flex items-center justify-center",
+                      "p-2 rounded-lg relative",
                       "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
                       !prefersReducedMotion && "transition-all",
-                      "text-neutral-9",
-                      "hover:bg-neutral-3",
                       "focus:outline-none focus:ring-2 focus:ring-primary-7",
+                      activeNavItem === item.id &&
+                        "bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-9",
+                      activeNavItem !== item.id &&
+                        "text-neutral-10 hover:bg-neutral-3",
                     )}
                   >
-                    {isCollapsed ? (
-                      <ChevronRight size={14} />
-                    ) : (
-                      <ChevronDown size={14} />
+                    {item.icon}
+                    {/* AI Prediction Indicator */}
+                    {enableAI && isPredicted && !predictionsLoading && (
+                      <span
+                        data-testid="nav-prediction-indicator"
+                        className={cn(
+                          "absolute -top-0.5 -right-0.5 w-2 h-2",
+                          "bg-primary-9 dark:bg-primary-9 rounded-full",
+                          !prefersReducedMotion && "animate-pulse",
+                        )}
+                        aria-label="AI suggested"
+                      />
                     )}
                   </Button>
-                  {/* Group Items (shown when expanded) */}
-                  {!isCollapsed && (
-                    <div
-                      id={`nav-group-items-${group.id}`}
-                      className="flex flex-col gap-0.5"
-                    >
-                      {group.visibleItems.map((item) => {
-                        const isPredicted = predictedItemIds.has(item.id);
-                        return (
-                          <Button
-                            key={item.id}
-                            type="button"
-                            variant="ghost"
-                            data-testid={`nav-${item.id}`}
-                            aria-label={item.label}
-                            title={
-                              isPredicted
-                                ? `${item.label} (Suggested)`
-                                : item.label
-                            }
-                            onClick={() => handleNavClick(item)}
-                            className={cn(
-                              "p-2 rounded-lg relative",
-                              "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
-                              !prefersReducedMotion && "transition-all",
-                              "focus:outline-none focus:ring-2 focus:ring-primary-7",
-                              activeNavItem === item.id &&
-                                "bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-9",
-                              activeNavItem !== item.id &&
-                                "text-neutral-10 hover:bg-neutral-3",
-                            )}
-                          >
-                            {item.icon}
-                            {/* AI Prediction Indicator */}
-                            {enableAI && isPredicted && !predictionsLoading && (
-                              <span
-                                data-testid="nav-prediction-indicator"
-                                className={cn(
-                                  "absolute -top-0.5 -right-0.5 w-2 h-2",
-                                  "bg-primary-9 dark:bg-primary-9 rounded-full",
-                                  !prefersReducedMotion && "animate-pulse",
-                                )}
-                                aria-label="AI suggested"
-                              />
-                            )}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* Flat List Mode (default) */
-          <div
-            className="flex flex-col gap-1"
-            role="group"
-            aria-label="Primary navigation"
-          >
-            {visibleNavItems.map((item) => {
-              const isPredicted = predictedItemIds.has(item.id);
-              return (
-                <Button
-                  key={item.id}
-                  type="button"
-                  variant="ghost"
-                  data-testid={`nav-${item.id}`}
-                  aria-label={item.label}
-                  title={isPredicted ? `${item.label} (Suggested)` : item.label}
-                  onClick={() => handleNavClick(item)}
-                  className={cn(
-                    "p-2 rounded-lg relative",
-                    "min-h-[44px] min-w-[44px]", // WCAG 2.5.8 AAA touch target
-                    !prefersReducedMotion && "transition-all",
-                    "focus:outline-none focus:ring-2 focus:ring-primary-7",
-                    activeNavItem === item.id &&
-                      "bg-primary-3 dark:bg-primary-4 text-primary-11 dark:text-primary-9",
-                    activeNavItem !== item.id &&
-                      "text-neutral-10 hover:bg-neutral-3",
-                  )}
-                >
-                  {item.icon}
-                  {/* AI Prediction Indicator */}
-                  {enableAI && isPredicted && !predictionsLoading && (
-                    <span
-                      data-testid="nav-prediction-indicator"
-                      className={cn(
-                        "absolute -top-0.5 -right-0.5 w-2 h-2",
-                        "bg-primary-9 dark:bg-primary-9 rounded-full",
-                        !prefersReducedMotion && "animate-pulse",
-                      )}
-                      aria-label="AI suggested"
-                    />
-                  )}
-                </Button>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
         </div>
         {/* Bottom icons - RBAC filtered, pinned to bottom */}
         <div

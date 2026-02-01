@@ -201,9 +201,7 @@ export const Sizes: Story = {
     return (
       <div className="space-y-6">
         <div>
-          <span className="text-sm text-neutral-11 mb-2 block">
-            Small
-          </span>
+          <span className="text-sm text-neutral-11 mb-2 block">Small</span>
           <Slider value={sm} onChange={setSm} size="sm" showValue />
         </div>
         <div>
@@ -213,9 +211,7 @@ export const Sizes: Story = {
           <Slider value={md} onChange={setMd} size="md" showValue />
         </div>
         <div>
-          <span className="text-sm text-neutral-11 mb-2 block">
-            Large
-          </span>
+          <span className="text-sm text-neutral-11 mb-2 block">Large</span>
           <Slider value={lg} onChange={setLg} size="lg" showValue />
         </div>
       </div>

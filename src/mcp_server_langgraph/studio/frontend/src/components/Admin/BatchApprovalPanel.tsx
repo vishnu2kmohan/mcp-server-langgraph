@@ -150,9 +150,7 @@ export function BatchApprovalPanel({
           className="w-12 h-12 text-success-9 mb-4"
           aria-hidden="true"
         />
-        <p className="text-neutral-11">
-          No pending approvals
-        </p>
+        <p className="text-neutral-11">No pending approvals</p>
       </div>
     );
   }
@@ -200,10 +198,14 @@ export function BatchApprovalPanel({
               "bg-success-10 text-neutral-12 hover:bg-success-11",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
-            )}>
+            )}
+          >
             {isApproving ? (
               <Loader2
-                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                className={cn(
+                  "w-4 h-4",
+                  !prefersReducedMotion && "animate-spin",
+                )}
                 data-testid="batch-approve-loading"
               />
             ) : (
@@ -223,10 +225,14 @@ export function BatchApprovalPanel({
               "bg-error-10 text-neutral-12 hover:bg-error-11",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors",
-            )}>
+            )}
+          >
             {isRejecting ? (
               <Loader2
-                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                className={cn(
+                  "w-4 h-4",
+                  !prefersReducedMotion && "animate-spin",
+                )}
                 data-testid="batch-reject-loading"
               />
             ) : (
@@ -294,7 +300,11 @@ export function BatchApprovalPanel({
                       "h-full rounded-full",
                       getConfidenceBgColor(approval.confidence),
                     )}
-                    style={{ '--progress': `${confidencePercent}%` } as React.CSSProperties}
+                    style={
+                      {
+                        "--progress": `${confidencePercent}%`,
+                      } as React.CSSProperties
+                    }
                   />
                 </div>
               </div>

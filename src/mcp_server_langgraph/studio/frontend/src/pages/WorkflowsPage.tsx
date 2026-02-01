@@ -46,42 +46,42 @@ import type { WorkflowExecution } from "../components/Workflow/ExecutionHistoryP
 const WorkflowCanvas = lazy(() =>
   import("../components/Workflow/WorkflowCanvas").then((m) => ({
     default: m.WorkflowCanvas,
-  }))
+  })),
 );
 const NodePalette = lazy(() =>
   import("../components/Workflow/NodePalette").then((m) => ({
     default: m.NodePalette,
-  }))
+  })),
 );
 const NodeInspector = lazy(() =>
   import("../components/Workflow/NodeInspector").then((m) => ({
     default: m.NodeInspector,
-  }))
+  })),
 );
 const ExecutionPanel = lazy(() =>
   import("../components/Workflow/ExecutionPanel").then((m) => ({
     default: m.ExecutionPanel,
-  }))
+  })),
 );
 const ExecutionHistoryPanel = lazy(() =>
   import("../components/Workflow/ExecutionHistoryPanel").then((m) => ({
     default: m.ExecutionHistoryPanel,
-  }))
+  })),
 );
 const SuggestionChips = lazy(() =>
   import("../components/Workflow/SuggestionChips").then((m) => ({
     default: m.SuggestionChips,
-  }))
+  })),
 );
 const WorkflowVersionHistory = lazy(() =>
   import("../components/Workflow/WorkflowVersionHistory").then((m) => ({
     default: m.WorkflowVersionHistory,
-  }))
+  })),
 );
 const ShareWorkflowDialog = lazy(() =>
   import("../components/Workflow/ShareWorkflowDialog").then((m) => ({
     default: m.ShareWorkflowDialog,
-  }))
+  })),
 );
 import { useWorkflowExecution } from "../hooks/useWorkflowExecution";
 import {
@@ -406,7 +406,12 @@ export function WorkflowsPage() {
   if (isLoading) {
     return (
       <div className={PAGE_CLASSES.shellLoading}>
-        <Loader2 className={cn("w-8 h-8 text-primary-9", !prefersReducedMotion && "animate-spin")} />
+        <Loader2
+          className={cn(
+            "w-8 h-8 text-primary-9",
+            !prefersReducedMotion && "animate-spin",
+          )}
+        />
       </div>
     );
   }
@@ -442,9 +447,7 @@ export function WorkflowsPage() {
                 className="flex items-center gap-2 px-3 py-1.5 bg-error-3 border border-error-4 rounded-lg"
               >
                 <AlertCircle size={14} className="text-error-9" />
-                <span className="text-sm text-error-11">
-                  {validationError}
-                </span>
+                <span className="text-sm text-error-11">{validationError}</span>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -484,11 +487,17 @@ export function WorkflowsPage() {
               >
                 {connectionStatus === "connected" && <Wifi size={12} />}
                 {connectionStatus === "connecting" && (
-                  <Loader2 size={12} className={cn(!prefersReducedMotion && "animate-spin")} />
+                  <Loader2
+                    size={12}
+                    className={cn(!prefersReducedMotion && "animate-spin")}
+                  />
                 )}
                 {connectionStatus === "reconnecting" && (
                   <>
-                    <RefreshCw size={12} className={cn(!prefersReducedMotion && "animate-spin")} />
+                    <RefreshCw
+                      size={12}
+                      className={cn(!prefersReducedMotion && "animate-spin")}
+                    />
                     <span>{reconnectAttempts}</span>
                   </>
                 )}
@@ -501,11 +510,7 @@ export function WorkflowsPage() {
             {showExecutionPanel &&
               (connectionStatus === "disconnected" ||
                 connectionStatus === "error") && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={reconnect}
-                >
+                <Button variant="primary" size="sm" onClick={reconnect}>
                   <RefreshCw size={12} />
                   Reconnect
                 </Button>
@@ -545,7 +550,10 @@ export function WorkflowsPage() {
               title="Run Workflow (Cmd+Enter)"
             >
               {executionState === "running" ? (
-                <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
+                <Loader2
+                  size={16}
+                  className={cn(!prefersReducedMotion && "animate-spin")}
+                />
               ) : (
                 <Play size={16} />
               )}
@@ -614,10 +622,7 @@ export function WorkflowsPage() {
               </Button>
             )}
 
-            <Button
-              variant="secondary"
-              onClick={handleExportJSON}
-            >
+            <Button variant="secondary" onClick={handleExportJSON}>
               <Download size={16} />
               Export JSON
             </Button>
@@ -629,7 +634,10 @@ export function WorkflowsPage() {
               title="Save (Cmd+S)"
             >
               {isSaving ? (
-                <Loader2 size={16} className={cn(!prefersReducedMotion && "animate-spin")} />
+                <Loader2
+                  size={16}
+                  className={cn(!prefersReducedMotion && "animate-spin")}
+                />
               ) : (
                 <Save size={16} />
               )}
@@ -666,7 +674,9 @@ export function WorkflowsPage() {
               <NodePalette
                 onAddNode={(type: NodeType) => {
                   // Add node at center of canvas when clicked
-                  dispatch(addNode(type as WorkflowNodeType, { x: 250, y: 250 }));
+                  dispatch(
+                    addNode(type as WorkflowNodeType, { x: 250, y: 250 }),
+                  );
                 }}
               />
             )}

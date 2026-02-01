@@ -5,14 +5,17 @@
  * Ensures references are transformed into ReferenceChip components.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import { MarkdownContent } from "./MarkdownContent";
 import { ReferenceResolverProvider as _ReferenceResolverProvider } from "@/contexts/ReferenceResolverContext";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { api } from "@/api";
-import type { ParsedReference as _ParsedReference, ResolvedReference } from "@/types/references";
+import type {
+  ParsedReference as _ParsedReference,
+  ResolvedReference,
+} from "@/types/references";
 
 // Mock state - use object to allow mutation in tests
 const mockState = {
@@ -54,6 +57,11 @@ function renderWithProviders(content: string, isStreaming = false) {
     </Provider>,
   );
 }
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("MarkdownContent References", () => {
   beforeEach(() => {
@@ -151,8 +159,7 @@ That's the syntax.`;
 
   describe("Multiple References", () => {
     it("should render multiple references in same paragraph", () => {
-      const content =
-        "Use [[tool:fs:read]] and [[tool:fs:write]] together.";
+      const content = "Use [[tool:fs:read]] and [[tool:fs:write]] together.";
       renderWithProviders(content);
 
       expect(screen.getByText("read")).toBeInTheDocument();

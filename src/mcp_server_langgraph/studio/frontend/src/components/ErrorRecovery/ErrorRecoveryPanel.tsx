@@ -207,7 +207,8 @@ export function ErrorRecoveryPanel({
               className="suggestion-button"
               key={index}
               onClick={() => handleSuggestionClick(suggestion)}
-              aria-label={suggestion.label}>
+              aria-label={suggestion.label}
+            >
               <span className="suggestion-icon" aria-hidden="true">
                 {getSuggestionIcon(suggestion.action)}
               </span>
@@ -230,18 +231,19 @@ export function ErrorRecoveryPanel({
           ))
         ) : (
           // Fallback suggestion when no AI suggestions
-          (<Button
+          <Button
             variant="primary"
             className="suggestion-button"
             onClick={() => onRetry?.()}
-            aria-label="Try again">
+            aria-label="Try again"
+          >
             <span className="suggestion-icon" aria-hidden="true">
               🔄
             </span>
             <span className="suggestion-content">
               <span className="suggestion-label">Try again</span>
             </span>
-          </Button>)
+          </Button>
         )}
       </div>
       {/* Similar Issues */}
@@ -263,11 +265,14 @@ export function ErrorRecoveryPanel({
           </div>
         )}
       {/* Dismiss Button */}
-      <Button variant="secondary"
+      <Button
+        variant="secondary"
         className="dismiss-button"
         onClick={onDismiss}
         aria-label="Dismiss"
-      >Dismiss</Button>
+      >
+        Dismiss
+      </Button>
       {/* Analysis Error Notice */}
       {analysisError && (
         <p className="analysis-error">

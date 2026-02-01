@@ -30,9 +30,7 @@ export function HelpPage() {
     >
       <div className="max-w-4xl mx-auto w-full space-y-6">
         {/* Page Header */}
-        <h1 className="text-2xl font-bold text-neutral-12">
-          Help Center
-        </h1>
+        <h1 className="text-2xl font-bold text-neutral-12">Help Center</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Help Topics */}
@@ -68,9 +66,7 @@ export function HelpPage() {
                 >
                   {selectedTopic.category}
                 </span>
-                <p className="text-neutral-11">
-                  {selectedTopic.content}
-                </p>
+                <p className="text-neutral-11">{selectedTopic.content}</p>
               </div>
             ) : (
               <div

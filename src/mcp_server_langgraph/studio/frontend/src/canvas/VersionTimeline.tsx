@@ -120,10 +120,7 @@ function VersionItem({
             </span>
           ) : (
             <span data-testid="user-indicator">
-              <User
-                size={12}
-                className="text-neutral-11"
-              />
+              <User size={12} className="text-neutral-11" />
             </span>
           )}
         </div>
@@ -146,7 +143,8 @@ function VersionItem({
             "p-1.5 rounded transition-colors",
             "text-neutral-11 hover:text-primary-11",
             "hover:bg-primary-3 dark:hover:bg-primary-a4",
-          )}>
+          )}
+        >
           <RotateCcw size={14} />
         </Button>
       )}
@@ -161,9 +159,7 @@ function VersionItem({
             "border border-neutral-5",
           )}
         >
-          <div className="text-xs text-neutral-11 mb-2">
-            Content preview:
-          </div>
+          <div className="text-xs text-neutral-11 mb-2">Content preview:</div>
           <pre className="text-xs text-neutral-11 overflow-hidden truncate">
             {version.content.slice(0, 100)}...
           </pre>
@@ -263,7 +259,8 @@ export function VersionTimeline({
             "flex items-center justify-center gap-1 mt-2 py-1.5 text-sm",
             "text-neutral-11 hover:text-neutral-11",
             "transition-colors",
-          )}>
+          )}
+        >
           {isExpanded ? (
             <>
               <ChevronUp size={14} />

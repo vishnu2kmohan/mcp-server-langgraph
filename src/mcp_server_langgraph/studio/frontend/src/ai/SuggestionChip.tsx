@@ -116,11 +116,7 @@ function getVariantClasses(variant: ChipVariant): string {
         "hover:bg-primary-1 dark:hover:bg-primary-a3",
       );
     case "subtle":
-      return cn(
-        "bg-neutral-2",
-        "text-neutral-11",
-        "hover:bg-neutral-3",
-      );
+      return cn("bg-neutral-2", "text-neutral-11", "hover:bg-neutral-3");
     default:
       return "";
   }
@@ -213,7 +209,8 @@ export function SuggestionChip({
         isDisabled && "opacity-50 cursor-not-allowed",
         // Custom classes
         className,
-      )}>
+      )}
+    >
       {/* Loading spinner */}
       {isLoading && (
         <Loader2

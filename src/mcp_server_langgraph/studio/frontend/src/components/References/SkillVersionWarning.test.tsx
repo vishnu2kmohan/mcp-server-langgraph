@@ -8,240 +8,245 @@
  * differs from the currently installed version.
  */
 
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { SkillVersionWarning } from './SkillVersionWarning';
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { SkillVersionWarning } from "./SkillVersionWarning";
 
-describe('SkillVersionWarning', () => {
-  describe('rendering', () => {
-    it('should render nothing when versions match', () => {
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+describe("SkillVersionWarning", () => {
+  describe("rendering", () => {
+    it("should render nothing when versions match", () => {
       const { container } = render(
         <SkillVersionWarning
           referencedVersion="1.2.0"
           installedVersion="1.2.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(container.firstChild).toBeNull();
     });
 
-    it('should render nothing when no versions provided', () => {
+    it("should render nothing when no versions provided", () => {
       const { container } = render(
         <SkillVersionWarning
           referencedVersion={undefined}
           installedVersion={undefined}
           skillName="code-review"
-        />
+        />,
       );
 
       expect(container.firstChild).toBeNull();
     });
 
-    it('should render warning when versions differ', () => {
+    it("should render warning when versions differ", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
-      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
-    it('should show referenced version in warning', () => {
+    it("should show referenced version in warning", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/1\.0\.0/)).toBeInTheDocument();
     });
 
-    it('should show installed version in warning', () => {
+    it("should show installed version in warning", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/2\.0\.0/)).toBeInTheDocument();
     });
 
-    it('should show skill name in warning', () => {
+    it("should show skill name in warning", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/code-review/)).toBeInTheDocument();
     });
   });
 
-  describe('severity levels', () => {
-    it('should show major version warning for major version mismatch', () => {
+  describe("severity levels", () => {
+    it("should show major version warning for major version mismatch", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/Major version/i)).toBeInTheDocument();
     });
 
-    it('should show minor version warning for minor version mismatch', () => {
+    it("should show minor version warning for minor version mismatch", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="1.1.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/Minor version/i)).toBeInTheDocument();
     });
 
-    it('should show patch version warning for patch version mismatch', () => {
+    it("should show patch version warning for patch version mismatch", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="1.0.1"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/Patch version/i)).toBeInTheDocument();
     });
 
-    it('should use error styling for major version mismatch', () => {
+    it("should use error styling for major version mismatch", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="3.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
-      const alert = screen.getByRole('alert');
-      expect(alert).toHaveClass('bg-danger-2');
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveClass("bg-danger-2");
     });
 
-    it('should use warning styling for minor version mismatch', () => {
+    it("should use warning styling for minor version mismatch", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="1.2.0"
           skillName="code-review"
-        />
+        />,
       );
 
-      const alert = screen.getByRole('alert');
-      expect(alert).toHaveClass('bg-warning-2');
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveClass("bg-warning-2");
     });
 
-    it('should use info styling for patch version mismatch', () => {
+    it("should use info styling for patch version mismatch", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="1.0.5"
           skillName="code-review"
-        />
+        />,
       );
 
-      const alert = screen.getByRole('alert');
-      expect(alert).toHaveClass('bg-info-2');
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveClass("bg-info-2");
     });
   });
 
-  describe('upgrade/downgrade indication', () => {
-    it('should indicate upgrade when installed is newer', () => {
+  describe("upgrade/downgrade indication", () => {
+    it("should indicate upgrade when installed is newer", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/newer version installed/i)).toBeInTheDocument();
     });
 
-    it('should indicate downgrade warning when installed is older', () => {
+    it("should indicate downgrade warning when installed is older", () => {
       render(
         <SkillVersionWarning
           referencedVersion="2.0.0"
           installedVersion="1.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/older version installed/i)).toBeInTheDocument();
     });
   });
 
-  describe('recommendations', () => {
-    it('should suggest updating reference for major upgrade', () => {
+  describe("recommendations", () => {
+    it("should suggest updating reference for major upgrade", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(
-        screen.getByText(/Consider updating the reference/i)
+        screen.getByText(/Consider updating the reference/i),
       ).toBeInTheDocument();
     });
 
-    it('should show breaking changes warning for major version difference', () => {
+    it("should show breaking changes warning for major version difference", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="3.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
       expect(screen.getByText(/breaking changes/i)).toBeInTheDocument();
     });
   });
 
-  describe('compact mode', () => {
-    it('should render compact version when compact prop is true', () => {
+  describe("compact mode", () => {
+    it("should render compact version when compact prop is true", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
           compact
-        />
+        />,
       );
 
       // Compact shows just icon and brief text
-      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toBeInTheDocument();
       expect(screen.queryByText(/Consider updating/i)).not.toBeInTheDocument();
     });
 
-    it('should still show version numbers in compact mode', () => {
+    it("should still show version numbers in compact mode", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
           compact
-        />
+        />,
       );
 
       expect(screen.getByText(/1\.0\.0/)).toBeInTheDocument();
@@ -249,95 +254,97 @@ describe('SkillVersionWarning', () => {
     });
   });
 
-  describe('accessibility', () => {
-    it('should have alert role', () => {
+  describe("accessibility", () => {
+    it("should have alert role", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
-      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
-    it('should have warning icon with aria-hidden', () => {
+    it("should have warning icon with aria-hidden", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
-      const alert = screen.getByRole('alert');
-      const svg = alert.querySelector('svg');
-      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      const alert = screen.getByRole("alert");
+      const svg = alert.querySelector("svg");
+      expect(svg).toHaveAttribute("aria-hidden", "true");
     });
 
-    it('should have descriptive text for screen readers', () => {
+    it("should have descriptive text for screen readers", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="2.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
-      const alert = screen.getByRole('alert');
-      expect(alert.textContent).toContain('code-review');
-      expect(alert.textContent).toContain('1.0.0');
-      expect(alert.textContent).toContain('2.0.0');
+      const alert = screen.getByRole("alert");
+      expect(alert.textContent).toContain("code-review");
+      expect(alert.textContent).toContain("1.0.0");
+      expect(alert.textContent).toContain("2.0.0");
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle prerelease versions', () => {
+  describe("edge cases", () => {
+    it("should handle prerelease versions", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0-alpha"
           installedVersion="1.0.0"
           skillName="code-review"
-        />
+        />,
       );
 
-      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
-    it('should handle build metadata in versions', () => {
+    it("should handle build metadata in versions", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0+build.123"
           installedVersion="1.0.0+build.456"
           skillName="code-review"
-        />
+        />,
       );
 
       // Build metadata should be ignored, versions are equal
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
 
-    it('should handle latest as installed version', () => {
+    it("should handle latest as installed version", () => {
       render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion="latest"
           skillName="code-review"
-        />
+        />,
       );
 
       // Cannot compare, show info message
-      expect(screen.getByText(/Version comparison unavailable/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Version comparison unavailable/i),
+      ).toBeInTheDocument();
     });
 
-    it('should handle missing installed version gracefully', () => {
+    it("should handle missing installed version gracefully", () => {
       const { container } = render(
         <SkillVersionWarning
           referencedVersion="1.0.0"
           installedVersion={undefined}
           skillName="code-review"
-        />
+        />,
       );
 
       // Should not crash, render nothing

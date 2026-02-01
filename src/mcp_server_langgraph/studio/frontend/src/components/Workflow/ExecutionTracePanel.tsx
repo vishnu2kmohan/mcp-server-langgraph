@@ -187,7 +187,11 @@ const LogEntry = memo(
             )}
           </div>
           {hasDetails && (
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={isExpanded ? "Collapse details" : "Expand details"}
+            >
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (
@@ -309,7 +313,8 @@ export const ExecutionTracePanel = memo(
               variant="primary"
               size="sm"
               className="px-2 py-1 text-xs rounded"
-              onClick={() => setLevelFilter("all")}>
+              onClick={() => setLevelFilter("all")}
+            >
               All
             </Button>
             <Button
@@ -317,7 +322,8 @@ export const ExecutionTracePanel = memo(
               size="sm"
               className="px-2 py-1 text-xs rounded"
               onClick={() => setLevelFilter("error")}
-              aria-label="Errors">
+              aria-label="Errors"
+            >
               Errors
             </Button>
           </div>
@@ -337,11 +343,13 @@ export const ExecutionTracePanel = memo(
             className="p-1.5 rounded"
             onClick={() => setAutoScroll(!autoScroll)}
             aria-label="Auto-scroll"
-            aria-pressed={autoScroll}>
+            aria-pressed={autoScroll}
+          >
             <ArrowDownToLine className="w-4 h-4" />
           </Button>
 
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1.5 hover:bg-neutral-2 rounded text-neutral-10 hover:text-error-9"
             onClick={handleClearLogs}

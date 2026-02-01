@@ -165,18 +165,9 @@ vi.mock("../api", () => ({
     isLoading: false,
     error: null,
   }),
-  useCreateConnectionMutation: () => [
-    vi.fn(),
-    { isLoading: false },
-  ],
-  useTestConnectionMutation: () => [
-    vi.fn(),
-    { isLoading: false },
-  ],
-  useStartOAuth2FlowMutation: () => [
-    vi.fn(),
-    { isLoading: false },
-  ],
+  useCreateConnectionMutation: () => [vi.fn(), { isLoading: false }],
+  useTestConnectionMutation: () => [vi.fn(), { isLoading: false }],
+  useStartOAuth2FlowMutation: () => [vi.fn(), { isLoading: false }],
 }));
 
 // =============================================================================
@@ -359,9 +350,7 @@ describe("ConnectedConversationPanel - Redux Integration", () => {
 
       // InlineConnectionCard should be rendered
       expect(screen.getByTestId("inline-connection-card")).toBeInTheDocument();
-      expect(
-        screen.getByText(/authentication required/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/authentication required/i)).toBeInTheDocument();
     });
 
     it("should not render InlineConnectionCard when no pendingAuthRequirements", () => {

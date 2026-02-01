@@ -98,7 +98,10 @@ export function AttachmentPreviews({
   // Note: isUploading prop reserved for future loading state UI
 
   // Don't render if nothing to show
-  const hasContent = uploadFiles.length > 0 || fetchedUrls.length > 0 || urlFetchLoading.length > 0;
+  const hasContent =
+    uploadFiles.length > 0 ||
+    fetchedUrls.length > 0 ||
+    urlFetchLoading.length > 0;
 
   if (!hasContent) {
     return null;
@@ -109,7 +112,7 @@ export function AttachmentPreviews({
       data-testid="attachment-previews"
       className={cn(
         "flex gap-2 overflow-x-auto pb-2",
-        "scrollbar-thin scrollbar-thumb-neutral-5 dark:scrollbar-thumb-neutral-6"
+        "scrollbar-thin scrollbar-thumb-neutral-5 dark:scrollbar-thumb-neutral-6",
       )}
     >
       <AnimatePresence mode="popLayout">
@@ -135,7 +138,7 @@ export function AttachmentPreviews({
                 "bg-neutral-3",
                 "border border-neutral-6",
                 "rounded-full text-sm whitespace-nowrap",
-                "shrink-0"
+                "shrink-0",
               )}
             >
               {isUploading ? (
@@ -164,7 +167,7 @@ export function AttachmentPreviews({
                   "p-0.5 rounded-full",
                   "text-neutral-9 hover:text-neutral-11",
                   "hover:bg-neutral-5",
-                  "transition-colors"
+                  "transition-colors",
                 )}
               >
                 <X className="w-3.5 h-3.5" />
@@ -188,7 +191,7 @@ export function AttachmentPreviews({
               "bg-neutral-3",
               "border border-neutral-6",
               "rounded-full text-sm whitespace-nowrap",
-              "shrink-0"
+              "shrink-0",
             )}
           >
             <Loader2 className="w-3.5 h-3.5 text-neutral-10 animate-spin" />
@@ -216,7 +219,7 @@ export function AttachmentPreviews({
                 "bg-neutral-3",
                 "border border-neutral-6",
                 "rounded-full text-sm whitespace-nowrap",
-                "shrink-0"
+                "shrink-0",
               )}
             >
               <Link2
@@ -239,7 +242,7 @@ export function AttachmentPreviews({
                     "p-0.5 rounded-full",
                     "text-neutral-9 hover:text-neutral-11",
                     "hover:bg-neutral-5",
-                    "transition-colors"
+                    "transition-colors",
                   )}
                 >
                   <X className="w-3.5 h-3.5" />

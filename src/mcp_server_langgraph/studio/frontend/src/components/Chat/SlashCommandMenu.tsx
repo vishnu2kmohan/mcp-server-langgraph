@@ -213,9 +213,7 @@ export function SlashCommandMenu({
                 <Icon
                   size={16}
                   className={
-                    isHighlighted
-                      ? "text-primary-9"
-                      : "text-neutral-9"
+                    isHighlighted ? "text-primary-9" : "text-neutral-9"
                   }
                 />
                 <div className="flex-1 min-w-0">

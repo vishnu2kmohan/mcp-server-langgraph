@@ -94,13 +94,12 @@ export function ContextualHelp({
                   className="text-neutral-9 hover:text-neutral-11"
                   type="button"
                   aria-label="Dismiss tip"
-                  onClick={() => onDismiss(tip)}>
+                  onClick={() => onDismiss(tip)}
+                >
                   <X size={14} />
                 </Button>
               </div>
-              <p className="text-sm text-neutral-11">
-                {tip.content}
-              </p>
+              <p className="text-sm text-neutral-11">{tip.content}</p>
               {tip.learnMoreUrl && (
                 <Button
                   variant="ghost"
@@ -110,7 +109,8 @@ export function ContextualHelp({
                     "mt-2 flex items-center gap-1 text-xs",
                     "text-primary-10 dark:text-primary-7",
                     "hover:underline",
-                  )}>
+                  )}
+                >
                   <span>Learn more</span>
                   <ExternalLink size={12} />
                 </Button>

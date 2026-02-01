@@ -49,9 +49,24 @@ export const SelectionGroup: Story = {
     const [selected, setSelected] = useState<string>("cloud");
 
     const options = [
-      { id: "cloud", title: "Cloud", description: "Cloud-based storage", icon: <Cloud className="w-5 h-5" /> },
-      { id: "server", title: "On-Premise", description: "Self-hosted server", icon: <Server className="w-5 h-5" /> },
-      { id: "database", title: "Database", description: "Direct database connection", icon: <Database className="w-5 h-5" /> },
+      {
+        id: "cloud",
+        title: "Cloud",
+        description: "Cloud-based storage",
+        icon: <Cloud className="w-5 h-5" />,
+      },
+      {
+        id: "server",
+        title: "On-Premise",
+        description: "Self-hosted server",
+        icon: <Server className="w-5 h-5" />,
+      },
+      {
+        id: "database",
+        title: "Database",
+        description: "Direct database connection",
+        icon: <Database className="w-5 h-5" />,
+      },
     ];
 
     return (

@@ -136,9 +136,7 @@ function getFileIcon(type: FileItem["type"]) {
     case "image":
       return <FileImage size={24} className="text-insight-9" />;
     default:
-      return (
-        <File size={24} className="text-neutral-11" />
-      );
+      return <File size={24} className="text-neutral-11" />;
   }
 }
 
@@ -544,12 +542,9 @@ export function ArtifactsPage() {
           className={cn(
             "absolute top-2 right-2 z-20 px-3 py-1.5 rounded-lg text-sm font-medium",
             "transition-all duration-200 shadow-lg",
-            deleteStatus === "pending" &&
-              "bg-warning-3/50 text-warning-10",
-            deleteStatus === "success" &&
-              "bg-success-3/50 text-success-11",
-            deleteStatus === "error" &&
-              "bg-error-3/50 text-error-11",
+            deleteStatus === "pending" && "bg-warning-3/50 text-warning-10",
+            deleteStatus === "success" && "bg-success-3/50 text-success-11",
+            deleteStatus === "error" && "bg-error-3/50 text-error-11",
           )}
         >
           {deleteStatus === "pending" && (
@@ -566,9 +561,7 @@ export function ArtifactsPage() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-6 bg-neutral-2">
         <div className="flex items-center gap-3">
           <FolderOpen size={24} className="text-primary-9" />
-          <h1 className="text-lg font-semibold text-neutral-12">
-            Artifacts
-          </h1>
+          <h1 className="text-lg font-semibold text-neutral-12">Artifacts</h1>
           <span className="text-sm text-neutral-11">
             {filteredFiles.length} artifacts
           </span>
@@ -609,7 +602,8 @@ export function ArtifactsPage() {
                   ? "bg-neutral-2 shadow-sm"
                   : "text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-5",
               )}
-              aria-label="Grid view">
+              aria-label="Grid view"
+            >
               <Grid size={16} />
             </Button>
             <Button
@@ -623,7 +617,8 @@ export function ArtifactsPage() {
                   ? "bg-neutral-2 shadow-sm"
                   : "text-neutral-11 hover:text-neutral-10 dark:hover:text-neutral-5",
               )}
-              aria-label="List view">
+              aria-label="List view"
+            >
               <List size={16} />
             </Button>
           </div>
@@ -633,13 +628,13 @@ export function ArtifactsPage() {
       <div className="flex-1 overflow-auto p-6">
         {filteredFiles.length === 0 ? (
           // Empty state - AI-enhanced (Sprint 3 Migration)
-          (<AIEmptyState
+          <AIEmptyState
             context="artifacts"
             emptyType={searchQuery ? "no-matches" : "empty"}
             searchQuery={searchQuery || undefined}
             variant="compact"
             enableAI={!searchQuery}
-          />)
+          />
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredFiles.map((file) => (
@@ -672,7 +667,7 @@ export function ArtifactsPage() {
       {previewArtifact && selectedFile && (
         <div
           data-testid="preview-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-6"
           onClick={handleClosePreview}
         >
           <div
@@ -726,7 +721,7 @@ export function ArtifactsPage() {
       {deleteConfirmFile && (
         <div
           data-testid="delete-confirm-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-6"
           onClick={handleCancelDelete}
         >
           <div

@@ -74,8 +74,7 @@ const SIZE_CLASSES: Record<
 
 const STATUS_CLASSES: Record<StepStatus, { circle: string; text: string }> = {
   pending: {
-    circle:
-      "bg-neutral-2 border-neutral-5 text-neutral-9",
+    circle: "bg-neutral-2 border-neutral-5 text-neutral-9",
     text: "text-neutral-10",
   },
   current: {
@@ -200,7 +199,8 @@ export function StepProgress({
                   data-status={status}
                   aria-current={status === "current" ? "step" : undefined}
                   aria-label={getStepAriaLabel(step, status)}
-                  onClick={() => handleStepClick(index, status)}>
+                  onClick={() => handleStepClick(index, status)}
+                >
                   {status === "completed" ? (
                     <Check
                       data-testid="step-completed-icon"

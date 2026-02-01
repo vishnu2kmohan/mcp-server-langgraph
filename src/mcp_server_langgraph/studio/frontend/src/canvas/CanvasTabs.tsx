@@ -125,7 +125,8 @@ export function CanvasTabs({
         const isDisabled = isTabDisabled(tab);
 
         return (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             key={tab}
             ref={(el) => tabRefs.current.set(tab, el)}
             role="tab"
@@ -141,9 +142,7 @@ export function CanvasTabs({
               "transition-all focus:outline-none focus:ring-2 focus:ring-primary-7",
               isActive &&
                 "bg-neutral-1 text-primary-11 dark:text-primary-11 shadow-sm",
-              !isActive &&
-                !isDisabled &&
-                "text-neutral-11 hover:bg-neutral-3",
+              !isActive && !isDisabled && "text-neutral-11 hover:bg-neutral-3",
               isDisabled && "opacity-50 cursor-not-allowed",
             )}
           >

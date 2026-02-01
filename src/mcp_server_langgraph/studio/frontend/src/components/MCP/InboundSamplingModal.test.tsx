@@ -5,11 +5,19 @@
  * This modal handles server-initiated sampling/createMessage JSON-RPC requests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InboundSamplingModal } from "./InboundSamplingModal";
-import type { PendingSamplingRequest, SamplingResponse as _SamplingResponse } from "@/types/mcp";
+import type {
+  PendingSamplingRequest,
+  SamplingResponse as _SamplingResponse,
+} from "@/types/mcp";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("InboundSamplingModal", () => {
   const mockOnApprove = vi.fn();
@@ -152,7 +160,9 @@ describe("InboundSamplingModal", () => {
       const input = screen.getByRole("textbox", { name: /response/i });
       await user.type(input, "The weather is sunny today.");
 
-      const approveButton = screen.getByRole("button", { name: /approve|submit/i });
+      const approveButton = screen.getByRole("button", {
+        name: /approve|submit/i,
+      });
       await user.click(approveButton);
 
       await waitFor(() => {
@@ -175,7 +185,9 @@ describe("InboundSamplingModal", () => {
         />,
       );
 
-      const approveButton = screen.getByRole("button", { name: /approve|submit/i });
+      const approveButton = screen.getByRole("button", {
+        name: /approve|submit/i,
+      });
       expect(approveButton).toBeDisabled();
     });
 
@@ -193,7 +205,9 @@ describe("InboundSamplingModal", () => {
       const input = screen.getByRole("textbox", { name: /response/i });
       await user.type(input, "Response text");
 
-      const approveButton = screen.getByRole("button", { name: /approve|submit/i });
+      const approveButton = screen.getByRole("button", {
+        name: /approve|submit/i,
+      });
       expect(approveButton).toBeEnabled();
     });
   });
@@ -210,7 +224,9 @@ describe("InboundSamplingModal", () => {
         />,
       );
 
-      const rejectButton = screen.getByRole("button", { name: /reject|cancel/i });
+      const rejectButton = screen.getByRole("button", {
+        name: /reject|cancel/i,
+      });
       await user.click(rejectButton);
 
       expect(mockOnReject).toHaveBeenCalled();
@@ -361,7 +377,9 @@ describe("InboundSamplingModal", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("textbox", { name: /response/i })).toHaveFocus();
+        expect(
+          screen.getByRole("textbox", { name: /response/i }),
+        ).toHaveFocus();
       });
     });
   });

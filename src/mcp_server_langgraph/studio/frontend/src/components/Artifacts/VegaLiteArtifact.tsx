@@ -244,18 +244,14 @@ export function VegaLiteArtifact({
       {/* Header */}
       <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3
-            size={16}
-            className="text-neutral-10"
-          />
-          <h3 className="font-medium text-neutral-12">
-            {displayTitle}
-          </h3>
+          <BarChart3 size={16} className="text-neutral-10" />
+          <h3 className="font-medium text-neutral-12">{displayTitle}</h3>
         </div>
         <div className="flex items-center gap-2">
           {/* Export button */}
           {!error && !isLoading && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1.5 text-neutral-11 hover:bg-neutral-2 rounded"
               onClick={handleExport}
@@ -267,7 +263,8 @@ export function VegaLiteArtifact({
           )}
           {/* Retry button (shown on error) */}
           {error && (
-            <Button size="icon"
+            <Button
+              size="icon"
               variant="secondary"
               className="p-1.5 text-neutral-11 hover:bg-neutral-2 rounded"
               onClick={handleRetry}

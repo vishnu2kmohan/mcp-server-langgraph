@@ -216,7 +216,10 @@ export function MessageList({
       role="log"
       aria-live="polite"
       aria-label="Chat messages"
-      className={cn("relative flex flex-col flex-1 overflow-y-auto p-4", className)}
+      className={cn(
+        "relative flex flex-col flex-1 overflow-y-auto p-4",
+        className,
+      )}
     >
       {/* Empty state */}
       {messages.length === 0 && !isLoading && (

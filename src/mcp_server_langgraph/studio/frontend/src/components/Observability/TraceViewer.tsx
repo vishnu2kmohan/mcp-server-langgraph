@@ -179,9 +179,7 @@ function SpanRow({
       data-testid={`span-row-${span.spanId}`}
       onClick={onClick}
       className={`flex items-center gap-4 p-2 rounded cursor-pointer transition-colors ${
-        isSelected
-          ? "bg-primary-1 dark:bg-primary-a3"
-          : "hover:bg-neutral-1"
+        isSelected ? "bg-primary-1 dark:bg-primary-a3" : "hover:bg-neutral-1"
       } ${span.depth > 0 ? "ml-4" : ""}`}
     >
       {/* Status indicator */}
@@ -235,9 +233,7 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
       {/* Header */}
       <div className="p-4 border-b border-neutral-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-neutral-12">
-            {span.name}
-          </h3>
+          <h3 className="font-semibold text-neutral-12">{span.name}</h3>
           <Button
             variant="ghost"
             size="icon"
@@ -265,16 +261,12 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
       )}
       {/* Attributes */}
       <div className="p-4 border-b border-neutral-5">
-        <h4 className="text-sm font-medium text-neutral-12 mb-2">
-          Attributes
-        </h4>
+        <h4 className="text-sm font-medium text-neutral-12 mb-2">Attributes</h4>
         <dl className="space-y-2">
           {Object.entries(span.attributes).map(([key, value]) => (
             <div key={key} className="flex justify-between text-sm">
               <dt className="text-neutral-10">{key}</dt>
-              <dd className="text-neutral-12 font-mono">
-                {String(value)}
-              </dd>
+              <dd className="text-neutral-12 font-mono">{String(value)}</dd>
             </div>
           ))}
         </dl>
@@ -282,15 +274,11 @@ function SpanDetails({ span, onClose }: SpanDetailsProps) {
       {/* Events */}
       {span.events.length > 0 && (
         <div className="p-4">
-          <h4 className="text-sm font-medium text-neutral-12 mb-2">
-            Events
-          </h4>
+          <h4 className="text-sm font-medium text-neutral-12 mb-2">Events</h4>
           <ul className="space-y-2">
             {span.events.map((event, index) => (
               <li key={index} className="text-sm">
-                <span className="text-neutral-12">
-                  {event.name}
-                </span>
+                <span className="text-neutral-12">{event.name}</span>
                 <span className="text-neutral-10 ml-2 text-xs">
                   {new Date(event.timestamp).toISOString()}
                 </span>

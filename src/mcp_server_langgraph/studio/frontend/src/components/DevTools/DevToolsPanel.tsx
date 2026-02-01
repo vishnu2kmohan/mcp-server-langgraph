@@ -18,7 +18,14 @@
  * - Uses semantic colors per STYLE.md
  */
 
-import { useCallback, Suspense, lazy, useMemo, useEffect, useState } from "react";
+import {
+  useCallback,
+  Suspense,
+  lazy,
+  useMemo,
+  useEffect,
+  useState,
+} from "react";
 import { useMetricsHistory } from "../../hooks/useMetricsHistory";
 import {
   ChevronDown,
@@ -364,9 +371,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     refetchOnReconnect: true,
   });
 
-  const {
-    data: selectedTraceData,
-  } = useGetTraceQuery(selectedTraceId ?? "", {
+  const { data: selectedTraceData } = useGetTraceQuery(selectedTraceId ?? "", {
     skip: !isTracesTabActive || !selectedTraceId,
     pollingInterval: traceDetailPollingInterval,
     refetchOnFocus: true,
@@ -379,8 +384,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     error: metricsError,
   } = useGetMetricsQuery(undefined, {
     skip: collapsed || activeTab !== "metrics",
-    pollingInterval:
-      !collapsed && activeTab === "metrics" ? metricsMs : 0,
+    pollingInterval: !collapsed && activeTab === "metrics" ? metricsMs : 0,
     refetchOnFocus: true,
     refetchOnReconnect: true,
   });
@@ -393,8 +397,7 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     { limit: 50 },
     {
       skip: collapsed || activeTab !== "alerts",
-      pollingInterval:
-        !collapsed && activeTab === "alerts" ? alertsMs : 0,
+      pollingInterval: !collapsed && activeTab === "alerts" ? alertsMs : 0,
       refetchOnFocus: true,
       refetchOnReconnect: true,
     },
@@ -963,7 +966,9 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
                 aria-controls={`tabpanel-${tabId}`}
                 onClick={() => handleTabSelect(tabId)}
                 className={devToolsTabVariants({ active: isActive })}
-                variants={prefersReducedMotion ? undefined : motionButtonVariants}
+                variants={
+                  prefersReducedMotion ? undefined : motionButtonVariants
+                }
                 initial="rest"
                 whileHover="hover"
                 whileTap="pressed"

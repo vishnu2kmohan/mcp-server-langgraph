@@ -54,9 +54,7 @@ describe("useTraceLinking E2E", () => {
 
     it("should complete toggle flow: toggle on -> toggle off -> toggle on different node", () => {
       const onHighlight = vi.fn();
-      const { result } = renderHook(() =>
-        useTraceLinking({ onHighlight }),
-      );
+      const { result } = renderHook(() => useTraceLinking({ onHighlight }));
 
       // Step 1: Toggle on
       act(() => {
@@ -104,7 +102,11 @@ describe("useTraceLinking E2E", () => {
 
       // Verify current state
       expect(result.current.highlightedNodeId).toBe("node-3");
-      expect(result.current.highlightHistory).toEqual(["node-1", "node-2", "node-3"]);
+      expect(result.current.highlightHistory).toEqual([
+        "node-1",
+        "node-2",
+        "node-3",
+      ]);
       expect(result.current.canNavigateBack).toBe(true);
       expect(result.current.canNavigateForward).toBe(false);
 
@@ -239,9 +241,7 @@ describe("useTraceLinking E2E", () => {
   describe("edge cases", () => {
     it("should handle rapid highlight changes", () => {
       const onHighlight = vi.fn();
-      const { result } = renderHook(() =>
-        useTraceLinking({ onHighlight }),
-      );
+      const { result } = renderHook(() => useTraceLinking({ onHighlight }));
 
       // Rapidly change highlights
       act(() => {
@@ -257,9 +257,7 @@ describe("useTraceLinking E2E", () => {
 
     it("should handle clear after highlight", () => {
       const onHighlight = vi.fn();
-      const { result } = renderHook(() =>
-        useTraceLinking({ onHighlight }),
-      );
+      const { result } = renderHook(() => useTraceLinking({ onHighlight }));
 
       act(() => {
         result.current.highlightNode("node-1");

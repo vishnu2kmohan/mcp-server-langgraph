@@ -126,12 +126,15 @@ export function SessionGoalTracker({
               }
             }}
           />
-          <Button variant="primary"
+          <Button
+            variant="primary"
             className="px-4 py-2 text-sm rounded-lg"
             onClick={handleSetGoal}
             disabled={!inputValue.trim()}
             aria-label="Set Goal"
-          >Set Goal</Button>
+          >
+            Set Goal
+          </Button>
         </div>
       </div>
     );
@@ -143,9 +146,7 @@ export function SessionGoalTracker({
       <div data-testid="session-goal-tracker" className={containerClass}>
         <div className="flex items-center gap-2 mb-2">
           <Target className="w-4 h-4 text-primary-9" />
-          <span className="text-sm font-medium text-neutral-11">
-            Edit Goal
-          </span>
+          <span className="text-sm font-medium text-neutral-11">Edit Goal</span>
         </div>
         <div className="flex gap-2">
           <Input
@@ -162,11 +163,14 @@ export function SessionGoalTracker({
           >
             Save
           </Button>
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             className="px-3 py-2 text-sm text-neutral-11 hover:text-neutral-12"
             onClick={handleCancelEdit}
             aria-label="Cancel edit"
-          >Cancel</Button>
+          >
+            Cancel
+          </Button>
         </div>
       </div>
     );
@@ -187,10 +191,13 @@ export function SessionGoalTracker({
             variant="ghost"
             className="p-1 text-neutral-9 hover:text-neutral-11 rounded"
             onClick={handleEdit}
-            aria-label="Edit">
+            aria-label="Edit"
+          >
             <Edit2 className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost"
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-1 text-neutral-9 hover:text-error-9 rounded"
             onClick={handleClear}
             aria-label="Clear"
@@ -203,9 +210,7 @@ export function SessionGoalTracker({
         {currentGoal}
       </p>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-neutral-10">
-          Was your goal achieved?
-        </span>
+        <span className="text-xs text-neutral-10">Was your goal achieved?</span>
         <div className="flex gap-1">
           <Button
             variant="success"

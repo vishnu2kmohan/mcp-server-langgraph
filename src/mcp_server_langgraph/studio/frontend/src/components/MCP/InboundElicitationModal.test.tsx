@@ -5,11 +5,19 @@
  * This modal handles server-initiated elicitation JSON-RPC requests.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InboundElicitationModal } from "./InboundElicitationModal";
-import type { PendingElicitation, JSONRPCError as _JSONRPCError } from "@/types/mcp";
+import type {
+  PendingElicitation,
+  JSONRPCError as _JSONRPCError,
+} from "@/types/mcp";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("InboundElicitationModal", () => {
   const mockOnRespond = vi.fn();
@@ -100,7 +108,9 @@ describe("InboundElicitationModal", () => {
       const nameInput = screen.getByLabelText(/name/i);
       await user.type(nameInput, "John Doe");
 
-      const submitButton = screen.getByRole("button", { name: /submit|respond/i });
+      const submitButton = screen.getByRole("button", {
+        name: /submit|respond/i,
+      });
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -117,7 +127,9 @@ describe("InboundElicitationModal", () => {
         />,
       );
 
-      const submitButton = screen.getByRole("button", { name: /submit|respond/i });
+      const submitButton = screen.getByRole("button", {
+        name: /submit|respond/i,
+      });
       expect(submitButton).toBeDisabled();
     });
 
@@ -135,7 +147,9 @@ describe("InboundElicitationModal", () => {
       const nameInput = screen.getByLabelText(/name/i);
       await user.type(nameInput, "John Doe");
 
-      const submitButton = screen.getByRole("button", { name: /submit|respond/i });
+      const submitButton = screen.getByRole("button", {
+        name: /submit|respond/i,
+      });
       expect(submitButton).toBeEnabled();
     });
   });
@@ -152,7 +166,9 @@ describe("InboundElicitationModal", () => {
         />,
       );
 
-      const cancelButton = screen.getByRole("button", { name: /cancel|decline/i });
+      const cancelButton = screen.getByRole("button", {
+        name: /cancel|decline/i,
+      });
       await user.click(cancelButton);
 
       expect(mockOnCancel).toHaveBeenCalled();

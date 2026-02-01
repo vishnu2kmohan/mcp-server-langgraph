@@ -7,12 +7,19 @@
  * WCAG 2.2 AA compliant with proper dialog and listbox patterns.
  */
 
-import { useState, useCallback, useMemo, useEffect, useRef, useId } from 'react';
-import { Search, Wrench, Sparkles, FileCode, X } from 'lucide-react';
-import { Button, Checkbox, Input } from '@/components/UI';
-import { cn } from '@/utils/cn';
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useId,
+} from "react";
+import { Search, Wrench, Sparkles, FileCode, X } from "lucide-react";
+import { Button, Checkbox, Input } from "@/components/UI";
+import { cn } from "@/utils/cn";
 
-export type ReferenceType = 'tool' | 'skill' | 'artifact';
+export type ReferenceType = "tool" | "skill" | "artifact";
 
 export interface ReferenceItem {
   /** Type of reference */
@@ -38,7 +45,7 @@ export interface BulkReferenceInserterProps {
   onClose: () => void;
 }
 
-type TabType = 'all' | ReferenceType;
+type TabType = "all" | ReferenceType;
 
 const TYPE_ICONS: Record<ReferenceType, typeof Wrench> = {
   tool: Wrench,
@@ -47,16 +54,16 @@ const TYPE_ICONS: Record<ReferenceType, typeof Wrench> = {
 };
 
 const TYPE_COLORS: Record<ReferenceType, string> = {
-  tool: 'text-primary-9',
-  skill: 'text-success-9',
-  artifact: 'text-neutral-9',
+  tool: "text-primary-9",
+  skill: "text-success-9",
+  artifact: "text-neutral-9",
 };
 
 /**
  * Generate markdown reference syntax for an item.
  */
 function toMarkdown(item: ReferenceItem): string {
-  if (item.type === 'tool' && item.qualifier) {
+  if (item.type === "tool" && item.qualifier) {
     return `[[tool:${item.qualifier}:${item.name}]]`;
   }
   return `[[${item.type}:${item.id}]]`;
@@ -73,16 +80,16 @@ export function BulkReferenceInserter({
 }: BulkReferenceInserterProps) {
   const titleId = useId();
   const searchRef = useRef<HTMLInputElement>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<TabType>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [focusedIndex, setFocusedIndex] = useState(-1);
 
   // Reset state when opening
   useEffect(() => {
     if (isOpen) {
-      setSearchQuery('');
-      setActiveTab('all');
+      setSearchQuery("");
+      setActiveTab("all");
       setSelectedIds(new Set());
       setFocusedIndex(-1);
       // Focus search after mount
@@ -95,7 +102,7 @@ export function BulkReferenceInserter({
     let result = items;
 
     // Filter by type
-    if (activeTab !== 'all') {
+    if (activeTab !== "all") {
       result = result.filter((item) => item.type === activeTab);
     }
 
@@ -107,7 +114,7 @@ export function BulkReferenceInserter({
           item.name.toLowerCase().includes(query) ||
           item.description?.toLowerCase().includes(query) ||
           item.qualifier?.toLowerCase().includes(query) ||
-          item.id.toLowerCase().includes(query)
+          item.id.toLowerCase().includes(query),
       );
     }
 
@@ -121,21 +128,21 @@ export function BulkReferenceInserter({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
         return;
       }
 
       // Arrow navigation in list
-      if (e.key === 'ArrowDown' && focusedIndex < filteredItems.length - 1) {
+      if (e.key === "ArrowDown" && focusedIndex < filteredItems.length - 1) {
         e.preventDefault();
         setFocusedIndex((prev) => prev + 1);
-      } else if (e.key === 'ArrowUp' && focusedIndex > 0) {
+      } else if (e.key === "ArrowUp" && focusedIndex > 0) {
         e.preventDefault();
         setFocusedIndex((prev) => prev - 1);
       }
     },
-    [filteredItems.length, focusedIndex, onClose]
+    [filteredItems.length, focusedIndex, onClose],
   );
 
   const handleToggleItem = useCallback((id: string) => {
@@ -169,10 +176,22 @@ export function BulkReferenceInserter({
   }
 
   const tabs: { value: TabType; label: string; count: number }[] = [
-    { value: 'all', label: 'All', count: items.length },
-    { value: 'tool', label: 'Tools', count: items.filter((i) => i.type === 'tool').length },
-    { value: 'skill', label: 'Skills', count: items.filter((i) => i.type === 'skill').length },
-    { value: 'artifact', label: 'Artifacts', count: items.filter((i) => i.type === 'artifact').length },
+    { value: "all", label: "All", count: items.length },
+    {
+      value: "tool",
+      label: "Tools",
+      count: items.filter((i) => i.type === "tool").length,
+    },
+    {
+      value: "skill",
+      label: "Skills",
+      count: items.filter((i) => i.type === "skill").length,
+    },
+    {
+      value: "artifact",
+      label: "Artifacts",
+      count: items.filter((i) => i.type === "artifact").length,
+    },
   ];
 
   return (
@@ -208,7 +227,7 @@ export function BulkReferenceInserter({
               className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-9"
               aria-hidden
             />
-{ }
+            {}
             <Input
               ref={searchRef}
               type="search"
@@ -217,10 +236,10 @@ export function BulkReferenceInserter({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
-                'w-full pl-9 pr-3 py-2 rounded-lg',
-                'bg-neutral-2 border border-neutral-6',
-                'text-sm text-neutral-12 placeholder:text-neutral-9',
-                'focus:outline-none focus:ring-2 focus:ring-primary-7'
+                "w-full pl-9 pr-3 py-2 rounded-lg",
+                "bg-neutral-2 border border-neutral-6",
+                "text-sm text-neutral-12 placeholder:text-neutral-9",
+                "focus:outline-none focus:ring-2 focus:ring-primary-7",
               )}
             />
           </div>
@@ -230,20 +249,21 @@ export function BulkReferenceInserter({
         <div className="px-4 py-2 border-b border-neutral-6">
           <div role="tablist" className="flex gap-1">
             {tabs.map((tab) => (
-              (<Button
-              variant="ghost"
-              key={tab.value}
-              role="tab"
-              aria-selected={activeTab === tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                activeTab === tab.value
-                  ? 'bg-primary-3 text-primary-11'
-                  : 'text-neutral-11 hover:bg-neutral-2'
-              )}>
+              <Button
+                variant="ghost"
+                key={tab.value}
+                role="tab"
+                aria-selected={activeTab === tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                  activeTab === tab.value
+                    ? "bg-primary-3 text-primary-11"
+                    : "text-neutral-11 hover:bg-neutral-2",
+                )}
+              >
                 {tab.label}({tab.count})
-                              </Button>)
+              </Button>
             ))}
           </div>
         </div>
@@ -287,9 +307,9 @@ export function BulkReferenceInserter({
                   role="option"
                   aria-selected={isFocused}
                   className={cn(
-                    'flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer',
-                    'hover:bg-neutral-2',
-                    isFocused && 'bg-neutral-2 ring-2 ring-primary-7'
+                    "flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer",
+                    "hover:bg-neutral-2",
+                    isFocused && "bg-neutral-2 ring-2 ring-primary-7",
                   )}
                   onClick={() => handleToggleItem(item.id)}
                 >
@@ -336,7 +356,7 @@ export function BulkReferenceInserter({
           <div className="px-4 py-2 border-t border-neutral-6 bg-neutral-2">
             <div className="text-xs text-neutral-10 mb-1">Preview:</div>
             <div className="text-xs text-neutral-11 font-mono bg-neutral-3 rounded px-2 py-1 overflow-x-auto">
-              {selectedItems.map((item) => toMarkdown(item)).join(' ')}
+              {selectedItems.map((item) => toMarkdown(item)).join(" ")}
             </div>
           </div>
         )}

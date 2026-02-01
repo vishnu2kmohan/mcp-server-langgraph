@@ -32,10 +32,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useAppDispatch } from "../store/hooks";
-import {
-  archiveSession,
-  restoreSession,
-} from "../store/slices/sessionSlice";
+import { archiveSession, restoreSession } from "../store/slices/sessionSlice";
 import type { SessionsLoaderData } from "../router/loaders";
 import type { SessionCamelCase as Session } from "../types";
 import { cn } from "../utils/cn";
@@ -523,7 +520,8 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
       >
         {/* Header with New Chat button */}
         <div className="p-2 border-b border-neutral-5">
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             data-testid="new-chat-button"
             onClick={handleNewChat}
@@ -539,7 +537,9 @@ export const SessionNav = forwardRef<HTMLElement, SessionNavProps>(
           >
             <Plus
               size={16}
-              className={cn(isCreating && !prefersReducedMotion && "animate-spin")}
+              className={cn(
+                isCreating && !prefersReducedMotion && "animate-spin",
+              )}
             />
             <span>{isCreating ? "Creating..." : "New Chat"}</span>
           </Button>

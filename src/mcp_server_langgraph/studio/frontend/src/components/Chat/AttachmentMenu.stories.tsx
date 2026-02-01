@@ -65,7 +65,8 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Default state with all options available. Click the + button to open the menu.",
+        story:
+          "Default state with all options available. Click the + button to open the menu.",
       },
     },
   },
@@ -153,7 +154,8 @@ export const KBFocusKBOnly: Story = {
   parameters: {
     docs: {
       description: {
-        story: "KB Focus set to 'Knowledge Base Only' - restricts to internal knowledge.",
+        story:
+          "KB Focus set to 'Knowledge Base Only' - restricts to internal knowledge.",
       },
     },
   },
@@ -176,8 +178,18 @@ export const InChatInputContext: Story = {
       />
       <span className="flex-1 text-sm text-neutral-9">Message...</span>
       <button className="p-2 rounded-full bg-primary-9 text-neutral-12">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 10l7-7m0 0l7 7m-7-7v18"
+          />
         </svg>
       </button>
     </div>
@@ -203,7 +215,9 @@ export const DarkMode: Story = {
           onInsertCodeBlock={() => console.log("Code")}
           onInsertMention={() => console.log("Mention")}
         />
-        <span className="text-sm text-neutral-9">Click to see dark mode menu</span>
+        <span className="text-sm text-neutral-9">
+          Click to see dark mode menu
+        </span>
       </div>
     </div>
   ),

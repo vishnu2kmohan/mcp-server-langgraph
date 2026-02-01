@@ -123,9 +123,7 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
       onClick={onCancel}
     >
       <div
-        className={cn(
-          "bg-neutral-1 rounded-lg shadow-xl p-6 max-w-sm mx-4",
-        )}
+        className={cn("bg-neutral-1 rounded-lg shadow-xl p-6 max-w-sm mx-4")}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg font-medium text-neutral-12 mb-2">
@@ -136,7 +134,8 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
           be permanently deleted.
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="secondary"
+          <Button
+            variant="secondary"
             data-testid="cancel-delete-button"
             type="button"
             onClick={onCancel}
@@ -147,8 +146,11 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
               "hover:bg-neutral-3",
               "transition-colors",
             )}
-          >Cancel</Button>
-          <Button variant="danger"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
             data-testid="confirm-delete-button"
             type="button"
             onClick={onConfirm}
@@ -157,7 +159,9 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: DeleteDialogProps) {
               "text-neutral-12 bg-error-10 hover:bg-error-11",
               "transition-colors",
             )}
-          >Delete</Button>
+          >
+            Delete
+          </Button>
         </div>
       </div>
     </div>
@@ -204,7 +208,8 @@ function ExportMenu({ onExport, onClose }: ExportMenuProps) {
             "text-neutral-11",
             "hover:bg-neutral-2",
             "transition-colors",
-          )}>
+          )}
+        >
           {label}
         </Button>
       ))}
@@ -247,12 +252,12 @@ function ActionButton({
       className={cn(
         "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium",
         "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-7",
-        variant === "default" &&
-          "text-neutral-11 hover:bg-neutral-2",
+        variant === "default" && "text-neutral-11 hover:bg-neutral-2",
         variant === "danger" &&
           "text-error-11 dark:text-error-11 hover:bg-error-3 dark:hover:bg-error-a4",
         disabled && "opacity-50 cursor-not-allowed",
-      )}>
+      )}
+    >
       <Icon size={14} data-testid={`${testId?.replace("-button", "")}-icon`} />
       {!compact && <span>{label}</span>}
     </Button>
@@ -377,7 +382,8 @@ export function ArtifactActions({
             "transition-colors focus:outline-none focus:ring-2 focus:ring-primary-7",
             "text-neutral-11 hover:bg-neutral-2",
             disabled && "opacity-50 cursor-not-allowed",
-          )}>
+          )}
+        >
           <Download size={14} data-testid="export-icon" />
           {!compact && <span>Export</span>}
           <ChevronDown size={12} />
@@ -447,7 +453,8 @@ export function ArtifactActions({
                   "focus:outline-none focus:ring-2 focus:ring-primary-7",
                   (disabled || aiActionLoading) &&
                     "opacity-50 cursor-not-allowed",
-                )}>
+                )}
+              >
                 <action.icon size={16} />
               </Button>
             ))}

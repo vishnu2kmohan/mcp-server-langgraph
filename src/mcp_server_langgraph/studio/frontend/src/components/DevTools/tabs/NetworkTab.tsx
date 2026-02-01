@@ -48,7 +48,12 @@ import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import type { NetworkTabProps, NetworkEntry } from "../types";
 
 // Shared OTEL components
-import { HumanTimestamp, OTELStatusBadge, SmartValue, OTELDetailsPanel } from "../components";
+import {
+  HumanTimestamp,
+  OTELStatusBadge,
+  SmartValue,
+  OTELDetailsPanel,
+} from "../components";
 
 import { Button, Input } from "@/components/UI";
 
@@ -206,9 +211,7 @@ function NetworkEntryRow({
             data-testid={`duration-${entry.id}`}
           />
         ) : (
-          <span className="text-xs text-neutral-9">
-            -
-          </span>
+          <span className="text-xs text-neutral-9">-</span>
         )}
       </td>
     </tr>
@@ -230,7 +233,10 @@ function RequestDetails({ entry }: RequestDetailsProps) {
     if (entry.requestHeaders && Object.keys(entry.requestHeaders).length > 0) {
       data.requestHeaders = entry.requestHeaders;
     }
-    if (entry.responseHeaders && Object.keys(entry.responseHeaders).length > 0) {
+    if (
+      entry.responseHeaders &&
+      Object.keys(entry.responseHeaders).length > 0
+    ) {
       data.responseHeaders = entry.responseHeaders;
     }
     return data;
@@ -256,7 +262,8 @@ function RequestDetails({ entry }: RequestDetailsProps) {
               activeTab === tab
                 ? "border-b-2 border-primary-9 text-primary-10"
                 : "text-neutral-10 hover:text-neutral-11",
-            )}>
+            )}
+          >
             {tab}
           </Button>
         ))}
@@ -272,9 +279,7 @@ function RequestDetails({ entry }: RequestDetailsProps) {
                 defaultView="summary"
               />
             ) : (
-              <p className="text-neutral-9">
-                No headers available
-              </p>
+              <p className="text-neutral-9">No headers available</p>
             )}
           </div>
         )}
@@ -292,9 +297,7 @@ function RequestDetails({ entry }: RequestDetailsProps) {
                 defaultView="raw"
               />
             ) : (
-              <p className="text-neutral-9">
-                No request payload
-              </p>
+              <p className="text-neutral-9">No request payload</p>
             )}
           </div>
         )}
@@ -312,9 +315,7 @@ function RequestDetails({ entry }: RequestDetailsProps) {
                 defaultView="raw"
               />
             ) : (
-              <p className="text-neutral-9">
-                No response body
-              </p>
+              <p className="text-neutral-9">No response body</p>
             )}
           </div>
         )}
@@ -532,7 +533,8 @@ export function NetworkTab({
         </Button>
 
         {/* Clear button */}
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
           data-testid="clear-network-button"
@@ -549,7 +551,9 @@ export function NetworkTab({
             data-testid="filter-all"
             type="button"
             onClick={() => setFilter("all")}
-            className={networkFilterButtonVariants({ active: filter === "all" })}
+            className={networkFilterButtonVariants({
+              active: filter === "all",
+            })}
             variants={prefersReducedMotion ? undefined : motionButtonVariants}
             initial="rest"
             whileHover="hover"
@@ -561,7 +565,9 @@ export function NetworkTab({
             data-testid="filter-api"
             type="button"
             onClick={() => setFilter("api")}
-            className={networkFilterButtonVariants({ active: filter === "api" })}
+            className={networkFilterButtonVariants({
+              active: filter === "api",
+            })}
             variants={prefersReducedMotion ? undefined : motionButtonVariants}
             initial="rest"
             whileHover="hover"
@@ -574,7 +580,9 @@ export function NetworkTab({
               data-testid="filter-mcp"
               type="button"
               onClick={() => setFilter("mcp")}
-              className={networkFilterButtonVariants({ active: filter === "mcp" })}
+              className={networkFilterButtonVariants({
+                active: filter === "mcp",
+              })}
               variants={prefersReducedMotion ? undefined : motionButtonVariants}
               initial="rest"
               whileHover="hover"
@@ -590,7 +598,8 @@ export function NetworkTab({
 
         {/* Export dropdown */}
         <div className="relative group">
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1 hover:bg-neutral-3 rounded text-neutral-10"
             data-testid="export-network-button"
@@ -686,7 +695,8 @@ export function NetworkTab({
                           variant="ghost"
                           className="flex"
                           type="button"
-                          onClick={header.column.getToggleSortingHandler()}>
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
@@ -694,9 +704,7 @@ export function NetworkTab({
                           <ArrowUpDown
                             size={12}
                             className={cn(
-                              sorted
-                                ? "text-primary-10"
-                                : "text-neutral-9",
+                              sorted ? "text-primary-10" : "text-neutral-9",
                               sorted === "desc" && "rotate-180",
                             )}
                           />

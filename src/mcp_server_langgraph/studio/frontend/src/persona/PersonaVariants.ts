@@ -439,8 +439,7 @@ const DEFAULT_THEME: PersonaTheme = {
   bg: "bg-neutral-1",
   text: "text-neutral-11",
   border: "border-neutral-5",
-  badge:
-    "bg-neutral-2 text-neutral-12",
+  badge: "bg-neutral-2 text-neutral-12",
   hover: "hover:bg-neutral-2",
   ring: "ring-neutral-8",
 };

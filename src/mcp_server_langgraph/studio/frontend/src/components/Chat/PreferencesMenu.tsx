@@ -17,7 +17,19 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Settings2, ChevronDown, Check, Brain, Wrench, Database, Loader2, Cpu, Sparkles, MessageSquare, Zap } from "lucide-react";
+import {
+  Settings2,
+  ChevronDown,
+  Check,
+  Brain,
+  Wrench,
+  Database,
+  Loader2,
+  Cpu,
+  Sparkles,
+  MessageSquare,
+  Zap,
+} from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import type { KBFocusMode } from "./KnowledgeBaseFocus";
@@ -107,10 +119,22 @@ const KB_FOCUS_MODES: { value: KBFocusMode; label: string }[] = [
 ];
 
 // v7: Tool preference modes for native vs builtin execution
-const TOOL_PREFERENCE_MODES: { value: ToolPreference; label: string; description: string }[] = [
+const TOOL_PREFERENCE_MODES: {
+  value: ToolPreference;
+  label: string;
+  description: string;
+}[] = [
   { value: "auto", label: "Auto", description: "Prefer native when available" },
-  { value: "native", label: "Native Only", description: "Use LLM provider tools" },
-  { value: "builtin", label: "Built-in Only", description: "Use server-side tools" },
+  {
+    value: "native",
+    label: "Native Only",
+    description: "Use LLM provider tools",
+  },
+  {
+    value: "builtin",
+    label: "Built-in Only",
+    description: "Use server-side tools",
+  },
   { value: "mcp", label: "MCP Only", description: "Use MCP server tools" },
 ];
 
@@ -181,28 +205,29 @@ export function PreferencesMenu({
   // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
     return undefined;
   }, [isOpen]);
 
   // Handle keyboard navigation
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-        buttonRef.current?.focus();
-      }
-    },
-    []
-  );
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === "Escape") {
+      setIsOpen(false);
+      buttonRef.current?.focus();
+    }
+  }, []);
 
   const handleToggle = useCallback(() => {
     if (!disabled && !isLoading) {
@@ -214,21 +239,21 @@ export function PreferencesMenu({
     (level: ReasoningEffortLevel) => {
       onThinkingLevelChange?.(level);
     },
-    [onThinkingLevelChange]
+    [onThinkingLevelChange],
   );
 
   const handleToolModeChange = useCallback(
     (mode: ToolSelectionMode) => {
       onToolModeChange?.(mode);
     },
-    [onToolModeChange]
+    [onToolModeChange],
   );
 
   const handleKBFocusChange = useCallback(
     (mode: KBFocusMode) => {
       onKBFocusChange?.(mode);
     },
-    [onKBFocusChange]
+    [onKBFocusChange],
   );
 
   // v7: Handle tool preference change
@@ -236,28 +261,28 @@ export function PreferencesMenu({
     (preference: ToolPreference) => {
       onToolPreferenceChange?.(preference);
     },
-    [onToolPreferenceChange]
+    [onToolPreferenceChange],
   );
 
   const handleModelChange = useCallback(
     (modelId: string) => {
       onModelChange?.(modelId);
     },
-    [onModelChange]
+    [onModelChange],
   );
 
   const handleExecutorModelChange = useCallback(
     (modelId: string | null) => {
       onExecutorModelChange?.(modelId);
     },
-    [onExecutorModelChange]
+    [onExecutorModelChange],
   );
 
   const handleCriticModelChange = useCallback(
     (modelId: string | null) => {
       onCriticModelChange?.(modelId);
     },
-    [onCriticModelChange]
+    [onCriticModelChange],
   );
 
   return (
@@ -268,7 +293,7 @@ export function PreferencesMenu({
       onKeyDown={handleKeyDown}
     >
       {/* Trigger Button */}
-      { }
+      {}
       <Button
         variant="ghost"
         ref={buttonRef}
@@ -285,8 +310,9 @@ export function PreferencesMenu({
           "bg-neutral-3 text-neutral-11 hover:bg-neutral-4",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7 focus-visible:ring-offset-2",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          compact ? "px-2" : "px-3"
-        )}>
+          compact ? "px-2" : "px-3",
+        )}
+      >
         {isLoading ? (
           <Loader2
             className="h-4 w-4 animate-spin"
@@ -300,7 +326,7 @@ export function PreferencesMenu({
         <ChevronDown
           className={cn(
             "h-3 w-3 transition-transform duration-150",
-            isOpen && "rotate-180"
+            isOpen && "rotate-180",
           )}
           aria-hidden="true"
         />
@@ -315,7 +341,7 @@ export function PreferencesMenu({
             "absolute right-0 bottom-full mb-1 z-50",
             "min-w-[240px] max-h-[70vh] overflow-y-auto rounded-lg border border-neutral-6",
             "bg-neutral-2 shadow-lg",
-            "py-2"
+            "py-2",
           )}
         >
           {/* Model Selection Section */}
@@ -328,34 +354,46 @@ export function PreferencesMenu({
                 </div>
                 {isModelsLoading ? (
                   <div className="flex items-center justify-center py-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-neutral-9" aria-label="Loading models" />
+                    <Loader2
+                      className="h-4 w-4 animate-spin text-neutral-9"
+                      aria-label="Loading models"
+                    />
                   </div>
                 ) : (
-                  <div className="space-y-1 max-h-[200px] overflow-y-auto" role="listbox" aria-label="Model selection">
+                  <div
+                    className="space-y-1 max-h-[200px] overflow-y-auto"
+                    role="listbox"
+                    aria-label="Model selection"
+                  >
                     {availableModels.map((model) => (
-                       
-                      (<Button
-                      variant="ghost"
-                      key={model.id}
-                      type="button"
-                      role="option"
-                      aria-selected={selectedModel === model.id}
-                      onClick={() => handleModelChange(model.id)}
-                      className={cn(
-                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                        "hover:bg-neutral-4 transition-colors",
-                        selectedModel === model.id
-                          ? "text-primary-11 bg-primary-3"
-                          : "text-neutral-12"
-                      )}>
+                      <Button
+                        variant="ghost"
+                        key={model.id}
+                        type="button"
+                        role="option"
+                        aria-selected={selectedModel === model.id}
+                        onClick={() => handleModelChange(model.id)}
+                        className={cn(
+                          "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                          "hover:bg-neutral-4 transition-colors",
+                          selectedModel === model.id
+                            ? "text-primary-11 bg-primary-3"
+                            : "text-neutral-12",
+                        )}
+                      >
                         <div className="flex flex-col items-start gap-0.5">
                           <span className="font-medium">{model.name}</span>
-                          <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
+                          <span className="text-xs text-neutral-10">
+                            {formatProviderDisplay(model)}
+                          </span>
                         </div>
                         {selectedModel === model.id && (
-                          <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                          <Check
+                            className="h-4 w-4 flex-shrink-0"
+                            aria-hidden="true"
+                          />
                         )}
-                      </Button>)
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -376,51 +414,69 @@ export function PreferencesMenu({
                 <p className="text-xs text-neutral-10 mb-2">
                   Generates initial response and refinements
                 </p>
-                <div className="space-y-1 max-h-[150px] overflow-y-auto" role="listbox" aria-label="Executor model selection">
+                <div
+                  className="space-y-1 max-h-[150px] overflow-y-auto"
+                  role="listbox"
+                  aria-label="Executor model selection"
+                >
                   {/* Auto option */}
-                  { }
+                  {}
                   <Button
                     variant="ghost"
                     type="button"
                     role="option"
-                    aria-selected={executorModel === null || executorModel === undefined}
+                    aria-selected={
+                      executorModel === null || executorModel === undefined
+                    }
                     onClick={() => handleExecutorModelChange(null)}
                     className={cn(
                       "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
                       "hover:bg-neutral-4 transition-colors",
-                      (executorModel === null || executorModel === undefined)
+                      executorModel === null || executorModel === undefined
                         ? "text-primary-11 bg-primary-3"
-                        : "text-neutral-12"
-                    )}>
-                    <span className="font-medium">Auto (based on complexity)</span>
-                    {(executorModel === null || executorModel === undefined) && (
-                      <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                        : "text-neutral-12",
+                    )}
+                  >
+                    <span className="font-medium">
+                      Auto (based on complexity)
+                    </span>
+                    {(executorModel === null ||
+                      executorModel === undefined) && (
+                      <Check
+                        className="h-4 w-4 flex-shrink-0"
+                        aria-hidden="true"
+                      />
                     )}
                   </Button>
                   {availableModels.map((model) => (
-                     
-                    (<Button
-                    variant="ghost"
-                    key={model.id}
-                    type="button"
-                    role="option"
-                    aria-selected={executorModel === model.id}
-                    onClick={() => handleExecutorModelChange(model.id)}
-                    className={cn(
-                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                      "hover:bg-neutral-4 transition-colors",
-                      executorModel === model.id
-                        ? "text-primary-11 bg-primary-3"
-                        : "text-neutral-12"
-                    )}>
+                    <Button
+                      variant="ghost"
+                      key={model.id}
+                      type="button"
+                      role="option"
+                      aria-selected={executorModel === model.id}
+                      onClick={() => handleExecutorModelChange(model.id)}
+                      className={cn(
+                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                        "hover:bg-neutral-4 transition-colors",
+                        executorModel === model.id
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12",
+                      )}
+                    >
                       <div className="flex flex-col items-start gap-0.5">
                         <span className="font-medium">{model.name}</span>
-                        <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
+                        <span className="text-xs text-neutral-10">
+                          {formatProviderDisplay(model)}
+                        </span>
                       </div>
                       {executorModel === model.id && (
-                        <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                        <Check
+                          className="h-4 w-4 flex-shrink-0"
+                          aria-hidden="true"
+                        />
                       )}
-                    </Button>)
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -436,51 +492,68 @@ export function PreferencesMenu({
                 <p className="text-xs text-neutral-10 mb-2">
                   Reviews and provides feedback for refinement
                 </p>
-                <div className="space-y-1 max-h-[150px] overflow-y-auto" role="listbox" aria-label="Critic model selection">
+                <div
+                  className="space-y-1 max-h-[150px] overflow-y-auto"
+                  role="listbox"
+                  aria-label="Critic model selection"
+                >
                   {/* Auto option */}
-                  { }
+                  {}
                   <Button
                     variant="ghost"
                     type="button"
                     role="option"
-                    aria-selected={criticModel === null || criticModel === undefined}
+                    aria-selected={
+                      criticModel === null || criticModel === undefined
+                    }
                     onClick={() => handleCriticModelChange(null)}
                     className={cn(
                       "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
                       "hover:bg-neutral-4 transition-colors",
-                      (criticModel === null || criticModel === undefined)
+                      criticModel === null || criticModel === undefined
                         ? "text-primary-11 bg-primary-3"
-                        : "text-neutral-12"
-                    )}>
-                    <span className="font-medium">Auto (cross-vendor diversity)</span>
+                        : "text-neutral-12",
+                    )}
+                  >
+                    <span className="font-medium">
+                      Auto (cross-vendor diversity)
+                    </span>
                     {(criticModel === null || criticModel === undefined) && (
-                      <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                      <Check
+                        className="h-4 w-4 flex-shrink-0"
+                        aria-hidden="true"
+                      />
                     )}
                   </Button>
                   {availableModels.map((model) => (
-                     
-                    (<Button
-                    variant="ghost"
-                    key={model.id}
-                    type="button"
-                    role="option"
-                    aria-selected={criticModel === model.id}
-                    onClick={() => handleCriticModelChange(model.id)}
-                    className={cn(
-                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                      "hover:bg-neutral-4 transition-colors",
-                      criticModel === model.id
-                        ? "text-primary-11 bg-primary-3"
-                        : "text-neutral-12"
-                    )}>
+                    <Button
+                      variant="ghost"
+                      key={model.id}
+                      type="button"
+                      role="option"
+                      aria-selected={criticModel === model.id}
+                      onClick={() => handleCriticModelChange(model.id)}
+                      className={cn(
+                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                        "hover:bg-neutral-4 transition-colors",
+                        criticModel === model.id
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12",
+                      )}
+                    >
                       <div className="flex flex-col items-start gap-0.5">
                         <span className="font-medium">{model.name}</span>
-                        <span className="text-xs text-neutral-10">{formatProviderDisplay(model)}</span>
+                        <span className="text-xs text-neutral-10">
+                          {formatProviderDisplay(model)}
+                        </span>
                       </div>
                       {criticModel === model.id && (
-                        <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                        <Check
+                          className="h-4 w-4 flex-shrink-0"
+                          aria-hidden="true"
+                        />
                       )}
-                    </Button>)
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -495,28 +568,32 @@ export function PreferencesMenu({
               <Brain className="h-3 w-3" aria-hidden="true" />
               Thinking Level
             </div>
-            <div className="space-y-1" role="listbox" aria-label="Thinking level">
+            <div
+              className="space-y-1"
+              role="listbox"
+              aria-label="Thinking level"
+            >
               {THINKING_LEVELS.map((level) => (
-                 
-                (<Button
-                variant="ghost"
-                key={level.value}
-                type="button"
-                role="option"
-                aria-selected={thinkingLevel === level.value}
-                onClick={() => handleThinkingLevelChange(level.value)}
-                className={cn(
-                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                  "hover:bg-neutral-4 transition-colors",
-                  thinkingLevel === level.value
-                    ? "text-primary-11 bg-primary-3"
-                    : "text-neutral-12"
-                )}>
+                <Button
+                  variant="ghost"
+                  key={level.value}
+                  type="button"
+                  role="option"
+                  aria-selected={thinkingLevel === level.value}
+                  onClick={() => handleThinkingLevelChange(level.value)}
+                  className={cn(
+                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                    "hover:bg-neutral-4 transition-colors",
+                    thinkingLevel === level.value
+                      ? "text-primary-11 bg-primary-3"
+                      : "text-neutral-12",
+                  )}
+                >
                   <span>{level.label}</span>
                   {thinkingLevel === level.value && (
                     <Check className="h-4 w-4" aria-hidden="true" />
                   )}
-                </Button>)
+                </Button>
               ))}
             </div>
           </div>
@@ -531,26 +608,26 @@ export function PreferencesMenu({
             </div>
             <div className="space-y-1" role="listbox" aria-label="Tool mode">
               {TOOL_MODES.map((mode) => (
-                 
-                (<Button
-                variant="ghost"
-                key={mode.value}
-                type="button"
-                role="option"
-                aria-selected={toolMode === mode.value}
-                onClick={() => handleToolModeChange(mode.value)}
-                className={cn(
-                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                  "hover:bg-neutral-4 transition-colors",
-                  toolMode === mode.value
-                    ? "text-primary-11 bg-primary-3"
-                    : "text-neutral-12"
-                )}>
+                <Button
+                  variant="ghost"
+                  key={mode.value}
+                  type="button"
+                  role="option"
+                  aria-selected={toolMode === mode.value}
+                  onClick={() => handleToolModeChange(mode.value)}
+                  className={cn(
+                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                    "hover:bg-neutral-4 transition-colors",
+                    toolMode === mode.value
+                      ? "text-primary-11 bg-primary-3"
+                      : "text-neutral-12",
+                  )}
+                >
                   <span>{mode.label}</span>
                   {toolMode === mode.value && (
                     <Check className="h-4 w-4" aria-hidden="true" />
                   )}
-                </Button>)
+                </Button>
               ))}
             </div>
           </div>
@@ -566,31 +643,40 @@ export function PreferencesMenu({
             <p className="text-xs text-neutral-10 mb-2">
               Choose between native LLM tools or server-side execution
             </p>
-            <div className="space-y-1" role="listbox" aria-label="Tool provider preference">
+            <div
+              className="space-y-1"
+              role="listbox"
+              aria-label="Tool provider preference"
+            >
               {TOOL_PREFERENCE_MODES.map((pref) => (
-                 
-                (<Button
-                variant="ghost"
-                key={pref.value}
-                type="button"
-                role="option"
-                aria-selected={toolPreference === pref.value}
-                onClick={() => handleToolPreferenceChange(pref.value)}
-                className={cn(
-                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                  "hover:bg-neutral-4 transition-colors",
-                  toolPreference === pref.value
-                    ? "text-primary-11 bg-primary-3"
-                    : "text-neutral-12"
-                )}>
+                <Button
+                  variant="ghost"
+                  key={pref.value}
+                  type="button"
+                  role="option"
+                  aria-selected={toolPreference === pref.value}
+                  onClick={() => handleToolPreferenceChange(pref.value)}
+                  className={cn(
+                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                    "hover:bg-neutral-4 transition-colors",
+                    toolPreference === pref.value
+                      ? "text-primary-11 bg-primary-3"
+                      : "text-neutral-12",
+                  )}
+                >
                   <div className="flex flex-col items-start gap-0.5">
                     <span className="font-medium">{pref.label}</span>
-                    <span className="text-xs text-neutral-10">{pref.description}</span>
+                    <span className="text-xs text-neutral-10">
+                      {pref.description}
+                    </span>
                   </div>
                   {toolPreference === pref.value && (
-                    <Check className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                    <Check
+                      className="h-4 w-4 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                   )}
-                </Button>)
+                </Button>
               ))}
             </div>
           </div>
@@ -603,28 +689,32 @@ export function PreferencesMenu({
               <Database className="h-3 w-3" aria-hidden="true" />
               Knowledge Base
             </div>
-            <div className="space-y-1" role="listbox" aria-label="KB focus mode">
+            <div
+              className="space-y-1"
+              role="listbox"
+              aria-label="KB focus mode"
+            >
               {KB_FOCUS_MODES.map((mode) => (
-                 
-                (<Button
-                variant="ghost"
-                key={mode.value}
-                type="button"
-                role="option"
-                aria-selected={kbFocusMode === mode.value}
-                onClick={() => handleKBFocusChange(mode.value)}
-                className={cn(
-                  "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                  "hover:bg-neutral-4 transition-colors",
-                  kbFocusMode === mode.value
-                    ? "text-primary-11 bg-primary-3"
-                    : "text-neutral-12"
-                )}>
+                <Button
+                  variant="ghost"
+                  key={mode.value}
+                  type="button"
+                  role="option"
+                  aria-selected={kbFocusMode === mode.value}
+                  onClick={() => handleKBFocusChange(mode.value)}
+                  className={cn(
+                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
+                    "hover:bg-neutral-4 transition-colors",
+                    kbFocusMode === mode.value
+                      ? "text-primary-11 bg-primary-3"
+                      : "text-neutral-12",
+                  )}
+                >
                   <span>{mode.label}</span>
                   {kbFocusMode === mode.value && (
                     <Check className="h-4 w-4" aria-hidden="true" />
                   )}
-                </Button>)
+                </Button>
               ))}
             </div>
           </div>

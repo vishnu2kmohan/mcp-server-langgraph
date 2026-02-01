@@ -95,9 +95,7 @@ export function KeyboardShortcuts({
       {/* Header */}
       <div className="flex items-center gap-2 p-4 border-b border-neutral-5">
         <Keyboard size={18} className="text-primary-9" />
-        <h3 className="font-semibold text-neutral-12">
-          Keyboard Shortcuts
-        </h3>
+        <h3 className="font-semibold text-neutral-12">Keyboard Shortcuts</h3>
       </div>
 
       {/* Categories */}
@@ -121,9 +119,7 @@ export function KeyboardShortcuts({
                       <span key={`${shortcut.id}-${key}-${index}`}>
                         <KeyBadge keyName={key} />
                         {index < shortcut.keys.length - 1 && (
-                          <span className="mx-0.5 text-neutral-9">
-                            +
-                          </span>
+                          <span className="mx-0.5 text-neutral-9">+</span>
                         )}
                       </span>
                     ))}

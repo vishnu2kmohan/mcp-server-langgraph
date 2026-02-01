@@ -7,8 +7,8 @@
  * TDD: Write tests FIRST, then implementation.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PreferencesMenu } from "./PreferencesMenu";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
@@ -28,6 +28,11 @@ vi.mock("lucide-react", async () => {
     Database: () => <span data-testid="icon-database" />,
     Cpu: () => <span data-testid="icon-cpu" />,
   };
+});
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
 });
 
 describe("PreferencesMenu", () => {
@@ -97,7 +102,7 @@ describe("PreferencesMenu", () => {
         <div>
           <PreferencesMenu {...defaultProps} />
           <button data-testid="outside">Outside</button>
-        </div>
+        </div>,
       );
 
       // Open menu
@@ -106,7 +111,9 @@ describe("PreferencesMenu", () => {
 
       // Click outside
       await user.click(screen.getByTestId("outside"));
-      expect(screen.queryByTestId("preferences-dropdown")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("preferences-dropdown"),
+      ).not.toBeInTheDocument();
     });
 
     it("closes dropdown when Escape is pressed", async () => {
@@ -119,14 +126,18 @@ describe("PreferencesMenu", () => {
 
       // Press Escape
       await user.keyboard("{Escape}");
-      expect(screen.queryByTestId("preferences-dropdown")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("preferences-dropdown"),
+      ).not.toBeInTheDocument();
     });
   });
 
   describe("Model Section", () => {
     it("displays current model in dropdown", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} selectedModel="claude-opus-4-5" />);
+      render(
+        <PreferencesMenu {...defaultProps} selectedModel="claude-opus-4-5" />,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -148,7 +159,10 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup();
       const onThinkingLevelChange = vi.fn();
       render(
-        <PreferencesMenu {...defaultProps} onThinkingLevelChange={onThinkingLevelChange} />
+        <PreferencesMenu
+          {...defaultProps}
+          onThinkingLevelChange={onThinkingLevelChange}
+        />,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -175,7 +189,12 @@ describe("PreferencesMenu", () => {
     it("calls onToolModeChange when tool mode is changed", async () => {
       const user = userEvent.setup();
       const onToolModeChange = vi.fn();
-      render(<PreferencesMenu {...defaultProps} onToolModeChange={onToolModeChange} />);
+      render(
+        <PreferencesMenu
+          {...defaultProps}
+          onToolModeChange={onToolModeChange}
+        />,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -201,7 +220,9 @@ describe("PreferencesMenu", () => {
     it("calls onKBFocusChange when KB focus mode is changed", async () => {
       const user = userEvent.setup();
       const onKBFocusChange = vi.fn();
-      render(<PreferencesMenu {...defaultProps} onKBFocusChange={onKBFocusChange} />);
+      render(
+        <PreferencesMenu {...defaultProps} onKBFocusChange={onKBFocusChange} />,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 

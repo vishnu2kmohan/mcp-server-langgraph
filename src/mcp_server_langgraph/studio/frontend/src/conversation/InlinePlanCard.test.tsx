@@ -7,19 +7,35 @@
  * @see test-utils.tsx for MOTION_PROPS and filterMotionProps documentation
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InlinePlanCard } from "./InlinePlanCard";
 import type { ExecutionPlan } from "@/store/slices/executionModeSlice";
 
 // Motion-specific props that should not be passed to DOM elements
 const MOTION_PROPS = new Set([
-  "whileHover", "whileTap", "whileFocus", "whileDrag", "whileInView",
-  "initial", "animate", "exit", "variants", "transition",
-  "layout", "layoutId", "drag", "dragConstraints", "dragElastic",
-  "dragMomentum", "onAnimationStart", "onAnimationComplete",
-  "onDragStart", "onDragEnd", "onDrag",
+  "whileHover",
+  "whileTap",
+  "whileFocus",
+  "whileDrag",
+  "whileInView",
+  "initial",
+  "animate",
+  "exit",
+  "variants",
+  "transition",
+  "layout",
+  "layoutId",
+  "drag",
+  "dragConstraints",
+  "dragElastic",
+  "dragMomentum",
+  "onAnimationStart",
+  "onAnimationComplete",
+  "onDragStart",
+  "onDragEnd",
+  "onDrag",
 ]);
 
 function filterMotionProps<T extends Record<string, unknown>>(props: T): T {
@@ -55,16 +71,29 @@ vi.mock("../contexts/TelemetryContext", () => ({
 // Mock motion/react to avoid animation issues in tests
 vi.mock("motion/react", () => ({
   motion: {
-    div: ({ children, ...props }: React.ComponentProps<"div"> & Record<string, unknown>) => (
+    div: ({
+      children,
+      ...props
+    }: React.ComponentProps<"div"> & Record<string, unknown>) => (
       <div {...filterMotionProps(props)}>{children}</div>
     ),
-    button: ({ children, ...props }: React.ComponentProps<"button"> & Record<string, unknown>) => (
+    button: ({
+      children,
+      ...props
+    }: React.ComponentProps<"button"> & Record<string, unknown>) => (
       <button {...filterMotionProps(props)}>{children}</button>
     ),
   },
   useReducedMotion: () => false,
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("InlinePlanCard", () => {
   // Full 27-field mockPlan matching ExecutionPlan interface
@@ -183,13 +212,17 @@ describe("InlinePlanCard", () => {
     it("renders approve button", () => {
       render(<InlinePlanCard {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: /approve/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /approve/i }),
+      ).toBeInTheDocument();
     });
 
     it("renders reject button", () => {
       render(<InlinePlanCard {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: /reject/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /reject/i }),
+      ).toBeInTheDocument();
     });
 
     it("renders edit plan button", () => {
@@ -226,7 +259,9 @@ describe("InlinePlanCard", () => {
       render(<InlinePlanCard {...defaultProps} />);
 
       // Edit section should be collapsed initially
-      expect(screen.queryByTestId("plan-editor-section")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("plan-editor-section"),
+      ).not.toBeInTheDocument();
 
       // Click edit button
       await user.click(screen.getByRole("button", { name: /edit/i }));
@@ -246,7 +281,9 @@ describe("InlinePlanCard", () => {
 
       // Collapse
       await user.click(screen.getByRole("button", { name: /edit/i }));
-      expect(screen.queryByTestId("plan-editor-section")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("plan-editor-section"),
+      ).not.toBeInTheDocument();
     });
 
     it("calls onEdit when changes saved", async () => {
@@ -302,7 +339,10 @@ describe("InlinePlanCard", () => {
     });
 
     it("renders complicated complexity", () => {
-      const complicatedPlan = { ...mockPlan, complexity: "complicated" as const };
+      const complicatedPlan = {
+        ...mockPlan,
+        complexity: "complicated" as const,
+      };
       render(<InlinePlanCard {...defaultProps} plan={complicatedPlan} />);
 
       expect(screen.getByText(/Complicated/i)).toBeInTheDocument();
@@ -321,8 +361,12 @@ describe("InlinePlanCard", () => {
       render(<InlinePlanCard {...defaultProps} isLoading={true} />);
 
       // When loading, action buttons are not rendered (isActionable is false)
-      expect(screen.queryByRole("button", { name: /approve/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /reject/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /approve/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /reject/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("still renders card when loading", () => {
@@ -350,13 +394,17 @@ describe("InlinePlanCard", () => {
     it("hides action buttons when approved", () => {
       render(<InlinePlanCard {...defaultProps} status="approved" />);
 
-      expect(screen.queryByRole("button", { name: /approve/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /approve/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("hides action buttons when rejected", () => {
       render(<InlinePlanCard {...defaultProps} status="rejected" />);
 
-      expect(screen.queryByRole("button", { name: /reject/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /reject/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -437,12 +485,7 @@ describe("InlinePlanCard", () => {
       const user = userEvent.setup();
       const highRiskPlan = { ...mockPlan, riskLevel: "high" as const };
 
-      render(
-        <InlinePlanCard
-          {...defaultProps}
-          plan={highRiskPlan}
-        />
-      );
+      render(<InlinePlanCard {...defaultProps} plan={highRiskPlan} />);
 
       const approveButton = screen.getByRole("button", { name: /approve/i });
       await user.click(approveButton);
@@ -450,7 +493,7 @@ describe("InlinePlanCard", () => {
       expect(mockTrackBypassApproval).toHaveBeenCalledWith(
         expect.objectContaining({
           riskLevel: "high",
-        })
+        }),
       );
     });
 
@@ -458,12 +501,7 @@ describe("InlinePlanCard", () => {
       const user = userEvent.setup();
       const complexPlan = { ...mockPlan, complexity: "complex" as const };
 
-      render(
-        <InlinePlanCard
-          {...defaultProps}
-          plan={complexPlan}
-        />
-      );
+      render(<InlinePlanCard {...defaultProps} plan={complexPlan} />);
 
       const approveButton = screen.getByRole("button", { name: /approve/i });
       await user.click(approveButton);
@@ -471,7 +509,7 @@ describe("InlinePlanCard", () => {
       expect(mockTrackBypassApproval).toHaveBeenCalledWith(
         expect.objectContaining({
           complexity: "complex",
-        })
+        }),
       );
     });
   });

@@ -63,10 +63,10 @@ function Dialog({ isOpen, onClose, title, children }: DialogProps) {
       />
       <div className="relative bg-neutral-1 rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-5">
-          <h3 className="text-lg font-medium text-neutral-12">
-            {title}
-          </h3>
-          <Button size="icon" variant="ghost"
+          <h3 className="text-lg font-medium text-neutral-12">{title}</h3>
+          <Button
+            size="icon"
+            variant="ghost"
             className="p-1 text-neutral-10 hover:text-neutral-11"
             onClick={onClose}
           >
@@ -303,9 +303,7 @@ export function WorkflowsTab({
       />
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-medium text-neutral-12">
-            Workflows
-          </h2>
+          <h2 className="text-lg font-medium text-neutral-12">Workflows</h2>
           {filteredWorkflows.length > 0 && (
             <Checkbox
               checked={

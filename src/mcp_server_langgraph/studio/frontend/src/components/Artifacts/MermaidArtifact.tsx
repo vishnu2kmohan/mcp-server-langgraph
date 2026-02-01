@@ -113,7 +113,8 @@ export function MermaidArtifact({
               <Copy size={16} />
             )}
           </Button>
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-1.5 text-neutral-10 hover:text-neutral-11 rounded hover:bg-neutral-2"
             onClick={handleOpenInLive}

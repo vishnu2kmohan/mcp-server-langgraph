@@ -181,10 +181,7 @@ function LineChartRenderer({
       {/* Labels */}
       <div className="flex justify-between px-2">
         {data.map((point) => (
-          <span
-            key={point.label}
-            className="text-xs text-neutral-11 truncate"
-          >
+          <span key={point.label} className="text-xs text-neutral-11 truncate">
             {point.label}
           </span>
         ))}
@@ -266,9 +263,7 @@ function PieChartRenderer({
                   point.color || CHART_COLORS[index % CHART_COLORS.length],
               }}
             />
-            <span className="text-xs text-neutral-11">
-              {point.label}
-            </span>
+            <span className="text-xs text-neutral-11">{point.label}</span>
           </div>
         ))}
       </div>
@@ -340,13 +335,8 @@ export function ChartArtifact({
       {/* Header */}
       <div className="px-4 py-3 border-b border-neutral-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ChartIcon
-            size={16}
-            className="text-neutral-10"
-          />
-          <h3 className="font-medium text-neutral-12">
-            {title}
-          </h3>
+          <ChartIcon size={16} className="text-neutral-10" />
+          <h3 className="font-medium text-neutral-12">{title}</h3>
         </div>
         <div className="flex items-center gap-2">
           {showTypeSwitcher && (
@@ -358,7 +348,8 @@ export function ChartArtifact({
                   className="flex px-2 py-1 text-xs rounded"
                   key={type}
                   onClick={() => setChartType(type)}
-                  aria-label={label}>
+                  aria-label={label}
+                >
                   {icon}
                 </Button>
               ))}

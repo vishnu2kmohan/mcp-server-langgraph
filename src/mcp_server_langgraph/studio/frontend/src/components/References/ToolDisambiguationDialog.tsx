@@ -7,10 +7,10 @@
  * WCAG 2.2 AA compliant with proper dialog and radiogroup patterns.
  */
 
-import { useState, useCallback, useEffect, useId } from 'react';
-import { Server, Check, AlertCircle, Wrench } from 'lucide-react';
-import { Button, Checkbox } from '@/components/UI';
-import { cn } from '@/utils/cn';
+import { useState, useCallback, useEffect, useId } from "react";
+import { Server, Check, AlertCircle, Wrench } from "lucide-react";
+import { Button, Checkbox } from "@/components/UI";
+import { cn } from "@/utils/cn";
 
 export interface AmbiguousConnection {
   /** Unique connection ID */
@@ -22,7 +22,7 @@ export interface AmbiguousConnection {
   /** Optional description */
   description?: string;
   /** Connection status */
-  status: 'connected' | 'disconnected' | 'error';
+  status: "connected" | "disconnected" | "error";
   /** Owner email/name */
   owner?: string;
 }
@@ -60,7 +60,7 @@ export function ToolDisambiguationDialog({
   const descId = useId();
 
   // Find first connected option for default selection
-  const defaultIndex = connections.findIndex((c) => c.status === 'connected');
+  const defaultIndex = connections.findIndex((c) => c.status === "connected");
   const initialIndex = defaultIndex >= 0 ? defaultIndex : 0;
 
   const [selectedIndex, setSelectedIndex] = useState(initialIndex);
@@ -68,26 +68,26 @@ export function ToolDisambiguationDialog({
 
   // Reset selection when connections change
   useEffect(() => {
-    const newDefault = connections.findIndex((c) => c.status === 'connected');
+    const newDefault = connections.findIndex((c) => c.status === "connected");
     setSelectedIndex(newDefault >= 0 ? newDefault : 0);
   }, [connections]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onCancel();
         return;
       }
 
-      if (e.key === 'ArrowDown') {
+      if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) => Math.min(prev + 1, connections.length - 1));
-      } else if (e.key === 'ArrowUp') {
+      } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
       }
     },
-    [connections.length, onCancel]
+    [connections.length, onCancel],
   );
 
   const handleConfirm = useCallback(() => {
@@ -105,7 +105,7 @@ export function ToolDisambiguationDialog({
   }
 
   const selectedConnection = connections[selectedIndex];
-  const isDisconnectedSelected = selectedConnection?.status === 'disconnected';
+  const isDisconnectedSelected = selectedConnection?.status === "disconnected";
 
   return (
     <div
@@ -134,7 +134,10 @@ export function ToolDisambiguationDialog({
         </div>
 
         {/* Description */}
-        <p id={descId} className="px-4 py-2 text-sm text-neutral-11 bg-neutral-2">
+        <p
+          id={descId}
+          className="px-4 py-2 text-sm text-neutral-11 bg-neutral-2"
+        >
           Multiple connections provide this tool. Select which one to use.
         </p>
 
@@ -152,7 +155,7 @@ export function ToolDisambiguationDialog({
           >
             {connections.map((connection, index) => {
               const isSelected = index === selectedIndex;
-              const isDisconnected = connection.status === 'disconnected';
+              const isDisconnected = connection.status === "disconnected";
 
               return (
                 <div
@@ -162,21 +165,21 @@ export function ToolDisambiguationDialog({
                   tabIndex={isSelected ? 0 : -1}
                   onClick={() => handleOptionClick(index)}
                   className={cn(
-                    'p-3 rounded-lg border cursor-pointer transition-colors',
-                    'flex items-start gap-3',
+                    "p-3 rounded-lg border cursor-pointer transition-colors",
+                    "flex items-start gap-3",
                     isSelected
-                      ? 'border-primary-7 bg-primary-2'
-                      : 'border-neutral-6 hover:border-neutral-8 hover:bg-neutral-2',
-                    isDisconnected && 'opacity-60'
+                      ? "border-primary-7 bg-primary-2"
+                      : "border-neutral-6 hover:border-neutral-8 hover:bg-neutral-2",
+                    isDisconnected && "opacity-60",
                   )}
                 >
                   {/* Selection indicator */}
                   <div
                     className={cn(
-                      'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5',
+                      "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5",
                       isSelected
-                        ? 'border-primary-9 bg-primary-9'
-                        : 'border-neutral-7'
+                        ? "border-primary-9 bg-primary-9"
+                        : "border-neutral-7",
                     )}
                   >
                     {isSelected && (
@@ -187,7 +190,11 @@ export function ToolDisambiguationDialog({
                   {/* Connection info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Server size={14} className="text-neutral-9" aria-hidden />
+                      <Server
+                        size={14}
+                        className="text-neutral-9"
+                        aria-hidden
+                      />
                       <span className="font-medium text-neutral-12 truncate">
                         {connection.displayName}
                       </span>
@@ -195,15 +202,15 @@ export function ToolDisambiguationDialog({
                       {/* Status badge */}
                       <span
                         className={cn(
-                          'text-xs px-1.5 py-0.5 rounded',
-                          connection.status === 'connected'
-                            ? 'bg-success-3 text-success-11'
-                            : 'bg-warning-3 text-warning-11'
+                          "text-xs px-1.5 py-0.5 rounded",
+                          connection.status === "connected"
+                            ? "bg-success-3 text-success-11"
+                            : "bg-warning-3 text-warning-11",
                         )}
                       >
-                        {connection.status === 'connected'
-                          ? 'Connected'
-                          : 'Disconnected'}
+                        {connection.status === "connected"
+                          ? "Connected"
+                          : "Disconnected"}
                       </span>
                     </div>
 

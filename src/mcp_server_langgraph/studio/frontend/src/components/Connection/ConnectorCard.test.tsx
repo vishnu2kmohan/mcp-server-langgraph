@@ -5,8 +5,8 @@
  * @see ADR-0102
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConnectorCard } from "./ConnectorCard";
 import type { ConnectionTemplateCamelCase } from "@/types/connectionTemplate";
 
@@ -28,6 +28,11 @@ const mockTemplate: ConnectionTemplateCamelCase = {
   documentationUrl: "https://docs.github.com/",
 };
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("ConnectorCard", () => {
   describe("Rendering", () => {
     it("should render the connector name", () => {
@@ -38,7 +43,9 @@ describe("ConnectorCard", () => {
     it("should render the connector description", () => {
       render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
       expect(
-        screen.getByText("Access GitHub repositories, issues, and pull requests")
+        screen.getByText(
+          "Access GitHub repositories, issues, and pull requests",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -61,7 +68,7 @@ describe("ConnectorCard", () => {
     it("should render the Connect button", () => {
       render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
       expect(
-        screen.getByRole("button", { name: /connect/i })
+        screen.getByRole("button", { name: /connect/i }),
       ).toBeInTheDocument();
     });
   });
@@ -87,9 +94,11 @@ describe("ConnectorCard", () => {
         documentationUrl: null,
       };
       render(
-        <ConnectorCard template={templateWithoutDocs} onConnect={vi.fn()} />
+        <ConnectorCard template={templateWithoutDocs} onConnect={vi.fn()} />,
       );
-      expect(screen.queryByRole("link", { name: /docs/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: /docs/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -119,7 +128,7 @@ describe("ConnectorCard", () => {
           template={mockTemplate}
           onConnect={vi.fn()}
           isConnected={true}
-        />
+        />,
       );
       // Both the badge and button text show "Connected"
       const connectedElements = screen.getAllByText("Connected");
@@ -132,7 +141,7 @@ describe("ConnectorCard", () => {
           template={mockTemplate}
           onConnect={vi.fn()}
           isConnected={true}
-        />
+        />,
       );
       expect(screen.getByRole("button", { name: /connected/i })).toBeDisabled();
     });
@@ -142,7 +151,7 @@ describe("ConnectorCard", () => {
     it("should have accessible name for the card", () => {
       render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
       expect(
-        screen.getByRole("article", { name: /github connector/i })
+        screen.getByRole("article", { name: /github connector/i }),
       ).toBeInTheDocument();
     });
 

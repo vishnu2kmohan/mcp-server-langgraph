@@ -107,18 +107,14 @@ export const AllStates: Story = {
   render: () => (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-11 w-32">
-          Default:
-        </span>
+        <span className="text-sm text-neutral-11 w-32">Default:</span>
         <HallucinationIndicator
           messageId="msg-1"
           onReport={(report) => console.log("Report:", report)}
         />
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-11 w-32">
-          Reported:
-        </span>
+        <span className="text-sm text-neutral-11 w-32">Reported:</span>
         <HallucinationIndicator
           messageId="msg-2"
           onReport={(report) => console.log("Report:", report)}

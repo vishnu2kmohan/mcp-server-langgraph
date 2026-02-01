@@ -69,7 +69,9 @@ function NodeTypeSwatch({ nodeType }: NodeTypeSwatchProps) {
         }}
       />
       <div className="flex-1">
-        <span className="text-sm font-medium text-neutral-12">{config.label}</span>
+        <span className="text-sm font-medium text-neutral-12">
+          {config.label}
+        </span>
         <div className="text-xs text-neutral-10 font-mono">
           {nodeType} • {config.pattern}
         </div>
@@ -90,8 +92,9 @@ function CategoricalPalettes() {
           Categorical Palettes
         </h2>
         <p className="text-neutral-11">
-          For discrete data with no inherent ordering. Set2 is the default choice
-          (colorblind-safe up to 3 categories). Use Dark2 for higher contrast.
+          For discrete data with no inherent ordering. Set2 is the default
+          choice (colorblind-safe up to 3 categories). Use Dark2 for higher
+          contrast.
         </p>
       </div>
 
@@ -115,8 +118,9 @@ function CategoricalPalettes() {
       <div className="bg-warning-2 border border-warning-6 rounded-lg p-4">
         <h4 className="font-medium text-warning-11 mb-1">Accessibility Note</h4>
         <p className="text-sm text-warning-11">
-          Categorical palettes are colorblind-safe for up to 3-4 categories.
-          For more categories, always add redundant encoding (shapes, patterns, labels).
+          Categorical palettes are colorblind-safe for up to 3-4 categories. For
+          more categories, always add redundant encoding (shapes, patterns,
+          labels).
         </p>
       </div>
     </div>
@@ -172,7 +176,8 @@ function SequentialPalettes() {
         <h4 className="font-medium text-success-11 mb-1">Best Practice</h4>
         <p className="text-sm text-success-11">
           Use Viridis for heatmaps and continuous data. It maintains perceptual
-          uniformity across the entire range and works well for all colorblind types.
+          uniformity across the entire range and works well for all colorblind
+          types.
         </p>
       </div>
     </div>
@@ -182,9 +187,33 @@ function SequentialPalettes() {
 function DivergingPalettes() {
   // Generate approximate diverging ramps for display
   const divergingExamples = {
-    rdbu: ["#67001f", "#b2182b", "#f4a582", "#f7f7f7", "#92c5de", "#2166ac", "#053061"],
-    brbg: ["#543005", "#8c510a", "#d8b365", "#f5f5f5", "#5ab4ac", "#01665e", "#003c30"],
-    prgn: ["#40004b", "#762a83", "#c2a5cf", "#f7f7f7", "#a6dba0", "#1b7837", "#00441b"],
+    rdbu: [
+      "#67001f",
+      "#b2182b",
+      "#f4a582",
+      "#f7f7f7",
+      "#92c5de",
+      "#2166ac",
+      "#053061",
+    ],
+    brbg: [
+      "#543005",
+      "#8c510a",
+      "#d8b365",
+      "#f5f5f5",
+      "#5ab4ac",
+      "#01665e",
+      "#003c30",
+    ],
+    prgn: [
+      "#40004b",
+      "#762a83",
+      "#c2a5cf",
+      "#f7f7f7",
+      "#a6dba0",
+      "#1b7837",
+      "#00441b",
+    ],
   };
 
   return (
@@ -220,8 +249,8 @@ function DivergingPalettes() {
       <div className="bg-info-2 border border-info-6 rounded-lg p-4">
         <h4 className="font-medium text-info-11 mb-1">When to Use</h4>
         <p className="text-sm text-info-11">
-          Use diverging palettes when your data has a natural midpoint
-          (e.g., positive/negative change, above/below average).
+          Use diverging palettes when your data has a natural midpoint (e.g.,
+          positive/negative change, above/below average).
         </p>
       </div>
     </div>
@@ -229,7 +258,9 @@ function DivergingPalettes() {
 }
 
 function NodeTypeColors() {
-  const nodeTypes = Object.keys(NODE_TYPE_COLORS) as Array<keyof typeof NODE_TYPE_COLORS>;
+  const nodeTypes = Object.keys(NODE_TYPE_COLORS) as Array<
+    keyof typeof NODE_TYPE_COLORS
+  >;
 
   return (
     <div className="space-y-8 p-6">
@@ -268,7 +299,8 @@ function VegaLiteTheme() {
           Vega-Lite Theme Configuration
         </h2>
         <p className="text-neutral-11">
-          Default theme configuration applied to all Vega-Lite charts in Agent Studio.
+          Default theme configuration applied to all Vega-Lite charts in Agent
+          Studio.
         </p>
       </div>
 
@@ -307,7 +339,9 @@ function AccessibilityGuidelines() {
 
       <div className="space-y-4">
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-2">1. Limit Categories</h4>
+          <h4 className="font-medium text-neutral-12 mb-2">
+            1. Limit Categories
+          </h4>
           <p className="text-sm text-neutral-11">
             Keep categorical data to 4-5 categories maximum. If more are needed,
             consider grouping or using interactive filtering.
@@ -315,7 +349,9 @@ function AccessibilityGuidelines() {
         </div>
 
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-2">2. Redundant Encoding</h4>
+          <h4 className="font-medium text-neutral-12 mb-2">
+            2. Redundant Encoding
+          </h4>
           <p className="text-sm text-neutral-11">
             Never rely on color alone. Add shapes, patterns, labels, or position
             to convey meaning.
@@ -323,15 +359,19 @@ function AccessibilityGuidelines() {
         </div>
 
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-2">3. Use Sequential for Continuous</h4>
+          <h4 className="font-medium text-neutral-12 mb-2">
+            3. Use Sequential for Continuous
+          </h4>
           <p className="text-sm text-neutral-11">
-            Sequential palettes (especially Viridis) are always safe for continuous
-            data, regardless of colorblind type.
+            Sequential palettes (especially Viridis) are always safe for
+            continuous data, regardless of colorblind type.
           </p>
         </div>
 
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-2">4. Test with Simulators</h4>
+          <h4 className="font-medium text-neutral-12 mb-2">
+            4. Test with Simulators
+          </h4>
           <p className="text-sm text-neutral-11">
             Use tools like Color Oracle or Viz Palette to simulate colorblind
             vision before shipping charts.
@@ -339,7 +379,9 @@ function AccessibilityGuidelines() {
         </div>
 
         <div className="border border-neutral-6 rounded-lg p-4">
-          <h4 className="font-medium text-neutral-12 mb-2">5. Provide Data Tables</h4>
+          <h4 className="font-medium text-neutral-12 mb-2">
+            5. Provide Data Tables
+          </h4>
           <p className="text-sm text-neutral-11">
             Always offer an accessible data table alternative for users who
             cannot perceive the visualization.
@@ -350,15 +392,21 @@ function AccessibilityGuidelines() {
       <div className="grid grid-cols-3 gap-4 text-center">
         <div className="border border-neutral-6 rounded-lg p-4">
           <span className="text-2xl font-bold text-neutral-12">4-5</span>
-          <p className="text-xs text-neutral-10 mt-1">Max categories (colorblind-safe)</p>
+          <p className="text-xs text-neutral-10 mt-1">
+            Max categories (colorblind-safe)
+          </p>
         </div>
         <div className="border border-neutral-6 rounded-lg p-4">
           <span className="text-2xl font-bold text-neutral-12">3:1</span>
-          <p className="text-xs text-neutral-10 mt-1">Min contrast for graphics</p>
+          <p className="text-xs text-neutral-10 mt-1">
+            Min contrast for graphics
+          </p>
         </div>
         <div className="border border-neutral-6 rounded-lg p-4">
           <span className="text-2xl font-bold text-neutral-12">2+</span>
-          <p className="text-xs text-neutral-10 mt-1">Encodings per data point</p>
+          <p className="text-xs text-neutral-10 mt-1">
+            Encodings per data point
+          </p>
         </div>
       </div>
     </div>
@@ -391,7 +439,8 @@ export const Categorical: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Categorical palettes for discrete data without inherent ordering.",
+        story:
+          "Categorical palettes for discrete data without inherent ordering.",
       },
     },
   },

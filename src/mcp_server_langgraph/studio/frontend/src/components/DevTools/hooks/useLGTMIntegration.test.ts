@@ -25,6 +25,7 @@ function mockEnv(env: Record<string, string>) {
 
 describe("useLGTMIntegration", () => {
   afterEach(() => {
+    vi.clearAllMocks();
     vi.unstubAllEnvs();
   });
 
@@ -54,7 +55,9 @@ describe("useLGTMIntegration", () => {
 
       expect(result.current.isAvailable).toBe(true);
       expect(result.current.canOpenInGrafana).toBe(true);
-      expect(result.current.config.grafanaUrl).toBe("https://grafana.example.com");
+      expect(result.current.config.grafanaUrl).toBe(
+        "https://grafana.example.com",
+      );
     });
 
     it("should detect when Loki is configured", () => {
@@ -364,7 +367,9 @@ describe("useLGTMIntegration", () => {
       const { result } = renderHook(() => useLGTMIntegration());
 
       const url = result.current.getAlertUrl("alert-123");
-      expect(url).toBe("https://grafana.example.com/alerting/list?search=alert-123");
+      expect(url).toBe(
+        "https://grafana.example.com/alerting/list?search=alert-123",
+      );
     });
 
     it("should return null when Grafana is not configured", () => {
@@ -406,7 +411,9 @@ describe("useLGTMIntegration", () => {
       const { result } = renderHook(() => useLGTMIntegration());
 
       // Should not throw, should handle gracefully
-      expect(() => result.current.getGrafanaDashboardUrl("abc123")).not.toThrow();
+      expect(() =>
+        result.current.getGrafanaDashboardUrl("abc123"),
+      ).not.toThrow();
     });
   });
 

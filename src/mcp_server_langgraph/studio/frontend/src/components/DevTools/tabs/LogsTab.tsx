@@ -21,7 +21,10 @@ import { motion, useReducedMotion, AnimatePresence } from "motion/react";
 import { cva } from "class-variance-authority";
 import { ArrowDown, Copy, Search } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { buttonVariants as motionButtonVariants, dropdownVariants } from "@/design-system/micro-interactions";
+import {
+  buttonVariants as motionButtonVariants,
+  dropdownVariants,
+} from "@/design-system/micro-interactions";
 import { useTimelineContext } from "../context/DevToolsTimelineProvider";
 import { cn } from "../../../utils/cn";
 import { useAutoTail } from "../hooks/useAutoTail";
@@ -148,7 +151,9 @@ function FilterDropdown({
     <div className="relative">
       <motion.button
         type="button"
-        className={filterButtonVariants({ variant: value ? "active" : "default" })}
+        className={filterButtonVariants({
+          variant: value ? "active" : "default",
+        })}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={label}
         aria-expanded={isOpen}
@@ -198,7 +203,8 @@ function FilterDropdown({
                   setIsOpen(false);
                 }}
                 className={filterOptionVariants({ selected: !value })}
-                aria-label="All">
+                aria-label="All"
+              >
                 All
               </Button>
               {options.map((option) => (
@@ -212,8 +218,11 @@ function FilterDropdown({
                     onChange(option);
                     setIsOpen(false);
                   }}
-                  className={filterOptionVariants({ selected: value === option })}
-                  aria-label={option}>
+                  className={filterOptionVariants({
+                    selected: value === option,
+                  })}
+                  aria-label={option}
+                >
                   {option}
                 </Button>
               ))}
@@ -233,7 +242,10 @@ interface AutoTailButtonProps {
   toggleAutoTail: () => void;
 }
 
-function AutoTailButton({ isAutoTailing, toggleAutoTail }: AutoTailButtonProps): React.ReactElement {
+function AutoTailButton({
+  isAutoTailing,
+  toggleAutoTail,
+}: AutoTailButtonProps): React.ReactElement {
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -411,10 +423,7 @@ export function LogsTab({
           )}
           {/* Attributes panel */}
           {hasAttributes && (
-            <OTELDetailsPanel
-              data={log.attributes!}
-              variant="json"
-            />
+            <OTELDetailsPanel data={log.attributes!} variant="json" />
           )}
           {/* Copy button */}
           <Button
@@ -450,10 +459,7 @@ export function LogsTab({
           </div>
           {/* Log row skeletons */}
           {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-10 bg-neutral-3 rounded animate-pulse"
-            />
+            <div key={i} className="h-10 bg-neutral-3 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -541,7 +547,8 @@ export function LogsTab({
               setSearchTerm("");
               setLevelFilter("");
               setServiceFilter("");
-            }}>
+            }}
+          >
             Clear
           </Button>
         )}

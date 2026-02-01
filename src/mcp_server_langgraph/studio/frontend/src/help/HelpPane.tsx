@@ -138,9 +138,7 @@ export function HelpPane({
       {/* Header */}
       <div className="flex items-center gap-2 p-4 border-b border-neutral-5">
         <HelpCircle size={18} className="text-primary-9" />
-        <h3 className="font-semibold text-neutral-12">
-          Help
-        </h3>
+        <h3 className="font-semibold text-neutral-12">Help</h3>
       </div>
       {/* Search */}
       <div className="p-3 border-b border-neutral-5">
@@ -168,7 +166,8 @@ export function HelpPane({
               className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-9 hover:text-neutral-11"
               type="button"
               aria-label="Clear search"
-              onClick={() => setSearchQuery("")}>
+              onClick={() => setSearchQuery("")}
+            >
               <X size={16} />
             </Button>
           )}
@@ -205,7 +204,8 @@ export function HelpPane({
                       "text-neutral-11",
                       "hover:bg-primary-3 dark:hover:bg-primary-a4",
                       "transition-colors",
-                    )}>
+                    )}
+                  >
                     <Zap size={12} />
                     {action.label}
                   </Button>
@@ -239,10 +239,9 @@ export function HelpPane({
                     "bg-neutral-1",
                     "hover:bg-primary-1 dark:hover:bg-primary-a3",
                     "transition-colors",
-                  )}>
-                  <span className="text-neutral-11">
-                    {topic.title}
-                  </span>
+                  )}
+                >
+                  <span className="text-neutral-11">{topic.title}</span>
                 </Button>
               ))}
             </div>
@@ -283,7 +282,8 @@ export function HelpPane({
                   "border border-neutral-5",
                   "hover:border-primary-5 dark:hover:border-primary-7",
                   "transition-colors",
-                )}>
+                )}
+              >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-neutral-11">
                     {topic.title}

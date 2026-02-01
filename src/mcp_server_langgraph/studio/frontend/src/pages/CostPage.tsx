@@ -410,9 +410,7 @@ export function CostPage({
                     onChange={(e) => setStartDate(e.target.value)}
                     aria-label="Start date"
                   />
-                  <span className="text-neutral-11">
-                    to
-                  </span>
+                  <span className="text-neutral-11">to</span>
                   <Input
                     className="px-3 py-2 text-neutral-12"
                     type="date"
@@ -440,7 +438,8 @@ export function CostPage({
                   useCustomDateRange
                     ? "Use preset periods"
                     : "Use custom date range"
-                }>
+                }
+              >
                 <Calendar size={16} />
                 {useCustomDateRange ? "Preset" : "Custom"}
               </Button>
@@ -455,14 +454,16 @@ export function CostPage({
             <Button
               variant="primary"
               className="flex px-4 py-2 rounded-lg text-sm"
-              onClick={() => setDashboardView("personal")}>
+              onClick={() => setDashboardView("personal")}
+            >
               <DollarSign size={16} />
               Personal Costs
             </Button>
             <Button
               variant="primary"
               className="flex px-4 py-2 rounded-lg text-sm"
-              onClick={() => setDashboardView("organizational")}>
+              onClick={() => setDashboardView("organizational")}
+            >
               <Building2 size={16} />
               Organizational View
             </Button>
@@ -492,7 +493,8 @@ export function CostPage({
               variant="secondary"
               className="text-warning-9 hover:text-warning-10 dark:hover:text-warning-6"
               onClick={clearBudgetWarnings}
-              aria-label="Dismiss warning">
+              aria-label="Dismiss warning"
+            >
               <X size={16} />
             </Button>
           </div>
@@ -564,7 +566,8 @@ export function CostPage({
             <Button
               variant="secondary"
               onClick={clearBudgetAlerts}
-              aria-label="Dismiss alert">
+              aria-label="Dismiss alert"
+            >
               <X size={16} />
             </Button>
           </div>
@@ -577,9 +580,7 @@ export function CostPage({
           className="mx-6 mt-4 p-4 bg-neutral-2 border border-neutral-6 rounded-lg"
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-neutral-11">
-              Your Budget
-            </h3>
+            <h3 className="text-sm font-medium text-neutral-11">Your Budget</h3>
             <span className="text-sm text-neutral-11">
               ${userBudget.remaining.toFixed(2)} remaining
             </span>
@@ -735,9 +736,7 @@ export function CostPage({
                           )
                         : "$0.00"}
                     </span>
-                    <span className="text-sm text-neutral-11">
-                      /1K
-                    </span>
+                    <span className="text-sm text-neutral-11">/1K</span>
                   </div>
                   <div className="mt-2 text-sm text-neutral-11">
                     Past {period}

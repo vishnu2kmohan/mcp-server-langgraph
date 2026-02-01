@@ -79,9 +79,7 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
       />
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-neutral-12 break-words">
-          {problem.message}
-        </p>
+        <p className="text-sm text-neutral-12 break-words">{problem.message}</p>
 
         <div className="flex items-center gap-2 mt-1 text-xs text-neutral-10">
           <span className="px-1.5 py-0.5 bg-neutral-2 rounded">
@@ -101,7 +99,8 @@ function ProblemRow({ problem, onDismiss }: ProblemRowProps) {
       </div>
       {/* Dismiss button */}
       {isHovered && onDismiss && (
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded"
           data-testid="dismiss-button"
@@ -200,10 +199,7 @@ export function ProblemsTab({
   return (
     <div
       data-testid="problems-tab"
-      className={cn(
-        "flex flex-col h-full bg-neutral-1",
-        compact && "compact",
-      )}
+      className={cn("flex flex-col h-full bg-neutral-1", compact && "compact")}
     >
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-2 py-1 border-b border-neutral-5 bg-neutral-1">
@@ -219,7 +215,8 @@ export function ProblemsTab({
               filter === "all"
                 ? "bg-primary-3 bg-primary-4 text-primary-11 dark:text-primary-5"
                 : "hover:bg-neutral-3",
-            )}>
+            )}
+          >
             All
           </Button>
           <Button
@@ -232,7 +229,8 @@ export function ProblemsTab({
               filter === "errors"
                 ? "bg-error-3 bg-error-4 text-error-11 dark:text-error-9"
                 : "hover:bg-neutral-3",
-            )}>
+            )}
+          >
             <AlertCircle size={12} />
             Errors
           </Button>
@@ -246,7 +244,8 @@ export function ProblemsTab({
               filter === "warnings"
                 ? "bg-warning-3 dark:bg-warning-a4 text-warning-10 dark:text-warning-6"
                 : "hover:bg-neutral-3",
-            )}>
+            )}
+          >
             <AlertTriangle size={12} />
             Warnings
           </Button>
@@ -279,7 +278,8 @@ export function ProblemsTab({
         <div className="flex-1" />
 
         {/* Clear all */}
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-1 hover:bg-neutral-3 rounded text-neutral-10 hover:text-error-9"
           data-testid="clear-all-button"

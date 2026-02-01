@@ -14,7 +14,16 @@
  */
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { ChevronDown, Check, Loader2, Brain, Zap, Globe, Code, Search } from "lucide-react";
+import {
+  ChevronDown,
+  Check,
+  Loader2,
+  Brain,
+  Zap,
+  Globe,
+  Code,
+  Search,
+} from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import type { ModelStatus } from "@/types";
@@ -29,7 +38,13 @@ export interface ModelOption {
   name: string;
   provider: string;
   /** Vendor distinguishes native API vs Vertex AI (Issue 5) */
-  vendor?: "anthropic" | "google" | "openai" | "vertex_ai" | "vertex_ai_anthropic" | "azure";
+  vendor?:
+    | "anthropic"
+    | "google"
+    | "openai"
+    | "vertex_ai"
+    | "vertex_ai_anthropic"
+    | "azure";
   supportsThinking?: boolean;
   supportsVision?: boolean;
   supportsTools?: boolean;
@@ -67,18 +82,15 @@ export interface HeaderModelSelectorProps {
 const STATUS_BADGES: Record<string, { label: string; className: string }> = {
   preview: {
     label: "Preview",
-    className:
-      "bg-info-3 text-info-11",
+    className: "bg-info-3 text-info-11",
   },
   legacy: {
     label: "Legacy",
-    className:
-      "bg-warning-3 text-warning-11",
+    className: "bg-warning-3 text-warning-11",
   },
   deprecated: {
     label: "Deprecated",
-    className:
-      "bg-error-3 text-error-11",
+    className: "bg-error-3 text-error-11",
   },
 };
 
@@ -162,7 +174,7 @@ export function HeaderModelSelector({
   // Get the selected model object
   const selectedModelObj = useMemo(
     () => availableModels.find((m) => m.id === selectedModel),
-    [availableModels, selectedModel]
+    [availableModels, selectedModel],
   );
 
   // Check if current model supports thinking
@@ -178,7 +190,7 @@ export function HeaderModelSelector({
       (model) =>
         model.name.toLowerCase().includes(query) ||
         model.provider.toLowerCase().includes(query) ||
-        model.id.toLowerCase().includes(query)
+        model.id.toLowerCase().includes(query),
     );
   }, [availableModels, searchQuery]);
 
@@ -273,7 +285,7 @@ export function HeaderModelSelector({
       onModelChange?.(modelId);
       setIsOpen(false);
     },
-    [onModelChange]
+    [onModelChange],
   );
 
   // Handle thinking level change
@@ -282,7 +294,7 @@ export function HeaderModelSelector({
       onThinkingLevelChange?.(level);
       // Keep dropdown open for further adjustments
     },
-    [onThinkingLevelChange]
+    [onThinkingLevelChange],
   );
 
   // Handle keyboard navigation in dropdown
@@ -293,14 +305,16 @@ export function HeaderModelSelector({
         case "ArrowDown":
           event.preventDefault();
           setFocusedIndex((prev) => {
-            const next = prev < 0 ? 0 : Math.min(prev + 1, filteredModels.length - 1);
+            const next =
+              prev < 0 ? 0 : Math.min(prev + 1, filteredModels.length - 1);
             return next;
           });
           break;
         case "ArrowUp":
           event.preventDefault();
           setFocusedIndex((prev) => {
-            const next = prev < 0 ? filteredModels.length - 1 : Math.max(prev - 1, 0);
+            const next =
+              prev < 0 ? filteredModels.length - 1 : Math.max(prev - 1, 0);
             return next;
           });
           break;
@@ -312,7 +326,7 @@ export function HeaderModelSelector({
           break;
       }
     },
-    [focusedIndex, filteredModels, handleModelSelect]
+    [focusedIndex, filteredModels, handleModelSelect],
   );
 
   const toggleDropdown = useCallback(() => {
@@ -335,7 +349,7 @@ export function HeaderModelSelector({
         setFocusedIndex(filteredModels.length - 1);
       }
     },
-    [toggleDropdown, isOpen, filteredModels.length]
+    [toggleDropdown, isOpen, filteredModels.length],
   );
 
   return (
@@ -348,7 +362,7 @@ export function HeaderModelSelector({
         disabled={disabled}
         onClick={toggleDropdown}
         onKeyDown={handleButtonKeyDown}
-        aria-label={`Select model. Current: ${displayName}${modelSupportsThinking ? ` (${thinkingLabel} thinking)` : "" }`}
+        aria-label={`Select model. Current: ${displayName}${modelSupportsThinking ? ` (${thinkingLabel} thinking)` : ""}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         data-testid="header-model-selector"
@@ -361,7 +375,7 @@ export function HeaderModelSelector({
           "text-neutral-11",
           "transition-colors",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          compact && "compact px-2 py-1 text-xs"
+          compact && "compact px-2 py-1 text-xs",
         )}
       >
         {isLoading ? (
@@ -373,16 +387,14 @@ export function HeaderModelSelector({
           <>
             <span className="font-medium">{displayName}</span>
             {modelSupportsThinking && (
-              <span className="text-neutral-10">
-                ({thinkingLabel})
-              </span>
+              <span className="text-neutral-10">({thinkingLabel})</span>
             )}
           </>
         )}
         <ChevronDown
           className={cn(
             "w-3.5 h-3.5 text-neutral-9 transition-transform",
-            isOpen && "rotate-180"
+            isOpen && "rotate-180",
           )}
         />
       </button>
@@ -400,7 +412,7 @@ export function HeaderModelSelector({
             "bg-neutral-2",
             "border border-neutral-6",
             "rounded-lg shadow-lg",
-            "z-dropdown"
+            "z-dropdown",
           )}
         >
           {/* Thinking Level Section (only for thinking-capable models) */}
@@ -410,15 +422,16 @@ export function HeaderModelSelector({
               className="p-3 border-b border-neutral-6"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Brain
-                  size={14}
-                  className="text-insight-11"
-                />
+                <Brain size={14} className="text-insight-11" />
                 <span className="text-xs font-medium text-neutral-11">
                   Thinking Level
                 </span>
               </div>
-              <div className="flex gap-1" role="radiogroup" aria-label="Thinking level">
+              <div
+                className="flex gap-1"
+                role="radiogroup"
+                aria-label="Thinking level"
+              >
                 {THINKING_LEVELS.map((level) => (
                   <label
                     key={level.value}
@@ -427,7 +440,7 @@ export function HeaderModelSelector({
                       "transition-colors",
                       thinkingLevel === level.value
                         ? "bg-insight-10 text-neutral-12"
-                        : "bg-neutral-4 text-neutral-11 hover:bg-neutral-5"
+                        : "bg-neutral-4 text-neutral-11 hover:bg-neutral-5",
                     )}
                   >
                     <input
@@ -453,10 +466,7 @@ export function HeaderModelSelector({
               className="p-3 border-b border-neutral-6"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Zap
-                  size={14}
-                  className="text-warning-11"
-                />
+                <Zap size={14} className="text-warning-11" />
                 <span className="text-xs font-medium text-neutral-11">
                   Native Tools Available
                 </span>
@@ -471,7 +481,7 @@ export function HeaderModelSelector({
                   <div
                     className={cn(
                       "inline-flex items-center gap-1 px-2 py-1 text-xs rounded",
-                      "bg-success-3 text-success-11"
+                      "bg-success-3 text-success-11",
                     )}
                     data-testid="native-web-search-badge"
                   >
@@ -483,7 +493,7 @@ export function HeaderModelSelector({
                   <div
                     className={cn(
                       "inline-flex items-center gap-1 px-2 py-1 text-xs rounded",
-                      "bg-success-3 text-success-11"
+                      "bg-success-3 text-success-11",
                     )}
                     data-testid="native-code-execution-badge"
                   >
@@ -519,7 +529,7 @@ export function HeaderModelSelector({
                       "w-full pl-7 pr-3 py-1.5 text-sm",
                       "bg-neutral-3 border border-neutral-6 rounded",
                       "text-neutral-11 placeholder:text-neutral-9",
-                      "focus:outline-none focus:ring-2 focus:ring-primary-9"
+                      "focus:outline-none focus:ring-2 focus:ring-primary-9",
                     )}
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => {
@@ -558,7 +568,7 @@ export function HeaderModelSelector({
                     "hover:bg-neutral-4",
                     "focus:bg-neutral-2",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-inset",
-                    "transition-colors"
+                    "transition-colors",
                   )}
                 >
                   <div className="flex-1 min-w-0">
@@ -575,7 +585,7 @@ export function HeaderModelSelector({
                         <span
                           className={cn(
                             "px-1.5 py-0.5 text-xs rounded",
-                            statusBadge.className
+                            statusBadge.className,
                           )}
                         >
                           {statusBadge.label}

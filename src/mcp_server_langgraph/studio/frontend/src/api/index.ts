@@ -1620,9 +1620,12 @@ export const api = createApi({
       NativeCapabilitiesResponseCamelCase,
       { modelId: string }
     >({
-      query: ({ modelId }) => `/tools/native-capabilities/${encodeURIComponent(modelId)}`,
+      query: ({ modelId }) =>
+        `/tools/native-capabilities/${encodeURIComponent(modelId)}`,
       transformResponse: (response: NativeCapabilitiesResponse) =>
-        transformSnakeToCamel(response) as unknown as NativeCapabilitiesResponseCamelCase,
+        transformSnakeToCamel(
+          response,
+        ) as unknown as NativeCapabilitiesResponseCamelCase,
       keepUnusedDataFor: 600, // 10 minutes - capabilities change infrequently
     }),
 
@@ -1698,60 +1701,61 @@ export const api = createApi({
           mcp: Record<string, unknown> | null;
         }>;
         summary: Record<string, unknown>;
-      }) => transformSnakeToCamel(response) as {
-        tools: Array<{
-          toolName: string;
-          native: {
-            provider: string | null;
-            selectionCount: number;
-            executionCount: number;
-            errorCount: number;
-            fallbackCount: number;
-            avgLatencyMs: number;
-            minLatencyMs: number;
-            maxLatencyMs: number;
-            p50LatencyMs: number;
-            p95LatencyMs: number;
-            p99LatencyMs: number;
-            errorRate: number;
-          } | null;
-          builtin: {
-            provider: string | null;
-            selectionCount: number;
-            executionCount: number;
-            errorCount: number;
-            fallbackCount: number;
-            avgLatencyMs: number;
-            minLatencyMs: number;
-            maxLatencyMs: number;
-            p50LatencyMs: number;
-            p95LatencyMs: number;
-            p99LatencyMs: number;
-            errorRate: number;
-          } | null;
-          mcp: {
-            provider: string | null;
-            selectionCount: number;
-            executionCount: number;
-            errorCount: number;
-            fallbackCount: number;
-            avgLatencyMs: number;
-            minLatencyMs: number;
-            maxLatencyMs: number;
-            p50LatencyMs: number;
-            p95LatencyMs: number;
-            p99LatencyMs: number;
-            errorRate: number;
-          } | null;
-        }>;
-        summary: {
-          nativeSelections: number;
-          builtinSelections: number;
-          nativeErrors: number;
-          builtinErrors: number;
-          uptimeSeconds: number;
-        };
-      },
+      }) =>
+        transformSnakeToCamel(response) as {
+          tools: Array<{
+            toolName: string;
+            native: {
+              provider: string | null;
+              selectionCount: number;
+              executionCount: number;
+              errorCount: number;
+              fallbackCount: number;
+              avgLatencyMs: number;
+              minLatencyMs: number;
+              maxLatencyMs: number;
+              p50LatencyMs: number;
+              p95LatencyMs: number;
+              p99LatencyMs: number;
+              errorRate: number;
+            } | null;
+            builtin: {
+              provider: string | null;
+              selectionCount: number;
+              executionCount: number;
+              errorCount: number;
+              fallbackCount: number;
+              avgLatencyMs: number;
+              minLatencyMs: number;
+              maxLatencyMs: number;
+              p50LatencyMs: number;
+              p95LatencyMs: number;
+              p99LatencyMs: number;
+              errorRate: number;
+            } | null;
+            mcp: {
+              provider: string | null;
+              selectionCount: number;
+              executionCount: number;
+              errorCount: number;
+              fallbackCount: number;
+              avgLatencyMs: number;
+              minLatencyMs: number;
+              maxLatencyMs: number;
+              p50LatencyMs: number;
+              p95LatencyMs: number;
+              p99LatencyMs: number;
+              errorRate: number;
+            } | null;
+          }>;
+          summary: {
+            nativeSelections: number;
+            builtinSelections: number;
+            nativeErrors: number;
+            builtinErrors: number;
+            uptimeSeconds: number;
+          };
+        },
       keepUnusedDataFor: 30, // 30 seconds - metrics change frequently
     }),
 
@@ -4545,7 +4549,13 @@ export const api = createApi({
       {
         planId: string;
         changes: {
-          orchestrator?: "standard" | "swarm" | "studio" | "ux" | "alert" | null;
+          orchestrator?:
+            | "standard"
+            | "swarm"
+            | "studio"
+            | "ux"
+            | "alert"
+            | null;
           thinkingBudget?: "none" | "light" | "medium" | "deep" | null;
           critiqueRounds?: number | null;
           executorModel?: string;
@@ -4623,7 +4633,9 @@ export const api = createApi({
           offset: number;
         };
         return {
-          templates: res.templates.map((t) => transformSnakeToCamel(t)) as Array<{
+          templates: res.templates.map((t) =>
+            transformSnakeToCamel(t),
+          ) as Array<{
             templateId: string;
             name: string;
             description: string;

@@ -27,7 +27,7 @@ function createTestStore() {
 // Helper to render with Redux
 function renderWithStore(
   ui: React.ReactElement,
-  { store = createTestStore() } = {}
+  { store = createTestStore() } = {},
 ) {
   return {
     store,
@@ -80,11 +80,11 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[]}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       expect(
-        screen.queryByTestId("connector-suggestion-bar")
+        screen.queryByTestId("connector-suggestion-bar"),
       ).not.toBeInTheDocument();
     });
 
@@ -94,11 +94,11 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       expect(
-        screen.getByTestId("connector-suggestion-bar")
+        screen.getByTestId("connector-suggestion-bar"),
       ).toBeInTheDocument();
     });
 
@@ -108,7 +108,7 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       // Template name appears in multiple places - check at least one exists
@@ -121,11 +121,11 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("button", { name: /connect github/i })
+        screen.getByRole("button", { name: /connect github/i }),
       ).toBeInTheDocument();
     });
 
@@ -135,11 +135,11 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("button", { name: /dismiss/i })
+        screen.getByRole("button", { name: /dismiss/i }),
       ).toBeInTheDocument();
     });
 
@@ -149,12 +149,12 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={mockTemplates}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       // Should show the first template (GitHub)
       expect(
-        screen.getByRole("button", { name: /connect github/i })
+        screen.getByRole("button", { name: /connect github/i }),
       ).toBeInTheDocument();
     });
   });
@@ -167,12 +167,10 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={onConnect}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
-      fireEvent.click(
-        screen.getByRole("button", { name: /connect github/i })
-      );
+      fireEvent.click(screen.getByRole("button", { name: /connect github/i }));
 
       expect(onConnect).toHaveBeenCalledWith(mockTemplates[0]);
     });
@@ -184,7 +182,7 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={vi.fn()}
           onDismiss={onDismiss}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
@@ -201,7 +199,7 @@ describe("ConnectorSuggestionBar", () => {
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
           isLoading={true}
-        />
+        />,
       );
 
       // Should show loading indicator
@@ -215,11 +213,11 @@ describe("ConnectorSuggestionBar", () => {
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
           isLoading={false}
-        />
+        />,
       );
 
       expect(
-        screen.queryByTestId("suggestion-loading")
+        screen.queryByTestId("suggestion-loading"),
       ).not.toBeInTheDocument();
     });
   });
@@ -231,7 +229,7 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       // The suggestion message should be readable
@@ -245,7 +243,7 @@ describe("ConnectorSuggestionBar", () => {
           suggestions={[mockTemplates[0]]}
           onConnect={vi.fn()}
           onDismiss={vi.fn()}
-        />
+        />,
       );
 
       const connectButton = screen.getByRole("button", {

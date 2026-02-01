@@ -79,7 +79,16 @@ const sizeClasses: Record<IconSize, string> = {
 // =============================================================================
 
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size = "md", "aria-label": ariaLabel, className, ...props }, ref) => {
+  (
+    {
+      icon: IconComponent,
+      size = "md",
+      "aria-label": ariaLabel,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     // Determine if icon is decorative or meaningful
     const isDecorative = !ariaLabel;
 
@@ -93,7 +102,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
 Icon.displayName = "Icon";

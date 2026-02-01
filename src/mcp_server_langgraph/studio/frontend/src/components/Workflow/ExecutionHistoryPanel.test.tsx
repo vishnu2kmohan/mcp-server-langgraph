@@ -95,9 +95,7 @@ describe("ExecutionHistoryPanel", () => {
       render(<ExecutionHistoryPanel {...defaultProps} />);
 
       const completedExec = screen.getByTestId("execution-exec-1");
-      expect(
-        completedExec.querySelector(".bg-success-9"),
-      ).toBeInTheDocument();
+      expect(completedExec.querySelector(".bg-success-9")).toBeInTheDocument();
     });
 
     it("should show blue indicator for running status", () => {

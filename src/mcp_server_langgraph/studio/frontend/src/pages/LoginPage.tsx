@@ -143,18 +143,12 @@ export function LoginPage() {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-4 overflow-hidden">
-            <img
-              src={iconSvg}
-              alt="Agent Studio"
-              className="w-16 h-16"
-            />
+            <img src={iconSvg} alt="Agent Studio" className="w-16 h-16" />
           </div>
           <h1 className="text-2xl font-bold text-neutral-12 leading-tight">
             Agent Studio
           </h1>
-          <p className="mt-2 text-sm text-neutral-11">
-            Sign in to continue
-          </p>
+          <p className="mt-2 text-sm text-neutral-11">Sign in to continue</p>
         </div>
 
         {/* Login Card - Minimal/borderless design */}

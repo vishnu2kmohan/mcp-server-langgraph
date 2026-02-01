@@ -122,12 +122,10 @@ export function AuditLogPage() {
   };
 
   const getActionColor = (action: string) => {
-    if (action.includes("delete"))
-      return "bg-error-3 text-error-11 bg-error-4";
+    if (action.includes("delete")) return "bg-error-3 text-error-11 bg-error-4";
     if (action.includes("create"))
       return "bg-success-3 text-success-11 bg-success-4";
-    if (action.includes("update"))
-      return "bg-warning-3 text-warning-10";
+    if (action.includes("update")) return "bg-warning-3 text-warning-10";
     if (action.includes("login"))
       return "bg-primary-3 text-primary-11 bg-primary-4";
     return "bg-neutral-2 text-neutral-11";
@@ -141,9 +139,7 @@ export function AuditLogPage() {
           <div className="flex items-center gap-3">
             <Shield className="text-primary-9" size={28} />
             <div>
-              <h1 className="text-2xl font-bold text-neutral-12">
-                Audit Logs
-              </h1>
+              <h1 className="text-2xl font-bold text-neutral-12">Audit Logs</h1>
               <p className="text-sm text-neutral-10">
                 System activity and security events
               </p>
@@ -196,8 +192,18 @@ export function AuditLogPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64" aria-busy="true" aria-label="Loading audit logs">
-            <RefreshCw size={32} className={cn("text-primary-9", !prefersReducedMotion && "animate-spin")} />
+          <div
+            className="flex items-center justify-center h-64"
+            aria-busy="true"
+            aria-label="Loading audit logs"
+          >
+            <RefreshCw
+              size={32}
+              className={cn(
+                "text-primary-9",
+                !prefersReducedMotion && "animate-spin",
+              )}
+            />
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-64 text-neutral-10">
@@ -232,15 +238,9 @@ export function AuditLogPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {expandedLogId === log.id ? (
-                        <ChevronDown
-                          size={16}
-                          className="text-neutral-9"
-                        />
+                        <ChevronDown size={16} className="text-neutral-9" />
                       ) : (
-                        <ChevronRight
-                          size={16}
-                          className="text-neutral-9"
-                        />
+                        <ChevronRight size={16} className="text-neutral-9" />
                       )}
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${getActionColor(log.action)}`}

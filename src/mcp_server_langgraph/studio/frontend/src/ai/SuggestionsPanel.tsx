@@ -116,7 +116,8 @@ export function SuggestionsPanel({
             "hover:text-neutral-12",
             "transition-colors",
           )}
-          aria-label="AI Suggestions">
+          aria-label="AI Suggestions"
+        >
           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           <Sparkles size={14} className="text-primary-9" />
           <span>AI Suggestions</span>
@@ -131,7 +132,9 @@ export function SuggestionsPanel({
           </span>
         </Button>
 
-        <Button size="icon" variant="ghost"
+        <Button
+          size="icon"
+          variant="ghost"
           type="button"
           onClick={onRefresh}
           disabled={isLoading}
@@ -238,7 +241,8 @@ export function SuggestionsPanel({
                             "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                             "text-success-10 hover:bg-success-3 dark:hover:bg-success-a4",
                             "transition-colors",
-                          )}>
+                          )}
+                        >
                           <Check size={16} />
                         </Button>
                         <Button
@@ -250,7 +254,8 @@ export function SuggestionsPanel({
                             "h-6 w-6 min-h-6 min-w-6 p-1 rounded",
                             "text-neutral-9 hover:text-error-9 hover:bg-error-3 dark:hover:bg-error-a4",
                             "transition-colors",
-                          )}>
+                          )}
+                        >
                           <X size={16} />
                         </Button>
                       </div>

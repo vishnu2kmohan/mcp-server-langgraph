@@ -118,7 +118,8 @@ export function InlineConnectionCard({
       // Start connection setup in Redux
       dispatch(
         startConnectionSetup({
-          templateId: templateId ?? "", connectionId: connectionId ?? undefined,
+          templateId: templateId ?? "",
+          connectionId: connectionId ?? undefined,
         }),
       );
 
@@ -186,7 +187,9 @@ export function InlineConnectionCard({
             }
           } catch (testErr) {
             setError(
-              testErr instanceof Error ? testErr.message : "Connection test failed",
+              testErr instanceof Error
+                ? testErr.message
+                : "Connection test failed",
             );
             setStatus("error");
             dispatch(
@@ -262,7 +265,8 @@ export function InlineConnectionCard({
     try {
       dispatch(
         startConnectionSetup({
-          templateId: templateId ?? "" }),
+          templateId: templateId ?? "",
+        }),
       );
 
       // Create connection with API key
@@ -345,11 +349,11 @@ export function InlineConnectionCard({
           </div>
           <div>
             <p className="font-medium text-neutral-12">
-              {isReAuth ? `Reconnect ${displayName}` : `${displayName} Connection Required`}
+              {isReAuth
+                ? `Reconnect ${displayName}`
+                : `${displayName} Connection Required`}
             </p>
-            <p className="text-sm text-neutral-11">
-              {message}
-            </p>
+            <p className="text-sm text-neutral-11">{message}</p>
           </div>
         </div>
 
@@ -366,7 +370,8 @@ export function InlineConnectionCard({
               <ChevronDown className="w-4 h-4" />
             </Button>
           )}
-          <Button size="icon"
+          <Button
+            size="icon"
             type="button"
             variant="ghost"
             onClick={onDismiss}
@@ -405,7 +410,7 @@ export function InlineConnectionCard({
                     <CheckCircle className="w-4 h-4" />
                     <span className="text-sm">
                       Connected successfully!{}
-                      {retryMessageId ? "Retrying your request..." : "" }
+                      {retryMessageId ? "Retrying your request..." : ""}
                     </span>
                   </div>
                 </div>

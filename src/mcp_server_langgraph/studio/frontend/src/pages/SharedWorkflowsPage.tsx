@@ -146,9 +146,7 @@ export function SharedWorkflowsPage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-12">
-          Shared Workflows
-        </h1>
+        <h1 className="text-2xl font-bold text-neutral-12">Shared Workflows</h1>
         <p className="text-neutral-8 mt-1">
           Workflows shared with you by team members (read-only access)
         </p>
@@ -193,9 +191,7 @@ export function SharedWorkflowsPage() {
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 <GitBranch className="w-5 h-5 text-primary-9" />
-                <h3 className="font-medium text-neutral-12">
-                  {workflow.name}
-                </h3>
+                <h3 className="font-medium text-neutral-12">{workflow.name}</h3>
               </div>
               <span className="text-xs px-2 py-1 bg-neutral-2 text-neutral-8 rounded">
                 Read-only

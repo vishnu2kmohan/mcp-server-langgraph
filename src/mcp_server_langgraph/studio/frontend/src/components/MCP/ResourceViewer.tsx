@@ -176,9 +176,7 @@ export function ResourceViewer({
         {/* Loading state */}
         {isLoadingResources && (
           <div className="flex flex-1 items-center justify-center">
-            <span className="text-neutral-10">
-              Loading resources...
-            </span>
+            <span className="text-neutral-10">Loading resources...</span>
           </div>
         )}
 

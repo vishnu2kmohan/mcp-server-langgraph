@@ -165,9 +165,7 @@ export const SettingsExample: Story = {
 
     return (
       <div className="max-w-md space-y-6 p-4 bg-neutral-1 rounded-lg border border-neutral-5">
-        <h3 className="text-lg font-semibold text-neutral-12">
-          Settings
-        </h3>
+        <h3 className="text-lg font-semibold text-neutral-12">Settings</h3>
         <div className="space-y-4">
           <Toggle
             checked={darkMode}

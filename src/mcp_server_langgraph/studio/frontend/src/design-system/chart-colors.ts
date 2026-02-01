@@ -15,61 +15,61 @@
 export const CHART_PALETTES = {
   /** Set2 - Default categorical, colorblind-safe up to 3 categories */
   categorical: {
-    scheme: 'set2',
+    scheme: "set2",
     colors: [
-      '#66c2a5', // teal
-      '#fc8d62', // salmon
-      '#8da0cb', // blue-gray
-      '#e78ac3', // pink
-      '#a6d854', // lime
-      '#ffd92f', // yellow
-      '#e5c494', // tan
-      '#b3b3b3', // gray
+      "#66c2a5", // teal
+      "#fc8d62", // salmon
+      "#8da0cb", // blue-gray
+      "#e78ac3", // pink
+      "#a6d854", // lime
+      "#ffd92f", // yellow
+      "#e5c494", // tan
+      "#b3b3b3", // gray
     ],
   },
 
   /** Dark2 - Higher contrast categorical */
   categoricalDark: {
-    scheme: 'dark2',
+    scheme: "dark2",
     colors: [
-      '#1b9e77', // teal
-      '#d95f02', // orange
-      '#7570b3', // purple
-      '#e7298a', // magenta
-      '#66a61e', // green
-      '#e6ab02', // gold
-      '#a6761d', // brown
-      '#666666', // gray
+      "#1b9e77", // teal
+      "#d95f02", // orange
+      "#7570b3", // purple
+      "#e7298a", // magenta
+      "#66a61e", // green
+      "#e6ab02", // gold
+      "#a6761d", // brown
+      "#666666", // gray
     ],
   },
 
   /** Sequential palettes - for ordered/continuous data */
   sequential: {
-    blue: { scheme: 'blues' },
-    green: { scheme: 'greens' },
-    purple: { scheme: 'purples' },
-    orange: { scheme: 'oranges' },
-    gray: { scheme: 'greys' },
+    blue: { scheme: "blues" },
+    green: { scheme: "greens" },
+    purple: { scheme: "purples" },
+    orange: { scheme: "oranges" },
+    gray: { scheme: "greys" },
     /** Viridis - perceptually uniform, colorblind-safe */
-    viridis: { scheme: 'viridis' },
+    viridis: { scheme: "viridis" },
   },
 
   /** Diverging palettes - for data with meaningful midpoint */
   diverging: {
     /** Blue to Red - default diverging */
-    blueRed: { scheme: 'rdbu' },
+    blueRed: { scheme: "rdbu" },
     /** Brown to Blue-Green - colorblind-safe */
-    brownTeal: { scheme: 'brbg' },
+    brownTeal: { scheme: "brbg" },
     /** Purple to Green */
-    purpleGreen: { scheme: 'prgn' },
+    purpleGreen: { scheme: "prgn" },
   },
 
   /** Heatmap palettes */
   heatmap: {
-    viridis: { scheme: 'viridis' },
-    inferno: { scheme: 'inferno' },
-    magma: { scheme: 'magma' },
-    plasma: { scheme: 'plasma' },
+    viridis: { scheme: "viridis" },
+    inferno: { scheme: "inferno" },
+    magma: { scheme: "magma" },
+    plasma: { scheme: "plasma" },
   },
 } as const;
 
@@ -80,15 +80,15 @@ export const CHART_PALETTES = {
  * @see https://personal.sron.nl/~pault/
  */
 export const PAUL_TOL_PALETTE = [
-  '#332288', // indigo
-  '#88CCEE', // cyan
-  '#44AA99', // teal
-  '#117733', // green
-  '#999933', // olive
-  '#DDCC77', // sand
-  '#CC6677', // rose
-  '#882255', // wine
-  '#AA4499', // purple
+  "#332288", // indigo
+  "#88CCEE", // cyan
+  "#44AA99", // teal
+  "#117733", // green
+  "#999933", // olive
+  "#DDCC77", // sand
+  "#CC6677", // rose
+  "#882255", // wine
+  "#AA4499", // purple
 ] as const;
 
 /**
@@ -97,52 +97,52 @@ export const PAUL_TOL_PALETTE = [
  */
 export const NODE_TYPE_COLORS = {
   tool: {
-    fill: 'var(--primary-9)',
-    stroke: 'var(--primary-11)',
-    pattern: 'diagonal-stripe',
-    label: 'Tool',
+    fill: "var(--primary-9)",
+    stroke: "var(--primary-11)",
+    pattern: "diagonal-stripe",
+    label: "Tool",
   },
   llm: {
-    fill: 'var(--violet-9)',
-    stroke: 'var(--violet-11)',
-    pattern: 'dots',
-    label: 'LLM',
+    fill: "var(--violet-9)",
+    stroke: "var(--violet-11)",
+    pattern: "dots",
+    label: "LLM",
   },
   conditional: {
-    fill: 'var(--amber-9)',
-    stroke: 'var(--amber-11)',
-    pattern: 'crosshatch',
-    label: 'Conditional',
+    fill: "var(--amber-9)",
+    stroke: "var(--amber-11)",
+    pattern: "crosshatch",
+    label: "Conditional",
   },
   start: {
-    fill: 'var(--grass-9)',
-    stroke: 'var(--grass-11)',
-    pattern: 'horizontal-lines',
-    label: 'Start',
+    fill: "var(--grass-9)",
+    stroke: "var(--grass-11)",
+    pattern: "horizontal-lines",
+    label: "Start",
   },
   end: {
-    fill: 'var(--neutral-9)',
-    stroke: 'var(--neutral-11)',
-    pattern: 'vertical-lines',
-    label: 'End',
+    fill: "var(--neutral-9)",
+    stroke: "var(--neutral-11)",
+    pattern: "vertical-lines",
+    label: "End",
   },
   human: {
-    fill: 'var(--sky-9)',
-    stroke: 'var(--sky-11)',
-    pattern: 'grid',
-    label: 'Human',
+    fill: "var(--sky-9)",
+    stroke: "var(--sky-11)",
+    pattern: "grid",
+    label: "Human",
   },
   error: {
-    fill: 'var(--ruby-9)',
-    stroke: 'var(--ruby-11)',
-    pattern: 'zigzag',
-    label: 'Error',
+    fill: "var(--ruby-9)",
+    stroke: "var(--ruby-11)",
+    pattern: "zigzag",
+    label: "Error",
   },
   parallel: {
-    fill: 'var(--orange-9)',
-    stroke: 'var(--orange-11)',
-    pattern: 'waves',
-    label: 'Parallel',
+    fill: "var(--orange-9)",
+    stroke: "var(--orange-11)",
+    pattern: "waves",
+    label: "Parallel",
   },
 } as const;
 
@@ -152,44 +152,44 @@ export const NODE_TYPE_COLORS = {
  */
 export const VEGA_LITE_THEME = {
   config: {
-    background: 'transparent',
+    background: "transparent",
 
     // Default color ranges
     range: {
-      category: { scheme: 'set2' },
-      diverging: { scheme: 'brbg' },
-      heatmap: { scheme: 'viridis' },
-      ordinal: { scheme: 'blues' },
-      ramp: { scheme: 'blues' },
+      category: { scheme: "set2" },
+      diverging: { scheme: "brbg" },
+      heatmap: { scheme: "viridis" },
+      ordinal: { scheme: "blues" },
+      ramp: { scheme: "blues" },
     },
 
     // Axis styling (uses CSS variables)
     axis: {
-      labelColor: 'var(--neutral-11)',
-      titleColor: 'var(--neutral-12)',
-      gridColor: 'var(--neutral-6)',
-      domainColor: 'var(--neutral-8)',
-      tickColor: 'var(--neutral-8)',
-      labelFont: 'Inter, system-ui, sans-serif',
-      titleFont: 'Inter, system-ui, sans-serif',
+      labelColor: "var(--neutral-11)",
+      titleColor: "var(--neutral-12)",
+      gridColor: "var(--neutral-6)",
+      domainColor: "var(--neutral-8)",
+      tickColor: "var(--neutral-8)",
+      labelFont: "Inter, system-ui, sans-serif",
+      titleFont: "Inter, system-ui, sans-serif",
       labelFontSize: 11,
       titleFontSize: 12,
     },
 
     // Legend styling
     legend: {
-      labelColor: 'var(--neutral-11)',
-      titleColor: 'var(--neutral-12)',
-      labelFont: 'Inter, system-ui, sans-serif',
-      titleFont: 'Inter, system-ui, sans-serif',
+      labelColor: "var(--neutral-11)",
+      titleColor: "var(--neutral-12)",
+      labelFont: "Inter, system-ui, sans-serif",
+      titleFont: "Inter, system-ui, sans-serif",
       labelFontSize: 11,
       titleFontSize: 12,
     },
 
     // Title styling
     title: {
-      color: 'var(--neutral-12)',
-      font: 'Inter, system-ui, sans-serif',
+      color: "var(--neutral-12)",
+      font: "Inter, system-ui, sans-serif",
       fontSize: 14,
       fontWeight: 500,
     },

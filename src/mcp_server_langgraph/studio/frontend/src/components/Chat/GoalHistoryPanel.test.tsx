@@ -44,6 +44,7 @@ describe("GoalHistoryPanel", () => {
 
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
   });
 
   describe("Rendering", () => {
@@ -62,7 +63,9 @@ describe("GoalHistoryPanel", () => {
     it("renders all goals in the list", () => {
       render(<GoalHistoryPanel goals={mockGoals} />);
 
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
       expect(screen.getByText("Implement new feature")).toBeInTheDocument();
       expect(screen.getByText("Fix critical bug")).toBeInTheDocument();
     });
@@ -78,7 +81,9 @@ describe("GoalHistoryPanel", () => {
     it("displays feedback when available", () => {
       render(<GoalHistoryPanel goals={mockGoals} />);
 
-      expect(screen.getByText("All analysis done successfully")).toBeInTheDocument();
+      expect(
+        screen.getByText("All analysis done successfully"),
+      ).toBeInTheDocument();
       expect(screen.getByText("Completed 80%")).toBeInTheDocument();
       expect(screen.getByText("Blocked by dependencies")).toBeInTheDocument();
     });
@@ -107,7 +112,9 @@ describe("GoalHistoryPanel", () => {
         />,
       );
 
-      expect(screen.getByText("Start by setting a goal above")).toBeInTheDocument();
+      expect(
+        screen.getByText("Start by setting a goal above"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -151,7 +158,8 @@ describe("GoalHistoryPanel", () => {
       // Verify status badges are accessible (use getAllByLabelText since there are multiple)
       const achievedBadges = screen.getAllByLabelText(/status: achieved/i);
       const partialBadges = screen.getAllByLabelText(/status: partial/i);
-      const notAchievedBadges = screen.getAllByLabelText(/status: not achieved/i);
+      const notAchievedBadges =
+        screen.getAllByLabelText(/status: not achieved/i);
 
       expect(achievedBadges.length).toBeGreaterThan(0);
       expect(partialBadges.length).toBeGreaterThan(0);
@@ -171,7 +179,9 @@ describe("GoalHistoryPanel", () => {
       render(<GoalHistoryPanel goals={mockGoals} compact />);
 
       // Feedback should not be visible in compact mode
-      expect(screen.queryByText("All analysis done successfully")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("All analysis done successfully"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -199,19 +209,27 @@ describe("GoalHistoryPanel", () => {
       expect(header).toBeInTheDocument();
 
       // Initially expanded
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
 
       // Click to collapse
       await user.click(header);
 
       // Content should be hidden
-      expect(screen.queryByText("Complete the data analysis")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Complete the data analysis"),
+      ).not.toBeInTheDocument();
     });
 
     it("starts collapsed when defaultCollapsed is true", () => {
-      render(<GoalHistoryPanel goals={mockGoals} collapsible defaultCollapsed />);
+      render(
+        <GoalHistoryPanel goals={mockGoals} collapsible defaultCollapsed />,
+      );
 
-      expect(screen.queryByText("Complete the data analysis")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Complete the data analysis"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -219,15 +237,21 @@ describe("GoalHistoryPanel", () => {
     it("filters by achievement status when filter is provided", () => {
       render(<GoalHistoryPanel goals={mockGoals} filter="achieved" />);
 
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
-      expect(screen.queryByText("Implement new feature")).not.toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("Implement new feature"),
+      ).not.toBeInTheDocument();
       expect(screen.queryByText("Fix critical bug")).not.toBeInTheDocument();
     });
 
     it("shows partial goals when filter is 'partial'", () => {
       render(<GoalHistoryPanel goals={mockGoals} filter="partial" />);
 
-      expect(screen.queryByText("Complete the data analysis")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Complete the data analysis"),
+      ).not.toBeInTheDocument();
       expect(screen.getByText("Implement new feature")).toBeInTheDocument();
       expect(screen.queryByText("Fix critical bug")).not.toBeInTheDocument();
     });
@@ -235,8 +259,12 @@ describe("GoalHistoryPanel", () => {
     it("shows not achieved goals when filter is 'not-achieved'", () => {
       render(<GoalHistoryPanel goals={mockGoals} filter="not-achieved" />);
 
-      expect(screen.queryByText("Complete the data analysis")).not.toBeInTheDocument();
-      expect(screen.queryByText("Implement new feature")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Complete the data analysis"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Implement new feature"),
+      ).not.toBeInTheDocument();
       expect(screen.getByText("Fix critical bug")).toBeInTheDocument();
     });
   });
@@ -295,14 +323,18 @@ describe("GoalHistoryPanel", () => {
       const onDelete = vi.fn();
       render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       expect(deleteButtons).toHaveLength(3);
     });
 
     it("does not render delete button when onDelete is not provided", () => {
       render(<GoalHistoryPanel goals={mockGoals} />);
 
-      const deleteButtons = screen.queryAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.queryAllByRole("button", {
+        name: /delete goal/i,
+      });
       expect(deleteButtons).toHaveLength(0);
     });
 
@@ -311,7 +343,9 @@ describe("GoalHistoryPanel", () => {
       const onDelete = vi.fn();
       render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       // Click first delete button (which is goal-3 due to reverse chronological order)
       await user.click(deleteButtons[0]);
 
@@ -330,7 +364,9 @@ describe("GoalHistoryPanel", () => {
         />,
       );
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       await user.click(deleteButtons[0]);
 
       // onDelete should NOT be called yet (waiting for confirmation)
@@ -351,7 +387,9 @@ describe("GoalHistoryPanel", () => {
         />,
       );
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       await user.click(deleteButtons[0]);
 
       // Click confirm button in dialog
@@ -372,7 +410,9 @@ describe("GoalHistoryPanel", () => {
         />,
       );
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       await user.click(deleteButtons[0]);
 
       // Click cancel button in dialog
@@ -386,7 +426,9 @@ describe("GoalHistoryPanel", () => {
       const onDelete = vi.fn();
       render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       // Each button should contain a trash icon (verify via class or svg)
       deleteButtons.forEach((button) => {
         expect(button.querySelector("svg")).toBeInTheDocument();
@@ -400,7 +442,9 @@ describe("GoalHistoryPanel", () => {
       const onDelete = vi.fn();
       render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       const firstDeleteButton = deleteButtons[0];
 
       // Focus the button and press Enter
@@ -415,7 +459,9 @@ describe("GoalHistoryPanel", () => {
       const onDelete = vi.fn();
       render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       const firstDeleteButton = deleteButtons[0];
 
       // Focus the button and press Space
@@ -436,7 +482,9 @@ describe("GoalHistoryPanel", () => {
         />,
       );
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
       await user.click(deleteButtons[0]);
 
       // Dialog should be open
@@ -457,7 +505,9 @@ describe("GoalHistoryPanel", () => {
       const onDelete = vi.fn();
       render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
 
-      const deleteButtons = screen.getAllByRole("button", { name: /delete goal/i });
+      const deleteButtons = screen.getAllByRole("button", {
+        name: /delete goal/i,
+      });
 
       // All buttons should be focusable (no tabindex=-1)
       deleteButtons.forEach((button) => {
@@ -470,23 +520,19 @@ describe("GoalHistoryPanel", () => {
     it("uses isCollapsed prop when provided (controlled mode)", () => {
       // When isCollapsed=false, content should be visible
       const { rerender } = render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          collapsible
-          isCollapsed={false}
-        />,
+        <GoalHistoryPanel goals={mockGoals} collapsible isCollapsed={false} />,
       );
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
 
       // When isCollapsed=true, content should be hidden
       rerender(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          collapsible
-          isCollapsed={true}
-        />,
+        <GoalHistoryPanel goals={mockGoals} collapsible isCollapsed={true} />,
       );
-      expect(screen.queryByText("Complete the data analysis")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Complete the data analysis"),
+      ).not.toBeInTheDocument();
     });
 
     it("calls onCollapsedChange when toggle button is clicked", async () => {
@@ -503,7 +549,9 @@ describe("GoalHistoryPanel", () => {
       );
 
       // Click the toggle button
-      const toggleButton = screen.getByRole("button", { name: /goal history/i });
+      const toggleButton = screen.getByRole("button", {
+        name: /goal history/i,
+      });
       await user.click(toggleButton);
 
       // Should call onCollapsedChange with true (requesting collapse)
@@ -525,15 +573,21 @@ describe("GoalHistoryPanel", () => {
       );
 
       // Content should be visible
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
 
       // Click toggle - should call callback but NOT change visibility
       // (parent controls the state)
-      const toggleButton = screen.getByRole("button", { name: /goal history/i });
+      const toggleButton = screen.getByRole("button", {
+        name: /goal history/i,
+      });
       await user.click(toggleButton);
 
       // Content should STILL be visible (controlled mode ignores click until parent updates prop)
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
     });
 
     it("maintains backwards compatibility with uncontrolled mode", async () => {
@@ -549,14 +603,20 @@ describe("GoalHistoryPanel", () => {
       );
 
       // Content should be visible
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
 
       // Click toggle - should collapse using internal state
-      const toggleButton = screen.getByRole("button", { name: /goal history/i });
+      const toggleButton = screen.getByRole("button", {
+        name: /goal history/i,
+      });
       await user.click(toggleButton);
 
       // Content should now be hidden (uncontrolled mode uses internal state)
-      expect(screen.queryByText("Complete the data analysis")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Complete the data analysis"),
+      ).not.toBeInTheDocument();
     });
 
     it("persists expanded state across parent re-renders when controlled", () => {
@@ -572,7 +632,9 @@ describe("GoalHistoryPanel", () => {
         />,
       );
 
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
 
       // Parent re-renders with same isCollapsed value - should stay expanded
       rerender(
@@ -584,7 +646,9 @@ describe("GoalHistoryPanel", () => {
         />,
       );
 
-      expect(screen.getByText("Complete the data analysis")).toBeInTheDocument();
+      expect(
+        screen.getByText("Complete the data analysis"),
+      ).toBeInTheDocument();
     });
   });
 });

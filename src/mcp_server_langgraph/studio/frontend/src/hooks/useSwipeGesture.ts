@@ -22,7 +22,13 @@ import type { PanInfo } from "motion/react";
 // Types
 // =============================================================================
 
-export type SwipeDirection = "horizontal" | "vertical" | "left" | "right" | "up" | "down";
+export type SwipeDirection =
+  | "horizontal"
+  | "vertical"
+  | "left"
+  | "right"
+  | "up"
+  | "down";
 
 export interface UseSwipeGestureOptions {
   /** Callback when element is swiped away */
@@ -40,7 +46,10 @@ export interface UseSwipeGestureReturn {
   drag: "x" | "y" | boolean;
   dragConstraints: { left: number; right: number; top: number; bottom: number };
   dragElastic: number;
-  onDragEnd: (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void;
+  onDragEnd: (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => void;
   /** Current drag offset for UI feedback */
   dragOffset: number;
   /** Whether currently dragging */
@@ -96,7 +105,11 @@ export function useSwipeGesture({
       const { offset, velocity } = info;
 
       // Check if swipe exceeds threshold or has enough velocity
-      const shouldDismiss = (offsetValue: number, velocityValue: number, isPositive: boolean) => {
+      const shouldDismiss = (
+        offsetValue: number,
+        velocityValue: number,
+        isPositive: boolean,
+      ) => {
         const absOffset = Math.abs(offsetValue);
         const absVelocity = Math.abs(velocityValue);
         const directionMatches = isPositive ? offsetValue > 0 : offsetValue < 0;

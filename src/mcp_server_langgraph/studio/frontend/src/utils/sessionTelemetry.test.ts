@@ -771,7 +771,9 @@ describe("SessionTelemetry", () => {
       expect(metrics.executionMode.bypassApprovals.autoApproved).toBe(0);
       expect(metrics.executionMode.bypassApprovals.userApproved).toBe(1);
       expect(metrics.executionMode.bypassApprovals.byRiskLevel.high).toBe(1);
-      expect(metrics.executionMode.bypassApprovals.byComplexity.complex).toBe(1);
+      expect(metrics.executionMode.bypassApprovals.byComplexity.complex).toBe(
+        1,
+      );
     });
 
     it("should calculate auto-approval rate", () => {
@@ -809,7 +811,9 @@ describe("SessionTelemetry", () => {
       expect(metrics.executionMode.bypassApprovals.total).toBe(4);
       expect(metrics.executionMode.bypassApprovals.autoApproved).toBe(3);
       expect(metrics.executionMode.bypassApprovals.userApproved).toBe(1);
-      expect(metrics.executionMode.bypassApprovals.autoApprovalRate).toBeCloseTo(0.75, 2);
+      expect(
+        metrics.executionMode.bypassApprovals.autoApprovalRate,
+      ).toBeCloseTo(0.75, 2);
     });
 
     it("should track risk level distribution", () => {
@@ -884,8 +888,12 @@ describe("SessionTelemetry", () => {
       const metrics = telemetry.getMetrics();
       expect(metrics.executionMode.modeChanges.total).toBe(0);
       expect(metrics.executionMode.bypassApprovals.total).toBe(0);
-      expect(Object.keys(metrics.executionMode.modeChanges.byMode)).toHaveLength(0);
-      expect(Object.keys(metrics.executionMode.bypassApprovals.byRiskLevel)).toHaveLength(0);
+      expect(
+        Object.keys(metrics.executionMode.modeChanges.byMode),
+      ).toHaveLength(0);
+      expect(
+        Object.keys(metrics.executionMode.bypassApprovals.byRiskLevel),
+      ).toHaveLength(0);
     });
   });
 });

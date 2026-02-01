@@ -384,9 +384,7 @@ describe("AlertsPanel", () => {
         <AlertsPanel {...defaultProps} connectionStatus="disconnected" />,
       );
 
-      expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-error-9",
-      );
+      expect(screen.getByTestId("connection-status")).toHaveClass("bg-error-9");
     });
 
     it("should show connecting status indicator", () => {
@@ -525,9 +523,7 @@ describe("AlertsPanel", () => {
         <AlertsPanel {...defaultProps} connectionStatus="error" />,
       );
 
-      expect(screen.getByTestId("connection-status")).toHaveClass(
-        "bg-error-9",
-      );
+      expect(screen.getByTestId("connection-status")).toHaveClass("bg-error-9");
     });
 
     it("should handle undefined connection status (defaults to connected)", () => {

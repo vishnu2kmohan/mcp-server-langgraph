@@ -142,7 +142,9 @@ describe("TimelineBar - Rendering", () => {
   describe("design system compliance", () => {
     it("should use ghost variant for playback control buttons per STYLE.md", () => {
       renderWithProvider(<TimelineBar />);
-      const jumpToStartBtn = screen.getByRole("button", { name: /jump to start/i });
+      const jumpToStartBtn = screen.getByRole("button", {
+        name: /jump to start/i,
+      });
       const playBtn = screen.getByRole("button", { name: /play/i });
       const jumpToEndBtn = screen.getByRole("button", { name: /jump to end/i });
 
@@ -178,7 +180,9 @@ describe("TimelineBar - Rendering", () => {
       renderWithProvider(<TimelineBar />);
 
       // Lucide icons should be rendered as SVG elements inside buttons
-      const jumpToStartBtn = screen.getByRole("button", { name: /jump to start/i });
+      const jumpToStartBtn = screen.getByRole("button", {
+        name: /jump to start/i,
+      });
       const svgIcon = jumpToStartBtn.querySelector("svg");
 
       expect(svgIcon).toBeInTheDocument();

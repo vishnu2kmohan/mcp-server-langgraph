@@ -49,7 +49,7 @@ export const renderWithRouter = (component: React.ReactNode) => {
   return render(
     <Provider store={store}>
       <MemoryRouter>{component}</MemoryRouter>
-    </Provider>
+    </Provider>,
   );
 };
 
@@ -194,9 +194,7 @@ interface MockFunctions {
  * Create a mock mutation trigger that returns an RTK Query-like result with unwrap().
  * RTK Query mutations return { unwrap: () => Promise<result> }, not a direct Promise.
  */
-const createMockMutationTrigger = (
-  mockDeleteFn: ReturnType<typeof vi.fn>,
-) => {
+const createMockMutationTrigger = (mockDeleteFn: ReturnType<typeof vi.fn>) => {
   // Track calls to mockDeleteFn but return RTK Query-like structure
   return (id: string) => {
     // Call the mock function to track invocations

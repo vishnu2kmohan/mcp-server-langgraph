@@ -1,6 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Icon } from "./Icon";
-import { Download, CheckCircle, AlertTriangle, Settings, Trash2, Plus, Search } from "lucide-react";
+import {
+  Download,
+  CheckCircle,
+  AlertTriangle,
+  Settings,
+  Trash2,
+  Plus,
+  Search,
+} from "lucide-react";
 
 const meta: Meta<typeof Icon> = {
   title: "UI/Icon",

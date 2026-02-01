@@ -11,9 +11,14 @@
  * - The buttonVariants function is properly exported
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import { Button, buttonVariants } from "./Button";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("Button Variants", () => {
   describe("buttonVariants CVA function", () => {

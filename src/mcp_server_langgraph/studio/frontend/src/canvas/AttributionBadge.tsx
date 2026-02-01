@@ -66,8 +66,10 @@ export function AttributionBadge({
   const config = ATTRIBUTION_CONFIG[attributionType];
   const Icon = config.icon;
 
-  const baseCompactClasses = "inline-flex items-center justify-center p-1 rounded-full";
-  const baseFullClasses = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium";
+  const baseCompactClasses =
+    "inline-flex items-center justify-center p-1 rounded-full";
+  const baseFullClasses =
+    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium";
 
   if (compact) {
     return (

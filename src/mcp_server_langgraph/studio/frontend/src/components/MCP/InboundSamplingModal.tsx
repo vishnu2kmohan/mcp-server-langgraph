@@ -65,7 +65,9 @@ function MessageBubble({ message }: MessageBubbleProps) {
       <div
         className={cn(
           "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
-          isUser ? "bg-primary-9 text-neutral-1" : "bg-neutral-9 text-neutral-1",
+          isUser
+            ? "bg-primary-9 text-neutral-1"
+            : "bg-neutral-9 text-neutral-1",
         )}
       >
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}

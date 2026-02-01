@@ -46,8 +46,9 @@ type OmitMotionConflicts<T> = Omit<
   | "onDrag"
 >;
 
-interface MotionBaseProps
-  extends OmitMotionConflicts<HTMLAttributes<HTMLDivElement>> {
+interface MotionBaseProps extends OmitMotionConflicts<
+  HTMLAttributes<HTMLDivElement>
+> {
   children: ReactNode;
   className?: string;
   /** Duration override in seconds */
@@ -69,7 +70,7 @@ export type MotionFadeInProps = MotionBaseProps;
 export const MotionFadeIn = forwardRef<HTMLDivElement, MotionFadeInProps>(
   function MotionFadeIn(
     { children, className, duration = 0.3, delay = 0, ...props },
-    ref
+    ref,
   ) {
     const prefersReducedMotion = useReducedMotion();
 
@@ -89,7 +90,7 @@ export const MotionFadeIn = forwardRef<HTMLDivElement, MotionFadeInProps>(
         {children}
       </motion.div>
     );
-  }
+  },
 );
 
 // =============================================================================
@@ -118,7 +119,7 @@ export const MotionSlideIn = forwardRef<HTMLDivElement, MotionSlideInProps>(
       delay = 0,
       ...props
     },
-    ref
+    ref,
   ) {
     const prefersReducedMotion = useReducedMotion();
 
@@ -155,15 +156,16 @@ export const MotionSlideIn = forwardRef<HTMLDivElement, MotionSlideInProps>(
         {children}
       </motion.div>
     );
-  }
+  },
 );
 
 // =============================================================================
 // MotionList
 // =============================================================================
 
-export interface MotionListProps
-  extends OmitMotionConflicts<HTMLAttributes<HTMLUListElement>> {
+export interface MotionListProps extends OmitMotionConflicts<
+  HTMLAttributes<HTMLUListElement>
+> {
   children: ReactNode;
   className?: string;
   /** Delay between each child animation */
@@ -177,7 +179,7 @@ export interface MotionListProps
 export const MotionList = forwardRef<HTMLUListElement, MotionListProps>(
   function MotionList(
     { children, className, staggerDelay = 0.05, ...props },
-    ref
+    ref,
   ) {
     const prefersReducedMotion = useReducedMotion();
 
@@ -210,15 +212,16 @@ export const MotionList = forwardRef<HTMLUListElement, MotionListProps>(
         {children}
       </motion.ul>
     );
-  }
+  },
 );
 
 // =============================================================================
 // MotionListItem
 // =============================================================================
 
-export interface MotionListItemProps
-  extends OmitMotionConflicts<HTMLAttributes<HTMLLIElement>> {
+export interface MotionListItemProps extends OmitMotionConflicts<
+  HTMLAttributes<HTMLLIElement>
+> {
   children: ReactNode;
   className?: string;
 }
@@ -238,16 +241,11 @@ export const MotionListItem = forwardRef<HTMLLIElement, MotionListItemProps>(
       : listItemVariants;
 
     return (
-      <motion.li
-        ref={ref}
-        className={className}
-        variants={variants}
-        {...props}
-      >
+      <motion.li ref={ref} className={className} variants={variants} {...props}>
         {children}
       </motion.li>
     );
-  }
+  },
 );
 
 // =============================================================================
@@ -317,8 +315,9 @@ export function MotionPanel({
 // MotionSkeleton
 // =============================================================================
 
-export interface MotionSkeletonProps
-  extends OmitMotionConflicts<Omit<HTMLAttributes<HTMLDivElement>, "children">> {
+export interface MotionSkeletonProps extends OmitMotionConflicts<
+  Omit<HTMLAttributes<HTMLDivElement>, "children">
+> {
   /** Width of the skeleton */
   width?: string | number;
   /** Height of the skeleton */
@@ -335,7 +334,7 @@ export interface MotionSkeletonProps
 export const MotionSkeleton = forwardRef<HTMLDivElement, MotionSkeletonProps>(
   function MotionSkeleton(
     { width, height, variant = "rectangular", className, style, ...props },
-    ref
+    ref,
   ) {
     const prefersReducedMotion = useReducedMotion();
 
@@ -348,11 +347,7 @@ export const MotionSkeleton = forwardRef<HTMLDivElement, MotionSkeletonProps>(
     return (
       <motion.div
         ref={ref}
-        className={cn(
-          "bg-neutral-5",
-          variantClasses[variant],
-          className
-        )}
+        className={cn("bg-neutral-5", variantClasses[variant], className)}
         style={{
           width: typeof width === "number" ? `${width}px` : width,
           height: typeof height === "number" ? `${height}px` : height,
@@ -363,7 +358,7 @@ export const MotionSkeleton = forwardRef<HTMLDivElement, MotionSkeletonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
 // =============================================================================
@@ -384,7 +379,7 @@ export interface MotionBadgeProps extends MotionBaseProps {
 export const MotionBadge = forwardRef<HTMLSpanElement, MotionBadgeProps>(
   function MotionBadge(
     { children, className, pulse = false, variant = "default", ...props },
-    ref
+    ref,
   ) {
     const prefersReducedMotion = useReducedMotion();
 
@@ -402,7 +397,7 @@ export const MotionBadge = forwardRef<HTMLSpanElement, MotionBadgeProps>(
         className={cn(
           "inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full",
           variantClasses[variant],
-          className
+          className,
         )}
         variants={prefersReducedMotion ? undefined : badgeVariants}
         initial="hidden"
@@ -412,7 +407,7 @@ export const MotionBadge = forwardRef<HTMLSpanElement, MotionBadgeProps>(
         {children}
       </motion.span>
     );
-  }
+  },
 );
 
 // =============================================================================

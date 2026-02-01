@@ -5,10 +5,15 @@
  * Tests skill list rendering, uninstall actions, and empty state.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InstalledContent } from "./InstalledContent";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("InstalledContent", () => {
   const defaultProps = {

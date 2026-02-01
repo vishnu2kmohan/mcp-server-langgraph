@@ -6,11 +6,16 @@
  * option lists.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FileCode, Bot, Shield } from "lucide-react";
 import { SelectionCard } from "./SelectionCard";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("SelectionCard", () => {
   describe("rendering", () => {
@@ -21,12 +26,12 @@ describe("SelectionCard", () => {
           description="This is a test description"
           icon={<FileCode data-testid="icon" />}
           onClick={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByText("Test Option")).toBeInTheDocument();
       expect(
-        screen.getByText("This is a test description")
+        screen.getByText("This is a test description"),
       ).toBeInTheDocument();
       expect(screen.getByTestId("icon")).toBeInTheDocument();
     });
@@ -37,7 +42,7 @@ describe("SelectionCard", () => {
           title="Title Only"
           icon={<Bot data-testid="icon" />}
           onClick={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByText("Title Only")).toBeInTheDocument();
@@ -52,7 +57,7 @@ describe("SelectionCard", () => {
           icon={<Shield />}
           badge="Recommended"
           onClick={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByText("Recommended")).toBeInTheDocument();
@@ -68,7 +73,7 @@ describe("SelectionCard", () => {
           icon={<FileCode />}
           selected={true}
           onClick={() => {}}
-        />
+        />,
       );
 
       const button = screen.getByRole("button");
@@ -85,7 +90,7 @@ describe("SelectionCard", () => {
           icon={<FileCode />}
           selected={false}
           onClick={() => {}}
-        />
+        />,
       );
 
       const button = screen.getByRole("button");
@@ -101,7 +106,7 @@ describe("SelectionCard", () => {
           description="No selected prop"
           icon={<FileCode />}
           onClick={() => {}}
-        />
+        />,
       );
 
       const button = screen.getByRole("button");
@@ -120,7 +125,7 @@ describe("SelectionCard", () => {
           description="Click me"
           icon={<FileCode />}
           onClick={handleClick}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button"));
@@ -138,7 +143,7 @@ describe("SelectionCard", () => {
           icon={<FileCode />}
           value="test-value"
           onClick={handleClick}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button"));
@@ -154,7 +159,7 @@ describe("SelectionCard", () => {
           description="Screen reader friendly"
           icon={<FileCode />}
           onClick={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByRole("button")).toBeInTheDocument();
@@ -168,7 +173,7 @@ describe("SelectionCard", () => {
           icon={<FileCode />}
           ariaLabel="Select custom option"
           onClick={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByLabelText("Select custom option")).toBeInTheDocument();
@@ -181,11 +186,11 @@ describe("SelectionCard", () => {
           description="Uses title"
           icon={<FileCode />}
           onClick={() => {}}
-        />
+        />,
       );
 
       expect(
-        screen.getByRole("button", { name: /Default Label/i })
+        screen.getByRole("button", { name: /Default Label/i }),
       ).toBeInTheDocument();
     });
   });
@@ -199,11 +204,11 @@ describe("SelectionCard", () => {
           icon={<FileCode data-testid="icon" />}
           selected={true}
           onClick={() => {}}
-        />
+        />,
       );
 
       const iconContainer = container.querySelector(
-        ".bg-primary-4.text-primary-11"
+        ".bg-primary-4.text-primary-11",
       );
       expect(iconContainer).toBeInTheDocument();
     });
@@ -216,11 +221,11 @@ describe("SelectionCard", () => {
           icon={<FileCode data-testid="icon" />}
           selected={false}
           onClick={() => {}}
-        />
+        />,
       );
 
       const iconContainer = container.querySelector(
-        ".bg-neutral-4.text-neutral-11"
+        ".bg-neutral-4.text-neutral-11",
       );
       expect(iconContainer).toBeInTheDocument();
     });
@@ -234,7 +239,7 @@ describe("SelectionCard", () => {
           description="Consistent padding"
           icon={<FileCode />}
           onClick={() => {}}
-        />
+        />,
       );
 
       const button = screen.getByRole("button");
@@ -248,7 +253,7 @@ describe("SelectionCard", () => {
           description="Consistent gap"
           icon={<FileCode />}
           onClick={() => {}}
-        />
+        />,
       );
 
       const button = screen.getByRole("button");
@@ -262,7 +267,7 @@ describe("SelectionCard", () => {
           description="Consistent border"
           icon={<FileCode />}
           onClick={() => {}}
-        />
+        />,
       );
 
       const button = screen.getByRole("button");

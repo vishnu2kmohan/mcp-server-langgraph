@@ -266,7 +266,8 @@ export function AgentApprovalDialog({
             <AlertTriangle className="w-5 h-5 text-warning-9" />
             Agent Decision Requires Approval
           </h2>
-          <Button size="icon"
+          <Button
+            size="icon"
             variant="secondary"
             className="p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg"
             data-testid="close-dialog"
@@ -310,7 +311,11 @@ export function AgentApprovalDialog({
               <div
                 data-testid="confidence-gauge"
                 className={`h-full transition-all ${getConfidenceColor(request.confidence)}`}
-                style={{ '--progress': `${confidencePercent}%` } as React.CSSProperties}
+                style={
+                  {
+                    "--progress": `${confidencePercent}%`,
+                  } as React.CSSProperties
+                }
               />
             </div>
           </div>
@@ -410,10 +415,7 @@ export function AgentApprovalDialog({
                       <ul className="mt-1 space-y-1">
                         {request.aiExplanation.confidenceFactors.map(
                           (factor, index) => (
-                            <li
-                              key={index}
-                              className="text-neutral-11 text-xs"
-                            >
+                            <li key={index} className="text-neutral-11 text-xs">
                               <span
                                 className={`font-mono ${
                                   factor.weight < 0
@@ -448,7 +450,12 @@ export function AgentApprovalDialog({
                   AI Risk Assessment
                 </h3>
                 {riskLoading && (
-                  <Loader2 className={cn("w-4 h-4 text-insight-9", !prefersReducedMotion && "animate-spin")} />
+                  <Loader2
+                    className={cn(
+                      "w-4 h-4 text-insight-9",
+                      !prefersReducedMotion && "animate-spin",
+                    )}
+                  />
                 )}
               </div>
 
@@ -551,7 +558,12 @@ export function AgentApprovalDialog({
                   Similar Decisions
                 </h3>
                 {historyLoading && (
-                  <Loader2 className={cn("w-4 h-4 text-primary-9", !prefersReducedMotion && "animate-spin")} />
+                  <Loader2
+                    className={cn(
+                      "w-4 h-4 text-primary-9",
+                      !prefersReducedMotion && "animate-spin",
+                    )}
+                  />
                 )}
               </div>
 
@@ -636,9 +648,7 @@ export function AgentApprovalDialog({
             </div>
 
             <div>
-              <span className="text-sm text-neutral-10">
-                Proposed Action:
-              </span>
+              <span className="text-sm text-neutral-10">Proposed Action:</span>
               <p
                 data-testid="proposed-action"
                 className="text-sm text-neutral-12 mt-1 p-2 bg-neutral-2 rounded"
@@ -695,10 +705,7 @@ export function AgentApprovalDialog({
               htmlFor="reason-input"
               className="block text-sm font-medium text-neutral-11 mb-1"
             >
-              Reason{" "}
-              <span className="text-neutral-10">
-                (optional)
-              </span>
+              Reason <span className="text-neutral-10">(optional)</span>
             </label>
             <Textarea
               className="px-3 py-2 text-sm text-neutral-12 placeholder-neutral-9 focus:ring-primary-7"
@@ -724,7 +731,10 @@ export function AgentApprovalDialog({
             {isRejecting ? (
               <Loader2
                 data-testid="reject-loading"
-                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                className={cn(
+                  "w-4 h-4",
+                  !prefersReducedMotion && "animate-spin",
+                )}
               />
             ) : (
               <XCircle className="w-4 h-4" />
@@ -741,7 +751,10 @@ export function AgentApprovalDialog({
             {isApproving ? (
               <Loader2
                 data-testid="approve-loading"
-                className={cn("w-4 h-4", !prefersReducedMotion && "animate-spin")}
+                className={cn(
+                  "w-4 h-4",
+                  !prefersReducedMotion && "animate-spin",
+                )}
               />
             ) : (
               <CheckCircle className="w-4 h-4" />

@@ -5,9 +5,12 @@
  * is shared across the app.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
-import { MCPConnectionProvider, useMCPConnection } from "./MCPConnectionContext";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, renderHook } from "@testing-library/react";
+import {
+  MCPConnectionProvider,
+  useMCPConnection,
+} from "./MCPConnectionContext";
 
 // Mock useMCPWebSocket hook
 vi.mock("../hooks/useMCPWebSocket", () => ({
@@ -33,11 +36,18 @@ vi.mock("../hooks/useMCPWebSocket", () => ({
   })),
 }));
 
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("MCPConnectionContext", () => {
   describe("useMCPConnection", () => {
     it("throws error when used outside provider", () => {
       // Suppress console.error for this test
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       expect(() => {
         renderHook(() => useMCPConnection());

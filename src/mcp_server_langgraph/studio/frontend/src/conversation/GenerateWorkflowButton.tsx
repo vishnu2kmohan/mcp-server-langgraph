@@ -102,7 +102,8 @@ export function GenerateWorkflowButton({
         className,
       )}
       aria-label="Generate workflow from this chat"
-      title="Generate workflow from this chat">
+      title="Generate workflow from this chat"
+    >
       {isGenerating ? (
         <Loader2 size={14} className="animate-spin" />
       ) : (

@@ -778,14 +778,23 @@ Type \`/\` to see available commands.`,
         })
           .unwrap()
           .then(() => {
-            toast.success("Thank you for your feedback!", { id: TOAST_ID_FEEDBACK, duration: 2000 });
+            toast.success("Thank you for your feedback!", {
+              id: TOAST_ID_FEEDBACK,
+              duration: 2000,
+            });
           })
           .catch(() => {
-            toast.error("Failed to save feedback", { id: TOAST_ID_FEEDBACK, duration: 3000 });
+            toast.error("Failed to save feedback", {
+              id: TOAST_ID_FEEDBACK,
+              duration: 3000,
+            });
           });
       } else {
         // Fallback for local-only feedback
-        toast.success("Thank you for your feedback!", { id: TOAST_ID_FEEDBACK, duration: 2000 });
+        toast.success("Thank you for your feedback!", {
+          id: TOAST_ID_FEEDBACK,
+          duration: 2000,
+        });
       }
     },
     [currentSession?.id, messageRatings, submitRating],
@@ -1155,7 +1164,9 @@ Type \`/\` to see available commands.`,
           onSelect={(text) => {
             // User clicked a suggestion but no session exists
             // The parent component should handle session creation
-            toast.info(`Create a new session to ask: "${text}"`, { id: TOAST_ID_SESSION_SUGGEST });
+            toast.info(`Create a new session to ask: "${text}"`, {
+              id: TOAST_ID_SESSION_SUGGEST,
+            });
           }}
           title="Try asking about..."
           compact

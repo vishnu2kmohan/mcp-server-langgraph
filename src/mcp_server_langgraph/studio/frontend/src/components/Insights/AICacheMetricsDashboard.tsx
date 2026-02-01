@@ -107,8 +107,7 @@ function MetricCard({
 }: MetricCardProps) {
   const colorClasses = {
     blue: "text-primary-10 dark:text-primary-7 bg-primary-1 bg-primary-4",
-    green:
-      "text-success-10 dark:text-success-7 bg-success-1 bg-success-4",
+    green: "text-success-10 dark:text-success-7 bg-success-1 bg-success-4",
     purple:
       "text-insight-10 dark:text-insight-9 bg-insight-1 dark:bg-insight-a4",
     orange:
@@ -122,9 +121,7 @@ function MetricCard({
         {icon && (
           <div className={`p-1.5 rounded ${colorClasses[color]}`}>{icon}</div>
         )}
-        <span className="text-sm text-neutral-10">
-          {label}
-        </span>
+        <span className="text-sm text-neutral-10">{label}</span>
       </div>
       <div
         className={`text-2xl font-bold text-neutral-12 ${valueClassName ?? ""}`}
@@ -148,9 +145,7 @@ interface FeatureRowProps {
 function FeatureRow({ feature, metrics }: FeatureRowProps) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-neutral-5 last:border-0">
-      <span className="text-sm font-medium text-neutral-11">
-        {feature}
-      </span>
+      <span className="text-sm font-medium text-neutral-11">{feature}</span>
       <div className="flex items-center gap-4 text-sm text-neutral-11">
         <span data-testid={`feature-${feature}-requests`}>
           {metrics.requestCount} req
@@ -197,7 +192,8 @@ export function AICacheMetricsDashboard({
         <h3 className="text-lg font-semibold text-neutral-12">
           AI Cache Metrics
         </h3>
-        <Button size="icon"
+        <Button
+          size="icon"
           variant="secondary"
           className="p-2 text-neutral-10 hover:text-neutral-11 hover:bg-neutral-2 rounded-lg focus:ring-primary-7"
           type="button"
@@ -220,9 +216,7 @@ export function AICacheMetricsDashboard({
           {/* Cache Hit Ratio Progress */}
           <div className="p-4 rounded-lg bg-neutral-1 border border-neutral-5">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-neutral-11">
-                Cache Hit Ratio
-              </span>
+              <span className="text-sm text-neutral-11">Cache Hit Ratio</span>
               <span className="text-lg font-semibold text-neutral-12">
                 {formatPercentage(snapshot.cacheHitRatio)}
               </span>
@@ -238,7 +232,11 @@ export function AICacheMetricsDashboard({
               <div
                 data-testid="cache-hit-progress-bar"
                 className={`h-full ${getCacheHitBarColor(snapshot.cacheHitRatio)} transition-all duration-300`}
-                style={{ '--progress': `${snapshot.cacheHitRatio * 100}%` } as React.CSSProperties}
+                style={
+                  {
+                    "--progress": `${snapshot.cacheHitRatio * 100}%`,
+                  } as React.CSSProperties
+                }
               />
             </div>
           </div>
@@ -334,17 +332,23 @@ export function AICacheMetricsDashboard({
                     <>
                       <div
                         className="bg-success-9"
-                        style={{ '--progress': `${l1Pct}%` } as React.CSSProperties}
+                        style={
+                          { "--progress": `${l1Pct}%` } as React.CSSProperties
+                        }
                         title={`L1 Hits: ${l1Pct.toFixed(1)}%`}
                       />
                       <div
                         className="bg-primary-9"
-                        style={{ '--progress': `${l2Pct}%` } as React.CSSProperties}
+                        style={
+                          { "--progress": `${l2Pct}%` } as React.CSSProperties
+                        }
                         title={`L2 Hits: ${l2Pct.toFixed(1)}%`}
                       />
                       <div
                         className="bg-neutral-4"
-                        style={{ '--progress': `${missPct}%` } as React.CSSProperties}
+                        style={
+                          { "--progress": `${missPct}%` } as React.CSSProperties
+                        }
                         title={`Misses: ${missPct.toFixed(1)}%`}
                       />
                     </>
@@ -357,9 +361,7 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Zap size={14} className="text-success-9" />
-                    <span className="text-neutral-11">
-                      L1 (Memory)
-                    </span>
+                    <span className="text-neutral-11">L1 (Memory)</span>
                   </div>
                   <span
                     data-testid="l1-hits-value"
@@ -372,9 +374,7 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <HardDrive size={14} className="text-primary-9" />
-                    <span className="text-neutral-11">
-                      L2 (Session)
-                    </span>
+                    <span className="text-neutral-11">L2 (Session)</span>
                   </div>
                   <span
                     data-testid="l2-hits-value"
@@ -386,13 +386,8 @@ export function AICacheMetricsDashboard({
 
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Database
-                      size={14}
-                      className="text-neutral-9"
-                    />
-                    <span className="text-neutral-11">
-                      Misses
-                    </span>
+                    <Database size={14} className="text-neutral-9" />
+                    <span className="text-neutral-11">Misses</span>
                   </div>
                   <span
                     data-testid="tiered-misses-value"
@@ -405,9 +400,7 @@ export function AICacheMetricsDashboard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-insight-9" />
-                    <span className="text-neutral-11">
-                      Cache Age
-                    </span>
+                    <span className="text-neutral-11">Cache Age</span>
                   </div>
                   <span
                     data-testid="cache-age-value"

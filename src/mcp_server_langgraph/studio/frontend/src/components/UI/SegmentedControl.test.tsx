@@ -6,11 +6,16 @@
  *
  * Following TDD: These tests were written FIRST, before implementation.
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SegmentedControl, SegmentedControlItem } from "./SegmentedControl";
 import { LayoutGrid, List } from "lucide-react";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("SegmentedControl", () => {
   // ==========================================================================
@@ -27,7 +32,7 @@ describe("SegmentedControl", () => {
           <SegmentedControlItem value="list" aria-label="List view">
             <List size={16} />
           </SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
@@ -40,7 +45,7 @@ describe("SegmentedControl", () => {
           <SegmentedControlItem value="day">Day</SegmentedControlItem>
           <SegmentedControlItem value="week">Week</SegmentedControlItem>
           <SegmentedControlItem value="month">Month</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getByText("Day")).toBeInTheDocument();
@@ -59,7 +64,7 @@ describe("SegmentedControl", () => {
             <List size={16} />
             <span>List</span>
           </SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getByText("Grid")).toBeInTheDocument();
@@ -75,7 +80,7 @@ describe("SegmentedControl", () => {
         >
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getByRole("radiogroup")).toHaveClass("custom-class");
@@ -99,7 +104,7 @@ describe("SegmentedControl", () => {
           <SegmentedControlItem value="list" aria-label="List view">
             List
           </SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       await user.click(screen.getByText("List"));
@@ -114,7 +119,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="grid" onValueChange={onValueChange}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       await user.click(screen.getByText("Grid"));
@@ -131,7 +136,7 @@ describe("SegmentedControl", () => {
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
           <SegmentedControlItem value="table">Table</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       // Focus the first item
@@ -151,7 +156,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="grid" onValueChange={onValueChange}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const listButton = screen.getByText("List").closest("button");
@@ -172,7 +177,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="list" onValueChange={() => {}}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const gridRadio = screen.getByText("Grid").closest('[role="radio"]');
@@ -187,7 +192,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="list" onValueChange={() => {}}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const listButton = screen.getByText("List").closest("button");
@@ -206,7 +211,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="grid" onValueChange={() => {}}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
@@ -217,7 +222,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="grid" onValueChange={() => {}}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getAllByRole("radio")).toHaveLength(2);
@@ -232,12 +237,12 @@ describe("SegmentedControl", () => {
         >
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getByRole("radiogroup")).toHaveAttribute(
         "aria-label",
-        "View mode"
+        "View mode",
       );
     });
 
@@ -250,7 +255,7 @@ describe("SegmentedControl", () => {
           <SegmentedControlItem value="list" aria-label="List view">
             <List size={16} />
           </SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       expect(screen.getByLabelText("Grid view")).toBeInTheDocument();
@@ -262,7 +267,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="list" onValueChange={() => {}}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const gridButton = screen.getByText("Grid").closest("button");
@@ -283,7 +288,7 @@ describe("SegmentedControl", () => {
       render(
         <SegmentedControl value="grid" onValueChange={() => {}}>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       // Default size should have standard padding
@@ -295,7 +300,7 @@ describe("SegmentedControl", () => {
       render(
         <SegmentedControl value="grid" onValueChange={() => {}} size="sm">
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const container = screen.getByRole("radiogroup");
@@ -306,7 +311,7 @@ describe("SegmentedControl", () => {
       render(
         <SegmentedControl value="grid" onValueChange={() => {}} size="lg">
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const container = screen.getByRole("radiogroup");
@@ -324,7 +329,7 @@ describe("SegmentedControl", () => {
         <SegmentedControl value="grid" onValueChange={() => {}} disabled>
           <SegmentedControlItem value="grid">Grid</SegmentedControlItem>
           <SegmentedControlItem value="list">List</SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const buttons = screen.getAllByRole("radio");
@@ -340,7 +345,7 @@ describe("SegmentedControl", () => {
           <SegmentedControlItem value="list" disabled>
             List
           </SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       const gridButton = screen.getByText("Grid").closest("button");
@@ -360,7 +365,7 @@ describe("SegmentedControl", () => {
           <SegmentedControlItem value="list" disabled>
             List
           </SegmentedControlItem>
-        </SegmentedControl>
+        </SegmentedControl>,
       );
 
       await user.click(screen.getByText("List"));

@@ -76,7 +76,7 @@ export interface UseAvailableToolsResult {
  * @returns Tool data, loading state, and utilities
  */
 export function useAvailableTools(
-  options: UseAvailableToolsOptions = {}
+  options: UseAvailableToolsOptions = {},
 ): UseAvailableToolsResult {
   const { skip = false, searchTerm, source, category } = options;
 
@@ -135,7 +135,7 @@ export function useAvailableTools(
           tool.name.toLowerCase().includes(term) ||
           tool.displayName.toLowerCase().includes(term) ||
           tool.description.toLowerCase().includes(term) ||
-          (tool.serverName && tool.serverName.toLowerCase().includes(term))
+          (tool.serverName && tool.serverName.toLowerCase().includes(term)),
       );
     }
 
@@ -147,7 +147,7 @@ export function useAvailableTools(
     (name: string): UnifiedToolCamelCase | undefined => {
       return tools.find((tool) => tool.name === name);
     },
-    [tools]
+    [tools],
   );
 
   return {

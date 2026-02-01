@@ -40,8 +40,10 @@ import { Button } from "@/components/UI";
 // Types
 // =============================================================================
 
-export interface OTELDataTableProps<T>
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+export interface OTELDataTableProps<T> extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "children"
+> {
   /** Data to display */
   data: T[];
   /** Column definitions */
@@ -120,7 +122,9 @@ export function OTELDataTable<T extends { id?: string }>({
   const [sorting, setSorting] = useState<SortingState>(
     defaultSort ? [{ id: defaultSort.id, desc: defaultSort.desc }] : [],
   );
-  const [internalExpandedRowId, setInternalExpandedRowId] = useState<string | null>(null);
+  const [internalExpandedRowId, setInternalExpandedRowId] = useState<
+    string | null
+  >(null);
 
   // Refs
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -243,10 +247,15 @@ export function OTELDataTable<T extends { id?: string }>({
                   "border-b border-neutral-5",
                   canSort && "cursor-pointer select-none hover:bg-neutral-2",
                 )}
-                onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                onClick={
+                  canSort ? header.column.getToggleSortingHandler() : undefined
+                }
               >
                 <div className="flex items-center gap-1">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  )}
                   {canSort && (
                     <span className="shrink-0">
                       {isSorted === "asc" ? (
@@ -395,10 +404,7 @@ export function OTELDataTable<T extends { id?: string }>({
           shouldVirtualize && "max-h-[600px]",
         )}
       >
-        <table
-          role="table"
-          className="w-full border-collapse text-sm"
-        >
+        <table role="table" className="w-full border-collapse text-sm">
           {renderHeader()}
           {shouldVirtualize ? renderVirtualizedBody() : renderStandardBody()}
         </table>

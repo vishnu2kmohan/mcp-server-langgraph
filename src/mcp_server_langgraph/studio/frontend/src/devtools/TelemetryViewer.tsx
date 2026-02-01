@@ -43,7 +43,8 @@ function CollapsibleSection({
         variant="secondary"
         className="flex w-full p-2 bg-transparent border-none text-sm text-neutral-12 hover:bg-neutral-2"
         type="button"
-        onClick={() => setIsOpen(!isOpen)}>
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <span className="mr-2">{isOpen ? "▼" : "▶"}</span>
         {title}
       </Button>
@@ -188,7 +189,12 @@ export function TelemetryViewer() {
       </div>
       {/* Refresh Button */}
       <div className="p-3 border-t border-neutral-3 text-center">
-        <Button variant="outline" size="sm" className="w-full" onClick={refresh}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={refresh}
+        >
           Refresh Metrics
         </Button>
       </div>

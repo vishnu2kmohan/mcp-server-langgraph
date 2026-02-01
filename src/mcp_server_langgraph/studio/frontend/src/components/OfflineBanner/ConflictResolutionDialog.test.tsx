@@ -7,11 +7,20 @@
  * when coming back online.
  */
 
-import { render, screen, fireEvent as _fireEvent, within as _within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent as _fireEvent,
+  render,
+  screen,
+  within as _within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConflictResolutionDialog } from "./ConflictResolutionDialog";
-import type { SyncConflict, ConflictResolution as _ConflictResolution } from "../../hooks/useOfflineQueue";
+import type {
+  SyncConflict,
+  ConflictResolution as _ConflictResolution,
+} from "../../hooks/useOfflineQueue";
 
 // =============================================================================
 // Test Fixtures
@@ -31,6 +40,11 @@ const createMockConflict = (
 // =============================================================================
 // Tests
 // =============================================================================
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 describe("ConflictResolutionDialog", () => {
   const defaultProps = {
@@ -64,7 +78,9 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "2" }),
         createMockConflict({ actionId: "3" }),
       ];
-      render(<ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />);
+      render(
+        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+      );
       expect(screen.getByText(/3 conflicts/i)).toBeInTheDocument();
     });
 
@@ -169,8 +185,14 @@ describe("ConflictResolutionDialog", () => {
       const user = userEvent.setup();
       const onResolveAll = vi.fn();
       const conflicts = [
-        createMockConflict({ actionId: "1", suggestedResolution: "keep-local" }),
-        createMockConflict({ actionId: "2", suggestedResolution: "keep-server" }),
+        createMockConflict({
+          actionId: "1",
+          suggestedResolution: "keep-local",
+        }),
+        createMockConflict({
+          actionId: "2",
+          suggestedResolution: "keep-server",
+        }),
       ];
       render(
         <ConflictResolutionDialog
