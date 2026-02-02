@@ -17,6 +17,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useRealtimeSync } from "../../../hooks/useRealtimeSync";
 import { buildWebSocketUrl, WS_ENDPOINTS } from "../../../utils/websocket";
 import { reportWebSocketMetrics } from "../../../utils/websocketTelemetry";
+import { authenticatedFetch } from "../../../utils/authenticatedFetch";
 import type { ConsoleEntry, NetworkEntry } from "../types";
 
 // Import typed protocols for type-safe WebSocket message handling
@@ -55,6 +56,10 @@ export interface UseDevToolsWebSocketOptions {
   maxNetworkEntries?: number;
   /** Context entity ID for filtering (session or workflow ID) */
   contextEntityId?: string | null;
+  /** Enable HTTP polling fallback when WebSocket is disconnected (Fix 4) */
+  enableHttpFallback?: boolean;
+  /** HTTP polling interval in milliseconds (default: 5000) */
+  httpPollingInterval?: number;
 }
 
 export interface UseDevToolsWebSocketReturn {
@@ -76,6 +81,8 @@ export interface UseDevToolsWebSocketReturn {
   reconnect: () => void;
   /** Number of reconnection attempts (for dashboard visibility) */
   reconnectAttempts: number;
+  /** Whether HTTP polling fallback is active (Fix 4) */
+  isHttpPollingActive: boolean;
 }
 
 // =============================================================================
@@ -129,6 +136,8 @@ export function useDevToolsWebSocket(
     maxConsoleEntries = DEFAULT_MAX_CONSOLE_ENTRIES,
     maxNetworkEntries = DEFAULT_MAX_NETWORK_ENTRIES,
     contextEntityId,
+    enableHttpFallback = true, // Fix 4: Enable HTTP polling fallback by default
+    httpPollingInterval = 5000,
   } = options;
 
   const [consoleEntries, setConsoleEntries] = useState<ConsoleEntry[]>([]);
@@ -136,6 +145,8 @@ export function useDevToolsWebSocket(
   const [traceSteps, setTraceSteps] = useState<TraceStepPayload[]>([]);
   const [connectionStatus, setConnectionStatus] =
     useState<DevToolsWebSocketStatus>("disconnected");
+  // Fix 4: Track HTTP polling state
+  const [isHttpPollingActive, setIsHttpPollingActive] = useState(false);
 
   const contextEntityIdRef = useRef(contextEntityId);
   contextEntityIdRef.current = contextEntityId;
@@ -300,6 +311,101 @@ export function useDevToolsWebSocket(
     };
   }, [disconnect]);
 
+  // Fix 4: HTTP polling fallback when WebSocket is disconnected
+  // This ensures Agent Trace data is available even when WS fails
+  useEffect(() => {
+    // Only poll if:
+    // - HTTP fallback is enabled
+    // - WebSocket is disconnected
+    // - We have a session/context to poll for
+    // - The hook is enabled
+    const shouldPoll =
+      enableHttpFallback &&
+      enabled &&
+      contextEntityId &&
+      (connectionStatus === "disconnected" || connectionStatus === "error");
+
+    if (!shouldPoll) {
+      setIsHttpPollingActive(false);
+      return;
+    }
+
+    setIsHttpPollingActive(true);
+
+    const pollAgentTrace = async () => {
+      try {
+        const response = await authenticatedFetch(
+          `/api/v1/sessions/${contextEntityId}/agent-execution-trace`,
+        );
+
+        if (!response.ok) {
+          console.debug(
+            "[DevTools WS] HTTP fallback fetch failed:",
+            response.statusText,
+          );
+          return;
+        }
+
+        const data = await response.json();
+        if (data.traces && Array.isArray(data.traces)) {
+          // Transform API response to TraceStepPayload format
+          const newSteps: TraceStepPayload[] = data.traces.map(
+            (trace: {
+              trace_id: string;
+              node_name: string;
+              status: string;
+              start_time: number;
+              end_time?: number;
+              duration_ms?: number;
+              session_id?: string;
+            }) => ({
+              id: trace.trace_id,
+              name: trace.node_name,
+              status: trace.status as TraceStepPayload["status"],
+              startTime: trace.start_time,
+              endTime: trace.end_time,
+              duration: trace.duration_ms,
+              session_id: trace.session_id ?? contextEntityId,
+            }),
+          );
+
+          // Only update if we have new data
+          if (newSteps.length > 0) {
+            setTraceSteps((prev) => {
+              // Fix: Merge by ID instead of filter to allow status updates
+              // (e.g., running → completed transitions)
+              const stepMap = new Map(prev.map((s) => [s.id, s]));
+              for (const step of newSteps) {
+                // Update existing or add new
+                stepMap.set(step.id, step);
+              }
+              return Array.from(stepMap.values());
+            });
+          }
+        }
+      } catch (error) {
+        console.debug("[DevTools WS] HTTP fallback error:", error);
+      }
+    };
+
+    // Initial fetch
+    pollAgentTrace();
+
+    // Set up polling interval
+    const intervalId = setInterval(pollAgentTrace, httpPollingInterval);
+
+    return () => {
+      clearInterval(intervalId);
+      setIsHttpPollingActive(false);
+    };
+  }, [
+    enableHttpFallback,
+    enabled,
+    contextEntityId,
+    connectionStatus,
+    httpPollingInterval,
+  ]);
+
   /**
    * Clear console entries.
    */
@@ -331,6 +437,7 @@ export function useDevToolsWebSocket(
     clearTraceSteps,
     reconnect: wsReconnect,
     reconnectAttempts,
+    isHttpPollingActive, // Fix 4: Expose HTTP polling status
   };
 }
 

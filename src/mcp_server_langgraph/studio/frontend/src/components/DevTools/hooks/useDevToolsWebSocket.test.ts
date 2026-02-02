@@ -584,4 +584,148 @@ describe("useDevToolsWebSocket", () => {
       expect(result.current.reconnectAttempts).toBe(0);
     });
   });
+
+  describe("HTTP polling fallback (Fix 4)", () => {
+    beforeEach(() => {
+      // Mock fetch for HTTP polling
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              session_id: "session-123",
+              traces: [
+                {
+                  trace_id: "trace-1",
+                  node_name: "router",
+                  status: "completed",
+                  start_time: Date.now(),
+                  end_time: Date.now() + 100,
+                  duration_ms: 100,
+                },
+              ],
+              total: 1,
+              has_more: false,
+            }),
+        }),
+      );
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("should expose isHttpPollingActive in return value", () => {
+      const { result } = renderHook(() =>
+        useDevToolsWebSocket({ enabled: true }),
+      );
+
+      expect(typeof result.current.isHttpPollingActive).toBe("boolean");
+    });
+
+    it("should enable HTTP polling when WS is disconnected and context is provided", async () => {
+      // Force error state (disconnected auto-reconnects in mock)
+      mockStatus = "error";
+
+      const { result } = renderHook(() =>
+        useDevToolsWebSocket({
+          enabled: true,
+          contextEntityId: "session-123",
+          enableHttpFallback: true,
+        }),
+      );
+
+      // Wait for polling to start
+      await waitFor(() => {
+        expect(result.current.isHttpPollingActive).toBe(true);
+      });
+
+      // Verify fetch was called with correct URL
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "/api/v1/sessions/session-123/agent-execution-trace",
+        ),
+        expect.any(Object),
+      );
+    });
+
+    it("should NOT poll when WS is connected", async () => {
+      const { result } = renderHook(() =>
+        useDevToolsWebSocket({
+          enabled: true,
+          contextEntityId: "session-123",
+          enableHttpFallback: true,
+        }),
+      );
+
+      act(() => {
+        simulateConnect();
+      });
+
+      await waitFor(() => {
+        expect(result.current.status).toBe("connected");
+      });
+
+      expect(result.current.isHttpPollingActive).toBe(false);
+    });
+
+    it("should stop polling when WS reconnects", async () => {
+      // Start in error state (triggers polling)
+      mockStatus = "error";
+
+      const { result, rerender } = renderHook(() =>
+        useDevToolsWebSocket({
+          enabled: true,
+          contextEntityId: "session-123",
+          enableHttpFallback: true,
+        }),
+      );
+
+      await waitFor(() => {
+        expect(result.current.isHttpPollingActive).toBe(true);
+      });
+
+      // Simulate reconnect
+      act(() => {
+        simulateConnect();
+      });
+
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current.status).toBe("connected");
+        expect(result.current.isHttpPollingActive).toBe(false);
+      });
+    });
+
+    it("should NOT poll when enableHttpFallback is false", async () => {
+      mockStatus = "error"; // Use error to avoid auto-reconnect
+
+      const { result } = renderHook(() =>
+        useDevToolsWebSocket({
+          enabled: true,
+          contextEntityId: "session-123",
+          enableHttpFallback: false,
+        }),
+      );
+
+      // Should not activate polling
+      expect(result.current.isHttpPollingActive).toBe(false);
+    });
+
+    it("should NOT poll when no contextEntityId is provided", async () => {
+      mockStatus = "error"; // Use error to avoid auto-reconnect
+
+      const { result } = renderHook(() =>
+        useDevToolsWebSocket({
+          enabled: true,
+          contextEntityId: undefined, // No session ID
+          enableHttpFallback: true,
+        }),
+      );
+
+      expect(result.current.isHttpPollingActive).toBe(false);
+    });
+  });
 });
