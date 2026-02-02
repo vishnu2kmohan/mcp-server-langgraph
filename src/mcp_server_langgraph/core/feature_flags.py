@@ -1803,6 +1803,26 @@ class FeatureFlags(BaseSettings):
     )
 
     # =========================================================================
+    # Agent Execution Tracing (DevTools Agent Trace Tab)
+    # =========================================================================
+    # NOTE: This is DISTINCT from:
+    # - enable_context_graph: Decision Traces for precedent search (above)
+    # - OTEL Distributed Tracing: Infrastructure-level traces → Grafana Tempo
+    #
+    # Agent Execution Tracing captures LangGraph node execution events for
+    # real-time DevTools visualization in the Agent Trace tab.
+    # =========================================================================
+
+    enable_agent_execution_tracing: bool = Field(
+        default=False,
+        description="Enable LangGraph Agent Execution Tracing for Studio sessions "
+        "(FF_ENABLE_AGENT_EXECUTION_TRACING). "
+        "Captures node execution events from LangGraph graphs for DevTools visualization. "
+        "DISTINCT from enable_context_graph (Decision Traces) and OTEL distributed tracing. "
+        "Set FF_ENABLE_AGENT_EXECUTION_TRACING=true to activate.",
+    )
+
+    # =========================================================================
     # Settings Migration: Feature Toggles (moved from Settings for proper FF semantics)
     # These flags control feature enablement and are suitable for gradual rollout,
     # A/B testing, and kill switches. Infrastructure config remains in Settings.
