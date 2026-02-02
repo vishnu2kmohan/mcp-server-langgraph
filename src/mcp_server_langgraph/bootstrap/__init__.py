@@ -62,6 +62,11 @@ from mcp_server_langgraph.bootstrap.context_graph import (
     ContextGraphState,
     init_context_graph,
 )
+from mcp_server_langgraph.bootstrap.agent_execution_tracing import (
+    cleanup_agent_execution_tracing,
+    init_agent_execution_trace_repository,
+    is_agent_execution_tracing_available,
+)
 from mcp_server_langgraph.bootstrap.semantic import (
     SemanticState,
     init_semantic,
@@ -89,6 +94,7 @@ class AppState:
     websocket: WebSocketState | None = None
     skills: SkillsState | None = None
     context_graph: ContextGraphState | None = None
+    agent_execution_tracing_available: bool = False  # Fix 3: Separate from context_graph
     semantic: SemanticState | None = None
     model_sync: ModelSyncState | None = None
 
@@ -104,6 +110,10 @@ class AppState:
 
         if self.semantic:
             await self.semantic.cleanup()
+
+        # Agent execution tracing cleanup (Fix 3: Separate from context_graph)
+        if self.agent_execution_tracing_available:
+            cleanup_agent_execution_tracing()
 
         if self.context_graph:
             await self.context_graph.cleanup()
@@ -182,6 +192,11 @@ async def bootstrap_all(settings: "Settings") -> AppState:
     # Phase 7: Context graph (async, decision trace capture)
     context_graph = await init_context_graph(settings)
 
+    # Phase 7b: Agent Execution Tracing (async, separate from context_graph)
+    # Fix 3: Initialize with its own feature flag (FF_ENABLE_AGENT_EXECUTION_TRACING)
+    # This is DISTINCT from Decision Traces (context_graph above)
+    agent_execution_tracing_available = await init_agent_execution_trace_repository(settings)
+
     # Phase 8: Semantic index (async, tool/skill/memory search)
     semantic = await init_semantic(settings)
 
@@ -196,6 +211,7 @@ async def bootstrap_all(settings: "Settings") -> AppState:
         websocket=websocket,
         skills=skills,
         context_graph=context_graph,
+        agent_execution_tracing_available=agent_execution_tracing_available,
         semantic=semantic,
         model_sync=model_sync,
     )
@@ -220,6 +236,9 @@ __all__ = [
     "init_websocket_lifecycle",
     "init_skills",
     "init_context_graph",
+    "init_agent_execution_trace_repository",
+    "is_agent_execution_tracing_available",
+    "cleanup_agent_execution_tracing",
     "init_semantic",
     "init_model_sync",
 ]

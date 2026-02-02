@@ -78,13 +78,9 @@ async def init_context_graph(settings: "Settings") -> ContextGraphState | None:
     from mcp_server_langgraph.core.dependencies import (
         get_async_session,
         set_decision_trace_repository,
-        set_langgraph_execution_trace_repository,
     )
     from mcp_server_langgraph.repositories.decision_trace import (
         PostgresDecisionTraceRepository,
-    )
-    from mcp_server_langgraph.repositories.langgraph_execution_trace import (
-        PostgresLangGraphExecutionTraceRepository,
     )
     from mcp_server_langgraph.schedulers.decision_retention import (
         start_retention_scheduler,
@@ -96,11 +92,12 @@ async def init_context_graph(settings: "Settings") -> ContextGraphState | None:
     # Register repository singleton for GDPR access (ADR-0101 Phase 11)
     set_decision_trace_repository(repository)
 
-    # Phase 4: Create and register LangGraph execution trace repository
-    # Used by DevTools AgentTraceTab for historical trace display
-    execution_trace_repository = PostgresLangGraphExecutionTraceRepository(session_factory=get_async_session)
-    set_langgraph_execution_trace_repository(execution_trace_repository)
-    logger.debug("LangGraph execution trace repository initialized")
+    # NOTE: LangGraph Execution Trace repository is now initialized separately
+    # in bootstrap/agent_execution_tracing.py with its own feature flag
+    # (FF_ENABLE_AGENT_EXECUTION_TRACING). This separation ensures:
+    # 1. Agent execution traces can be enabled independently of context graph
+    # 2. Clear terminology: Decision Traces (here) vs Agent Execution Traces
+    # See: Triple-AI Diagnosis Plan - Fix 3
 
     # Create and start emitter
     emitter = DecisionEmitter(repository)
