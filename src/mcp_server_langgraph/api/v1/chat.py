@@ -191,6 +191,14 @@ class ChatCompletionRequest(BaseModel):
         default=None,
         description="Optional list of tools for idempotency hashing (internal use).",
     )
+    # Agent Execution Tracing (DevTools Agent Trace Tab)
+    emit_agent_execution_trace: bool = Field(
+        default=True,
+        description="Emit LangGraph Agent Execution Traces to DevTools. "
+        "Enabled by default when FF_ENABLE_AGENT_EXECUTION_TRACING is true. "
+        "Set to false to explicitly disable for a specific request. "
+        "DISTINCT from OTEL distributed tracing and Decision Traces.",
+    )
 
     @field_validator("request_id")
     @classmethod
@@ -437,6 +445,85 @@ def _compute_content_hash(
 
     # Full SHA-256 hash (R2-Finding 2: no truncation)
     return hashlib.sha256(canonical_str.encode()).hexdigest()
+
+
+def resolve_agent_execution_tracing(
+    emit_agent_execution_trace: bool,
+    is_studio_session: bool,
+) -> bool:
+    """Resolve agent execution trace emission with feature flag enforcement.
+
+    Security: Feature flag acts as GATE, not just default.
+    Client cannot enable tracing if flag is disabled.
+
+    NOTE: This is DISTINCT from:
+    - enable_context_graph (Decision Traces)
+    - OTEL distributed tracing (always on for observability)
+
+    Args:
+        emit_agent_execution_trace: Request parameter value (defaults to True)
+        is_studio_session: Whether this is a Studio session (X-Studio-Session header)
+
+    Returns:
+        True if agent execution traces should be emitted, False otherwise
+    """
+    from mcp_server_langgraph.core.feature_flags import feature_flags
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    # Feature flag disabled = always false, regardless of request
+    if not feature_flags.enable_agent_execution_tracing:
+        if emit_agent_execution_trace:
+            logger.warning("emit_agent_execution_trace=true ignored: enable_agent_execution_tracing flag is disabled")
+        return False
+
+    # Feature flag enabled - respect request, but only for Studio sessions
+    if not is_studio_session:
+        return False  # Non-Studio clients don't get agent execution tracing
+
+    # Studio session with flag enabled - use request value (defaults to True)
+    # Client can explicitly set to false to disable for a specific request
+    return emit_agent_execution_trace
+
+
+def should_emit_traces_with_availability_check(
+    emit_agent_execution_trace: bool,
+    is_studio_session: bool,
+) -> bool:
+    """Check if agent execution traces should be emitted, including availability check.
+
+    Combines:
+    1. Feature flag gate (resolve_agent_execution_tracing)
+    2. Repository availability check (fail-fast pattern)
+
+    Args:
+        emit_agent_execution_trace: Request parameter value (defaults to True)
+        is_studio_session: Whether this is a Studio session
+
+    Returns:
+        True if traces should be emitted AND repository is available
+    """
+    from mcp_server_langgraph.observability.telemetry import logger
+
+    # First, check feature flag and session type
+    should_emit = resolve_agent_execution_tracing(emit_agent_execution_trace, is_studio_session)
+    if not should_emit:
+        return False
+
+    # Second, check repository availability (fail-fast pattern)
+    try:
+        from mcp_server_langgraph.bootstrap.agent_execution_tracing import (
+            is_agent_execution_tracing_available,
+        )
+
+        if not is_agent_execution_tracing_available():
+            logger.warning("Agent execution tracing requested but unavailable - traces will not be emitted")
+            return False
+    except ImportError:
+        # Module not yet created - assume unavailable
+        logger.debug("agent_execution_tracing module not available, skipping traces")
+        return False
+
+    return True
 
 
 async def _stream_cached_response(
@@ -3033,6 +3120,8 @@ async def create_stream(
         thinking_tokens: int | None = None
         model_name: str | None = None
         sources_collected: list[dict[str, Any]] = []
+        # Fix: Accumulate usage data for persistence (token usage display after revalidation)
+        accumulated_usage: dict[str, Any] | None = None
 
         try:
             async for chunk in service.create_stream(
@@ -3053,6 +3142,11 @@ async def create_stream(
                 tool_preference=request.tool_preference,
                 tool_selection_mode=request.tool_selection_mode,
                 selected_tools=request.selected_tools,
+                # Fix: Wire emit_agent_execution_trace to streaming (defaults to True)
+                emit_agent_execution_trace=should_emit_traces_with_availability_check(
+                    request.emit_agent_execution_trace,
+                    is_studio_session=True,  # Studio frontend uses this endpoint
+                ),
             ):
                 # Accumulate delta content for persistence
                 if "delta" in chunk and "content" in chunk["delta"]:
@@ -3080,6 +3174,10 @@ async def create_stream(
                 # Collect sources for persistence
                 if "sources" in chunk:
                     sources_collected.extend(chunk["sources"])
+
+                # Fix: Capture usage data from final chunk for persistence
+                if "usage" in chunk and chunk["usage"]:
+                    accumulated_usage = chunk["usage"]
 
                 # CR-Finding: Accumulate tool_calls for caching
                 if "delta" in chunk and "tool_calls" in chunk["delta"]:
@@ -3140,6 +3238,10 @@ async def create_stream(
 
                     if model_name:
                         message_data["model_name"] = model_name
+
+                    # Fix: Persist usage data for token display after revalidation
+                    if accumulated_usage:
+                        message_data["usage"] = accumulated_usage
 
                     result = await session_service.add_message(
                         request.session_id,
