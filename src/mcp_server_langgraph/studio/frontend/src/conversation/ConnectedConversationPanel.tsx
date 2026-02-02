@@ -42,7 +42,7 @@ import {
   selectCurrentSession,
   createSession,
   clearMessages,
-  saveAssistantMessage,
+  // Note: saveAssistantMessage removed - backend already persists during streaming (Fix 1)
 } from "../store/slices/sessionSlice";
 import {
   selectExecutionMode,
@@ -308,6 +308,15 @@ export const ConnectedConversationPanel = forwardRef<
   const lastThinkingTokensRef = useRef<number | null>(null);
   const lastStreamedSourcesRef = useRef<typeof streamingSources>([]);
 
+  // Fix 1: Seamless handoff state for UI flicker prevention
+  // The backend streaming endpoint already persists the message, so we DON'T call saveAssistantMessage.
+  // These states enable seamless handoff from streaming content to persisted message.
+  const [lastStreamedContent, setLastStreamedContent] = useState<string | null>(
+    null,
+  );
+  const [revalidationInProgress, setRevalidationInProgress] = useState(false);
+  const [revalidationFailed, setRevalidationFailed] = useState(false);
+
   // =============================================================================
   // Artifact Extraction (connects Chat to Canvas)
   // =============================================================================
@@ -408,6 +417,29 @@ export const ConnectedConversationPanel = forwardRef<
   // Hook for revalidating loader data after sending messages
   const { revalidateMessages } = useMessageRevalidation();
 
+  // Retry handler for failed revalidation (Fix 1: graceful degradation)
+  // Note: This handler can be passed to MessageBubble for retry UI, or exposed via context
+  const _retryRevalidation = useCallback(() => {
+    if (!lastStreamedContent) return;
+
+    setRevalidationInProgress(true);
+    setRevalidationFailed(false);
+
+    Promise.resolve()
+      .then(() => revalidateMessages())
+      .then(() => new Promise((resolve) => setTimeout(resolve, 50)))
+      .then(() => {
+        setLastStreamedContent(null);
+      })
+      .catch((error: unknown) => {
+        console.error("Revalidation retry failed:", error);
+        setRevalidationFailed(true);
+      })
+      .finally(() => {
+        setRevalidationInProgress(false);
+      });
+  }, [lastStreamedContent, revalidateMessages]);
+
   // Get messages from the chat loader (try both session and index routes)
   const sessionLoaderData = useRouteLoaderData("chat-session") as
     | ChatLoaderData
@@ -493,22 +525,53 @@ export const ConnectedConversationPanel = forwardRef<
   }, [currentSession?.messages, loaderData?.messages]);
 
   // Append the streaming message separately so we don't re-merge/re-sort on every chunk.
+  // Fix 1: Seamless handoff - show lastStreamedContent during revalidation to prevent flicker.
   const messages = useMemo(() => {
-    if (isStreaming && streamingContent) {
+    // Check if we have a persisted assistant message that matches our streamed content
+    // This prevents the brief double-render gap
+    const lastPersistedAssistantMessage = baseMessages
+      .filter((m) => m.role === "assistant")
+      .pop();
+    const hasMatchingPersistedMessage =
+      lastPersistedAssistantMessage &&
+      lastStreamedContent &&
+      lastPersistedAssistantMessage.content?.startsWith(
+        lastStreamedContent.slice(0, 100),
+      );
+
+    // Show streaming placeholder if:
+    // - We're actively streaming, OR
+    // - We have lastStreamedContent AND no matching persisted message yet
+    const contentToShow = streamingContent || lastStreamedContent;
+    const shouldShowPlaceholder =
+      (isStreaming && streamingContent) ||
+      (lastStreamedContent && !hasMatchingPersistedMessage);
+
+    if (shouldShowPlaceholder && contentToShow) {
       return [
         ...baseMessages,
         {
           id: "streaming-message",
           role: "assistant" as const,
-          content: streamingContent,
+          content: contentToShow,
           timestamp: Date.now(),
-          isStreaming: true,
+          isStreaming: isStreaming, // Only show streaming indicator when actually streaming
+          isRevalidating: revalidationInProgress && !isStreaming, // Show saving indicator
+          revalidationFailed: revalidationFailed, // Show retry option on failure
           sources: streamingSources, // Source citations from web search
         },
       ];
     }
     return baseMessages;
-  }, [baseMessages, isStreaming, streamingContent, streamingSources]);
+  }, [
+    baseMessages,
+    isStreaming,
+    streamingContent,
+    streamingSources,
+    lastStreamedContent,
+    revalidationInProgress,
+    revalidationFailed,
+  ]);
 
   // =============================================================================
   // Session Auto-Naming
@@ -528,7 +591,9 @@ export const ConnectedConversationPanel = forwardRef<
   // Streaming Completion Effects
   // =============================================================================
 
-  // When streaming completes, save the assistant message to the session
+  // When streaming completes, revalidate to fetch the persisted message
+  // Fix 1: DO NOT call saveAssistantMessage - backend already persists during streaming.
+  // This eliminates the duplicate message issue.
   useEffect(() => {
     if (
       !isStreaming &&
@@ -539,41 +604,45 @@ export const ConnectedConversationPanel = forwardRef<
       streamingCompleteRef.current = false;
       lastStreamedContentRef.current = "";
 
-      // Add assistant message to Redux and persist to backend
+      // Only revalidate if we have content (backend already persisted)
       if (sessionId && assistantContent.trim()) {
-        // Get captured usage data from refs
-        const capturedUsage = lastStreamedUsageRef.current;
-        const capturedThinkingTokens = lastThinkingTokensRef.current;
-        const capturedSources = lastStreamedSourcesRef.current;
-
         // Clear refs after capturing
         lastStreamedUsageRef.current = null;
         lastThinkingTokensRef.current = null;
         lastStreamedSourcesRef.current = [];
 
-        dispatch(
-          saveAssistantMessage({
-            role: "assistant",
-            content: assistantContent,
-            // Include token usage for cost tracking in the UI
-            usage: capturedUsage ?? undefined,
-            thinkingTokens: capturedThinkingTokens ?? undefined,
-            // Include source citations from web search results
-            sources: capturedSources.length > 0 ? capturedSources : undefined,
-          }),
-        )
-          .unwrap()
-          .then(() => {
-            // Revalidate to sync with loader after save completes
-            revalidateMessages();
+        // Fix 1: Seamless Handoff Pattern
+        // 1. Capture streamed content BEFORE any async operations
+        setLastStreamedContent(assistantContent);
+        setRevalidationInProgress(true);
+        setRevalidationFailed(false);
 
-            // Extract artifacts from the completed stream and save to canvas
-            // This connects chat streaming to the canvas panel
-            extractAndSaveArtifacts(assistantContent);
+        // 2. Revalidate to fetch persisted message from backend
+        // Note: We use Promise.resolve().then() instead of async/await
+        // to avoid needing to mark this effect as async
+        Promise.resolve()
+          .then(() => revalidateMessages())
+          .then(() => {
+            // 3. SUCCESS: Clear placeholder after messages are confirmed in store
+            // Small delay ensures React has re-rendered with new messages
+            return new Promise((resolve) => setTimeout(resolve, 50));
           })
-          .catch(() => {
-            // Error already logged by thunk
+          .then(() => {
+            // Clear the placeholder - persisted message is now in store
+            setLastStreamedContent(null);
+          })
+          .catch((error: unknown) => {
+            // 4. FAILURE: Keep lastStreamedContent visible, show retry option
+            console.error("Revalidation failed:", error);
+            setRevalidationFailed(true);
+            // Do NOT clear lastStreamedContent - keep message visible
+          })
+          .finally(() => {
+            setRevalidationInProgress(false);
           });
+
+        // 5. Extract artifacts (independent of message display)
+        extractAndSaveArtifacts(assistantContent);
       }
     }
   }, [
