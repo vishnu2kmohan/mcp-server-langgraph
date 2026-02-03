@@ -223,7 +223,7 @@ class TestBroadcastingSpanProcessor:
         assert "span_id" in result
         assert result["name"] == "http.request"
         assert result["service_name"] == "api-gateway"
-        assert result["status"] == "OK"
+        assert result["status"] == "ok"  # Protocol expects lowercase
         assert "duration_ms" in result
         assert result["duration_ms"] == 150.0  # 150ms
         assert "attributes" in result

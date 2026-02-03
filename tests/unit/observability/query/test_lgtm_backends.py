@@ -323,8 +323,8 @@ class TestLokiLoggingClient:
             # WHEN
             logql = client._build_logql(service_name="mcp-server")
 
-            # THEN
-            assert 'service_name="mcp-server"' in logql
+            # THEN - LogQL uses 'service' label (Docker Compose service name)
+            assert 'service="mcp-server"' in logql
 
     @pytest.mark.asyncio
     async def test_build_logql_with_level_filter(self) -> None:
@@ -340,8 +340,8 @@ class TestLokiLoggingClient:
             # WHEN
             logql = client._build_logql(level=LogLevel.ERROR)
 
-            # THEN
-            assert '"level":"error"' in logql
+            # THEN - LogQL uses label selector syntax, not JSON
+            assert 'level="error"' in logql
 
     @pytest.mark.asyncio
     async def test_build_logql_with_text_query(self) -> None:

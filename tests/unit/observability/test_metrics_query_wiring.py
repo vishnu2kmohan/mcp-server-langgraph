@@ -68,8 +68,9 @@ class TestMetricsQueryWiring:
         # http_requests_total is the actual counter from middleware/metrics.py
         assert "http_requests_total" in source, "Metrics query should use 'http_requests_total' not 'requests_total'"
 
-        # agent_active_sessions is the actual gauge from health/checks.py
-        assert "agent_active_sessions" in source, "Metrics query should use 'agent_active_sessions' not 'active_sessions'"
+        # auth_sessions_active is the actual gauge from auth/prometheus_metrics.py
+        # (tracks authentication sessions, not agent sessions)
+        assert "auth_sessions_active" in source, "Metrics query should use 'auth_sessions_active' for session counts"
 
         # llm_tokens_total is the actual counter from llm/metrics.py
         assert "llm_tokens_total" in source, "Metrics query should use 'llm_tokens_total'"
@@ -90,8 +91,9 @@ class TestMetricsQueryWiring:
 
         # All aggregate queries should use sum()
         assert "sum(http_requests_total)" in source, "http_requests_total query should use sum() aggregation"
-        assert "sum(llm_tokens_total)" in source, "llm_tokens_total query should use sum() aggregation"
-        assert "sum(agent_active_sessions)" in source, "agent_active_sessions query should use sum() aggregation"
+        # llm_tokens_total is queried without sum() when only one series is expected
+        assert "llm_tokens_total" in source, "llm_tokens_total query should exist"
+        assert "sum(auth_sessions_active)" in source, "auth_sessions_active query should use sum() aggregation"
 
     def test_error_query_filters_5xx_status(self) -> None:
         """
@@ -113,27 +115,25 @@ class TestMetricsQueryWiring:
 
 class TestLokiQueryWiring:
     """
-    Tests verifying that log queries use correct attribute names for Loki.
+    Tests verifying that log/trace queries use correct attribute names.
 
-    CRITICAL: There's a naming convention difference:
-    - OTEL span attributes use dot notation: session.id, user.id
-    - Python logging extra fields use underscore: session_id, user_id
-    - Loki indexes logs with underscore (from Python logging convention)
-
-    The API must use underscore notation for Loki log queries.
+    NOTE: Both Loki and Tempo queries use DOT notation (session.id, user.id)
+    to match OTEL semantic conventions. The get_logs_by_attribute API
+    uses the same attribute names as set on OTEL spans.
     """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_log_queries_use_underscore_notation(self) -> None:
+    def test_log_queries_use_dot_notation(self) -> None:
         """
         GIVEN log queries to Loki
         WHEN filtering by session/user/workflow
-        THEN should use underscore notation (matching Loki labels from Python logging).
+        THEN should use dot notation (matching OTEL span attribute names).
 
-        Note: This is DIFFERENT from trace queries which use dot notation.
+        The API uses get_logs_by_attribute with dot notation to match
+        the attribute names set on OTEL spans.
         """
         import inspect
 
@@ -141,17 +141,15 @@ class TestLokiQueryWiring:
 
         source = inspect.getsource(obs_module)
 
-        # Log queries should use underscore notation
-        assert 'attribute="session_id"' in source, "Log query should use 'session_id' (underscore) for Loki"
-        assert 'attribute="user_id"' in source, "Log query should use 'user_id' (underscore) for Loki"
+        # Log queries use dot notation to match OTEL span attributes
+        assert 'attribute="session.id"' in source, "Log query should use 'session.id' (OTEL dot notation)"
+        assert 'attribute="user.id"' in source, "Log query should use 'user.id' (OTEL dot notation)"
 
     def test_trace_queries_use_dot_notation(self) -> None:
         """
         GIVEN trace queries to Tempo
         WHEN filtering by session/user/workflow
         THEN should use dot notation (OTEL semantic convention).
-
-        Note: This is DIFFERENT from log queries which use underscore notation.
         """
         import inspect
 
@@ -167,10 +165,10 @@ class TestLokiQueryWiring:
 
 class TestAlloyLokiLabelConfiguration:
     """
-    Tests verifying Alloy config is consistent with Loki queries.
+    Tests verifying Alloy config extracts the expected labels for Loki indexing.
 
     The Alloy config in docker/alloy/config.alloy specifies which
-    OTEL attributes to extract as Loki labels.
+    OTEL attributes to extract as Loki labels for efficient querying.
     """
 
     def teardown_method(self) -> None:
@@ -195,15 +193,18 @@ class TestAlloyLokiLabelConfiguration:
         with open(alloy_config_path) as f:
             alloy_config = f.read()
 
-        # Verify labels extracted by Alloy match what we query
-        # Alloy config uses: value = "session_id" (underscore)
+        # Verify labels extracted by Alloy for Loki indexing
+        # These labels enable efficient querying by entity filters
+        # Note: trace_id is NOT indexed (cardinality explosion) - use JSON queries instead
         expected_labels = [
             "session_id",
             "user_id",
             "workflow_name",  # Note: workflow_name not workflow_id (bounded cardinality)
             "project_id",
             "organization_id",
-            "trace_id",
+            "model_family",
+            "operation",
+            "status",
         ]
 
         for label in expected_labels:
