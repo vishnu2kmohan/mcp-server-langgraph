@@ -497,34 +497,5 @@ class TestEdgeCases:
         assert "\\" in log_data["special_field"]
 
 
-@pytest.mark.benchmark
-@pytest.mark.unit
-@pytest.mark.xdist_group(name="testperformance")
-class TestPerformance:
-    """Performance tests for JSON logging"""
-
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
-        gc.collect()
-
-    def test_formatting_performance_with_benchmark_measures_execution_speed(self, json_formatter, log_record, benchmark):
-        """Benchmark JSON formatting performance"""
-
-        def format_log():
-            return json_formatter.format(log_record)
-
-        result = benchmark(format_log)
-        # Verify it's valid JSON
-        json.loads(result)
-
-    def test_formatting_with_trace_performance(self, json_formatter, log_record, tracer_provider, benchmark):
-        """Benchmark JSON formatting with active trace"""
-        tracer = tracer_provider.get_tracer(__name__)
-
-        def format_with_trace():
-            with tracer.start_as_current_span("test_span"):
-                return json_formatter.format(log_record)
-
-        result = benchmark(format_with_trace)
-        log_data = json.loads(result)
-        assert "trace_id" in log_data
+# NOTE: Performance benchmarks moved to tests/benchmarks/test_json_logger_performance.py
+# Run benchmarks with: pytest tests/benchmarks/ --benchmark-enable

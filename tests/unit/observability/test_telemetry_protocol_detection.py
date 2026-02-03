@@ -162,24 +162,8 @@ class TestOTLPExporterSelection:
         exporter_type = get_metric_exporter_type("http://alloy-test:4318")
         assert exporter_type == "http", f"Expected HTTP exporter for port 4318, got: {exporter_type}"
 
-    def test_grpc_endpoint_uses_grpc_exporter_for_metrics(self) -> None:
-        """
-        Test that gRPC endpoint results in gRPC metric exporter being used.
-
-        GIVEN: An endpoint with port 4317 (gRPC)
-        WHEN: ObservabilityConfig sets up metric exporters
-        THEN: gRPC exporter should be used
-        """
-        from mcp_server_langgraph.observability.telemetry import (
-            GRPC_AVAILABLE,
-            get_metric_exporter_type,
-        )
-
-        if not GRPC_AVAILABLE:
-            pytest.skip("gRPC exporter not available")
-
-        exporter_type = get_metric_exporter_type("http://collector:4317")
-        assert exporter_type == "grpc", f"Expected gRPC exporter for port 4317, got: {exporter_type}"
+    # NOTE: gRPC exporter tests moved to tests/integration/test_otlp_grpc_exporter.py
+    # because they depend on optional opentelemetry-exporter-otlp-proto-grpc package
 
     def test_http_endpoint_uses_http_exporter_for_traces(self) -> None:
         """
@@ -199,25 +183,6 @@ class TestOTLPExporterSelection:
 
         exporter_type = get_span_exporter_type("http://alloy-test:4318")
         assert exporter_type == "http", f"Expected HTTP exporter for port 4318, got: {exporter_type}"
-
-    def test_grpc_endpoint_uses_grpc_exporter_for_traces(self) -> None:
-        """
-        Test that gRPC endpoint results in gRPC span exporter being used.
-
-        GIVEN: An endpoint with port 4317 (gRPC)
-        WHEN: ObservabilityConfig sets up span exporters
-        THEN: gRPC exporter should be used
-        """
-        from mcp_server_langgraph.observability.telemetry import (
-            GRPC_AVAILABLE,
-            get_span_exporter_type,
-        )
-
-        if not GRPC_AVAILABLE:
-            pytest.skip("gRPC exporter not available")
-
-        exporter_type = get_span_exporter_type("http://collector:4317")
-        assert exporter_type == "grpc", f"Expected gRPC exporter for port 4317, got: {exporter_type}"
 
 
 @pytest.mark.xdist_group(name="telemetry_protocol_tests")
