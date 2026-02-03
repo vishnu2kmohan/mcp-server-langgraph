@@ -19,15 +19,14 @@ This directory contains optimized workflow resources for Claude Code sessions.
 ├── settings.json                     # Shared project settings (git tracked)
 ├── settings.local.json               # Local settings, hooks, permissions
 │
-├── commands/                         # 44 slash commands (organized by category)
+├── commands/                         # 37 slash commands (organized by category)
 │   ├── README.md                    # ⭐ Command organization & discovery guide
-│   ├── explore-codebase.md          # Development workflow
-│   ├── plan-feature.md              #
+│   ├── plan-feature.md              # Development workflow (5 commands)
 │   ├── tdd.md                       #
 │   ├── create-test.md               #
 │   ├── fix-mypy.md                  #
 │   ├── lint.md                      #
-│   ├── test-summary.md              # Testing & quality (11 commands)
+│   ├── test-summary.md              # Testing & quality (10 commands)
 │   ├── test-all.md                  #
 │   ├── test-fast.md                 #
 │   ├── verify-tests.md              #
@@ -35,14 +34,12 @@ This directory contains optimized workflow resources for Claude Code sessions.
 │   ├── benchmark.md                 #
 │   ├── security-scan-report.md      #
 │   ├── coverage-trend.md            #
-│   ├── coverage-gaps.md             #
 │   ├── improve-coverage.md          #
 │   ├── type-safety-status.md        #
 │   ├── quick-debug.md               # Debugging (3 commands)
 │   ├── debug-auth.md                #
 │   ├── validate.md                  #
-│   ├── ci-status.md                 # CI/CD & deployment (5 commands)
-│   ├── pr-checks.md                 #
+│   ├── pr-checks.md                 # CI/CD & deployment (4 commands)
 │   ├── review-pr.md                 #
 │   ├── deploy-dev.md                #
 │   ├── deploy.md                    #
@@ -53,12 +50,13 @@ This directory contains optimized workflow resources for Claude Code sessions.
 │   ├── fix-issue.md                 #
 │   ├── create-adr.md                #
 │   ├── analytics.md                 #
-│   ├── docs-audit.md                # Documentation (3 commands)
-│   ├── refresh-context.md           #
-│   ├── knowledge-search.md          #
+│   ├── refresh-context.md           # Documentation (1 command)
 │   ├── setup-env.md                 # Environment (3 commands)
 │   ├── db-operations.md             #
-│   └── ...                          # (38 total)
+│   └── ...                          # (37 total)
+│   # Note: 10 commands moved to skills: explore-codebase, code-review,
+│   #       plan-review, plan-status, ci-status, coverage-gaps,
+│   #       docs-audit, knowledge-search, troubleshoot, test-status
 │
 ├── templates/                        # 8 professional templates
 │   ├── README.md                    # ⭐ Template selection guide
@@ -185,7 +183,7 @@ cp .claude/templates/progress-tracking.md docs-internal/SPRINT_PROGRESS_$(date +
 ### Checking CI/CD Status (NEW! 🆕)
 
 ```bash
-# Check GitHub Actions workflow status
+# Check GitHub Actions workflow status (skill)
 /ci-status
 
 # Check PR validation status
@@ -193,7 +191,7 @@ cp .claude/templates/progress-tracking.md docs-internal/SPRINT_PROGRESS_$(date +
 /pr-checks 142  # Specific PR number
 ```
 
-**What ci-status does**:
+**What ci-status does** (now a skill):
 1. Shows workflow runs for current branch
 2. Displays failing jobs and steps
 3. Provides live progress monitoring
@@ -604,8 +602,10 @@ git log --oneline --since="today"
 
 **recent-work.md**:
 ```bash
-# Run at sprint start/end or daily
-git log --oneline -n 15 > /tmp/commits.txt
+# Run at sprint start/end or daily (cross-platform using mktemp)
+TMPFILE=$(mktemp)
+trap "rm -f $TMPFILE" EXIT
+git log --oneline -n 15 > "$TMPFILE"
 # Update recent-work.md with latest commits
 ```
 
@@ -714,6 +714,56 @@ To add new resources:
 - Document what works well
 - Identify gaps or improvements needed
 - Update templates based on real usage
+
+---
+
+## 🖥️ Platform Compatibility
+
+These commands are tested on **Linux** and **macOS**.
+
+### Windows Users
+
+**Supported Environments** (in order of preference):
+1. **WSL2** (Windows Subsystem for Linux 2) - Full Unix compatibility
+2. **Git Bash** (comes with Git for Windows) - Most shell scripts work
+3. **PowerShell 7+** - Use PowerShell equivalents where documented
+
+**Minimum Tool Versions**:
+- Python 3.12+ (via `python --version`)
+- uv 0.5+ (via `uv --version`)
+- Docker Desktop with `docker compose` v2 (via `docker compose version`)
+- Git 2.40+ (via `git --version`)
+
+**Key Differences**:
+- `chmod`/`chown` commands are Unix-only (safe to skip on Windows)
+- Replace `/tmp` with `$env:TEMP` in PowerShell
+- Use Python scripts instead of `sed`/`perl` for in-place editing
+- Path separators: `.venv\Scripts\` instead of `.venv/bin/`
+
+### Minimal Containers
+
+- Commands assume standard coreutils are available
+- Python-based alternatives provided for environments without Perl/sed
+- Use `uv run --frozen` for cross-platform Python execution
+
+### Cross-Platform Commands
+
+| Unix Command | Windows Equivalent | Cross-Platform |
+|--------------|-------------------|----------------|
+| `sed -i` | N/A | `perl -pi -e` or Python |
+| `chmod +x` | N/A (skip) | N/A |
+| `${TMPDIR:-/tmp}/file` | `$env:TEMP\file` | `mktemp` or `tempfile` module |
+| `source .venv/bin/activate` | `.venv\Scripts\Activate.ps1` | `uv run --frozen` |
+| `docker compose` | `docker compose` | `docker compose` (v2) |
+
+### Best Practices
+
+1. **Use `uv run --frozen`** instead of activating venv manually
+2. **Use `mktemp`** instead of hardcoded `/tmp` paths (add `trap "rm -f $TMPFILE" EXIT` for cleanup)
+3. **Use Python** for in-place file editing (most portable - works on Windows)
+4. **Use `docker compose`** (v2 with space, not hyphen)
+5. **Use `grep -oE`** instead of `grep -oP` (GNU PCRE)
+6. **Use Python `pathlib`** for destructive file operations (safer than `xargs rm`)
 
 ---
 

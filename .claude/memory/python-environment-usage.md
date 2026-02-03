@@ -13,15 +13,27 @@ uv run --frozen python script.py
 uv run --frozen mypy src/
 ```
 
-### 2. Explicit venv path
+### 2. Explicit venv path (Unix/macOS)
 ```bash
+# Unix/macOS
 .venv/bin/python script.py
 .venv/bin/pytest tests/
+
+# Windows (Git Bash, PowerShell, or cmd)
+.venv\Scripts\python.exe script.py
+.venv\Scripts\pytest.exe tests/
 ```
 
 ### 3. Activate first (multiple commands only)
 ```bash
+# Unix/macOS
 source .venv/bin/activate && pytest && mypy src/
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1; pytest; mypy src/
+
+# Windows (cmd)
+.venv\Scripts\activate.bat && pytest && mypy src/
 ```
 
 ---

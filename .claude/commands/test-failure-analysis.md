@@ -12,7 +12,7 @@ argument-hint: <args>
 
 For automated analysis, use the dedicated script:
 ```bash
-uv run --frozen python scripts/workflow/test-failure-analyzer.py --output /tmp/failure_analysis.md
+uv run --frozen python scripts/workflow/test-failure-analyzer.py --output ${TMPDIR:-/tmp}/failure_analysis.md
 ```
 
 This handles failure parsing, categorization, and fix suggestions in a single command.
@@ -39,16 +39,21 @@ Performs deep analysis of test failures to identify root causes and suggest fixe
 Execute test suite with detailed output:
 
 ```bash
+# Create secure temp files (cross-platform)
+TMPFILE=$(mktemp)
+TMPFILE2=$(mktemp)
+trap "rm -f $TMPFILE $TMPFILE2" EXIT
+
 # Run all tests, don't stop on first failure
-uv run --frozen pytest tests/ -v --tb=short --maxfail=100 2>&1 | tee /tmp/test_output.txt
+uv run --frozen pytest tests/ -v --tb=short --maxfail=100 2>&1 | tee "$TMPFILE"
 
 # Alternative: Only run previously failed tests
-uv run --frozen pytest --lf -v --tb=long 2>&1 | tee /tmp/test_failures.txt
+uv run --frozen pytest --lf -v --tb=long 2>&1 | tee "$TMPFILE2"
 
 # Count failures
-FAILURES=$(grep -c "FAILED" /tmp/test_output.txt)
-ERRORS=$(grep -c "ERROR" /tmp/test_output.txt)
-PASSED=$(grep -c "PASSED" /tmp/test_output.txt)
+FAILURES=$(grep -c "FAILED" "$TMPFILE")
+ERRORS=$(grep -c "ERROR" "$TMPFILE")
+PASSED=$(grep -c "PASSED" "$TMPFILE")
 
 echo "Results: $PASSED passed, $FAILURES failed, $ERRORS errors"
 ```
@@ -58,20 +63,26 @@ echo "Results: $PASSED passed, $FAILURES failed, $ERRORS errors"
 Parse test output to extract structured data:
 
 ```bash
+# Create temp files with cleanup (cross-platform)
+FAILED_TESTS=$(mktemp)
+ERROR_TYPES=$(mktemp)
+FAILING_FILES=$(mktemp)
+trap "rm -f $FAILED_TESTS $ERROR_TYPES $FAILING_FILES" EXIT
+
 # Extract failed test names
-grep "FAILED" /tmp/test_output.txt | \
+grep "FAILED" "$TMPFILE" | \
   sed 's/FAILED //' | \
-  sed 's/ - .*//' > /tmp/failed_tests.txt
+  sed 's/ - .*//' > "$FAILED_TESTS"
 
 # Extract error types
-grep -A 5 "FAILED\|ERROR" /tmp/test_output.txt | \
-  grep -E "Error|Exception|assert" > /tmp/error_types.txt
+grep -A 5 "FAILED\|ERROR" "$TMPFILE" | \
+  grep -E "Error|Exception|assert" > "$ERROR_TYPES"
 
 # Extract file locations
-grep "FAILED" /tmp/test_output.txt | \
+grep "FAILED" "$TMPFILE" | \
   sed 's/::.*//' | \
   sort | uniq -c | \
-  sort -rn > /tmp/failing_files.txt
+  sort -rn > "$FAILING_FILES"
 ```
 
 ### Step 3: Categorize Failures
@@ -130,14 +141,14 @@ Identify patterns across failures:
 
 ```bash
 # Check if failures are in same module
-MOST_FAILING_MODULE=$(head -1 /tmp/failing_files.txt | awk '{print $2}')
+MOST_FAILING_MODULE=$(head -1 ${TMPDIR:-/tmp}/failing_files.txt | awk '{print $2}')
 
 # Check if same error type
-MOST_COMMON_ERROR=$(sort /tmp/error_types.txt | uniq -c | sort -rn | head -1)
+MOST_COMMON_ERROR=$(sort ${TMPDIR:-/tmp}/error_types.txt | uniq -c | sort -rn | head -1)
 
 # Check if recent code changes related
 git diff --name-only HEAD~5 | while read file; do
-    if grep -q "$file" /tmp/failing_files.txt; then
+    if grep -q "$file" ${TMPDIR:-/tmp}/failing_files.txt; then
         echo "Recent change in $file may have caused failures"
     fi
 done
@@ -362,9 +373,9 @@ Fix Priority: HIGH (blocks integration tests)
 
 Recommended Fix:
 ```bash
-docker-compose up -d redis
+docker compose up -d redis
 # Wait for health
-timeout 30s bash -c 'until docker-compose ps redis | grep healthy; do sleep 1; done'
+timeout 30s bash -c 'until docker compose ps redis | grep healthy; do sleep 1; done'
 ```
 
 Expected Outcome: 23/23 failures → 0/23 failures
@@ -394,7 +405,7 @@ Category 1: ImportError (12 failures)
 
 Category 2: ConnectionError (8 failures)
 - Root Cause: Redis not running
-- Fix: docker-compose up -d redis
+- Fix: docker compose up -d redis
 - Time: 1 min
 - Priority: HIGH
 
@@ -508,7 +519,7 @@ Timing-related failures
 # Fix cascade import failures
 
 # 1. Identify missing file
-MISSING_FILE=$(grep -o "from .* import" /tmp/test_output.txt | \
+MISSING_FILE=$(grep -o "from .* import" ${TMPDIR:-/tmp}/test_output.txt | \
                awk '{print $2}' | sort | uniq -c | sort -rn | head -1 | awk '{print $2}')
 
 # 2. Check git status
@@ -529,7 +540,7 @@ uv run --frozen pytest --lf -v
 # Fix infrastructure failures
 
 # 1. Identify which service
-SERVICE=$(grep -o "localhost:[0-9]*" /tmp/test_output.txt | \
+SERVICE=$(grep -o "localhost:[0-9]*" ${TMPDIR:-/tmp}/test_output.txt | \
           sed 's/localhost://' | sort | uniq)
 
 # Map port to service
@@ -540,10 +551,10 @@ case $SERVICE in
 esac
 
 # 2. Start service
-docker-compose up -d $SERVICE_NAME
+docker compose up -d $SERVICE_NAME
 
 # 3. Wait for healthy
-timeout 60s bash -c "until docker-compose ps $SERVICE_NAME | grep healthy; do sleep 2; done"
+timeout 60s bash -c "until docker compose ps $SERVICE_NAME | grep healthy; do sleep 2; done"
 
 # 4. Re-run tests
 uv run --frozen pytest --lf -v
@@ -655,7 +666,7 @@ For each unique failure:
 
 ```bash
 # Focus on most common error
-grep "FAILED" /tmp/test_output.txt | \
+grep "FAILED" ${TMPDIR:-/tmp}/test_output.txt | \
   awk -F':' '{print $NF}' | \
   sort | uniq -c | sort -rn | head -5
 ```
@@ -675,8 +686,8 @@ uv run --frozen pytest --lf --pdb
 ```bash
 # Run multiple times
 for i in {1..10}; do
-    uv run --frozen pytest tests/ > /tmp/run_$i.txt 2>&1
-    grep -c "FAILED" /tmp/run_$i.txt
+    uv run --frozen pytest tests/ > ${TMPDIR:-/tmp}/run_$i.txt 2>&1
+    grep -c "FAILED" ${TMPDIR:-/tmp}/run_$i.txt
 done
 ```
 

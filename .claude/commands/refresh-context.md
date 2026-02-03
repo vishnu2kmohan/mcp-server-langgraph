@@ -26,7 +26,7 @@ Refreshes context files in `.claude/context/` by analyzing current repository st
 
 ```bash
 # Quick refresh (recent-work.md only - FAST)
-python scripts/workflow/update-context-files.py --recent-work
+uv run --frozen python scripts/workflow/update-context-files.py --recent-work
 
 # View what changed
 git diff .claude/context/recent-work.md
@@ -71,7 +71,7 @@ Context is now up-to-date with repository state.
 Updates only recent-work.md (fast, ~2-5 seconds):
 
 ```bash
-python scripts/workflow/update-context-files.py --recent-work
+uv run --frozen python scripts/workflow/update-context-files.py --recent-work
 ```
 
 ### Full Refresh (Slower)
@@ -134,13 +134,13 @@ cat .git/hooks/post-commit
 Should contain:
 ```bash
 #!/bin/bash
-python scripts/workflow/update-context-files.py --recent-work --quiet
+uv run --frozen python scripts/workflow/update-context-files.py --recent-work --quiet
 ```
 
 To reinstall hook if missing:
 
 ```bash
-python scripts/workflow/update-context-files.py --create-hook
+uv run --frozen python scripts/workflow/update-context-files.py --create-hook
 ```
 
 ---
@@ -239,18 +239,21 @@ ls -la scripts/workflow/update-context-files.py
 ### Issue: Permission denied
 
 ```bash
-# Make script executable
+# Make script executable (Unix/macOS only - Windows uses file associations)
 chmod +x scripts/workflow/update-context-files.py
+
+# On Windows, run scripts via Python directly:
+# python scripts/workflow/update-context-files.py
 ```
 
 ### Issue: Git hook not working
 
 ```bash
 # Reinstall hook
-python scripts/workflow/update-context-files.py --create-hook
+uv run --frozen python scripts/workflow/update-context-files.py --create-hook
 
 # Test manual update
-python scripts/workflow/update-context-files.py --recent-work
+uv run --frozen python scripts/workflow/update-context-files.py --recent-work
 ```
 
 ---

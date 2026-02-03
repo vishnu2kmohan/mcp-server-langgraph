@@ -37,7 +37,7 @@ make test-integration
 
 **Prerequisites**:
 - Infrastructure running: `make setup-infra`
-- Services healthy: `docker-compose ps`
+- Services healthy: `docker compose ps`
 
 **Success criteria**: All integration tests PASS
 
@@ -175,7 +175,7 @@ could not connect to server: Connection refused
 **Fix**: Start infrastructure
 ```bash
 make setup-infra
-docker-compose ps  # Verify services are running
+docker compose ps  # Verify services are running
 ```bash
 ### Scenario: Async Test Hanging
 

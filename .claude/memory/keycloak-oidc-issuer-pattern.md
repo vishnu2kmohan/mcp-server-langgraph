@@ -27,7 +27,7 @@ The port in the issuer varies based on how Keycloak is accessed, causing `invali
 Configure Keycloak with `KC_HOSTNAME_URL` to force a consistent issuer URL regardless of how it's accessed:
 
 ```yaml
-# docker-compose.test.yml - keycloak-test
+# docker compose.test.yml - keycloak-test
 environment:
   # KC_HOSTNAME_URL takes precedence and sets the exact base URL for all issuer claims
   # This ensures tokens always have issuer: http://localhost/authn/realms/default
@@ -58,7 +58,7 @@ OpenFGA validates tokens and needs to:
 ### Required Configuration
 
 ```yaml
-# docker-compose.test.yml - openfga-test
+# docker compose.test.yml - openfga-test
 environment:
   - OPENFGA_AUTHN_METHOD=oidc
   - OPENFGA_AUTHN_OIDC_ISSUER=http://localhost/authn/realms/default

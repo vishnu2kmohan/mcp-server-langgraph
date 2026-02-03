@@ -207,7 +207,7 @@ See the "Hooks System" section below for complete documentation of all 13 hooks.
     "Grep(**)",
     "Bash",
     "WebFetch(domain:*)",
-    "Read(//tmp/**)",
+    "Read(//$TMPDIR/**)",  // Cross-platform: $TMPDIR, /tmp (Unix), %TEMP% (Windows)
     // ... extensive WebFetch and Read permissions
   ],
   "defaultMode": "acceptEdits"

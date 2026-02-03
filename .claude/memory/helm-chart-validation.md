@@ -148,7 +148,7 @@ ls deployments/helm/mcp-server-langgraph/charts/*.tgz
 
 Missing GHCR image. Either:
 1. Wait for CI to build and push the image
-2. Use local build: `docker-compose -f docker-compose.test.yml build <service>`
+2. Use local build: `docker compose -f docker compose.test.yml build <service>`
 
 ---
 

@@ -53,10 +53,10 @@ git diff --stat <sprint-start-commit>..HEAD
 pytest --collect-only -q | tail -1  # Total test count
 
 # Run tests with verbose output
-pytest -v --tb=short 2>&1 | tee /tmp/test_results.txt
+pytest -v --tb=short 2>&1 | tee ${TMPDIR:-/tmp}/test_results.txt
 
 # Parse results
-grep -E "(passed|failed|skipped)" /tmp/test_results.txt | tail -1
+grep -E "(passed|failed|skipped)" ${TMPDIR:-/tmp}/test_results.txt | tail -1
 ```
 
 **Coverage Metrics**:

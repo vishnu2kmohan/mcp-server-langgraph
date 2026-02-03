@@ -245,7 +245,7 @@ Grep "class UserModel" --type py
 
 ```bash
 # BAD
-python script.py
+uv run --frozen python script.py
 pytest tests/
 pip install package
 

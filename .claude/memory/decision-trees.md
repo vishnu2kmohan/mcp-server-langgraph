@@ -166,26 +166,33 @@ Should I enter plan mode?
 
 ## Bulk Operation Recipes
 
-```
-Rename symbol across codebase:
-rg -l "OldName" --type py | xargs sed -i '' 's/OldName/NewName/g'
+> **Cross-Platform Note**: Use `perl -pi -e` instead of `sed -i` for portable in-place editing.
+> Python alternatives provided for Windows compatibility.
 
-Add import to files using symbol:
-rg -l "Symbol" --type py | xargs -I{} sed -i '' '1a\
-import foo
-' {}
+```
+Rename symbol across codebase (cross-platform):
+rg -l "OldName" --type py | xargs perl -pi -e 's/OldName/NewName/g'
+
+Add import to files using symbol (Python for reliability):
+uv run --frozen python3 -c "
+from pathlib import Path
+for f in Path('.').rglob('*.py'):
+    c = f.read_text()
+    if 'Symbol' in c and 'import foo' not in c:
+        f.write_text('import foo\n' + c)
+"
 
 Update version in multiple files:
-rg -l "1.2.3" | xargs sed -i '' 's/1.2.3/1.2.4/g'
+rg -l "1.2.3" | xargs perl -pi -e 's/1.2.3/1.2.4/g'
 
 Find and update test markers:
-rg -l "@pytest.mark.old" tests/ | xargs sed -i '' 's/@pytest.mark.old/@pytest.mark.new/g'
+rg -l "@pytest.mark.old" tests/ | xargs perl -pi -e 's/\@pytest.mark.old/\@pytest.mark.new/g'
 
 Rename files matching pattern:
 fd "old_name" --type f -x mv {} {//}/new_name
 
 Remove lines matching pattern:
-rg -l "pattern_to_remove" | xargs sed -i '' '/pattern_to_remove/d'
+rg -l "pattern_to_remove" | xargs perl -pi -e '/pattern_to_remove/ && next; print'
 ```
 
 ---

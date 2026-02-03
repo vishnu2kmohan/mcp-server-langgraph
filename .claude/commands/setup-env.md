@@ -61,7 +61,7 @@ Execute the complete development environment setup from scratch.
 
 6. **Restart Services**
    ```bash
-   docker-compose restart agent
+   docker compose restart agent
    ```
 
 7. **Verify Setup**

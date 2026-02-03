@@ -53,7 +53,7 @@ PermissionError: Invalid authentication token
 
 **Root Cause**:
 - `conftest.py` mock_jwt_token fixture: `"test-secret-key"`
-- `docker-compose.test.yml` JWT_SECRET_KEY: `"test-secret-key-for-integration-tests"`
+- `docker compose.test.yml` JWT_SECRET_KEY: `"test-secret-key-for-integration-tests"`
 - `.github/workflows/*.yaml` JWT_SECRET_KEY: `"test-secret-key-for-ci"`
 
 **Result**: Token signing secret ≠ verification secret → All integration tests failed
@@ -154,7 +154,7 @@ def mock_jwt_token(mock_auth_settings):
 
 ### Pattern 2: Docker Compose Configuration
 
-**File**: `docker/docker-compose.test.yml`
+**File**: `docker/docker compose.test.yml`
 
 ```yaml
 services:
@@ -169,15 +169,15 @@ services:
 ```bash
 # scripts/validation/validate-test-constants.py
 def validate_docker_compose():
-    """Ensure docker-compose.test.yml uses TEST_JWT_SECRET"""
+    """Ensure docker compose.test.yml uses TEST_JWT_SECRET"""
     from tests.constants import TEST_JWT_SECRET
 
-    with open("docker/docker-compose.test.yml") as f:
+    with open("docker/docker compose.test.yml") as f:
         content = f.read()
 
     if TEST_JWT_SECRET not in content:
         raise ValueError(
-            f"docker-compose.test.yml JWT_SECRET_KEY does not match "
+            f"docker compose.test.yml JWT_SECRET_KEY does not match "
             f"tests/constants.py::TEST_JWT_SECRET ({TEST_JWT_SECRET})"
         )
 ```
@@ -296,7 +296,7 @@ async def test_redis_checkpointer():
 | `TEST_JWT_EXPIRATION_HOURS` | `1` | Token expiration time |
 
 **Must match**:
-- `docker-compose.test.yml` → `JWT_SECRET_KEY`
+- `docker compose.test.yml` → `JWT_SECRET_KEY`
 - `.github/workflows/*.yaml` → `JWT_SECRET_KEY`
 - `tests/conftest.py` → `mock_jwt_token` fixture
 
@@ -379,14 +379,14 @@ validate_jwt_secret()
 ```
 
 **Checks**:
-1. `docker-compose.test.yml` uses `TEST_JWT_SECRET`
+1. `docker compose.test.yml` uses `TEST_JWT_SECRET`
 2. `.github/workflows/*.yaml` use `TEST_JWT_SECRET`
 3. No hardcoded test secrets in test files
 4. All references to test constants import from `tests/constants.py`
 
 **To run manually**:
 ```bash
-python scripts/validation/validate-test-constants.py
+uv run --frozen python scripts/validation/validate-test-constants.py
 ```
 
 ---
@@ -422,8 +422,8 @@ def test_constants_synchronized():
     """Verify constants are synchronized across configurations"""
     import yaml
 
-    # Check docker-compose.test.yml
-    with open("docker/docker-compose.test.yml") as f:
+    # Check docker compose.test.yml
+    with open("docker/docker compose.test.yml") as f:
         docker_config = yaml.safe_load(f)
 
     jwt_secret = docker_config["services"]["mcp-server"]["environment"]["JWT_SECRET_KEY"]
@@ -482,7 +482,7 @@ validate_redis_config()
 ### Step 3: Update Docker Compose
 
 ```yaml
-# docker-compose.test.yml
+# docker compose.test.yml
 services:
   redis:
     ports:
@@ -500,7 +500,7 @@ def validate_redis_configuration():
     """Ensure Redis config matches constants"""
     from tests.constants import TEST_REDIS_PORT, TEST_REDIS_DB
 
-    with open("docker-compose.test.yml") as f:
+    with open("docker compose.test.yml") as f:
         config = yaml.safe_load(f)
 
     redis_port = config["services"]["redis"]["ports"][0].split(":")[0]
@@ -703,9 +703,9 @@ PermissionError: Invalid authentication token
 **Diagnosis**:
 ```bash
 # Check if TEST_JWT_SECRET matches across configurations
-grep -r "JWT_SECRET" docker-compose.test.yml
+grep -r "JWT_SECRET" docker compose.test.yml
 grep -r "JWT_SECRET" .github/workflows/
-python -c "from tests.constants import TEST_JWT_SECRET; print(TEST_JWT_SECRET)"
+uv run --frozen python -c "from tests.constants import TEST_JWT_SECRET; print(TEST_JWT_SECRET)"
 ```
 
 **Fix**: Ensure all three use same value from `tests/constants.py`
@@ -722,10 +722,10 @@ python -c "from tests.constants import TEST_JWT_SECRET; print(TEST_JWT_SECRET)"
 **Diagnosis**:
 ```bash
 # Run validation manually
-python scripts/validation/validate-test-constants.py
+uv run --frozen python scripts/validation/validate-test-constants.py
 ```
 
-**Fix**: Update `docker-compose.test.yml` or `.github/workflows/*.yaml` to match
+**Fix**: Update `docker compose.test.yml` or `.github/workflows/*.yaml` to match
 
 ---
 
@@ -742,7 +742,7 @@ ImportError: cannot import name 'TEST_JWT_SECRET' from 'tests.constants'
 ls -la tests/constants.py
 
 # Check Python path
-python -c "import sys; print('\n'.join(sys.path))"
+uv run --frozen python -c "import sys; print('\n'.join(sys.path))"
 ```
 
 **Fix**: Ensure `tests/` is in Python path (check `pyproject.toml` → `pythonpath`)
@@ -755,7 +755,7 @@ python -c "import sys; print('\n'.join(sys.path))"
 - Validation Script: `scripts/validation/validate-test-constants.py`
 - Meta-Tests: `tests/meta/test_constants.py`
 - Pre-commit Hook: `.pre-commit-config.yaml` → `validate-test-constants`
-- Docker Compose: `docker/docker-compose.test.yml`
+- Docker Compose: `docker/docker compose.test.yml`
 - CI Workflows: `.github/workflows/ci.yaml`
 - xdist Safety Patterns: `.claude/context/xdist-safety-patterns.md` (AsyncMock configuration)
 

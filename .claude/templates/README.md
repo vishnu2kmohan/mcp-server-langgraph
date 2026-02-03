@@ -418,7 +418,7 @@ Templates are validated via:
 # Verify template exists
 ls .claude/templates/<template-name>.md
 
-# Check file permissions
+# Check file permissions (Unix/macOS only - Windows users can skip)
 chmod 644 .claude/templates/<template-name>.md
 
 # Validate template content

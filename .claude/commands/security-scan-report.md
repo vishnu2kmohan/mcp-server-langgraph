@@ -31,7 +31,7 @@ Execute security scanning via Makefile:
 make security-check
 
 # Individual scans
-bandit -r src/ -f json -o /tmp/bandit_report.json
+bandit -r src/ -f json -o ${TMPDIR:-/tmp}/bandit_report.json
 bandit -r src/ -ll  # Low/Medium/High severity
 
 # Check dependencies (if safety installed)
@@ -47,16 +47,16 @@ Analyze findings from each scanner:
 
 ```bash
 # Parse Bandit JSON output
-if [ -f /tmp/bandit_report.json ]; then
+if [ -f ${TMPDIR:-/tmp}/bandit_report.json ]; then
     jq '.results[] | {severity, confidence, test_id, issue_text, filename, line_number}' \
-       /tmp/bandit_report.json
+       ${TMPDIR:-/tmp}/bandit_report.json
 fi
 
 # Count by severity
-CRITICAL=$(jq '[.results[] | select(.severity=="CRITICAL")] | length' /tmp/bandit_report.json)
-HIGH=$(jq '[.results[] | select(.severity=="HIGH")] | length' /tmp/bandit_report.json)
-MEDIUM=$(jq '[.results[] | select(.severity=="MEDIUM")] | length' /tmp/bandit_report.json)
-LOW=$(jq '[.results[] | select(.severity=="LOW")] | length' /tmp/bandit_report.json)
+CRITICAL=$(jq '[.results[] | select(.severity=="CRITICAL")] | length' ${TMPDIR:-/tmp}/bandit_report.json)
+HIGH=$(jq '[.results[] | select(.severity=="HIGH")] | length' ${TMPDIR:-/tmp}/bandit_report.json)
+MEDIUM=$(jq '[.results[] | select(.severity=="MEDIUM")] | length' ${TMPDIR:-/tmp}/bandit_report.json)
+LOW=$(jq '[.results[] | select(.severity=="LOW")] | length' ${TMPDIR:-/tmp}/bandit_report.json)
 ```
 
 ### Step 3: Categorize Issues
@@ -297,8 +297,8 @@ Status: ✅ SAFE TO DEPLOY
 (No critical or high severity issues)
 
 Full Reports:
-- Bandit: /tmp/bandit_report.json
-- Summary: /tmp/security_summary.md
+- Bandit: ${TMPDIR:-/tmp}/bandit_report.json
+- Summary: ${TMPDIR:-/tmp}/security_summary.md
 ```
 
 ---
@@ -412,7 +412,7 @@ pip install bandit safety
 ```bash
 # Check if bandit succeeded
 if [ $? -eq 0 ]; then
-    jq . /tmp/bandit_report.json
+    jq . ${TMPDIR:-/tmp}/bandit_report.json
 else
     echo "Scan failed, check output"
 fi

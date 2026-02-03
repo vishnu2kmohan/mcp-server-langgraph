@@ -30,13 +30,29 @@ Edit file3.py: old -> new
 
 ### ALWAYS Do This Instead
 
+> **Cross-Platform Note**: Use Python for reliable cross-platform in-place editing.
+> - macOS sed: `sed -i ''`
+> - Linux sed: `sed -i`
+> - Portable (Unix): `perl -pi -e` (if Perl available)
+> - **Most Portable**: Python (works on all platforms including Windows)
+
 ```bash
-# GOOD: Single pipeline for bulk replacement
-rg -l "old_pattern" --type py | xargs sed -i '' 's/old_pattern/new_pattern/g'
+# GOOD: Python for bulk replacement (most portable - works on Windows, macOS, Linux)
+uv run --frozen python3 -c "
+from pathlib import Path
+import re
+for f in Path('.').rglob('*.py'):
+    c = f.read_text()
+    if 'old_pattern' in c:
+        f.write_text(re.sub(r'old_pattern', 'new_pattern', c))
+        print(f'Modified: {f}')
+"
 
 # GOOD: With preview first
 rg "old_pattern" --type py  # Preview matches
-rg -l "old_pattern" --type py | xargs sed -i '' 's/old_pattern/new_pattern/g'
+
+# ALTERNATIVE: perl -pi -e (Unix only - requires Perl)
+rg -l "old_pattern" --type py | xargs perl -pi -e 's/old_pattern/new_pattern/g'
 ```
 
 ---
@@ -45,31 +61,38 @@ rg -l "old_pattern" --type py | xargs sed -i '' 's/old_pattern/new_pattern/g'
 
 ### Bulk Rename/Replace
 
+> **Note**: Examples use `perl -pi -e` for cross-platform compatibility.
+
 ```bash
-# Replace string across Python files
-rg -l "OldClass" --type py | xargs sed -i '' 's/OldClass/NewClass/g'
+# Replace string across Python files (cross-platform)
+rg -l "OldClass" --type py | xargs perl -pi -e 's/OldClass/NewClass/g'
 
 # Replace in specific directory
-rg -l "old_func" src/mcp_server_langgraph/core/ | xargs sed -i '' 's/old_func/new_func/g'
+rg -l "old_func" src/mcp_server_langgraph/core/ | xargs perl -pi -e 's/old_func/new_func/g'
 
 # Replace with word boundaries (safer)
-rg -l '\bold_name\b' --type py | xargs sed -i '' 's/\bold_name\b/new_name/g'
+rg -l '\bold_name\b' --type py | xargs perl -pi -e 's/\bold_name\b/new_name/g'
 ```
 
 ### Bulk Add/Modify Imports
 
 ```bash
-# Add import to files that use a symbol but don't import it
-rg -l "FeatureFlag\." --type py | xargs -I{} sed -i '' '1a\
-from mcp_server_langgraph.core.feature_flags import FeatureFlag
-' {}
+# Add import to files that use a symbol but don't import it (Python for reliability)
+uv run --frozen python3 -c "
+from pathlib import Path
+import re
+for f in Path('.').rglob('*.py'):
+    content = f.read_text()
+    if 'FeatureFlag.' in content and 'from mcp_server_langgraph.core.feature_flags import FeatureFlag' not in content:
+        f.write_text('from mcp_server_langgraph.core.feature_flags import FeatureFlag\n' + content)
+"
 ```
 
 ### Bulk Update Test Markers
 
 ```bash
-# Add marker to all tests in a directory
-rg -l "^def test_" tests/unit/auth/ | xargs sed -i '' 's/@pytest.mark.unit/@pytest.mark.unit\n@pytest.mark.auth/g'
+# Add marker to all tests in a directory (cross-platform)
+rg -l "^def test_" tests/unit/auth/ | xargs perl -pi -e 's/\@pytest.mark.unit/\@pytest.mark.unit\n\@pytest.mark.auth/g'
 ```
 
 ### Bulk File Operations
@@ -187,17 +210,17 @@ Glob **/*.tsx
 # 2. Find all usages that need the flag
 rg -l "some_feature" --type py
 
-# 3. Bulk add flag check
-rg -l "some_feature" --type py | xargs sed -i '' 's/some_feature/FeatureFlag.SOME_FEATURE.is_enabled() and some_feature/g'
+# 3. Bulk add flag check (cross-platform)
+rg -l "some_feature" --type py | xargs perl -pi -e 's/some_feature/FeatureFlag.SOME_FEATURE.is_enabled() and some_feature/g'
 ```
 
 ### Test Marker Updates
 
 ```bash
-# Add integration marker to tests that use real infrastructure
+# Add integration marker to tests that use real infrastructure (cross-platform)
 rg -l "@pytest.mark.asyncio" tests/integration/ | \
   xargs rg -l "async def test_.*real" | \
-  xargs sed -i '' 's/@pytest.mark.asyncio/@pytest.mark.asyncio\n@pytest.mark.requires_infrastructure/g'
+  xargs perl -pi -e 's/\@pytest.mark.asyncio/\@pytest.mark.asyncio\n\@pytest.mark.requires_infrastructure/g'
 ```
 
 ### Import Reorganization
@@ -206,20 +229,20 @@ rg -l "@pytest.mark.asyncio" tests/integration/ | \
 # Find files with old import path
 rg -l "from mcp_server_langgraph.old_module" --type py
 
-# Bulk update
+# Bulk update (cross-platform)
 rg -l "from mcp_server_langgraph.old_module" --type py | \
-  xargs sed -i '' 's/from mcp_server_langgraph.old_module/from mcp_server_langgraph.new_module/g'
+  xargs perl -pi -e 's/from mcp_server_langgraph.old_module/from mcp_server_langgraph.new_module/g'
 ```
 
 ### Frontend Component Prop Updates
 
 ```bash
-# Update prop name across TSX files
-rg -l "oldProp=" --type tsx | xargs sed -i '' 's/oldProp=/newProp=/g'
+# Update prop name across TSX files (cross-platform)
+rg -l "oldProp=" --type tsx | xargs perl -pi -e 's/oldProp=/newProp=/g'
 
 # Update type definition and usages together
 rg -l "oldProp:" src/mcp_server_langgraph/studio/frontend/src/ | \
-  xargs sed -i '' 's/oldProp:/newProp:/g'
+  xargs perl -pi -e 's/oldProp:/newProp:/g'
 ```
 
 ### API Endpoint Renaming
@@ -228,8 +251,8 @@ rg -l "oldProp:" src/mcp_server_langgraph/studio/frontend/src/ | \
 # Find all references (backend + frontend + tests)
 rg "/api/v1/old-endpoint"
 
-# Bulk replace
-rg -l "/api/v1/old-endpoint" | xargs sed -i '' 's|/api/v1/old-endpoint|/api/v1/new-endpoint|g'
+# Bulk replace (cross-platform)
+rg -l "/api/v1/old-endpoint" | xargs perl -pi -e 's|/api/v1/old-endpoint|/api/v1/new-endpoint|g'
 ```
 
 ---

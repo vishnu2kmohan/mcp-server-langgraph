@@ -10,12 +10,15 @@
 # The Big 7 (use these daily)
 /quick-debug "error"      # Debug any error (saves 60% time)
 /test-summary             # Run tests before commit
-/ci-status                # Check CI before push
+/ci-status                # Check CI before push (skill)
 /pr-checks                # Check before requesting review
-/coverage-gaps            # NEW: Visual coverage heatmap
-/deploy                   # NEW: Unified deployment
+/coverage-gaps            # Visual coverage heatmap (skill)
+/deploy                   # Unified deployment
 /refresh-context          # Update context when needed
 ```
+
+> **Note**: Some commands are now user-level skills (marked with "skill").
+> They work identically - just invoked from `~/.claude/skills/` instead.
 
 ---
 
@@ -29,10 +32,10 @@
 /release-prep 2.8.0             # Release checklist
 ```
 
-### Documentation (NEW)
+### Documentation
 ```bash
 /create-adr "Title"             # Create ADR (saves 40 min)
-/docs-audit                     # Audit documentation
+/docs-audit                     # Audit documentation (skill)
 ```
 
 ### Testing
@@ -44,11 +47,11 @@
 /create-test <module>           # NEW: Generate test file
 ```
 
-### Quality & Coverage (NEW)
+### Quality & Coverage
 ```bash
 /benchmark                      # Performance + trends
 /security-scan-report           # Security
-/coverage-gaps                  # Visual coverage heatmap
+/coverage-gaps                  # Visual coverage heatmap (skill)
 /improve-coverage 70            # Coverage improvement plan
 /type-safety-status             # Mypy strict rollout
 /validate                       # All validations
@@ -62,18 +65,18 @@
 /fix-issue 42                   # Fix issue #42
 ```
 
-### CI/CD & Deployment (ENHANCED)
+### CI/CD & Deployment
 ```bash
-/ci-status                      # Workflows
+/ci-status                      # Workflows (skill)
 /pr-checks                      # PR validation
 /pr-checks 142                  # Specific PR
-/deploy <target> <env>          # NEW: Unified deployment
+/deploy <target> <env>          # Unified deployment
 /deploy-dev                     # Deploy to dev (legacy)
 ```
 
-### Advanced Features (NEW - Phase 5)
+### Advanced Features
 ```bash
-/knowledge-search "<query>"     # Semantic codebase search
+/knowledge-search "<query>"     # Semantic codebase search (skill)
 /analytics                      # Usage + ROI dashboard
 ```
 
@@ -101,9 +104,9 @@ Hit error → /quick-debug "error message" → Apply fix → Done
 Tests fail → /test-failure-analysis → Follow fix sequence → Verify
 ```
 
-### Improve Coverage (NEW)
+### Improve Coverage
 ```
-/coverage-gaps → /improve-coverage 70 → /create-test <file> → Run tests
+/coverage-gaps (skill) → /improve-coverage 70 → /create-test <file> → Run tests
 ```
 
 ### Type Safety Migration (NEW)
@@ -118,12 +121,12 @@ Tests fail → /test-failure-analysis → Follow fix sequence → Verify
 
 ### Create PR
 ```
-Code ready → /test-summary → /coverage-gaps → /ci-status → Create PR → /pr-checks
+Code ready → /test-summary → /coverage-gaps (skill) → /ci-status (skill) → Create PR → /pr-checks
 ```
 
 ### Release
 ```
-/test-summary all → /benchmark → /coverage-gaps → /security-scan-report → /release-prep
+/test-summary all → /benchmark → /coverage-gaps (skill) → /security-scan-report → /release-prep
 ```
 
 ---
@@ -175,7 +178,7 @@ git status src/ && git add <file> && git commit --amend
 
 ### Error: Service not running
 ```bash
-docker-compose up -d <service>
+docker compose up -d <service>
 ```
 
 ---
@@ -183,7 +186,7 @@ docker-compose up -d <service>
 ## 🎓 Pro Tips
 
 1. **Always use `/quick-debug` first** - Don't guess at errors
-2. **Check `/ci-status` before pushing** - Catch issues early
+2. **Check `/ci-status` (skill) before pushing** - Catch issues early
 3. **Use templates for documentation** - Saves 60%+ time
 4. **Let hooks work** - They catch issues automatically
 5. **Context auto-updates** - No manual maintenance needed
@@ -208,7 +211,7 @@ docker-compose up -d <service>
 
 **Stuck?** Check:
 1. `.claude/README.md` - Complete workflow guide
-2. `.claude/commands/README.md` - Detailed command documentation (44 commands)
+2. `.claude/commands/README.md` - Detailed command documentation (37 commands + 10 skills)
 3. `.claude/templates/README.md` - Template selection guide (8 templates)
 4. `.claude/SETTINGS.md` - Configuration architecture explained
 5. This reference card - Quick command cheat sheet
@@ -230,7 +233,7 @@ uv run python --version   # Correct Python?
 - MDX validation in pre-commit hooks
 
 **Phase 2: Coverage & Quality**
-- `/coverage-gaps` - Visual heatmap + prioritization
+- `/coverage-gaps` (skill) - Visual heatmap + prioritization
 - `/improve-coverage` - Systematic coverage improvement
 - `/type-safety-status` - Mypy strict rollout tracker
 
@@ -238,8 +241,8 @@ uv run python --version   # Correct Python?
 - `/deploy` - Unified multi-target deployment
 - Enhanced `/benchmark` - Trend analysis + regression detection
 
-**Phase 5: Advanced Automation** (NEW!)
-- `/knowledge-search` - Semantic search across codebase
+**Phase 5: Advanced Automation**
+- `/knowledge-search` (skill) - Semantic search across codebase
 - `/analytics` - Usage stats + ROI dashboard
 - Auto-populate handoff files from git
 - Command usage tracking + time savings measurement

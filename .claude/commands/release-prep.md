@@ -83,11 +83,11 @@ Create release notes from CHANGELOG.md and git commits:
 
 ```bash
 # Extract changelog section for this version
-sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md > /tmp/release_notes.md
+sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md > ${TMPDIR:-/tmp}/release_notes.md
 
 # Add git commit summary since last tag
 LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~10")
-git log $LAST_TAG..HEAD --oneline --no-merges >> /tmp/release_notes_commits.txt
+git log $LAST_TAG..HEAD --oneline --no-merges >> ${TMPDIR:-/tmp}/release_notes_commits.txt
 ```
 
 **Format**:
@@ -133,21 +133,30 @@ git log $LAST_TAG..HEAD --oneline --no-merges >> /tmp/release_notes_commits.txt
 
 Files to update with new version:
 
+> **Note**: The sed commands below use `perl -pi -e` for cross-platform compatibility.
+> Use `-i ''` on macOS or `-i` on Linux if using sed directly.
+
 ```bash
-# 1. pyproject.toml
-sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+# 1. pyproject.toml (cross-platform)
+perl -pi -e "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
 
 # 2. docker-compose.yml
-sed -i "s/image: .*:latest/image: langgraph-agent:$VERSION/" docker-compose.yml
+perl -pi -e "s/image: .*:latest/image: langgraph-agent:$VERSION/" docker-compose.yml
 
-# 3. Kubernetes manifests
-find deployments/kubernetes -name "*.yaml" -exec sed -i "s|image: .*:.*|image: langgraph-agent:$VERSION|g" {} \;
+# 3. Kubernetes manifests (Python for cross-platform)
+uv run --frozen python3 -c "
+from pathlib import Path
+import re
+for f in Path('deployments/kubernetes').rglob('*.yaml'):
+    content = f.read_text()
+    f.write_text(re.sub(r'image: .*:.*', f'image: langgraph-agent:$VERSION', content))
+"
 
 # 4. Helm chart
-sed -i "s/appVersion: \".*\"/appVersion: \"$VERSION\"/" deployments/helm/langgraph-agent/Chart.yaml
+perl -pi -e "s/appVersion: \".*\"/appVersion: \"$VERSION\"/" deployments/helm/langgraph-agent/Chart.yaml
 
 # 5. Kustomize
-sed -i "s/newTag: .*/newTag: $VERSION/" deployments/kustomize/*/kustomization.yaml
+find deployments/kustomize -name "kustomization.yaml" -exec perl -pi -e "s/newTag: .*/newTag: $VERSION/" {} \;
 ```
 
 ### Step 5: Build and Test Release Artifacts
@@ -160,7 +169,7 @@ docker build -t langgraph-agent:$VERSION .
 docker run --rm langgraph-agent:$VERSION --version
 
 # 3. Build Python package
-python -m build
+uv run --frozen python -m build
 
 # 4. Validate package
 twine check dist/*
@@ -217,7 +226,7 @@ echo "
 2. Create GitHub Release:
    gh release create v$VERSION \\
      --title 'Release v$VERSION' \\
-     --notes-file /tmp/release_notes.md
+     --notes-file ${TMPDIR:-/tmp}/release_notes.md
 
 3. Build and Push Docker Image:
    docker build -t your-registry/langgraph-agent:$VERSION .

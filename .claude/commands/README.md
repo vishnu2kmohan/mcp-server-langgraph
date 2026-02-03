@@ -1,6 +1,10 @@
 # Claude Code Slash Commands
 
-This directory contains 47 specialized slash commands for streamlined development workflows.
+This directory contains 37 specialized slash commands for streamlined development workflows.
+
+> **Note**: Some commands have been migrated to user-level skills (`~/.claude/skills/`).
+> Skills include: `/explore-codebase`, `/code-review`, `/plan-review`, `/plan-status`,
+> `/ci-status`, `/coverage-gaps`, `/docs-audit`, `/knowledge-search`, `/troubleshoot`, `/test-status`.
 
 **Quick Access**: See `.claude/QUICK_REFERENCE.md` for the most-used commands.
 
@@ -8,24 +12,23 @@ This directory contains 47 specialized slash commands for streamlined developmen
 
 ## 📋 Command Categories
 
-### 🚀 Development Workflow (6 commands)
+### 🚀 Development Workflow (5 commands)
 
 Essential commands for daily development tasks:
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/explore-codebase` | Guided codebase exploration | Before making changes to unfamiliar code |
 | `/fix-mypy` | Systematic MyPy error fixing | When you have type checking errors |
 | `/plan-feature` | Feature planning with deep thinking | Before implementing new features |
 | `/tdd` | TDD workflow (Red-Green-Refactor) | When implementing with test-first approach |
 | `/create-test` | Generate test file from template | When creating tests for new modules |
 | `/lint` | Run linting workflow | Before committing code |
 
-**Most Used**: `/explore-codebase`, `/plan-feature`, `/tdd`
+**Most Used**: `/plan-feature`, `/tdd`, `/explore-codebase` (skill)
 
 ---
 
-### ✅ Testing & Quality (11 commands)
+### ✅ Testing & Quality (10 commands)
 
 Comprehensive testing and quality assurance tools:
 
@@ -39,58 +42,45 @@ Comprehensive testing and quality assurance tools:
 | `/benchmark` | Performance benchmarks + trends | ~5 min | After performance changes |
 | `/security-scan-report` | Security scanning | ~10 min | Pre-release, weekly |
 | `/coverage-trend` | Coverage trend analysis | ~2 min | Sprint retrospectives |
-| `/coverage-gaps` | Visual coverage heatmap | ~1 min | Identifying what to test next |
 | `/improve-coverage [%]` | Generate coverage improvement plan | ~3 min | Working toward 80% coverage |
 | `/type-safety-status` | MyPy strict rollout tracker | ~2 min | Type safety migration sprints |
 
-**Most Used**: `/test-summary`, `/test-fast`, `/coverage-gaps`
+**Most Used**: `/test-summary`, `/test-fast`, `/coverage-gaps` (skill)
 
 **Fast Workflow**: Use `/test-fast dev` during active development, `/test-summary` before commits
 
 ---
 
-### 🐛 Debugging (4 commands)
+### 🐛 Debugging (3 commands)
 
 AI-assisted debugging and problem-solving:
 
 | Command | Purpose | AI Systems | When to Use |
 |---------|---------|------------|-------------|
 | `/quick-debug [error]` | Fast AI-assisted debugging | Claude | **First response** to simple errors |
-| `/troubleshoot <issue>` | **Triple-AI diagnosis** (Claude + Codex + Gemini) | All 3 | Complex issues needing deep analysis |
 | `/debug-auth` | Authentication debugging | Claude | Login/permission issues |
 | `/validate` | Run all validations | Claude | Comprehensive health check |
 
-**Pro Tip**: Start with `/quick-debug` for simple errors. Use `/troubleshoot` for complex issues requiring multiple perspectives.
-
-**Triple-AI Features** (`/troubleshoot`):
-- Parallel analysis from Claude, Codex (GPT-5.2), and Gemini (3 Pro)
-- Multimodal support: attach images, logs, screenshots
-- Finding consensus with confidence tags: `[Consensus]`, `[Claude+Codex]`, etc.
-- Multi-round troubleshooting with incremental artifacts
+**Pro Tip**: Start with `/quick-debug` for simple errors. Use `/troubleshoot` (skill) for complex issues requiring multiple perspectives.
 
 ---
 
-### 🔄 CI/CD & Deployment (8 commands)
+### 🔄 CI/CD & Deployment (4 commands)
 
 Continuous integration and deployment workflows:
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/ci-status` | GitHub Actions monitoring | Before pushing, investigating failures |
 | `/pr-checks [number]` | PR validation summary | Before requesting reviews |
 | `/review-pr` | PR review checklist | When reviewing PRs |
-| `/plan-review [path]` | **Dual AI review** (Codex + Gemini) of plans | Before implementing a plan |
-| `/plan-status [path]` | **Dual AI verification** of plan completion | Before code review or commit |
-| `/code-review [scope]` | **Dual AI review** (Codex + Gemini) of code | Before committing code |
 | `/deploy-dev` | Development deployment | Deploying to dev environment |
 | `/deploy` | Production deployment | Production releases |
 
-**Best Practice**: Check `/plan-status` before `/code-review`, check `/ci-status` before pushing, `/pr-checks` before requesting review
+**Best Practice**: Check `/plan-status` (skill) before `/code-review` (skill), check `/ci-status` (skill) before pushing
 
-**Dual-Reviewer Features** (Codex + Gemini):
-- Parallel analysis from GPT-5.2-Codex and Gemini 3 Pro Preview
-- Finding reconciliation with source tags: `[Both]`, `[Codex]`, `[Gemini]`
-- Clarification questions before applying fixes (critical/important findings)
+**Skills for AI-Powered Reviews**:
+- `/code-review`, `/plan-review`, `/plan-status`, `/ci-status` are now user-level skills
+- Access them the same way - they work identically as skills
 
 ---
 
@@ -114,17 +104,17 @@ Sprint planning, tracking, and documentation:
 
 ---
 
-### 📚 Documentation (3 commands)
+### 📚 Documentation (1 command)
 
 Documentation creation and maintenance:
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/docs-audit` | Documentation completeness audit | Monthly, pre-release |
 | `/refresh-context` | Manual context file refresh | When context feels stale |
-| `/knowledge-search` | Semantic codebase search | Finding patterns, examples |
 
 **Note**: Context files auto-update via post-commit hook - manual refresh rarely needed
+
+**Skills**: `/docs-audit` and `/knowledge-search` are available as user-level skills
 
 ---
 
@@ -314,7 +304,7 @@ ls .claude/commands/ | grep <command-name>
 ```bash
 # Check prerequisites
 1. Verify virtual environment: uv run --frozen python --version
-2. Check infrastructure: docker-compose ps
+2. Check infrastructure: docker compose ps
 3. Validate git hooks: ls .git/hooks/
 ```
 

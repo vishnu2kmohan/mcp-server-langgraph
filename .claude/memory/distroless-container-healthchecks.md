@@ -34,7 +34,7 @@ healthcheck:
   retries: 5
 ```
 
-**Example** (from `docker-compose.test.yml`):
+**Example** (from `docker compose.test.yml`):
 ```yaml
 alloy-test:
   image: grafana/alloy:v1.4.2
@@ -66,7 +66,7 @@ healthcheck:
   disable: true
 ```
 
-**Example** (from `docker-compose.test.yml`):
+**Example** (from `docker compose.test.yml`):
 ```yaml
 mimir-test:
   image: grafana/mimir:3.0.1
@@ -158,8 +158,8 @@ limits_config:
 
 ## Files Modified for LGTM Stack Health Checks
 
-- `docker-compose.test.yml:698-705` - Alloy bash TCP check
-- `docker-compose.test.yml:643-645` - Mimir health check disabled
+- `docker compose.test.yml:698-705` - Alloy bash TCP check
+- `docker compose.test.yml:643-645` - Mimir health check disabled
 - `docker/loki/loki-config.yaml:66-71` - Loki timestamp rejection disabled
 
 ---

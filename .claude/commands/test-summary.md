@@ -49,10 +49,10 @@ Execute tests and capture all output:
 
 ```bash
 # Run tests with JSON output
-pytest -v --tb=short --json-report --json-report-file=/tmp/test_results.json
+pytest -v --tb=short --json-report --json-report-file=${TMPDIR:-/tmp}/test_results.json
 
 # Also capture human-readable output
-pytest -v --tb=short 2>&1 | tee /tmp/test_output.txt
+pytest -v --tb=short 2>&1 | tee ${TMPDIR:-/tmp}/test_output.txt
 ```
 
 **Capture**:

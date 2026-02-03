@@ -51,13 +51,13 @@ make test-coverage-combined
 Parse coverage results:
 
 ```bash
-# Total coverage percentage
-CURRENT_COV=$(grep -oP 'Total coverage: \K[0-9.]+' coverage.xml || \
+# Total coverage percentage (cross-platform: grep -oE instead of grep -oP)
+CURRENT_COV=$(grep -oE 'Total coverage: [0-9.]+' coverage.xml | grep -oE '[0-9.]+' || \
               coverage report --format=total 2>/dev/null || \
               echo "unknown")
 
 # Module-level coverage
-coverage report --format=markdown > /tmp/coverage_by_module.md
+coverage report --format=markdown > ${TMPDIR:-/tmp}/coverage_by_module.md
 
 # Or parse HTML
 grep -A 5 "Total" htmlcov-combined/index.html
@@ -435,7 +435,7 @@ Coverage improving steadily. Keep it up!
 Full Reports:
 - HTML: htmlcov-combined/index.html
 - Trend: .coverage-history/trend.csv
-- Details: /tmp/coverage_trend_full.md
+- Details: ${TMPDIR:-/tmp}/coverage_trend_full.md
 ```
 
 ---

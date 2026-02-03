@@ -60,7 +60,7 @@ async def test_session_creation(self, store):
 ### `integration`
 **Purpose**: Tests requiring real infrastructure (Redis, PostgreSQL, OpenFGA, etc.)
 **Characteristics**:
-- Requires docker-compose services
+- Requires docker compose services
 - Tests actual integration between components
 - May be slower (1-5 seconds per test)
 

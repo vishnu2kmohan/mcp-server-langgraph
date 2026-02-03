@@ -607,7 +607,7 @@ def init_test_observability():
 
 **To run manually**:
 ```bash
-python scripts/validation/check_test_memory_safety.py tests/
+uv run --frozen python scripts/validation/check_test_memory_safety.py tests/
 ```
 
 ---
@@ -689,13 +689,13 @@ timeout = 60
 **Diagnosis**:
 ```bash
 # Check for missing teardown_method
-python scripts/validation/check_test_memory_safety.py tests/
+uv run --frozen python scripts/validation/check_test_memory_safety.py tests/
 
 # Run tests with single worker to isolate
 pytest -n 1 tests/
 
 # Profile memory usage
-python -m memory_profiler tests/test_file.py
+uv run --frozen python -m memory_profiler tests/test_file.py
 ```
 
 **Fix**:

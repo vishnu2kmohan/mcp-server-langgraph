@@ -359,8 +359,8 @@ uv run --frozen mypy src/mcp_server_langgraph --show-error-codes --pretty
 # Test strict mode on specific module
 uv run --frozen mypy src/mcp_server_langgraph/<module>.py --strict --show-error-codes
 
-# Check which errors are most common
-uv run --frozen mypy src/ --show-error-codes 2>&1 | grep -oP '\[.*?\]' | sort | uniq -c | sort -rn
+# Check which errors are most common (cross-platform: grep -oE instead of grep -oP)
+uv run --frozen mypy src/ --show-error-codes 2>&1 | grep -oE '\[[^]]+\]' | sort | uniq -c | sort -rn
 
 # Verify migration successful
 uv run --frozen pytest tests/ -v && uv run --frozen mypy src/mcp_server_langgraph --strict

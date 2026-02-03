@@ -30,7 +30,7 @@ You are tasked with generating a comprehensive analytics dashboard for the Claud
 Run the usage tracking script:
 
 ```bash
-python scripts/workflow/track-command-usage.py --report --days 30
+uv run --frozen python scripts/workflow/track-command-usage.py --report --days 30
 ```
 
 ### Step 2: Calculate ROI
@@ -38,7 +38,7 @@ python scripts/workflow/track-command-usage.py --report --days 30
 Run the ROI calculation:
 
 ```bash
-python scripts/workflow/track-command-usage.py --roi
+uv run --frozen python scripts/workflow/track-command-usage.py --roi
 ```
 
 ### Step 3: Gather Additional Metrics
@@ -60,18 +60,20 @@ git log --since="30 days ago" --numstat | awk '{add+=$1; del+=$2} END {print add
 
 **Test Metrics**:
 ```bash
-# Run tests and capture results
-pytest tests/ -v --tb=no 2>&1 | tee /tmp/test-results.txt
+# Run tests and capture results (cross-platform using mktemp)
+TMPFILE=$(mktemp)
+trap "rm -f $TMPFILE" EXIT
+pytest tests/ -v --tb=no 2>&1 | tee "$TMPFILE"
 
 # Parse pass rate
-grep "passed" /tmp/test-results.txt
+grep "passed" "$TMPFILE"
 ```
 
 **Coverage Metrics**:
 ```bash
-# Get coverage percentage
+# Get coverage percentage (cross-platform, uses grep -oE instead of GNU-only -oP)
 if [ -f "htmlcov/index.html" ]; then
-    grep -oP 'pc_cov">\K[0-9]+' htmlcov/index.html | head -1
+    grep -oE 'pc_cov">[0-9]+' htmlcov/index.html | head -1 | grep -oE '[0-9]+'
 fi
 ```
 
@@ -290,7 +292,7 @@ To log commands automatically, add to each slash command:
 
 ```bash
 # At the end of each command execution
-python scripts/workflow/track-command-usage.py --log "<command-name>"
+uv run --frozen python scripts/workflow/track-command-usage.py --log "<command-name>"
 ```
 
 Example integration in `/test-summary`:
@@ -299,7 +301,7 @@ Example integration in `/test-summary`:
 pytest tests/ -v
 
 # Log usage
-python scripts/workflow/track-command-usage.py --log "/test-summary"
+uv run --frozen python scripts/workflow/track-command-usage.py --log "/test-summary"
 ```
 
 ## Export Options
@@ -307,13 +309,13 @@ python scripts/workflow/track-command-usage.py --log "/test-summary"
 ### JSON Export
 ```bash
 # Export usage data as JSON
-python scripts/workflow/track-command-usage.py --report --days 30 --format json > analytics-report.json
+uv run --frozen python scripts/workflow/track-command-usage.py --report --days 30 --format json > analytics-report.json
 ```
 
 ### CSV Export
 ```bash
 # Export for spreadsheet analysis
-python scripts/workflow/track-command-usage.py --export-csv > usage-data.csv
+uv run --frozen python scripts/workflow/track-command-usage.py --export-csv > usage-data.csv
 ```
 
 ## Integration with Other Tools

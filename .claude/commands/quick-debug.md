@@ -34,7 +34,7 @@ ERROR_MSG="$ARGUMENTS"
 If no argument, look for recent errors:
 ```bash
 # Check recent test failures
-uv run --frozen pytest --lf -v 2>&1 | tee /tmp/test_errors.txt
+uv run --frozen pytest --lf -v 2>&1 | tee ${TMPDIR:-/tmp}/test_errors.txt
 
 # Check recent git commits for fix mentions
 git log -10 --oneline | grep -i "fix"
@@ -113,7 +113,7 @@ Based on error category, run relevant diagnostics:
 **For Import Errors**:
 ```bash
 # Check if module exists
-python -c "import {module}" 2>&1
+uv run --frozen python -c "import {module}" 2>&1
 
 # Check installed packages
 uv pip list | grep {module}
@@ -123,7 +123,7 @@ git status --short | grep "^ M"
 
 # Verify Python environment
 which python
-python --version
+uv run --frozen python --version
 ```bash
 **For Test Failures**:
 ```bash
@@ -339,13 +339,13 @@ ConnectionError: Error -2 connecting to localhost:6379
 **Quick Check**:
 ```bash
 docker ps | grep redis
-docker-compose ps
+docker compose ps
 ```bash
 **Common Cause**: Service not started
 
 **Fix**:
 ```bash
-docker-compose up -d redis
+docker compose up -d redis
 # Wait for health check
 sleep 2
 ```
@@ -477,14 +477,14 @@ Root Cause: Redis service not running
 
 Quick Fix (1 minute):
 ```bash
-docker-compose up -d redis
+docker compose up -d redis
 
 # Wait for health check
-timeout 30s bash -c 'until docker-compose ps redis | grep healthy; do sleep 1; done'
+timeout 30s bash -c 'until docker compose ps redis | grep healthy; do sleep 1; done'
 ```yaml
 Verification:
 ```bash
-docker-compose ps redis
+docker compose ps redis
 redis-cli ping  # Should return PONG
 ```
 
@@ -494,7 +494,7 @@ uv run --frozen pytest tests/test_session.py -v
 ```bash
 Prevention:
 Add to .claude/memory/:
-- Always run `docker-compose ps` before test sessions
+- Always run `docker compose ps` before test sessions
 - Add health checks to docker-compose.yml
 - Consider `make setup-infra` before testing
 ```
@@ -565,7 +565,7 @@ Check `.claude/memory/` for known issues:
 
 ```bash
 # Check recent pytest output
-ls -lt /tmp/test_*.txt
+ls -lt ${TMPDIR:-/tmp}/test_*.txt
 
 # Check application logs
 find . -name "*.log" -mtime -1

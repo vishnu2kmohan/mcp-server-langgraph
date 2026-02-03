@@ -27,7 +27,7 @@ The MCP Server LangGraph uses PostgreSQL for:
 - Port: `5432`
 - Database: `openfga`
 - User: `postgres`
-- Container: `postgres` (via docker-compose)
+- Container: `postgres` (via docker compose)
 
 ---
 
@@ -207,8 +207,14 @@ make db-shell
 # Keep last 7 days
 find backups/ -name "*.sql" -mtime +7 -delete
 
-# Keep last 10 backups
-ls -t backups/*.sql | tail -n +11 | xargs rm
+# Keep last 10 backups (cross-platform, handles filenames with spaces safely)
+uv run --frozen python3 -c "
+from pathlib import Path
+import os
+files = sorted(Path('backups').glob('*.sql'), key=os.path.getmtime, reverse=True)
+for f in files[10:]:  # Keep 10 newest
+    f.unlink()
+"
 ```
 
 ### Disaster Recovery
@@ -318,6 +324,7 @@ df -h .
 **Check backups directory exists**:
 ```bash
 mkdir -p backups
+# Unix/macOS only - Windows users can skip this step
 chmod 755 backups
 ```
 
@@ -491,4 +498,4 @@ ls -lh backups/openfga_backup_20251021_143022.sql
 **Last Updated**: 2025-10-21
 **Command Version**: 1.0
 **Database**: PostgreSQL 14+
-**Container**: docker-compose postgres service
+**Container**: docker compose postgres service

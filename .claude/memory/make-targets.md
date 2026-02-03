@@ -107,7 +107,7 @@ make health-check      # Check system health
 **Purpose**: Start all Docker infrastructure services
 **Duration**: 30-60 seconds
 **Services**: PostgreSQL, Redis, OpenFGA, Keycloak, Prometheus, Grafana
-**Command**: `docker-compose up -d`
+**Command**: `docker compose up -d`
 
 ### `make setup-openfga`
 **Purpose**: Initialize OpenFGA authorization model
@@ -202,15 +202,15 @@ make health-check      # Check system health
 **Purpose**: Start Docker services for testing
 **Duration**: 20-30 seconds
 **Services**: PostgreSQL, Redis, OpenFGA (test instances)
-**Command**: `docker-compose -f docker-compose.test.yml up -d`
+**Command**: `docker compose -f docker compose.test.yml up -d`
 
 #### `make test-infra-down`
 **Purpose**: Stop test infrastructure
-**Command**: `docker-compose -f docker-compose.test.yml down`
+**Command**: `docker compose -f docker compose.test.yml down`
 
 #### `make test-infra-logs`
 **Purpose**: Show logs from test infrastructure
-**Command**: `docker-compose -f docker-compose.test.yml logs -f`
+**Command**: `docker compose -f docker compose.test.yml logs -f`
 
 ---
 
@@ -347,10 +347,10 @@ make health-check      # Check system health
 **Duration**: 10-15 seconds
 **Runs**: Helm + Kustomize + Docker Compose validation
 
-#### `make validate-docker-compose`
+#### `make validate-docker compose`
 **Purpose**: Validate Docker Compose files
 **Duration**: 2 seconds
-**Command**: `docker-compose config --quiet`
+**Command**: `docker compose config --quiet`
 
 #### `make validate-docker-image`
 **Purpose**: Validate Dockerfile and build
@@ -435,11 +435,11 @@ make health-check      # Check system health
 
 #### `make logs`
 **Purpose**: Show infrastructure logs
-**Command**: `docker-compose logs --tail=100`
+**Command**: `docker compose logs --tail=100`
 
 #### `make logs-follow`
 **Purpose**: Follow all logs in real-time
-**Command**: `docker-compose logs -f`
+**Command**: `docker compose logs -f`
 
 ---
 
@@ -559,7 +559,7 @@ make health-check      # Check system health
 make -j4 target1 target2 target3 target4
 
 # Example: Parallel validation
-make -j4 validate-openapi validate-helm validate-kustomize validate-docker-compose
+make -j4 validate-openapi validate-helm validate-kustomize validate-docker compose
 
 # Example: Parallel tests
 make -j2 test-unit test-property

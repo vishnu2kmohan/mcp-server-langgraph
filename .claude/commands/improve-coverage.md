@@ -376,7 +376,7 @@ grep -E '<span class="pc_cov">([0-6][0-9]|[0-9])%</span>' htmlcov/index.html
 **Parse XML Coverage Report**:
 ```bash
 # Extract file-level coverage (if XML report exists)
-python3 -c "
+uv run --frozen python3 -c "
 import xml.etree.ElementTree as ET
 tree = ET.parse('coverage.xml')
 for elem in tree.findall('.//class'):

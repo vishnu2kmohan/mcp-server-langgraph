@@ -346,7 +346,7 @@ kubectl top pods -n mcp-server-langgraph
 
 # 7. Verify dependencies
 kubectl exec -it -n mcp-server-langgraph <pod-name> -- \
-  python -c "import redis; r = redis.Redis(host='redis', port=6379); print(r.ping())"
+  uv run --frozen python -c "import redis; r = redis.Redis(host='redis', port=6379); print(r.ping())"
 ```
 
 ### Step 5: Smoke Tests
@@ -515,7 +515,7 @@ limits:
 ## Integration with CI/CD
 
 This command integrates with:
-- `/ci-status` - Check CI/CD pipeline status before deploying
+- `/ci-status` (skill) - Check CI/CD pipeline status before deploying
 - `/pr-checks` - Validate PR before merge and deploy
 - `/validate` - Run all validations pre-deployment
 - `/test-all` - Run full test suite before deployment

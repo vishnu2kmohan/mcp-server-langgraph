@@ -453,8 +453,14 @@ cp .benchmark/latest.json .benchmark/history/$TIMESTAMP.json
 git add .benchmark/history/$TIMESTAMP.json
 git commit -m "chore(benchmark): performance results $TIMESTAMP"
 
-# Prune old results (keep last 30)
-ls -t .benchmark/history/*.json | tail -n +31 | xargs rm -f
+# Prune old results (keep last 30, cross-platform, handles filenames safely)
+uv run --frozen python3 -c "
+from pathlib import Path
+import os
+files = sorted(Path('.benchmark/history').glob('*.json'), key=os.path.getmtime, reverse=True)
+for f in files[30:]:  # Keep 30 newest
+    f.unlink()
+"
 ```
 
 **Integrate with CI/CD**:
@@ -482,7 +488,7 @@ jobs:
 
       - name: Detect regressions
         run: |
-          python scripts/detect_benchmark_regressions.py \
+          uv run --frozen python scripts/detect_benchmark_regressions.py \
             --threshold 20 \
             --consecutive 3
 

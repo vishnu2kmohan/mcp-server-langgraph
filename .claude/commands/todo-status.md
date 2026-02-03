@@ -24,10 +24,10 @@ Execute the automated TODO tracker with git integration:
 
 ```bash
 # Standard scan
-python scripts/workflow/todo-tracker.py --output /tmp/todo_scan.md
+uv run --frozen python scripts/workflow/todo-tracker.py --output ${TMPDIR:-/tmp}/todo_scan.md
 
 # With historical tracking (recommended)
-python scripts/workflow/todo-tracker.py --output /tmp/todo_scan.md --track-history
+uv run --frozen python scripts/workflow/todo-tracker.py --output ${TMPDIR:-/tmp}/todo_scan.md --track-history
 ```
 
 **Captures**:
@@ -62,7 +62,7 @@ Analyze TODO evolution using git:
 git log --since="30.days.ago" --all --format="%H|%ad|%s" --date=short | while IFS='|' read hash date msg; do
     count=$(git show $hash:src/ 2>/dev/null | grep -r "TODO" | wc -l)
     echo "$date|$count|$msg"
-done > /tmp/todo_history.txt
+done > ${TMPDIR:-/tmp}/todo_history.txt
 
 # Calculate velocity (TODOs resolved per day)
 # Parse history and compute trend
@@ -80,7 +80,7 @@ Generate visual ASCII burndown chart and comparison:
 
 ```bash
 # Generate burndown visualization
-python scripts/workflow/generate-burndown.py --days 30 --output /tmp/burndown.txt
+uv run --frozen python scripts/workflow/generate-burndown.py --days 30 --output ${TMPDIR:-/tmp}/burndown.txt
 ```
 
 **Burndown Chart** (ASCII visualization):
@@ -296,9 +296,9 @@ Historical Context:
 - Oct 19-20: Mixed cleanup (9 items)
 
 Full Reports:
-- Current scan: /tmp/todo_scan.md
-- Burndown chart: /tmp/burndown.txt
-- Git history: /tmp/todo_history.txt
+- Current scan: ${TMPDIR:-/tmp}/todo_scan.md
+- Burndown chart: ${TMPDIR:-/tmp}/burndown.txt
+- Git history: ${TMPDIR:-/tmp}/todo_history.txt
 ```
 
 ---

@@ -90,7 +90,7 @@ You MUST mount the ADC file using `SANDBOX_FLAGS`:
 # Mount ADC credentials into the sandbox container
 # For git worktrees, also mount the git common directory
 GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
-export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.json:/tmp/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/adc.json -v ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:ro"
+export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.json:${TMPDIR:-/tmp}/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS=${TMPDIR:-/tmp}/adc.json -v ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:ro"
 
 # Use stdin for prompt (piped from echo)
 # Use REPEATED --allowed-tools flags (space-separated causes parsing issues)
@@ -149,23 +149,29 @@ Session cleanup MUST run when ANY of these occur:
 | `/code-review` | `CODE_REVIEW_ID` | `CODEX_REVIEW_SESSION_ID` | `GEMINI_REVIEW_SESSION_ID` |
 | `/plan-review` | `PLAN_REVIEW_ID` | `CODEX_PLAN_REVIEW_SESSION_ID` | `GEMINI_PLAN_REVIEW_SESSION_ID` |
 
-### Temp File Naming (session-specific)
+### Temp File Naming (session-specific, cross-platform)
 
-```
-/tmp/codex_code_review_${CODE_REVIEW_ID}.json
-/tmp/gemini_code_review_${CODE_REVIEW_ID}.json
-/tmp/codex_plan_review_${PLAN_REVIEW_ID}.json
-/tmp/gemini_plan_review_${PLAN_REVIEW_ID}.json
+> **Note**: Use `mktemp` for secure temp file creation. These patterns show naming conventions.
+> - Unix: `${TMPDIR:-/tmp}/` or `$TMPDIR/`
+> - Windows: `%TEMP%\` or Python's `tempfile.gettempdir()`
+
+```bash
+# Secure temp file creation (cross-platform)
+TMPDIR="${TMPDIR:-/tmp}"
+CODEX_REVIEW_FILE=$(mktemp "${TMPDIR}/codex_code_review_${CODE_REVIEW_ID}_XXXXXX.json")
+GEMINI_REVIEW_FILE=$(mktemp "${TMPDIR}/gemini_code_review_${CODE_REVIEW_ID}_XXXXXX.json")
+trap "rm -f $CODEX_REVIEW_FILE $GEMINI_REVIEW_FILE" EXIT
 ```
 
 ### Manual Cleanup (if interrupted)
 
 ```bash
-# List orphaned temp files
-ls -la /tmp/codex_*_review_*.json /tmp/gemini_*_review_*.json 2>/dev/null
+# List orphaned temp files (cross-platform)
+TMPDIR="${TMPDIR:-/tmp}"
+ls -la "${TMPDIR}"/codex_*_review_*.json "${TMPDIR}"/gemini_*_review_*.json 2>/dev/null
 
 # Delete orphaned temp files
-rm -f /tmp/codex_*_review_*.json /tmp/gemini_*_review_*.json 2>/dev/null
+rm -f "${TMPDIR}"/codex_*_review_*.json "${TMPDIR}"/gemini_*_review_*.json 2>/dev/null
 
 # List recent sessions (review before deleting!)
 find ~/.codex/sessions -type f -mmin -60 -name "*.jsonl" -ls
@@ -205,7 +211,7 @@ The Docker sandbox cannot access host Application Default Credentials.
 **Solution**: Mount the ADC file into the container:
 
 ```bash
-export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.json:/tmp/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/adc.json"
+export SANDBOX_FLAGS="-v $HOME/.config/gcloud/application_default_credentials.json:${TMPDIR:-/tmp}/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS=${TMPDIR:-/tmp}/adc.json"
 gemini --sandbox -- "Your prompt"
 ```
 
