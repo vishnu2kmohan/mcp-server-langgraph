@@ -27,6 +27,7 @@ class TraceFilter:
     trace_id: str | None = None
     min_duration_ms: float | None = None
     status: str | None = None  # "OK", "ERROR", "UNSET"
+    session_id: str | None = None  # Filter by session.id for DevTools
 
 
 @dataclass
@@ -173,7 +174,20 @@ class TraceBroadcaster:
             return False
         if filter_.min_duration_ms and span.get("duration_ms", 0) < filter_.min_duration_ms:
             return False
-        return not (filter_.status and span.get("status") != filter_.status)
+        if filter_.status and span.get("status") != filter_.status:
+            return False
+        # Check session_id filter (supports all three attribute variants)
+        if filter_.session_id:
+            attrs = span.get("attributes", {}) or {}
+            span_session_id = (
+                attrs.get("session.id")
+                or attrs.get("session_id")
+                or attrs.get("sessionId")
+                or span.get("session_id")  # Direct field fallback
+            )
+            if span_session_id != filter_.session_id:
+                return False
+        return True
 
     def queue_broadcast(self, span: dict[str, Any]) -> None:
         """

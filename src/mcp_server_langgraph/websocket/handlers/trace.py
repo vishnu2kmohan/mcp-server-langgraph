@@ -55,6 +55,7 @@ class TraceFilter:
     trace_id: str | None = None
     min_duration_ms: float | None = None
     status: str | None = None  # "OK", "ERROR", "UNSET"
+    session_id: str | None = None  # Filter by session.id for DevTools
 
 
 @runtime_checkable
@@ -213,6 +214,7 @@ class TraceHandler(WebSocketBase, BroadcasterMixin):
             trace_id=payload.get("trace_id"),
             min_duration_ms=payload.get("min_duration_ms"),
             status=payload.get("status"),
+            session_id=payload.get("session_id"),
         )
 
         # Resubscribe with new filter using BroadcasterMixin methods
@@ -232,6 +234,7 @@ class TraceHandler(WebSocketBase, BroadcasterMixin):
                     "trace_id": new_filter.trace_id,
                     "min_duration_ms": new_filter.min_duration_ms,
                     "status": new_filter.status,
+                    "session_id": new_filter.session_id,
                 }
             },
             id=message.id,
