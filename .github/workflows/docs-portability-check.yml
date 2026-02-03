@@ -1,0 +1,122 @@
+name: Documentation Portability Check
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - '.claude/**'
+      - '.github/workflows/docs-portability-check.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - '.claude/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  portability-check:
+    name: Check for Non-Portable Patterns
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check for GNU-only grep patterns
+        id: grep-check
+        run: |
+          echo "Checking for grep -oP (GNU PCRE - not portable)..."
+          if grep -rn "grep -oP" .claude/; then
+            echo "::warning::Found grep -oP pattern (GNU-only). Consider using grep -oE or Python regex."
+            echo "found_issues=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No grep -oP patterns found"
+          fi
+
+      - name: Check for sed -i without cross-platform handling
+        id: sed-check
+        run: |
+          echo "Checking for sed -i patterns..."
+          # Check for GNU-style sed -i (without '')
+          if grep -rn 'sed -i "' .claude/ | grep -v "perl -pi -e" | grep -v "# Unix" | grep -v "cross-platform"; then
+            echo "::warning::Found GNU-style sed -i. Consider using perl -pi -e or Python for cross-platform."
+            echo "found_issues=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No problematic sed -i patterns found"
+          fi
+
+      - name: Check for unsafe xargs patterns
+        id: xargs-check
+        run: |
+          echo "Checking for xargs without -0 flag (security vulnerability)..."
+          # Check for xargs rm without -0
+          if grep -rn "xargs rm" .claude/ | grep -v "xargs -0" | grep -v "python"; then
+            echo "::error::Found unsafe xargs rm pattern. Use 'find -print0 | xargs -0' or Python."
+            exit 1
+          else
+            echo "✅ No unsafe xargs patterns found"
+          fi
+
+      - name: Check for hardcoded /tmp paths
+        id: tmp-check
+        run: |
+          echo "Checking for hardcoded /tmp paths..."
+          # Check for /tmp/ that isn't using mktemp or documented
+          if grep -rn '"/tmp/' .claude/ | grep -v "mktemp" | grep -v "TMPDIR" | grep -v "cross-platform" | head -5; then
+            echo "::warning::Found hardcoded /tmp paths. Consider using mktemp or tempfile module."
+            echo "found_issues=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No problematic /tmp patterns found"
+          fi
+
+      - name: Check for docker-compose v1 syntax
+        id: docker-check
+        run: |
+          echo "Checking for deprecated docker-compose (v1) syntax..."
+          if grep -rn "docker-compose" .claude/ | head -3; then
+            echo "::warning::Found docker-compose (v1). Consider updating to 'docker compose' (v2)."
+            echo "found_issues=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Using docker compose v2 syntax"
+          fi
+
+      - name: Portability Summary
+        if: always()
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  PORTABILITY CHECK SUMMARY"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "The .claude/ directory has been checked for cross-platform compatibility."
+          echo ""
+          echo "Checks performed:"
+          echo "  ✓ grep -oP (GNU PCRE) → use grep -oE or Python"
+          echo "  ✓ sed -i patterns → use perl -pi -e or Python"
+          echo "  ✓ xargs security → use find -print0 | xargs -0 or Python"
+          echo "  ✓ /tmp hardcoding → use mktemp or tempfile"
+          echo "  ✓ docker-compose v1 → use docker compose v2"
+          echo ""
+          echo "For cross-platform best practices, see:"
+          echo "  .claude/README.md#platform-compatibility"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Comment on PR with findings
+        if: github.event_name == 'pull_request' && (steps.grep-check.outputs.found_issues == 'true' || steps.sed-check.outputs.found_issues == 'true' || steps.tmp-check.outputs.found_issues == 'true' || steps.docker-check.outputs.found_issues == 'true')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Portability Check Findings**\n\nSome non-portable patterns were detected in the `.claude/` directory. While not blocking, please consider:\n\n- Using `perl -pi -e` instead of `sed -i` for cross-platform in-place editing\n- Using `grep -oE` instead of `grep -oP` (GNU PCRE not available on macOS)\n- Using `mktemp` instead of hardcoded `/tmp` paths\n- Using `docker compose` (v2) instead of `docker-compose` (v1)\n\nSee `.claude/README.md#platform-compatibility` for best practices.'
+            })
