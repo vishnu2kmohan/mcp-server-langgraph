@@ -199,9 +199,9 @@ class TestSlashCommands:
             pytest.skip("commands directory does not exist")
 
         # New commands recommended by Anthropic best practices
+        # Note: explore-codebase.md moved to skills (~/.claude/skills/)
         new_commands = {
             "tdd.md": "Start TDD workflow for a feature",
-            "explore-codebase.md": "Guided codebase exploration",
             "plan-feature.md": "Feature planning with ultrathink",
             "verify-tests.md": "Run and verify all tests pass",
             "fix-mypy.md": "Systematic MyPy error fixing",

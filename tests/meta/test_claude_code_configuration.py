@@ -189,9 +189,9 @@ class TestClaudeCodeConfiguration:
             pytest.skip("commands directory does not exist")
 
         # New commands recommended by Anthropic best practices
+        # Note: explore-codebase.md moved to skills (~/.claude/skills/)
         recommended_commands = [
             "tdd.md",
-            "explore-codebase.md",
             "plan-feature.md",
             "verify-tests.md",
             "fix-mypy.md",
