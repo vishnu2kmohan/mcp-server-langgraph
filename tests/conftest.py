@@ -210,8 +210,17 @@ def init_test_observability():
 
 
 @pytest.fixture(autouse=True)
-def ensure_observability_initialized():
-    """Ensure observability is re-initialized if shut down by previous test."""
+def ensure_observability_initialized(request):
+    """Ensure observability is re-initialized if shut down by previous test.
+
+    Skip for tests marked with @pytest.mark.skip_observability_init to allow
+    isolated testing of OTEL components like SessionPropagatingSpanProcessor.
+    """
+    # Allow tests to skip this fixture for isolated OTEL component testing
+    if request.node.get_closest_marker("skip_observability_init"):
+        yield
+        return
+
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
 

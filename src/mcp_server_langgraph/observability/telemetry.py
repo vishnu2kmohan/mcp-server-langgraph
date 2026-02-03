@@ -307,6 +307,23 @@ class ObservabilityConfig:
             console_exporter = ConsoleSpanExporter()
             provider.add_span_processor(BatchSpanProcessor(console_exporter))
 
+        # Session ID propagation for DevTools trace visualization
+        # Must be added BEFORE BroadcastingSpanProcessor so session.id is available
+        # when trace_step events are emitted.
+        try:
+            from mcp_server_langgraph.observability.session_propagating_span_processor import (
+                SessionPropagatingSpanProcessor,
+            )
+
+            provider.add_span_processor(SessionPropagatingSpanProcessor())
+        except ImportError:
+            # SessionPropagatingSpanProcessor not available - session.id won't propagate
+            if OBSERVABILITY_VERBOSE:
+                print("⚠ SessionPropagatingSpanProcessor not available")
+        except Exception as exc:
+            # Graceful degradation - log at debug level for diagnostics
+            logging.getLogger(__name__).debug("Failed to add SessionPropagatingSpanProcessor: %s", exc)
+
         # Real-time trace streaming for Studio DevTools (/api/v1/ws/traces)
         # Best-effort: failures should not affect core tracing/export.
         try:

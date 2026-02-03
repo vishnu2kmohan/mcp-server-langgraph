@@ -907,6 +907,7 @@ markers = [
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
     "preview: Preview environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",
+    "skip_observability_init: Opt-out of autouse observability initialization fixture (for OTEL component unit tests)",
     "resilience: Resilience pattern tests (circuit breaker, retry, timeout, fallback)",
     "chaos: Chaos engineering tests (service unavailability, graceful degradation)",
     "cache: Caching layer tests (L1/L2 cache, Redis, fallback)",
