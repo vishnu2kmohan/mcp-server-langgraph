@@ -27,7 +27,9 @@ This guide documents the patterns and conventions for creating UI components in 
    - 5.3 [Target Size Requirements](#target-size-requirements)
    - 5.4 [Focus & Keyboard Navigation](#focus--keyboard-navigation)
    - 5.5 [Non-Color Cues](#non-color-cues)
-6. [Motion.dev Animation Patterns](#motiondev-animation-patterns)
+6. [Animation Patterns](#animation-patterns)
+   - 6.1 [Choosing Between Animation Libraries](#choosing-between-animation-libraries)
+   - 6.2 [Motion.dev Patterns](#motiondev-patterns)
 7. [Typography & Content](#typography--content)
 8. [Responsive Design Patterns](#responsive-design-patterns)
 9. [Interactive Component Patterns](#interactive-component-patterns)
@@ -872,7 +874,91 @@ See `radix-colors.ts` for `NODE_TYPE_STYLES` with pattern overlays.
 
 ---
 
-## 6. Motion.dev Animation Patterns
+## 6. Animation Patterns
+
+Agent Studio uses two animation libraries that complement each other:
+
+| Library | Package | Use For |
+|---------|---------|---------|
+| **tailwindcss-animate** | `tailwindcss-animate` | Simple CSS transitions (Radix UI components) |
+| **Motion.dev** | `motion/react` | Complex, physics-based animations |
+
+### Choosing Between Animation Libraries
+
+#### Use `tailwindcss-animate` (CSS-based) when:
+
+- Animating **Radix UI primitives** (DropdownMenu, Tooltip, Dialog, etc.)
+- Simple **enter/exit transitions** (fade, zoom, slide)
+- **No JavaScript control** needed over animation state
+- **Performance-critical** scenarios (CSS runs on GPU)
+
+```tsx
+// ✅ Radix UI dropdown with tailwindcss-animate
+<DropdownMenu.Content
+  className={cn(
+    "data-[state=open]:animate-in data-[state=closed]:animate-out",
+    "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+    "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+    "data-[side=top]:slide-in-from-bottom-2",
+    // Reduced motion support
+    "motion-reduce:animate-none"
+  )}
+>
+```
+
+#### Use `motion.dev` (JavaScript-based) when:
+
+- **Spring physics** animations (bouncy, snappy feel)
+- **Staggered lists** or orchestrated sequences
+- **Gesture-driven** animations (drag, swipe, pan)
+- **Layout animations** (shared element transitions)
+- **Fine-grained control** over animation state
+
+```tsx
+// ✅ Staggered list with motion.dev
+<motion.ul variants={listContainerVariants} initial="hidden" animate="visible">
+  {items.map((item, i) => (
+    <motion.li key={item.id} variants={listItemVariants} custom={i}>
+      {item.label}
+    </motion.li>
+  ))}
+</motion.ul>
+```
+
+#### Decision Matrix
+
+| Scenario | Library | Reason |
+|----------|---------|--------|
+| Radix DropdownMenu, Tooltip, Dialog | `tailwindcss-animate` | Uses `data-[state=*]` attributes |
+| Simple fade/slide/zoom | `tailwindcss-animate` | No JS needed |
+| Staggered list items | `motion.dev` | Orchestration control |
+| Drag/swipe gestures | `motion.dev` | Gesture support |
+| Spring physics (bouncy) | `motion.dev` | Physics engine |
+| Accordion expand/collapse | `motion.dev` | Height animation |
+| Loading skeleton shimmer | CSS (`animate-shimmer`) | Performance |
+
+#### Combining Both Libraries
+
+The libraries work together when needed:
+
+```tsx
+// Radix dropdown with CSS transitions, staggered content with motion.dev
+<DropdownMenu.Content
+  className="data-[state=open]:animate-in data-[state=open]:fade-in-0"
+>
+  <motion.div variants={listContainerVariants}>
+    {items.map((item, i) => (
+      <motion.div key={item.id} variants={listItemVariants} custom={i}>
+        <DropdownMenu.Item>{item.label}</DropdownMenu.Item>
+      </motion.div>
+    ))}
+  </motion.div>
+</DropdownMenu.Content>
+```
+
+---
+
+### Motion.dev Patterns
 
 All complex animations use [Motion.dev](https://motion.dev/) (`motion/react`) for
 declarative, physics-based animations.
