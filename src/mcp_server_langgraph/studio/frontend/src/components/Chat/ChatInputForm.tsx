@@ -29,6 +29,7 @@
  */
 
 import { useRef, useEffect, useCallback, useState, useMemo } from "react";
+import { cn } from "../../utils/cn";
 import {
   Send,
   Mic,
@@ -58,30 +59,13 @@ import type { ToolSelectionMode } from "@/types/tools";
 
 import { Button, Input, Textarea } from "@/components/UI";
 import { MODEL_LIFECYCLE_BADGE_STYLES } from "../../utils/colors";
-import type { ModelStatus } from "@/types";
+import type { ModelOption } from "@/types";
 
 // Re-export SlashCommand for external use
 export type { SlashCommand };
 
-// Re-export ModelStatus from centralized types for backwards compatibility
-export type { ModelStatus } from "@/types";
-
-/** Model option for model selector dropdown */
-export interface ModelOption {
-  id: string;
-  name: string;
-  provider: string;
-  /** Whether this model supports extended thinking (Claude Opus 4.5, Gemini 2.5, etc.) */
-  supportsThinking?: boolean;
-  /** Whether this model supports vision/image input */
-  supportsVision?: boolean;
-  /** Whether this model supports tool/function calling */
-  supportsTools?: boolean;
-  /** Model lifecycle status (current, preview, legacy, deprecated) */
-  status?: ModelStatus;
-  /** Sunset date for deprecated models (ISO 8601 format: YYYY-MM-DD) */
-  sunsetDate?: string;
-}
+// Re-export types from centralized @/types for backwards compatibility
+export type { ModelStatus, ModelOption } from "@/types";
 
 // Re-export for test compatibility
 export type { UploadFile };
@@ -316,83 +300,6 @@ export function ChatInputForm({
     setIsDeprecationWarningDismissed(false);
   }, [selectedModel]);
 
-  // Handle model dropdown keyboard navigation
-  const handleModelDropdownKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLButtonElement>) => {
-      if (!showModelSelector) return;
-
-      switch (e.key) {
-        case "Enter":
-        case " ":
-          e.preventDefault();
-          if (!isModelDropdownOpen) {
-            // Open dropdown
-            setIsModelDropdownOpen(true);
-          } else if (
-            focusedModelIndex >= 0 &&
-            focusedModelIndex < availableModels.length
-          ) {
-            // Select focused model
-            const selectedModelOption = availableModels[focusedModelIndex];
-            if (selectedModelOption) {
-              onModelChange?.(selectedModelOption.id);
-              setIsModelDropdownOpen(false);
-            }
-          }
-          break;
-        case "Escape":
-          e.preventDefault();
-          setIsModelDropdownOpen(false);
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          if (!isModelDropdownOpen) {
-            setIsModelDropdownOpen(true);
-          } else {
-            // Navigate down with wrap-around
-            // If no focus yet (-1), start at first option (0)
-            setFocusedModelIndex((prev) => {
-              if (prev === -1) return 0;
-              return prev >= availableModels.length - 1 ? 0 : prev + 1;
-            });
-          }
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          if (!isModelDropdownOpen) {
-            setIsModelDropdownOpen(true);
-          } else {
-            // Navigate up with wrap-around
-            // If no focus yet (-1), start at last option
-            setFocusedModelIndex((prev) => {
-              if (prev === -1) return availableModels.length - 1;
-              return prev <= 0 ? availableModels.length - 1 : prev - 1;
-            });
-          }
-          break;
-        case "Home":
-          e.preventDefault();
-          if (isModelDropdownOpen) {
-            setFocusedModelIndex(0);
-          }
-          break;
-        case "End":
-          e.preventDefault();
-          if (isModelDropdownOpen) {
-            setFocusedModelIndex(availableModels.length - 1);
-          }
-          break;
-      }
-    },
-    [
-      showModelSelector,
-      isModelDropdownOpen,
-      focusedModelIndex,
-      availableModels,
-      onModelChange,
-    ],
-  );
-
   // Auto-focus the textarea on mount if autoFocus is true
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
@@ -584,6 +491,95 @@ export function ChatInputForm({
     // Always sort by status priority
     return sortModelsByStatus(models);
   }, [availableModels, modelSearchQuery, sortModelsByStatus]);
+
+  // Clamp focused index when filtered list shrinks (e.g., during search)
+  useEffect(() => {
+    if (
+      focusedModelIndex >= filteredModels.length &&
+      filteredModels.length > 0
+    ) {
+      setFocusedModelIndex(filteredModels.length - 1);
+    } else if (filteredModels.length === 0) {
+      setFocusedModelIndex(-1);
+    }
+  }, [filteredModels.length, focusedModelIndex]);
+
+  // Handle model dropdown keyboard navigation
+  const handleModelDropdownKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (!showModelSelector) return;
+
+      switch (e.key) {
+        case "Enter":
+        case " ":
+          e.preventDefault();
+          if (!isModelDropdownOpen) {
+            // Open dropdown
+            setIsModelDropdownOpen(true);
+          } else if (
+            focusedModelIndex >= 0 &&
+            focusedModelIndex < filteredModels.length
+          ) {
+            // Select focused model from filtered list
+            const selectedModelOption = filteredModels[focusedModelIndex];
+            if (selectedModelOption) {
+              onModelChange?.(selectedModelOption.id);
+              setIsModelDropdownOpen(false);
+            }
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          setIsModelDropdownOpen(false);
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          if (!isModelDropdownOpen) {
+            setIsModelDropdownOpen(true);
+          } else {
+            // Navigate down with wrap-around in filtered list
+            // If no focus yet (-1), start at first option (0)
+            setFocusedModelIndex((prev) => {
+              if (prev === -1) return 0;
+              return prev >= filteredModels.length - 1 ? 0 : prev + 1;
+            });
+          }
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (!isModelDropdownOpen) {
+            setIsModelDropdownOpen(true);
+          } else {
+            // Navigate up with wrap-around in filtered list
+            // If no focus yet (-1), start at last option
+            setFocusedModelIndex((prev) => {
+              if (prev === -1) return filteredModels.length - 1;
+              return prev <= 0 ? filteredModels.length - 1 : prev - 1;
+            });
+          }
+          break;
+        case "Home":
+          e.preventDefault();
+          if (isModelDropdownOpen) {
+            setFocusedModelIndex(0);
+          }
+          break;
+        case "End":
+          e.preventDefault();
+          if (isModelDropdownOpen) {
+            setFocusedModelIndex(filteredModels.length - 1);
+          }
+          break;
+      }
+    },
+    [
+      showModelSelector,
+      isModelDropdownOpen,
+      focusedModelIndex,
+      filteredModels,
+      onModelChange,
+    ],
+  );
 
   // Handle model selection
   const handleModelSelect = (modelId: string) => {
@@ -788,8 +784,10 @@ export function ChatInputForm({
             aria-controls="model-selector-listbox"
             aria-busy={isModelsLoading}
             aria-activedescendant={
-              isModelDropdownOpen && focusedModelIndex >= 0
-                ? `model-option-${availableModels[focusedModelIndex]?.id}`
+              isModelDropdownOpen &&
+              focusedModelIndex >= 0 &&
+              filteredModels[focusedModelIndex]
+                ? `model-option-${filteredModels[focusedModelIndex].id}`
                 : undefined
             }
           >
@@ -928,7 +926,12 @@ export function ChatInputForm({
               {filteredModels.map((model, index) => (
                 <Button
                   variant="ghost"
-                  className="w-full flex flex-col px-3 py-2 text-sm hover:bg-neutral-2 focus:bg-primary-3"
+                  className={cn(
+                    "w-full flex flex-col px-3 py-2 text-sm hover:bg-neutral-2 focus:bg-primary-3",
+                    // Compare with map index since focusedModelIndex is based on filteredModels
+                    focusedModelIndex === index &&
+                      "ring-2 ring-primary-7 bg-neutral-2",
+                  )}
                   key={model.id}
                   id={`model-option-${model.id}`}
                   type="button"
@@ -936,7 +939,10 @@ export function ChatInputForm({
                   aria-selected={model.id === selectedModel}
                   data-testid={`model-option-${model.id}`}
                   onClick={() => handleModelSelect(model.id)}
-                  onMouseEnter={() => setFocusedModelIndex(index)}
+                  onMouseEnter={() => {
+                    // Use filtered index for consistent focus tracking
+                    setFocusedModelIndex(index);
+                  }}
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">

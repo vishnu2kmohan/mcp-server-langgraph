@@ -34,6 +34,55 @@ export type SortOrder = "asc" | "desc";
 export type ModelStatus = "current" | "preview" | "legacy" | "deprecated";
 
 /**
+ * Known model vendor values.
+ *
+ * Distinguishes between native provider APIs and hosted/proxy versions.
+ * Used for display differentiation in model selectors.
+ */
+export type KnownModelVendor =
+  | "anthropic"
+  | "google"
+  | "openai"
+  | "vertex_ai"
+  | "vertex_ai_anthropic"
+  | "azure";
+
+/**
+ * Model vendor type.
+ *
+ * Allows known vendors plus arbitrary strings for forward compatibility
+ * with new vendors from the API. Use KnownModelVendor for switch/match.
+ */
+export type ModelVendor = KnownModelVendor | (string & {});
+
+/**
+ * Model option for model selectors.
+ *
+ * Unified interface for model selection UI components.
+ * Used by HeaderModelSelector, PreferencesMenu, ChatInput, etc.
+ */
+export interface ModelOption {
+  /** Unique model identifier (e.g., "claude-opus-4.5", "gpt-4o") */
+  id: string;
+  /** Human-readable model name (e.g., "Claude Opus 4.5") */
+  name: string;
+  /** Provider identifier (e.g., "anthropic", "openai", "google") */
+  provider: string;
+  /** Vendor distinguishes native API vs Vertex AI/Azure (Issue 5) */
+  vendor?: ModelVendor;
+  /** Whether this model supports extended thinking/reasoning */
+  supportsThinking?: boolean;
+  /** Whether this model supports vision/image inputs */
+  supportsVision?: boolean;
+  /** Whether this model supports tool/function calling */
+  supportsTools?: boolean;
+  /** Model lifecycle status for UI badges */
+  status?: ModelStatus;
+  /** Sunset date for deprecated models (ISO 8601 format) */
+  sunsetDate?: string;
+}
+
+/**
  * Cursor-based pagination metadata from backend.
  *
  * IMPORTANT: `count` is the number of items in the CURRENT page, NOT total count.

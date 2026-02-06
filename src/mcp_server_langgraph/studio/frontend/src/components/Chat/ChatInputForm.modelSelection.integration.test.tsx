@@ -521,8 +521,9 @@ describe("ChatInputForm Model Selection Integration", () => {
       // Press ArrowUp to navigate to last option
       fireEvent.keyDown(button, { key: "ArrowUp" });
 
-      // Last option should be focused (gemini-2.5-flash)
-      const lastOption = screen.getByTestId("model-option-gemini-2.5-flash");
+      // Models are sorted alphabetically: Claude, Gemini, GPT-4o
+      // So GPT-4o is the last option after sorting
+      const lastOption = screen.getByTestId("model-option-gpt-4o");
       expect(lastOption).toHaveClass("ring-2");
     });
 
@@ -543,16 +544,17 @@ describe("ChatInputForm Model Selection Integration", () => {
       const button = screen.getByTestId("model-selector-button");
       fireEvent.click(button);
 
+      // Models are sorted alphabetically: Claude, Gemini, GPT-4o
       // Initial focus is -1
       // ArrowDown -> 0 (claude-3-5-sonnet)
-      // ArrowDown -> 1 (gpt-4o)
+      // ArrowDown -> 1 (gemini-2.5-flash)
       fireEvent.keyDown(button, { key: "ArrowDown" }); // -1 -> 0
       fireEvent.keyDown(button, { key: "ArrowDown" }); // 0 -> 1
 
-      // Press Enter to select gpt-4o
+      // Press Enter to select gemini-2.5-flash
       fireEvent.keyDown(button, { key: "Enter" });
 
-      expect(onModelChange).toHaveBeenCalledWith("gpt-4o");
+      expect(onModelChange).toHaveBeenCalledWith("gemini-2.5-flash");
     });
 
     it("should open dropdown with Enter key when closed", () => {
@@ -615,7 +617,9 @@ describe("ChatInputForm Model Selection Integration", () => {
       // Press End to jump to last
       fireEvent.keyDown(button, { key: "End" });
 
-      const lastOption = screen.getByTestId("model-option-gemini-2.5-flash");
+      // Models are sorted alphabetically: Claude, Gemini, GPT-4o
+      // So GPT-4o is the last option after sorting
+      const lastOption = screen.getByTestId("model-option-gpt-4o");
       expect(lastOption).toHaveClass("ring-2");
     });
 
@@ -643,6 +647,37 @@ describe("ChatInputForm Model Selection Integration", () => {
 
       const firstOption = screen.getByTestId("model-option-claude-3-5-sonnet");
       expect(firstOption).toHaveClass("ring-2");
+    });
+
+    it("should navigate filtered models with keyboard when search is enabled", () => {
+      const onModelChange = vi.fn();
+
+      render(
+        <ChatInputForm
+          {...defaultProps}
+          showModelSelector={true}
+          enableModelSearch={true}
+          availableModels={mockModels}
+          selectedModel="claude-3-5-sonnet"
+          onModelChange={onModelChange}
+        />,
+      );
+
+      // Open dropdown
+      const button = screen.getByTestId("model-selector-button");
+      fireEvent.click(button);
+
+      // Filter to "gpt" - should narrow list to GPT-4o only
+      const search = screen.getByTestId("model-search-input");
+      fireEvent.change(search, { target: { value: "gpt" } });
+
+      // Navigate down to first (and only) filtered result
+      fireEvent.keyDown(button, { key: "ArrowDown" });
+
+      // Select with Enter
+      fireEvent.keyDown(button, { key: "Enter" });
+
+      expect(onModelChange).toHaveBeenCalledWith("gpt-4o");
     });
   });
 }); // Close main describe block

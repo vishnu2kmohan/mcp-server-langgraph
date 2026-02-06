@@ -20,6 +20,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { HeaderModelSelector, type ModelOption } from "./HeaderModelSelector";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
+import { TestProvider } from "../../test-utils";
 
 // =============================================================================
 // Test Data
@@ -81,6 +82,7 @@ interface SessionHeaderProps {
 /**
  * Test wrapper simulating session header context with HeaderModelSelector.
  * This mimics the actual usage in ConnectedConversationPanel.
+ * Wrapped with TestProvider for RTK Query support (useNativeCapabilities hook).
  */
 function SessionHeaderWithModelSelector({
   title = "New Conversation",
@@ -96,30 +98,32 @@ function SessionHeaderWithModelSelector({
   };
 
   return (
-    <div
-      data-testid="session-header"
-      className="flex items-center justify-between px-4 py-2 border-b"
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <h2
-          className="text-sm font-medium truncate"
-          data-testid="session-title"
-        >
-          {title}
-        </h2>
-        <HeaderModelSelector
-          selectedModel={selectedModel}
-          availableModels={availableModels}
-          thinkingLevel={thinkingLevel}
-          onModelChange={onModelChange}
-          onThinkingLevelChange={onThinkingLevelChange}
-          compact
-        />
+    <TestProvider>
+      <div
+        data-testid="session-header"
+        className="flex items-center justify-between px-4 py-2 border-b"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <h2
+            className="text-sm font-medium truncate"
+            data-testid="session-title"
+          >
+            {title}
+          </h2>
+          <HeaderModelSelector
+            selectedModel={selectedModel}
+            availableModels={availableModels}
+            thinkingLevel={thinkingLevel}
+            onModelChange={onModelChange}
+            onThinkingLevelChange={onThinkingLevelChange}
+            compact
+          />
+        </div>
+        <button onClick={handleSend} data-testid="send-button">
+          Send
+        </button>
       </div>
-      <button onClick={handleSend} data-testid="send-button">
-        Send
-      </button>
-    </div>
+    </TestProvider>
   );
 }
 

@@ -39,6 +39,7 @@ vi.mock("../store/hooks", () => ({
 
 // Mock the selector itself
 vi.mock("../store/slices/uiSlice", () => ({
+  default: (state = {}) => state,
   selectSubmitOnEnter: (state: { ui: { submitOnEnter: boolean } }) =>
     state.ui.submitOnEnter,
 }));

@@ -14,6 +14,8 @@ export type {
 export type {
   SortOrder,
   ModelStatus,
+  ModelOption,
+  ModelVendor,
   CursorPaginationMetadata,
   BackendCursorPaginatedResponse,
   PaginatedResponse,

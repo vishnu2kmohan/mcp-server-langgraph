@@ -141,12 +141,10 @@ const DEFAULT_CHAT_SUGGESTIONS: ChatSuggestion[] = [
 // Types
 // =============================================================================
 
-/** Model option for the model selector */
-export interface ModelOption {
-  id: string;
-  name: string;
-  provider: string;
-}
+import type { ModelOption } from "@/types";
+
+// Re-export ModelOption for backwards compatibility
+export type { ModelOption } from "@/types";
 
 /** Default available models for selection (latest versions only) */
 const DEFAULT_AVAILABLE_MODELS: ModelOption[] = [

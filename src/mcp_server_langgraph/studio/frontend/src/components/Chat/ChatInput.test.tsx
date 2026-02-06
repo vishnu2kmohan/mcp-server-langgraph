@@ -272,7 +272,8 @@ describe("ChatInput", () => {
         />,
       );
 
-      expect(screen.getByText("anthropic")).toBeInTheDocument();
+      // formatProviderDisplay properly cases provider names
+      expect(screen.getByText("Anthropic")).toBeInTheDocument();
     });
 
     it("opens dropdown when clicked", async () => {
@@ -1627,6 +1628,250 @@ describe("ChatInput", () => {
       );
 
       expect(screen.getByTestId("tools-loading")).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // P3: PreferencesMenu Integration
+  // ===========================================================================
+  describe("PreferencesMenu integration", () => {
+    const mockModels = [
+      { id: "claude-opus-4-5", name: "Claude Opus 4.5", provider: "anthropic" },
+      { id: "claude-sonnet-4", name: "Claude Sonnet 4", provider: "anthropic" },
+    ];
+
+    it("renders PreferencesMenu when showPreferencesMenu is true", () => {
+      render(
+        <ChatInput
+          {...createMockProps({
+            showPreferencesMenu: true,
+            availableModels: mockModels,
+            selectedModel: "claude-opus-4-5",
+            onModelChange: vi.fn(),
+            onThinkingLevelChange: vi.fn(),
+          })}
+        />,
+      );
+
+      expect(
+        screen.getByTestId("preferences-menu-trigger"),
+      ).toBeInTheDocument();
+    });
+
+    it("hides model selector when showPreferencesMenu is true", () => {
+      render(
+        <ChatInput
+          {...createMockProps({
+            showPreferencesMenu: true,
+            showModelSelector: true,
+            availableModels: mockModels,
+            selectedModel: "claude-opus-4-5",
+            onModelChange: vi.fn(),
+          })}
+        />,
+      );
+
+      // PreferencesMenu should be visible
+      expect(
+        screen.getByTestId("preferences-menu-trigger"),
+      ).toBeInTheDocument();
+      // Standard model selector should NOT be visible (preferences menu replaces it)
+      expect(
+        screen.queryByTestId("model-settings-button"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("passes model props to PreferencesMenu", async () => {
+      const onModelChange = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <ChatInput
+          {...createMockProps({
+            showPreferencesMenu: true,
+            availableModels: mockModels,
+            selectedModel: "claude-opus-4-5",
+            onModelChange,
+          })}
+        />,
+      );
+
+      // Open preferences menu
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      // Verify menu opened
+      expect(screen.getByTestId("preferences-dropdown")).toBeInTheDocument();
+    });
+
+    it("passes thinking level props to PreferencesMenu", async () => {
+      const onThinkingLevelChange = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <ChatInput
+          {...createMockProps({
+            showPreferencesMenu: true,
+            availableModels: mockModels,
+            selectedModel: "claude-opus-4-5",
+            thinkingLevel: "medium",
+            onThinkingLevelChange,
+          })}
+        />,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      // Verify thinking submenu trigger exists
+      expect(
+        screen.getByTestId("submenu-trigger-thinking"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // P3: ExecutionMode Integration
+  // ===========================================================================
+  describe("ExecutionMode integration", () => {
+    it("renders SegmentedControl when onExecutionModeChange is provided", () => {
+      render(
+        <ChatInput
+          {...createMockProps({
+            executionMode: "default",
+            onExecutionModeChange: vi.fn(),
+          })}
+        />,
+      );
+
+      // SegmentedControl wrapper is rendered when onExecutionModeChange is provided
+      expect(
+        screen.getByTestId("execution-mode-segmented"),
+      ).toBeInTheDocument();
+    });
+
+    it("renders ExecutionModeIndicator when only onCycleExecutionMode is provided", () => {
+      render(
+        <ChatInput
+          {...createMockProps({
+            executionMode: "plan",
+            onCycleExecutionMode: vi.fn(),
+          })}
+        />,
+      );
+
+      // ExecutionModeIndicator shows the mode badge when only cycling is available
+      expect(
+        screen.getByTestId("execution-mode-indicator"),
+      ).toBeInTheDocument();
+    });
+
+    it("calls onExecutionModeChange when mode is changed via SegmentedControl", async () => {
+      const onExecutionModeChange = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <ChatInput
+          {...createMockProps({
+            executionMode: "default",
+            onExecutionModeChange,
+          })}
+        />,
+      );
+
+      // Find and click the plan mode option
+      const planOption = screen.getByRole("radio", { name: /plan/i });
+      await user.click(planOption);
+
+      expect(onExecutionModeChange).toHaveBeenCalledWith("plan");
+    });
+
+    it("calls onCycleExecutionMode when keyboard shortcut is used", async () => {
+      const onCycleExecutionMode = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <ChatInput
+          {...createMockProps({
+            executionMode: "default",
+            onCycleExecutionMode,
+          })}
+        />,
+      );
+
+      // Focus the textarea
+      const textarea = screen.getByRole("textbox");
+      await user.click(textarea);
+
+      // Ctrl+Shift+M cycles execution mode
+      await user.keyboard("{Control>}{Shift>}m{/Shift}{/Control}");
+
+      expect(onCycleExecutionMode).toHaveBeenCalled();
+    });
+  });
+
+  describe("Provider Display Formatting", () => {
+    const mockModelsWithVendor = [
+      {
+        id: "claude-opus-4-5",
+        name: "Claude Opus 4.5",
+        provider: "anthropic",
+        vendor: "vertex_ai_anthropic" as const,
+      },
+      {
+        id: "gemini-2.5-pro",
+        name: "Gemini 2.5 Pro",
+        provider: "google",
+        vendor: "vertex_ai" as const,
+      },
+      {
+        id: "gpt-4o",
+        name: "GPT-4o",
+        provider: "openai",
+      },
+    ];
+
+    it("displays formatted provider names with proper casing in dropdown", async () => {
+      const user = userEvent.setup();
+      render(
+        <ChatInput
+          {...createMockProps({
+            showModelSelector: true,
+            selectedModel: "claude-opus-4-5",
+            availableModels: mockModelsWithVendor,
+          })}
+        />,
+      );
+
+      // Open the model dropdown
+      await user.click(screen.getByTestId("model-settings-button"));
+
+      // Should show properly formatted provider names with vendor context
+      // Vertex AI models show "(Vertex AI)" suffix, direct API models show just the provider
+      // Use getAllByText since button AND dropdown both show the selected model's provider
+      expect(
+        screen.getAllByText("Anthropic (Vertex AI)").length,
+      ).toBeGreaterThan(0);
+      expect(screen.getByText("OpenAI")).toBeInTheDocument();
+      expect(screen.getByText("Google (Vertex AI)")).toBeInTheDocument();
+    });
+
+    it("shows vendor info when different from provider", async () => {
+      const user = userEvent.setup();
+      render(
+        <ChatInput
+          {...createMockProps({
+            showModelSelector: true,
+            selectedModel: "claude-opus-4-5",
+            availableModels: mockModelsWithVendor,
+          })}
+        />,
+      );
+
+      // Open the model dropdown
+      await user.click(screen.getByTestId("model-settings-button"));
+
+      // Vertex AI models should show vendor context (getAllByText since multiple may exist)
+      const vertexElements = screen.getAllByText(/Vertex AI/);
+      expect(vertexElements.length).toBeGreaterThan(0);
     });
   });
 });

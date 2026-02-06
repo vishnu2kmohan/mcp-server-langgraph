@@ -211,17 +211,20 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       expect(screen.getByTestId("model-option-gpt-4o")).toBeInTheDocument();
 
       // WHEN: User navigates with arrow keys
+      // Models are sorted alphabetically: Claude, Gemini, GPT-4o
       fireEvent.keyDown(button, { key: "ArrowDown" }); // Focus first option (Claude)
-      fireEvent.keyDown(button, { key: "ArrowDown" }); // Focus second option (GPT)
+      fireEvent.keyDown(button, { key: "ArrowDown" }); // Focus second option (Gemini)
 
-      // Second option should have focus ring
-      expect(screen.getByTestId("model-option-gpt-4o")).toHaveClass("ring-2");
+      // Second option (Gemini) should have focus ring
+      expect(screen.getByTestId("model-option-gemini-2.5-flash")).toHaveClass(
+        "ring-2",
+      );
 
       // WHEN: User presses Enter to select
       fireEvent.keyDown(button, { key: "Enter" });
 
-      // THEN: Callback should be called
-      expect(onModelChange).toHaveBeenCalledWith("gpt-4o");
+      // THEN: Callback should be called with Gemini (second option after sorting)
+      expect(onModelChange).toHaveBeenCalledWith("gemini-2.5-flash");
     });
 
     it("should close dropdown with Escape without selecting", () => {
@@ -647,7 +650,7 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
         },
         {
           id: "legacy-model-without-status",
-          name: "Legacy Model",
+          name: "Old Model",
           provider: "test",
           // No status field - backward compatibility
         },

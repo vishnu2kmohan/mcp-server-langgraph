@@ -560,6 +560,8 @@ export default {
   },
   plugins: [
     require('@tailwindcss/typography'),
+    // Radix UI animation utilities (animate-in, fade-in-0, zoom-in-95, etc.)
+    require('tailwindcss-animate'),
     // Animation delay plugin - generates animation-delay-* utilities
     function({ addUtilities, theme }: { addUtilities: (utilities: Record<string, Record<string, string>>) => void; theme: (key: string) => Record<string, string> }) {
       const delays = theme('animationDelay') as Record<string, string>;

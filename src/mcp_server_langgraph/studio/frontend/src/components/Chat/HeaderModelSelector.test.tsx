@@ -376,7 +376,8 @@ describe("HeaderModelSelector", () => {
       render(<HeaderModelSelector {...defaultProps} />);
 
       const pill = screen.getByTestId("header-model-selector");
-      expect(pill).toHaveAttribute("aria-haspopup", "listbox");
+      // The dropdown contains a dialog (settings + model list), not just a listbox
+      expect(pill).toHaveAttribute("aria-haspopup", "dialog");
       expect(pill).toHaveAttribute("aria-expanded", "false");
     });
 
@@ -407,7 +408,10 @@ describe("HeaderModelSelector", () => {
       await user.click(screen.getByTestId("header-model-selector"));
 
       const dropdown = screen.getByTestId("model-dropdown");
-      expect(dropdown).toHaveAttribute("role", "listbox");
+      // Container is a dialog (contains thinking level section, search, etc.)
+      expect(dropdown).toHaveAttribute("role", "dialog");
+      // Models are inside a nested listbox
+      expect(dropdown.querySelector('[role="listbox"]')).toBeInTheDocument();
     });
 
     it("model options have proper role", async () => {

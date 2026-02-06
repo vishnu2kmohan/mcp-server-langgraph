@@ -26,31 +26,12 @@ import {
 } from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
-import type { ModelStatus } from "@/types";
+import type { ModelOption } from "@/types";
 import { useNativeCapabilities } from "@/hooks";
+import { formatProviderDisplay } from "@/utils/modelDisplay";
 
-// =============================================================================
-// Types
-// =============================================================================
-
-export interface ModelOption {
-  id: string;
-  name: string;
-  provider: string;
-  /** Vendor distinguishes native API vs Vertex AI (Issue 5) */
-  vendor?:
-    | "anthropic"
-    | "google"
-    | "openai"
-    | "vertex_ai"
-    | "vertex_ai_anthropic"
-    | "azure";
-  supportsThinking?: boolean;
-  supportsVision?: boolean;
-  supportsTools?: boolean;
-  status?: ModelStatus;
-  sunsetDate?: string;
-}
+// Re-export ModelOption for backwards compatibility
+export type { ModelOption } from "@/types";
 
 export interface HeaderModelSelectorProps {
   /** Currently selected model ID */
@@ -94,34 +75,7 @@ const STATUS_BADGES: Record<string, { label: string; className: string }> = {
   },
 };
 
-/**
- * Format model provider display with vendor info for transparency.
- * Shows "Google (Vertex AI)" when using Vertex AI instead of native API.
- * Issue 5: Add vendor distinction for Google vs Vertex AI models.
- */
-function formatProviderDisplay(model: ModelOption): string {
-  const { provider, vendor } = model;
-
-  // Helper to capitalize provider name
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-  // No vendor specified - return capitalized provider
-  if (!vendor) return capitalize(provider);
-
-  // Show vendor distinction when it differs from simplified provider
-  if (vendor === "vertex_ai" && provider === "google") {
-    return "Google (Vertex AI)";
-  }
-  if (vendor === "vertex_ai_anthropic" && provider === "anthropic") {
-    return "Anthropic (Vertex AI)";
-  }
-  if (vendor === "azure" && provider === "openai") {
-    return "OpenAI (Azure)";
-  }
-
-  // Default: capitalize provider
-  return capitalize(provider);
-}
+// formatProviderDisplay imported from @/utils/modelDisplay
 
 const THINKING_LEVELS: {
   value: ReasoningEffortLevel;
@@ -363,7 +317,7 @@ export function HeaderModelSelector({
         onClick={toggleDropdown}
         onKeyDown={handleButtonKeyDown}
         aria-label={`Select model. Current: ${displayName}${modelSupportsThinking ? ` (${thinkingLabel} thinking)` : ""}`}
-        aria-haspopup="listbox"
+        aria-haspopup="dialog"
         aria-expanded={isOpen}
         data-testid="header-model-selector"
         className={cn(
@@ -403,8 +357,8 @@ export function HeaderModelSelector({
       {isOpen && (
         <div
           ref={dropdownRef}
-          role="listbox"
-          aria-label="Select a model"
+          role="dialog"
+          aria-label="Model settings"
           data-testid="model-dropdown"
           className={cn(
             "absolute left-0 bottom-full mb-1",
@@ -522,7 +476,11 @@ export function HeaderModelSelector({
                     ref={searchInputRef}
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      // Reset focus when search changes to prevent stale index
+                      setFocusedIndex(-1);
+                    }}
                     placeholder="Search models..."
                     data-testid="model-search-input"
                     className={cn(
@@ -546,71 +504,78 @@ export function HeaderModelSelector({
             <div className="px-3 py-1.5 text-xs font-medium text-neutral-10 uppercase tracking-wider">
               Models
             </div>
-            {filteredModels.map((model, index) => {
-              const isSelected = model.id === selectedModel;
-              const statusBadge = model.status && STATUS_BADGES[model.status];
+            <div role="listbox" aria-label="Available models">
+              {filteredModels.map((model, index) => {
+                const isSelected = model.id === selectedModel;
+                const statusBadge = model.status && STATUS_BADGES[model.status];
 
-              return (
-                // eslint-disable-next-line react/forbid-elements -- Listbox options require native button
-                <button
-                  key={model.id}
-                  ref={(el) => {
-                    optionsRef.current[index] = el;
-                  }}
-                  role="option"
-                  aria-selected={isSelected}
-                  onClick={() => handleModelSelect(model.id)}
-                  onKeyDown={handleDropdownKeyDown}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2",
-                    "text-sm text-left",
-                    "text-neutral-11",
-                    "hover:bg-neutral-4",
-                    "focus:bg-neutral-2",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-inset",
-                    "transition-colors",
-                  )}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">{model.name}</span>
-                      {model.supportsThinking && (
-                        <Brain
-                          size={12}
-                          className="text-insight-9 shrink-0"
-                          data-testid="thinking-badge"
-                        />
-                      )}
-                      {statusBadge && (
-                        <span
-                          className={cn(
-                            "px-1.5 py-0.5 text-xs rounded",
-                            statusBadge.className,
-                          )}
-                        >
-                          {statusBadge.label}
+                return (
+                  // eslint-disable-next-line react/forbid-elements -- Listbox options require native button
+                  <button
+                    key={model.id}
+                    ref={(el) => {
+                      optionsRef.current[index] = el;
+                    }}
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => handleModelSelect(model.id)}
+                    onFocus={() => setFocusedIndex(index)}
+                    onKeyDown={handleDropdownKeyDown}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2",
+                      "text-sm text-left",
+                      "text-neutral-11",
+                      "hover:bg-neutral-4",
+                      "focus:bg-neutral-2",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-inset",
+                      "transition-colors",
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium truncate">
+                          {model.name}
                         </span>
-                      )}
+                        {model.supportsThinking && (
+                          <Brain
+                            size={12}
+                            className="text-insight-9 shrink-0"
+                            data-testid="thinking-badge"
+                          />
+                        )}
+                        {statusBadge && (
+                          <span
+                            className={cn(
+                              "px-1.5 py-0.5 text-xs rounded",
+                              statusBadge.className,
+                            )}
+                          >
+                            {statusBadge.label}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-neutral-10">
+                        {formatProviderDisplay(model)}
+                      </div>
                     </div>
-                    <div className="text-xs text-neutral-10">
-                      {formatProviderDisplay(model)}
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <Check
-                      className="w-4 h-4 text-primary-9 shrink-0"
-                      data-testid="model-selected-check"
-                    />
-                  )}
-                </button>
-              );
-            })}
-            {/* Issue 4: Updated to show appropriate message for search vs no models */}
-            {filteredModels.length === 0 && (
-              <div className="px-3 py-4 text-sm text-center text-neutral-10">
-                {searchQuery.trim() ? "No models found" : "No models available"}
-              </div>
-            )}
+                    {isSelected && (
+                      <Check
+                        className="w-4 h-4 text-primary-9 shrink-0"
+                        data-testid="model-selected-check"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+              {/* Issue 4: Updated to show appropriate message for search vs no models */}
+              {filteredModels.length === 0 && (
+                <div className="px-3 py-4 text-sm text-center text-neutral-10">
+                  {searchQuery.trim()
+                    ? "No models found"
+                    : "No models available"}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

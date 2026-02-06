@@ -29,8 +29,43 @@ vi.mock("../store/hooks", () => ({
 }));
 
 vi.mock("../store/slices/uiSlice", () => ({
+  default: (state = {}) => state,
   selectSubmitOnEnter: () => true,
 }));
+
+// Mock TelemetryContext
+vi.mock("../contexts/TelemetryContext", () => ({
+  useSessionTelemetry: () => ({
+    trackExecutionModeChange: vi.fn(),
+    trackBypassApproval: vi.fn(),
+    trackSessionCreation: vi.fn(),
+    trackRevalidation: vi.fn(),
+    trackSync: vi.fn(),
+    trackArtifactSave: vi.fn(),
+    trackArtifactDelete: vi.fn(),
+    trackSuggestionAction: vi.fn(),
+    trackCanvasAction: vi.fn(),
+    getMetrics: vi.fn(),
+    getHistory: vi.fn(),
+    reset: vi.fn(),
+  }),
+  TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+}));
+
+// Mock useCheckBypassPermissionQuery from API (RTK Query)
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useCheckBypassPermissionQuery: () => ({
+      data: { allowed: false },
+      isLoading: false,
+      isError: false,
+    }),
+  };
+});
 
 // =============================================================================
 // Mock Hooks

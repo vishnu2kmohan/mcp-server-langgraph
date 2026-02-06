@@ -1,25 +1,29 @@
 /**
  * PreferencesMenu Component
  *
- * Consolidated preferences dropdown for chat input settings.
+ * Hierarchical preferences dropdown for chat input settings using Radix UI.
  * Provides access to:
  * - Model selection (with thinking level)
- * - Tool selection mode
+ * - Tool selection mode (with nested tool provider)
  * - Knowledge Base focus mode
  *
  * Design System Compliance:
+ * - Uses Radix UI DropdownMenu for accessibility
  * - Uses CVA for variant styling
  * - Uses Radix 1-12 color scale
  * - Focus rings: focus-visible:ring-2 focus-visible:ring-primary-7
  * - Touch targets: 32px minimum (WCAG 2.5.8)
+ * - Reduced motion: motion-reduce:animate-none for prefers-reduced-motion
  *
  * @see Chat Input UX Plan for architecture details
  */
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { forwardRef, type ReactNode } from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   Settings2,
   ChevronDown,
+  ChevronRight,
   Check,
   Brain,
   Wrench,
@@ -31,12 +35,13 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
+import { Button } from "@/components/UI";
 import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import type { KBFocusMode } from "./KnowledgeBaseFocus";
 import type { ToolSelectionMode, ToolPreference } from "@/types/tools";
+import { formatProviderDisplay } from "@/utils/modelDisplay";
 import type { ModelOption } from "./ChatInput";
-
-import { Button } from "@/components/UI";
+import type { ToolOption } from "./ToolSelector";
 
 // =============================================================================
 // Types
@@ -59,10 +64,12 @@ export interface PreferencesMenuProps {
   toolMode?: ToolSelectionMode;
   /** Callback when tool mode changes */
   onToolModeChange?: (mode: ToolSelectionMode) => void;
-  /** Currently selected tools */
+  /** Currently selected tools (tool IDs) */
   selectedTools?: string[];
   /** Callback when tools change */
   onToolsChange?: (tools: string[]) => void;
+  /** Available tools for multi-select (when toolMode is manual) */
+  availableTools?: ToolOption[];
   /** Current KB focus mode */
   kbFocusMode?: KBFocusMode;
   /** Callback when KB focus mode changes */
@@ -142,28 +149,108 @@ const TOOL_PREFERENCE_MODES: {
 // Helpers
 // =============================================================================
 
+// formatProviderDisplay imported from @/utils/modelDisplay
+
 /**
- * Format model provider display with vendor info for transparency.
- * Shows "google (Vertex AI)" when using Vertex AI instead of native API.
+ * Get display label for thinking level
  */
-function formatProviderDisplay(model: ModelOption): string {
-  const { provider, vendor } = model;
-  if (!vendor) return provider;
-
-  // Show vendor distinction when it differs from simplified provider
-  if (vendor === "vertex_ai" && provider === "google") {
-    return "Google (Vertex AI)";
-  }
-  if (vendor === "vertex_ai_anthropic" && provider === "anthropic") {
-    return "Anthropic (Vertex AI)";
-  }
-  if (vendor === "azure" && provider === "openai") {
-    return "OpenAI (Azure)";
-  }
-
-  // Capitalize provider for display
-  return provider.charAt(0).toUpperCase() + provider.slice(1);
+function getThinkingLevelLabel(level: ReasoningEffortLevel): string {
+  return THINKING_LEVELS.find((l) => l.value === level)?.label ?? "Medium";
 }
+
+/**
+ * Get display label for tool mode
+ */
+function getToolModeLabel(mode: ToolSelectionMode): string {
+  return TOOL_MODES.find((m) => m.value === mode)?.label ?? "Auto";
+}
+
+/**
+ * Get display label for KB focus mode
+ */
+function getKBFocusModeLabel(mode: KBFocusMode): string {
+  return KB_FOCUS_MODES.find((m) => m.value === mode)?.label ?? "All Sources";
+}
+
+/**
+ * Get display label for tool preference
+ */
+function getToolPreferenceLabel(pref: ToolPreference): string {
+  return TOOL_PREFERENCE_MODES.find((p) => p.value === pref)?.label ?? "Auto";
+}
+
+// =============================================================================
+// Styled Components
+// =============================================================================
+
+// Styled SubMenu Trigger
+// Note: Radix DropdownMenu.SubTrigger types its ref as HTMLDivElement
+const SubMenuTrigger = forwardRef<
+  HTMLDivElement,
+  {
+    icon: ReactNode;
+    label: string;
+    value: string;
+    "data-testid"?: string;
+  }
+>(({ icon, label, value, "data-testid": testId, ...props }, ref) => (
+  <DropdownMenu.SubTrigger
+    ref={ref}
+    data-testid={testId}
+    className={cn(
+      "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+      "text-neutral-11 hover:bg-neutral-4 hover:text-neutral-12",
+      "focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+      "cursor-pointer rounded-md",
+      "transition-colors duration-150",
+      "data-[state=open]:bg-neutral-4",
+    )}
+    {...props}
+  >
+    <div className="flex items-center gap-2">
+      {icon}
+      <span className="font-medium">{label}:</span>
+      <span className="text-neutral-10">{value}</span>
+    </div>
+    <ChevronRight className="h-4 w-4 text-neutral-9" aria-hidden="true" />
+  </DropdownMenu.SubTrigger>
+));
+SubMenuTrigger.displayName = "SubMenuTrigger";
+
+// Styled SubMenu Content
+const SubMenuContent = forwardRef<
+  HTMLDivElement,
+  { children: ReactNode; "data-testid"?: string }
+>(({ children, "data-testid": testId, ...props }, ref) => (
+  <DropdownMenu.Portal>
+    <DropdownMenu.SubContent
+      ref={ref}
+      data-testid={testId}
+      sideOffset={2}
+      alignOffset={-4}
+      className={cn(
+        "min-w-[180px] rounded-lg p-1",
+        "bg-neutral-2 border border-neutral-6",
+        "shadow-elevated z-dropdown",
+        "max-h-[300px] overflow-y-auto",
+        // Animation (respects prefers-reduced-motion via motion-reduce)
+        "data-[state=open]:animate-in data-[state=closed]:animate-out",
+        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "data-[side=bottom]:slide-in-from-top-2",
+        "data-[side=left]:slide-in-from-right-2",
+        "data-[side=right]:slide-in-from-left-2",
+        "data-[side=top]:slide-in-from-bottom-2",
+        // Reduced motion: disable animations for accessibility
+        "motion-reduce:animate-none motion-reduce:transition-none",
+      )}
+      {...props}
+    >
+      {children}
+    </DropdownMenu.SubContent>
+  </DropdownMenu.Portal>
+));
+SubMenuContent.displayName = "SubMenuContent";
 
 // =============================================================================
 // Component
@@ -178,8 +265,10 @@ export function PreferencesMenu({
   onThinkingLevelChange,
   toolMode = "auto",
   onToolModeChange,
-  selectedTools: _selectedTools,
-  onToolsChange: _onToolsChange,
+  // Tool selection props for individual tool multi-select (when toolMode is manual)
+  selectedTools = [],
+  onToolsChange,
+  availableTools = [],
   kbFocusMode = "all",
   onKBFocusChange,
   // v7: Native tool preference
@@ -196,186 +285,103 @@ export function PreferencesMenu({
   criticModel,
   onCriticModelChange,
 }: PreferencesMenuProps) {
-  // Get current model info (reserved for future tooltip/display enhancements)
-  const _currentModel = availableModels.find((m) => m.id === selectedModel);
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-    return undefined;
-  }, [isOpen]);
-
-  // Handle keyboard navigation
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key === "Escape") {
-      setIsOpen(false);
-      buttonRef.current?.focus();
-    }
-  }, []);
-
-  const handleToggle = useCallback(() => {
-    if (!disabled && !isLoading) {
-      setIsOpen((prev) => !prev);
-    }
-  }, [disabled, isLoading]);
-
-  const handleThinkingLevelChange = useCallback(
-    (level: ReasoningEffortLevel) => {
-      onThinkingLevelChange?.(level);
-    },
-    [onThinkingLevelChange],
-  );
-
-  const handleToolModeChange = useCallback(
-    (mode: ToolSelectionMode) => {
-      onToolModeChange?.(mode);
-    },
-    [onToolModeChange],
-  );
-
-  const handleKBFocusChange = useCallback(
-    (mode: KBFocusMode) => {
-      onKBFocusChange?.(mode);
-    },
-    [onKBFocusChange],
-  );
-
-  // v7: Handle tool preference change
-  const handleToolPreferenceChange = useCallback(
-    (preference: ToolPreference) => {
-      onToolPreferenceChange?.(preference);
-    },
-    [onToolPreferenceChange],
-  );
-
-  const handleModelChange = useCallback(
-    (modelId: string) => {
-      onModelChange?.(modelId);
-    },
-    [onModelChange],
-  );
-
-  const handleExecutorModelChange = useCallback(
-    (modelId: string | null) => {
-      onExecutorModelChange?.(modelId);
-    },
-    [onExecutorModelChange],
-  );
-
-  const handleCriticModelChange = useCallback(
-    (modelId: string | null) => {
-      onCriticModelChange?.(modelId);
-    },
-    [onCriticModelChange],
-  );
+  // Get current model display name
+  const currentModel = availableModels.find((m) => m.id === selectedModel);
+  const currentModelName = currentModel?.name ?? "Select Model";
 
   return (
-    <div
-      ref={containerRef}
-      data-testid="preferences-menu"
-      className={cn("relative", className)}
-      onKeyDown={handleKeyDown}
-    >
-      {/* Trigger Button */}
-      {}
-      <Button
-        variant="ghost"
-        ref={buttonRef}
-        type="button"
-        data-testid="preferences-menu-trigger"
-        onClick={handleToggle}
-        disabled={disabled || isLoading}
-        aria-label="Open preferences menu"
-        aria-expanded={isOpen}
-        aria-haspopup="menu"
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-md text-sm font-medium",
-          "min-h-8 transition-colors duration-150",
-          "bg-neutral-3 text-neutral-11 hover:bg-neutral-4",
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7 focus-visible:ring-offset-2",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          compact ? "px-2" : "px-3",
-        )}
-      >
-        {isLoading ? (
-          <Loader2
-            className="h-4 w-4 animate-spin"
-            data-testid="preferences-loading"
-            aria-hidden="true"
-          />
-        ) : (
-          <Settings2 className="h-4 w-4" aria-hidden="true" />
-        )}
-        {!compact && <span>Preferences</span>}
-        <ChevronDown
-          className={cn(
-            "h-3 w-3 transition-transform duration-150",
-            isOpen && "rotate-180",
-          )}
-          aria-hidden="true"
-        />
-      </Button>
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div
-          data-testid="preferences-dropdown"
-          role="menu"
-          aria-label="Preferences menu"
-          className={cn(
-            "absolute right-0 bottom-full mb-1 z-50",
-            "min-w-[240px] max-h-[70vh] overflow-y-auto rounded-lg border border-neutral-6",
-            "bg-neutral-2 shadow-lg",
-            "py-2",
-          )}
-        >
-          {/* Model Selection Section */}
-          {availableModels.length > 0 && (
-            <>
-              <div className="px-3 py-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
-                  <Cpu className="h-3 w-3" aria-hidden="true" />
-                  Model
-                </div>
+    <div data-testid="preferences-menu" className={cn("relative", className)}>
+      <DropdownMenu.Root>
+        {/* Trigger Button */}
+        <DropdownMenu.Trigger asChild>
+          <Button
+            variant="ghost"
+            type="button"
+            data-testid="preferences-menu-trigger"
+            disabled={disabled || isLoading}
+            aria-label="Open preferences menu"
+            className={cn(
+              "group inline-flex items-center gap-1.5 rounded-md text-sm font-medium",
+              "min-h-8 transition-colors duration-150",
+              "bg-neutral-3 text-neutral-11 hover:bg-neutral-4",
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7 focus-visible:ring-offset-2",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              compact ? "px-2" : "px-3",
+            )}
+          >
+            {isLoading ? (
+              <Loader2
+                className="h-4 w-4 animate-spin"
+                data-testid="preferences-loading"
+                aria-hidden="true"
+              />
+            ) : (
+              <Settings2 className="h-4 w-4" aria-hidden="true" />
+            )}
+            {!compact && <span>Preferences</span>}
+            <ChevronDown
+              className="h-3 w-3 transition-transform duration-150 group-data-[state=open]:rotate-180"
+              aria-hidden="true"
+            />
+          </Button>
+        </DropdownMenu.Trigger>
+
+        {/* Dropdown Content */}
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            data-testid="preferences-dropdown"
+            side="top"
+            align="end"
+            sideOffset={4}
+            collisionPadding={8}
+            className={cn(
+              "min-w-[240px] rounded-lg p-1",
+              "bg-neutral-2 border border-neutral-6",
+              "shadow-elevated z-dropdown",
+              // Animation (respects prefers-reduced-motion via motion-reduce)
+              "data-[state=open]:animate-in data-[state=closed]:animate-out",
+              "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+              "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+              "data-[side=bottom]:slide-in-from-top-2",
+              "data-[side=top]:slide-in-from-bottom-2",
+              // Reduced motion: disable animations for accessibility
+              "motion-reduce:animate-none motion-reduce:transition-none",
+            )}
+          >
+            {/* Model Submenu - Always render to show loading/empty states */}
+            <DropdownMenu.Sub>
+              <SubMenuTrigger
+                data-testid="submenu-trigger-model"
+                icon={<Cpu className="h-4 w-4" aria-hidden="true" />}
+                label="Model"
+                value={currentModelName}
+              />
+              <SubMenuContent data-testid="submenu-content-model">
                 {isModelsLoading ? (
-                  <div className="flex items-center justify-center py-2">
+                  <div className="flex items-center justify-center py-4">
                     <Loader2
                       className="h-4 w-4 animate-spin text-neutral-9"
                       aria-label="Loading models"
                     />
                   </div>
+                ) : availableModels.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-neutral-10">
+                    No models available
+                  </div>
                 ) : (
-                  <div
-                    className="space-y-1 max-h-[200px] overflow-y-auto"
-                    role="listbox"
-                    aria-label="Model selection"
+                  <DropdownMenu.RadioGroup
+                    value={selectedModel}
+                    onValueChange={(value) => onModelChange?.(value)}
                   >
                     {availableModels.map((model) => (
-                      <Button
-                        variant="ghost"
+                      <DropdownMenu.RadioItem
                         key={model.id}
-                        type="button"
-                        role="option"
-                        aria-selected={selectedModel === model.id}
-                        onClick={() => handleModelChange(model.id)}
+                        value={model.id}
                         className={cn(
-                          "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                          "hover:bg-neutral-4 transition-colors",
+                          "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                          "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                          "cursor-pointer rounded-md",
+                          "transition-colors duration-150",
                           selectedModel === model.id
                             ? "text-primary-11 bg-primary-3"
                             : "text-neutral-12",
@@ -387,339 +393,400 @@ export function PreferencesMenu({
                             {formatProviderDisplay(model)}
                           </span>
                         </div>
-                        {selectedModel === model.id && (
-                          <Check
-                            className="h-4 w-4 flex-shrink-0"
-                            aria-hidden="true"
-                          />
-                        )}
-                      </Button>
+                        <DropdownMenu.ItemIndicator>
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        </DropdownMenu.ItemIndicator>
+                      </DropdownMenu.RadioItem>
                     ))}
-                  </div>
+                  </DropdownMenu.RadioGroup>
                 )}
-              </div>
-              <div className="border-t border-neutral-6 my-2" />
-            </>
-          )}
+              </SubMenuContent>
+            </DropdownMenu.Sub>
 
-          {/* Executor/Critic Model Selection (Critique Loop) */}
-          {critiqueLoopEnabled && availableModels.length > 0 && (
-            <>
-              {/* Executor Model Section */}
-              <div className="px-3 py-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
-                  <Sparkles className="h-3 w-3" aria-hidden="true" />
-                  Executor Model
-                </div>
-                <p className="text-xs text-neutral-10 mb-2">
-                  Generates initial response and refinements
-                </p>
-                <div
-                  className="space-y-1 max-h-[150px] overflow-y-auto"
-                  role="listbox"
-                  aria-label="Executor model selection"
-                >
-                  {/* Auto option */}
-                  {}
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    role="option"
-                    aria-selected={
-                      executorModel === null || executorModel === undefined
+            {/* Executor Model Submenu (Critique Loop) */}
+            {critiqueLoopEnabled && availableModels.length > 0 && (
+              <DropdownMenu.Sub>
+                <SubMenuTrigger
+                  data-testid="submenu-trigger-executor"
+                  icon={<Sparkles className="h-4 w-4" aria-hidden="true" />}
+                  label="Executor"
+                  value={
+                    executorModel
+                      ? (availableModels.find((m) => m.id === executorModel)
+                          ?.name ?? "Unknown")
+                      : "Auto"
+                  }
+                />
+                <SubMenuContent data-testid="submenu-content-executor">
+                  <DropdownMenu.RadioGroup
+                    value={executorModel ?? "auto"}
+                    onValueChange={(value) =>
+                      onExecutorModelChange?.(value === "auto" ? null : value)
                     }
-                    onClick={() => handleExecutorModelChange(null)}
-                    className={cn(
-                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                      "hover:bg-neutral-4 transition-colors",
-                      executorModel === null || executorModel === undefined
-                        ? "text-primary-11 bg-primary-3"
-                        : "text-neutral-12",
-                    )}
                   >
-                    <span className="font-medium">
-                      Auto (based on complexity)
-                    </span>
-                    {(executorModel === null ||
-                      executorModel === undefined) && (
-                      <Check
-                        className="h-4 w-4 flex-shrink-0"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </Button>
-                  {availableModels.map((model) => (
-                    <Button
-                      variant="ghost"
-                      key={model.id}
-                      type="button"
-                      role="option"
-                      aria-selected={executorModel === model.id}
-                      onClick={() => handleExecutorModelChange(model.id)}
+                    <DropdownMenu.RadioItem
+                      value="auto"
                       className={cn(
-                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                        "hover:bg-neutral-4 transition-colors",
-                        executorModel === model.id
+                        "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                        "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                        "cursor-pointer rounded-md",
+                        "transition-colors duration-150",
+                        !executorModel
                           ? "text-primary-11 bg-primary-3"
                           : "text-neutral-12",
                       )}
                     >
-                      <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-medium">{model.name}</span>
-                        <span className="text-xs text-neutral-10">
-                          {formatProviderDisplay(model)}
-                        </span>
-                      </div>
-                      {executorModel === model.id && (
-                        <Check
-                          className="h-4 w-4 flex-shrink-0"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+                      <span className="font-medium">
+                        Auto (based on complexity)
+                      </span>
+                      <DropdownMenu.ItemIndicator>
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      </DropdownMenu.ItemIndicator>
+                    </DropdownMenu.RadioItem>
+                    {availableModels.map((model) => (
+                      <DropdownMenu.RadioItem
+                        key={model.id}
+                        value={model.id}
+                        className={cn(
+                          "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                          "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                          "cursor-pointer rounded-md",
+                          "transition-colors duration-150",
+                          executorModel === model.id
+                            ? "text-primary-11 bg-primary-3"
+                            : "text-neutral-12",
+                        )}
+                      >
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="font-medium">{model.name}</span>
+                          <span className="text-xs text-neutral-10">
+                            {formatProviderDisplay(model)}
+                          </span>
+                        </div>
+                        <DropdownMenu.ItemIndicator>
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        </DropdownMenu.ItemIndicator>
+                      </DropdownMenu.RadioItem>
+                    ))}
+                  </DropdownMenu.RadioGroup>
+                </SubMenuContent>
+              </DropdownMenu.Sub>
+            )}
 
-              <div className="border-t border-neutral-6 my-2" />
-
-              {/* Critic Model Section */}
-              <div className="px-3 py-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
-                  <MessageSquare className="h-3 w-3" aria-hidden="true" />
-                  Critic Model
-                </div>
-                <p className="text-xs text-neutral-10 mb-2">
-                  Reviews and provides feedback for refinement
-                </p>
-                <div
-                  className="space-y-1 max-h-[150px] overflow-y-auto"
-                  role="listbox"
-                  aria-label="Critic model selection"
-                >
-                  {/* Auto option */}
-                  {}
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    role="option"
-                    aria-selected={
-                      criticModel === null || criticModel === undefined
+            {/* Critic Model Submenu (Critique Loop) */}
+            {critiqueLoopEnabled && availableModels.length > 0 && (
+              <DropdownMenu.Sub>
+                <SubMenuTrigger
+                  data-testid="submenu-trigger-critic"
+                  icon={
+                    <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                  }
+                  label="Critic"
+                  value={
+                    criticModel
+                      ? (availableModels.find((m) => m.id === criticModel)
+                          ?.name ?? "Unknown")
+                      : "Auto"
+                  }
+                />
+                <SubMenuContent data-testid="submenu-content-critic">
+                  <DropdownMenu.RadioGroup
+                    value={criticModel ?? "auto"}
+                    onValueChange={(value) =>
+                      onCriticModelChange?.(value === "auto" ? null : value)
                     }
-                    onClick={() => handleCriticModelChange(null)}
-                    className={cn(
-                      "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                      "hover:bg-neutral-4 transition-colors",
-                      criticModel === null || criticModel === undefined
-                        ? "text-primary-11 bg-primary-3"
-                        : "text-neutral-12",
-                    )}
                   >
-                    <span className="font-medium">
-                      Auto (cross-vendor diversity)
-                    </span>
-                    {(criticModel === null || criticModel === undefined) && (
-                      <Check
-                        className="h-4 w-4 flex-shrink-0"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </Button>
-                  {availableModels.map((model) => (
-                    <Button
-                      variant="ghost"
-                      key={model.id}
-                      type="button"
-                      role="option"
-                      aria-selected={criticModel === model.id}
-                      onClick={() => handleCriticModelChange(model.id)}
+                    <DropdownMenu.RadioItem
+                      value="auto"
                       className={cn(
-                        "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                        "hover:bg-neutral-4 transition-colors",
-                        criticModel === model.id
+                        "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                        "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                        "cursor-pointer rounded-md",
+                        "transition-colors duration-150",
+                        !criticModel
                           ? "text-primary-11 bg-primary-3"
                           : "text-neutral-12",
                       )}
                     >
-                      <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-medium">{model.name}</span>
-                        <span className="text-xs text-neutral-10">
-                          {formatProviderDisplay(model)}
-                        </span>
-                      </div>
-                      {criticModel === model.id && (
-                        <Check
-                          className="h-4 w-4 flex-shrink-0"
-                          aria-hidden="true"
-                        />
+                      <span className="font-medium">
+                        Auto (cross-vendor diversity)
+                      </span>
+                      <DropdownMenu.ItemIndicator>
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      </DropdownMenu.ItemIndicator>
+                    </DropdownMenu.RadioItem>
+                    {availableModels.map((model) => (
+                      <DropdownMenu.RadioItem
+                        key={model.id}
+                        value={model.id}
+                        className={cn(
+                          "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                          "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                          "cursor-pointer rounded-md",
+                          "transition-colors duration-150",
+                          criticModel === model.id
+                            ? "text-primary-11 bg-primary-3"
+                            : "text-neutral-12",
+                        )}
+                      >
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="font-medium">{model.name}</span>
+                          <span className="text-xs text-neutral-10">
+                            {formatProviderDisplay(model)}
+                          </span>
+                        </div>
+                        <DropdownMenu.ItemIndicator>
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        </DropdownMenu.ItemIndicator>
+                      </DropdownMenu.RadioItem>
+                    ))}
+                  </DropdownMenu.RadioGroup>
+                </SubMenuContent>
+              </DropdownMenu.Sub>
+            )}
+
+            <DropdownMenu.Separator className="h-px bg-neutral-6 my-1" />
+
+            {/* Thinking Level Submenu */}
+            <DropdownMenu.Sub>
+              <SubMenuTrigger
+                data-testid="submenu-trigger-thinking"
+                icon={<Brain className="h-4 w-4" aria-hidden="true" />}
+                label="Thinking"
+                value={getThinkingLevelLabel(thinkingLevel)}
+              />
+              <SubMenuContent data-testid="submenu-content-thinking">
+                <DropdownMenu.RadioGroup
+                  value={thinkingLevel}
+                  onValueChange={(value) =>
+                    onThinkingLevelChange?.(value as ReasoningEffortLevel)
+                  }
+                >
+                  {THINKING_LEVELS.map((level) => (
+                    <DropdownMenu.RadioItem
+                      key={level.value}
+                      value={level.value}
+                      className={cn(
+                        "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                        "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                        "cursor-pointer rounded-md",
+                        "transition-colors duration-150",
+                        thinkingLevel === level.value
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12",
                       )}
-                    </Button>
+                    >
+                      <span>{level.label}</span>
+                      <DropdownMenu.ItemIndicator>
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      </DropdownMenu.ItemIndicator>
+                    </DropdownMenu.RadioItem>
                   ))}
-                </div>
-              </div>
+                </DropdownMenu.RadioGroup>
+              </SubMenuContent>
+            </DropdownMenu.Sub>
 
-              <div className="border-t border-neutral-6 my-2" />
-            </>
-          )}
-
-          {/* Thinking Level Section */}
-          <div className="px-3 py-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
-              <Brain className="h-3 w-3" aria-hidden="true" />
-              Thinking Level
-            </div>
-            <div
-              className="space-y-1"
-              role="listbox"
-              aria-label="Thinking level"
-            >
-              {THINKING_LEVELS.map((level) => (
-                <Button
-                  variant="ghost"
-                  key={level.value}
-                  type="button"
-                  role="option"
-                  aria-selected={thinkingLevel === level.value}
-                  onClick={() => handleThinkingLevelChange(level.value)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                    "hover:bg-neutral-4 transition-colors",
-                    thinkingLevel === level.value
-                      ? "text-primary-11 bg-primary-3"
-                      : "text-neutral-12",
-                  )}
+            {/* Tools Submenu (with nested Tool Provider) */}
+            <DropdownMenu.Sub>
+              <SubMenuTrigger
+                data-testid="submenu-trigger-tools"
+                icon={<Wrench className="h-4 w-4" aria-hidden="true" />}
+                label="Tools"
+                value={getToolModeLabel(toolMode)}
+              />
+              <SubMenuContent data-testid="submenu-content-tools">
+                {/* Tool Mode Selection */}
+                <DropdownMenu.RadioGroup
+                  value={toolMode}
+                  onValueChange={(value) =>
+                    onToolModeChange?.(value as ToolSelectionMode)
+                  }
                 >
-                  <span>{level.label}</span>
-                  {thinkingLevel === level.value && (
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </Button>
-              ))}
-            </div>
-          </div>
+                  {TOOL_MODES.map((mode) => (
+                    <DropdownMenu.RadioItem
+                      key={mode.value}
+                      value={mode.value}
+                      className={cn(
+                        "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                        "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                        "cursor-pointer rounded-md",
+                        "transition-colors duration-150",
+                        toolMode === mode.value
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12",
+                      )}
+                    >
+                      <span>{mode.label}</span>
+                      <DropdownMenu.ItemIndicator>
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      </DropdownMenu.ItemIndicator>
+                    </DropdownMenu.RadioItem>
+                  ))}
+                </DropdownMenu.RadioGroup>
 
-          <div className="border-t border-neutral-6 my-2" />
+                <DropdownMenu.Separator className="h-px bg-neutral-6 my-1" />
 
-          {/* Tools Section */}
-          <div className="px-3 py-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
-              <Wrench className="h-3 w-3" aria-hidden="true" />
-              Tools
-            </div>
-            <div className="space-y-1" role="listbox" aria-label="Tool mode">
-              {TOOL_MODES.map((mode) => (
-                <Button
-                  variant="ghost"
-                  key={mode.value}
-                  type="button"
-                  role="option"
-                  aria-selected={toolMode === mode.value}
-                  onClick={() => handleToolModeChange(mode.value)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                    "hover:bg-neutral-4 transition-colors",
-                    toolMode === mode.value
-                      ? "text-primary-11 bg-primary-3"
-                      : "text-neutral-12",
-                  )}
-                >
-                  <span>{mode.label}</span>
-                  {toolMode === mode.value && (
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div className="border-t border-neutral-6 my-2" />
-
-          {/* v7: Tool Provider Preference Section */}
-          <div className="px-3 py-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
-              <Zap className="h-3 w-3" aria-hidden="true" />
-              Tool Provider
-            </div>
-            <p className="text-xs text-neutral-10 mb-2">
-              Choose between native LLM tools or server-side execution
-            </p>
-            <div
-              className="space-y-1"
-              role="listbox"
-              aria-label="Tool provider preference"
-            >
-              {TOOL_PREFERENCE_MODES.map((pref) => (
-                <Button
-                  variant="ghost"
-                  key={pref.value}
-                  type="button"
-                  role="option"
-                  aria-selected={toolPreference === pref.value}
-                  onClick={() => handleToolPreferenceChange(pref.value)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                    "hover:bg-neutral-4 transition-colors",
-                    toolPreference === pref.value
-                      ? "text-primary-11 bg-primary-3"
-                      : "text-neutral-12",
-                  )}
-                >
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="font-medium">{pref.label}</span>
-                    <span className="text-xs text-neutral-10">
-                      {pref.description}
-                    </span>
-                  </div>
-                  {toolPreference === pref.value && (
-                    <Check
-                      className="h-4 w-4 flex-shrink-0"
-                      aria-hidden="true"
+                {/* Selected Tools Sub-submenu (only in manual mode) */}
+                {toolMode === "manual" && (
+                  <DropdownMenu.Sub>
+                    <SubMenuTrigger
+                      data-testid="submenu-trigger-selected-tools"
+                      icon={<Wrench className="h-4 w-4" aria-hidden="true" />}
+                      label="Selected Tools"
+                      value={
+                        selectedTools.length === 0
+                          ? "None"
+                          : `${selectedTools.length} selected`
+                      }
                     />
-                  )}
-                </Button>
-              ))}
-            </div>
-          </div>
+                    <SubMenuContent data-testid="submenu-content-selected-tools">
+                      {availableTools.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-neutral-10">
+                          No tools available
+                        </div>
+                      ) : (
+                        availableTools.map((tool) => {
+                          const isSelected = selectedTools.includes(
+                            tool.toolId,
+                          );
+                          return (
+                            <DropdownMenu.CheckboxItem
+                              key={tool.toolId}
+                              checked={isSelected}
+                              onCheckedChange={() => {
+                                if (isSelected) {
+                                  // Remove tool
+                                  onToolsChange?.(
+                                    selectedTools.filter(
+                                      (id) => id !== tool.toolId,
+                                    ),
+                                  );
+                                } else {
+                                  // Add tool
+                                  onToolsChange?.([
+                                    ...selectedTools,
+                                    tool.toolId,
+                                  ]);
+                                }
+                              }}
+                              className={cn(
+                                "flex items-center justify-between w-full px-3 py-2.5 text-sm",
+                                "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                                "cursor-pointer rounded-md",
+                                "transition-colors duration-150",
+                                isSelected
+                                  ? "text-primary-11 bg-primary-3"
+                                  : "text-neutral-12",
+                              )}
+                            >
+                              <div className="flex flex-col items-start gap-0.5">
+                                <span className="font-medium">
+                                  {tool.displayName}
+                                </span>
+                                {tool.description && (
+                                  <span className="text-xs text-neutral-10">
+                                    {tool.description}
+                                  </span>
+                                )}
+                              </div>
+                              <DropdownMenu.ItemIndicator>
+                                <Check className="h-4 w-4" aria-hidden="true" />
+                              </DropdownMenu.ItemIndicator>
+                            </DropdownMenu.CheckboxItem>
+                          );
+                        })
+                      )}
+                    </SubMenuContent>
+                  </DropdownMenu.Sub>
+                )}
 
-          <div className="border-t border-neutral-6 my-2" />
+                {/* Nested Tool Provider Sub-submenu */}
+                <DropdownMenu.Sub>
+                  <SubMenuTrigger
+                    data-testid="submenu-trigger-provider"
+                    icon={<Zap className="h-4 w-4" aria-hidden="true" />}
+                    label="Provider"
+                    value={getToolPreferenceLabel(toolPreference)}
+                  />
+                  <SubMenuContent data-testid="submenu-content-provider">
+                    <DropdownMenu.RadioGroup
+                      value={toolPreference}
+                      onValueChange={(value) =>
+                        onToolPreferenceChange?.(value as ToolPreference)
+                      }
+                    >
+                      {TOOL_PREFERENCE_MODES.map((pref) => (
+                        <DropdownMenu.RadioItem
+                          key={pref.value}
+                          value={pref.value}
+                          className={cn(
+                            "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                            "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                            "cursor-pointer rounded-md",
+                            "transition-colors duration-150",
+                            toolPreference === pref.value
+                              ? "text-primary-11 bg-primary-3"
+                              : "text-neutral-12",
+                          )}
+                        >
+                          <div className="flex flex-col items-start gap-0.5">
+                            <span className="font-medium">{pref.label}</span>
+                            <span className="text-xs text-neutral-10">
+                              {pref.description}
+                            </span>
+                          </div>
+                          <DropdownMenu.ItemIndicator>
+                            <Check className="h-4 w-4" aria-hidden="true" />
+                          </DropdownMenu.ItemIndicator>
+                        </DropdownMenu.RadioItem>
+                      ))}
+                    </DropdownMenu.RadioGroup>
+                  </SubMenuContent>
+                </DropdownMenu.Sub>
+              </SubMenuContent>
+            </DropdownMenu.Sub>
 
-          {/* KB Focus Section */}
-          <div className="px-3 py-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-11 uppercase tracking-wide mb-2">
-              <Database className="h-3 w-3" aria-hidden="true" />
-              Knowledge Base
-            </div>
-            <div
-              className="space-y-1"
-              role="listbox"
-              aria-label="KB focus mode"
-            >
-              {KB_FOCUS_MODES.map((mode) => (
-                <Button
-                  variant="ghost"
-                  key={mode.value}
-                  type="button"
-                  role="option"
-                  aria-selected={kbFocusMode === mode.value}
-                  onClick={() => handleKBFocusChange(mode.value)}
-                  className={cn(
-                    "flex items-center justify-between w-full px-2 py-1.5 rounded text-sm",
-                    "hover:bg-neutral-4 transition-colors",
-                    kbFocusMode === mode.value
-                      ? "text-primary-11 bg-primary-3"
-                      : "text-neutral-12",
-                  )}
+            {/* KB Focus Submenu */}
+            <DropdownMenu.Sub>
+              <SubMenuTrigger
+                data-testid="submenu-trigger-kb"
+                icon={<Database className="h-4 w-4" aria-hidden="true" />}
+                label="KB"
+                value={getKBFocusModeLabel(kbFocusMode)}
+              />
+              <SubMenuContent data-testid="submenu-content-kb">
+                <DropdownMenu.RadioGroup
+                  value={kbFocusMode}
+                  onValueChange={(value) =>
+                    onKBFocusChange?.(value as KBFocusMode)
+                  }
                 >
-                  <span>{mode.label}</span>
-                  {kbFocusMode === mode.value && (
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+                  {KB_FOCUS_MODES.map((mode) => (
+                    <DropdownMenu.RadioItem
+                      key={mode.value}
+                      value={mode.value}
+                      className={cn(
+                        "flex items-center justify-between w-full px-3 py-2.5 text-sm", // py-2.5 for improved touch targets
+                        "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                        "cursor-pointer rounded-md",
+                        "transition-colors duration-150",
+                        kbFocusMode === mode.value
+                          ? "text-primary-11 bg-primary-3"
+                          : "text-neutral-12",
+                      )}
+                    >
+                      <span>{mode.label}</span>
+                      <DropdownMenu.ItemIndicator>
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      </DropdownMenu.ItemIndicator>
+                    </DropdownMenu.RadioItem>
+                  ))}
+                </DropdownMenu.RadioGroup>
+              </SubMenuContent>
+            </DropdownMenu.Sub>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </div>
   );
 }

@@ -62,29 +62,11 @@ import {
 } from "@/components/UI/SegmentedControl";
 import { ShieldCheck } from "lucide-react";
 import { cn } from "../../utils/cn";
+import type { ModelOption } from "@/types";
+import { formatProviderDisplay } from "@/utils/modelDisplay";
 
-// ==============================================================================
-// Types
-// ==============================================================================
-
-export interface ModelOption {
-  id: string;
-  name: string;
-  /** Simplified provider for grouping (google, anthropic, openai) */
-  provider: string;
-  /**
-   * Actual backend vendor (vertex_ai, vertex_ai_anthropic, google, anthropic, etc.)
-   * Shows which API/credentials are used. Optional for backward compatibility.
-   */
-  vendor?: string;
-  supportsThinking?: boolean;
-  /** Model lifecycle status for badges */
-  status?: "current" | "preview" | "deprecated";
-  /** Sunset date for deprecated models */
-  sunsetDate?: string;
-  /** Whether this is the default model (from backend settings.model_name) */
-  isDefault?: boolean;
-}
+// Re-export ModelOption for backwards compatibility
+export type { ModelOption } from "@/types";
 
 export interface MentionOption {
   type: "model" | "file" | "user";
@@ -516,12 +498,14 @@ export function ChatInput({
         !modelDropdownRef.current.contains(e.target as Node)
       ) {
         setIsModelDropdownOpen(false);
+        setModelSearchQuery("");
       }
     };
 
     const handleEscape = (e: globalThis.KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsModelDropdownOpen(false);
+        setModelSearchQuery("");
       }
     };
 
@@ -884,10 +868,10 @@ export function ChatInput({
       )}
       {/* Textarea area */}
       <div className="relative px-3 pt-3">
-        {/* Inline suggestion ghost text - must match textarea padding (px-0 py-2) */}
+        {/* Inline suggestion ghost text - must match textarea padding and font size */}
         {enableInlineSuggestions && value && inlineSuggestion && (
           <div
-            className="absolute inset-0 px-0 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words text-base leading-normal"
+            className="absolute inset-0 px-0 py-2 pointer-events-none overflow-hidden whitespace-pre-wrap break-words text-sm leading-normal"
             aria-hidden="true"
           >
             <span className="invisible">{value}</span>
@@ -1015,7 +999,7 @@ export function ChatInput({
           {/* Attachment button */}
           <Button
             variant="secondary"
-            className="min-h-[44px] min-w-[44px] p-2 text-neutral-9 hover:text-neutral-11 rounded-lg hover:bg-neutral-2"
+            className="min-h-[44px] min-w-[44px] p-2 text-neutral-9 hover:text-neutral-11 rounded-full hover:bg-neutral-2"
             type="button"
             disabled={disabled}
             onClick={() => fileInputRef.current?.click()}
@@ -1091,7 +1075,7 @@ export function ChatInput({
                   <>
                     <span className="font-medium">{currentModel.name}</span>
                     <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
-                      {currentModel.provider}
+                      {formatProviderDisplay(currentModel)}
                     </span>
                   </>
                 )}
@@ -1142,7 +1126,7 @@ export function ChatInput({
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{model.name}</span>
                             <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
-                              {model.provider}
+                              {formatProviderDisplay(model)}
                             </span>
                           </div>
                           {model.id === selectedModel && (
@@ -1186,7 +1170,7 @@ export function ChatInput({
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.name}</span>
                               <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-2 text-neutral-10">
-                                {model.provider}
+                                {formatProviderDisplay(model)}
                               </span>
                               {/* P3: Lifecycle badges */}
                               {model.status === "deprecated" && (
