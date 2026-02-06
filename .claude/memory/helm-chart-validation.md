@@ -1,8 +1,11 @@
-# Helm Chart Dependency Validation
+---
+purpose: Prevent corrupted Helm chart caches from causing CI failures
+priority: medium
+category: infrastructure
+last-updated: 2026-02-05
+---
 
-**Purpose**: Prevent corrupted partial Helm chart caches from causing CI failures
-**Created**: 2025-12-11
-**Root Cause Analysis**: `.claude/plans/purrfect-dazzling-breeze.md`
+# Helm Chart Dependency Validation
 
 ---
 

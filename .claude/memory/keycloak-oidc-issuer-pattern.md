@@ -1,8 +1,12 @@
-# Keycloak OIDC Issuer Configuration Pattern
+---
+purpose: Patterns for consistent OIDC issuer URLs with Keycloak and OpenFGA
+priority: medium
+category: auth
+reference: ADR-0070
+last-updated: 2026-02-05
+---
 
-**Last Updated**: 2025-12-29
-**Purpose**: Lessons learned from OIDC token issuer mismatch debugging
-**Reference**: ADR-0070 - OpenFGA OIDC Authentication Migration
+# Keycloak OIDC Issuer Configuration Pattern
 
 ---
 

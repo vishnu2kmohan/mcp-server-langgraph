@@ -1,6 +1,11 @@
-# Task Spawn Error Prevention
+---
+purpose: Prevent common async, subprocess, and Docker errors in CI/CD pipelines
+priority: high
+category: error-prevention
+last-updated: 2026-02-05
+---
 
-**Purpose**: Prevent common async/subprocess/Docker errors in this repository
+# Task Spawn Error Prevention
 
 ---
 

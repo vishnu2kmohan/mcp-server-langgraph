@@ -1,7 +1,11 @@
-# Distroless Container Health Check Patterns
+---
+purpose: Patterns for health checks in distroless/minimal container images
+priority: medium
+category: infrastructure
+last-updated: 2026-02-05
+---
 
-**Last Updated**: 2025-12-07
-**Purpose**: Lessons learned from Grafana LGTM stack health check debugging
+# Distroless Container Health Check Patterns
 
 ---
 

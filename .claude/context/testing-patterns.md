@@ -1,8 +1,12 @@
-# Testing Patterns Context
+---
+purpose: Reference guide for writing tests with pytest, vitest, and Hypothesis
+priority: high
+category: testing
+test-count: 437+
+last-updated: 2026-02-05
+---
 
-**Last Updated**: 2026-01-31
-**Purpose**: Reference guide for writing tests in mcp-server-langgraph
-**Test Count**: 437+ tests across multiple categories
+# Testing Patterns Context
 
 ---
 

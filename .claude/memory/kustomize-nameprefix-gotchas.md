@@ -1,8 +1,12 @@
-# Kustomize namePrefix Gotchas
+---
+purpose: Critical gotchas when using Kustomize namePrefix that cause deployment failures
+priority: high
+category: infrastructure
+related: PR-145, PR-146
+last-updated: 2026-02-05
+---
 
-**Purpose**: Critical gotchas when using Kustomize `namePrefix` that can cause deployment failures.
-**Last Updated**: 2025-12-07
-**Related Issue**: PR #145, #146 (staging-to-preview rename)
+# Kustomize namePrefix Gotchas
 
 ---
 

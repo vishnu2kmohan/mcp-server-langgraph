@@ -1,3 +1,10 @@
+---
+purpose: Quick reference for UI component patterns with CVA, Radix, and Tailwind
+priority: high
+category: frontend
+last-updated: 2026-02-05
+---
+
 # Frontend Component Patterns
 
 Quick reference for UI component development patterns.

@@ -1,7 +1,11 @@
-# Anti-Patterns to Avoid
+---
+purpose: Common mistakes to avoid and their corrections
+priority: high
+category: anti-patterns
+last-updated: 2026-02-05
+---
 
-**Purpose**: Document common mistakes and their corrections
-**Last Updated**: 2025-01-10
+# Anti-Patterns to Avoid
 
 ---
 

@@ -1,7 +1,11 @@
-# GKE Infrastructure Testing Guidance
+---
+purpose: Lessons learned from GKE Preview environment testing and local vs CI gaps
+priority: medium
+category: infrastructure
+last-updated: 2026-02-05
+---
 
-**Last Updated**: 2025-12-07
-**Purpose**: Key lessons learned from GKE Preview environment testing cycles
+# GKE Infrastructure Testing Guidance
 
 ---
 

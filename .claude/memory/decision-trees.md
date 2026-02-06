@@ -1,7 +1,11 @@
-# Quick Decision Trees
+---
+purpose: Fast decision frameworks for common tool and workflow choices
+priority: high
+category: decision-trees
+last-updated: 2026-02-05
+---
 
-**Purpose**: Fast decision frameworks for common choices
-**Last Updated**: 2025-01-10
+# Quick Decision Trees
 
 ---
 

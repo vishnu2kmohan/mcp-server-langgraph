@@ -1,7 +1,11 @@
-# Session Workflow Patterns
+---
+purpose: Proven patterns for managing Claude Code sessions effectively
+priority: medium
+category: workflow
+last-updated: 2026-02-05
+---
 
-**Purpose**: Document proven patterns for managing Claude Code sessions effectively
-**Last Updated**: 2025-01-10
+# Session Workflow Patterns
 
 ---
 

@@ -1,7 +1,11 @@
-# Execution Mode Patterns
+---
+purpose: Bypass execution mode patterns and permission escalation workflows
+priority: medium
+category: patterns
+last-updated: 2026-02-05
+---
 
-**Created**: 2025-01-19
-**Last Updated**: 2025-01-19
+# Execution Mode Patterns
 
 ## Implementation Status
 

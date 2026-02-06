@@ -1,7 +1,11 @@
-# Feature Flag Naming Conventions
+---
+purpose: Naming conventions for feature flags across backend and API
+priority: medium
+category: conventions
+last-updated: 2026-02-05
+---
 
-**Created**: 2026-01-10
-**Context**: Skills UI "Disabled" bug fix
+# Feature Flag Naming Conventions
 
 ---
 

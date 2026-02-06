@@ -1,8 +1,12 @@
-# Pytest Markers Reference
+---
+purpose: Complete catalog of 168 pytest markers for test categorization
+priority: high
+category: testing
+marker-count: 168
+last-updated: 2026-02-05
+---
 
-**Last Updated**: 2026-01-28
-**Purpose**: Complete catalog of pytest markers for mcp-server-langgraph
-**Total Markers**: 168 registered markers
+# Pytest Markers Reference
 
 ---
 

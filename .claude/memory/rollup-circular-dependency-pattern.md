@@ -1,6 +1,11 @@
-# Rollup Circular Dependency Pattern
+---
+purpose: Fixing Rollup circular dependency warnings with barrel exports
+priority: medium
+category: frontend
+last-updated: 2026-02-05
+---
 
-**Last Updated**: 2026-01-20
+# Rollup Circular Dependency Pattern
 
 ## Problem
 

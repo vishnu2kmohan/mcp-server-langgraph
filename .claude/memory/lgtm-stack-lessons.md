@@ -1,8 +1,11 @@
-# LGTM Stack & Keycloak GHCR Image - Lessons Learned
+---
+purpose: Lessons learned from Grafana LGTM stack and Keycloak GHCR image setup
+priority: medium
+category: observability
+last-updated: 2026-02-05
+---
 
-**Created**: 2025-12-08
-**Author**: Claude Code
-**Status**: Active
+# LGTM Stack & Keycloak GHCR Image - Lessons Learned
 
 ---
 

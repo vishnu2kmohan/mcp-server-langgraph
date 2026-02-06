@@ -1,6 +1,14 @@
+---
+purpose: Index and guide for 47 specialized slash commands
+priority: high
+category: commands
+command-count: 47
+last-updated: 2026-02-05
+---
+
 # Claude Code Slash Commands
 
-This directory contains 37 specialized slash commands for streamlined development workflows.
+This directory contains 47 specialized slash commands for streamlined development workflows.
 
 > **Note**: Some commands have been migrated to user-level skills (`~/.claude/skills/`).
 > Skills include: `/explore-codebase`, `/code-review`, `/plan-review`, `/plan-status`,

@@ -1,9 +1,12 @@
-# Makefile Targets Guide
+---
+purpose: Complete reference for all 161 Makefile targets
+priority: medium
+category: commands
+target-count: 161
+last-updated: 2026-02-05
+---
 
-**Last Updated**: 2026-01-28
-**Purpose**: Complete reference for all Make targets
-**Total Targets**: 161 targets organized by category
-**File**: `Makefile` (primary development interface)
+# Makefile Targets Guide
 
 ---
 
