@@ -28,7 +28,18 @@ import {
   KeyboardEvent,
   ChangeEvent,
 } from "react";
-import { Bold, Italic, Code, FileCode, Plus, Minus } from "lucide-react";
+import {
+  Bold,
+  Italic,
+  Code,
+  FileCode,
+  Plus,
+  Minus,
+  Strikethrough,
+  List,
+  ListOrdered,
+  Quote,
+} from "lucide-react";
 
 import { Button, Textarea } from "@/components/UI";
 
@@ -254,6 +265,53 @@ export function RichTextInput({
     applyFormatting("`", "`");
   }, [applyFormatting]);
 
+  const handleStrikethrough = useCallback(() => {
+    applyFormatting("~~", "~~");
+  }, [applyFormatting]);
+
+  // Apply line prefix for lists and quotes
+  const applyLinePrefix = useCallback(
+    (prefix: string) => {
+      const textarea = textareaRef.current;
+      if (!textarea || disabled) return;
+
+      const { selectionStart } = textarea;
+      // Find the start of the current line
+      const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
+      const lineContent = value.slice(lineStart, selectionStart);
+
+      // Check if line already has this prefix
+      if (lineContent.startsWith(prefix)) {
+        return; // Already has prefix
+      }
+
+      // Insert prefix at line start
+      const newText =
+        value.slice(0, lineStart) + prefix + value.slice(lineStart);
+      const newCursorPos = selectionStart + prefix.length;
+
+      setValue(newText);
+
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      });
+    },
+    [value, setValue, disabled],
+  );
+
+  const handleOrderedList = useCallback(() => {
+    applyLinePrefix("1. ");
+  }, [applyLinePrefix]);
+
+  const handleBulletList = useCallback(() => {
+    applyLinePrefix("- ");
+  }, [applyLinePrefix]);
+
+  const handleQuote = useCallback(() => {
+    applyLinePrefix("> ");
+  }, [applyLinePrefix]);
+
   // Handle text change
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -288,6 +346,151 @@ export function RichTextInput({
     [setValue, maxLength, mentionOptions.length],
   );
 
+  // Auto-continue list/quote on newline
+  const handleAutoContinueList = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return false;
+
+      const { selectionStart } = textarea;
+      // Find the start of the current line
+      const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
+      const lineContent = value.slice(lineStart, selectionStart);
+
+      // Helper to enforce maxLength on generated text
+      const clampToMaxLength = (text: string): string =>
+        maxLength ? text.slice(0, maxLength) : text;
+
+      // Ordered list pattern: "1. ", "2. ", etc.
+      const orderedMatch = lineContent.match(/^(\d+)\.\s/);
+      if (orderedMatch) {
+        const currentNum = parseInt(orderedMatch[1], 10);
+        const restOfLine = lineContent.slice(orderedMatch[0].length);
+
+        // Empty list item - exit list mode
+        if (restOfLine.trim() === "") {
+          e.preventDefault();
+          // Remove the empty list prefix and add newline
+          const newText = clampToMaxLength(
+            value.slice(0, lineStart) + "\n" + value.slice(selectionStart),
+          );
+          setValue(newText);
+          requestAnimationFrame(() => {
+            textarea.focus();
+            const pos = Math.min(lineStart + 1, newText.length);
+            textarea.setSelectionRange(pos, pos);
+          });
+          return true;
+        }
+
+        // Auto-continue with next number
+        e.preventDefault();
+        const nextPrefix = `${currentNum + 1}. `;
+        const newText = clampToMaxLength(
+          value.slice(0, selectionStart) +
+            "\n" +
+            nextPrefix +
+            value.slice(selectionStart),
+        );
+        const newCursorPos = Math.min(
+          selectionStart + 1 + nextPrefix.length,
+          newText.length,
+        );
+        setValue(newText);
+        requestAnimationFrame(() => {
+          textarea.focus();
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        });
+        return true;
+      }
+
+      // Bullet list pattern: "- "
+      const bulletMatch = lineContent.match(/^-\s/);
+      if (bulletMatch) {
+        const restOfLine = lineContent.slice(bulletMatch[0].length);
+
+        // Empty list item - exit list mode
+        if (restOfLine.trim() === "") {
+          e.preventDefault();
+          const newText = clampToMaxLength(
+            value.slice(0, lineStart) + "\n" + value.slice(selectionStart),
+          );
+          setValue(newText);
+          requestAnimationFrame(() => {
+            textarea.focus();
+            const pos = Math.min(lineStart + 1, newText.length);
+            textarea.setSelectionRange(pos, pos);
+          });
+          return true;
+        }
+
+        // Auto-continue with bullet
+        e.preventDefault();
+        const nextPrefix = "- ";
+        const newText = clampToMaxLength(
+          value.slice(0, selectionStart) +
+            "\n" +
+            nextPrefix +
+            value.slice(selectionStart),
+        );
+        const newCursorPos = Math.min(
+          selectionStart + 1 + nextPrefix.length,
+          newText.length,
+        );
+        setValue(newText);
+        requestAnimationFrame(() => {
+          textarea.focus();
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        });
+        return true;
+      }
+
+      // Quote pattern: "> "
+      const quoteMatch = lineContent.match(/^>\s/);
+      if (quoteMatch) {
+        const restOfLine = lineContent.slice(quoteMatch[0].length);
+
+        // Empty quote line - exit quote mode
+        if (restOfLine.trim() === "") {
+          e.preventDefault();
+          const newText = clampToMaxLength(
+            value.slice(0, lineStart) + "\n" + value.slice(selectionStart),
+          );
+          setValue(newText);
+          requestAnimationFrame(() => {
+            textarea.focus();
+            const pos = Math.min(lineStart + 1, newText.length);
+            textarea.setSelectionRange(pos, pos);
+          });
+          return true;
+        }
+
+        // Auto-continue with quote
+        e.preventDefault();
+        const nextPrefix = "> ";
+        const newText = clampToMaxLength(
+          value.slice(0, selectionStart) +
+            "\n" +
+            nextPrefix +
+            value.slice(selectionStart),
+        );
+        const newCursorPos = Math.min(
+          selectionStart + 1 + nextPrefix.length,
+          newText.length,
+        );
+        setValue(newText);
+        requestAnimationFrame(() => {
+          textarea.focus();
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        });
+        return true;
+      }
+
+      return false;
+    },
+    [value, setValue, maxLength],
+  );
+
   // Handle keyboard events
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -304,6 +507,12 @@ export function RichTextInput({
             }
             return;
           }
+          // Shift+Enter for newline - check for auto-continue list
+          if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            if (handleAutoContinueList(e)) {
+              return;
+            }
+          }
         } else {
           // Legacy-style: Ctrl/Cmd+Enter = submit
           if (e.ctrlKey || e.metaKey) {
@@ -314,6 +523,12 @@ export function RichTextInput({
               setShowMentions(false);
             }
             return;
+          }
+          // Plain Enter for newline - check for auto-continue list
+          if (!e.shiftKey) {
+            if (handleAutoContinueList(e)) {
+              return;
+            }
           }
         }
       }
@@ -357,6 +572,13 @@ export function RichTextInput({
           return;
         }
 
+        // Ctrl+Shift+X for strikethrough
+        if (e.shiftKey && e.key.toLowerCase() === "x") {
+          e.preventDefault();
+          handleStrikethrough();
+          return;
+        }
+
         switch (e.key.toLowerCase()) {
           case "b":
             e.preventDefault();
@@ -381,6 +603,8 @@ export function RichTextInput({
       handleBold,
       handleItalic,
       handleCode,
+      handleStrikethrough,
+      handleAutoContinueList,
       submitOnEnter,
       enableInlineSuggestions,
       inlineSuggestion,
@@ -505,6 +729,60 @@ export function RichTextInput({
               title="Inline code (Ctrl+`)"
             >
               <Code className="w-4 h-4" aria-hidden="true" />
+            </Button>
+
+            <Button
+              size="icon"
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-2"
+              type="button"
+              onClick={handleStrikethrough}
+              disabled={disabled}
+              aria-label="Strikethrough"
+              title="Strikethrough (Ctrl+Shift+X)"
+            >
+              <Strikethrough className="w-4 h-4" aria-hidden="true" />
+            </Button>
+
+            <div className="w-px h-4 bg-neutral-3 mx-1" />
+
+            <Button
+              size="icon"
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-2"
+              type="button"
+              onClick={handleOrderedList}
+              disabled={disabled}
+              aria-label="Ordered list"
+              title="Numbered list"
+            >
+              <ListOrdered className="w-4 h-4" aria-hidden="true" />
+            </Button>
+
+            <Button
+              size="icon"
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-2"
+              type="button"
+              onClick={handleBulletList}
+              disabled={disabled}
+              aria-label="Bullet list"
+              title="Bullet list"
+            >
+              <List className="w-4 h-4" aria-hidden="true" />
+            </Button>
+
+            <Button
+              size="icon"
+              variant="secondary"
+              className="p-1.5 rounded hover:bg-neutral-2"
+              type="button"
+              onClick={handleQuote}
+              disabled={disabled}
+              aria-label="Quote"
+              title="Blockquote"
+            >
+              <Quote className="w-4 h-4" aria-hidden="true" />
             </Button>
 
             <div className="w-px h-4 bg-neutral-3 mx-1" />

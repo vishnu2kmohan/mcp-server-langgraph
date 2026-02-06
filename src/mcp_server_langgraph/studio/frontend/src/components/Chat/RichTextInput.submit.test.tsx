@@ -57,7 +57,7 @@ describe("RichTextInput - Submit Handling", () => {
         await user.type(input, "Test message");
         await user.keyboard("{Enter}");
 
-        expect(input).toHaveValue();
+        expect(input).toHaveValue("");
       });
     });
 
@@ -92,7 +92,7 @@ describe("RichTextInput - Submit Handling", () => {
         await user.type(input, "Test message");
         await user.keyboard("{Control>}{Enter}{/Control}");
 
-        expect(input).toHaveValue();
+        expect(input).toHaveValue("");
       });
     });
 

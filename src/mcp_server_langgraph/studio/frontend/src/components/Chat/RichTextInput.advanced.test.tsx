@@ -122,7 +122,7 @@ describe("RichTextInput - Advanced Features", () => {
       render(<RichTextInput onSubmit={mockOnSubmit} />);
       expect(
         screen.getByRole("button", {
-          name: /show formatting|hide formatting/i,
+          name: /toggle formatting toolbar/i,
         }),
       ).toBeInTheDocument();
     });
@@ -133,7 +133,7 @@ describe("RichTextInput - Advanced Features", () => {
       // Toggle button should be visible
       expect(
         screen.getByRole("button", {
-          name: /show formatting|hide formatting/i,
+          name: /toggle formatting toolbar/i,
         }),
       ).toBeInTheDocument();
 
@@ -148,7 +148,7 @@ describe("RichTextInput - Advanced Features", () => {
       render(<RichTextInput onSubmit={mockOnSubmit} />);
 
       const toggleButton = screen.getByRole("button", {
-        name: /show formatting|hide formatting/i,
+        name: /toggle formatting toolbar/i,
       });
       await user.click(toggleButton);
 
@@ -168,7 +168,7 @@ describe("RichTextInput - Advanced Features", () => {
       render(<RichTextInput onSubmit={mockOnSubmit} />);
 
       const toggleButton = screen.getByRole("button", {
-        name: /show formatting|hide formatting/i,
+        name: /toggle formatting toolbar/i,
       });
 
       // Open toolbar
@@ -205,23 +205,25 @@ describe("RichTextInput - Advanced Features", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("should show Aa toggle button and change style when expanded", async () => {
+    it("should show Plus icon when collapsed and Minus icon when expanded", async () => {
       const user = userEvent.setup();
       render(<RichTextInput onSubmit={mockOnSubmit} />);
 
-      const toggleButton = screen.getByTestId("formatting-toggle-button");
-      const aaIcon = screen.getByTestId("aa-icon");
+      const toggleButton = screen.getByRole("button", {
+        name: /toggle formatting toolbar/i,
+      });
 
-      // Should show Aa text
-      expect(aaIcon).toHaveTextContent("Aa");
-
-      // Should have muted color when collapsed
-      expect(aaIcon.className).toMatch(/text-neutral-10/);
+      // Should show Plus icon when collapsed
+      expect(screen.getByTestId("plus-icon")).toBeInTheDocument();
+      expect(screen.queryByTestId("minus-icon")).not.toBeInTheDocument();
+      expect(toggleButton).toHaveAttribute("aria-expanded", "false");
 
       await user.click(toggleButton);
 
-      // Should have primary color when expanded
-      expect(aaIcon.className).toMatch(/text-primary-10/);
+      // Should show Minus icon when expanded
+      expect(screen.getByTestId("minus-icon")).toBeInTheDocument();
+      expect(screen.queryByTestId("plus-icon")).not.toBeInTheDocument();
+      expect(toggleButton).toHaveAttribute("aria-expanded", "true");
     });
 
     it("should render toolbar visible when defaultExpanded prop is true", () => {
@@ -242,7 +244,7 @@ describe("RichTextInput - Advanced Features", () => {
 
       // Expand toolbar
       const toggleButton = screen.getByRole("button", {
-        name: /show formatting|hide formatting/i,
+        name: /toggle formatting toolbar/i,
       });
       await user.click(toggleButton);
 
@@ -263,7 +265,7 @@ describe("RichTextInput - Advanced Features", () => {
       render(<RichTextInput onSubmit={mockOnSubmit} />);
 
       const toggleButton = screen.getByRole("button", {
-        name: /show formatting|hide formatting/i,
+        name: /toggle formatting toolbar/i,
       });
 
       // Should indicate collapsed state
@@ -280,7 +282,7 @@ describe("RichTextInput - Advanced Features", () => {
       render(<RichTextInput onSubmit={mockOnSubmit} />);
 
       const toggleButton = screen.getByRole("button", {
-        name: /show formatting|hide formatting/i,
+        name: /toggle formatting toolbar/i,
       });
 
       // Check for live region
