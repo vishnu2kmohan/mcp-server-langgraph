@@ -126,8 +126,10 @@ function getHeapSizeMB(): string {
   }
 
   // Priority 4: Local development uses moderate heap
-  // Reduced from 16GB to 8GB to fail faster on OOM during sharded runs
-  return "8192"; // 8GB per worker for local development
+  // Reduced from 8GB to 4GB to prevent zombie GC-spin processes
+  // when multiple concurrent vitest instances run (e.g., parallel tool calls).
+  // 4GB matches CI and is sufficient for jsdom test files with mocks.
+  return "4096"; // 4GB per worker for local development
 }
 
 const heapSizeMB = getHeapSizeMB();
@@ -164,6 +166,9 @@ export default defineConfig({
       },
     },
     setupFiles: ["./src/test/setup.ts"],
+    // Force-exit after tests complete to prevent zombie fork workers
+    // that get stuck in V8 GC death spirals on OOM
+    forceExit: true,
     include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.{test,spec}.{ts,tsx}"],
 
     // =========================================================================
