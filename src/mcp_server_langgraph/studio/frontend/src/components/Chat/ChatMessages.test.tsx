@@ -23,6 +23,17 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { axe } from "jest-axe";
+
+// Mock AIEmptyState to avoid Redux Provider requirement
+vi.mock("../EmptyState/AIEmptyState", () => ({
+  AIEmptyState: () => (
+    <div data-testid="ai-empty-state">
+      <p>No messages yet</p>
+      <p>Start a conversation by typing a message below</p>
+    </div>
+  ),
+}));
+
 import { ChatMessages } from "./ChatMessages";
 
 describe("ChatMessages", () => {

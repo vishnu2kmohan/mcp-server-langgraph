@@ -82,7 +82,7 @@ describe("InteractiveChart", () => {
       fireEvent.click(lineButton);
 
       // Line button should be active (indicated by styling)
-      expect(lineButton.classList.contains("bg-primary-2")).toBe(true);
+      expect(lineButton.classList.contains("bg-primary-3")).toBe(true);
     });
   });
 

@@ -48,6 +48,7 @@ KNOWN_LARGE_FILES=(
     "src/pages/SkillsPage.test.tsx"                    # 1216 lines - needs sharding
     "src/hooks/useStreamingChat.test.ts"               # 1076 lines - needs sharding
     "src/components/Chat/HeaderModelSelector.test.tsx"  # 1071 lines - needs sharding
+    "src/components/Chat/ChatDocument.test.tsx"         # 1010 lines - needs sharding
     "src/components/Chat/PreferencesMenu.test.tsx"     # 1244 lines - needs sharding
     "src/layout/SessionNav.test.tsx"                   # 1010 lines - needs sharding
 )

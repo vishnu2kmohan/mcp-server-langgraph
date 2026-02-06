@@ -214,47 +214,56 @@ describe("LangGraphNodeVisualization", () => {
   describe("getNodeColor", () => {
     it("should return error colors for error status", () => {
       const color = getNodeColor("agent", "error");
-      expect(color).toContain("red");
+      // Uses Radix semantic color scale
+      expect(color).toContain("error");
     });
 
     it("should return running colors for running status", () => {
       const color = getNodeColor("agent", "running");
-      expect(color).toContain("blue");
+      // Uses primary color for running state
+      expect(color).toContain("primary");
     });
 
     it("should return completed colors for completed status", () => {
       const color = getNodeColor("agent", "completed");
-      expect(color).toContain("green");
+      // Uses success color for completed state
+      expect(color).toContain("success");
     });
 
     it("should return start node colors", () => {
       const color = getNodeColor("start", "pending");
-      expect(color).toContain("emerald");
+      // Start nodes use success color
+      expect(color).toContain("success");
     });
 
     it("should return end node colors", () => {
       const color = getNodeColor("end", "pending");
-      expect(color).toContain("slate");
+      // End nodes use neutral color
+      expect(color).toContain("neutral");
     });
 
     it("should return conditional node colors", () => {
       const color = getNodeColor("conditional", "pending");
-      expect(color).toContain("amber");
+      // Conditional nodes use warning/amber color
+      expect(color).toContain("warning");
     });
 
     it("should return tool node colors", () => {
       const color = getNodeColor("tool", "pending");
-      expect(color).toContain("purple");
+      // Tool nodes use insight color
+      expect(color).toContain("insight");
     });
 
     it("should return agent node colors", () => {
       const color = getNodeColor("agent", "pending");
-      expect(color).toContain("indigo");
+      // Agent nodes use primary color
+      expect(color).toContain("primary");
     });
 
     it("should return default colors for unknown type", () => {
       const color = getNodeColor("default", "pending");
-      expect(color).toContain("gray");
+      // Default uses neutral color
+      expect(color).toContain("neutral");
     });
   });
 });

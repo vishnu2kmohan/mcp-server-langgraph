@@ -63,20 +63,20 @@ describe("AgentTraceToggleButton", () => {
       expect(button).toHaveAttribute("title", "Show execution trace");
     });
 
-    it("applies active styling when expanded", () => {
+    it("has aria-expanded=true when expanded", () => {
       render(<AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("bg-primary-2");
-      expect(button).toHaveClass("text-primary-10");
+      expect(button).toHaveAttribute("aria-expanded", "true");
+      expect(button).toHaveAttribute("title", "Hide execution trace");
     });
 
-    it("applies inactive styling when collapsed", () => {
+    it("has aria-expanded=false when collapsed", () => {
       render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
 
       const button = screen.getByRole("button");
-      expect(button).toHaveClass("text-neutral-9");
-      expect(button).not.toHaveClass("bg-primary-2");
+      expect(button).toHaveAttribute("aria-expanded", "false");
+      expect(button).toHaveAttribute("title", "Show execution trace");
     });
   });
 

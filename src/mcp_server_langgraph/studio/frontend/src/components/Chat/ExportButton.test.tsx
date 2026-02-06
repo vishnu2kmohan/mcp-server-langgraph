@@ -330,6 +330,7 @@ describe("ExportButton", () => {
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith(
           "Session exported as MARKDOWN",
+          { id: "export" },
         );
       });
     });
@@ -369,7 +370,9 @@ describe("ExportButton", () => {
       await user.click(markdownOption);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Failed to export session");
+        expect(toast.error).toHaveBeenCalledWith("Failed to export session", {
+          id: "export",
+        });
       });
     });
   });
