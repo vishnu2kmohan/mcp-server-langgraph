@@ -24,13 +24,26 @@ rules/
 ├── git-validation.md      # Pre-commit/pre-push hooks
 ├── frontend.md            # React/Redux/Tailwind (paths: studio/frontend/**)
 ├── api.md                 # FastAPI/Pydantic (paths: api/**)
-└── tests.md               # pytest/Vitest (paths: tests/**)
+├── tests.md               # pytest/Vitest (paths: tests/**)
+└── context-efficiency.md  # Parallel tests, bulk ops (paths: **/*)
 ```
+
+### Lib (Zero-Cost Runtime Utilities)
+```
+lib/
+├── test_utils.sh          # run_pytest_parallel, run_npm_test_parallel
+└── bulk_edit_utils.sh     # rename_symbol, update_imports, bulk_replace
+```
+Usage: `source .claude/lib/test_utils.sh`
 
 ### Memory (Reference Docs)
 make-targets: memory/make-targets.md (161 targets)
 error-prevention: memory/task-spawn-error-prevention-strategy.md
-efficiency: memory/context-efficiency.md
+tool-patterns: memory/tool-patterns.md
+anti-patterns: memory/anti-patterns.md
+progressive-disclosure: memory/progressive-disclosure.md
+scripts-reference: memory/scripts-reference.md
+style-reference: memory/style-reference.md
 frontmatter: memory/frontmatter-conventions.md
 frontend-patterns: memory/frontend-component-patterns.md
 
