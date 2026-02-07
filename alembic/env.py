@@ -51,7 +51,20 @@ if config.config_file_name is not None:
 # instead of installing the full package with all dependencies (~500MB+).
 # The models.py file is self-contained (only SQLAlchemy imports).
 try:
-    from mcp_server_langgraph.database.models import Base
+    from mcp_server_langgraph.models.base import Base
+
+    # Import all model modules so their tables register on Base.metadata
+    import mcp_server_langgraph.models  # noqa: F401  (audit_log, connection, project, session_goal, database_connection, unified_audit)
+    import mcp_server_langgraph.database.models  # noqa: F401
+    import mcp_server_langgraph.database.execution_plan_models  # noqa: F401
+    import mcp_server_langgraph.storage.session.postgres_models  # noqa: F401
+    import mcp_server_langgraph.storage.workflow.postgres_models  # noqa: F401
+    import mcp_server_langgraph.storage.workflow.postgres_execution_manager  # noqa: F401
+    import mcp_server_langgraph.storage.artifacts.models  # noqa: F401
+    import mcp_server_langgraph.storage.user.postgres_models  # noqa: F401
+    import mcp_server_langgraph.notifications.push_store  # noqa: F401
+    import mcp_server_langgraph.alerts.models  # noqa: F401
+    import mcp_server_langgraph.alerts.feedback  # noqa: F401
 except ImportError:
     # In Docker: models.py is copied to /app/models.py
     import sys

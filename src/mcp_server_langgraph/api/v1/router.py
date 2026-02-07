@@ -27,6 +27,7 @@ from mcp_server_langgraph.api.v1.chat import chat_router
 from mcp_server_langgraph.api.v1.connection_audit import audit_router as connection_audit_router
 from mcp_server_langgraph.api.v1.connection_templates import templates_router
 from mcp_server_langgraph.api.v1.connections import connections_router
+from mcp_server_langgraph.api.v1.database_connections import database_connections_router
 from mcp_server_langgraph.api.v1.connections_bulk import bulk_router as connections_bulk_router
 from mcp_server_langgraph.api.v1.cost import cost_router
 from mcp_server_langgraph.api.v1.features import features_router
@@ -155,6 +156,9 @@ v1_router.include_router(kb_router, prefix="/kb", tags=["kb"])
 
 # Include MCP connections CRUD endpoints
 v1_router.include_router(connections_router)
+
+# Include database connections CRUD endpoints (SQLGlot integration - Phase 6)
+v1_router.include_router(database_connections_router)
 
 # Note: Connection health WebSocket moved to consolidated ws_router (ADR-0068)
 
