@@ -261,6 +261,83 @@ uv add package
 
 ---
 
+## Script Reuse Anti-Patterns
+
+### 21. Creating Scripts Without Checking Existing Ones
+
+```bash
+# BAD - Creating new bulk fix script
+# "I'll write a script to fix AsyncMock issues..."
+Write scripts/fix_asyncmock_new.py
+
+# GOOD - Check existing scripts first
+Read scripts/SCRIPT_INVENTORY.md  # 192 scripts documented!
+# Found: scripts/archive/unused/bulk_fix_async_mock.py
+# Found: scripts/validators/check_asyncmock_usage.py (pre-commit hook)
+```
+
+**Before creating bulk operation scripts, ALWAYS:**
+1. Read `scripts/SCRIPT_INVENTORY.md` (auto-generated, 192 scripts)
+2. Search: `Glob scripts/**/*.py` or `Grep "pattern" path=scripts/`
+3. Check `scripts/archive/unused/` for archived but reusable scripts
+4. Check `.pre-commit-config.yaml` for existing validation hooks
+
+### 22. Using Edit Tool for Bulk Operations
+
+```
+# BAD - 50 separate Edit calls
+Edit file1.py: AsyncMock() -> AsyncMock(spec=X)
+Edit file2.py: AsyncMock() -> AsyncMock(spec=X)
+...
+
+# GOOD - Script + single Bash call
+Bash: uv run python scripts/archive/unused/bulk_fix_async_mock.py
+```
+
+**Context efficiency**: Scripts execute outside Claude's context window = zero token overhead.
+
+### 23. Sequential Tests When Parallel Available
+
+```bash
+# BAD - Sequential (20+ minutes for 8,700+ tests)
+uv run pytest
+
+# GOOD - Parallel with xdist (~3 minutes)
+uv run pytest -n auto
+
+# OPT-OUT when debugging isolation
+PYTEST_SEQUENTIAL=1 uv run pytest
+```
+
+### 24. Sequential npm Tests
+
+```bash
+# BAD - Default pool (slower)
+npm test
+
+# GOOD - Thread pool (faster for larger projects)
+npm test -- --pool=threads
+
+# FALLBACK (compatibility issues)
+npm test -- --pool=forks
+```
+
+### 25. run_in_background + TaskOutput Polling
+
+```
+# BAD - Creates orphaned notifications, wastes context
+Bash(run_in_background=true): pytest ...
+TaskOutput(task_id, block=true)
+# If parent exits, notifications leak into conversation
+
+# GOOD - Parallel blocking calls, single round-trip
+Bash(timeout=300000): pytest -m unit
+Bash(timeout=300000): npm test
+# Both run concurrently, return together
+```
+
+---
+
 ## Recovery Patterns
 
 When you catch yourself in an anti-pattern:
