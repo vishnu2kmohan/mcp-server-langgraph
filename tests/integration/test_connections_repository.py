@@ -19,8 +19,12 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from mcp_server_langgraph.core.secrets import InMemorySecretsProvider
-from mcp_server_langgraph.models.connection import ConnectionBase
-from mcp_server_langgraph.models.project import ProjectBase, ProjectModel
+from mcp_server_langgraph.models.base import Base
+
+# Import model modules to register tables on Base.metadata:
+import mcp_server_langgraph.models.connection  # noqa: F401
+import mcp_server_langgraph.models.project  # noqa: F401
+from mcp_server_langgraph.models.project import ProjectModel
 from mcp_server_langgraph.repositories.connections import PostgresConnectionRepository
 from mcp_server_langgraph.storage.models import (
     MCPConnectionCreate,
@@ -128,29 +132,9 @@ async def setup_database(test_engine):
         tables_exist = result.scalar()
 
         if not tables_exist:
-            # Fresh database - create tables
-            await conn.run_sync(ProjectBase.metadata.create_all)
-
-            # Reflect projects table into ConnectionBase.metadata so FK can be resolved
-            def reflect_projects(sync_conn):
-                ConnectionBase.metadata.reflect(
-                    bind=sync_conn,
-                    only=["projects"],
-                )
-
-            await conn.run_sync(reflect_projects)
-            await conn.run_sync(ConnectionBase.metadata.create_all)
+            # Fresh database - create tables (unified Base has all tables)
+            await conn.run_sync(Base.metadata.create_all)
             tables_created = True
-        else:
-            # Tables exist - reflect projects table for FK resolution during ORM ops
-            def reflect_projects(sync_conn):
-                if "projects" not in ConnectionBase.metadata.tables:
-                    ConnectionBase.metadata.reflect(
-                        bind=sync_conn,
-                        only=["projects"],
-                    )
-
-            await conn.run_sync(reflect_projects)
 
             # Check if transport column exists (MCP 2025-11-25 migration)
             # If missing, add it to match the model definition
@@ -185,12 +169,7 @@ async def setup_database(test_engine):
     # Only cleanup if we created the tables
     if tables_created:
         async with test_engine.begin() as conn:
-            await conn.run_sync(ConnectionBase.metadata.drop_all)
-            await conn.run_sync(ProjectBase.metadata.drop_all)
-
-        # Clear reflected tables from ConnectionBase metadata
-        if "projects" in ConnectionBase.metadata.tables:
-            ConnectionBase.metadata.remove(ConnectionBase.metadata.tables["projects"])
+            await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest.fixture

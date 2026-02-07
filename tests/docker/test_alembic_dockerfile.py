@@ -153,7 +153,7 @@ class TestAlembicEnvPyImportFallback:
 
     def test_env_py_imports_base_from_package(self, alembic_env_content: str) -> None:
         """Verify env.py tries to import from the full package first."""
-        assert "from mcp_server_langgraph.database.models import Base" in alembic_env_content, (
+        assert "from mcp_server_langgraph.models.base import Base" in alembic_env_content, (
             "env.py should try to import from full package first (for local dev)"
         )
 
@@ -176,38 +176,31 @@ class TestModelsFileIsStandalone:
         """Verify models.py exists at the expected path."""
         assert models_path.exists(), f"models.py should exist at {models_path}"
 
-    def test_models_file_does_not_import_from_package(self, models_content: str) -> None:
+    def test_models_file_has_import_fallback(self, models_content: str) -> None:
         """
-        Verify models.py doesn't import from mcp_server_langgraph.
+        Verify models.py has try/except fallback for Base import.
 
-        This is critical for the minimal Dockerfile approach. If models.py
-        imported from other parts of the package, we'd need to install the
-        full package in the Docker image.
+        models.py tries to import Base from the unified models.base module,
+        but falls back to defining Base locally for Docker containers where
+        the full package is not installed.
         """
-        # Check for any imports from the main package
-        package_import_patterns = [
-            "from mcp_server_langgraph",
-            "import mcp_server_langgraph",
-        ]
+        assert "try:" in models_content, "models.py should have try/except for Base import fallback"
+        assert "except ImportError:" in models_content, "models.py should catch ImportError for Docker fallback"
+        assert "class Base(DeclarativeBase):" in models_content, "models.py should define a fallback Base class for Docker"
 
-        for pattern in package_import_patterns:
-            assert pattern not in models_content, (
-                f"models.py should NOT import from mcp_server_langgraph. "
-                f"Found: {pattern}. "
-                f"This would break the minimal Dockerfile approach."
-            )
-
-    def test_models_file_only_imports_standard_and_sqlalchemy(self, models_content: str) -> None:
+    def test_models_file_only_imports_standard_sqlalchemy_and_models_base(self, models_content: str) -> None:
         """
-        Verify models.py only imports from standard library and SQLAlchemy.
+        Verify models.py only imports from standard library, SQLAlchemy,
+        and the unified models.base module (with Docker fallback).
 
         Allowed imports:
         - Standard library (datetime, decimal, typing, etc.)
         - SQLAlchemy (sqlalchemy, sqlalchemy.orm)
+        - mcp_server_langgraph.models.base (unified Base, with Docker fallback)
 
         Forbidden imports:
         - LangGraph, LangChain, LiteLLM, etc.
-        - Anything from mcp_server_langgraph
+        - Other mcp_server_langgraph modules (would require full package)
         """
         # Extract import lines
         import_lines = [line.strip() for line in models_content.split("\n") if line.strip().startswith(("import ", "from "))]
@@ -221,20 +214,23 @@ class TestModelsFileIsStandalone:
             "import decimal",
             "from sqlalchemy",
             "import sqlalchemy",
+            "from mcp_server_langgraph.models.base",
         ]
 
         for import_line in import_lines:
             is_allowed = any(import_line.startswith(prefix) for prefix in allowed_prefixes)
             assert is_allowed, (
                 f"models.py has forbidden import: {import_line}. "
-                f"Only standard library and SQLAlchemy imports are allowed "
+                f"Only standard library, SQLAlchemy, and models.base imports are allowed "
                 f"to keep the Alembic Docker image minimal."
             )
 
     def test_models_defines_base(self, models_content: str) -> None:
-        """Verify models.py defines Base using declarative_base."""
-        assert "Base = declarative_base()" in models_content, (
-            "models.py should define Base = declarative_base() for SQLAlchemy models"
+        """Verify models.py defines or imports Base."""
+        has_unified_import = "from mcp_server_langgraph.models.base import Base" in models_content
+        has_fallback_base = "class Base(DeclarativeBase):" in models_content
+        assert has_unified_import and has_fallback_base, (
+            "models.py should import Base from models.base with a local DeclarativeBase fallback"
         )
 
     def test_models_defines_at_least_one_table(self, models_content: str) -> None:
