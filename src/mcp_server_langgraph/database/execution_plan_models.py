@@ -27,10 +27,10 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from mcp_server_langgraph.database.models import Base
+from mcp_server_langgraph.models.base import Base
 
 
-class ExecutionPlanModel(Base):  # type: ignore[misc,valid-type]
+class ExecutionPlanModel(Base):
     """
     SQLAlchemy model for execution_plans table.
 
@@ -139,7 +139,7 @@ class ExecutionPlanModel(Base):  # type: ignore[misc,valid-type]
         return f"<ExecutionPlanModel(plan_id={self.plan_id}, status={self.status}, session_id={self.session_id})>"
 
 
-class PlanTemplateModel(Base):  # type: ignore[misc,valid-type]
+class PlanTemplateModel(Base):
     """
     SQLAlchemy model for plan_templates table.
 

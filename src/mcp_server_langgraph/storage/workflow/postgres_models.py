@@ -16,16 +16,12 @@ from typing import Any
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, JSON, String, Text
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from mcp_server_langgraph.models.base import Base
 
 
-class WorkflowBase(DeclarativeBase):
-    """Base class for Workflow database models."""
-
-    pass
-
-
-class WorkflowModel(WorkflowBase):
+class WorkflowModel(Base):
     """
     SQLAlchemy model for workflow storage.
 
@@ -138,7 +134,7 @@ class WorkflowModel(WorkflowBase):
         return f"<Workflow(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
 
 
-class WorkflowShareModel(WorkflowBase):
+class WorkflowShareModel(Base):
     """
     SQLAlchemy model for workflow sharing permissions.
 
@@ -189,7 +185,7 @@ class WorkflowShareModel(WorkflowBase):
         return f"<WorkflowShare(workflow_id={self.workflow_id!r}, user_id={self.user_id!r}, permission={self.permission!r})>"
 
 
-class WorkflowVersionModel(WorkflowBase):
+class WorkflowVersionModel(Base):
     """
     SQLAlchemy model for workflow version history.
 

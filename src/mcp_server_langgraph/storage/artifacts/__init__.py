@@ -9,7 +9,6 @@ Multi-layer storage for canvas artifacts:
 """
 
 from mcp_server_langgraph.storage.artifacts.models import (
-    ArtifactBase,
     ArtifactModel,
     ArtifactVersionModel,
 )
@@ -37,7 +36,6 @@ from mcp_server_langgraph.storage.artifacts.factory import (
 )
 
 __all__ = [
-    "ArtifactBase",
     "ArtifactModel",
     "ArtifactVersionModel",
     "PostgresArtifactsRepository",

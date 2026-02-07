@@ -40,14 +40,13 @@ from .postgres_manager import (
     create_postgres_engine,
     init_session_database,
 )
-from .postgres_models import MessageModel, SessionBase, SessionModel
+from .postgres_models import MessageModel, SessionModel
 
 __all__ = [
     # Postgres storage (recommended for production)
     "PostgresSessionManager",
     "create_postgres_engine",
     "init_session_database",
-    "SessionBase",
     "SessionModel",
     "MessageModel",
     # Redis storage

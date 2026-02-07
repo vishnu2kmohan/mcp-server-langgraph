@@ -11,16 +11,12 @@ from typing import Any
 
 from sqlalchemy import DateTime, Index, String
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
+
+from mcp_server_langgraph.models.base import Base
 
 
-class UserPreferencesBase(DeclarativeBase):
-    """Base class for User Preferences database models."""
-
-    pass
-
-
-class UserPreferencesModel(UserPreferencesBase):
+class UserPreferencesModel(Base):
     """
     PostgreSQL model for user preferences storage.
 

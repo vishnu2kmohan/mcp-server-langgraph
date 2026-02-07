@@ -17,7 +17,8 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from mcp_server_langgraph.api.v1.sessions import sessions_router
-from mcp_server_langgraph.models.session_goal import SessionGoalBase
+from mcp_server_langgraph.models.base import Base
+import mcp_server_langgraph.models.session_goal  # noqa: F401
 from mcp_server_langgraph.repositories.session_goal import PostgresSessionGoalRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -69,7 +70,7 @@ async def test_engine():
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
             # Create session_goals table if not exists
-            await conn.run_sync(SessionGoalBase.metadata.create_all)
+            await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
         pytest.skip(f"Could not connect to test database: {e}")
 

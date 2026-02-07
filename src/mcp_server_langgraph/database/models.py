@@ -25,12 +25,20 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-Base = declarative_base()
+try:
+    from mcp_server_langgraph.models.base import Base
+except ImportError:
+    # Docker fallback: models.py is copied standalone to /app/models.py
+    # where the full package is not installed.
+    class Base(DeclarativeBase):  # type: ignore[no-redef]
+        """Standalone base for Docker minimal image."""
+
+        pass
 
 
-class TokenUsageRecord(Base):  # type: ignore[misc,valid-type]
+class TokenUsageRecord(Base):
     """
     Persistent storage for LLM token usage and cost data.
 
@@ -208,7 +216,7 @@ class TokenUsageRecord(Base):  # type: ignore[misc,valid-type]
         }
 
 
-class BudgetRecord(Base):  # type: ignore[misc,valid-type]
+class BudgetRecord(Base):
     """
     Persistent storage for budget configurations.
 
@@ -328,7 +336,7 @@ class BudgetRecord(Base):  # type: ignore[misc,valid-type]
 # =============================================================================
 
 
-class DecisionTrace(Base):  # type: ignore[misc,valid-type]
+class DecisionTrace(Base):
     """
     Append-only decision trace for context graphs.
 
@@ -584,7 +592,7 @@ class DecisionTrace(Base):  # type: ignore[misc,valid-type]
         }
 
 
-class DecisionEdge(Base):  # type: ignore[misc,valid-type]
+class DecisionEdge(Base):
     """
     Graph edges connecting decisions to entities.
 
@@ -696,7 +704,7 @@ class DecisionEdge(Base):  # type: ignore[misc,valid-type]
 # =============================================================================
 
 
-class LangGraphExecutionTrace(Base):  # type: ignore[misc,valid-type]
+class LangGraphExecutionTrace(Base):
     """
     Persistent storage for LangGraph node execution traces.
 

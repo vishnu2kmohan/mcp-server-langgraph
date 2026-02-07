@@ -18,9 +18,10 @@ from uuid import uuid4
 
 from sqlalchemy import DateTime, Index, JSON, select, String, Text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from mcp_server_langgraph.api.v1.workflow_executions import ExecutionHistoryManagerInterface
+from mcp_server_langgraph.models.base import Base
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
 
@@ -29,13 +30,7 @@ from mcp_server_langgraph.observability.telemetry import logger, tracer
 # ==============================================================================
 
 
-class ExecutionBase(DeclarativeBase):
-    """Base class for Execution database models."""
-
-    pass
-
-
-class WorkflowExecutionModel(ExecutionBase):
+class WorkflowExecutionModel(Base):
     """
     SQLAlchemy model for workflow execution storage.
 
@@ -399,7 +394,6 @@ def clear_execution_manager() -> None:
 __all__ = [
     "PostgresExecutionHistoryManager",
     "WorkflowExecutionModel",
-    "ExecutionBase",
     # Global getter pattern
     "set_execution_manager",
     "get_execution_manager",

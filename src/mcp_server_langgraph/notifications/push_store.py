@@ -22,9 +22,9 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from sqlalchemy import DateTime, String, Text, delete, select
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
-Base = declarative_base()
+from mcp_server_langgraph.models.base import Base
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -262,7 +262,7 @@ class InMemoryPushSubscriptionStore(PushSubscriptionStore):
 # =============================================================================
 
 
-class PushSubscriptionRecord(Base):  # type: ignore[misc, valid-type]
+class PushSubscriptionRecord(Base):
     """
     SQLAlchemy model for push subscription records.
 

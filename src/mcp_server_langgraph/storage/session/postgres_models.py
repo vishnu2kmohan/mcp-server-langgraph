@@ -10,16 +10,12 @@ from typing import Any
 
 from sqlalchemy import JSON, DateTime, Float, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
+
+from mcp_server_langgraph.models.base import Base
 
 
-class SessionBase(DeclarativeBase):
-    """Base class for Session database models."""
-
-    pass
-
-
-class SessionModel(SessionBase):
+class SessionModel(Base):
     """
     SQLAlchemy model for session storage.
 
@@ -89,7 +85,7 @@ class SessionModel(SessionBase):
         return f"<Session(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
 
 
-class MessageModel(SessionBase):
+class MessageModel(Base):
     """
     SQLAlchemy model for message storage.
 

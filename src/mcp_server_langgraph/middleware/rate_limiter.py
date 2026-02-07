@@ -43,6 +43,7 @@ ENDPOINT_RATE_LIMITS = {
     "oauth2_callback": "20/minute",  # Allow reasonable callback rate
     "suggestions": "60/minute",  # AI suggestion endpoints (configurable via FF_SUGGESTION_RATE_LIMIT_PER_MINUTE)
     "ai_ux": "30/minute",  # AI UX endpoints (LLM-backed, cost control)
+    "db_connection_test": "5/minute",  # Prevent connection test abuse
     "alertmanager_webhook": "120/minute",  # Alertmanager webhook (ADR-0026)
 }
 
@@ -78,6 +79,8 @@ PATH_RATE_LIMITS: dict[str, str] = {
     "/api/v1/ai/composite": "20/minute",
     "/api/v1/ai/composite/stream": "20/minute",
     "/api/v1/ai/composite/batch": "10/minute",  # Lower limit for batch operations
+    # Database connection test - prevent abuse
+    "/api/v1/database-connections/{connection_id}/test": "5/minute",
     # Frontend cache endpoints - prevent cache flooding
     "/api/v1/cache": "100/minute",
 }

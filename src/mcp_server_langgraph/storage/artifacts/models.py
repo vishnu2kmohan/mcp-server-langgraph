@@ -22,16 +22,12 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from mcp_server_langgraph.models.base import Base
 
 
-class ArtifactBase(DeclarativeBase):
-    """Base class for Artifact database models."""
-
-    pass
-
-
-class ArtifactModel(ArtifactBase):
+class ArtifactModel(Base):
     """
     SQLAlchemy model for artifact storage.
 
@@ -140,7 +136,7 @@ class ArtifactModel(ArtifactBase):
         }
 
 
-class ArtifactVersionModel(ArtifactBase):
+class ArtifactVersionModel(Base):
     """
     SQLAlchemy model for artifact version history.
 

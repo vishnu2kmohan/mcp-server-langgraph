@@ -82,16 +82,17 @@ async def async_engine() -> AsyncGenerator[AsyncEngine, None]:
         pytest.skip(f"PostgreSQL connection failed: {e}")
 
     # Create tables
-    from mcp_server_langgraph.storage.workflow.postgres_models import WorkflowBase
+    from mcp_server_langgraph.models.base import Base
+    import mcp_server_langgraph.storage.workflow.postgres_models  # noqa: F401
 
     async with engine.begin() as conn:
-        await conn.run_sync(WorkflowBase.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)
 
     yield engine
 
     # Cleanup
     async with engine.begin() as conn:
-        await conn.run_sync(WorkflowBase.metadata.drop_all)
+        await conn.run_sync(Base.metadata.drop_all)
 
     await engine.dispose()
 

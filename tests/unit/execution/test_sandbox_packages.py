@@ -913,3 +913,92 @@ class TestSQLAlchemyDatabaseDialects:
         for pkg_name in dialect_packages:
             pkg = SANDBOX_PACKAGES.get(pkg_name, {})
             assert pkg.get("category") == "database-dialect", f"Package '{pkg_name}' should have 'database-dialect' category"
+
+
+@pytest.mark.xdist_group(name="sandbox_packages")
+class TestSQLGlotPackage:
+    """Tests for the SQLGlot sandbox package."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    def test_sqlglot_in_sandbox_packages(self) -> None:
+        """
+        GIVEN: SANDBOX_PACKAGES configuration
+        THEN: sqlglot is present
+        """
+        assert "sqlglot" in SANDBOX_PACKAGES
+
+    def test_sqlglot_has_correct_pip_name(self) -> None:
+        """
+        GIVEN: sqlglot package specification
+        THEN: pip_name is 'sqlglot'
+        """
+        assert SANDBOX_PACKAGES["sqlglot"]["pip_name"] == "sqlglot"
+
+    def test_sqlglot_has_correct_import_names(self) -> None:
+        """
+        GIVEN: sqlglot package specification
+        THEN: import_names is ['sqlglot']
+        """
+        assert SANDBOX_PACKAGES["sqlglot"]["import_names"] == ["sqlglot"]
+
+    def test_sqlglot_has_correct_pyodide_name(self) -> None:
+        """
+        GIVEN: sqlglot package specification
+        THEN: pyodide_name is 'sqlglot'
+        """
+        assert SANDBOX_PACKAGES["sqlglot"]["pyodide_name"] == "sqlglot"
+
+    def test_sqlglot_category_is_database(self) -> None:
+        """
+        GIVEN: sqlglot package specification
+        THEN: category is 'database'
+        """
+        assert SANDBOX_PACKAGES["sqlglot"]["category"] == "database"
+
+    def test_sqlglot_has_no_dependencies(self) -> None:
+        """
+        GIVEN: sqlglot package specification
+        THEN: dependencies is empty (zero dependency package)
+        """
+        assert SANDBOX_PACKAGES["sqlglot"]["dependencies"] == []
+
+    def test_sqlglot_not_docker_only(self) -> None:
+        """
+        GIVEN: sqlglot package specification
+        THEN: It is NOT Docker-only (works in Pyodide too)
+        """
+        assert not SANDBOX_PACKAGES["sqlglot"].get("docker_only", False)
+
+    def test_sqlglot_in_allowed_imports(self) -> None:
+        """
+        GIVEN: get_allowed_imports() result
+        THEN: sqlglot is allowed
+        """
+        assert "sqlglot" in get_allowed_imports()
+
+    def test_sqlglot_in_pip_packages(self) -> None:
+        """
+        GIVEN: get_pip_packages() result
+        THEN: sqlglot is in the pip packages list
+        """
+        assert "sqlglot" in get_pip_packages()
+
+    def test_sqlglot_in_pyodide_packages(self) -> None:
+        """
+        GIVEN: get_pyodide_packages() result
+        THEN: sqlglot maps to 'sqlglot' Pyodide package
+        """
+        mapping = get_pyodide_packages()
+        assert mapping["sqlglot"] == "sqlglot"
+
+    def test_sqlglot_in_pyodide_lazy_packages(self) -> None:
+        """
+        GIVEN: get_pyodide_lazy_packages() result
+        THEN: sqlglot is in lazy packages with itself as only dependency
+        """
+        lazy = get_pyodide_lazy_packages()
+        assert "sqlglot" in lazy
+        assert lazy["sqlglot"] == ["sqlglot"]
