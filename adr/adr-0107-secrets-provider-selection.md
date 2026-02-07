@@ -1,0 +1,131 @@
+# 107. Secrets Provider Selection for Database Connection Credentials
+
+Date: 2026-02-07
+
+## Status
+
+Accepted
+
+## Context
+
+**Background**:
+Database connections require secure credential storage. The system needs to
+store credentials (passwords, connection strings) in a secrets backend and
+reference them by path/key in the database. Two secrets provider abstractions
+exist in the codebase:
+
+1. `secret_providers/factory.py` - Older factory pattern with manual provider selection
+2. `core/secrets.py` - Newer auto-detection with cloud provider fallback chain
+
+The database connections API (`api/v1/database_connections.py`) had a stub
+`get_secrets_provider()` returning `None`, blocking credential storage and
+CRUD operations.
+
+**Requirements**:
+- Credentials must never be stored in the database (OWASP A02 prevention)
+- Auto-detection of cloud provider for zero-config deployments
+- InMemorySecretsProvider fallback for dev/test environments
+- Warning when InMemorySecretsProvider is used in production
+
+**Stakeholders**:
+- Platform team (deployment configuration)
+- Security team (credential storage compliance)
+
+## Decision
+
+We will use `core/secrets.py:get_secrets_provider()` with auto-detection for
+database connection credential storage.
+
+**Rationale**:
+- `core/secrets.py` is already used by `core/dependencies.py` for MCP connection secrets
+- Has cloud auto-detection (AWS/Azure/GCP) based on environment variables
+- Falls back to `InMemorySecretsProvider` for dev/test
+- Singleton pattern prevents multiple provider instances
+
+**Implementation Details**:
+
+```python
+# api/v1/database_connections.py
+def get_secrets_provider() -> SecretsProvider:
+    from mcp_server_langgraph.core.secrets import get_secrets_provider as _get_provider
+    provider = _get_provider()
+    # Warn if InMemory in production
+    if isinstance(provider, InMemorySecretsProvider):
+        env = os.environ.get("ENVIRONMENT", "").lower()
+        if env in {"production", "prod", "staging"}:
+            logger.warning("InMemorySecretsProvider active in %s", env)
+    return provider
+```
+
+**Configuration Table**:
+
+| Provider | Env Var | Example Value |
+|----------|---------|---------------|
+| Auto-detect | `SECRETS_PROVIDER` | `aws`, `azure`, `gcp`, `local` |
+| AWS | `AWS_REGION` | `us-east-1` |
+| AWS | `AWS_SECRETS_PREFIX` | `mcp-server/` |
+| Azure | `AZURE_KEY_VAULT_URL` | `https://myvault.vault.azure.net` |
+| GCP | `GOOGLE_CLOUD_PROJECT` | `my-project-id` |
+
+**Components Affected**:
+- `src/mcp_server_langgraph/api/v1/database_connections.py`
+- `src/mcp_server_langgraph/core/secrets.py`
+
+## Consequences
+
+### Positive Consequences
+
+- **Zero-config dev/test**: InMemorySecretsProvider works without setup
+- **Cloud-native**: Auto-detection matches deployment environment
+- **Consistent**: Same provider used for both MCP and database connections
+- **Secure**: Production warning prevents accidental in-memory usage
+
+### Negative Consequences
+
+- **InMemorySecretsProvider not persistent**: Credentials lost on restart in dev/test
+- **Singleton coupling**: All consumers share one provider instance
+
+### Neutral Consequences
+
+- **Environment variable dependency**: Production deployments must configure cloud credentials
+
+## Alternatives Considered
+
+### Alternative 1: `secret_providers/factory.py`
+
+**Description**: Use the older factory pattern with explicit provider configuration
+
+**Pros**:
+- More explicit provider selection
+- Separate configuration per consumer
+
+**Cons**:
+- Not used by `core/dependencies.py` (inconsistency)
+- No auto-detection
+- More configuration required
+
+**Why Rejected**: Would create two parallel secrets pathways, increasing maintenance burden
+
+---
+
+### Alternative 2: Inline HashiCorp Vault Integration
+
+**Description**: Directly integrate with Vault for credential storage
+
+**Pros**:
+- Industry standard for secrets management
+- Dynamic credential rotation
+
+**Cons**:
+- Additional infrastructure dependency
+- More complex deployment
+- Not needed for current cloud-native deployments
+
+**Why Rejected**: Over-engineered for current requirements; cloud-native providers suffice
+
+## References
+
+**Internal**:
+- `src/mcp_server_langgraph/core/secrets.py` - Provider implementations
+- `src/mcp_server_langgraph/repositories/connections.py` - SecretsProvider protocol
+- `src/mcp_server_langgraph/execution/sql/credential_manager.py` - Credential caching
