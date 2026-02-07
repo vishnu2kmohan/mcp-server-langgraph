@@ -81,6 +81,7 @@ dependencies = [
     "pybreaker>=1.0.0",  # Circuit breaker pattern for preventing cascade failures
     "tenacity>=9.1.2",  # Retry logic with exponential backoff
     "cachetools>=5.3.0",  # In-memory LRU cache for L1 caching (ADR-0028)
+    "sqlglot>=26.0.0",  # Pure Python SQL parser/transpiler for Text2SQL (0 transitive deps)
     "slowapi>=0.1.9",  # Rate limiting for FastAPI (ADR-0027)
     # LLM Provider SDKs (required for LiteLLM multi-provider support)
     "google-cloud-aiplatform>=1.38.0",  # Vertex AI SDK (default: Anthropic Claude on Vertex)
@@ -1167,6 +1168,22 @@ alembic = [
     "sqlalchemy[asyncio]>=2.0.44",
     "asyncpg>=0.29.0",
     "pyyaml>=6.0.3",
+]
+
+# Optional SQL database drivers
+# Install individual drivers as needed:
+#   uv sync --frozen --extra sql-mysql
+sql-mysql = ["aiomysql>=0.2.0"]
+sql-duckdb = ["duckdb>=1.1.0"]
+sql-redshift = ["redshift-connector>=2.1.0"]
+sql-clickhouse = ["asynch>=0.2.0"]
+sql-trino = ["trino>=0.330.0"]
+sql-all = [
+    "aiomysql>=0.2.0",
+    "duckdb>=1.1.0",
+    "redshift-connector>=2.1.0",
+    "asynch>=0.2.0",
+    "trino>=0.330.0",
 ]
 
 # OpenFGA seeding script - minimal dependencies

@@ -12,10 +12,10 @@ from typing import Any
 from sqlalchemy import JSON, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from mcp_server_langgraph.database.models import Base
+from mcp_server_langgraph.models.base import Base
 
 
-class AlertRecord(Base):  # type: ignore[misc]
+class AlertRecord(Base):
     """
     Persistent storage for infrastructure alerts from Alertmanager.
 

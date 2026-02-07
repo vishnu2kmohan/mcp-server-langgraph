@@ -19,16 +19,12 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.dialects.postgresql import JSON, TSVECTOR, UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from mcp_server_langgraph.models.base import Base
 
 
-class ProjectBase(DeclarativeBase):
-    """Base class for project-related models."""
-
-    pass
-
-
-class ProjectModel(ProjectBase):
+class ProjectModel(Base):
     """
     Core project entity - container for sessions, workflows, and connections.
 
@@ -115,7 +111,7 @@ class ProjectModel(ProjectBase):
     )
 
 
-class ProjectWorkflowModel(ProjectBase):
+class ProjectWorkflowModel(Base):
     """Junction table linking projects to workflows."""
 
     __tablename__ = "project_workflows"
@@ -145,7 +141,7 @@ class ProjectWorkflowModel(ProjectBase):
     __table_args__ = (Index("ix_project_workflows_workflow", "workflow_id"),)
 
 
-class ProjectSessionModel(ProjectBase):
+class ProjectSessionModel(Base):
     """Junction table linking projects to sessions."""
 
     __tablename__ = "project_sessions"
@@ -176,7 +172,7 @@ class ProjectSessionModel(ProjectBase):
     __table_args__ = (Index("ix_project_sessions_session", "session_id"),)
 
 
-class ProjectConnectionModel(ProjectBase):
+class ProjectConnectionModel(Base):
     """Connections (MCP servers, vector stores, API keys) linked to a project."""
 
     __tablename__ = "project_connections"
@@ -221,7 +217,7 @@ class ProjectConnectionModel(ProjectBase):
     __table_args__ = (Index("ix_project_connections_type", "project_id", "connection_type"),)
 
 
-class ProjectMemberModel(ProjectBase):
+class ProjectMemberModel(Base):
     """Project membership with roles."""
 
     __tablename__ = "project_members"

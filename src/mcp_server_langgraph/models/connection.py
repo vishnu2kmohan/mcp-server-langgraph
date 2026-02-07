@@ -26,22 +26,17 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSON, TSVECTOR, UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # Import ConnectionScope from auth module (defined there to avoid SQLAlchemy
 # dependency in lightweight deployments)
 from mcp_server_langgraph.auth.connection_scope import ConnectionScope
+from mcp_server_langgraph.models.base import Base
 
-__all__ = ["ConnectionBase", "MCPConnectionModel", "OAuth2StateModel", "ConnectionScope"]
-
-
-class ConnectionBase(DeclarativeBase):
-    """Base class for connection-related models."""
-
-    pass
+__all__ = ["MCPConnectionModel", "OAuth2StateModel", "ConnectionScope"]
 
 
-class MCPConnectionModel(ConnectionBase):
+class MCPConnectionModel(Base):
     """
     MCP server connection with OAuth2 and API Key authentication.
 
@@ -225,7 +220,7 @@ class MCPConnectionModel(ConnectionBase):
     )
 
 
-class OAuth2StateModel(ConnectionBase):
+class OAuth2StateModel(Base):
     """
     OAuth2 PKCE flow state storage.
 

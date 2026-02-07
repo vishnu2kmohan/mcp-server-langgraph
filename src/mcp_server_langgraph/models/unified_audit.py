@@ -13,16 +13,12 @@ from typing import Any
 
 from sqlalchemy import BigInteger, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
+
+from mcp_server_langgraph.models.base import Base
 
 
-class UnifiedAuditBase(DeclarativeBase):
-    """Base class for unified audit models."""
-
-    pass
-
-
-class UnifiedAuditModel(UnifiedAuditBase):
+class UnifiedAuditModel(Base):
     """
     SQLAlchemy model for unified audit events.
 

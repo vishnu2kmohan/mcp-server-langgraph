@@ -2,20 +2,28 @@
 Sandbox Context
 
 Provides execution context for sandboxed code with access to
-MCP tools via the tool bridge.
+MCP tools via the tool bridge and SQL validation/transpilation.
 
 Usage:
     from mcp_server_langgraph.execution.sandbox_context import SandboxContext
 
     context = SandboxContext()
     result = await context.call_mcp_tool("search", {"query": "..."})
+
+    # SQL support
+    validator = context.get_sql_validator()
+    transpiler = context.get_sql_transpiler()
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.execution.tool_bridge import ToolBridge, ToolResult
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.execution.sql.transpiler import SQLTranspiler
+    from mcp_server_langgraph.execution.sql.validator import SQLValidator
 
 
 class SandboxContext:
@@ -110,3 +118,23 @@ class SandboxContext:
             List of available tool names
         """
         return self.tool_bridge.list_tools()
+
+    def get_sql_validator(self) -> SQLValidator:
+        """Get an SQL validator for validating queries in sandbox code.
+
+        Returns:
+            SQLValidator instance for AST-based SQL validation.
+        """
+        from mcp_server_langgraph.execution.sql.validator import SQLValidator
+
+        return SQLValidator()
+
+    def get_sql_transpiler(self) -> SQLTranspiler:
+        """Get an SQL transpiler for converting between SQL dialects.
+
+        Returns:
+            SQLTranspiler instance for dialect-aware transpilation.
+        """
+        from mcp_server_langgraph.execution.sql.transpiler import SQLTranspiler
+
+        return SQLTranspiler()

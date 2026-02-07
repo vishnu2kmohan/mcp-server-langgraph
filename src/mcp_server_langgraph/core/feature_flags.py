@@ -994,6 +994,35 @@ class FeatureFlags(BaseSettings):
         "Set FF_ENABLE_PROGRAMMATIC_TOOLS=true to enable.",
     )
 
+    # SQL Execution Engine
+    sql_engine: str = Field(
+        default="sqlglot",
+        description="SQL execution engine: 'sqlglot' (AST-based, recommended), "
+        "'sqlalchemy' (legacy ORM), or 'dual' (run both, compare results). "
+        "Set FF_SQL_ENGINE=sqlalchemy to roll back to legacy engine.",
+    )
+
+    enable_sql_egress_validation: bool = Field(
+        default=True,
+        description="Enable SSRF/egress validation for database connections. "
+        "Blocks RFC1918 IPs, cloud metadata endpoints, and non-standard ports. "
+        "Set FF_ENABLE_SQL_EGRESS_VALIDATION=false only in dev/testing.",
+    )
+
+    sql_query_timeout_seconds: float = Field(
+        default=30.0,
+        ge=1.0,
+        le=300.0,
+        description="Default timeout for SQL query execution in seconds. Set FF_SQL_QUERY_TIMEOUT_SECONDS to override.",
+    )
+
+    sql_max_row_limit: int = Field(
+        default=10000,
+        ge=100,
+        le=1000000,
+        description="Maximum rows returned from SQL queries. Set FF_SQL_MAX_ROW_LIMIT to override.",
+    )
+
     enable_multi_agent_orchestration: bool = Field(
         default=True,
         description="Enable orchestrator-worker pattern for parallel task execution. "
@@ -2250,7 +2279,29 @@ class FeatureFlags(BaseSettings):
             # Skills Marketplace Features (ADR-0072)
             "skills_system": self.enable_skills_system,
             "skills_marketplace": self.enable_skills_marketplace,
+            # SQL Execution
+            "sql_engine": self.sql_engine,
+            "sql_egress_validation": self.enable_sql_egress_validation,
         }
+
+    def to_dict(self) -> dict[str, object]:
+        """Serialize feature flags to a dictionary.
+
+        Returns a dictionary containing all feature flag values. This is
+        a convenience wrapper around Pydantic's model_dump() with additional
+        SQL execution flags explicitly included.
+
+        Returns:
+            Dictionary mapping flag names to their current values.
+        """
+        d = self.model_dump()
+        # Ensure SQL execution flags are present (they should be via model_dump,
+        # but this makes the contract explicit for consumers)
+        d.setdefault("sql_engine", self.sql_engine)
+        d.setdefault("enable_sql_egress_validation", self.enable_sql_egress_validation)
+        d.setdefault("sql_query_timeout_seconds", self.sql_query_timeout_seconds)
+        d.setdefault("sql_max_row_limit", self.sql_max_row_limit)
+        return d
 
 
 # Global feature flags instance

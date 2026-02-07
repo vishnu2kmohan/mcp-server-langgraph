@@ -13,16 +13,12 @@ from uuid import uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
+
+from mcp_server_langgraph.models.base import Base
 
 
-class SessionGoalBase(DeclarativeBase):
-    """Base class for session goal models."""
-
-    pass
-
-
-class SessionGoal(SessionGoalBase):
+class SessionGoal(Base):
     """
     Session goal model for tracking user goals.
 

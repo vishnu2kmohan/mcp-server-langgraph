@@ -28,9 +28,11 @@ Network Packages (httpx, requests, aiohttp):
 
     Only enable network access in trusted environments.
 
-Database Package (sqlalchemy):
+Database Packages (sqlglot, sqlalchemy):
+    sqlglot: Pure Python SQL parser and transpiler. Zero dependencies, safe for
+    Pyodide. Used for AST-based SQL validation and dialect transpilation.
+    sqlalchemy: SQL toolkit and ORM (deprecated for Text2SQL, use sqlglot).
     Requires database connection strings with credentials.
-    Code can access any database the connection string permits.
 
 Docker-Only Packages:
     Packages marked with docker_only=True are not available in Pyodide browser.
@@ -285,6 +287,14 @@ SANDBOX_PACKAGES: dict[str, PackageSpec] = {
         "pyodide_name": "sqlalchemy",
         "category": "database",
         "description": "SQL toolkit and ORM",
+        "dependencies": [],
+    },
+    "sqlglot": {
+        "pip_name": "sqlglot",
+        "import_names": ["sqlglot"],
+        "pyodide_name": "sqlglot",
+        "category": "database",
+        "description": "SQL parser, transpiler, and optimizer (zero dependencies)",
         "dependencies": [],
     },
     # -------------------------------------------------------------------------

@@ -22,12 +22,12 @@ from enum import Enum
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from sqlalchemy import JSON, DateTime, Float, String, Text, Boolean, select
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
+
+from mcp_server_langgraph.models.base import Base
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
-Base = declarative_base()
 
 
 # =============================================================================
@@ -233,7 +233,7 @@ class InMemoryFeedbackStore:
 # =============================================================================
 
 
-class FeedbackRecord(Base):  # type: ignore[misc,valid-type]
+class FeedbackRecord(Base):
     """
     SQLAlchemy model for remediation feedback records.
 
@@ -357,28 +357,34 @@ class PostgresFeedbackStore(FeedbackStore):
         self,
         alert_type: str | None = None,
     ) -> dict[RejectionReason, int]:
-        """Get rejection reason counts for constraint learning."""
+        """Get rejection reason counts for constraint learning.
+
+        PERFORMANCE: Uses SQL GROUP BY to aggregate in the database
+        rather than loading all records into memory.
+        """
+        from sqlalchemy import func
+
         async with self._session_maker() as session:
-            stmt = select(FeedbackRecord).where(
-                FeedbackRecord.action == "rejected",
-                FeedbackRecord.reason.isnot(None),
+            stmt = (
+                select(FeedbackRecord.reason, func.count(FeedbackRecord.feedback_id))
+                .where(
+                    FeedbackRecord.action == "rejected",
+                    FeedbackRecord.reason.isnot(None),
+                )
+                .group_by(FeedbackRecord.reason)
             )
             if alert_type:
                 stmt = stmt.where(FeedbackRecord.alert_type == alert_type)
 
             result = await session.execute(stmt)
-            records = result.scalars().all()
+            counts: dict[RejectionReason, int] = {}
+            for reason_val, count in result.all():
+                try:
+                    counts[RejectionReason(reason_val)] = count
+                except ValueError:
+                    pass  # Skip invalid reason values
 
-            counts: dict[RejectionReason, int] = defaultdict(int)
-            for record in records:
-                if record.reason:
-                    try:
-                        reason = RejectionReason(record.reason)
-                        counts[reason] += 1
-                    except ValueError:
-                        pass  # Skip invalid reason values
-
-            return dict(counts)
+            return counts
 
     async def get_recent_feedback(
         self,

@@ -13,16 +13,12 @@ from typing import Any
 
 from sqlalchemy import BigInteger, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
+
+from mcp_server_langgraph.models.base import Base
 
 
-class AuditBase(DeclarativeBase):
-    """Base class for audit-related models."""
-
-    pass
-
-
-class UnifiedAuditLog(AuditBase):
+class UnifiedAuditLog(Base):
     """
     Unified audit log model for regulatory compliance.
 
