@@ -1,0 +1,53 @@
+# Kubernetes NetworkPolicy for SQL Executor egress control
+# Defense-in-depth: restricts egress to approved database ports only
+# Blocks access to private IP ranges (SSRF prevention at network layer)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sql-executor-egress
+  labels:
+    app.kubernetes.io/component: sql-executor
+    app.kubernetes.io/part-of: mcp-server-langgraph
+spec:
+  podSelector:
+    matchLabels:
+      app: sql-executor
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow only approved database ports to external (non-private) IPs
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8       # RFC1918 Class A
+              - 172.16.0.0/12    # RFC1918 Class B
+              - 192.168.0.0/16   # RFC1918 Class C
+              - 169.254.0.0/16   # Link-local / cloud metadata
+              - 127.0.0.0/8      # Loopback
+      ports:
+        - protocol: TCP
+          port: 5432   # PostgreSQL
+        - protocol: TCP
+          port: 3306   # MySQL
+        - protocol: TCP
+          port: 443    # Cloud DBs (BigQuery, Snowflake via HTTPS)
+    # Allow internal cluster database services
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432

@@ -1,0 +1,25 @@
+# ConfigMap for SQLGlot rollback controller settings
+# Used by the RollbackController to determine when to auto-rollback
+# from SQLGlot to SQLAlchemy
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sqlglot-rollback-config
+  labels:
+    app.kubernetes.io/component: sql-executor
+    app.kubernetes.io/part-of: mcp-server-langgraph
+data:
+  # Error rate threshold (fraction) - rollback if exceeded over window
+  ERROR_RATE_THRESHOLD: "0.05"
+  # Monitoring window in seconds (5 minutes)
+  WINDOW_SECONDS: "300"
+  # P99 latency multiplier - rollback if P99 > baseline * multiplier
+  P99_LATENCY_MULTIPLIER: "2.0"
+  # Max circuit breaker opens per hour before rollback
+  CIRCUIT_BREAKER_OPENS_MAX: "3"
+  # Default SQL engine (sqlalchemy | sqlglot | dual)
+  DEFAULT_SQL_ENGINE: "sqlalchemy"
+  # Rollout percentage (0-100) for canary deployment
+  SQLGLOT_ROLLOUT_PERCENTAGE: "0"
+  # Enable automatic rollback (true/false)
+  AUTO_ROLLBACK_ENABLED: "true"

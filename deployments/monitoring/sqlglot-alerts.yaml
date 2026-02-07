@@ -1,0 +1,252 @@
+# SQLGlot Migration - Prometheus Recording & Alerting Rules
+#
+# Monitors the SQLGlot query engine migration including:
+#   - Error rates, latency, rollbacks
+#   - Circuit breaker state
+#   - Dual/shadow mode result mismatches
+#   - Execution throughput
+#
+# Deploy as PrometheusRule CR or include via Prometheus rule_files config.
+#
+# Related:
+#   - Alertmanager config: deployments/monitoring/alertmanager/alertmanager-config.yaml
+#   - Resilience alerts: deployments/helm/.../prometheus-rules/resilience.yaml
+
+groups:
+  # ============================================================================
+  # Recording Rules - Pre-computed metrics for dashboards and alert efficiency
+  # ============================================================================
+  - name: sqlglot.recording_rules
+    interval: 30s
+    rules:
+      # Error rate over 5m window
+      - record: sqlglot:error_rate:5m
+        expr: |
+          rate(sqlglot_execution_failure_total[5m])
+          /
+          (rate(sqlglot_execution_success_total[5m]) + rate(sqlglot_execution_failure_total[5m]))
+        labels:
+          component: sqlglot
+
+      # P99 latency over 5m window
+      - record: sqlglot:latency_p99:5m
+        expr: |
+          histogram_quantile(0.99, rate(sql_execution_duration_seconds_bucket{engine="sqlglot"}[5m]))
+        labels:
+          component: sqlglot
+
+      # Total execution rate over 5m window (success + failure)
+      - record: sqlglot:execution_rate:5m
+        expr: |
+          rate(sqlglot_execution_success_total[5m]) + rate(sqlglot_execution_failure_total[5m])
+        labels:
+          component: sqlglot
+
+  # ============================================================================
+  # Alerting Rules - SQLGlot Engine Health
+  # ============================================================================
+  - name: sqlglot.engine_health
+    interval: 30s
+    rules:
+      # ----------------------------------------------------------------------
+      # SQLGlotHighErrorRate (critical)
+      # Fires when SQLGlot error rate exceeds 5% over a 5-minute window.
+      # Sustained errors indicate query compatibility or transpilation issues.
+      # ----------------------------------------------------------------------
+      - alert: SQLGlotHighErrorRate
+        expr: |
+          rate(sqlglot_execution_failure_total[5m])
+          /
+          (rate(sqlglot_execution_success_total[5m]) + rate(sqlglot_execution_failure_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: sqlglot
+          team: platform
+        annotations:
+          summary: 'SQLGlot error rate exceeds 5%: {{ $value | humanizePercentage }}'
+          description: |
+            SQLGlot query engine error rate is {{ $value | humanizePercentage }} over the last 5 minutes,
+            exceeding the 5% threshold.
+
+            This indicates a significant number of SQL queries are failing through the SQLGlot engine.
+            Possible causes:
+            - Unsupported SQL dialect constructs
+            - Transpilation errors for complex queries
+            - Backend driver compatibility issues
+
+            Investigate:
+            1. Check sqlglot_execution_failure_total by error_type label
+            2. Review application logs for SQLGlot transpilation errors
+            3. Consider triggering rollback if error rate continues rising
+          runbook_url: 'https://docs/runbooks/SQLGLOT_OPERATIONS.md#high-error-rate'
+
+      # ----------------------------------------------------------------------
+      # SQLGlotHighLatency (warning)
+      # Fires when SQLGlot P99 latency exceeds 2x the SQLAlchemy baseline.
+      # Detects performance regressions introduced by the migration.
+      # ----------------------------------------------------------------------
+      - alert: SQLGlotHighLatency
+        expr: |
+          histogram_quantile(0.99, rate(sql_execution_duration_seconds_bucket{engine="sqlglot"}[5m]))
+          > 2 * histogram_quantile(0.99, rate(sql_execution_duration_seconds_bucket{engine="sqlalchemy"}[5m]))
+        for: 10m
+        labels:
+          severity: warning
+          component: sqlglot
+          team: platform
+        annotations:
+          summary: 'SQLGlot P99 latency exceeds 2x SQLAlchemy baseline'
+          description: |
+            SQLGlot engine P99 latency is more than 2x the SQLAlchemy baseline for 10+ minutes.
+
+            SQLGlot P99: {{ with query "histogram_quantile(0.99, rate(sql_execution_duration_seconds_bucket{engine='sqlglot'}[5m]))" }}{{ . | first | value | humanizeDuration }}{{ end }}
+            SQLAlchemy P99: {{ with query "histogram_quantile(0.99, rate(sql_execution_duration_seconds_bucket{engine='sqlalchemy'}[5m]))" }}{{ . | first | value | humanizeDuration }}{{ end }}
+
+            Investigate:
+            1. Check for query patterns with high transpilation overhead
+            2. Review sql_execution_duration_seconds histogram by query_type
+            3. Consider optimizing hot-path queries or adjusting migration scope
+          runbook_url: 'https://docs/runbooks/SQLGLOT_OPERATIONS.md#high-latency'
+
+  # ============================================================================
+  # Alerting Rules - SQLGlot Migration Safety
+  # ============================================================================
+  - name: sqlglot.migration_safety
+    interval: 30s
+    rules:
+      # ----------------------------------------------------------------------
+      # SQLGlotRollbackTriggered (critical)
+      # Fires immediately when a rollback event is detected.
+      # Rollback means the system reverted from SQLGlot back to SQLAlchemy.
+      # ----------------------------------------------------------------------
+      - alert: SQLGlotRollbackTriggered
+        expr: increase(sqlglot_rollback_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: sqlglot
+          team: platform
+        annotations:
+          summary: 'SQLGlot rollback triggered'
+          description: |
+            A SQLGlot rollback event has been detected. The system has reverted from the
+            SQLGlot engine back to SQLAlchemy.
+
+            This is an automated safety mechanism triggered by excessive errors or latency.
+
+            Immediate actions:
+            1. Verify the rollback completed successfully
+            2. Check sqlglot_execution_failure_total for the error pattern that triggered rollback
+            3. Review SQLGlot transpilation logs for the failing queries
+            4. Do NOT re-enable SQLGlot until root cause is identified and fixed
+          runbook_url: 'https://docs/runbooks/SQLGLOT_OPERATIONS.md#rollback-triggered'
+
+      # ----------------------------------------------------------------------
+      # SQLGlotCircuitBreakerOpen (warning)
+      # Fires when the SQLGlot circuit breaker opens, indicating the engine
+      # is being bypassed due to repeated failures.
+      # ----------------------------------------------------------------------
+      - alert: SQLGlotCircuitBreakerOpen
+        expr: sqlglot_circuit_breaker_state == 1
+        for: 1m
+        labels:
+          severity: warning
+          component: sqlglot
+          team: platform
+        annotations:
+          summary: 'SQLGlot circuit breaker is OPEN'
+          description: |
+            The SQLGlot circuit breaker has opened, meaning SQLGlot queries are being
+            bypassed and falling back to the previous engine.
+
+            The circuit breaker opened due to repeated execution failures exceeding
+            the configured threshold.
+
+            Investigate:
+            1. Check sqlglot_execution_failure_total for error patterns
+            2. Review recent query logs for transpilation failures
+            3. The circuit breaker will attempt half-open recovery automatically
+            4. If failures persist, consider a full rollback
+          runbook_url: 'https://docs/runbooks/SQLGLOT_OPERATIONS.md#circuit-breaker-open'
+
+  # ============================================================================
+  # Alerting Rules - SQLGlot Dual/Shadow Mode
+  # ============================================================================
+  - name: sqlglot.dual_mode
+    interval: 30s
+    rules:
+      # ----------------------------------------------------------------------
+      # SQLGlotDualModeMismatch (warning)
+      # Fires when result mismatches between engines exceed 0.1% in
+      # dual/shadow mode, indicating query result divergence.
+      # ----------------------------------------------------------------------
+      - alert: SQLGlotDualModeMismatch
+        expr: |
+          rate(sqlglot_dual_mode_mismatch_total[5m])
+          /
+          (rate(sqlglot_dual_mode_match_total[5m]) + rate(sqlglot_dual_mode_mismatch_total[5m]))
+          > 0.001
+        for: 15m
+        labels:
+          severity: warning
+          component: sqlglot
+          team: platform
+        annotations:
+          summary: 'SQLGlot dual-mode mismatch rate exceeds 0.1%'
+          description: |
+            More than 0.1% of query results differ between the SQLGlot and SQLAlchemy engines
+            in dual/shadow mode for the last 15 minutes.
+
+            Mismatch rate: {{ $value | humanizePercentage }}
+
+            This indicates potential correctness issues with the SQLGlot transpilation.
+            Do NOT proceed with full migration until mismatches are resolved.
+
+            Investigate:
+            1. Check sqlglot_dual_mode_mismatch_total by query_type label
+            2. Review mismatch logs for specific divergent query results
+            3. Identify and fix the transpilation rules causing divergence
+            4. Re-run shadow mode validation after fixes
+          runbook_url: 'https://docs/runbooks/SQLGLOT_OPERATIONS.md#dual-mode-mismatch'
+
+  # ============================================================================
+  # Alerting Rules - SQLGlot Availability
+  # ============================================================================
+  - name: sqlglot.availability
+    interval: 30s
+    rules:
+      # ----------------------------------------------------------------------
+      # SQLGlotNoExecutions (warning)
+      # Fires when no SQL executions are observed but the counter exists,
+      # indicating a possible outage or misconfiguration.
+      # ----------------------------------------------------------------------
+      - alert: SQLGlotNoExecutions
+        expr: |
+          sum(rate(sqlglot_execution_success_total[10m])) == 0
+          and
+          sum(sqlglot_execution_success_total) > 0
+        for: 10m
+        labels:
+          severity: warning
+          component: sqlglot
+          team: platform
+        annotations:
+          summary: 'No SQLGlot executions detected for 10+ minutes'
+          description: |
+            No successful SQL executions have been observed through the SQLGlot engine
+            for the last 10 minutes, but the metric existed previously (not a fresh deploy).
+
+            This may indicate:
+            - The SQLGlot engine has been disabled or bypassed
+            - An upstream outage preventing queries from reaching the engine
+            - A configuration change routing queries away from SQLGlot
+            - Application-level issues preventing SQL execution
+
+            Investigate:
+            1. Verify SQLGlot feature flag state
+            2. Check application health and readiness probes
+            3. Review sqlglot_circuit_breaker_state for open circuit breaker
+            4. Check for recent deployments or config changes
+          runbook_url: 'https://docs/runbooks/SQLGLOT_OPERATIONS.md#no-executions'
