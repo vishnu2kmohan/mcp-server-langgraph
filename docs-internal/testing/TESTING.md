@@ -5,6 +5,7 @@ Comprehensive guide for running tests in the MCP Server LangGraph project. This 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Parallel Test Execution](#parallel-test-execution)
 - [Test Types](#test-types)
 - [Running Tests Locally](#running-tests-locally)
 - [Matching CI/CD Behavior](#matching-cicd-behavior)
@@ -27,6 +28,58 @@ make test-unit-fast
 
 # Integration tests (Docker-based, same as CI)
 make test-integration
+```
+
+## Parallel Test Execution
+
+Tests run in parallel by default using pytest-xdist. This reduces execution time by 3-5x (8,700+ tests complete in ~3min vs ~20min sequential).
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PYTEST_SEQUENTIAL` | unset | Set to `1` to disable parallel execution |
+| `PYTEST_WORKERS` | `auto` | Number of parallel workers (requires xdist) |
+
+### Precedence Order
+
+1. `PYTEST_SEQUENTIAL=1` - Always runs sequentially (highest priority)
+2. `PYTEST_WORKERS=N` - Use N workers (if xdist available)
+3. Default: `-n auto` (if xdist available), sequential otherwise
+
+### Examples
+
+```bash
+# Run all tests in parallel (default)
+make test
+
+# Run sequentially for debugging test isolation
+PYTEST_SEQUENTIAL=1 make test
+
+# Limit to 4 workers (useful in CI with limited resources)
+PYTEST_WORKERS=4 make test
+
+# Check current parallelism setting
+make print-pytest-parallel-flag
+```
+
+### When to Use Sequential Mode
+
+- **Debugging test isolation issues**: When tests pass individually but fail together
+- **Reproducing order-dependent failures**: Sequential mode ensures deterministic order
+- **Memory-constrained environments**: Parallel workers consume more memory
+- **pytest-xdist not installed**: Tests automatically fall back to sequential
+
+### Frontend Tests
+
+Frontend tests (Vitest) also support parallelism:
+
+```bash
+# Parallel (default)
+npm test -- --pool=threads
+
+# Fallback for compatibility issues
+npm test -- --pool=forks
 ```
 
 ## Test Types
