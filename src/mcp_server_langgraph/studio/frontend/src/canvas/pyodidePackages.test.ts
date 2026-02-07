@@ -247,5 +247,48 @@ import unknown_package
       const required = getRequiredPackages(code);
       expect(required).toHaveLength(0);
     });
+
+    it("should return sqlglot when detected in code", () => {
+      const code = `import sqlglot`;
+      const required = getRequiredPackages(code);
+      expect(required).toContain("sqlglot");
+    });
+  });
+
+  describe("SQLGlot integration", () => {
+    describe("PYODIDE_IMPORT_TO_PACKAGE", () => {
+      it("maps sqlglot import to sqlglot package", () => {
+        expect(PYODIDE_IMPORT_TO_PACKAGE["sqlglot"]).toBe("sqlglot");
+      });
+
+      it("still maps sqlalchemy import", () => {
+        expect(PYODIDE_IMPORT_TO_PACKAGE["sqlalchemy"]).toBe("sqlalchemy");
+      });
+    });
+
+    describe("PYODIDE_LAZY_PACKAGES", () => {
+      it("has sqlglot with no dependencies", () => {
+        expect(PYODIDE_LAZY_PACKAGES["sqlglot"]).toEqual(["sqlglot"]);
+      });
+    });
+
+    describe("detectPythonImports", () => {
+      it("detects import sqlglot", () => {
+        const imports = detectPythonImports("import sqlglot");
+        expect(imports.has("sqlglot")).toBe(true);
+      });
+
+      it("detects from sqlglot import", () => {
+        const imports = detectPythonImports("from sqlglot import exp, parse");
+        expect(imports.has("sqlglot")).toBe(true);
+      });
+
+      it("detects from sqlglot.expressions import", () => {
+        const imports = detectPythonImports(
+          "from sqlglot.expressions import Select",
+        );
+        expect(imports.has("sqlglot")).toBe(true);
+      });
+    });
   });
 });

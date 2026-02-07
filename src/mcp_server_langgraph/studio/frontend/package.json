@@ -5,6 +5,7 @@
   "description": "Unified Studio Frontend for MCP Server LangGraph - Consolidates Builder and Playground",
   "scripts": {
     "dev": "vite",
+    "download-wasm": "bash scripts/download-wasm.sh",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "NODE_OPTIONS='--expose-gc' vitest",
@@ -22,6 +23,7 @@
     "test:e2e:report": "playwright show-report",
     "test:e2e:install": "playwright install --with-deps",
     "test:a11y": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run --testNamePattern='Accessibility|WCAG|axe|a11y' --reporter=json --outputFile=a11y-report/summary.json",
+    "verify-wasm": "bash scripts/verify-wasm-integrity.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
@@ -94,6 +96,7 @@
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
     "sonner": "^1.7.1",
+    "sql.js": "^1.12.0",
     "tailwindcss-animate": "^1.0.7",
     "unist-util-visit": "^5.0.0",
     "vega": "^6.2.0",

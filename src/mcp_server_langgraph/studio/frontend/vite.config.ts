@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import { readFileSync, existsSync } from 'fs';
 import packageJson from './package.json';
 
 // Check if building for Storybook (Storybook sets this env var)
@@ -53,6 +54,12 @@ export default defineConfig(({ mode }) => {
       __APP_VERSION__: JSON.stringify(packageJson.version),
       __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
       ...observabilityEnvDefines,
+      // sql.js WASM integrity hash (injected at build time for runtime SRI verification)
+      'import.meta.env.VITE_SQL_WASM_HASH': JSON.stringify(
+        existsSync(path.resolve(__dirname, 'public/wasm/sql-wasm.sha384'))
+          ? readFileSync(path.resolve(__dirname, 'public/wasm/sql-wasm.sha384'), 'utf-8').trim()
+          : ''
+      ),
     },
     plugins: [
       react(),
@@ -117,6 +124,18 @@ export default defineConfig(({ mode }) => {
                 expiration: {
                   maxEntries: 20,
                   maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+                },
+              },
+            },
+            {
+              // WASM files: Cache First (immutable, integrity-verified)
+              urlPattern: /\.wasm$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'wasm-cache',
+                expiration: {
+                  maxEntries: 5,
+                  maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year (versioned)
                 },
               },
             },
@@ -205,6 +224,8 @@ export default defineConfig(({ mode }) => {
             'vendor-math': ['katex'],
             // Graph visualization (cytoscape)
             'vendor-cytoscape': ['cytoscape'],
+            // sql.js SQLite WASM bridge (split for lazy loading)
+            'vendor-sql': ['sql.js'],
           },
         },
       },

@@ -264,6 +264,100 @@ export interface ConnectionActions {
 export type ConnectionStore = ConnectionState & ConnectionActions;
 
 // ==============================================================================
+// Database Connection Types (SQLGlot Phase 6)
+// ==============================================================================
+
+/** Database dialect identifier */
+export type DatabaseDialect =
+  | "postgres"
+  | "mysql"
+  | "sqlite"
+  | "bigquery"
+  | "snowflake"
+  | "duckdb"
+  | "redshift"
+  | "clickhouse"
+  | "trino";
+
+/** SSL/TLS mode for database connections */
+export type SSLMode = "disable" | "require" | "verify-ca" | "verify-full";
+
+/** Connection method for credential source */
+export type ConnectionMethod =
+  | "credentials"
+  | "secret_ref"
+  | "connection_string";
+
+/** Full database connection entity (snake_case - matches API) */
+export interface DatabaseConnection {
+  id: string;
+  name: string;
+  description: string | null;
+  dialect: DatabaseDialect;
+  host: string | null;
+  port: number | null;
+  database: string | null;
+  project_id: string | null;
+  account_id: string | null;
+  warehouse_id: string | null;
+  ssl_mode: SSLMode;
+  status: ConnectionStatus;
+  last_tested_at: string | null;
+  dialect_version: string | null;
+  owner_id: string;
+  tenant_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Request model for creating a database connection (camelCase)
+ *
+ * ADR-0091 Phase 6: Uses camelCase - transformed to snake_case at API boundary
+ */
+export interface DatabaseConnectionCreate {
+  name: string;
+  description?: string | null;
+  dialect: DatabaseDialect;
+  host?: string | null;
+  port?: number | null;
+  database?: string | null;
+  projectId?: string | null;
+  accountId?: string | null;
+  warehouseId?: string | null;
+  connectionMethod?: ConnectionMethod;
+  username?: string | null;
+  password?: string | null;
+  secretPath?: string | null;
+  secretKey?: string | null;
+  sslMode?: SSLMode;
+  scope?: ConnectionScope;
+}
+
+/** Request model for updating a database connection (camelCase) */
+export interface DatabaseConnectionUpdate {
+  name?: string | null;
+  description?: string | null;
+  host?: string | null;
+  port?: number | null;
+  database?: string | null;
+  sslMode?: SSLMode | null;
+}
+
+/** Result of testing a database connection */
+export interface DatabaseConnectionTestResult {
+  success: boolean;
+  error: string | null;
+  dialect_version: string | null;
+}
+
+/** Response for listing database connections */
+export interface DatabaseConnectionListResponse {
+  items: DatabaseConnection[];
+  total: number;
+}
+
+// ==============================================================================
 // Aggregated Capabilities Types (MCP 2025-11-25)
 // ==============================================================================
 
@@ -390,3 +484,15 @@ export interface ConnectionListResponseCamelCase {
   total: number;
   cursor: string | null;
 }
+
+/**
+ * DatabaseConnection type with camelCase keys (after RTK Query transformation).
+ */
+export type DatabaseConnectionCamelCase =
+  SnakeToCamelCaseDeep<DatabaseConnection>;
+
+/**
+ * DatabaseConnectionTestResult type with camelCase keys (after RTK Query transformation).
+ */
+export type DatabaseConnectionTestResultCamelCase =
+  SnakeToCamelCaseDeep<DatabaseConnectionTestResult>;

@@ -76,6 +76,8 @@ export const PYODIDE_IMPORT_TO_PACKAGE: Record<string, string> = {
   aiohttp: "aiohttp",
   // Database
   sqlalchemy: "sqlalchemy",
+  // SQL Parsing & Transpilation (pure Python, zero dependencies)
+  sqlglot: "sqlglot",
   // LLM Utilities
   tiktoken: "tiktoken",
 };
@@ -129,6 +131,7 @@ export const PYODIDE_LAZY_PACKAGES: Record<string, string[]> = {
   aiohttp: ["aiohttp"],
   // Database
   sqlalchemy: ["sqlalchemy"],
+  sqlglot: ["sqlglot"],
   // LLM Utilities
   tiktoken: ["tiktoken"],
 };

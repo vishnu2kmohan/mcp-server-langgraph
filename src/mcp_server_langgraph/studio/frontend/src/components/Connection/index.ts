@@ -18,3 +18,11 @@ export { CapabilitiesTab } from "./CapabilitiesTab";
 // ADR-0102 Phase 6: Scope Components
 export { ScopeBadge, type ScopeBadgeProps } from "./ScopeBadge";
 export { ScopeSelector, type ScopeSelectorProps } from "./ScopeSelector";
+
+// SQLGlot Phase 6: Database Connection Components
+export { DatabaseConnectionDialog } from "./DatabaseConnectionDialog";
+export {
+  SupportBadge,
+  type SupportBadgeProps,
+  type SupportLevel,
+} from "./SupportBadge";
