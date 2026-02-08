@@ -45,7 +45,7 @@ exports[`Animations Stories > should match Durations snapshot 1`] = `
         class="w-40 shrink-0"
       >
         <button
-          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+          class="px-3 py-1.5 bg-primary-9 text-neutral-12 text-sm rounded hover:bg-primary-10 transition-colors"
         >
           Play
         </button>
@@ -85,7 +85,7 @@ exports[`Animations Stories > should match Durations snapshot 1`] = `
         class="w-40 shrink-0"
       >
         <button
-          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+          class="px-3 py-1.5 bg-primary-9 text-neutral-12 text-sm rounded hover:bg-primary-10 transition-colors"
         >
           Play
         </button>
@@ -125,7 +125,7 @@ exports[`Animations Stories > should match Durations snapshot 1`] = `
         class="w-40 shrink-0"
       >
         <button
-          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+          class="px-3 py-1.5 bg-primary-9 text-neutral-12 text-sm rounded hover:bg-primary-10 transition-colors"
         >
           Play
         </button>
@@ -165,7 +165,7 @@ exports[`Animations Stories > should match Durations snapshot 1`] = `
         class="w-40 shrink-0"
       >
         <button
-          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+          class="px-3 py-1.5 bg-primary-9 text-neutral-12 text-sm rounded hover:bg-primary-10 transition-colors"
         >
           Play
         </button>
@@ -205,7 +205,7 @@ exports[`Animations Stories > should match Durations snapshot 1`] = `
         class="w-40 shrink-0"
       >
         <button
-          class="px-3 py-1.5 bg-primary-9 text-white text-sm rounded hover:bg-primary-10 transition-colors"
+          class="px-3 py-1.5 bg-primary-9 text-neutral-12 text-sm rounded hover:bg-primary-10 transition-colors"
         >
           Play
         </button>
@@ -273,7 +273,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-3"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-2"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -285,7 +285,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-4"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-3"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -297,7 +297,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-5"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-4"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -309,7 +309,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-7"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-primary-5"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -414,7 +414,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-3"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-2"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -426,7 +426,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-4"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-3"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -438,7 +438,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-5"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-4"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -450,7 +450,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-7"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-success-5"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -543,7 +543,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-3"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-1"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -555,7 +555,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-3"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-2"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -567,7 +567,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-6"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-3"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -579,7 +579,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-6"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-4"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -591,7 +591,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-9"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-5"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -616,7 +616,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-9"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-10"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -628,7 +628,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-10"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-warning-11"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -696,7 +696,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-3"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-2"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -708,7 +708,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-4"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-3"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -720,7 +720,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-9"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-4"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -732,7 +732,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-7"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-error-5"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -837,7 +837,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-3"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-2"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -849,7 +849,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-4"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-3"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -861,7 +861,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-5"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-4"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -873,7 +873,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-11"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-5"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -898,7 +898,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-9"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-10"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -910,7 +910,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-10"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-info-11"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -990,7 +990,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-4"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-3"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -1002,7 +1002,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-5"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-4"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -1014,7 +1014,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-9"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-insight-5"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -1248,7 +1248,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-400"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-5"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -1260,7 +1260,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-500"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-9"
           title="#f46800"
         />
         <span
@@ -1273,7 +1273,7 @@ exports[`ColorPalette Stories > should match Palette snapshot 1`] = `
         class="text-center"
       >
         <div
-          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-600"
+          class="w-16 h-16 rounded-lg shadow-sm border border-neutral-6 bg-grafana-10"
         />
         <span
           class="text-xs text-neutral-11 mt-1 block"
@@ -2296,7 +2296,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             12px
-             / 
+             /
             16px
           </span>
         </div>
@@ -2338,7 +2338,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             14px
-             / 
+             /
             20px
           </span>
         </div>
@@ -2380,7 +2380,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             16px
-             / 
+             /
             24px
           </span>
         </div>
@@ -2422,7 +2422,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             18px
-             / 
+             /
             28px
           </span>
         </div>
@@ -2464,7 +2464,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             20px
-             / 
+             /
             28px
           </span>
         </div>
@@ -2506,7 +2506,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             24px
-             / 
+             /
             32px
           </span>
         </div>
@@ -2548,7 +2548,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             30px
-             / 
+             /
             36px
           </span>
         </div>
@@ -2590,7 +2590,7 @@ exports[`Typography Stories > should match Scale snapshot 1`] = `
             class="text-xs text-neutral-10"
           >
             36px
-             / 
+             /
             40px
           </span>
         </div>
