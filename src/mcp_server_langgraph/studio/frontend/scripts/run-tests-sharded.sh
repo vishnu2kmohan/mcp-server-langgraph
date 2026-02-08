@@ -6,10 +6,10 @@
 # to prevent OOM errors when running the full test suite.
 #
 # Usage:
-#   ./scripts/run-tests-sharded.sh                  # Run all shards sequentially (100 shards)
+#   ./scripts/run-tests-sharded.sh                  # Run all shards sequentially (150 shards)
 #   ./scripts/run-tests-sharded.sh --parallel       # RECOMMENDED: Run shards in parallel (~5-10min)
-#   ./scripts/run-tests-sharded.sh --fast           # Fast mode: 50 shards for quick iteration
-#   ./scripts/run-tests-sharded.sh --shard 1        # Run specific shard (1-100)
+#   ./scripts/run-tests-sharded.sh --fast           # Fast mode: 75 shards for quick iteration
+#   ./scripts/run-tests-sharded.sh --shard 1        # Run specific shard (1-150)
 #   ./scripts/run-tests-sharded.sh --count 50       # Custom shard count
 #   ./scripts/run-tests-sharded.sh --parallel 4     # Run 4 shards in parallel
 #
@@ -41,17 +41,17 @@ NC='\033[0m' # No Color
 # Memory budget: 4GB heap per shard (safe for most systems)
 # Memory per test file: ~300-500MB (jsdom + React Testing Library + MSW)
 # Safe files per shard: 4GB / 400MB = ~10 files
-# With 626 test files, need ~63 shards minimum
+# With 787 test files (as of 2026-02), need ~79 shards minimum
 #
-# Using 100 shards as default (optimized from 200):
-# - 626 files / 100 shards = ~6 files per shard
-# - 6 files × 400MB = 2.4GB per shard (safe for 4GB limit)
-# - Still accounts for heavy tests that use 800MB+ each
+# Using 150 shards as default (increased from 100 due to OOM issues):
+# - 787 files / 150 shards = ~5 files per shard
+# - 5 files × 400MB = 2GB per shard (safe for 4GB limit)
+# - Provides more headroom for heavy tests that use 800MB+ each
 #
 # Presets:
-#   --count 100  - Default: balanced speed/safety (~25min sequential)
-#   --count 50   - Fast: for quick iteration (~12min sequential)
-#   --count 200  - Safe: for memory-constrained systems (~50min sequential)
+#   --count 150  - Default: balanced speed/safety (~30min sequential)
+#   --count 75   - Fast: for quick iteration (~15min sequential)
+#   --count 250  - Safe: for memory-constrained systems (~50min sequential)
 #   --parallel   - Recommended: auto-concurrent execution (~5-10min)
 #
 # Known heavy tests (800MB+ each):
@@ -61,9 +61,9 @@ NC='\033[0m' # No Color
 # - AlertDetailPanel.test.tsx
 # - CanvasShortcutsMenu.test.tsx
 #
-# Trade-off: 100 shards × 15s overhead = ~25min sequential
+# Trade-off: 150 shards × 15s overhead = ~37min sequential
 # Recommended: Use --parallel for fastest execution (~5-10min)
-SHARD_COUNT=100
+SHARD_COUNT=150
 
 run_shard() {
     local shard_num=$1
@@ -113,7 +113,8 @@ get_optimal_concurrency() {
         free_mem_kb=$(free -k | awk '/^Mem:/ {print $7}')
     elif [[ "$(uname)" == "Darwin" ]]; then
         # macOS uses vm_stat
-        local pages_free=$(vm_stat | awk '/Pages free/ {print $3}' | tr -d '.')
+        local pages_free
+        pages_free=$(vm_stat | awk '/Pages free/ {print $3}' | tr -d '.')
         free_mem_kb=$((pages_free * 4))  # 4KB pages
     else
         free_mem_kb=8000000  # Default 8GB assumption
@@ -292,8 +293,8 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --fast)
-            # Fast mode: 50 shards for quick iteration (~12min sequential, ~3-5min parallel)
-            SHARD_COUNT=50
+            # Fast mode: 75 shards for quick iteration (~15min sequential, ~3-5min parallel)
+            SHARD_COUNT=75
             shift
             ;;
         --safe)
@@ -315,7 +316,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --parallel [N]   RECOMMENDED: Run shards in parallel (~5-10min)"
-            echo "  --fast           Fast mode: 50 shards for quick iteration"
+            echo "  --fast           Fast mode: 75 shards for quick iteration"
             echo "  --safe           Safe mode: 200 shards for memory-constrained systems"
             echo "  --shard N        Run only shard N"
             echo "  --count N        Use N total shards (default: $SHARD_COUNT)"
