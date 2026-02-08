@@ -16,6 +16,16 @@ import React from "react";
 import { TracesTab } from "./TracesTab";
 import { DevToolsTimelineProvider } from "../context/DevToolsTimelineProvider";
 
+// Mock useLGTMIntegration hook
+const mockGetTraceUrl = vi.fn();
+vi.mock("../hooks/useLGTMIntegration", () => ({
+  useLGTMIntegration: () => ({
+    canOpenInTempo: true,
+    getTraceUrl: mockGetTraceUrl,
+    tempoUrl: "/tempo",
+  }),
+}));
+
 // =============================================================================
 // Test Helpers
 // =============================================================================
@@ -259,33 +269,26 @@ describe("TracesTab", () => {
     });
   });
 
-  describe("grafana integration", () => {
-    it("should display View in Grafana button when grafanaUrl is provided", () => {
+  describe("tempo integration", () => {
+    it("should display View in Tempo button when LGTM integration is available", () => {
       renderWithProvider(
-        <TracesTab
-          traces={mockTraces}
-          selectedTraceId="trace-1"
-          grafanaUrl="/grafana/explore"
-        />,
+        <TracesTab traces={mockTraces} selectedTraceId="trace-1" />,
       );
 
       expect(
-        screen.getByRole("button", { name: /view in grafana/i }),
+        screen.getByRole("button", { name: /view in tempo/i }),
       ).toBeInTheDocument();
     });
 
-    it("should open Grafana URL with trace ID", () => {
+    it("should open Tempo URL with trace ID", () => {
       const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+      mockGetTraceUrl.mockReturnValue("/tempo/explore?traceId=trace-1");
 
       renderWithProvider(
-        <TracesTab
-          traces={mockTraces}
-          selectedTraceId="trace-1"
-          grafanaUrl="/grafana/explore"
-        />,
+        <TracesTab traces={mockTraces} selectedTraceId="trace-1" />,
       );
 
-      fireEvent.click(screen.getByRole("button", { name: /view in grafana/i }));
+      fireEvent.click(screen.getByRole("button", { name: /view in tempo/i }));
 
       expect(openSpy).toHaveBeenCalledWith(
         expect.stringContaining("trace-1"),

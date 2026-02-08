@@ -14,11 +14,31 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import { api } from "../../../api";
 
 expect.extend(toHaveNoViolations);
 
 import { AIInsightsTab } from "./AIInsightsTab";
 import type { AIInsight } from "../types";
+
+// Create a minimal store for testing
+const createTestStore = () =>
+  configureStore({
+    reducer: {
+      [api.reducerPath]: api.reducer,
+      auth: (state = { user: { id: "test-user" } }) => state,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(api.middleware),
+  });
+
+// Wrapper component for rendering with Redux
+const renderWithProvider = (component: React.ReactElement) => {
+  const store = createTestStore();
+  return render(<Provider store={store}>{component}</Provider>);
+};
 
 // =============================================================================
 // Mock Data
@@ -122,13 +142,17 @@ describe("AIInsightsTab", () => {
 
   describe("rendering", () => {
     it("should render with data-testid", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("ai-insights-tab")).toBeInTheDocument();
     });
 
     it("should display insights", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByText("High latency detected")).toBeInTheDocument();
       expect(screen.getByText("Token usage spike")).toBeInTheDocument();
@@ -147,7 +171,9 @@ describe("AIInsightsTab", () => {
         fetchSuggestions: vi.fn(),
       });
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("ai-insights-loading")).toBeInTheDocument();
     });
@@ -164,7 +190,9 @@ describe("AIInsightsTab", () => {
         fetchSuggestions: vi.fn(),
       });
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("ai-insights-empty")).toBeInTheDocument();
       expect(screen.getByText(/no ai insights/i)).toBeInTheDocument();
@@ -173,7 +201,9 @@ describe("AIInsightsTab", () => {
 
   describe("insight display", () => {
     it("should show severity indicators", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("severity-insight-1")).toHaveAttribute(
         "data-severity",
@@ -190,7 +220,9 @@ describe("AIInsightsTab", () => {
     });
 
     it("should show insight type badges", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       const insight1 = screen.getByTestId("ai-insight-insight-1");
       expect(within(insight1).getByText("anomaly")).toBeInTheDocument();
@@ -200,7 +232,9 @@ describe("AIInsightsTab", () => {
     });
 
     it("should show confidence scores", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("confidence-insight-1")).toHaveTextContent(
         "90%",
@@ -211,7 +245,9 @@ describe("AIInsightsTab", () => {
     });
 
     it("should show suggested actions when available", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(
         screen.getByText("Check network connectivity"),
@@ -222,7 +258,9 @@ describe("AIInsightsTab", () => {
 
   describe("filtering", () => {
     it("should show filter options", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("filter-all")).toBeInTheDocument();
       expect(screen.getByTestId("filter-anomaly")).toBeInTheDocument();
@@ -232,7 +270,9 @@ describe("AIInsightsTab", () => {
     it("should filter by type", async () => {
       const user = userEvent.setup();
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       await user.click(screen.getByTestId("filter-anomaly"));
 
@@ -249,7 +289,9 @@ describe("AIInsightsTab", () => {
 
   describe("dismiss", () => {
     it("should show dismiss button on hover", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       const insight = screen.getByTestId("ai-insight-insight-1");
       fireEvent.mouseEnter(insight);
@@ -273,7 +315,9 @@ describe("AIInsightsTab", () => {
         fetchSuggestions: vi.fn(),
       });
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       const insight = screen.getByTestId("ai-insight-insight-1");
       fireEvent.mouseEnter(insight);
@@ -285,7 +329,9 @@ describe("AIInsightsTab", () => {
 
   describe("refresh", () => {
     it("should have refresh button", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("refresh-insights-button")).toBeInTheDocument();
     });
@@ -305,7 +351,9 @@ describe("AIInsightsTab", () => {
         fetchSuggestions: mockFetch,
       });
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       await user.click(screen.getByTestId("refresh-insights-button"));
 
@@ -326,7 +374,9 @@ describe("AIInsightsTab", () => {
         fetchSuggestions: vi.fn(),
       });
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       const banner = screen.getByTestId("layout-suggestion-banner");
       expect(banner).toBeInTheDocument();
@@ -348,7 +398,9 @@ describe("AIInsightsTab", () => {
         fetchSuggestions: vi.fn(),
       });
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       await user.click(screen.getByTestId("apply-layout-button"));
 
@@ -369,7 +421,9 @@ describe("AIInsightsTab", () => {
         fetchSuggestions: vi.fn(),
       });
 
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(screen.getByTestId("ai-insights-error")).toBeInTheDocument();
       expect(screen.getByText(/failed to fetch/i)).toBeInTheDocument();
@@ -378,7 +432,9 @@ describe("AIInsightsTab", () => {
 
   describe("accessibility", () => {
     it("should have accessible structure", () => {
-      render(<AIInsightsTab context="session" contextEntityId="session-123" />);
+      renderWithProvider(
+        <AIInsightsTab context="session" contextEntityId="session-123" />,
+      );
 
       expect(
         screen.getByRole("heading", { name: /insights/i }),
@@ -386,7 +442,7 @@ describe("AIInsightsTab", () => {
     });
 
     it("should have no accessibility violations", async () => {
-      const { container } = render(
+      const { container } = renderWithProvider(
         <AIInsightsTab context="session" contextEntityId="session-123" />,
       );
       const results = await axe(container);
