@@ -752,7 +752,7 @@ export function ChatInput({
 
   return (
     <div
-      data-testid="chat-input-pill"
+      data-testid="chat-input-form"
       className="relative bg-neutral-1 rounded-2xl shadow-lg ring-1 ring-neutral-a6 backdrop-blur-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-primary-a6"
       {...dragHandlers}
     >

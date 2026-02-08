@@ -338,7 +338,7 @@ describe("ConnectedChatInputForm Telemetry Integration", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // Component should render without error
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
   });
 });

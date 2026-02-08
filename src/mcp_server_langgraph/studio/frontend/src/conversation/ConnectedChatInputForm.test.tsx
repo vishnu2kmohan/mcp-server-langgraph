@@ -321,7 +321,7 @@ describe("ConnectedChatInputForm", () => {
   describe("Rendering", () => {
     it("should render chat input form", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should render text input area", () => {
@@ -436,7 +436,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // ChatInputForm should show uploading state
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should show drag overlay when dragging files", () => {
@@ -445,7 +445,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // Component should indicate drag state
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should display file error when upload fails", () => {
@@ -549,7 +549,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} value="/" />);
 
       // Default commands should be available
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should use custom slash commands when provided", async () => {
@@ -571,7 +571,7 @@ describe("ConnectedChatInputForm", () => {
       await user.type(input, "/");
 
       // Custom command should appear in menu
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should call onSlashCommand and clear input when command is selected", async () => {
@@ -588,7 +588,7 @@ describe("ConnectedChatInputForm", () => {
       );
 
       // Component should be ready
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
   });
 
@@ -601,13 +601,13 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} isProcessing />);
 
       // Send button should indicate processing state
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should show streaming indicator when isStreaming is true", () => {
       render(<ConnectedChatInputForm {...defaultProps} isStreaming />);
 
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should show stop button when streaming", () => {
@@ -657,7 +657,7 @@ describe("ConnectedChatInputForm", () => {
       );
 
       // Suggestion should be visible as ghost text
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should not display suggestion when enableInlineSuggestions is false", () => {
@@ -669,7 +669,7 @@ describe("ConnectedChatInputForm", () => {
         />,
       );
 
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should call onAcceptSuggestion when Tab is pressed", async () => {
@@ -690,7 +690,7 @@ describe("ConnectedChatInputForm", () => {
       await user.keyboard("{Tab}");
 
       // Tab should accept the suggestion
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should call onDismissSuggestion when Escape is pressed", async () => {
@@ -711,7 +711,7 @@ describe("ConnectedChatInputForm", () => {
       await user.keyboard("{Escape}");
 
       // Escape should dismiss the suggestion
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
   });
 
@@ -738,7 +738,7 @@ describe("ConnectedChatInputForm", () => {
       render(<ConnectedChatInputForm {...defaultProps} />);
 
       // ChatInput pill container should be present
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
 
     it("should render textarea for message input", () => {

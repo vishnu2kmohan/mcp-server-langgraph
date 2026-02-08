@@ -755,7 +755,7 @@ describe("ChatInput", () => {
     it("renders pill container with rounded styling", () => {
       render(<ChatInput {...createMockProps()} />);
 
-      expect(screen.getByTestId("chat-input-pill")).toBeInTheDocument();
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
   });
 
