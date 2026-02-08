@@ -535,33 +535,11 @@ jobs:
       continue-on-error: true
 
     - name: Run tests with sharding (OOM prevention)
-      run: |
-        # Use sharded test execution to prevent OOM
-        # GitHub ubuntu-latest runner: 4 vCPUs, 16 GiB RAM
-        # Each shard runs sequentially with 1 worker, using max 4GB per shard
-        # 50 shards = ~10 test files per shard, ~17s per shard = ~15 min total
-        echo "🧪 Running frontend tests with sharding (50 shards)..."
-
-        FAILED_SHARDS=()
-        for i in $(seq 1 50); do
-          echo "=== Shard $i/50 ==="
-          if ! VITEST_MAX_FORKS=1 npm run test -- --run --shard=$i/50 2>&1; then
-            echo "❌ Shard $i/50 failed"
-            FAILED_SHARDS+=("$i")
-          fi
-        done
-
-        if [ ${#FAILED_SHARDS[@]} -gt 0 ]; then
-          echo "::error::Failed shards: ${FAILED_SHARDS[*]}"
-          exit 1
-        fi
-        echo "✅ All 50 shards passed"
+      working-directory: src/mcp_server_langgraph/studio/frontend
+      run: bash scripts/run-tests-sharded.sh --ci
       env:
-        # Memory limit per shard - 4GB is sufficient for 1 worker with ~10 test files
-        # GitHub runner has 16 GiB RAM, so 4GB leaves headroom for Node.js overhead
+        # Fallback heap limit; run-tests-sharded.sh sets per-shard NODE_OPTIONS
         NODE_OPTIONS: '--max-old-space-size=4096 --expose-gc'
-        # Enable memory monitoring to detect memory leaks during test runs
-        VITEST_MEMORY_MONITOR: 'true'
 
     - name: Verify no orphan vitest processes
       run: |

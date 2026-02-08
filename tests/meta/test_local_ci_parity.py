@@ -3073,10 +3073,13 @@ class TestFrontendCIParity:
             "CI workflow should include frontend tests"
         )
 
-        # CI should run npm test
-        assert "npm test" in ci_workflow_content or "npm run test" in ci_workflow_content, (
-            "CI should run 'npm test' for frontend unit tests"
-        )
+        # CI should run frontend tests (via npm test, vitest, or sharded runner)
+        assert (
+            "npm test" in ci_workflow_content
+            or "npm run test" in ci_workflow_content
+            or "run-tests-sharded.sh" in ci_workflow_content
+            or "vitest run" in ci_workflow_content
+        ), "CI should run frontend unit tests"
 
     def test_validate_pre_push_ci_includes_frontend_tests(self, makefile_content: str):
         """Test that validate-pre-push-ci runs frontend tests.
