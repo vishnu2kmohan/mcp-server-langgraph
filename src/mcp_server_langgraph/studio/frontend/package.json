@@ -49,6 +49,8 @@
     "migrate:inputs": "npx jscodeshift --parser=tsx --extensions=tsx -t scripts/codemods/migrate-inputs.ts",
     "fix:button-variants": "npx jscodeshift --parser=tsx --extensions=tsx -t scripts/codemods/fix-button-semantics.ts",
     "fix:button-variants:dry": "npx jscodeshift --dry --parser=tsx --extensions=tsx -t scripts/codemods/fix-button-semantics.ts",
+    "fix:test-providers": "npx jscodeshift --parser=tsx --extensions=tsx -t scripts/codemods/wrap-render-with-test-provider.ts src/",
+    "fix:test-providers:dry": "npx jscodeshift --dry --parser=tsx --extensions=tsx -t scripts/codemods/wrap-render-with-test-provider.ts src/",
     "migrate:all": "./scripts/migrate-to-design-system.sh --all",
     "migrate:check": "./scripts/migrate-to-design-system.sh --check",
     "migrate:colors": "python3 scripts/migrate-raw-colors.py",
