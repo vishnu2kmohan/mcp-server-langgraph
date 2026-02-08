@@ -9,6 +9,8 @@
 #   ./scripts/run-tests-sharded.sh                  # Run all shards sequentially (150 shards)
 #   ./scripts/run-tests-sharded.sh --parallel       # RECOMMENDED: Run shards in parallel (~5-10min)
 #   ./scripts/run-tests-sharded.sh --fast           # Fast mode: 75 shards for quick iteration
+#   ./scripts/run-tests-sharded.sh --ci             # CI mode: 50 shards, sequential, memory monitoring
+#   ./scripts/run-tests-sharded.sh --ci --parallel  # CI mode with parallel execution
 #   ./scripts/run-tests-sharded.sh --shard 1        # Run specific shard (1-150)
 #   ./scripts/run-tests-sharded.sh --count 50       # Custom shard count
 #   ./scripts/run-tests-sharded.sh --parallel 4     # Run 4 shards in parallel
@@ -64,6 +66,7 @@ NC='\033[0m' # No Color
 # Trade-off: 150 shards × 15s overhead = ~37min sequential
 # Recommended: Use --parallel for fastest execution (~5-10min)
 SHARD_COUNT=150
+CI_MODE=""
 
 run_shard() {
     local shard_num=$1
@@ -81,10 +84,18 @@ run_shard() {
             local heap_size=4096
         fi
 
+        # Cap heap at 6GB in CI mode (runner has 16GB total, need headroom for OS + Node overhead)
+        if [[ "${CI_MODE:-}" == "true" ]]; then
+            local max_heap=6144
+            [[ $heap_size -gt $max_heap ]] && heap_size=$max_heap
+        fi
+
         # Run with single fork and adaptive heap to prevent OOM
+        # Use vitest binary directly (not npm run test:single) so NODE_OPTIONS
+        # from this script takes effect instead of the 8GB default in package.json
         VITEST_HEAP_SIZE=$heap_size VITEST_MAX_FORKS=1 \
             NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc" \
-            npm run test:single -- --shard="$shard_num/$total_shards" 2>&1 && {
+            ./node_modules/.bin/vitest run --shard="$shard_num/$total_shards" 2>&1 && {
             echo -e "${GREEN}Shard $shard_num/$total_shards completed${NC}"
             echo ""
             return 0
@@ -214,22 +225,29 @@ run_shards_parallel() {
 
     # Wait for jobs to complete and start new ones
     while [[ ${#running_jobs[@]} -gt 0 ]]; do
-        # Wait for any job to complete using busy-wait (compatible with all bash versions)
         local finished_pid=""
-        while [[ -z "$finished_pid" ]]; do
-            for pid in "${!running_jobs[@]}"; do
-                if ! kill -0 "$pid" 2>/dev/null; then
-                    # Process has exited, get its exit code
-                    wait "$pid" 2>/dev/null
-                    exit_codes[$pid]=$?
-                    finished_pid=$pid
-                    break
-                fi
-            done
-            [[ -z "$finished_pid" ]] && sleep 0.5
-        done
 
-        # Get exit code from stored values (set in the wait loop above)
+        # Bash 5.1+: use wait -n -p for event-driven waiting (no CPU-wasting polling)
+        # Bash 4.x: fallback to kill -0 busy-wait (still needed for associative arrays)
+        if [[ ${BASH_VERSINFO[0]} -ge 6 ]] || { [[ ${BASH_VERSINFO[0]} -ge 5 ]] && [[ ${BASH_VERSINFO[1]} -ge 1 ]]; }; then
+            wait -n -p finished_pid "${!running_jobs[@]}" 2>/dev/null
+            exit_codes[$finished_pid]=$?
+        else
+            # Fallback: busy-wait for bash 4.x
+            while [[ -z "$finished_pid" ]]; do
+                for pid in "${!running_jobs[@]}"; do
+                    if ! kill -0 "$pid" 2>/dev/null; then
+                        wait "$pid" 2>/dev/null
+                        exit_codes[$pid]=$?
+                        finished_pid=$pid
+                        break
+                    fi
+                done
+                [[ -z "$finished_pid" ]] && sleep 0.5
+            done
+        fi
+
+        # Get exit code from stored values
         local exit_code=${exit_codes[$finished_pid]:-1}
         local finished_shard=${running_jobs[$finished_pid]}
         unset "running_jobs[$finished_pid]"
@@ -302,6 +320,16 @@ while [[ $# -gt 0 ]]; do
             SHARD_COUNT=200
             shift
             ;;
+        --ci)
+            # CI mode: 50 shards, sequential, memory monitoring
+            # Heap escalation capped at 6GB (runner has 16GB)
+            SHARD_COUNT=50
+            PARALLEL_MODE=""
+            PARALLEL_CONCURRENCY=""
+            export VITEST_MEMORY_MONITOR=true
+            CI_MODE=true
+            shift
+            ;;
         --parallel|-j)
             PARALLEL_MODE="true"
             # Check if next arg is a number (optional concurrency)
@@ -318,6 +346,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --parallel [N]   RECOMMENDED: Run shards in parallel (~5-10min)"
             echo "  --fast           Fast mode: 75 shards for quick iteration"
             echo "  --safe           Safe mode: 200 shards for memory-constrained systems"
+            echo "  --ci             CI mode: 50 shards, sequential, memory monitoring"
+            echo "                   Can combine with --parallel for parallel CI runs"
+            echo "                   Heap escalation capped at 6GB in CI mode"
             echo "  --shard N        Run only shard N"
             echo "  --count N        Use N total shards (default: $SHARD_COUNT)"
             echo "  -j [N]           Alias for --parallel"
@@ -327,6 +358,8 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --parallel              # Fastest: parallel with auto-concurrency"
             echo "  $0 --fast --parallel       # Fast + parallel (~3-5min)"
             echo "  $0 --parallel 4            # 4 concurrent shards"
+            echo "  $0 --ci                    # CI mode (50 shards, sequential)"
+            echo "  $0 --ci --parallel         # CI mode with parallel execution"
             exit 0
             ;;
         *)
@@ -339,7 +372,22 @@ done
 
 echo "=== Frontend Test Suite (Sharded for OOM Prevention) ==="
 echo "Using $SHARD_COUNT shards with Vitest native sharding"
+[[ "${CI_MODE:-}" == "true" ]] && echo "CI mode: heap escalation capped at 6GB, memory monitoring enabled"
 echo ""
+
+# Dry-run mode: print configuration and exit (used by tests)
+if [[ "${SHARDED_TEST_DRY_RUN:-}" == "1" ]]; then
+    echo "DRY_RUN: SHARD_COUNT=$SHARD_COUNT"
+    echo "DRY_RUN: PARALLEL_MODE=${PARALLEL_MODE:-}"
+    echo "DRY_RUN: CI_MODE=${CI_MODE:-}"
+    if [[ -n "${PARALLEL_MODE:-}" ]]; then
+        if [[ -z "${PARALLEL_CONCURRENCY:-}" ]]; then
+            PARALLEL_CONCURRENCY=$(get_optimal_concurrency)
+        fi
+        echo "DRY_RUN: concurrency=$PARALLEL_CONCURRENCY"
+    fi
+    exit 0
+fi
 
 # Run specific shard or all shards
 if [ -n "$SPECIFIC_SHARD" ]; then
