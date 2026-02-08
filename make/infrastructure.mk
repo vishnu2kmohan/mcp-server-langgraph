@@ -145,9 +145,9 @@ test-e2e-ci:
 	@echo "Running E2E tests with CI parity..."
 	@./scripts/test-e2e.sh && echo "E2E tests passed" || (echo "E2E tests failed" && exit 1)
 
-test-frontend-ci:
-	@echo "Running frontend tests with CI parity..."
-	@./scripts/test-frontend.sh && echo "Frontend tests passed" || (echo "Frontend tests failed" && exit 1)
+test-frontend-full-ci:
+	@echo "Running full frontend CI pipeline (lint + typecheck + tests + build)..."
+	@./scripts/test-frontend.sh && echo "Frontend CI pipeline passed" || (echo "Frontend CI pipeline failed" && exit 1)
 
 test-api:
 	@echo "Running API endpoint tests..."

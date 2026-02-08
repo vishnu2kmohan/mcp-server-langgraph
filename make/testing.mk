@@ -228,3 +228,21 @@ test-auth:
 test-mcp:
 	@echo "Testing MCP server..."
 	$(UV_RUN) python examples/client_stdio.py
+
+# ------------------------------------------------------------------------------
+# Frontend Test Targets (Sharded Runner for OOM Prevention)
+# ------------------------------------------------------------------------------
+
+test-frontend: ## Run frontend tests (sharded, parallel, default 150 shards)
+	cd src/mcp_server_langgraph/studio/frontend && bash scripts/run-tests-sharded.sh --parallel
+
+test-frontend-fast: ## Run frontend tests (fast mode, 75 shards, parallel)
+	cd src/mcp_server_langgraph/studio/frontend && bash scripts/run-tests-sharded.sh --fast --parallel
+
+test-frontend-ci: ## Run frontend tests in CI mode (50 shards, sequential)
+	cd src/mcp_server_langgraph/studio/frontend && bash scripts/run-tests-sharded.sh --ci
+
+test-frontend-scripts: ## Run shell tests for sharded runner script
+	bash tests/scripts/test_sharded_runner.sh
+
+.PHONY: test-frontend test-frontend-fast test-frontend-ci test-frontend-scripts
