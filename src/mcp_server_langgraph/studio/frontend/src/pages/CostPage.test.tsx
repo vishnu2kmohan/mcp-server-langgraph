@@ -141,6 +141,18 @@ vi.mock("../api", () => ({
     error: null,
     refetch: mockRefetch,
   })),
+  // Tool metrics comparison hook used by NativeToolComparison
+  useGetToolMetricsComparisonQuery: vi.fn(() => ({
+    data: {
+      comparison: [],
+      summary: { totalNativeCost: 0, totalBuiltinCost: 0, potentialSavings: 0 },
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    refetch: mockRefetch,
+  })),
 }));
 
 const mockedUseGetCostSummaryQuery = vi.mocked(

@@ -450,19 +450,27 @@ export function CostPage({
       {/* Admin View Toggle */}
       {isAdmin && (
         <div className="px-6 py-2 bg-neutral-2 border-b border-neutral-6">
-          <div className="flex items-center gap-2">
+          <div
+            role="group"
+            aria-label="Dashboard view"
+            className="flex items-center gap-2"
+          >
             <Button
-              variant="primary"
+              variant={dashboardView === "personal" ? "primary" : "secondary"}
               className="flex px-4 py-2 rounded-lg text-sm"
               onClick={() => setDashboardView("personal")}
+              aria-pressed={dashboardView === "personal"}
             >
               <DollarSign size={16} />
               Personal Costs
             </Button>
             <Button
-              variant="primary"
+              variant={
+                dashboardView === "organizational" ? "primary" : "secondary"
+              }
               className="flex px-4 py-2 rounded-lg text-sm"
               onClick={() => setDashboardView("organizational")}
+              aria-pressed={dashboardView === "organizational"}
             >
               <Building2 size={16} />
               Organizational View
@@ -653,7 +661,12 @@ export function CostPage({
             </Suspense>
           </div>
         ) : isLoading ? (
-          <div className="space-y-6">
+          <div
+            data-testid="cost-loading-container"
+            aria-busy="true"
+            aria-label="Loading cost data"
+            className="space-y-6"
+          >
             {/* Skeleton for Cost Summary Cards */}
             <div className="grid gap-4 md:grid-cols-3">
               <SkeletonCard />
