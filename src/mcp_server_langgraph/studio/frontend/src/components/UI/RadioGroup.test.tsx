@@ -9,6 +9,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RadioGroup, Radio } from "./RadioGroup";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -25,11 +27,13 @@ describe("RadioGroup", () => {
   describe("rendering", () => {
     it("renders all options", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          {options.map((opt) => (
-            <Radio key={opt.value} value={opt.value} label={opt.label} />
-          ))}
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            {options.map((opt) => (
+              <Radio key={opt.value} value={opt.value} label={opt.label} />
+            ))}
+          </RadioGroup>
+        </TestProvider>,
       );
       expect(screen.getByText("Option 1")).toBeInTheDocument();
       expect(screen.getByText("Option 2")).toBeInTheDocument();
@@ -38,11 +42,13 @@ describe("RadioGroup", () => {
 
     it("renders radio inputs with correct name attribute", () => {
       render(
-        <RadioGroup name="test-group" value="option1" onChange={() => {}}>
-          {options.map((opt) => (
-            <Radio key={opt.value} value={opt.value} label={opt.label} />
-          ))}
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test-group" value="option1" onChange={() => {}}>
+            {options.map((opt) => (
+              <Radio key={opt.value} value={opt.value} label={opt.label} />
+            ))}
+          </RadioGroup>
+        </TestProvider>,
       );
       const radios = screen.getAllByRole("radio");
       expect(radios).toHaveLength(3);
@@ -53,28 +59,32 @@ describe("RadioGroup", () => {
 
     it("renders with legend when provided", () => {
       render(
-        <RadioGroup
-          name="test"
-          value="option1"
-          onChange={() => {}}
-          legend="Select an option"
-        >
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="test"
+            value="option1"
+            onChange={() => {}}
+            legend="Select an option"
+          >
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       expect(screen.getByText("Select an option")).toBeInTheDocument();
     });
 
     it("applies custom className", () => {
       render(
-        <RadioGroup
-          name="test"
-          value="option1"
-          onChange={() => {}}
-          className="custom-class"
-        >
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="test"
+            value="option1"
+            onChange={() => {}}
+            className="custom-class"
+          >
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       expect(screen.getByRole("radiogroup")).toHaveClass("custom-class");
     });
@@ -83,11 +93,13 @@ describe("RadioGroup", () => {
   describe("selection", () => {
     it("marks the correct option as checked", () => {
       render(
-        <RadioGroup name="test" value="option2" onChange={() => {}}>
-          {options.map((opt) => (
-            <Radio key={opt.value} value={opt.value} label={opt.label} />
-          ))}
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option2" onChange={() => {}}>
+            {options.map((opt) => (
+              <Radio key={opt.value} value={opt.value} label={opt.label} />
+            ))}
+          </RadioGroup>
+        </TestProvider>,
       );
       const radios = screen.getAllByRole("radio");
       expect(radios[0]).not.toBeChecked();
@@ -99,11 +111,13 @@ describe("RadioGroup", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <RadioGroup name="test" value="option1" onChange={onChange}>
-          {options.map((opt) => (
-            <Radio key={opt.value} value={opt.value} label={opt.label} />
-          ))}
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={onChange}>
+            {options.map((opt) => (
+              <Radio key={opt.value} value={opt.value} label={opt.label} />
+            ))}
+          </RadioGroup>
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Option 2"));
@@ -114,10 +128,12 @@ describe("RadioGroup", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <RadioGroup name="test" value="option1" onChange={onChange}>
-          <Radio value="option1" label="Click me" />
-          <Radio value="option2" label="Or me" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={onChange}>
+            <Radio value="option1" label="Click me" />
+            <Radio value="option2" label="Or me" />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Or me"));
@@ -128,11 +144,13 @@ describe("RadioGroup", () => {
   describe("disabled state", () => {
     it("disables all options when group is disabled", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}} disabled>
-          {options.map((opt) => (
-            <Radio key={opt.value} value={opt.value} label={opt.label} />
-          ))}
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}} disabled>
+            {options.map((opt) => (
+              <Radio key={opt.value} value={opt.value} label={opt.label} />
+            ))}
+          </RadioGroup>
+        </TestProvider>,
       );
       const radios = screen.getAllByRole("radio");
       radios.forEach((radio) => {
@@ -142,11 +160,13 @@ describe("RadioGroup", () => {
 
     it("disables individual options", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          <Radio value="option1" label="Option 1" />
-          <Radio value="option2" label="Option 2" disabled />
-          <Radio value="option3" label="Option 3" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            <Radio value="option1" label="Option 1" />
+            <Radio value="option2" label="Option 2" disabled />
+            <Radio value="option3" label="Option 3" />
+          </RadioGroup>
+        </TestProvider>,
       );
       const radios = screen.getAllByRole("radio");
       expect(radios[0]).not.toBeDisabled();
@@ -158,10 +178,12 @@ describe("RadioGroup", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <RadioGroup name="test" value="option1" onChange={onChange}>
-          <Radio value="option1" label="Option 1" />
-          <Radio value="option2" label="Option 2" disabled />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={onChange}>
+            <Radio value="option1" label="Option 1" />
+            <Radio value="option2" label="Option 2" disabled />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Option 2"));
@@ -172,9 +194,11 @@ describe("RadioGroup", () => {
   describe("sizes", () => {
     it("renders small size", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}} size="sm">
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}} size="sm">
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       const radio = screen.getByRole("radio");
       expect(radio).toHaveClass("h-4");
@@ -183,9 +207,11 @@ describe("RadioGroup", () => {
 
     it("renders medium size (default)", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       const radio = screen.getByRole("radio");
       expect(radio).toHaveClass("h-5");
@@ -194,9 +220,11 @@ describe("RadioGroup", () => {
 
     it("renders large size", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}} size="lg">
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}} size="lg">
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       const radio = screen.getByRole("radio");
       expect(radio).toHaveClass("h-6");
@@ -207,10 +235,12 @@ describe("RadioGroup", () => {
   describe("orientation", () => {
     it("renders vertical by default", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          <Radio value="option1" label="Option 1" />
-          <Radio value="option2" label="Option 2" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            <Radio value="option1" label="Option 1" />
+            <Radio value="option2" label="Option 2" />
+          </RadioGroup>
+        </TestProvider>,
       );
       const group = screen.getByRole("radiogroup");
       expect(group).toHaveClass("flex-col");
@@ -218,15 +248,17 @@ describe("RadioGroup", () => {
 
     it("renders horizontal when specified", () => {
       render(
-        <RadioGroup
-          name="test"
-          value="option1"
-          onChange={() => {}}
-          orientation="horizontal"
-        >
-          <Radio value="option1" label="Option 1" />
-          <Radio value="option2" label="Option 2" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="test"
+            value="option1"
+            onChange={() => {}}
+            orientation="horizontal"
+          >
+            <Radio value="option1" label="Option 1" />
+            <Radio value="option2" label="Option 2" />
+          </RadioGroup>
+        </TestProvider>,
       );
       const group = screen.getByRole("radiogroup");
       expect(group).toHaveClass("flex-row");
@@ -236,18 +268,22 @@ describe("RadioGroup", () => {
   describe("accessibility", () => {
     it("has role radiogroup", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("is focusable via keyboard", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       const radio = screen.getByRole("radio");
       radio.focus();
@@ -256,14 +292,16 @@ describe("RadioGroup", () => {
 
     it("supports aria-label on group", () => {
       render(
-        <RadioGroup
-          name="test"
-          value="option1"
-          onChange={() => {}}
-          aria-label="Choose option"
-        >
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="test"
+            value="option1"
+            onChange={() => {}}
+            aria-label="Choose option"
+          >
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
       expect(screen.getByRole("radiogroup")).toHaveAttribute(
         "aria-label",
@@ -275,13 +313,15 @@ describe("RadioGroup", () => {
   describe("Radio with description", () => {
     it("renders description when provided", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          <Radio
-            value="option1"
-            label="Option 1"
-            description="This is the first option"
-          />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            <Radio
+              value="option1"
+              label="Option 1"
+              description="This is the first option"
+            />
+          </RadioGroup>
+        </TestProvider>,
       );
       expect(screen.getByText("This is the first option")).toBeInTheDocument();
     });
@@ -291,18 +331,22 @@ describe("RadioGroup", () => {
 describe("Radio (standalone)", () => {
   it("renders as a radio input", () => {
     render(
-      <RadioGroup name="test" value="" onChange={() => {}}>
-        <Radio value="test" label="Test" />
-      </RadioGroup>,
+      <TestProvider>
+        <RadioGroup name="test" value="" onChange={() => {}}>
+          <Radio value="test" label="Test" />
+        </RadioGroup>
+      </TestProvider>,
     );
     expect(screen.getByRole("radio")).toBeInTheDocument();
   });
 
   it("renders label", () => {
     render(
-      <RadioGroup name="test" value="" onChange={() => {}}>
-        <Radio value="test" label="Test Label" />
-      </RadioGroup>,
+      <TestProvider>
+        <RadioGroup name="test" value="" onChange={() => {}}>
+          <Radio value="test" label="Test Label" />
+        </RadioGroup>
+      </TestProvider>,
     );
     expect(screen.getByText("Test Label")).toBeInTheDocument();
   });
@@ -312,15 +356,25 @@ describe("RadioGroup variants", () => {
   describe("card variant", () => {
     it("renders card-style radio options with borders", () => {
       render(
-        <RadioGroup
-          name="test"
-          value="option1"
-          onChange={() => {}}
-          variant="card"
-        >
-          <Radio value="option1" label="Option 1" description="First option" />
-          <Radio value="option2" label="Option 2" description="Second option" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="test"
+            value="option1"
+            onChange={() => {}}
+            variant="card"
+          >
+            <Radio
+              value="option1"
+              label="Option 1"
+              description="First option"
+            />
+            <Radio
+              value="option2"
+              label="Option 2"
+              description="Second option"
+            />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       // Check that card wrapper elements exist (labels should have border classes)
@@ -333,15 +387,17 @@ describe("RadioGroup variants", () => {
 
     it("highlights selected card with primary border", () => {
       render(
-        <RadioGroup
-          name="test"
-          value="option1"
-          onChange={() => {}}
-          variant="card"
-        >
-          <Radio value="option1" label="Option 1" data-testid="radio-1" />
-          <Radio value="option2" label="Option 2" data-testid="radio-2" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="test"
+            value="option1"
+            onChange={() => {}}
+            variant="card"
+          >
+            <Radio value="option1" label="Option 1" data-testid="radio-1" />
+            <Radio value="option2" label="Option 2" data-testid="radio-2" />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       const selectedLabel = screen.getByText("Option 1").closest("label");
@@ -355,15 +411,17 @@ describe("RadioGroup variants", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       const { rerender } = render(
-        <RadioGroup
-          name="test"
-          value="option1"
-          onChange={onChange}
-          variant="card"
-        >
-          <Radio value="option1" label="Option 1" />
-          <Radio value="option2" label="Option 2" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="test"
+            value="option1"
+            onChange={onChange}
+            variant="card"
+          >
+            <Radio value="option1" label="Option 1" />
+            <Radio value="option2" label="Option 2" />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Option 2"));
@@ -390,16 +448,18 @@ describe("RadioGroup variants", () => {
   describe("rating variant", () => {
     it("renders compact horizontal rating scale", () => {
       render(
-        <RadioGroup
-          name="rating"
-          value="3"
-          onChange={() => {}}
-          variant="rating"
-        >
-          {[1, 2, 3, 4, 5].map((n) => (
-            <Radio key={n} value={String(n)} label={String(n)} />
-          ))}
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="rating"
+            value="3"
+            onChange={() => {}}
+            variant="rating"
+          >
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Radio key={n} value={String(n)} label={String(n)} />
+            ))}
+          </RadioGroup>
+        </TestProvider>,
       );
 
       // Rating should be horizontal
@@ -413,14 +473,16 @@ describe("RadioGroup variants", () => {
 
     it("shows label below radio in rating variant", () => {
       render(
-        <RadioGroup
-          name="rating"
-          value="3"
-          onChange={() => {}}
-          variant="rating"
-        >
-          <Radio value="1" label="1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="rating"
+            value="3"
+            onChange={() => {}}
+            variant="rating"
+          >
+            <Radio value="1" label="1" />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       // Label should be in flex-col layout below the radio
@@ -430,14 +492,16 @@ describe("RadioGroup variants", () => {
 
     it("centers items in rating variant", () => {
       render(
-        <RadioGroup
-          name="rating"
-          value="3"
-          onChange={() => {}}
-          variant="rating"
-        >
-          <Radio value="1" label="1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup
+            name="rating"
+            value="3"
+            onChange={() => {}}
+            variant="rating"
+          >
+            <Radio value="1" label="1" />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       const label = screen.getByText("1").closest("label");
@@ -448,9 +512,11 @@ describe("RadioGroup variants", () => {
   describe("default variant", () => {
     it("renders standard layout without variant prop", () => {
       render(
-        <RadioGroup name="test" value="option1" onChange={() => {}}>
-          <Radio value="option1" label="Option 1" />
-        </RadioGroup>,
+        <TestProvider>
+          <RadioGroup name="test" value="option1" onChange={() => {}}>
+            <Radio value="option1" label="Option 1" />
+          </RadioGroup>
+        </TestProvider>,
       );
 
       // Default should not have card-style borders on label

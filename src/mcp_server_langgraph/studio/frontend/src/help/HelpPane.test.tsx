@@ -11,6 +11,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 expect.extend(toHaveNoViolations);
 import { HelpPane, type HelpTopic } from "./HelpPane";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock useContextualHelp hook
 vi.mock("../hooks/useUXIntelligence", () => ({
   useContextualHelp: vi.fn(() => ({
@@ -62,14 +64,18 @@ describe("HelpPane", () => {
   describe("Rendering", () => {
     it("renders the help pane container", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
       expect(screen.getByTestId("help-pane")).toBeInTheDocument();
     });
 
     it("renders help pane header", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
       // Get the h3 element specifically
       expect(
@@ -79,14 +85,18 @@ describe("HelpPane", () => {
 
     it("renders search input", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
       expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
     });
 
     it("renders all topics", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
       expect(screen.getByText("Getting Started")).toBeInTheDocument();
       expect(screen.getByText("Keyboard Shortcuts")).toBeInTheDocument();
@@ -94,7 +104,11 @@ describe("HelpPane", () => {
     });
 
     it("shows empty state when no topics", () => {
-      render(<HelpPane topics={[]} onTopicSelect={mockOnTopicSelect} />);
+      render(
+        <TestProvider>
+          <HelpPane topics={[]} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no help topics/i)).toBeInTheDocument();
     });
   });
@@ -102,7 +116,9 @@ describe("HelpPane", () => {
   describe("Search", () => {
     it("filters topics by title", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -114,7 +130,9 @@ describe("HelpPane", () => {
 
     it("filters topics by keywords", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -126,7 +144,9 @@ describe("HelpPane", () => {
 
     it("shows no results message when search matches nothing", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -137,7 +157,9 @@ describe("HelpPane", () => {
 
     it("clears search when clear button is clicked", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -153,7 +175,9 @@ describe("HelpPane", () => {
   describe("Topic Selection", () => {
     it("calls onTopicSelect when topic is clicked", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Getting Started"));
@@ -165,7 +189,9 @@ describe("HelpPane", () => {
   describe("Categories", () => {
     it("shows category labels", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
       // Categories may also appear in content, so check category badges specifically
       // Each topic has a category badge as a span element
@@ -181,11 +207,13 @@ describe("HelpPane", () => {
   describe("Loading State", () => {
     it("shows loading state when isLoading is true", () => {
       render(
-        <HelpPane
-          topics={[]}
-          onTopicSelect={mockOnTopicSelect}
-          isLoading={true}
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={[]}
+            onTopicSelect={mockOnTopicSelect}
+            isLoading={true}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
@@ -194,7 +222,9 @@ describe("HelpPane", () => {
   describe("Accessibility (WCAG 2.1 AA)", () => {
     it("should have no accessibility violations with topics", async () => {
       const { container } = render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -202,7 +232,9 @@ describe("HelpPane", () => {
 
     it("should have no accessibility violations when empty", async () => {
       const { container } = render(
-        <HelpPane topics={[]} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={[]} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -212,7 +244,9 @@ describe("HelpPane", () => {
   describe("Search Edge Cases", () => {
     it("filters topics by content", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -224,7 +258,9 @@ describe("HelpPane", () => {
 
     it("handles whitespace-only search query", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -238,7 +274,9 @@ describe("HelpPane", () => {
 
     it("handles case-insensitive keyword search", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -249,7 +287,9 @@ describe("HelpPane", () => {
 
     it("handles partial keyword matches", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -260,7 +300,9 @@ describe("HelpPane", () => {
 
     it("does not show clear button when search is empty", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       expect(screen.queryByLabelText(/clear search/i)).not.toBeInTheDocument();
@@ -268,7 +310,9 @@ describe("HelpPane", () => {
 
     it("shows clear button when search has content", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -291,10 +335,12 @@ describe("HelpPane", () => {
       ];
 
       render(
-        <HelpPane
-          topics={topicWithUnknownCategory}
-          onTopicSelect={mockOnTopicSelect}
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={topicWithUnknownCategory}
+            onTopicSelect={mockOnTopicSelect}
+          />
+        </TestProvider>,
       );
 
       // Should render without error
@@ -306,11 +352,13 @@ describe("HelpPane", () => {
   describe("Custom className", () => {
     it("applies custom className to container", () => {
       render(
-        <HelpPane
-          topics={mockTopics}
-          onTopicSelect={mockOnTopicSelect}
-          className="custom-help-class"
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={mockTopics}
+            onTopicSelect={mockOnTopicSelect}
+            className="custom-help-class"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("help-pane")).toHaveClass("custom-help-class");
@@ -320,7 +368,9 @@ describe("HelpPane", () => {
   describe("Topic Selection", () => {
     it("calls onTopicSelect with correct topic when filtered topic is clicked", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       // Filter to show only one topic
@@ -337,7 +387,9 @@ describe("HelpPane", () => {
   describe("Topic Content Display", () => {
     it("displays topic content preview", () => {
       render(
-        <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />,
+        <TestProvider>
+          <HelpPane topics={mockTopics} onTopicSelect={mockOnTopicSelect} />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/welcome to the platform/i)).toBeInTheDocument();
@@ -362,10 +414,12 @@ describe("HelpPane", () => {
       ];
 
       render(
-        <HelpPane
-          topics={topicsWithSharedKeywords}
-          onTopicSelect={mockOnTopicSelect}
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={topicsWithSharedKeywords}
+            onTopicSelect={mockOnTopicSelect}
+          />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search/i);
@@ -379,24 +433,28 @@ describe("HelpPane", () => {
   describe("AI Contextual Help Integration (Sprint 6)", () => {
     it("should accept enableAI prop", () => {
       render(
-        <HelpPane
-          topics={mockTopics}
-          onTopicSelect={mockOnTopicSelect}
-          enableAI={true}
-          currentPage="chat"
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={mockTopics}
+            onTopicSelect={mockOnTopicSelect}
+            enableAI={true}
+            currentPage="chat"
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("help-pane")).toBeInTheDocument();
     });
 
     it("should show contextual suggestions section when AI is enabled", () => {
       render(
-        <HelpPane
-          topics={mockTopics}
-          onTopicSelect={mockOnTopicSelect}
-          enableAI={true}
-          currentPage="chat"
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={mockTopics}
+            onTopicSelect={mockOnTopicSelect}
+            enableAI={true}
+            currentPage="chat"
+          />
+        </TestProvider>,
       );
       // The component should render with AI section
       expect(screen.getByTestId("help-pane")).toBeInTheDocument();
@@ -404,11 +462,13 @@ describe("HelpPane", () => {
 
     it("should not show AI section when enableAI is false", () => {
       render(
-        <HelpPane
-          topics={mockTopics}
-          onTopicSelect={mockOnTopicSelect}
-          enableAI={false}
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={mockTopics}
+            onTopicSelect={mockOnTopicSelect}
+            enableAI={false}
+          />
+        </TestProvider>,
       );
       expect(
         screen.queryByTestId("ai-contextual-help-section"),
@@ -417,12 +477,14 @@ describe("HelpPane", () => {
 
     it("should show quick actions when provided by AI", () => {
       render(
-        <HelpPane
-          topics={mockTopics}
-          onTopicSelect={mockOnTopicSelect}
-          enableAI={true}
-          currentPage="admin"
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={mockTopics}
+            onTopicSelect={mockOnTopicSelect}
+            enableAI={true}
+            currentPage="admin"
+          />
+        </TestProvider>,
       );
       // Quick actions section should be available when AI provides them
       expect(screen.getByTestId("help-pane")).toBeInTheDocument();
@@ -431,12 +493,14 @@ describe("HelpPane", () => {
     it("should gracefully handle AI errors", () => {
       // When AI fails, the component should still render regular help
       render(
-        <HelpPane
-          topics={mockTopics}
-          onTopicSelect={mockOnTopicSelect}
-          enableAI={true}
-          currentPage="chat"
-        />,
+        <TestProvider>
+          <HelpPane
+            topics={mockTopics}
+            onTopicSelect={mockOnTopicSelect}
+            enableAI={true}
+            currentPage="chat"
+          />
+        </TestProvider>,
       );
       // Should still show regular topics
       expect(screen.getByText("Getting Started")).toBeInTheDocument();

@@ -8,6 +8,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { NodePalette } from "./NodePalette";
 
+import { TestProvider } from "@/test-utils";
+
 describe("NodePalette", () => {
   const defaultProps = {
     onAddNode: vi.fn(),
@@ -24,13 +26,21 @@ describe("NodePalette", () => {
 
   describe("Rendering", () => {
     it("should render the node palette", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Node Types")).toBeInTheDocument();
     });
 
     it("should render all node type buttons", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Start")).toBeInTheDocument();
       expect(screen.getByText("End")).toBeInTheDocument();
@@ -42,7 +52,11 @@ describe("NodePalette", () => {
     });
 
     it("should render category headers", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Flow Control")).toBeInTheDocument();
       expect(screen.getByText("Processing")).toBeInTheDocument();
@@ -51,7 +65,11 @@ describe("NodePalette", () => {
     });
 
     it("should render search input", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByPlaceholderText("Search nodes..."),
@@ -59,13 +77,21 @@ describe("NodePalette", () => {
     });
 
     it("should render footer hint", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Drag nodes to canvas/)).toBeInTheDocument();
     });
 
     it("should have data-testid on palette", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("node-palette")).toBeInTheDocument();
     });
@@ -73,35 +99,55 @@ describe("NodePalette", () => {
 
   describe("Node Type Selection (Click to Add)", () => {
     it('should call onAddNode with "start" when Start is clicked', () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("node-start"));
       expect(defaultProps.onAddNode).toHaveBeenCalledWith("start");
     });
 
     it('should call onAddNode with "llm" when LLM is clicked', () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("node-llm"));
       expect(defaultProps.onAddNode).toHaveBeenCalledWith("llm");
     });
 
     it('should call onAddNode with "tool" when Tool is clicked', () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("node-tool"));
       expect(defaultProps.onAddNode).toHaveBeenCalledWith("tool");
     });
 
     it('should call onAddNode with "conditional" when Conditional is clicked', () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("node-conditional"));
       expect(defaultProps.onAddNode).toHaveBeenCalledWith("conditional");
     });
 
     it('should call onAddNode with "end" when End is clicked', () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("node-end"));
       expect(defaultProps.onAddNode).toHaveBeenCalledWith("end");
@@ -110,7 +156,11 @@ describe("NodePalette", () => {
 
   describe("Search Functionality", () => {
     it("should filter nodes when searching", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText("Search nodes...");
       fireEvent.change(searchInput, { target: { value: "LLM" } });
@@ -121,7 +171,11 @@ describe("NodePalette", () => {
     });
 
     it("should show message when no nodes match search", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText("Search nodes...");
       fireEvent.change(searchInput, { target: { value: "nonexistent" } });
@@ -132,7 +186,11 @@ describe("NodePalette", () => {
     });
 
     it("should search by description", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText("Search nodes...");
       fireEvent.change(searchInput, { target: { value: "language model" } });
@@ -143,7 +201,11 @@ describe("NodePalette", () => {
 
   describe("Collapsed Mode", () => {
     it("should render collapsed view when isCollapsed is true", () => {
-      render(<NodePalette {...defaultProps} isCollapsed={true} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} isCollapsed={true} />
+        </TestProvider>,
+      );
 
       // Should not show search or category headers
       expect(
@@ -153,7 +215,11 @@ describe("NodePalette", () => {
     });
 
     it("should still have buttons in collapsed mode", () => {
-      render(<NodePalette {...defaultProps} isCollapsed={true} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} isCollapsed={true} />
+        </TestProvider>,
+      );
 
       // Buttons should still be clickable
       expect(
@@ -167,14 +233,22 @@ describe("NodePalette", () => {
 
   describe("Drag and Drop", () => {
     it("should have draggable attribute on node elements", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       const startNode = screen.getByTestId("node-start");
       expect(startNode).toHaveAttribute("draggable", "true");
     });
 
     it("should set data transfer on drag start", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       const startNode = screen.getByTestId("node-start");
       const dataTransfer = {
@@ -193,7 +267,11 @@ describe("NodePalette", () => {
 
   describe("Accessibility", () => {
     it("should have proper aria-labels on nodes", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: "Add Start node" }),
@@ -204,7 +282,11 @@ describe("NodePalette", () => {
     });
 
     it("should have aria-label on search input", () => {
-      render(<NodePalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <NodePalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("textbox", { name: "Search node types" }),

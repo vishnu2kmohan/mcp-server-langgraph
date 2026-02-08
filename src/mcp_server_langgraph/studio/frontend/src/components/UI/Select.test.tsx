@@ -10,6 +10,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Select } from "./Select";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -24,19 +26,29 @@ describe("Select", () => {
 
   describe("rendering", () => {
     it("renders with default props", () => {
-      render(<Select options={defaultOptions} />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("combobox")).toBeInTheDocument();
     });
 
     it("renders all options", () => {
-      render(<Select options={defaultOptions} />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} />
+        </TestProvider>,
+      );
       const select = screen.getByRole("combobox");
       expect(select.querySelectorAll("option").length).toBe(3);
     });
 
     it("renders with placeholder option", () => {
       render(
-        <Select options={defaultOptions} placeholder="Select an option" />,
+        <TestProvider>
+          <Select options={defaultOptions} placeholder="Select an option" />
+        </TestProvider>,
       );
       const options = screen.getAllByRole("option");
       expect(options[0]).toHaveTextContent("Select an option");
@@ -44,7 +56,11 @@ describe("Select", () => {
     });
 
     it("renders with selected value", () => {
-      render(<Select options={defaultOptions} value="2" onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} value="2" onChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("combobox")).toHaveValue("2");
     });
   });
@@ -52,7 +68,9 @@ describe("Select", () => {
   describe("sizes", () => {
     it("renders small size", () => {
       render(
-        <Select options={defaultOptions} size="sm" data-testid="select" />,
+        <TestProvider>
+          <Select options={defaultOptions} size="sm" data-testid="select" />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("text-xs");
@@ -61,7 +79,9 @@ describe("Select", () => {
 
     it("renders medium size (default)", () => {
       render(
-        <Select options={defaultOptions} size="md" data-testid="select" />,
+        <TestProvider>
+          <Select options={defaultOptions} size="md" data-testid="select" />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("text-sm");
@@ -70,7 +90,9 @@ describe("Select", () => {
 
     it("renders large size", () => {
       render(
-        <Select options={defaultOptions} size="lg" data-testid="select" />,
+        <TestProvider>
+          <Select options={defaultOptions} size="lg" data-testid="select" />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("text-base");
@@ -81,11 +103,13 @@ describe("Select", () => {
   describe("variants", () => {
     it("renders default variant", () => {
       render(
-        <Select
-          options={defaultOptions}
-          variant="default"
-          data-testid="select"
-        />,
+        <TestProvider>
+          <Select
+            options={defaultOptions}
+            variant="default"
+            data-testid="select"
+          />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("border-neutral-5");
@@ -93,11 +117,13 @@ describe("Select", () => {
 
     it("renders error variant", () => {
       render(
-        <Select
-          options={defaultOptions}
-          variant="error"
-          data-testid="select"
-        />,
+        <TestProvider>
+          <Select
+            options={defaultOptions}
+            variant="error"
+            data-testid="select"
+          />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("border-error-9");
@@ -105,11 +131,13 @@ describe("Select", () => {
 
     it("renders success variant", () => {
       render(
-        <Select
-          options={defaultOptions}
-          variant="success"
-          data-testid="select"
-        />,
+        <TestProvider>
+          <Select
+            options={defaultOptions}
+            variant="success"
+            data-testid="select"
+          />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("border-success-9");
@@ -118,14 +146,22 @@ describe("Select", () => {
 
   describe("states", () => {
     it("renders disabled state", () => {
-      render(<Select options={defaultOptions} disabled data-testid="select" />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} disabled data-testid="select" />
+        </TestProvider>,
+      );
       const select = screen.getByTestId("select");
       expect(select).toBeDisabled();
       expect(select).toHaveClass("cursor-not-allowed");
     });
 
     it("renders required state", () => {
-      render(<Select options={defaultOptions} required data-testid="select" />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} required data-testid="select" />
+        </TestProvider>,
+      );
       const select = screen.getByTestId("select");
       expect(select).toBeRequired();
     });
@@ -134,7 +170,9 @@ describe("Select", () => {
   describe("fullWidth", () => {
     it("renders full width when prop is true", () => {
       render(
-        <Select options={defaultOptions} fullWidth data-testid="select" />,
+        <TestProvider>
+          <Select options={defaultOptions} fullWidth data-testid="select" />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("w-full");
@@ -142,11 +180,13 @@ describe("Select", () => {
 
     it("renders auto width when fullWidth is false", () => {
       render(
-        <Select
-          options={defaultOptions}
-          fullWidth={false}
-          data-testid="select"
-        />,
+        <TestProvider>
+          <Select
+            options={defaultOptions}
+            fullWidth={false}
+            data-testid="select"
+          />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).not.toHaveClass("w-full");
@@ -158,7 +198,11 @@ describe("Select", () => {
       const handleChange = vi.fn();
       const user = userEvent.setup();
 
-      render(<Select options={defaultOptions} onChange={handleChange} />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} onChange={handleChange} />
+        </TestProvider>,
+      );
       const select = screen.getByRole("combobox");
 
       await user.selectOptions(select, "2");
@@ -169,11 +213,13 @@ describe("Select", () => {
   describe("customization", () => {
     it("accepts custom className", () => {
       render(
-        <Select
-          options={defaultOptions}
-          className="custom-class"
-          data-testid="select"
-        />,
+        <TestProvider>
+          <Select
+            options={defaultOptions}
+            className="custom-class"
+            data-testid="select"
+          />
+        </TestProvider>,
       );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("custom-class");
@@ -181,11 +227,13 @@ describe("Select", () => {
 
     it("passes through additional props", () => {
       render(
-        <Select
-          options={defaultOptions}
-          data-testid="custom-select"
-          aria-label="Custom select"
-        />,
+        <TestProvider>
+          <Select
+            options={defaultOptions}
+            data-testid="custom-select"
+            aria-label="Custom select"
+          />
+        </TestProvider>,
       );
       const select = screen.getByTestId("custom-select");
       expect(select).toHaveAttribute("aria-label", "Custom select");
@@ -193,7 +241,11 @@ describe("Select", () => {
 
     it("forwards ref to select element", () => {
       const ref = vi.fn();
-      render(<Select options={defaultOptions} ref={ref} />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} ref={ref} />
+        </TestProvider>,
+      );
       expect(ref).toHaveBeenCalled();
       expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLSelectElement);
     });
@@ -202,10 +254,12 @@ describe("Select", () => {
   describe("accessibility", () => {
     it("associates label with select using id", () => {
       render(
-        <>
-          <label htmlFor="test-select">Test Label</label>
-          <Select options={defaultOptions} id="test-select" />
-        </>,
+        <TestProvider>
+          <>
+            <label htmlFor="test-select">Test Label</label>
+            <Select options={defaultOptions} id="test-select" />
+          </>
+        </TestProvider>,
       );
       const select = screen.getByLabelText("Test Label");
       expect(select).toBeInTheDocument();
@@ -213,21 +267,27 @@ describe("Select", () => {
 
     it("supports aria-describedby for error messages", () => {
       render(
-        <>
-          <Select
-            options={defaultOptions}
-            aria-describedby="error-message"
-            variant="error"
-          />
-          <span id="error-message">Please select an option</span>
-        </>,
+        <TestProvider>
+          <>
+            <Select
+              options={defaultOptions}
+              aria-describedby="error-message"
+              variant="error"
+            />
+            <span id="error-message">Please select an option</span>
+          </>
+        </TestProvider>,
       );
       const select = screen.getByRole("combobox");
       expect(select).toHaveAttribute("aria-describedby", "error-message");
     });
 
     it("has proper focus ring styles", () => {
-      render(<Select options={defaultOptions} data-testid="select" />);
+      render(
+        <TestProvider>
+          <Select options={defaultOptions} data-testid="select" />
+        </TestProvider>,
+      );
       const select = screen.getByTestId("select");
       expect(select).toHaveClass("focus:ring-2");
     });
@@ -240,7 +300,11 @@ describe("Select", () => {
         { value: "2", label: "Option 2", disabled: true },
         { value: "3", label: "Option 3" },
       ];
-      render(<Select options={optionsWithDisabled} />);
+      render(
+        <TestProvider>
+          <Select options={optionsWithDisabled} />
+        </TestProvider>,
+      );
       const options = screen.getAllByRole("option");
       expect(options[1]).toBeDisabled();
     });

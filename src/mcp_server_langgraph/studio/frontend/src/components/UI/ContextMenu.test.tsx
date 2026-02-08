@@ -23,6 +23,8 @@ import { afterEach, describe, it, expect, vi } from "vitest";
 
 import { ContextMenu, ContextMenuItem } from "./ContextMenu";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -39,9 +41,11 @@ describe("ContextMenu", () => {
   describe("Trigger", () => {
     it("renders children normally", () => {
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("trigger")).toBeInTheDocument();
@@ -50,9 +54,11 @@ describe("ContextMenu", () => {
 
     it("opens menu on right-click", async () => {
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -62,9 +68,11 @@ describe("ContextMenu", () => {
 
     it("positions menu at cursor location", async () => {
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"), {
@@ -80,9 +88,11 @@ describe("ContextMenu", () => {
   describe("Menu Items", () => {
     it("renders all menu items", async () => {
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -106,9 +116,11 @@ describe("ContextMenu", () => {
       ];
 
       render(
-        <ContextMenu items={items}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={items}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -124,9 +136,11 @@ describe("ContextMenu", () => {
       ];
 
       render(
-        <ContextMenu items={items}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={items}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -143,9 +157,11 @@ describe("ContextMenu", () => {
       ];
 
       render(
-        <ContextMenu items={items}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={items}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -165,9 +181,11 @@ describe("ContextMenu", () => {
       ];
 
       render(
-        <ContextMenu items={items}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={items}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -186,9 +204,11 @@ describe("ContextMenu", () => {
       ];
 
       render(
-        <ContextMenu items={items}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={items}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -201,12 +221,14 @@ describe("ContextMenu", () => {
     it("closes on outside click", async () => {
       const user = userEvent.setup();
       render(
-        <>
-          <ContextMenu items={defaultItems}>
-            <div data-testid="trigger">Right-click me</div>
-          </ContextMenu>
-          <button data-testid="outside">Outside</button>
-        </>,
+        <TestProvider>
+          <>
+            <ContextMenu items={defaultItems}>
+              <div data-testid="trigger">Right-click me</div>
+            </ContextMenu>
+            <button data-testid="outside">Outside</button>
+          </>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -222,9 +244,11 @@ describe("ContextMenu", () => {
     it("closes on Escape key", async () => {
       const user = userEvent.setup();
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -239,9 +263,11 @@ describe("ContextMenu", () => {
   describe("Keyboard Navigation", () => {
     it("focuses first item when opened", async () => {
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -254,9 +280,11 @@ describe("ContextMenu", () => {
     it("navigates with arrow keys", async () => {
       const user = userEvent.setup();
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -283,9 +311,11 @@ describe("ContextMenu", () => {
       ];
 
       render(
-        <ContextMenu items={items}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={items}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -303,9 +333,11 @@ describe("ContextMenu", () => {
   describe("Accessibility", () => {
     it("has proper ARIA roles", async () => {
       render(
-        <ContextMenu items={defaultItems}>
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems}>
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));
@@ -316,9 +348,11 @@ describe("ContextMenu", () => {
 
     it("supports aria-label on menu", async () => {
       render(
-        <ContextMenu items={defaultItems} aria-label="Session actions">
-          <div data-testid="trigger">Right-click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={defaultItems} aria-label="Session actions">
+            <div data-testid="trigger">Right-click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       fireEvent.contextMenu(screen.getByTestId("trigger"));

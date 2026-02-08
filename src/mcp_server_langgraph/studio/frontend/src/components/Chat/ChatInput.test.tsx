@@ -20,6 +20,8 @@ import userEvent from "@testing-library/user-event";
 import { ChatInput } from "./ChatInput";
 import type { ChatInputProps } from "./ChatInput";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock props factory
 const createMockProps = (
   overrides: Partial<ChatInputProps> = {},
@@ -42,7 +44,11 @@ describe("ChatInput", () => {
 
   describe("core functionality", () => {
     it("renders textarea with placeholder", () => {
-      render(<ChatInput {...createMockProps()} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps()} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByPlaceholderText("Type your message..."),
@@ -50,7 +56,11 @@ describe("ChatInput", () => {
     });
 
     it("displays controlled value", () => {
-      render(<ChatInput {...createMockProps({ value: "Hello world" })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ value: "Hello world" })} />
+        </TestProvider>,
+      );
 
       expect(screen.getByDisplayValue("Hello world")).toBeInTheDocument();
     });
@@ -58,7 +68,11 @@ describe("ChatInput", () => {
     it("calls onChange when typing", async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(<ChatInput {...createMockProps({ onChange })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ onChange })} />
+        </TestProvider>,
+      );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
       await user.type(textarea, "test");
@@ -70,7 +84,11 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
       render(
-        <ChatInput {...createMockProps({ value: "test message", onSubmit })} />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({ value: "test message", onSubmit })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -83,7 +101,11 @@ describe("ChatInput", () => {
     it("does not submit empty message", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
-      render(<ChatInput {...createMockProps({ value: "", onSubmit })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ value: "", onSubmit })} />
+        </TestProvider>,
+      );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
       await user.click(textarea);
@@ -95,7 +117,11 @@ describe("ChatInput", () => {
     it("does not submit whitespace-only message", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
-      render(<ChatInput {...createMockProps({ value: "   ", onSubmit })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ value: "   ", onSubmit })} />
+        </TestProvider>,
+      );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
       await user.click(textarea);
@@ -107,7 +133,11 @@ describe("ChatInput", () => {
     it("creates newline on Shift+Enter", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
-      render(<ChatInput {...createMockProps({ value: "test", onSubmit })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ value: "test", onSubmit })} />
+        </TestProvider>,
+      );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
       await user.click(textarea);
@@ -117,7 +147,11 @@ describe("ChatInput", () => {
     });
 
     it("disables textarea when disabled prop is true", () => {
-      render(<ChatInput {...createMockProps({ disabled: true })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ disabled: true })} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByPlaceholderText("Type your message..."),
@@ -127,19 +161,31 @@ describe("ChatInput", () => {
 
   describe("send button", () => {
     it("renders send button", () => {
-      render(<ChatInput {...createMockProps()} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps()} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /send/i })).toBeInTheDocument();
     });
 
     it("disables send button when value is empty", () => {
-      render(<ChatInput {...createMockProps({ value: "" })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ value: "" })} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /send/i })).toBeDisabled();
     });
 
     it("enables send button when value has content", () => {
-      render(<ChatInput {...createMockProps({ value: "test" })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ value: "test" })} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /send/i })).not.toBeDisabled();
     });
@@ -147,7 +193,11 @@ describe("ChatInput", () => {
     it("calls onSubmit when send button is clicked", async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
-      render(<ChatInput {...createMockProps({ value: "test", onSubmit })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ value: "test", onSubmit })} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /send/i }));
 
@@ -156,13 +206,15 @@ describe("ChatInput", () => {
 
     it("shows stop button when streaming", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test",
-            isStreaming: true,
-            onStopStreaming: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test",
+              isStreaming: true,
+              onStopStreaming: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /stop/i })).toBeInTheDocument();
@@ -172,13 +224,15 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onStopStreaming = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test",
-            isStreaming: true,
-            onStopStreaming,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test",
+              isStreaming: true,
+              onStopStreaming,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /stop/i }));
@@ -189,7 +243,11 @@ describe("ChatInput", () => {
 
   describe("attachment button", () => {
     it("renders attachment button with plus icon", () => {
-      render(<ChatInput {...createMockProps()} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps()} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /attach/i }),
@@ -197,7 +255,11 @@ describe("ChatInput", () => {
     });
 
     it("disables attachment button when disabled", () => {
-      render(<ChatInput {...createMockProps({ disabled: true })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ disabled: true })} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /attach/i })).toBeDisabled();
     });
@@ -227,20 +289,26 @@ describe("ChatInput", () => {
 
     it("renders model settings button with brain icon when showModelSelector is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("model-settings-button")).toBeInTheDocument();
     });
 
     it("does not render model settings when showModelSelector is false", () => {
-      render(<ChatInput {...createMockProps({ showModelSelector: false })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ showModelSelector: false })} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("model-settings-button"),
@@ -249,13 +317,15 @@ describe("ChatInput", () => {
 
     it("displays selected model name on button", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Claude Opus 4.5")).toBeInTheDocument();
@@ -263,13 +333,15 @@ describe("ChatInput", () => {
 
     it("displays provider badge on button", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+            })}
+          />
+        </TestProvider>,
       );
 
       // formatProviderDisplay properly cases provider names
@@ -279,13 +351,15 @@ describe("ChatInput", () => {
     it("opens dropdown when clicked", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -296,13 +370,15 @@ describe("ChatInput", () => {
     it("shows all available models in dropdown", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -315,14 +391,16 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onModelChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            onModelChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              onModelChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -334,16 +412,18 @@ describe("ChatInput", () => {
     it("shows thinking controls when model supports thinking", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            modelSupportsThinking: true,
-            reasoningEffort: "medium",
-            onReasoningEffortChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              modelSupportsThinking: true,
+              reasoningEffort: "medium",
+              onReasoningEffortChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -354,14 +434,16 @@ describe("ChatInput", () => {
     it("hides thinking controls when model does not support thinking", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "gpt-4o",
-            availableModels: mockModels,
-            modelSupportsThinking: false,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "gpt-4o",
+              availableModels: mockModels,
+              modelSupportsThinking: false,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -373,16 +455,18 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onReasoningEffortChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            modelSupportsThinking: true,
-            reasoningEffort: "medium",
-            onReasoningEffortChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              modelSupportsThinking: true,
+              reasoningEffort: "medium",
+              onReasoningEffortChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -394,13 +478,15 @@ describe("ChatInput", () => {
     it("closes dropdown when Escape is pressed", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -416,22 +502,28 @@ describe("ChatInput", () => {
   describe("tool selector", () => {
     it("renders tool selector when showToolSelector is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showToolSelector: true,
-            selectedTools: [],
-            onSelectedToolsChange: vi.fn(),
-            toolSelectionMode: "auto",
-            onToolSelectionModeChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showToolSelector: true,
+              selectedTools: [],
+              onSelectedToolsChange: vi.fn(),
+              toolSelectionMode: "auto",
+              onToolSelectionModeChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("tool-selector")).toBeInTheDocument();
     });
 
     it("does not render tool selector when showToolSelector is false", () => {
-      render(<ChatInput {...createMockProps({ showToolSelector: false })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ showToolSelector: false })} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("tool-selector")).not.toBeInTheDocument();
     });
@@ -440,20 +532,26 @@ describe("ChatInput", () => {
   describe("KB focus selector", () => {
     it("renders KB focus when showKBFocus is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showKBFocus: true,
-            kbFocusValue: "all",
-            onKBFocusChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showKBFocus: true,
+              kbFocusValue: "all",
+              onKBFocusChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("kb-focus-selector")).toBeInTheDocument();
     });
 
     it("does not render KB focus when showKBFocus is false", () => {
-      render(<ChatInput {...createMockProps({ showKBFocus: false })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ showKBFocus: false })} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("kb-focus-selector")).not.toBeInTheDocument();
     });
@@ -462,14 +560,16 @@ describe("ChatInput", () => {
   describe("voice input", () => {
     it("renders voice button when voice is supported", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            isVoiceSupported: true,
-            isListening: false,
-            onStartListening: vi.fn(),
-            onStopListening: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isVoiceSupported: true,
+              isListening: false,
+              onStartListening: vi.fn(),
+              onStopListening: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -478,7 +578,11 @@ describe("ChatInput", () => {
     });
 
     it("does not render voice button when voice is not supported", () => {
-      render(<ChatInput {...createMockProps({ isVoiceSupported: false })} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps({ isVoiceSupported: false })} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByRole("button", { name: /voice/i }),
@@ -489,14 +593,16 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onStartListening = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            isVoiceSupported: true,
-            isListening: false,
-            onStartListening,
-            onStopListening: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isVoiceSupported: true,
+              isListening: false,
+              onStartListening,
+              onStopListening: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /voice/i }));
@@ -508,14 +614,16 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onStopListening = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            isVoiceSupported: true,
-            isListening: true,
-            onStartListening: vi.fn(),
-            onStopListening,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isVoiceSupported: true,
+              isListening: true,
+              onStartListening: vi.fn(),
+              onStopListening,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /stop.*voice/i }));
@@ -527,13 +635,15 @@ describe("ChatInput", () => {
   describe("inline suggestions", () => {
     it("displays inline suggestion as ghost text", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "Hello",
-            enableInlineSuggestions: true,
-            inlineSuggestion: " world",
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "Hello",
+              enableInlineSuggestions: true,
+              inlineSuggestion: " world",
+            })}
+          />
+        </TestProvider>,
       );
 
       const suggestion = screen.getByTestId("inline-suggestion");
@@ -545,14 +655,16 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onAcceptSuggestion = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "Hello",
-            enableInlineSuggestions: true,
-            inlineSuggestion: " world",
-            onAcceptSuggestion,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "Hello",
+              enableInlineSuggestions: true,
+              inlineSuggestion: " world",
+              onAcceptSuggestion,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -566,14 +678,16 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onDismissSuggestion = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "Hello",
-            enableInlineSuggestions: true,
-            inlineSuggestion: " world",
-            onDismissSuggestion,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "Hello",
+              enableInlineSuggestions: true,
+              inlineSuggestion: " world",
+              onDismissSuggestion,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -589,12 +703,14 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test",
-            onChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test",
+              onChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -615,12 +731,14 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test",
-            onChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test",
+              onChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -634,12 +752,14 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test",
-            onChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test",
+              onChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -652,7 +772,11 @@ describe("ChatInput", () => {
 
   describe("accessibility", () => {
     it("has accessible textarea label", () => {
-      render(<ChatInput {...createMockProps()} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps()} />
+        </TestProvider>,
+      );
 
       // The textarea should be accessible via its label
       const textarea = screen.getByRole("textbox", { name: /message/i });
@@ -661,19 +785,21 @@ describe("ChatInput", () => {
 
     it("model settings button has aria-haspopup", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: [
-              {
-                id: "claude-opus-4-5",
-                name: "Claude Opus 4.5",
-                provider: "anthropic",
-              },
-            ],
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: [
+                {
+                  id: "claude-opus-4-5",
+                  name: "Claude Opus 4.5",
+                  provider: "anthropic",
+                },
+              ],
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("model-settings-button")).toHaveAttribute(
@@ -685,19 +811,21 @@ describe("ChatInput", () => {
     it("model settings dropdown has proper listbox role", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: [
-              {
-                id: "claude-opus-4-5",
-                name: "Claude Opus 4.5",
-                provider: "anthropic",
-              },
-            ],
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: [
+                {
+                  id: "claude-opus-4-5",
+                  name: "Claude Opus 4.5",
+                  provider: "anthropic",
+                },
+              ],
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -706,7 +834,11 @@ describe("ChatInput", () => {
     });
 
     it("send button has aria-label", () => {
-      render(<ChatInput {...createMockProps()} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps()} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /send/i })).toHaveAttribute(
         "aria-label",
@@ -717,32 +849,38 @@ describe("ChatInput", () => {
   describe("layout", () => {
     it("renders single bottom controls row", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            showToolSelector: true,
-            showKBFocus: true,
-            isVoiceSupported: true,
-            selectedModel: "test",
-            availableModels: [{ id: "test", name: "Test", provider: "test" }],
-            selectedTools: [],
-            onSelectedToolsChange: vi.fn(),
-            toolSelectionMode: "auto",
-            onToolSelectionModeChange: vi.fn(),
-            kbFocusValue: "all",
-            onKBFocusChange: vi.fn(),
-            isListening: false,
-            onStartListening: vi.fn(),
-            onStopListening: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              showToolSelector: true,
+              showKBFocus: true,
+              isVoiceSupported: true,
+              selectedModel: "test",
+              availableModels: [{ id: "test", name: "Test", provider: "test" }],
+              selectedTools: [],
+              onSelectedToolsChange: vi.fn(),
+              toolSelectionMode: "auto",
+              onToolSelectionModeChange: vi.fn(),
+              kbFocusValue: "all",
+              onKBFocusChange: vi.fn(),
+              isListening: false,
+              onStartListening: vi.fn(),
+              onStopListening: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("controls-row")).toBeInTheDocument();
     });
 
     it("does not render formatting toolbar (+/- toggle)", () => {
-      render(<ChatInput {...createMockProps()} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps()} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByRole("button", { name: /formatting/i }),
@@ -753,7 +891,11 @@ describe("ChatInput", () => {
     });
 
     it("renders pill container with rounded styling", () => {
-      render(<ChatInput {...createMockProps()} />);
+      render(
+        <TestProvider>
+          <ChatInput {...createMockProps()} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
     });
@@ -762,16 +904,18 @@ describe("ChatInput", () => {
   describe("drag and drop", () => {
     it("shows drop zone overlay when dragging", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            isDragging: true,
-            dragHandlers: {
-              onDragOver: vi.fn(),
-              onDragLeave: vi.fn(),
-              onDrop: vi.fn(),
-            },
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isDragging: true,
+              dragHandlers: {
+                onDragOver: vi.fn(),
+                onDragLeave: vi.fn(),
+                onDrop: vi.fn(),
+              },
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("drop-zone-overlay")).toBeInTheDocument();
@@ -779,11 +923,13 @@ describe("ChatInput", () => {
 
     it("hides drop zone overlay when not dragging", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            isDragging: false,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isDragging: false,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("drop-zone-overlay")).not.toBeInTheDocument();
@@ -793,19 +939,21 @@ describe("ChatInput", () => {
   describe("file previews", () => {
     it("displays uploaded files", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            uploadFiles: [
-              {
-                id: "1",
-                file: new File([""], "test.pdf"),
-                status: "complete" as const,
-                progress: 100,
-              },
-            ],
-            onRemoveFile: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              uploadFiles: [
+                {
+                  id: "1",
+                  file: new File([""], "test.pdf"),
+                  status: "complete" as const,
+                  progress: 100,
+                },
+              ],
+              onRemoveFile: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("test.pdf")).toBeInTheDocument();
@@ -815,19 +963,21 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onRemoveFile = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            uploadFiles: [
-              {
-                id: "1",
-                file: new File([""], "test.pdf"),
-                status: "complete" as const,
-                progress: 100,
-              },
-            ],
-            onRemoveFile,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              uploadFiles: [
+                {
+                  id: "1",
+                  file: new File([""], "test.pdf"),
+                  status: "complete" as const,
+                  progress: 100,
+                },
+              ],
+              onRemoveFile,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /remove/i }));
@@ -841,11 +991,13 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSelectFiles = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            onSelectFiles,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              onSelectFiles,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Find the hidden file input
@@ -869,12 +1021,14 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSelectFiles = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            onSelectFiles,
-            acceptMultipleFiles: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              onSelectFiles,
+              acceptMultipleFiles: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       const fileInput = document.querySelector(
@@ -894,11 +1048,13 @@ describe("ChatInput", () => {
   describe("auto focus", () => {
     it("focuses textarea on mount when autoFocus is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            autoFocus: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              autoFocus: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox", { name: /message/i });
@@ -907,11 +1063,13 @@ describe("ChatInput", () => {
 
     it("does not focus textarea on mount when autoFocus is false", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            autoFocus: false,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              autoFocus: false,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox", { name: /message/i });
@@ -932,14 +1090,16 @@ describe("ChatInput", () => {
     it("shows loading indicator in model dropdown when isModelsLoading is true", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            isModelsLoading: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              isModelsLoading: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -951,14 +1111,16 @@ describe("ChatInput", () => {
     it("does not show loading indicator when isModelsLoading is false", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            isModelsLoading: false,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              isModelsLoading: false,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -978,13 +1140,15 @@ describe("ChatInput", () => {
       const _user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "/",
-            onChange,
-            slashCommands: mockSlashCommands,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "/",
+              onChange,
+              slashCommands: mockSlashCommands,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("slash-command-menu")).toBeInTheDocument();
@@ -994,13 +1158,15 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSlashCommandSelect = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "/",
-            slashCommands: mockSlashCommands,
-            onSlashCommandSelect,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "/",
+              slashCommands: mockSlashCommands,
+              onSlashCommandSelect,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("/help"));
@@ -1015,12 +1181,14 @@ describe("ChatInput", () => {
   describe("error states", () => {
     it("displays voice error when voiceError is provided", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            isVoiceSupported: true,
-            voiceError: "Microphone access denied",
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isVoiceSupported: true,
+              voiceError: "Microphone access denied",
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Microphone access denied")).toBeInTheDocument();
@@ -1028,11 +1196,13 @@ describe("ChatInput", () => {
 
     it("displays file error when fileError is provided", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            fileError: "File too large (max 10MB)",
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              fileError: "File too large (max 10MB)",
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("File too large (max 10MB)")).toBeInTheDocument();
@@ -1041,12 +1211,14 @@ describe("ChatInput", () => {
     it("allows dismissing voice error", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            isVoiceSupported: true,
-            voiceError: "Microphone access denied",
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isVoiceSupported: true,
+              voiceError: "Microphone access denied",
+            })}
+          />
+        </TestProvider>,
       );
 
       const dismissButton = screen.getByRole("button", {
@@ -1066,11 +1238,13 @@ describe("ChatInput", () => {
   describe("loading states", () => {
     it("shows upload indicator when isUploading is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            isUploading: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              isUploading: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("upload-indicator")).toBeInTheDocument();
@@ -1078,12 +1252,14 @@ describe("ChatInput", () => {
 
     it("shows suggestion loading spinner when isSuggestionLoading is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            enableInlineSuggestions: true,
-            isSuggestionLoading: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              enableInlineSuggestions: true,
+              isSuggestionLoading: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestion-loading")).toBeInTheDocument();
@@ -1098,13 +1274,15 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test message",
-            onSubmit,
-            submitOnEnter: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test message",
+              onSubmit,
+              submitOnEnter: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1119,14 +1297,16 @@ describe("ChatInput", () => {
       const onSubmit = vi.fn();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test message",
-            onSubmit,
-            onChange,
-            submitOnEnter: false,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test message",
+              onSubmit,
+              onChange,
+              submitOnEnter: false,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1140,13 +1320,15 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test message",
-            onSubmit,
-            submitOnEnter: false,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test message",
+              onSubmit,
+              submitOnEnter: false,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1160,13 +1342,15 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "test",
-            onSubmit,
-            submitOnEnter: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "test",
+              onSubmit,
+              submitOnEnter: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1185,12 +1369,14 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onCursorPositionChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "hello world",
-            onCursorPositionChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "hello world",
+              onCursorPositionChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1216,16 +1402,18 @@ describe("ChatInput", () => {
     it("shows thinking toggle when enableThinking prop is provided", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            modelSupportsThinking: true,
-            enableThinking: true,
-            onEnableThinkingChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              modelSupportsThinking: true,
+              enableThinking: true,
+              onEnableThinkingChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1237,16 +1425,18 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onEnableThinkingChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            modelSupportsThinking: true,
-            enableThinking: true,
-            onEnableThinkingChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              modelSupportsThinking: true,
+              enableThinking: true,
+              onEnableThinkingChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1262,12 +1452,14 @@ describe("ChatInput", () => {
   describe("URL content fetch", () => {
     it("shows URL loading indicator when urlFetchLoading contains URLs", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            enableUrlFetch: true,
-            urlFetchLoading: ["https://example.com"],
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              enableUrlFetch: true,
+              urlFetchLoading: ["https://example.com"],
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("url-fetch-loading")).toBeInTheDocument();
@@ -1275,18 +1467,20 @@ describe("ChatInput", () => {
 
     it("displays fetched URL badges", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            enableUrlFetch: true,
-            fetchedUrls: [
-              {
-                url: "https://example.com",
-                title: "Example Site",
-                content: "...",
-              },
-            ],
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              enableUrlFetch: true,
+              fetchedUrls: [
+                {
+                  url: "https://example.com",
+                  title: "Example Site",
+                  content: "...",
+                },
+              ],
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Example Site")).toBeInTheDocument();
@@ -1296,19 +1490,21 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onRemoveFetchedUrl = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            enableUrlFetch: true,
-            fetchedUrls: [
-              {
-                url: "https://example.com",
-                title: "Example Site",
-                content: "...",
-              },
-            ],
-            onRemoveFetchedUrl,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              enableUrlFetch: true,
+              fetchedUrls: [
+                {
+                  url: "https://example.com",
+                  title: "Example Site",
+                  content: "...",
+                },
+              ],
+              onRemoveFetchedUrl,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /remove.*url/i }));
@@ -1334,13 +1530,15 @@ describe("ChatInput", () => {
       const _user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "@",
-            onChange,
-            mentionOptions: mockMentionOptions,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "@",
+              onChange,
+              mentionOptions: mockMentionOptions,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("mention-suggestions")).toBeInTheDocument();
@@ -1350,13 +1548,15 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "@cl",
-            onChange,
-            mentionOptions: mockMentionOptions,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "@cl",
+              onChange,
+              mentionOptions: mockMentionOptions,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Claude Opus 4.5"));
@@ -1380,14 +1580,16 @@ describe("ChatInput", () => {
     it("shows recent models section when recentModels is provided", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            recentModels: ["gpt-4o", "claude-sonnet-4"],
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              recentModels: ["gpt-4o", "claude-sonnet-4"],
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1398,14 +1600,16 @@ describe("ChatInput", () => {
     it("shows model search input when enableModelSearch is true", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            enableModelSearch: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              enableModelSearch: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1416,14 +1620,16 @@ describe("ChatInput", () => {
     it("filters models based on search query", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModels,
-            enableModelSearch: true,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModels,
+              enableModelSearch: true,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1448,12 +1654,14 @@ describe("ChatInput", () => {
   describe("character count and maxLength", () => {
     it("shows character count when maxLength is provided", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "Hello",
-            maxLength: 100,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "Hello",
+              maxLength: 100,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("5 / 100")).toBeInTheDocument();
@@ -1463,13 +1671,15 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "12345",
-            onChange,
-            maxLength: 5,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "12345",
+              onChange,
+              maxLength: 5,
+            })}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText("Type your message...");
@@ -1481,12 +1691,14 @@ describe("ChatInput", () => {
 
     it("shows warning when approaching maxLength", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            value: "a".repeat(95),
-            maxLength: 100,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              value: "a".repeat(95),
+              maxLength: 100,
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("char-count-warning")).toBeInTheDocument();
@@ -1499,15 +1711,17 @@ describe("ChatInput", () => {
   describe("KB status indicator", () => {
     it("shows KB status indicator when kbStatus is provided", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showKBFocus: true,
-            kbFocusValue: "kb_only",
-            onKBFocusChange: vi.fn(),
-            kbStatus: "ready",
-            kbStatusMessage: "Knowledge base is ready",
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showKBFocus: true,
+              kbFocusValue: "kb_only",
+              onKBFocusChange: vi.fn(),
+              kbStatus: "ready",
+              kbStatusMessage: "Knowledge base is ready",
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("kb-status-indicator")).toBeInTheDocument();
@@ -1516,15 +1730,17 @@ describe("ChatInput", () => {
     it("shows tooltip with kbStatusMessage on hover", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showKBFocus: true,
-            kbFocusValue: "kb_only",
-            onKBFocusChange: vi.fn(),
-            kbStatus: "misconfigured",
-            kbStatusMessage: "API key not configured",
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showKBFocus: true,
+              kbFocusValue: "kb_only",
+              onKBFocusChange: vi.fn(),
+              kbStatus: "misconfigured",
+              kbStatusMessage: "API key not configured",
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.hover(screen.getByTestId("kb-status-indicator"));
@@ -1562,13 +1778,15 @@ describe("ChatInput", () => {
     it("shows lifecycle badge for deprecated models", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModelsWithStatus,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModelsWithStatus,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1579,13 +1797,15 @@ describe("ChatInput", () => {
     it("shows preview badge for preview models", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModelsWithStatus,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModelsWithStatus,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1596,13 +1816,15 @@ describe("ChatInput", () => {
     it("shows sunset date for deprecated models", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModelsWithStatus,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModelsWithStatus,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("model-settings-button"));
@@ -1617,14 +1839,16 @@ describe("ChatInput", () => {
   describe("tools loading state", () => {
     it("shows loading indicator in tool selector when isToolsLoading is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showToolSelector: true,
-            isToolsLoading: true,
-            onSelectedToolsChange: vi.fn(),
-            onToolSelectionModeChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showToolSelector: true,
+              isToolsLoading: true,
+              onSelectedToolsChange: vi.fn(),
+              onToolSelectionModeChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("tools-loading")).toBeInTheDocument();
@@ -1642,15 +1866,17 @@ describe("ChatInput", () => {
 
     it("renders PreferencesMenu when showPreferencesMenu is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showPreferencesMenu: true,
-            availableModels: mockModels,
-            selectedModel: "claude-opus-4-5",
-            onModelChange: vi.fn(),
-            onThinkingLevelChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showPreferencesMenu: true,
+              availableModels: mockModels,
+              selectedModel: "claude-opus-4-5",
+              onModelChange: vi.fn(),
+              onThinkingLevelChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -1660,15 +1886,17 @@ describe("ChatInput", () => {
 
     it("hides model selector when showPreferencesMenu is true", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            showPreferencesMenu: true,
-            showModelSelector: true,
-            availableModels: mockModels,
-            selectedModel: "claude-opus-4-5",
-            onModelChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showPreferencesMenu: true,
+              showModelSelector: true,
+              availableModels: mockModels,
+              selectedModel: "claude-opus-4-5",
+              onModelChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       // PreferencesMenu should be visible
@@ -1686,14 +1914,16 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
 
       render(
-        <ChatInput
-          {...createMockProps({
-            showPreferencesMenu: true,
-            availableModels: mockModels,
-            selectedModel: "claude-opus-4-5",
-            onModelChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showPreferencesMenu: true,
+              availableModels: mockModels,
+              selectedModel: "claude-opus-4-5",
+              onModelChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Open preferences menu
@@ -1708,15 +1938,17 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
 
       render(
-        <ChatInput
-          {...createMockProps({
-            showPreferencesMenu: true,
-            availableModels: mockModels,
-            selectedModel: "claude-opus-4-5",
-            thinkingLevel: "medium",
-            onThinkingLevelChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showPreferencesMenu: true,
+              availableModels: mockModels,
+              selectedModel: "claude-opus-4-5",
+              thinkingLevel: "medium",
+              onThinkingLevelChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1734,12 +1966,14 @@ describe("ChatInput", () => {
   describe("ExecutionMode integration", () => {
     it("renders SegmentedControl when onExecutionModeChange is provided", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            executionMode: "default",
-            onExecutionModeChange: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              executionMode: "default",
+              onExecutionModeChange: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       // SegmentedControl wrapper is rendered when onExecutionModeChange is provided
@@ -1750,12 +1984,14 @@ describe("ChatInput", () => {
 
     it("renders ExecutionModeIndicator when only onCycleExecutionMode is provided", () => {
       render(
-        <ChatInput
-          {...createMockProps({
-            executionMode: "plan",
-            onCycleExecutionMode: vi.fn(),
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              executionMode: "plan",
+              onCycleExecutionMode: vi.fn(),
+            })}
+          />
+        </TestProvider>,
       );
 
       // ExecutionModeIndicator shows the mode badge when only cycling is available
@@ -1769,12 +2005,14 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
 
       render(
-        <ChatInput
-          {...createMockProps({
-            executionMode: "default",
-            onExecutionModeChange,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              executionMode: "default",
+              onExecutionModeChange,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Find and click the plan mode option
@@ -1789,12 +2027,14 @@ describe("ChatInput", () => {
       const user = userEvent.setup();
 
       render(
-        <ChatInput
-          {...createMockProps({
-            executionMode: "default",
-            onCycleExecutionMode,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              executionMode: "default",
+              onCycleExecutionMode,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Focus the textarea
@@ -1832,13 +2072,15 @@ describe("ChatInput", () => {
     it("displays formatted provider names with proper casing in dropdown", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModelsWithVendor,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModelsWithVendor,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Open the model dropdown
@@ -1857,13 +2099,15 @@ describe("ChatInput", () => {
     it("shows vendor info when different from provider", async () => {
       const user = userEvent.setup();
       render(
-        <ChatInput
-          {...createMockProps({
-            showModelSelector: true,
-            selectedModel: "claude-opus-4-5",
-            availableModels: mockModelsWithVendor,
-          })}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...createMockProps({
+              showModelSelector: true,
+              selectedModel: "claude-opus-4-5",
+              availableModels: mockModelsWithVendor,
+            })}
+          />
+        </TestProvider>,
       );
 
       // Open the model dropdown

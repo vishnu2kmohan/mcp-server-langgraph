@@ -10,6 +10,8 @@ import { WebSocketMetricsPanel } from "./WebSocketMetricsPanel";
 import { websocketTelemetry } from "../../utils/websocketTelemetry";
 import { createInitialReconnectionMetrics } from "../../types/websocket-metrics";
 
+import { TestProvider } from "@/test-utils";
+
 describe("WebSocketMetricsPanel", () => {
   beforeEach(() => {
     websocketTelemetry.reset();
@@ -22,7 +24,11 @@ describe("WebSocketMetricsPanel", () => {
   });
 
   it("should render empty state when no connections", () => {
-    render(<WebSocketMetricsPanel />);
+    render(
+      <TestProvider>
+        <WebSocketMetricsPanel />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("ws-metrics-panel")).toBeInTheDocument();
     expect(screen.getByText("No WebSocket connections")).toBeInTheDocument();
@@ -36,7 +42,11 @@ describe("WebSocketMetricsPanel", () => {
     metrics.successRate = 80;
     websocketTelemetry.trackReconnectionMetrics("notifications", metrics);
 
-    render(<WebSocketMetricsPanel />);
+    render(
+      <TestProvider>
+        <WebSocketMetricsPanel />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("ws-metrics-panel")).toBeInTheDocument();
     expect(screen.getByText("notifications")).toBeInTheDocument();
@@ -53,7 +63,11 @@ describe("WebSocketMetricsPanel", () => {
     websocketTelemetry.trackReconnectionMetrics("notifications", metrics);
     websocketTelemetry.trackReconnectionMetrics("alerts", metrics);
 
-    render(<WebSocketMetricsPanel />);
+    render(
+      <TestProvider>
+        <WebSocketMetricsPanel />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Total Connections")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument(); // 2 connections
@@ -67,7 +81,11 @@ describe("WebSocketMetricsPanel", () => {
     metrics.failuresByReason.token_expired = 1;
     websocketTelemetry.trackReconnectionMetrics("notifications", metrics);
 
-    render(<WebSocketMetricsPanel />);
+    render(
+      <TestProvider>
+        <WebSocketMetricsPanel />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("network_error")).toBeInTheDocument();
     expect(screen.getByText("token_expired")).toBeInTheDocument();
@@ -76,7 +94,11 @@ describe("WebSocketMetricsPanel", () => {
   it("should respect refresh interval", async () => {
     vi.useFakeTimers();
 
-    render(<WebSocketMetricsPanel refreshInterval={1000} />);
+    render(
+      <TestProvider>
+        <WebSocketMetricsPanel refreshInterval={1000} />
+      </TestProvider>,
+    );
 
     // Add metrics after initial render
     const metrics = createInitialReconnectionMetrics();
@@ -94,7 +116,11 @@ describe("WebSocketMetricsPanel", () => {
   });
 
   it("should apply custom className", () => {
-    render(<WebSocketMetricsPanel className="custom-class" />);
+    render(
+      <TestProvider>
+        <WebSocketMetricsPanel className="custom-class" />
+      </TestProvider>,
+    );
 
     const panel = screen.getByTestId("ws-metrics-panel");
     expect(panel).toHaveClass("custom-class");

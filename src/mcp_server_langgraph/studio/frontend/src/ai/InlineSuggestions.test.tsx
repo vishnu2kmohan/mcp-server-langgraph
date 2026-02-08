@@ -8,6 +8,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { InlineSuggestions, type Suggestion } from "./InlineSuggestions";
 
+import { TestProvider } from "@/test-utils";
+
 describe("InlineSuggestions", () => {
   const mockSuggestions: Suggestion[] = [
     {
@@ -45,11 +47,13 @@ describe("InlineSuggestions", () => {
   describe("Rendering", () => {
     it("renders the suggestions container", () => {
       render(
-        <InlineSuggestions
-          suggestions={mockSuggestions}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={mockSuggestions}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("inline-suggestions")).toBeInTheDocument();
@@ -57,11 +61,13 @@ describe("InlineSuggestions", () => {
 
     it("renders all suggestions", () => {
       render(
-        <InlineSuggestions
-          suggestions={mockSuggestions}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={mockSuggestions}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Add error handling")).toBeInTheDocument();
@@ -75,11 +81,13 @@ describe("InlineSuggestions", () => {
 
     it("shows empty state when no suggestions", () => {
       render(
-        <InlineSuggestions
-          suggestions={[]}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[]}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no suggestions/i)).toBeInTheDocument();
@@ -87,12 +95,14 @@ describe("InlineSuggestions", () => {
 
     it("shows loading state when isLoading is true", () => {
       render(
-        <InlineSuggestions
-          suggestions={[]}
-          isLoading={true}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[]}
+            isLoading={true}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/generating suggestions/i)).toBeInTheDocument();
@@ -102,11 +112,13 @@ describe("InlineSuggestions", () => {
   describe("Suggestion Types", () => {
     it("renders correct icon for completion type", () => {
       render(
-        <InlineSuggestions
-          suggestions={[mockSuggestions[0]]}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[mockSuggestions[0]]}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       // Check that completion suggestion is labeled correctly
@@ -115,11 +127,13 @@ describe("InlineSuggestions", () => {
 
     it("renders correct icon for refactor type", () => {
       render(
-        <InlineSuggestions
-          suggestions={[mockSuggestions[1]]}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[mockSuggestions[1]]}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("refactor")).toBeInTheDocument();
@@ -127,11 +141,13 @@ describe("InlineSuggestions", () => {
 
     it("renders correct icon for fix type", () => {
       render(
-        <InlineSuggestions
-          suggestions={[mockSuggestions[2]]}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[mockSuggestions[2]]}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("fix")).toBeInTheDocument();
@@ -141,11 +157,13 @@ describe("InlineSuggestions", () => {
   describe("Interactions", () => {
     it("calls onAccept when accept button is clicked", () => {
       render(
-        <InlineSuggestions
-          suggestions={mockSuggestions}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={mockSuggestions}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       // Find the first accept button
@@ -157,11 +175,13 @@ describe("InlineSuggestions", () => {
 
     it("calls onDismiss when dismiss button is clicked", () => {
       render(
-        <InlineSuggestions
-          suggestions={mockSuggestions}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={mockSuggestions}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       // Find the first dismiss button
@@ -175,11 +195,13 @@ describe("InlineSuggestions", () => {
   describe("Confidence Indicator", () => {
     it("displays confidence as percentage", () => {
       render(
-        <InlineSuggestions
-          suggestions={[mockSuggestions[0]]}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[mockSuggestions[0]]}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/95%/)).toBeInTheDocument();
@@ -187,11 +209,13 @@ describe("InlineSuggestions", () => {
 
     it("applies high confidence styling for >= 0.9", () => {
       render(
-        <InlineSuggestions
-          suggestions={[mockSuggestions[0]]} // 0.95 confidence
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[mockSuggestions[0]]} // 0.95 confidence
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       const confidenceBadge = screen.getByText(/95%/).closest("span");
@@ -200,11 +224,13 @@ describe("InlineSuggestions", () => {
 
     it("applies medium confidence styling for >= 0.7 and < 0.9", () => {
       render(
-        <InlineSuggestions
-          suggestions={[mockSuggestions[2]]} // 0.72 confidence
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={[mockSuggestions[2]]} // 0.72 confidence
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       const confidenceBadge = screen.getByText(/72%/).closest("span");
@@ -215,11 +241,13 @@ describe("InlineSuggestions", () => {
   describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
     it("accept button meets minimum 24x24px touch target", () => {
       render(
-        <InlineSuggestions
-          suggestions={mockSuggestions}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={mockSuggestions}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       const acceptButtons = screen.getAllByLabelText(/accept/i);
@@ -232,11 +260,13 @@ describe("InlineSuggestions", () => {
 
     it("dismiss button meets minimum 24x24px touch target", () => {
       render(
-        <InlineSuggestions
-          suggestions={mockSuggestions}
-          onAccept={mockOnAccept}
-          onDismiss={mockOnDismiss}
-        />,
+        <TestProvider>
+          <InlineSuggestions
+            suggestions={mockSuggestions}
+            onAccept={mockOnAccept}
+            onDismiss={mockOnDismiss}
+          />
+        </TestProvider>,
       );
 
       const dismissButtons = screen.getAllByLabelText(/dismiss/i);

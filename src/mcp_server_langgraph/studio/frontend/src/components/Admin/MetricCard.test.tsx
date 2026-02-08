@@ -13,6 +13,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { MetricCard } from "./MetricCard";
 
+import { TestProvider } from "@/test-utils";
+
 describe("MetricCard", () => {
   afterEach(() => {
     cleanup();
@@ -21,20 +23,30 @@ describe("MetricCard", () => {
 
   describe("Basic Rendering", () => {
     it("should render label", () => {
-      render(<MetricCard label="Happiness" value={85} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Happiness" value={85} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Happiness")).toBeInTheDocument();
     });
 
     it("should render value with percentage", () => {
-      render(<MetricCard label="Happiness" value={85} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Happiness" value={85} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("85%")).toBeInTheDocument();
     });
 
     it("should render value without percentage when showPercentage is false", () => {
       render(
-        <MetricCard label="Active Users" value={150} showPercentage={false} />,
+        <TestProvider>
+          <MetricCard label="Active Users" value={150} showPercentage={false} />
+        </TestProvider>,
       );
 
       expect(screen.getByText("150")).toBeInTheDocument();
@@ -44,21 +56,33 @@ describe("MetricCard", () => {
 
   describe("Color Coding", () => {
     it("should show green for high values (>= 80)", () => {
-      render(<MetricCard label="Happiness" value={85} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Happiness" value={85} />
+        </TestProvider>,
+      );
 
       const valueElement = screen.getByText("85%");
       expect(valueElement).toHaveClass("text-success-10");
     });
 
     it("should show yellow for medium values (60-79)", () => {
-      render(<MetricCard label="Adoption" value={68} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Adoption" value={68} />
+        </TestProvider>,
+      );
 
       const valueElement = screen.getByText("68%");
       expect(valueElement).toHaveClass("text-warning-9");
     });
 
     it("should show red for low values (< 60)", () => {
-      render(<MetricCard label="Engagement" value={45} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Engagement" value={45} />
+        </TestProvider>,
+      );
 
       const valueElement = screen.getByText("45%");
       expect(valueElement).toHaveClass("text-error-10");
@@ -67,42 +91,66 @@ describe("MetricCard", () => {
 
   describe("Trend Indicator", () => {
     it("should show positive trend with up arrow", () => {
-      render(<MetricCard label="Happiness" value={85} trend={12} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Happiness" value={85} trend={12} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("trend-up")).toBeInTheDocument();
       expect(screen.getByText("+12%")).toBeInTheDocument();
     });
 
     it("should show negative trend with down arrow", () => {
-      render(<MetricCard label="Engagement" value={68} trend={-5} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Engagement" value={68} trend={-5} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("trend-down")).toBeInTheDocument();
       expect(screen.getByText("-5%")).toBeInTheDocument();
     });
 
     it("should not show trend indicator when trend is zero", () => {
-      render(<MetricCard label="Adoption" value={72} trend={0} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Adoption" value={72} trend={0} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("trend-up")).not.toBeInTheDocument();
       expect(screen.queryByTestId("trend-down")).not.toBeInTheDocument();
     });
 
     it("should not show trend when trend prop is not provided", () => {
-      render(<MetricCard label="Retention" value={88} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Retention" value={88} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("trend-up")).not.toBeInTheDocument();
       expect(screen.queryByTestId("trend-down")).not.toBeInTheDocument();
     });
 
     it("should show positive trend in green", () => {
-      render(<MetricCard label="Happiness" value={85} trend={12} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Happiness" value={85} trend={12} />
+        </TestProvider>,
+      );
 
       const trendElement = screen.getByText("+12%");
       expect(trendElement).toHaveClass("text-success-9");
     });
 
     it("should show negative trend in red", () => {
-      render(<MetricCard label="Engagement" value={68} trend={-5} />);
+      render(
+        <TestProvider>
+          <MetricCard label="Engagement" value={68} trend={-5} />
+        </TestProvider>,
+      );
 
       const trendElement = screen.getByText("-5%");
       expect(trendElement).toHaveClass("text-error-9");
@@ -111,21 +159,33 @@ describe("MetricCard", () => {
 
   describe("Variants", () => {
     it("should apply compact variant styling", () => {
-      render(<MetricCard label="NPS" value={42} variant="compact" />);
+      render(
+        <TestProvider>
+          <MetricCard label="NPS" value={42} variant="compact" />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("metric-card");
       expect(card).toHaveClass("p-3");
     });
 
     it("should apply default variant styling", () => {
-      render(<MetricCard label="NPS" value={42} />);
+      render(
+        <TestProvider>
+          <MetricCard label="NPS" value={42} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("metric-card");
       expect(card).toHaveClass("p-4");
     });
 
     it("should apply large variant styling", () => {
-      render(<MetricCard label="NPS" value={42} variant="large" />);
+      render(
+        <TestProvider>
+          <MetricCard label="NPS" value={42} variant="large" />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("metric-card");
       expect(card).toHaveClass("p-6");
@@ -135,11 +195,13 @@ describe("MetricCard", () => {
   describe("Icon", () => {
     it("should render icon when provided", () => {
       render(
-        <MetricCard
-          label="Users"
-          value={150}
-          icon={<span data-testid="custom-icon">👥</span>}
-        />,
+        <TestProvider>
+          <MetricCard
+            label="Users"
+            value={150}
+            icon={<span data-testid="custom-icon">👥</span>}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
@@ -149,11 +211,13 @@ describe("MetricCard", () => {
   describe("Description", () => {
     it("should render description when provided", () => {
       render(
-        <MetricCard
-          label="NPS Score"
-          value={42}
-          description="Net Promoter Score for the last 30 days"
-        />,
+        <TestProvider>
+          <MetricCard
+            label="NPS Score"
+            value={42}
+            description="Net Promoter Score for the last 30 days"
+          />
+        </TestProvider>,
       );
 
       expect(

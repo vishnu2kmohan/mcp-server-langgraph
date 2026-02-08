@@ -16,6 +16,8 @@ import userEvent from "@testing-library/user-event";
 import { MarketplaceManager } from "./MarketplaceManager";
 import type { MarketplaceInfo } from "../../types/skills";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock marketplace data
 const mockMarketplaces: MarketplaceInfo[] = [
   {
@@ -63,56 +65,92 @@ describe("MarketplaceManager", () => {
 
   describe("Rendering", () => {
     it("renders marketplace manager container", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("marketplace-manager")).toBeInTheDocument();
     });
 
     it("renders header with title", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("heading", { name: /marketplaces/i }),
       ).toBeInTheDocument();
     });
 
     it("renders add marketplace button", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /add marketplace/i }),
       ).toBeInTheDocument();
     });
 
     it("renders marketplace list", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("marketplace-list")).toBeInTheDocument();
     });
 
     it("renders all marketplaces", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("marketplace-anthropic")).toBeInTheDocument();
       expect(screen.getByTestId("marketplace-community")).toBeInTheDocument();
     });
 
     it("displays marketplace names", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("anthropic")).toBeInTheDocument();
       expect(screen.getByText("community")).toBeInTheDocument();
     });
 
     it("displays marketplace URIs", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText("https://github.com/anthropics/skills-marketplace"),
       ).toBeInTheDocument();
     });
 
     it("shows trusted badge for trusted marketplaces", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       const anthropicRow = screen.getByTestId("marketplace-anthropic");
       expect(within(anthropicRow).getByText(/trusted/i)).toBeInTheDocument();
     });
 
     it("shows auto-sync badge for auto-sync marketplaces", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       const anthropicRow = screen.getByTestId("marketplace-anthropic");
       expect(within(anthropicRow).getByText(/auto-sync/i)).toBeInTheDocument();
     });
@@ -124,13 +162,21 @@ describe("MarketplaceManager", () => {
 
   describe("Action Buttons", () => {
     it("renders sync button for each marketplace", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       const syncButtons = screen.getAllByRole("button", { name: /sync/i });
       expect(syncButtons.length).toBe(2);
     });
 
     it("does not show remove button for default anthropic marketplace", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       const anthropicRow = screen.getByTestId("marketplace-anthropic");
       expect(
         within(anthropicRow).queryByRole("button", { name: /remove/i }),
@@ -138,7 +184,11 @@ describe("MarketplaceManager", () => {
     });
 
     it("shows remove button for non-default marketplaces", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       const communityRow = screen.getByTestId("marketplace-community");
       expect(
         within(communityRow).getByRole("button", { name: /remove/i }),
@@ -147,7 +197,11 @@ describe("MarketplaceManager", () => {
 
     it("calls onAdd when Add Marketplace button clicked", async () => {
       const user = userEvent.setup();
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(
         screen.getByRole("button", { name: /add marketplace/i }),
@@ -157,7 +211,11 @@ describe("MarketplaceManager", () => {
 
     it("calls onRemove with marketplace name when Remove clicked", async () => {
       const user = userEvent.setup();
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const communityRow = screen.getByTestId("marketplace-community");
       await user.click(
@@ -168,7 +226,11 @@ describe("MarketplaceManager", () => {
 
     it("calls onSync with marketplace name when Sync clicked", async () => {
       const user = userEvent.setup();
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const communityRow = screen.getByTestId("marketplace-community");
       await user.click(
@@ -184,22 +246,32 @@ describe("MarketplaceManager", () => {
 
   describe("Loading States", () => {
     it("shows loading spinner when isLoading", () => {
-      render(<MarketplaceManager {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
       expect(document.querySelector(".animate-spin")).toBeInTheDocument();
     });
 
     it("hides marketplace list when loading", () => {
-      render(<MarketplaceManager {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("marketplace-list")).not.toBeInTheDocument();
     });
 
     it("disables sync button for syncing marketplace", () => {
       render(
-        <MarketplaceManager
-          {...defaultProps}
-          isSyncing={true}
-          syncingMarketplace="community"
-        />,
+        <TestProvider>
+          <MarketplaceManager
+            {...defaultProps}
+            isSyncing={true}
+            syncingMarketplace="community"
+          />
+        </TestProvider>,
       );
       const communityRow = screen.getByTestId("marketplace-community");
       expect(
@@ -209,11 +281,13 @@ describe("MarketplaceManager", () => {
 
     it("shows syncing spinner on syncing marketplace", () => {
       render(
-        <MarketplaceManager
-          {...defaultProps}
-          isSyncing={true}
-          syncingMarketplace="community"
-        />,
+        <TestProvider>
+          <MarketplaceManager
+            {...defaultProps}
+            isSyncing={true}
+            syncingMarketplace="community"
+          />
+        </TestProvider>,
       );
       const communityRow = screen.getByTestId("marketplace-community");
       // The spinner is inside the syncing button
@@ -225,11 +299,13 @@ describe("MarketplaceManager", () => {
 
     it("does not disable other sync buttons while one is syncing", () => {
       render(
-        <MarketplaceManager
-          {...defaultProps}
-          isSyncing={true}
-          syncingMarketplace="community"
-        />,
+        <TestProvider>
+          <MarketplaceManager
+            {...defaultProps}
+            isSyncing={true}
+            syncingMarketplace="community"
+          />
+        </TestProvider>,
       );
       const anthropicRow = screen.getByTestId("marketplace-anthropic");
       expect(
@@ -245,10 +321,12 @@ describe("MarketplaceManager", () => {
   describe("Error States", () => {
     it("shows error message when error prop provided", () => {
       render(
-        <MarketplaceManager
-          {...defaultProps}
-          error="Failed to load marketplaces"
-        />,
+        <TestProvider>
+          <MarketplaceManager
+            {...defaultProps}
+            error="Failed to load marketplaces"
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByText(/failed to load marketplaces/i),
@@ -257,10 +335,12 @@ describe("MarketplaceManager", () => {
 
     it("shows error with alert role for accessibility", () => {
       render(
-        <MarketplaceManager
-          {...defaultProps}
-          error="Failed to load marketplaces"
-        />,
+        <TestProvider>
+          <MarketplaceManager
+            {...defaultProps}
+            error="Failed to load marketplaces"
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
@@ -272,14 +352,22 @@ describe("MarketplaceManager", () => {
 
   describe("Empty State", () => {
     it("shows empty state when no marketplaces", () => {
-      render(<MarketplaceManager {...defaultProps} marketplaces={[]} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} marketplaces={[]} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(/no marketplaces registered/i),
       ).toBeInTheDocument();
     });
 
     it("shows add marketplace prompt in empty state", () => {
-      render(<MarketplaceManager {...defaultProps} marketplaces={[]} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} marketplaces={[]} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /add marketplace/i }),
       ).toBeInTheDocument();
@@ -292,7 +380,11 @@ describe("MarketplaceManager", () => {
 
   describe("Accessibility", () => {
     it("has accessible button labels", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Add button should have descriptive label
       expect(
@@ -305,18 +397,30 @@ describe("MarketplaceManager", () => {
     });
 
     it("uses semantic list for marketplaces", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("list")).toBeInTheDocument();
     });
 
     it("each marketplace is a listitem", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       const items = screen.getAllByRole("listitem");
       expect(items.length).toBe(2);
     });
 
     it("has proper heading hierarchy", () => {
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
       const heading = screen.getByRole("heading", { name: /marketplaces/i });
       expect(heading.tagName).toBe("H2");
     });
@@ -329,7 +433,11 @@ describe("MarketplaceManager", () => {
   describe("Keyboard Navigation", () => {
     it("buttons are focusable", async () => {
       const user = userEvent.setup();
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Tab navigation should focus buttons
       await user.tab();
@@ -340,7 +448,11 @@ describe("MarketplaceManager", () => {
 
     it("Enter key activates focused button", async () => {
       const user = userEvent.setup();
-      render(<MarketplaceManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <MarketplaceManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const addButton = screen.getByRole("button", {
         name: /add marketplace/i,

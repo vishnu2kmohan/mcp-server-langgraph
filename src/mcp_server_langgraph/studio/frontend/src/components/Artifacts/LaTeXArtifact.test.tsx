@@ -19,6 +19,8 @@ import {
 } from "@testing-library/react";
 import { LaTeXArtifact } from "./LaTeXArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock KaTeX (the rendering library)
 vi.mock("katex", () => ({
   default: {
@@ -56,14 +58,22 @@ describe("LaTeXArtifact", () => {
 
   describe("Rendering", () => {
     it("should render LaTeX content", () => {
-      render(<LaTeXArtifact content="E = mc^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="E = mc^2" />
+        </TestProvider>,
+      );
 
       // Check that container is rendered
       expect(screen.getByTestId("latex-artifact")).toBeInTheDocument();
     });
 
     it("should render inline math by default", () => {
-      render(<LaTeXArtifact content="x^2 + y^2 = z^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2 + y^2 = z^2" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("latex-artifact");
       expect(container.innerHTML).toContain("katex-inline");
@@ -71,10 +81,12 @@ describe("LaTeXArtifact", () => {
 
     it("should render display math when displayMode is true", () => {
       render(
-        <LaTeXArtifact
-          content="\\int_0^\\infty e^{-x} dx = 1"
-          displayMode={true}
-        />,
+        <TestProvider>
+          <LaTeXArtifact
+            content="\\int_0^\\infty e^{-x} dx = 1"
+            displayMode={true}
+          />
+        </TestProvider>,
       );
 
       const container = screen.getByTestId("latex-artifact");
@@ -82,7 +94,11 @@ describe("LaTeXArtifact", () => {
     });
 
     it("should apply custom className", () => {
-      render(<LaTeXArtifact content="a + b" className="custom-latex" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="a + b" className="custom-latex" />
+        </TestProvider>,
+      );
 
       // className is applied to the outer container, not the latex-artifact div
       const container =
@@ -94,7 +110,9 @@ describe("LaTeXArtifact", () => {
   describe("Copy Functionality", () => {
     it("should render copy button", () => {
       render(
-        <LaTeXArtifact content="x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" />,
+        <TestProvider>
+          <LaTeXArtifact content="x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}" />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
@@ -102,7 +120,11 @@ describe("LaTeXArtifact", () => {
 
     it("should copy raw LaTeX to clipboard when copy is clicked", async () => {
       const content = "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}";
-      render(<LaTeXArtifact content={content} />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content={content} />
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByRole("button", { name: /copy/i });
       fireEvent.click(copyButton);
@@ -113,7 +135,11 @@ describe("LaTeXArtifact", () => {
     });
 
     it("should show success message after copying", async () => {
-      render(<LaTeXArtifact content="\\sum_{i=1}^n i" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="\\sum_{i=1}^n i" />
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByRole("button", { name: /copy/i });
       fireEvent.click(copyButton);
@@ -126,20 +152,30 @@ describe("LaTeXArtifact", () => {
 
   describe("Error Handling", () => {
     it("should show error message for invalid LaTeX", () => {
-      render(<LaTeXArtifact content="\\invalid{command}" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="\\invalid{command}" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/error/i)).toBeInTheDocument();
     });
 
     it("should still display raw LaTeX when there is an error", () => {
-      render(<LaTeXArtifact content="\\invalid{command}" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="\\invalid{command}" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/\\invalid\{command\}/)).toBeInTheDocument();
     });
 
     it("should allow retry after error", () => {
       const { rerender } = render(
-        <LaTeXArtifact content="\\invalid{command}" />,
+        <TestProvider>
+          <LaTeXArtifact content="\\invalid{command}" />
+        </TestProvider>,
       );
 
       // Verify error is shown
@@ -155,32 +191,50 @@ describe("LaTeXArtifact", () => {
 
   describe("Common LaTeX Expressions", () => {
     it("should render fractions", () => {
-      render(<LaTeXArtifact content="\\frac{1}{2}" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="\\frac{1}{2}" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("latex-artifact").innerHTML).toContain(
         "\\frac{1}{2}",
       );
     });
 
     it("should render square roots", () => {
-      render(<LaTeXArtifact content="\\sqrt{x}" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="\\sqrt{x}" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("latex-artifact").innerHTML).toContain(
         "\\sqrt{x}",
       );
     });
 
     it("should render summations", () => {
-      render(<LaTeXArtifact content="\\sum_{i=1}^{n} i^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="\\sum_{i=1}^{n} i^2" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("latex-artifact").innerHTML).toContain("\\sum");
     });
 
     it("should render integrals", () => {
-      render(<LaTeXArtifact content="\\int_a^b f(x) dx" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="\\int_a^b f(x) dx" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("latex-artifact").innerHTML).toContain("\\int");
     });
 
     it("should render matrices", () => {
       render(
-        <LaTeXArtifact content="\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" />,
+        <TestProvider>
+          <LaTeXArtifact content="\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" />
+        </TestProvider>,
       );
       expect(screen.getByTestId("latex-artifact").innerHTML).toContain(
         "pmatrix",
@@ -190,7 +244,11 @@ describe("LaTeXArtifact", () => {
 
   describe("Accessibility", () => {
     it("should have role presentation for decorative math", () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("latex-artifact");
       expect(container).toHaveAttribute("role", "img");
@@ -198,7 +256,11 @@ describe("LaTeXArtifact", () => {
 
     it("should have aria-label with LaTeX content", () => {
       const content = "E = mc^2";
-      render(<LaTeXArtifact content={content} />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content={content} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("latex-artifact");
       expect(container).toHaveAttribute(
@@ -210,13 +272,21 @@ describe("LaTeXArtifact", () => {
 
   describe("Title", () => {
     it("should render title when provided", () => {
-      render(<LaTeXArtifact content="x^2" title="Quadratic formula" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" title="Quadratic formula" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Quadratic formula")).toBeInTheDocument();
     });
 
     it("should not render title section when not provided", () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("latex-title")).not.toBeInTheDocument();
     });
@@ -224,27 +294,47 @@ describe("LaTeXArtifact", () => {
 
   describe("Zoom Controls", () => {
     it("should have zoom in button", () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText("Zoom in")).toBeInTheDocument();
     });
 
     it("should have zoom out button", () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText("Zoom out")).toBeInTheDocument();
     });
 
     it("should have reset zoom button", () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText("Reset zoom")).toBeInTheDocument();
     });
 
     it("should display zoom level", () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
       expect(screen.getByText("100%")).toBeInTheDocument();
     });
 
     it("should increase zoom when zoom in clicked", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
       const zoomIn = screen.getByLabelText("Zoom in");
       fireEvent.click(zoomIn);
       await waitFor(() => {
@@ -255,12 +345,20 @@ describe("LaTeXArtifact", () => {
 
   describe("Fullscreen", () => {
     it("should have fullscreen toggle button", () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText("Toggle fullscreen")).toBeInTheDocument();
     });
 
     it("should toggle fullscreen mode", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
       const container = screen
         .getByTestId("latex-artifact")
         .closest(".rounded-lg");
@@ -278,7 +376,11 @@ describe("LaTeXArtifact", () => {
 
   describe("Keyboard Shortcuts", () => {
     it("should zoom in with + key", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("latex-container");
       fireEvent.keyDown(container, { key: "+" });
@@ -289,7 +391,11 @@ describe("LaTeXArtifact", () => {
     });
 
     it("should zoom out with - key", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("latex-container");
       fireEvent.keyDown(container, { key: "-" });
@@ -300,7 +406,11 @@ describe("LaTeXArtifact", () => {
     });
 
     it("should reset zoom with 0 key", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       // First zoom in
       fireEvent.click(screen.getByLabelText("Zoom in"));
@@ -318,7 +428,11 @@ describe("LaTeXArtifact", () => {
     });
 
     it("should exit fullscreen with Escape key", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       // Enter fullscreen
       fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
@@ -339,7 +453,11 @@ describe("LaTeXArtifact", () => {
     });
 
     it("should be focusable for keyboard navigation", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("latex-container");
       expect(container).toHaveAttribute("tabIndex", "0");
@@ -348,7 +466,11 @@ describe("LaTeXArtifact", () => {
 
   describe("Touch Gestures", () => {
     it("should handle pinch-to-zoom with two fingers", async () => {
-      render(<LaTeXArtifact content="x^2" />);
+      render(
+        <TestProvider>
+          <LaTeXArtifact content="x^2" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("latex-container");
 

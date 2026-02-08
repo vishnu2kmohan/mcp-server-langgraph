@@ -15,6 +15,8 @@ import {
 } from "./LangGraphNodeVisualization";
 import type { LangGraphNode, LangGraphEdge } from "../../types/chat";
 
+import { TestProvider } from "@/test-utils";
+
 describe("LangGraphNodeVisualization", () => {
   afterEach(() => {
     cleanup();
@@ -26,7 +28,11 @@ describe("LangGraphNodeVisualization", () => {
         { id: "1", name: "Start", type: "start", status: "completed" },
       ];
 
-      render(<LangGraphNodeVisualization nodes={nodes} />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={nodes} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByTestId("langgraph-node-visualization"),
@@ -40,7 +46,11 @@ describe("LangGraphNodeVisualization", () => {
         { id: "3", name: "End", type: "end", status: "pending" },
       ];
 
-      render(<LangGraphNodeVisualization nodes={nodes} />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={nodes} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("node-1")).toBeInTheDocument();
       expect(screen.getByTestId("node-2")).toBeInTheDocument();
@@ -52,7 +62,11 @@ describe("LangGraphNodeVisualization", () => {
         { id: "1", name: "My Custom Node", type: "agent", status: "completed" },
       ];
 
-      render(<LangGraphNodeVisualization nodes={nodes} />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={nodes} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("My Custom Node")).toBeInTheDocument();
     });
@@ -68,7 +82,11 @@ describe("LangGraphNodeVisualization", () => {
         },
       ];
 
-      render(<LangGraphNodeVisualization nodes={nodes} />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={nodes} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("150ms")).toBeInTheDocument();
     });
@@ -79,7 +97,11 @@ describe("LangGraphNodeVisualization", () => {
         { id: "2", name: "Active", type: "agent", status: "running" },
       ];
 
-      render(<LangGraphNodeVisualization nodes={nodes} currentNode="2" />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={nodes} currentNode="2" />
+        </TestProvider>,
+      );
 
       const activeNode = screen.getByTestId("node-2");
       expect(activeNode.className).toContain("ring-2");
@@ -92,7 +114,11 @@ describe("LangGraphNodeVisualization", () => {
       ];
       const edges: LangGraphEdge[] = [{ from: "1", to: "2" }];
 
-      render(<LangGraphNodeVisualization nodes={nodes} edges={edges} />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={nodes} edges={edges} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("edge-1-to-2")).toBeInTheDocument();
     });
@@ -106,13 +132,21 @@ describe("LangGraphNodeVisualization", () => {
         { from: "1", to: "2", condition: "success" },
       ];
 
-      render(<LangGraphNodeVisualization nodes={nodes} edges={edges} />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={nodes} edges={edges} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("success")).toBeInTheDocument();
     });
 
     it("should handle empty nodes array", () => {
-      render(<LangGraphNodeVisualization nodes={[]} />);
+      render(
+        <TestProvider>
+          <LangGraphNodeVisualization nodes={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByTestId("langgraph-node-visualization"),
@@ -122,49 +156,77 @@ describe("LangGraphNodeVisualization", () => {
 
   describe("getNodeTypeIcon", () => {
     it("should return correct icon for start type", () => {
-      const { container } = render(<>{getNodeTypeIcon("start")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeTypeIcon("start")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-type-start"]'),
       ).toBeInTheDocument();
     });
 
     it("should return correct icon for end type", () => {
-      const { container } = render(<>{getNodeTypeIcon("end")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeTypeIcon("end")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-type-end"]'),
       ).toBeInTheDocument();
     });
 
     it("should return correct icon for tool type", () => {
-      const { container } = render(<>{getNodeTypeIcon("tool")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeTypeIcon("tool")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-type-tool"]'),
       ).toBeInTheDocument();
     });
 
     it("should return correct icon for conditional type", () => {
-      const { container } = render(<>{getNodeTypeIcon("conditional")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeTypeIcon("conditional")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-type-conditional"]'),
       ).toBeInTheDocument();
     });
 
     it("should return correct icon for agent type", () => {
-      const { container } = render(<>{getNodeTypeIcon("agent")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeTypeIcon("agent")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-type-agent"]'),
       ).toBeInTheDocument();
     });
 
     it("should return default icon for unknown type", () => {
-      const { container } = render(<>{getNodeTypeIcon("default")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeTypeIcon("default")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-type-default"]'),
       ).toBeInTheDocument();
     });
 
     it("should respect custom size parameter", () => {
-      const { container } = render(<>{getNodeTypeIcon("start", 20)}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeTypeIcon("start", 20)}</>
+        </TestProvider>,
+      );
       const icon = container.querySelector('[data-testid="node-type-start"]');
       expect(icon).toHaveAttribute("width", "20");
       expect(icon).toHaveAttribute("height", "20");
@@ -173,14 +235,22 @@ describe("LangGraphNodeVisualization", () => {
 
   describe("getNodeStatusIndicator", () => {
     it("should return completed indicator", () => {
-      const { container } = render(<>{getNodeStatusIndicator("completed")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeStatusIndicator("completed")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-status-completed"]'),
       ).toBeInTheDocument();
     });
 
     it("should return running indicator with animation", () => {
-      const { container } = render(<>{getNodeStatusIndicator("running")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeStatusIndicator("running")}</>
+        </TestProvider>,
+      );
       const indicator = container.querySelector(
         '[data-testid="node-status-running"]',
       );
@@ -190,21 +260,33 @@ describe("LangGraphNodeVisualization", () => {
     });
 
     it("should return error indicator", () => {
-      const { container } = render(<>{getNodeStatusIndicator("error")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeStatusIndicator("error")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-status-error"]'),
       ).toBeInTheDocument();
     });
 
     it("should return pending indicator", () => {
-      const { container } = render(<>{getNodeStatusIndicator("pending")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeStatusIndicator("pending")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-status-pending"]'),
       ).toBeInTheDocument();
     });
 
     it("should return skipped indicator", () => {
-      const { container } = render(<>{getNodeStatusIndicator("skipped")}</>);
+      const { container } = render(
+        <TestProvider>
+          <>{getNodeStatusIndicator("skipped")}</>
+        </TestProvider>,
+      );
       expect(
         container.querySelector('[data-testid="node-status-skipped"]'),
       ).toBeInTheDocument();

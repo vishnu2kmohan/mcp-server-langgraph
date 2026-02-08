@@ -235,6 +235,8 @@ import { ToolExplorer } from "./ToolExplorer";
 import { ResourceBrowser } from "./ResourceBrowser";
 import { PromptLibrary } from "./PromptLibrary";
 
+import { TestProvider } from "@/test-utils";
+
 describe("AggregatedCapabilitiesPanel", () => {
   let store: ReturnType<typeof createMockStore>;
 
@@ -378,43 +380,65 @@ describe("MCPServerCard", () => {
   };
 
   it("should render server name", () => {
-    render(<MCPServerCard {...defaultProps} />);
+    render(
+      <TestProvider>
+        <MCPServerCard {...defaultProps} />
+      </TestProvider>,
+    );
     expect(screen.getByText("github")).toBeInTheDocument();
   });
 
   it("should show tool count with icon", () => {
-    render(<MCPServerCard {...defaultProps} />);
+    render(
+      <TestProvider>
+        <MCPServerCard {...defaultProps} />
+      </TestProvider>,
+    );
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByTestId("tool-icon")).toBeInTheDocument();
   });
 
   it("should show resource count with icon", () => {
-    render(<MCPServerCard {...defaultProps} />);
+    render(
+      <TestProvider>
+        <MCPServerCard {...defaultProps} />
+      </TestProvider>,
+    );
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByTestId("resource-icon")).toBeInTheDocument();
   });
 
   it("should show prompt count with icon", () => {
-    render(<MCPServerCard {...defaultProps} />);
+    render(
+      <TestProvider>
+        <MCPServerCard {...defaultProps} />
+      </TestProvider>,
+    );
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByTestId("prompt-icon")).toBeInTheDocument();
   });
 
   it("should call onSelect when clicked", () => {
-    render(<MCPServerCard {...defaultProps} />);
+    render(
+      <TestProvider>
+        <MCPServerCard {...defaultProps} />
+      </TestProvider>,
+    );
     fireEvent.click(screen.getByRole("button"));
     expect(defaultProps.onSelect).toHaveBeenCalledWith("github");
   });
 
   it("should show zero counts gracefully", () => {
     render(
-      <MCPServerCard
-        serverName="empty-server"
-        toolCount={0}
-        resourceCount={0}
-        promptCount={0}
-        onSelect={vi.fn()}
-      />,
+      <TestProvider>
+        <MCPServerCard
+          serverName="empty-server"
+          toolCount={0}
+          resourceCount={0}
+          promptCount={0}
+          onSelect={vi.fn()}
+        />
+      </TestProvider>,
     );
     expect(screen.getAllByText("0")).toHaveLength(3);
   });

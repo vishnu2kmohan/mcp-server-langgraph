@@ -19,8 +19,8 @@ import {
   within,
   cleanup,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
 import { WorkflowsTab } from "./WorkflowsTab";
+import { TestProvider } from "@/test-utils";
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -64,9 +64,9 @@ describe("WorkflowsTab", () => {
   describe("Workflow List Display", () => {
     it("should render workflow list", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Workflow One")).toBeInTheDocument();
@@ -76,9 +76,9 @@ describe("WorkflowsTab", () => {
 
     it("should show created date for workflows with dates", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText(/Created 1\/1\/2025/)).toBeInTheDocument();
@@ -86,9 +86,9 @@ describe("WorkflowsTab", () => {
 
     it("should show empty state when no workflows", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} workflows={[]} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no workflows yet/i)).toBeInTheDocument();
@@ -96,9 +96,9 @@ describe("WorkflowsTab", () => {
 
     it("should have New Workflow button", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(
@@ -110,9 +110,9 @@ describe("WorkflowsTab", () => {
   describe("Navigation", () => {
     it("should navigate to workflow builder when workflow is clicked", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Workflow One"));
@@ -124,9 +124,9 @@ describe("WorkflowsTab", () => {
   describe("Create Workflow", () => {
     it("should open dialog when New Workflow is clicked", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /new workflow/i }));
@@ -136,9 +136,9 @@ describe("WorkflowsTab", () => {
 
     it("should call API and refresh when workflow is created", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /new workflow/i }));
@@ -164,9 +164,9 @@ describe("WorkflowsTab", () => {
   describe("Remove Workflow", () => {
     it("should have remove button for each workflow", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const removeButtons = screen.getAllByRole("button", {
@@ -177,9 +177,9 @@ describe("WorkflowsTab", () => {
 
     it("should call API and refresh when workflow is removed", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // Find "Workflow One" text element and get its parent row
@@ -208,9 +208,9 @@ describe("WorkflowsTab", () => {
 
     it("should not navigate when remove button is clicked", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const removeButtons = screen.getAllByRole("button", {
@@ -225,9 +225,9 @@ describe("WorkflowsTab", () => {
   describe("Search and Filter", () => {
     it("should render search input", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(
@@ -237,9 +237,9 @@ describe("WorkflowsTab", () => {
 
     it("should filter workflows by search query", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // All workflows should be visible initially
@@ -259,9 +259,9 @@ describe("WorkflowsTab", () => {
 
     it("should filter workflows case-insensitively", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search.*workflows/i);
@@ -273,9 +273,9 @@ describe("WorkflowsTab", () => {
 
     it("should show empty message when no workflows match search", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText(/search.*workflows/i);
@@ -286,9 +286,9 @@ describe("WorkflowsTab", () => {
 
     it("should render sort dropdown", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText(/sort by/i)).toBeInTheDocument();
@@ -296,9 +296,9 @@ describe("WorkflowsTab", () => {
 
     it("should sort workflows by name", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // Change sort to name (ascending)
@@ -314,9 +314,9 @@ describe("WorkflowsTab", () => {
 
     it("should sort workflows by date (default)", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // Default is date descending, so workflows with dates come first (newest first)
@@ -331,9 +331,9 @@ describe("WorkflowsTab", () => {
   describe("Bulk Selection", () => {
     it("should render checkboxes for each workflow", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -343,9 +343,9 @@ describe("WorkflowsTab", () => {
 
     it("should have select all checkbox", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText(/select all/i)).toBeInTheDocument();
@@ -353,9 +353,9 @@ describe("WorkflowsTab", () => {
 
     it("should select all when select all is clicked", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const selectAllCheckbox = screen.getByLabelText(/select all/i);
@@ -369,9 +369,9 @@ describe("WorkflowsTab", () => {
 
     it("should show bulk action bar when workflows are selected", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -385,9 +385,9 @@ describe("WorkflowsTab", () => {
 
     it("should bulk delete workflows when confirmed", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <WorkflowsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // Select two workflows

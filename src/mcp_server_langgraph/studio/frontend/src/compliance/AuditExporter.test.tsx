@@ -13,6 +13,8 @@ import {
 } from "@testing-library/react";
 import { AuditExporter, type AuditFilter } from "./AuditExporter";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -67,22 +69,26 @@ describe("AuditExporter", () => {
   describe("Rendering", () => {
     it("should render exporter container", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("audit-exporter")).toBeInTheDocument();
     });
 
     it("should display export format options", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("CSV")).toBeInTheDocument();
       expect(screen.getByText("JSON")).toBeInTheDocument();
@@ -91,22 +97,26 @@ describe("AuditExporter", () => {
 
     it("should show record count", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/2 records/i)).toBeInTheDocument();
     });
 
     it("should display date range", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       // Date format depends on locale, just verify the range is shown
       expect(screen.getByText(/from .+ to .+/)).toBeInTheDocument();
@@ -116,11 +126,13 @@ describe("AuditExporter", () => {
   describe("Format Selection", () => {
     it("should have CSV selected by default", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       const csvOption = screen.getByTestId("format-csv");
       expect(csvOption).toHaveClass("selected");
@@ -128,11 +140,13 @@ describe("AuditExporter", () => {
 
     it("should allow selecting JSON format", async () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       const jsonOption = screen.getByTestId("format-json");
       fireEvent.click(jsonOption);
@@ -141,11 +155,13 @@ describe("AuditExporter", () => {
 
     it("should allow selecting PDF format", async () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       const pdfOption = screen.getByTestId("format-pdf");
       fireEvent.click(pdfOption);
@@ -159,11 +175,13 @@ describe("AuditExporter", () => {
         .fn()
         .mockResolvedValue({ url: "/download/export.csv" });
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={onExport}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={onExport}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("export-button"));
@@ -189,11 +207,13 @@ describe("AuditExporter", () => {
         );
 
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={onExport}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={onExport}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("export-button"));
@@ -208,11 +228,13 @@ describe("AuditExporter", () => {
         .fn()
         .mockResolvedValue({ url: "/download/export.csv" });
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={onExport}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={onExport}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("export-button"));
@@ -225,11 +247,13 @@ describe("AuditExporter", () => {
     it("should show error on export failure", async () => {
       const onExport = vi.fn().mockRejectedValue(new Error("Export failed"));
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={onExport}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={onExport}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("export-button"));
@@ -243,13 +267,15 @@ describe("AuditExporter", () => {
   describe("Rate Limiting", () => {
     it("should show rate limit warning", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-          remainingExports={3}
-          maxExports={10}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+            remainingExports={3}
+            maxExports={10}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByText(/3 of 10 exports remaining/i),
@@ -258,13 +284,15 @@ describe("AuditExporter", () => {
 
     it("should disable export when rate limited", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-          remainingExports={0}
-          maxExports={10}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+            remainingExports={0}
+            maxExports={10}
+          />
+        </TestProvider>,
       );
       const exportButton = screen.getByTestId("export-button");
       expect(exportButton).toBeDisabled();
@@ -272,13 +300,15 @@ describe("AuditExporter", () => {
 
     it("should show rate limit exhausted message", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-          remainingExports={0}
-          maxExports={10}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+            remainingExports={0}
+            maxExports={10}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/rate limit reached/i)).toBeInTheDocument();
     });
@@ -287,12 +317,14 @@ describe("AuditExporter", () => {
   describe("Field Selection", () => {
     it("should show field selection dropdown", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-          showFieldSelection
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+            showFieldSelection
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("field-selection")).toBeInTheDocument();
     });
@@ -302,12 +334,14 @@ describe("AuditExporter", () => {
         .fn()
         .mockResolvedValue({ url: "/download/export.csv" });
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={onExport}
-          showFieldSelection
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={onExport}
+            showFieldSelection
+          />
+        </TestProvider>,
       );
 
       // Toggle off userAgent field
@@ -329,11 +363,13 @@ describe("AuditExporter", () => {
   describe("Watermarking", () => {
     it("should show watermark option for PDF", async () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
 
       // Select PDF format
@@ -347,11 +383,13 @@ describe("AuditExporter", () => {
         .fn()
         .mockResolvedValue({ url: "/download/export.pdf" });
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={onExport}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={onExport}
+          />
+        </TestProvider>,
       );
 
       // Select PDF format
@@ -374,11 +412,13 @@ describe("AuditExporter", () => {
   describe("Accessibility", () => {
     it("should have accessible export button", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       const exportButton = screen.getByRole("button", { name: /export/i });
       expect(exportButton).toBeInTheDocument();
@@ -386,11 +426,13 @@ describe("AuditExporter", () => {
 
     it("should have radio buttons for format selection", () => {
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
@@ -400,11 +442,13 @@ describe("AuditExporter", () => {
         .fn()
         .mockResolvedValue({ url: "/download/export.csv" });
       render(
-        <AuditExporter
-          auditLogs={mockAuditLogs}
-          filters={mockFilters}
-          onExport={onExport}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={mockAuditLogs}
+            filters={mockFilters}
+            onExport={onExport}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("export-button"));
@@ -419,22 +463,26 @@ describe("AuditExporter", () => {
   describe("Empty State", () => {
     it("should show empty state when no logs", () => {
       render(
-        <AuditExporter
-          auditLogs={[]}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={[]}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/no audit logs/i)).toBeInTheDocument();
     });
 
     it("should disable export when no logs", () => {
       render(
-        <AuditExporter
-          auditLogs={[]}
-          filters={mockFilters}
-          onExport={() => Promise.resolve()}
-        />,
+        <TestProvider>
+          <AuditExporter
+            auditLogs={[]}
+            filters={mockFilters}
+            onExport={() => Promise.resolve()}
+          />
+        </TestProvider>,
       );
       const exportButton = screen.getByTestId("export-button");
       expect(exportButton).toBeDisabled();

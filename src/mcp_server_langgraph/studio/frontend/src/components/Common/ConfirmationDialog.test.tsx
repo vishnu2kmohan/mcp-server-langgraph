@@ -18,6 +18,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 describe("ConfirmationDialog", () => {
@@ -44,25 +46,41 @@ describe("ConfirmationDialog", () => {
 
   describe("rendering", () => {
     it("should render the dialog when open", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
-      render(<ConfirmationDialog {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("should render the title", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Confirm Action")).toBeInTheDocument();
     });
 
     it("should render the message", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Are you sure you want to proceed?"),
@@ -70,7 +88,11 @@ describe("ConfirmationDialog", () => {
     });
 
     it("should render confirm and cancel buttons", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /confirm/i }),
@@ -82,11 +104,13 @@ describe("ConfirmationDialog", () => {
 
     it("should render custom button labels", () => {
       render(
-        <ConfirmationDialog
-          {...defaultProps}
-          confirmLabel="Delete"
-          cancelLabel="Keep"
-        />,
+        <TestProvider>
+          <ConfirmationDialog
+            {...defaultProps}
+            confirmLabel="Delete"
+            cancelLabel="Keep"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -102,34 +126,54 @@ describe("ConfirmationDialog", () => {
 
   describe("severity levels", () => {
     it("should render info severity by default", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("data-severity", "info");
     });
 
     it("should render warning severity", () => {
-      render(<ConfirmationDialog {...defaultProps} severity="warning" />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} severity="warning" />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("data-severity", "warning");
     });
 
     it("should render danger severity", () => {
-      render(<ConfirmationDialog {...defaultProps} severity="danger" />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} severity="danger" />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("data-severity", "danger");
     });
 
     it("should show warning icon for warning severity", () => {
-      render(<ConfirmationDialog {...defaultProps} severity="warning" />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} severity="warning" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("warning-icon")).toBeInTheDocument();
     });
 
     it("should show danger icon for danger severity", () => {
-      render(<ConfirmationDialog {...defaultProps} severity="danger" />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} severity="danger" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("danger-icon")).toBeInTheDocument();
     });
@@ -142,11 +186,13 @@ describe("ConfirmationDialog", () => {
   describe("type-to-confirm", () => {
     it("should show type confirmation input for danger severity with confirmText", () => {
       render(
-        <ConfirmationDialog
-          {...defaultProps}
-          severity="danger"
-          confirmText="DELETE"
-        />,
+        <TestProvider>
+          <ConfirmationDialog
+            {...defaultProps}
+            severity="danger"
+            confirmText="DELETE"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -156,11 +202,13 @@ describe("ConfirmationDialog", () => {
 
     it("should disable confirm button until correct text is entered", () => {
       render(
-        <ConfirmationDialog
-          {...defaultProps}
-          severity="danger"
-          confirmText="DELETE"
-        />,
+        <TestProvider>
+          <ConfirmationDialog
+            {...defaultProps}
+            severity="danger"
+            confirmText="DELETE"
+          />
+        </TestProvider>,
       );
 
       const confirmButton = screen.getByRole("button", { name: /confirm/i });
@@ -170,11 +218,13 @@ describe("ConfirmationDialog", () => {
     it("should enable confirm button when correct text is entered", async () => {
       const user = userEvent.setup();
       render(
-        <ConfirmationDialog
-          {...defaultProps}
-          severity="danger"
-          confirmText="DELETE"
-        />,
+        <TestProvider>
+          <ConfirmationDialog
+            {...defaultProps}
+            severity="danger"
+            confirmText="DELETE"
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByPlaceholderText(/type DELETE to confirm/i);
@@ -187,11 +237,13 @@ describe("ConfirmationDialog", () => {
     it("should be case-sensitive for confirmation text", async () => {
       const user = userEvent.setup();
       render(
-        <ConfirmationDialog
-          {...defaultProps}
-          severity="danger"
-          confirmText="DELETE"
-        />,
+        <TestProvider>
+          <ConfirmationDialog
+            {...defaultProps}
+            severity="danger"
+            confirmText="DELETE"
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByPlaceholderText(/type DELETE to confirm/i);
@@ -210,7 +262,11 @@ describe("ConfirmationDialog", () => {
     it("should call onConfirm when confirm button is clicked", async () => {
       const onConfirm = vi.fn();
       const user = userEvent.setup();
-      render(<ConfirmationDialog {...defaultProps} onConfirm={onConfirm} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} onConfirm={onConfirm} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /confirm/i }));
 
@@ -220,7 +276,11 @@ describe("ConfirmationDialog", () => {
     it("should call onCancel when cancel button is clicked", async () => {
       const onCancel = vi.fn();
       const user = userEvent.setup();
-      render(<ConfirmationDialog {...defaultProps} onCancel={onCancel} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} onCancel={onCancel} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /cancel/i }));
 
@@ -230,7 +290,11 @@ describe("ConfirmationDialog", () => {
     it("should call onCancel when backdrop is clicked", async () => {
       const onCancel = vi.fn();
       const user = userEvent.setup();
-      render(<ConfirmationDialog {...defaultProps} onCancel={onCancel} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} onCancel={onCancel} />
+        </TestProvider>,
+      );
 
       const backdrop = screen.getByTestId("dialog-backdrop");
       await user.click(backdrop);
@@ -241,7 +305,11 @@ describe("ConfirmationDialog", () => {
     it("should not close when dialog content is clicked", async () => {
       const onCancel = vi.fn();
       const user = userEvent.setup();
-      render(<ConfirmationDialog {...defaultProps} onCancel={onCancel} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} onCancel={onCancel} />
+        </TestProvider>,
+      );
 
       const dialogContent = screen.getByRole("dialog");
       await user.click(dialogContent);
@@ -258,7 +326,11 @@ describe("ConfirmationDialog", () => {
     it("should close on Escape key", async () => {
       const onCancel = vi.fn();
       const user = userEvent.setup();
-      render(<ConfirmationDialog {...defaultProps} onCancel={onCancel} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} onCancel={onCancel} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Escape}");
 
@@ -266,7 +338,11 @@ describe("ConfirmationDialog", () => {
     });
 
     it("should focus confirm button on open", async () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /confirm/i })).toHaveFocus();
@@ -275,7 +351,11 @@ describe("ConfirmationDialog", () => {
 
     it("should trap focus within dialog", async () => {
       const user = userEvent.setup();
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Tab through the dialog elements
       await user.tab(); // Cancel button
@@ -293,7 +373,11 @@ describe("ConfirmationDialog", () => {
 
   describe("loading state", () => {
     it("should show loading state on confirm button when loading", () => {
-      render(<ConfirmationDialog {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       const confirmButton = screen.getByRole("button", { name: /confirm/i });
       expect(confirmButton).toBeDisabled();
@@ -301,7 +385,11 @@ describe("ConfirmationDialog", () => {
     });
 
     it("should disable cancel button when loading", () => {
-      render(<ConfirmationDialog {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
       expect(cancelButton).toBeDisabled();
@@ -314,34 +402,54 @@ describe("ConfirmationDialog", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<ConfirmationDialog {...defaultProps} />);
+      const { container } = render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have proper dialog role", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have proper aria-labelledby", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-labelledby");
     });
 
     it("should have proper aria-describedby", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-describedby");
     });
 
     it("should have proper aria-modal", () => {
-      render(<ConfirmationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConfirmationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-modal", "true");

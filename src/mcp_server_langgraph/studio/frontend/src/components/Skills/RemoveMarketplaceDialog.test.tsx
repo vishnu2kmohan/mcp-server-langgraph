@@ -15,6 +15,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RemoveMarketplaceDialog } from "./RemoveMarketplaceDialog";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -39,57 +41,93 @@ describe("RemoveMarketplaceDialog", () => {
 
   describe("Rendering", () => {
     it("does not render when isOpen is false", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("renders dialog when isOpen is true", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("has data-testid", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByTestId("remove-marketplace-dialog"),
       ).toBeInTheDocument();
     });
 
     it("displays dialog title", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("heading", { name: /remove marketplace/i }),
       ).toBeInTheDocument();
     });
 
     it("displays marketplace name in confirmation message", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/community/)).toBeInTheDocument();
     });
 
     it("displays warning message", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(/are you sure you want to remove/i),
       ).toBeInTheDocument();
     });
 
     it("displays consequences warning", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(/skills from this marketplace will no longer/i),
       ).toBeInTheDocument();
     });
 
     it("renders Cancel button", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /cancel/i }),
       ).toBeInTheDocument();
     });
 
     it("renders Remove button", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /^remove$/i }),
       ).toBeInTheDocument();
@@ -97,7 +135,9 @@ describe("RemoveMarketplaceDialog", () => {
 
     it("does not render when marketplaceName is null", () => {
       render(
-        <RemoveMarketplaceDialog {...defaultProps} marketplaceName={null} />,
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} marketplaceName={null} />
+        </TestProvider>,
       );
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
@@ -110,7 +150,11 @@ describe("RemoveMarketplaceDialog", () => {
   describe("User Interactions", () => {
     it("calls onClose when Cancel clicked", async () => {
       const user = userEvent.setup();
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /cancel/i }));
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
@@ -118,7 +162,11 @@ describe("RemoveMarketplaceDialog", () => {
 
     it("calls onConfirm when Remove clicked", async () => {
       const user = userEvent.setup();
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /^remove$/i }));
       expect(defaultProps.onConfirm).toHaveBeenCalledTimes(1);
@@ -126,7 +174,11 @@ describe("RemoveMarketplaceDialog", () => {
 
     it("closes dialog on Escape key", async () => {
       const user = userEvent.setup();
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Escape}");
       expect(defaultProps.onClose).toHaveBeenCalled();
@@ -134,7 +186,11 @@ describe("RemoveMarketplaceDialog", () => {
 
     it("closes dialog when clicking backdrop", async () => {
       const user = userEvent.setup();
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Click on the backdrop (the outer container)
       const backdrop = screen.getByTestId("remove-marketplace-dialog-backdrop");
@@ -149,22 +205,38 @@ describe("RemoveMarketplaceDialog", () => {
 
   describe("Loading State", () => {
     it("disables Remove button when removing", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /removing/i })).toBeDisabled();
     });
 
     it("disables Cancel button when removing", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
     });
 
     it("shows loading spinner when removing", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />
+        </TestProvider>,
+      );
       expect(document.querySelector(".animate-spin")).toBeInTheDocument();
     });
 
     it("shows 'Removing...' text when removing", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} isRemoving={true} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/removing/i)).toBeInTheDocument();
     });
   });
@@ -175,18 +247,30 @@ describe("RemoveMarketplaceDialog", () => {
 
   describe("Accessibility", () => {
     it("has accessible dialog with aria-modal", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
     });
 
     it("has aria-labelledby pointing to title", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-labelledby");
     });
 
     it("Remove button has danger styling indication", () => {
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       const removeButton = screen.getByRole("button", { name: /^remove$/i });
       // Check for danger-related classes (error semantic color)
       expect(removeButton.className).toMatch(/error|red|danger/i);
@@ -194,7 +278,11 @@ describe("RemoveMarketplaceDialog", () => {
 
     it("focus is trapped in dialog", async () => {
       const user = userEvent.setup();
-      render(<RemoveMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemoveMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Tab through the dialog
       await user.tab();
@@ -212,10 +300,12 @@ describe("RemoveMarketplaceDialog", () => {
   describe("Edge Cases", () => {
     it("handles long marketplace names gracefully", () => {
       render(
-        <RemoveMarketplaceDialog
-          {...defaultProps}
-          marketplaceName="very-long-marketplace-name-that-might-overflow"
-        />,
+        <TestProvider>
+          <RemoveMarketplaceDialog
+            {...defaultProps}
+            marketplaceName="very-long-marketplace-name-that-might-overflow"
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByText(/very-long-marketplace-name-that-might-overflow/),
@@ -224,10 +314,12 @@ describe("RemoveMarketplaceDialog", () => {
 
     it("handles special characters in marketplace name", () => {
       render(
-        <RemoveMarketplaceDialog
-          {...defaultProps}
-          marketplaceName="my-org/skills-repo"
-        />,
+        <TestProvider>
+          <RemoveMarketplaceDialog
+            {...defaultProps}
+            marketplaceName="my-org/skills-repo"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/my-org\/skills-repo/)).toBeInTheDocument();
     });

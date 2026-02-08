@@ -109,6 +109,8 @@ vi.mock("./ConnectedChatInputForm", () => ({
 // Import after mock
 import { ConversationPanel } from "./ConversationPanel";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mock Data
 // =============================================================================
@@ -160,13 +162,21 @@ describe("ConversationPanel", () => {
 
   describe("Rendering", () => {
     it("should render the conversation panel container", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("conversation-panel")).toBeInTheDocument();
     });
 
     it("should render MessageList with messages", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("message-list")).toBeInTheDocument();
       expect(screen.getByText("Hello, how are you?")).toBeInTheDocument();
@@ -176,13 +186,21 @@ describe("ConversationPanel", () => {
     });
 
     it("should render ChatInput", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("chat-input-container")).toBeInTheDocument();
     });
 
     it("should render empty state when no messages", () => {
-      render(<ConversationPanel {...defaultProps} messages={[]} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} messages={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("No messages yet. Start a conversation!"),
@@ -194,7 +212,9 @@ describe("ConversationPanel", () => {
     it("should call onSendMessage when user sends a message", async () => {
       const onSendMessage = vi.fn();
       render(
-        <ConversationPanel {...defaultProps} onSendMessage={onSendMessage} />,
+        <TestProvider>
+          <ConversationPanel {...defaultProps} onSendMessage={onSendMessage} />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -205,7 +225,11 @@ describe("ConversationPanel", () => {
     });
 
     it("should clear input after sending", async () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await userEvent.type(input, "Test message");
@@ -215,7 +239,11 @@ describe("ConversationPanel", () => {
     });
 
     it("should disable input when isLoading", () => {
-      render(<ConversationPanel {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       expect(input).toBeDisabled();
@@ -225,7 +253,9 @@ describe("ConversationPanel", () => {
   describe("Follow-up Suggestions", () => {
     it("should render suggestions when provided", () => {
       render(
-        <ConversationPanel {...defaultProps} suggestions={mockSuggestions} />,
+        <TestProvider>
+          <ConversationPanel {...defaultProps} suggestions={mockSuggestions} />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Tell me more about X")).toBeInTheDocument();
@@ -233,7 +263,11 @@ describe("ConversationPanel", () => {
     });
 
     it("should not render suggestions when empty", () => {
-      render(<ConversationPanel {...defaultProps} suggestions={[]} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} suggestions={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("follow-up-suggestions"),
@@ -243,11 +277,13 @@ describe("ConversationPanel", () => {
     it("should call onSendMessage when suggestion clicked", async () => {
       const onSendMessage = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          onSendMessage={onSendMessage}
-          suggestions={mockSuggestions}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            onSendMessage={onSendMessage}
+            suggestions={mockSuggestions}
+          />
+        </TestProvider>,
       );
 
       const suggestion = screen.getByText("Tell me more about X");
@@ -258,11 +294,13 @@ describe("ConversationPanel", () => {
 
     it("should hide suggestions while loading", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          suggestions={mockSuggestions}
-          isLoading
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            suggestions={mockSuggestions}
+            isLoading
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -274,10 +312,12 @@ describe("ConversationPanel", () => {
   describe("Slash Commands", () => {
     it("should show slash command menu when typing /", async () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          slashCommands={mockSlashCommands}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            slashCommands={mockSlashCommands}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -290,10 +330,12 @@ describe("ConversationPanel", () => {
 
     it("should filter commands based on input", async () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          slashCommands={mockSlashCommands}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            slashCommands={mockSlashCommands}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -308,11 +350,13 @@ describe("ConversationPanel", () => {
     it("should call onSlashCommand when command clicked", async () => {
       const onSlashCommand = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          slashCommands={mockSlashCommands}
-          onSlashCommand={onSlashCommand}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            slashCommands={mockSlashCommands}
+            onSlashCommand={onSlashCommand}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -333,10 +377,12 @@ describe("ConversationPanel", () => {
 
     it("should hide slash menu after command selection", async () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          slashCommands={mockSlashCommands}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            slashCommands={mockSlashCommands}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -360,20 +406,32 @@ describe("ConversationPanel", () => {
 
   describe("Loading and Streaming States", () => {
     it("should show loading indicator when isLoading", () => {
-      render(<ConversationPanel {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
     });
 
     it("should show streaming indicator when isStreaming", () => {
-      render(<ConversationPanel {...defaultProps} isStreaming />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isStreaming />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("streaming-indicator")).toBeInTheDocument();
       expect(screen.getByText("AI is typing...")).toBeInTheDocument();
     });
 
     it("should disable send button while loading", () => {
-      render(<ConversationPanel {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       const sendButton = screen.getByTestId("send-button");
       expect(sendButton).toBeDisabled();
@@ -382,7 +440,11 @@ describe("ConversationPanel", () => {
 
   describe("Scroll Behavior", () => {
     it("should show scroll-to-bottom button when scrolled up", () => {
-      render(<ConversationPanel {...defaultProps} isScrolledUp />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isScrolledUp />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("scroll-to-bottom-button")).toBeInTheDocument();
     });
@@ -390,11 +452,13 @@ describe("ConversationPanel", () => {
     it("should call onScrollToBottom when button clicked", async () => {
       const onScrollToBottom = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          isScrolledUp
-          onScrollToBottom={onScrollToBottom}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            isScrolledUp
+            onScrollToBottom={onScrollToBottom}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("scroll-to-bottom-button");
@@ -406,7 +470,11 @@ describe("ConversationPanel", () => {
 
   describe("Keyboard Navigation", () => {
     it("should focus input on mount when autoFocus is true", () => {
-      render(<ConversationPanel {...defaultProps} autoFocus />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} autoFocus />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       expect(document.activeElement).toBe(input);
@@ -415,7 +483,9 @@ describe("ConversationPanel", () => {
     it("should submit message on Enter (without Shift)", async () => {
       const onSendMessage = vi.fn();
       render(
-        <ConversationPanel {...defaultProps} onSendMessage={onSendMessage} />,
+        <TestProvider>
+          <ConversationPanel {...defaultProps} onSendMessage={onSendMessage} />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -425,7 +495,11 @@ describe("ConversationPanel", () => {
     });
 
     it("should allow newline on Shift+Enter", async () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await userEvent.type(input, "Line 1{Shift>}{Enter}{/Shift}Line 2");
@@ -437,7 +511,9 @@ describe("ConversationPanel", () => {
   describe("Session Header", () => {
     it("should render session title when provided", () => {
       render(
-        <ConversationPanel {...defaultProps} sessionTitle="Chat Session 1" />,
+        <TestProvider>
+          <ConversationPanel {...defaultProps} sessionTitle="Chat Session 1" />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Chat Session 1")).toBeInTheDocument();
@@ -447,12 +523,14 @@ describe("ConversationPanel", () => {
       const onRename = vi.fn();
       const onDelete = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          sessionTitle="Chat Session 1"
-          onRename={onRename}
-          onDelete={onDelete}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            sessionTitle="Chat Session 1"
+            onRename={onRename}
+            onDelete={onDelete}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("session-rename-button")).toBeInTheDocument();
@@ -462,14 +540,22 @@ describe("ConversationPanel", () => {
 
   describe("Accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<ConversationPanel {...defaultProps} />);
+      const { container } = render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have proper ARIA labels", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("log")).toHaveAttribute(
         "aria-label",
@@ -479,7 +565,11 @@ describe("ConversationPanel", () => {
     });
 
     it("should announce new messages to screen readers", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const messageList = screen.getByRole("log");
       expect(messageList).toHaveAttribute("aria-live", "polite");
@@ -487,11 +577,13 @@ describe("ConversationPanel", () => {
 
     it("should have proper focus management", async () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          suggestions={mockSuggestions}
-          autoFocus
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            suggestions={mockSuggestions}
+            autoFocus
+          />
+        </TestProvider>,
       );
 
       // When autoFocus is true, input starts with focus
@@ -508,14 +600,22 @@ describe("ConversationPanel", () => {
 
   describe("Responsive Layout", () => {
     it("should render in vertical layout by default", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const panel = screen.getByTestId("conversation-panel");
       expect(panel).toHaveClass("flex-col");
     });
 
     it("should accept custom className", () => {
-      render(<ConversationPanel {...defaultProps} className="custom-class" />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} className="custom-class" />
+        </TestProvider>,
+      );
 
       const panel = screen.getByTestId("conversation-panel");
       expect(panel).toHaveClass("custom-class");
@@ -526,7 +626,9 @@ describe("ConversationPanel", () => {
     it("should call onMessageSent callback for telemetry", async () => {
       const onMessageSent = vi.fn();
       render(
-        <ConversationPanel {...defaultProps} onMessageSent={onMessageSent} />,
+        <TestProvider>
+          <ConversationPanel {...defaultProps} onMessageSent={onMessageSent} />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -543,11 +645,13 @@ describe("ConversationPanel", () => {
     it("should call onSuggestionUsed callback for telemetry", async () => {
       const onSuggestionUsed = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          suggestions={mockSuggestions}
-          onSuggestionUsed={onSuggestionUsed}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            suggestions={mockSuggestions}
+            onSuggestionUsed={onSuggestionUsed}
+          />
+        </TestProvider>,
       );
 
       const suggestion = screen.getByText("Tell me more about X");
@@ -574,7 +678,11 @@ describe("ConversationPanel", () => {
     ];
 
     it("should pass showModelSelector prop to ConnectedChatInputForm", () => {
-      render(<ConversationPanel {...defaultProps} showModelSelector={true} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} showModelSelector={true} />
+        </TestProvider>,
+      );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -585,11 +693,13 @@ describe("ConversationPanel", () => {
 
     it("should pass selectedModel prop to ConnectedChatInputForm", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          showModelSelector={true}
-          selectedModel="claude-3-opus"
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            showModelSelector={true}
+            selectedModel="claude-3-opus"
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -601,11 +711,13 @@ describe("ConversationPanel", () => {
 
     it("should pass availableModels prop to ConnectedChatInputForm", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -618,11 +730,13 @@ describe("ConversationPanel", () => {
     it("should pass onModelChange callback to ConnectedChatInputForm", () => {
       const onModelChange = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          showModelSelector={true}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            showModelSelector={true}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -634,7 +748,9 @@ describe("ConversationPanel", () => {
 
     it("should pass modelSupportsThinking prop to ConnectedChatInputForm", () => {
       render(
-        <ConversationPanel {...defaultProps} modelSupportsThinking={true} />,
+        <TestProvider>
+          <ConversationPanel {...defaultProps} modelSupportsThinking={true} />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -646,11 +762,13 @@ describe("ConversationPanel", () => {
 
     it("should pass reasoningEffort prop to ConnectedChatInputForm", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          modelSupportsThinking={true}
-          reasoningEffort="high"
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            modelSupportsThinking={true}
+            reasoningEffort="high"
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -663,11 +781,13 @@ describe("ConversationPanel", () => {
     it("should pass onReasoningEffortChange callback to ConnectedChatInputForm", () => {
       const onReasoningEffortChange = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          modelSupportsThinking={true}
-          onReasoningEffortChange={onReasoningEffortChange}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            modelSupportsThinking={true}
+            onReasoningEffortChange={onReasoningEffortChange}
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -689,7 +809,11 @@ describe("ConversationPanel", () => {
     ];
 
     it("should pass showModelSelector prop to ConnectedChatInputForm", () => {
-      render(<ConversationPanel {...defaultProps} showModelSelector={true} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} showModelSelector={true} />
+        </TestProvider>,
+      );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -700,11 +824,13 @@ describe("ConversationPanel", () => {
 
     it("should pass selectedModel prop to ConnectedChatInputForm", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          showModelSelector={true}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            showModelSelector={true}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -716,11 +842,13 @@ describe("ConversationPanel", () => {
 
     it("should pass availableModels prop to ConnectedChatInputForm", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -733,11 +861,13 @@ describe("ConversationPanel", () => {
     it("should pass onModelChange callback to ConnectedChatInputForm", () => {
       const onModelChange = vi.fn();
       render(
-        <ConversationPanel
-          {...defaultProps}
-          showModelSelector={true}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            showModelSelector={true}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -749,11 +879,13 @@ describe("ConversationPanel", () => {
 
     it("should pass isModelsLoading prop to ConnectedChatInputForm", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          showModelSelector={true}
-          isModelsLoading={true}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            showModelSelector={true}
+            isModelsLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
@@ -764,7 +896,11 @@ describe("ConversationPanel", () => {
     });
 
     it("should default showModelSelector to false", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -774,7 +910,11 @@ describe("ConversationPanel", () => {
     });
 
     it("should default isModelsLoading to false", () => {
-      render(<ConversationPanel {...defaultProps} showModelSelector={true} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} showModelSelector={true} />
+        </TestProvider>,
+      );
 
       expect(mockConnectedChatInputForm).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -804,10 +944,12 @@ describe("ConversationPanel", () => {
 
     it("should group sources by type by default", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          messages={messageWithMixedSources}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            messages={messageWithMixedSources}
+          />
+        </TestProvider>,
       );
 
       // Default is groupSourcesByType=true, so groups should be present
@@ -817,11 +959,13 @@ describe("ConversationPanel", () => {
 
     it("should not group sources when groupSourcesByType is false", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          messages={messageWithMixedSources}
-          groupSourcesByType={false}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            messages={messageWithMixedSources}
+            groupSourcesByType={false}
+          />
+        </TestProvider>,
       );
 
       // When explicitly disabled, groups should not be present
@@ -831,11 +975,13 @@ describe("ConversationPanel", () => {
 
     it("should pass groupSourcesByType prop to MessageList", () => {
       render(
-        <ConversationPanel
-          {...defaultProps}
-          messages={messageWithMixedSources}
-          groupSourcesByType={false}
-        />,
+        <TestProvider>
+          <ConversationPanel
+            {...defaultProps}
+            messages={messageWithMixedSources}
+            groupSourcesByType={false}
+          />
+        </TestProvider>,
       );
 
       // The prop should affect rendering - no groups when disabled

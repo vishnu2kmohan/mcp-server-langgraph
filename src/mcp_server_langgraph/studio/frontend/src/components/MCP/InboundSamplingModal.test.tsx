@@ -14,6 +14,8 @@ import type {
   SamplingResponse as _SamplingResponse,
 } from "@/types/mcp";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -43,11 +45,13 @@ describe("InboundSamplingModal", () => {
   describe("rendering", () => {
     it("renders the modal with sampling request", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -56,11 +60,13 @@ describe("InboundSamplingModal", () => {
 
     it("displays the message history", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -70,11 +76,13 @@ describe("InboundSamplingModal", () => {
 
     it("renders server ID for context", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/test-server/)).toBeInTheDocument();
@@ -82,11 +90,13 @@ describe("InboundSamplingModal", () => {
 
     it("shows max tokens limit", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/1000/)).toBeInTheDocument();
@@ -99,11 +109,13 @@ describe("InboundSamplingModal", () => {
       };
 
       render(
-        <InboundSamplingModal
-          request={requestWithSystem}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={requestWithSystem}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -115,11 +127,13 @@ describe("InboundSamplingModal", () => {
   describe("response input", () => {
     it("renders a text input for manual response", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -131,11 +145,13 @@ describe("InboundSamplingModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox", { name: /response/i });
@@ -150,11 +166,13 @@ describe("InboundSamplingModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox", { name: /response/i });
@@ -178,11 +196,13 @@ describe("InboundSamplingModal", () => {
 
     it("disables approve button when response is empty", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       const approveButton = screen.getByRole("button", {
@@ -195,11 +215,13 @@ describe("InboundSamplingModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox", { name: /response/i });
@@ -217,11 +239,13 @@ describe("InboundSamplingModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       const rejectButton = screen.getByRole("button", {
@@ -236,11 +260,13 @@ describe("InboundSamplingModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       const backdrop = screen.getByTestId("modal-backdrop");
@@ -271,11 +297,13 @@ describe("InboundSamplingModal", () => {
       };
 
       render(
-        <InboundSamplingModal
-          request={multiMessageRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={multiMessageRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Hello")).toBeInTheDocument();
@@ -296,11 +324,13 @@ describe("InboundSamplingModal", () => {
       };
 
       render(
-        <InboundSamplingModal
-          request={request}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={request}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       // User and assistant messages should have different styling
@@ -329,11 +359,13 @@ describe("InboundSamplingModal", () => {
       };
 
       render(
-        <InboundSamplingModal
-          request={requestWithPrefs}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={requestWithPrefs}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/claude-3-opus/i)).toBeInTheDocument();
@@ -343,11 +375,13 @@ describe("InboundSamplingModal", () => {
   describe("accessibility", () => {
     it("has proper dialog role", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -355,11 +389,13 @@ describe("InboundSamplingModal", () => {
 
     it("has accessible title", () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -369,11 +405,13 @@ describe("InboundSamplingModal", () => {
 
     it("focuses response input on mount", async () => {
       render(
-        <InboundSamplingModal
-          request={defaultRequest}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={defaultRequest}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -389,11 +427,13 @@ describe("InboundSamplingModal", () => {
       const request = { ...defaultRequest, id: 789 };
 
       render(
-        <InboundSamplingModal
-          request={request}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={request}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -403,11 +443,13 @@ describe("InboundSamplingModal", () => {
       const request = { ...defaultRequest, id: "sampling-request-123" };
 
       render(
-        <InboundSamplingModal
-          request={request}
-          onApprove={mockOnApprove}
-          onReject={mockOnReject}
-        />,
+        <TestProvider>
+          <InboundSamplingModal
+            request={request}
+            onApprove={mockOnApprove}
+            onReject={mockOnReject}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();

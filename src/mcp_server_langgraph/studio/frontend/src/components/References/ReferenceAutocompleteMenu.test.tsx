@@ -10,6 +10,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ReferenceAutocompleteMenu } from "./ReferenceAutocompleteMenu";
 import type { ReferenceSuggestion } from "@/hooks/useReferenceAutocomplete";
 
+import { TestProvider } from "@/test-utils";
+
 // Test fixtures
 const typeSuggestions: ReferenceSuggestion[] = [
   {
@@ -65,14 +67,16 @@ describe("ReferenceAutocompleteMenu", () => {
   describe("rendering", () => {
     it("should render nothing when closed", () => {
       const { container } = render(
-        <ReferenceAutocompleteMenu
-          isOpen={false}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={false}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -80,14 +84,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should render nothing when no suggestions", () => {
       const { container } = render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={[]}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={[]}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -95,14 +101,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should render listbox when open with suggestions", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("listbox")).toBeInTheDocument();
@@ -110,14 +118,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should display all suggestions", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Tool")).toBeInTheDocument();
@@ -127,14 +137,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should display descriptions", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Reference an MCP tool")).toBeInTheDocument();
@@ -142,14 +154,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should highlight selected suggestion", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={1}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={1}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       const options = screen.getAllByRole("option");
@@ -163,14 +177,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={onSelectedIndexChange}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={onSelectedIndexChange}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowDown" });
@@ -181,14 +197,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={2}
-          onSelectedIndexChange={onSelectedIndexChange}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={2}
+            onSelectedIndexChange={onSelectedIndexChange}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowUp" });
@@ -199,14 +217,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={onSelectedIndexChange}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={onSelectedIndexChange}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowUp" });
@@ -217,14 +237,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onSelectedIndexChange = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={2}
-          onSelectedIndexChange={onSelectedIndexChange}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={2}
+            onSelectedIndexChange={onSelectedIndexChange}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("listbox"), { key: "ArrowDown" });
@@ -235,14 +257,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onSelect = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={1}
-          onSelectedIndexChange={() => {}}
-          onSelect={onSelect}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={1}
+            onSelectedIndexChange={() => {}}
+            onSelect={onSelect}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("listbox"), { key: "Enter" });
@@ -253,14 +277,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onClose = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={onClose}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={onClose}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" });
@@ -271,14 +297,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onClose = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={onClose}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={onClose}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("listbox"), { key: "Tab" });
@@ -291,14 +319,16 @@ describe("ReferenceAutocompleteMenu", () => {
       const onSelect = vi.fn();
 
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={toolSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={onSelect}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={toolSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={onSelect}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("write_file"));
@@ -309,14 +339,16 @@ describe("ReferenceAutocompleteMenu", () => {
   describe("accessibility", () => {
     it("should have listbox role", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("listbox")).toBeInTheDocument();
@@ -324,14 +356,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should have aria-label", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("listbox")).toHaveAttribute(
@@ -342,14 +376,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should have option role on each suggestion", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       const options = screen.getAllByRole("option");
@@ -358,14 +394,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should have unique ids for each option", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       const options = screen.getAllByRole("option");
@@ -376,14 +414,16 @@ describe("ReferenceAutocompleteMenu", () => {
 
     it("should show keyboard hints in footer", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={typeSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={typeSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       // Check for the footer with keyboard hints using partial text matching
@@ -396,14 +436,16 @@ describe("ReferenceAutocompleteMenu", () => {
   describe("icons", () => {
     it("should render correct icon for tool suggestions", () => {
       render(
-        <ReferenceAutocompleteMenu
-          isOpen={true}
-          suggestions={toolSuggestions}
-          selectedIndex={0}
-          onSelectedIndexChange={() => {}}
-          onSelect={() => {}}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <ReferenceAutocompleteMenu
+            isOpen={true}
+            suggestions={toolSuggestions}
+            selectedIndex={0}
+            onSelectedIndexChange={() => {}}
+            onSelect={() => {}}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       // Lucide icons are SVGs, check they're rendered

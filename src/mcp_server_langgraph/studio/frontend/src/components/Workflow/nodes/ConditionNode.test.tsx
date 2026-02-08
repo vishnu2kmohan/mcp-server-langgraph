@@ -17,9 +17,15 @@ import { ConditionNode } from "./ConditionNode";
 import type { NodeProps } from "reactflow";
 import type { WorkflowNodeData } from "../../../types/workflow";
 
+import { TestProvider } from "@/test-utils";
+
 // Helper to render nodes with ReactFlow context
 const renderNode = (node: JSX.Element) => {
-  return render(<ReactFlowProvider>{node}</ReactFlowProvider>);
+  return render(
+    <TestProvider>
+      <ReactFlowProvider>{node}</ReactFlowProvider>
+    </TestProvider>,
+  );
 };
 
 describe("ConditionNode", () => {

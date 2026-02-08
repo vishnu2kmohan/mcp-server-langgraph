@@ -18,6 +18,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { AccessibilitySettings } from "./AccessibilitySettings";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // Mock useAccessibility hook
@@ -61,7 +63,11 @@ describe("AccessibilitySettings", () => {
 
   describe("rendering", () => {
     it("should render all accessibility settings sections", () => {
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       // Use getAllByText and check at least one exists (there may be sr-only duplicates)
       expect(screen.getAllByText("Screen Reader Mode").length).toBeGreaterThan(
@@ -76,7 +82,11 @@ describe("AccessibilitySettings", () => {
     });
 
     it("should render section descriptions", () => {
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/optimize the interface for screen reader/i),
@@ -97,7 +107,11 @@ describe("AccessibilitySettings", () => {
   describe("screen reader mode", () => {
     it("should toggle screen reader mode when clicked", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByTestId("screen-reader-toggle");
       await user.click(toggle);
@@ -113,7 +127,11 @@ describe("AccessibilitySettings", () => {
   describe("reduced motion", () => {
     it("should toggle reduced motion when clicked", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByTestId("reduced-motion-toggle");
       await user.click(toggle);
@@ -129,7 +147,11 @@ describe("AccessibilitySettings", () => {
   describe("high contrast", () => {
     it("should toggle high contrast when clicked", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByTestId("high-contrast-toggle");
       await user.click(toggle);
@@ -144,7 +166,11 @@ describe("AccessibilitySettings", () => {
 
   describe("font size", () => {
     it("should render font size options", () => {
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("font-size-small")).toBeInTheDocument();
       expect(screen.getByTestId("font-size-medium")).toBeInTheDocument();
@@ -153,7 +179,11 @@ describe("AccessibilitySettings", () => {
 
     it("should call setFontSize when size option is clicked", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("font-size-large"));
 
@@ -168,7 +198,11 @@ describe("AccessibilitySettings", () => {
   describe("enhanced focus", () => {
     it("should toggle enhanced focus when clicked", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByTestId("enhanced-focus-toggle");
       await user.click(toggle);
@@ -183,7 +217,11 @@ describe("AccessibilitySettings", () => {
 
   describe("reset", () => {
     it("should render reset button", () => {
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /reset to defaults/i }),
@@ -192,7 +230,11 @@ describe("AccessibilitySettings", () => {
 
     it("should call resetToDefaults when reset is clicked", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       await user.click(
         screen.getByRole("button", { name: /reset to defaults/i }),
@@ -208,14 +250,22 @@ describe("AccessibilitySettings", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<AccessibilitySettings />);
+      const { container } = render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have proper heading structure", () => {
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("heading", { name: /accessibility/i }),
@@ -223,7 +273,11 @@ describe("AccessibilitySettings", () => {
     });
 
     it("should have proper labels for all controls", () => {
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       // All toggles should be accessible
       const toggles = screen.getAllByRole("switch");
@@ -234,7 +288,11 @@ describe("AccessibilitySettings", () => {
 
     it("should be keyboard navigable", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       // Tab through the controls
       await user.tab();
@@ -249,7 +307,11 @@ describe("AccessibilitySettings", () => {
 
     it("should support keyboard activation of toggles", async () => {
       const user = userEvent.setup();
-      render(<AccessibilitySettings />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings />
+        </TestProvider>,
+      );
 
       // Tab to the first toggle and activate with Enter
       await user.tab();
@@ -265,7 +327,11 @@ describe("AccessibilitySettings", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<AccessibilitySettings className="custom-class" />);
+      render(
+        <TestProvider>
+          <AccessibilitySettings className="custom-class" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("accessibility-settings")).toHaveClass(
         "custom-class",

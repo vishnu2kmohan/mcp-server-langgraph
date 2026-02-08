@@ -12,6 +12,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { UnifiedMessageList } from "./UnifiedMessageList";
 import type { ChatMessage } from "../types/session";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // =============================================================================
@@ -231,14 +233,22 @@ describe("UnifiedMessageList", () => {
 
   describe("Basic Rendering", () => {
     it("should render without crashing", () => {
-      render(<UnifiedMessageList messages={[]} showEmptyState={false} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={[]} showEmptyState={false} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("unified-message-list")).toBeInTheDocument();
     });
 
     it("should render user messages", () => {
       const messages = [createMockMessage({ role: "user", content: "Hello" })];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Hello")).toBeInTheDocument();
     });
 
@@ -247,7 +257,11 @@ describe("UnifiedMessageList", () => {
         createMockMessage({ role: "assistant", content: "Hi there!" }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Hi there!")).toBeInTheDocument();
     });
 
@@ -258,7 +272,11 @@ describe("UnifiedMessageList", () => {
         createMockMessage({ role: "user", content: "Third message" }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("First message")).toBeInTheDocument();
       expect(screen.getByText("Second message")).toBeInTheDocument();
@@ -269,7 +287,9 @@ describe("UnifiedMessageList", () => {
   describe("Auto-Scroll", () => {
     it("should scroll when new message arrives", async () => {
       const { rerender } = render(
-        <UnifiedMessageList messages={[]} showEmptyState={false} />,
+        <TestProvider>
+          <UnifiedMessageList messages={[]} showEmptyState={false} />
+        </TestProvider>,
       );
 
       rerender(
@@ -286,10 +306,12 @@ describe("UnifiedMessageList", () => {
     it("should not scroll when isScrolledUp=true", () => {
       vi.clearAllMocks();
       render(
-        <UnifiedMessageList
-          messages={[createMockMessage({ content: "Hello" })]}
-          isScrolledUp={true}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[createMockMessage({ content: "Hello" })]}
+            isScrolledUp={true}
+          />
+        </TestProvider>,
       );
 
       expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
@@ -297,17 +319,19 @@ describe("UnifiedMessageList", () => {
 
     it("should use content length as dependency during streaming", async () => {
       const { rerender } = render(
-        <UnifiedMessageList
-          messages={[
-            createMockMessage({
-              id: "streaming-message",
-              role: "assistant",
-              content: "Hello",
-              isStreaming: true,
-            }),
-          ]}
-          isStreaming={true}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[
+              createMockMessage({
+                id: "streaming-message",
+                role: "assistant",
+                content: "Hello",
+                isStreaming: true,
+              }),
+            ]}
+            isStreaming={true}
+          />
+        </TestProvider>,
       );
 
       vi.clearAllMocks();
@@ -335,17 +359,19 @@ describe("UnifiedMessageList", () => {
   describe("Streaming", () => {
     it("should show streaming cursor for streaming messages", () => {
       render(
-        <UnifiedMessageList
-          messages={[
-            createMockMessage({
-              id: "streaming-message",
-              role: "assistant",
-              content: "Thinking...",
-              isStreaming: true,
-            }),
-          ]}
-          isStreaming={true}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[
+              createMockMessage({
+                id: "streaming-message",
+                role: "assistant",
+                content: "Thinking...",
+                isStreaming: true,
+              }),
+            ]}
+            isStreaming={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Generating response")).toBeInTheDocument();
@@ -353,11 +379,13 @@ describe("UnifiedMessageList", () => {
 
     it("should show typing indicator when streaming with no content", () => {
       render(
-        <UnifiedMessageList
-          messages={[]}
-          isStreaming={true}
-          showEmptyState={false}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[]}
+            isStreaming={true}
+            showEmptyState={false}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("typing-indicator")).toBeInTheDocument();
@@ -365,16 +393,18 @@ describe("UnifiedMessageList", () => {
 
     it("should not show typing indicator when streaming message has content", () => {
       render(
-        <UnifiedMessageList
-          messages={[
-            createMockMessage({
-              role: "assistant",
-              content: "Some content",
-              isStreaming: true,
-            }),
-          ]}
-          isStreaming={true}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[
+              createMockMessage({
+                role: "assistant",
+                content: "Some content",
+                isStreaming: true,
+              }),
+            ]}
+            isStreaming={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("typing-indicator")).not.toBeInTheDocument();
@@ -382,16 +412,18 @@ describe("UnifiedMessageList", () => {
 
     it("should show processing indicator for empty streaming message", () => {
       render(
-        <UnifiedMessageList
-          messages={[
-            createMockMessage({
-              role: "assistant",
-              content: "",
-              isStreaming: true,
-            }),
-          ]}
-          isStreaming={true}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[
+              createMockMessage({
+                role: "assistant",
+                content: "",
+                isStreaming: true,
+              }),
+            ]}
+            isStreaming={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Processing...")).toBeInTheDocument();
@@ -401,11 +433,13 @@ describe("UnifiedMessageList", () => {
   describe("Loading State", () => {
     it("should show loading indicator when isLoading is true and not streaming", () => {
       render(
-        <UnifiedMessageList
-          messages={[createMockMessage()]}
-          isLoading={true}
-          isStreaming={false}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[createMockMessage()]}
+            isLoading={true}
+            isStreaming={false}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Processing...")).toBeInTheDocument();
     });
@@ -413,25 +447,41 @@ describe("UnifiedMessageList", () => {
 
   describe("Empty State", () => {
     it("should show empty state when no messages", () => {
-      render(<UnifiedMessageList messages={[]} showEmptyState />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={[]} showEmptyState />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("ai-empty-state")).toBeInTheDocument();
     });
 
     it("should not show empty state when there are messages", () => {
       const messages = [createMockMessage()];
-      render(<UnifiedMessageList messages={messages} showEmptyState />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} showEmptyState />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("ai-empty-state")).not.toBeInTheDocument();
     });
   });
 
   describe("Accessibility", () => {
     it("should have a role of log for screen readers", () => {
-      render(<UnifiedMessageList messages={[]} showEmptyState={false} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={[]} showEmptyState={false} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("log")).toBeInTheDocument();
     });
 
     it("should have aria-live polite for new messages", () => {
-      render(<UnifiedMessageList messages={[]} showEmptyState={false} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={[]} showEmptyState={false} />
+        </TestProvider>,
+      );
       const list = screen.getByTestId("unified-message-list");
       expect(list).toHaveAttribute("aria-live", "polite");
     });
@@ -447,7 +497,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("source-citations")).toBeInTheDocument();
       expect(screen.getByText("Source 1")).toBeInTheDocument();
     });
@@ -463,7 +517,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
 
       // Wait for lazy-loaded component to resolve
       await waitFor(() => {
@@ -479,7 +537,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByTestId("llm-thinking-trace"),
       ).not.toBeInTheDocument();
@@ -498,12 +560,14 @@ describe("UnifiedMessageList", () => {
       ];
 
       render(
-        <UnifiedMessageList
-          messages={messages}
-          onRateMessage={onRateMessage}
-          messageRatings={{ "msg-1": "up" }}
-          showRating
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={messages}
+            onRateMessage={onRateMessage}
+            messageRatings={{ "msg-1": "up" }}
+            showRating
+          />
+        </TestProvider>,
       );
 
       const rating = screen.getByTestId("response-rating");
@@ -519,7 +583,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} showRating={false} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} showRating={false} />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("response-rating")).not.toBeInTheDocument();
     });
   });
@@ -534,7 +602,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} showTokenUsage />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} showTokenUsage />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("token-usage-display")).toBeInTheDocument();
     });
 
@@ -547,7 +619,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} showTokenUsage />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} showTokenUsage />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("token-usage-display")).toHaveAttribute(
         "data-compact",
         "true",
@@ -565,7 +641,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("confidence-indicator")).toBeInTheDocument();
       expect(screen.getByText("92%")).toBeInTheDocument();
     });
@@ -583,11 +663,13 @@ describe("UnifiedMessageList", () => {
       ];
 
       render(
-        <UnifiedMessageList
-          messages={messages}
-          enableHallucinationReporting
-          onReportHallucination={onReportHallucination}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={messages}
+            enableHallucinationReporting
+            onReportHallucination={onReportHallucination}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("hallucination-indicator")).toBeInTheDocument();
@@ -605,11 +687,13 @@ describe("UnifiedMessageList", () => {
       ];
 
       render(
-        <UnifiedMessageList
-          messages={messages}
-          enableHallucinationReporting
-          onReportHallucination={onReportHallucination}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={messages}
+            enableHallucinationReporting
+            onReportHallucination={onReportHallucination}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Reported")).toBeInTheDocument();
@@ -632,7 +716,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} showAgentTraces={true} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} showAgentTraces={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("agent-trace-toggle")).toBeInTheDocument();
     });
@@ -653,7 +741,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} showAgentTraces={true} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} showAgentTraces={true} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByTestId("agent-trace-toggle");
       await user.click(toggle);
@@ -675,7 +767,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} showAvatars />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} showAvatars />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("assistant-avatar")).toBeInTheDocument();
     });
 
@@ -688,11 +784,13 @@ describe("UnifiedMessageList", () => {
       ];
 
       render(
-        <UnifiedMessageList
-          messages={messages}
-          showAvatars
-          userInitials="JD"
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={messages}
+            showAvatars
+            userInitials="JD"
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
       expect(screen.getByText("JD")).toBeInTheDocument();
@@ -702,11 +800,13 @@ describe("UnifiedMessageList", () => {
   describe("Scroll-to-Bottom Button", () => {
     it("should show scroll button when isScrolledUp", () => {
       render(
-        <UnifiedMessageList
-          messages={[createMockMessage()]}
-          isScrolledUp
-          onScrollToBottom={() => {}}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[createMockMessage()]}
+            isScrolledUp
+            onScrollToBottom={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Scroll to bottom")).toBeInTheDocument();
@@ -717,11 +817,13 @@ describe("UnifiedMessageList", () => {
       const onScrollToBottom = vi.fn();
 
       render(
-        <UnifiedMessageList
-          messages={[createMockMessage()]}
-          isScrolledUp
-          onScrollToBottom={onScrollToBottom}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[createMockMessage()]}
+            isScrolledUp
+            onScrollToBottom={onScrollToBottom}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByLabelText("Scroll to bottom"));
@@ -737,10 +839,12 @@ describe("UnifiedMessageList", () => {
       ];
 
       render(
-        <UnifiedMessageList
-          messages={[createMockMessage()]}
-          followUpSuggestions={suggestions}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[createMockMessage()]}
+            followUpSuggestions={suggestions}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
@@ -754,11 +858,13 @@ describe("UnifiedMessageList", () => {
       const suggestions = [{ id: "s1", text: "Click me", category: "general" }];
 
       render(
-        <UnifiedMessageList
-          messages={[createMockMessage()]}
-          followUpSuggestions={suggestions}
-          onSuggestionSelect={onSuggestionSelect}
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[createMockMessage()]}
+            followUpSuggestions={suggestions}
+            onSuggestionSelect={onSuggestionSelect}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Click me"));
@@ -771,11 +877,13 @@ describe("UnifiedMessageList", () => {
       ];
 
       render(
-        <UnifiedMessageList
-          messages={[createMockMessage()]}
-          followUpSuggestions={suggestions}
-          isStreaming
-        />,
+        <TestProvider>
+          <UnifiedMessageList
+            messages={[createMockMessage()]}
+            followUpSuggestions={suggestions}
+            isStreaming
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -790,7 +898,11 @@ describe("UnifiedMessageList", () => {
         createMockMessage({ id: "user-msg", role: "user", content: "Hello" }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       const messageRow = screen.getByTestId("message-user-msg");
       expect(messageRow).toHaveClass("justify-end");
     });
@@ -804,7 +916,11 @@ describe("UnifiedMessageList", () => {
         }),
       ];
 
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       const messageRow = screen.getByTestId("message-assistant-msg");
       expect(messageRow).toHaveClass("justify-start");
     });
@@ -825,14 +941,22 @@ describe("UnifiedMessageList", () => {
         createMockMessage({ id: "1", role: "user", content: "Hello" }),
         createMockMessage({ id: "2", role: "assistant", content: "Hi there!" }),
       ];
-      const { container } = render(<UnifiedMessageList messages={messages} />);
+      const { container } = render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       await waitForSuspense();
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have no accessibility violations when empty", async () => {
-      const { container } = render(<UnifiedMessageList messages={[]} />);
+      const { container } = render(
+        <TestProvider>
+          <UnifiedMessageList messages={[]} />
+        </TestProvider>,
+      );
       await waitForSuspense();
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -841,7 +965,9 @@ describe("UnifiedMessageList", () => {
     it("should have no accessibility violations when loading", async () => {
       const messages = [createMockMessage()];
       const { container } = render(
-        <UnifiedMessageList messages={messages} isLoading />,
+        <TestProvider>
+          <UnifiedMessageList messages={messages} isLoading />
+        </TestProvider>,
       );
       await waitForSuspense();
       const results = await axe(container);
@@ -859,7 +985,9 @@ describe("UnifiedMessageList", () => {
         }),
       ];
       const { container } = render(
-        <UnifiedMessageList messages={messages} isStreaming />,
+        <TestProvider>
+          <UnifiedMessageList messages={messages} isStreaming />
+        </TestProvider>,
       );
       await waitForSuspense();
       const results = await axe(container);
@@ -868,13 +996,21 @@ describe("UnifiedMessageList", () => {
 
     it("should have accessible list role", () => {
       const messages = [createMockMessage()];
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("log")).toBeInTheDocument();
     });
 
     it("should have aria-live region for new messages", () => {
       const messages = [createMockMessage()];
-      render(<UnifiedMessageList messages={messages} />);
+      render(
+        <TestProvider>
+          <UnifiedMessageList messages={messages} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("unified-message-list")).toHaveAttribute(
         "aria-live",
         "polite",

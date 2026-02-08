@@ -9,6 +9,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { PlanEditor, type ExecutionPlanView } from "./PlanEditor";
 
+import { TestProvider } from "@/test-utils";
+
 describe("PlanEditor", () => {
   const samplePlan: ExecutionPlanView = {
     planId: "plan-123",
@@ -46,22 +48,38 @@ describe("PlanEditor", () => {
 
   describe("Rendering", () => {
     it("should render plan summary section", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/Execution Plan/i)).toBeInTheDocument();
     });
 
     it("should display plan ID", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/plan-123/i)).toBeInTheDocument();
     });
 
     it("should display complexity level", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/complicated/i)).toBeInTheDocument();
     });
 
     it("should display risk level", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       // Find the Risk: label and verify the risk level is displayed near it
       expect(screen.getByText(/Risk:/i)).toBeInTheDocument();
       // Use getAllByText since "medium" appears in both risk level and thinking budget
@@ -70,62 +88,102 @@ describe("PlanEditor", () => {
     });
 
     it("should display estimated cost", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/0.05/i)).toBeInTheDocument();
     });
 
     it("should display executor model", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/gemini-3-flash-preview/i)).toBeInTheDocument();
     });
   });
 
   describe("Configuration Fields", () => {
     it("should display orchestrator selector", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/orchestrator/i)).toBeInTheDocument();
     });
 
     it("should display thinking budget selector", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/thinking budget/i)).toBeInTheDocument();
     });
 
     it("should display critique rounds input", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/critique rounds/i)).toBeInTheDocument();
     });
   });
 
   describe("Approval Actions", () => {
     it("should render approve button", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /approve/i }),
       ).toBeInTheDocument();
     });
 
     it("should render reject button", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /reject/i }),
       ).toBeInTheDocument();
     });
 
     it("should call onApprove when approve button clicked", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /approve/i }));
       expect(defaultProps.onApprove).toHaveBeenCalledTimes(1);
     });
 
     it("should call onReject when reject button clicked", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /reject/i }));
       expect(defaultProps.onReject).toHaveBeenCalledTimes(1);
     });
 
     it("should disable actions when readOnly", () => {
-      render(<PlanEditor {...defaultProps} readOnly={true} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} readOnly={true} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /approve/i })).toBeDisabled();
       expect(screen.getByRole("button", { name: /reject/i })).toBeDisabled();
     });
@@ -133,26 +191,42 @@ describe("PlanEditor", () => {
 
   describe("Status Display", () => {
     it("should show pending status indicator", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/awaiting approval/i)).toBeInTheDocument();
     });
 
     it("should show approved status when plan is approved", () => {
       const approvedPlan = { ...samplePlan, status: "approved" as const };
-      render(<PlanEditor {...defaultProps} plan={approvedPlan} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} plan={approvedPlan} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/approved/i)).toBeInTheDocument();
     });
 
     it("should show rejected status when plan is rejected", () => {
       const rejectedPlan = { ...samplePlan, status: "rejected" as const };
-      render(<PlanEditor {...defaultProps} plan={rejectedPlan} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} plan={rejectedPlan} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/rejected/i)).toBeInTheDocument();
     });
   });
 
   describe("Tools Display", () => {
     it("should display required tools", () => {
-      render(<PlanEditor {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/file_read/i)).toBeInTheDocument();
       expect(screen.getByText(/file_write/i)).toBeInTheDocument();
     });

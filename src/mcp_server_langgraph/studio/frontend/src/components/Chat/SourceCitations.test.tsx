@@ -9,6 +9,8 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { SourceCitations } from "./SourceCitations";
 import type { SourceCitation } from "../../types/session";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -60,7 +62,11 @@ afterEach(() => {
 describe("SourceCitations", () => {
   describe("rendering", () => {
     it("should render sources section with correct count", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       const section = screen.getByTestId("sources-section");
       expect(section).toBeInTheDocument();
@@ -68,7 +74,11 @@ describe("SourceCitations", () => {
     });
 
     it("should render each source as a link", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       const links = screen.getAllByRole("link");
       expect(links).toHaveLength(3);
@@ -88,7 +98,11 @@ describe("SourceCitations", () => {
     });
 
     it("should display source titles", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Python Documentation")).toBeInTheDocument();
       expect(screen.getByText("Real Python")).toBeInTheDocument();
@@ -96,7 +110,11 @@ describe("SourceCitations", () => {
     });
 
     it("should open links in new tab with security attributes", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       const links = screen.getAllByRole("link");
       links.forEach((link) => {
@@ -106,13 +124,19 @@ describe("SourceCitations", () => {
     });
 
     it("should return null for empty sources array", () => {
-      const { container } = render(<SourceCitations sources={[]} />);
+      const { container } = render(
+        <TestProvider>
+          <SourceCitations sources={[]} />
+        </TestProvider>,
+      );
       expect(container.firstChild).toBeNull();
     });
 
     it("should return null for undefined sources", () => {
       const { container } = render(
-        <SourceCitations sources={undefined as unknown as SourceCitation[]} />,
+        <TestProvider>
+          <SourceCitations sources={undefined as unknown as SourceCitation[]} />
+        </TestProvider>,
       );
       expect(container.firstChild).toBeNull();
     });
@@ -124,14 +148,22 @@ describe("SourceCitations", () => {
 
   describe("accessibility", () => {
     it("should have navigation landmark with aria-label", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       const nav = screen.getByRole("navigation");
       expect(nav).toHaveAttribute("aria-label", "Source citations");
     });
 
     it("should have accessible labels for each source link", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       const links = screen.getAllByRole("link");
       expect(links[0]).toHaveAttribute(
@@ -145,7 +177,11 @@ describe("SourceCitations", () => {
     });
 
     it("should hide decorative external link icon from screen readers", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       // External link icons should have aria-hidden
       const section = screen.getByTestId("sources-section");
@@ -167,7 +203,11 @@ describe("SourceCitations", () => {
         },
       ];
 
-      render(<SourceCitations sources={sourcesNoTitle} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={sourcesNoTitle} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("docs.python.org")).toBeInTheDocument();
     });
@@ -180,7 +220,11 @@ describe("SourceCitations", () => {
         },
       ];
 
-      render(<SourceCitations sources={sourcesWithBadUrl} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={sourcesWithBadUrl} />
+        </TestProvider>,
+      );
 
       // Should display the title, not crash
       expect(screen.getByText("Good Title")).toBeInTheDocument();
@@ -195,7 +239,11 @@ describe("SourceCitations", () => {
         },
       ];
 
-      render(<SourceCitations sources={longTitleSource} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={longTitleSource} />
+        </TestProvider>,
+      );
 
       // The title should be in document but truncated via CSS
       const link = screen.getByRole("link");
@@ -204,7 +252,11 @@ describe("SourceCitations", () => {
     });
 
     it("should show snippet as tooltip title", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       const links = screen.getAllByRole("link");
       expect(links[0]).toHaveAttribute(
@@ -221,7 +273,11 @@ describe("SourceCitations", () => {
         },
       ];
 
-      render(<SourceCitations sources={sourceNoSnippet} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={sourceNoSnippet} />
+        </TestProvider>,
+      );
 
       const link = screen.getByRole("link");
       expect(link).toHaveAttribute("title", "Python Docs");
@@ -242,7 +298,11 @@ describe("SourceCitations", () => {
         }),
       );
 
-      render(<SourceCitations sources={manySources} maxVisible={5} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={manySources} maxVisible={5} />
+        </TestProvider>,
+      );
 
       const links = screen.getAllByRole("link");
       expect(links).toHaveLength(5);
@@ -257,7 +317,11 @@ describe("SourceCitations", () => {
         }),
       );
 
-      render(<SourceCitations sources={manySources} maxVisible={5} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={manySources} maxVisible={5} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("+2 more")).toBeInTheDocument();
     });
@@ -268,7 +332,11 @@ describe("SourceCitations", () => {
         url: `https://example${i + 1}.com`,
       }));
 
-      render(<SourceCitations sources={sources} maxVisible={5} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={sources} maxVisible={5} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByText(/more/)).not.toBeInTheDocument();
     });
@@ -282,7 +350,11 @@ describe("SourceCitations", () => {
         }),
       );
 
-      render(<SourceCitations sources={manySources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={manySources} />
+        </TestProvider>,
+      );
 
       const links = screen.getAllByRole("link");
       expect(links).toHaveLength(5);
@@ -296,7 +368,11 @@ describe("SourceCitations", () => {
 
   describe("relevance score", () => {
     it("should handle sources with relevance_score", () => {
-      render(<SourceCitations sources={sourcesWithRelevance} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={sourcesWithRelevance} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("High Relevance")).toBeInTheDocument();
       expect(screen.getByText("Low Relevance")).toBeInTheDocument();
@@ -304,7 +380,11 @@ describe("SourceCitations", () => {
     });
 
     it("should preserve source order (sorted externally)", () => {
-      render(<SourceCitations sources={sourcesWithRelevance} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={sourcesWithRelevance} />
+        </TestProvider>,
+      );
 
       const links = screen.getAllByRole("link");
       expect(links[0]).toHaveTextContent("High Relevance");
@@ -320,7 +400,9 @@ describe("SourceCitations", () => {
   describe("className prop", () => {
     it("should apply custom className", () => {
       render(
-        <SourceCitations sources={mockSources} className="custom-class" />,
+        <TestProvider>
+          <SourceCitations sources={mockSources} className="custom-class" />
+        </TestProvider>,
       );
 
       const section = screen.getByTestId("sources-section");
@@ -339,7 +421,11 @@ describe("SourceCitations", () => {
     ];
 
     it("should show different icon for KB sources", () => {
-      render(<SourceCitations sources={mixedSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mixedSources} />
+        </TestProvider>,
+      );
 
       // KB sources should have a book icon (data-testid="kb-icon")
       expect(screen.getByTestId("kb-icon")).toBeInTheDocument();
@@ -353,14 +439,22 @@ describe("SourceCitations", () => {
         { title: "Config Ref", url: "kb://config.md" },
       ];
 
-      render(<SourceCitations sources={kbSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={kbSources} />
+        </TestProvider>,
+      );
 
       const kbIcons = screen.getAllByTestId("kb-icon");
       expect(kbIcons).toHaveLength(2);
     });
 
     it("should use external link icon for web sources", () => {
-      render(<SourceCitations sources={mockSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={mockSources} />
+        </TestProvider>,
+      );
 
       const webIcons = screen.getAllByTestId("web-icon");
       expect(webIcons).toHaveLength(3);
@@ -380,7 +474,11 @@ describe("SourceCitations", () => {
     ];
 
     it("should group sources by type when groupByType is enabled", () => {
-      render(<SourceCitations sources={groupedSources} groupByType />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={groupedSources} groupByType />
+        </TestProvider>,
+      );
 
       // Should have two groups
       expect(screen.getByTestId("web-sources-group")).toBeInTheDocument();
@@ -388,14 +486,22 @@ describe("SourceCitations", () => {
     });
 
     it("should show group headers when groupByType is enabled", () => {
-      render(<SourceCitations sources={groupedSources} groupByType />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={groupedSources} groupByType />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Web (2)")).toBeInTheDocument();
       expect(screen.getByText("Knowledge Base (2)")).toBeInTheDocument();
     });
 
     it("should not group sources by default", () => {
-      render(<SourceCitations sources={groupedSources} />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={groupedSources} />
+        </TestProvider>,
+      );
 
       // Should not have group testids when not grouped
       expect(screen.queryByTestId("web-sources-group")).not.toBeInTheDocument();
@@ -408,7 +514,11 @@ describe("SourceCitations", () => {
         { title: "Web 2", url: "https://b.com" },
       ];
 
-      render(<SourceCitations sources={webOnlySources} groupByType />);
+      render(
+        <TestProvider>
+          <SourceCitations sources={webOnlySources} groupByType />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("web-sources-group")).toBeInTheDocument();
       expect(screen.queryByTestId("kb-sources-group")).not.toBeInTheDocument();

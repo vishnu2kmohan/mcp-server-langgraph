@@ -7,6 +7,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { PersonaSwitcher, type Persona } from "./PersonaSwitcher";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -82,33 +84,39 @@ describe("PersonaSwitcher", () => {
   describe("Rendering", () => {
     it("should render switcher container", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("persona-switcher")).toBeInTheDocument();
     });
 
     it("should display current persona name", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Admin")).toBeInTheDocument();
     });
 
     it("should show dropdown trigger button", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("persona-trigger")).toBeInTheDocument();
     });
@@ -117,11 +125,13 @@ describe("PersonaSwitcher", () => {
   describe("Dropdown", () => {
     it("should open dropdown when trigger clicked", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       expect(screen.getByTestId("persona-dropdown")).toBeInTheDocument();
@@ -129,11 +139,13 @@ describe("PersonaSwitcher", () => {
 
     it("should display all personas in dropdown", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       expect(screen.getByText("Security Admin")).toBeInTheDocument();
@@ -143,14 +155,16 @@ describe("PersonaSwitcher", () => {
 
     it("should close dropdown when clicking outside", () => {
       render(
-        <div>
-          <div data-testid="outside">Outside</div>
-          <PersonaSwitcher
-            personas={mockPersonas}
-            currentPersona={mockPersonas[0]}
-            onSwitch={() => {}}
-          />
-        </div>,
+        <TestProvider>
+          <div>
+            <div data-testid="outside">Outside</div>
+            <PersonaSwitcher
+              personas={mockPersonas}
+              currentPersona={mockPersonas[0]}
+              onSwitch={() => {}}
+            />
+          </div>
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       expect(screen.getByTestId("persona-dropdown")).toBeInTheDocument();
@@ -163,11 +177,13 @@ describe("PersonaSwitcher", () => {
     it("should call onSwitch when persona selected", () => {
       const onSwitch = vi.fn();
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={onSwitch}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={onSwitch}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       fireEvent.click(screen.getByText("Bob"));
@@ -176,11 +192,13 @@ describe("PersonaSwitcher", () => {
 
     it("should highlight current persona in dropdown", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       const adminItem = screen.getByTestId("persona-item-admin");
@@ -189,11 +207,13 @@ describe("PersonaSwitcher", () => {
 
     it("should close dropdown after selection", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       fireEvent.click(screen.getByText("Bob"));
@@ -204,11 +224,13 @@ describe("PersonaSwitcher", () => {
   describe("Sub-personas", () => {
     it("should show sub-persona indicator for personas with children", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       // Admin should have sub-personas (Security Admin, Auditor)
@@ -218,11 +240,13 @@ describe("PersonaSwitcher", () => {
 
     it("should indent sub-personas in dropdown", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       const subPersonaItem = screen.getByTestId("persona-item-security-admin");
@@ -233,12 +257,14 @@ describe("PersonaSwitcher", () => {
   describe("Role Grouping", () => {
     it("should group personas by role", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-          groupByRole
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+            groupByRole
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       expect(screen.getByTestId("role-group-admin")).toBeInTheDocument();
@@ -250,11 +276,13 @@ describe("PersonaSwitcher", () => {
   describe("Keyboard Navigation", () => {
     it("should close dropdown on Escape", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       fireEvent.keyDown(screen.getByTestId("persona-dropdown"), {
@@ -265,11 +293,13 @@ describe("PersonaSwitcher", () => {
 
     it("should navigate with arrow keys", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       const dropdown = screen.getByTestId("persona-dropdown");
@@ -286,11 +316,13 @@ describe("PersonaSwitcher", () => {
   describe("Accessibility", () => {
     it("should have accessible trigger button", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /Admin/i }),
@@ -299,11 +331,13 @@ describe("PersonaSwitcher", () => {
 
     it("should have listbox role on dropdown", () => {
       render(
-        <PersonaSwitcher
-          personas={mockPersonas}
-          currentPersona={mockPersonas[0]}
-          onSwitch={() => {}}
-        />,
+        <TestProvider>
+          <PersonaSwitcher
+            personas={mockPersonas}
+            currentPersona={mockPersonas[0]}
+            onSwitch={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("persona-trigger"));
       expect(screen.getByRole("listbox")).toBeInTheDocument();

@@ -17,6 +17,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { ErrorRecovery } from "./ErrorRecovery";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 const mockError = {
@@ -42,25 +44,41 @@ describe("ErrorRecovery", () => {
 
   describe("rendering", () => {
     it("should render the error message", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(mockError.message)).toBeInTheDocument();
     });
 
     it("should render the error code", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(mockError.code)).toBeInTheDocument();
     });
 
     it("should render error icon", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("error-icon")).toBeInTheDocument();
     });
 
     it("should render with custom className", () => {
-      render(<ErrorRecovery error={mockError} className="custom-class" />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} className="custom-class" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("error-recovery")).toHaveClass("custom-class");
     });
@@ -72,7 +90,11 @@ describe("ErrorRecovery", () => {
 
   describe("recovery actions", () => {
     it("should show retry button when onRetry is provided", () => {
-      render(<ErrorRecovery error={mockError} onRetry={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} onRetry={() => {}} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /retry/i }),
@@ -82,7 +104,11 @@ describe("ErrorRecovery", () => {
     it("should call onRetry when retry button is clicked", async () => {
       const onRetry = vi.fn();
       const user = userEvent.setup();
-      render(<ErrorRecovery error={mockError} onRetry={onRetry} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} onRetry={onRetry} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /retry/i }));
 
@@ -90,7 +116,11 @@ describe("ErrorRecovery", () => {
     });
 
     it("should show dismiss button when onDismiss is provided", () => {
-      render(<ErrorRecovery error={mockError} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /dismiss/i }),
@@ -100,7 +130,11 @@ describe("ErrorRecovery", () => {
     it("should call onDismiss when dismiss button is clicked", async () => {
       const onDismiss = vi.fn();
       const user = userEvent.setup();
-      render(<ErrorRecovery error={mockError} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /dismiss/i }));
 
@@ -108,7 +142,11 @@ describe("ErrorRecovery", () => {
     });
 
     it("should show report button when onReport is provided", () => {
-      render(<ErrorRecovery error={mockError} onReport={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} onReport={() => {}} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /report/i }),
@@ -122,7 +160,11 @@ describe("ErrorRecovery", () => {
 
   describe("details expansion", () => {
     it("should show expand details button", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /details/i }),
@@ -131,7 +173,11 @@ describe("ErrorRecovery", () => {
 
     it("should expand details when button is clicked", async () => {
       const user = userEvent.setup();
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /details/i }));
 
@@ -140,7 +186,11 @@ describe("ErrorRecovery", () => {
 
     it("should collapse details when clicked again", async () => {
       const user = userEvent.setup();
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       const detailsButton = screen.getByRole("button", { name: /details/i });
       await user.click(detailsButton);
@@ -157,7 +207,11 @@ describe("ErrorRecovery", () => {
   describe("copy error info", () => {
     it("should show copy button in details", async () => {
       const user = userEvent.setup();
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /details/i }));
 
@@ -173,7 +227,11 @@ describe("ErrorRecovery", () => {
         configurable: true,
       });
 
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /details/i }));
       await user.click(screen.getByRole("button", { name: /copy/i }));
@@ -188,7 +246,11 @@ describe("ErrorRecovery", () => {
 
   describe("severity levels", () => {
     it("should show error styling by default", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("error-recovery")).toHaveAttribute(
         "data-severity",
@@ -197,7 +259,11 @@ describe("ErrorRecovery", () => {
     });
 
     it("should show warning styling when severity is warning", () => {
-      render(<ErrorRecovery error={mockError} severity="warning" />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} severity="warning" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("error-recovery")).toHaveAttribute(
         "data-severity",
@@ -206,7 +272,11 @@ describe("ErrorRecovery", () => {
     });
 
     it("should show info styling when severity is info", () => {
-      render(<ErrorRecovery error={mockError} severity="info" />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} severity="info" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("error-recovery")).toHaveAttribute(
         "data-severity",
@@ -225,7 +295,11 @@ describe("ErrorRecovery", () => {
         "Check your internet connection",
         "Try again in a few minutes",
       ];
-      render(<ErrorRecovery error={mockError} suggestions={suggestions} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} suggestions={suggestions} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Check your internet connection"),
@@ -242,20 +316,32 @@ describe("ErrorRecovery", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<ErrorRecovery error={mockError} />);
+      const { container } = render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have role alert", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("should have proper aria-live", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("alert")).toHaveAttribute(
         "aria-live",
@@ -264,7 +350,11 @@ describe("ErrorRecovery", () => {
     });
 
     it("should have proper heading", () => {
-      render(<ErrorRecovery error={mockError} />);
+      render(
+        <TestProvider>
+          <ErrorRecovery error={mockError} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("heading")).toBeInTheDocument();
     });

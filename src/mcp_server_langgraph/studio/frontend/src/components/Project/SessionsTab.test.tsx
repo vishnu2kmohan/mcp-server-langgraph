@@ -18,8 +18,8 @@ import {
   waitFor,
   cleanup,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
 import { SessionsTab } from "./SessionsTab";
+import { TestProvider } from "@/test-utils";
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -87,9 +87,9 @@ describe("SessionsTab", () => {
   describe("Session List Display", () => {
     it("should render session list", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Session One")).toBeInTheDocument();
@@ -99,9 +99,9 @@ describe("SessionsTab", () => {
 
     it("should show message count for each session", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("10 messages")).toBeInTheDocument();
@@ -111,9 +111,9 @@ describe("SessionsTab", () => {
 
     it("should show empty state when no sessions", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} sessions={[]} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no sessions yet/i)).toBeInTheDocument();
@@ -121,9 +121,9 @@ describe("SessionsTab", () => {
 
     it("should have New Session button", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(
@@ -135,9 +135,9 @@ describe("SessionsTab", () => {
   describe("Navigation", () => {
     it("should navigate to chat when session is clicked", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Session One"));
@@ -149,9 +149,9 @@ describe("SessionsTab", () => {
   describe("Create Session", () => {
     it("should open dialog when New Session is clicked", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /new session/i }));
@@ -161,9 +161,9 @@ describe("SessionsTab", () => {
 
     it("should call API and refresh when session is created", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /new session/i }));
@@ -201,9 +201,9 @@ describe("SessionsTab", () => {
   describe("Remove Session", () => {
     it("should have remove button for each session", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const removeButtons = screen.getAllByRole("button", {
@@ -214,9 +214,9 @@ describe("SessionsTab", () => {
 
     it("should call API and refresh when session is removed", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const removeButtons = screen.getAllByRole("button", {
@@ -238,9 +238,9 @@ describe("SessionsTab", () => {
 
     it("should not navigate when remove button is clicked", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const removeButtons = screen.getAllByRole("button", {
@@ -255,9 +255,9 @@ describe("SessionsTab", () => {
   describe("Bulk Selection", () => {
     it("should render checkboxes for each session", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -267,9 +267,9 @@ describe("SessionsTab", () => {
 
     it("should have select all checkbox", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText(/select all/i)).toBeInTheDocument();
@@ -277,9 +277,9 @@ describe("SessionsTab", () => {
 
     it("should select all when select all is clicked", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const selectAllCheckbox = screen.getByLabelText(/select all/i);
@@ -293,9 +293,9 @@ describe("SessionsTab", () => {
 
     it("should show bulk action bar when sessions are selected", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -309,9 +309,9 @@ describe("SessionsTab", () => {
 
     it("should bulk delete sessions when confirmed", async () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionsTab {...defaultProps} />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // Select two sessions

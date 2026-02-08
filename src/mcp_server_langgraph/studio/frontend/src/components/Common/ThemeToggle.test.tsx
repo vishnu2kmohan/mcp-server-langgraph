@@ -16,6 +16,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { ThemeToggle } from "./ThemeToggle";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // Mock matchMedia for system preference detection
@@ -53,7 +55,11 @@ describe("ThemeToggle", () => {
 
   describe("rendering", () => {
     it("should render the toggle button", () => {
-      render(<ThemeToggle />);
+      render(
+        <TestProvider>
+          <ThemeToggle />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /theme/i }),
@@ -61,7 +67,11 @@ describe("ThemeToggle", () => {
     });
 
     it("should render with custom className", () => {
-      render(<ThemeToggle className="custom-class" />);
+      render(
+        <TestProvider>
+          <ThemeToggle className="custom-class" />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /theme/i })).toHaveClass(
         "custom-class",
@@ -75,19 +85,31 @@ describe("ThemeToggle", () => {
 
   describe("theme state", () => {
     it("should show light theme icon when in light mode", () => {
-      render(<ThemeToggle theme="light" />);
+      render(
+        <TestProvider>
+          <ThemeToggle theme="light" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("sun-icon")).toBeInTheDocument();
     });
 
     it("should show dark theme icon when in dark mode", () => {
-      render(<ThemeToggle theme="dark" />);
+      render(
+        <TestProvider>
+          <ThemeToggle theme="dark" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("moon-icon")).toBeInTheDocument();
     });
 
     it("should show system theme icon when using system preference", () => {
-      render(<ThemeToggle theme="system" />);
+      render(
+        <TestProvider>
+          <ThemeToggle theme="system" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("monitor-icon")).toBeInTheDocument();
     });
@@ -101,7 +123,11 @@ describe("ThemeToggle", () => {
     it("should call onThemeChange when clicked", async () => {
       const onThemeChange = vi.fn();
       const user = userEvent.setup();
-      render(<ThemeToggle theme="light" onThemeChange={onThemeChange} />);
+      render(
+        <TestProvider>
+          <ThemeToggle theme="light" onThemeChange={onThemeChange} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /theme/i }));
 
@@ -112,7 +138,9 @@ describe("ThemeToggle", () => {
       const onThemeChange = vi.fn();
       const user = userEvent.setup();
       const { rerender } = render(
-        <ThemeToggle theme="light" onThemeChange={onThemeChange} />,
+        <TestProvider>
+          <ThemeToggle theme="light" onThemeChange={onThemeChange} />
+        </TestProvider>,
       );
 
       // Click to go to dark
@@ -139,11 +167,13 @@ describe("ThemeToggle", () => {
     it("should show dropdown when variant is dropdown", async () => {
       const user = userEvent.setup();
       render(
-        <ThemeToggle
-          variant="dropdown"
-          theme="light"
-          onThemeChange={() => {}}
-        />,
+        <TestProvider>
+          <ThemeToggle
+            variant="dropdown"
+            theme="light"
+            onThemeChange={() => {}}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /theme/i }));
@@ -156,11 +186,13 @@ describe("ThemeToggle", () => {
     it("should show all theme options in dropdown", async () => {
       const user = userEvent.setup();
       render(
-        <ThemeToggle
-          variant="dropdown"
-          theme="light"
-          onThemeChange={() => {}}
-        />,
+        <TestProvider>
+          <ThemeToggle
+            variant="dropdown"
+            theme="light"
+            onThemeChange={() => {}}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /theme/i }));
@@ -182,11 +214,13 @@ describe("ThemeToggle", () => {
       const onThemeChange = vi.fn();
       const user = userEvent.setup();
       render(
-        <ThemeToggle
-          variant="dropdown"
-          theme="light"
-          onThemeChange={onThemeChange}
-        />,
+        <TestProvider>
+          <ThemeToggle
+            variant="dropdown"
+            theme="light"
+            onThemeChange={onThemeChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /theme/i }));
@@ -202,14 +236,22 @@ describe("ThemeToggle", () => {
 
   describe("compact mode", () => {
     it("should hide label text in compact mode", () => {
-      render(<ThemeToggle compact theme="light" />);
+      render(
+        <TestProvider>
+          <ThemeToggle compact theme="light" />
+        </TestProvider>,
+      );
 
       expect(screen.queryByText(/light mode/i)).not.toBeInTheDocument();
     });
 
     it("should show tooltip on hover in compact mode", async () => {
       const user = userEvent.setup();
-      render(<ThemeToggle compact theme="light" />);
+      render(
+        <TestProvider>
+          <ThemeToggle compact theme="light" />
+        </TestProvider>,
+      );
 
       await user.hover(screen.getByRole("button", { name: /theme/i }));
 
@@ -225,14 +267,22 @@ describe("ThemeToggle", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<ThemeToggle theme="light" />);
+      const { container } = render(
+        <TestProvider>
+          <ThemeToggle theme="light" />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have proper aria-label", () => {
-      render(<ThemeToggle theme="light" />);
+      render(
+        <TestProvider>
+          <ThemeToggle theme="light" />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /theme/i })).toHaveAttribute(
         "aria-label",
@@ -240,7 +290,11 @@ describe("ThemeToggle", () => {
     });
 
     it("should indicate current theme state", () => {
-      render(<ThemeToggle theme="dark" />);
+      render(
+        <TestProvider>
+          <ThemeToggle theme="dark" />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /theme/i });
       expect(button).toHaveAttribute("aria-pressed", "true");

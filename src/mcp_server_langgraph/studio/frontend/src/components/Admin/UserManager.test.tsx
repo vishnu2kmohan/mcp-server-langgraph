@@ -14,6 +14,8 @@ import {
 } from "@testing-library/react";
 import { UserManager } from "./UserManager";
 
+import { TestProvider } from "@/test-utils";
+
 describe("UserManager", () => {
   const mockUsers = [
     {
@@ -65,13 +67,21 @@ describe("UserManager", () => {
 
   describe("Rendering", () => {
     it("should render user manager title", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("User Management")).toBeInTheDocument();
     });
 
     it("should render list of users", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Admin User")).toBeInTheDocument();
       expect(screen.getByText("Developer User")).toBeInTheDocument();
@@ -79,14 +89,22 @@ describe("UserManager", () => {
     });
 
     it("should display user emails", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("admin@example.com")).toBeInTheDocument();
       expect(screen.getByText("dev@example.com")).toBeInTheDocument();
     });
 
     it("should display user roles as badges", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Admin user has admin and developer roles
       const adminBadges = screen.getAllByText("admin");
@@ -94,7 +112,11 @@ describe("UserManager", () => {
     });
 
     it("should show active/inactive status", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const activeIndicators = screen.getAllByTestId("status-active");
       const inactiveIndicators = screen.getAllByTestId("status-inactive");
@@ -104,7 +126,11 @@ describe("UserManager", () => {
     });
 
     it("should render invite button", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /invite user/i }),
@@ -114,7 +140,11 @@ describe("UserManager", () => {
 
   describe("Role Management", () => {
     it("should open role editor when manage roles is clicked", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const manageRolesButtons = screen.getAllByRole("button", {
         name: /manage roles/i,
@@ -129,7 +159,11 @@ describe("UserManager", () => {
     });
 
     it("should display available roles in editor", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const manageRolesButtons = screen.getAllByRole("button", {
         name: /manage roles/i,
@@ -142,7 +176,11 @@ describe("UserManager", () => {
     });
 
     it("should call onUpdateRoles when roles are updated", async () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const manageRolesButtons = screen.getAllByRole("button", {
         name: /manage roles/i,
@@ -167,7 +205,11 @@ describe("UserManager", () => {
 
   describe("User Activation", () => {
     it("should call onDeactivate for active users", async () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const deactivateButtons = screen.getAllByRole("button", {
         name: /deactivate/i,
@@ -184,7 +226,11 @@ describe("UserManager", () => {
     });
 
     it("should call onActivate for inactive users", async () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Use exact match to avoid matching "Deactivate" buttons
       const activateButton = screen.getByRole("button", { name: "Activate" });
@@ -198,7 +244,11 @@ describe("UserManager", () => {
 
   describe("Invite User", () => {
     it("should open invite modal when invite button is clicked", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /invite user/i }));
 
@@ -210,7 +260,11 @@ describe("UserManager", () => {
     });
 
     it("should call onInvite with email and roles", async () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /invite user/i }));
 
@@ -234,7 +288,11 @@ describe("UserManager", () => {
 
   describe("Loading State", () => {
     it("should show loading indicator when isLoading is true", () => {
-      render(<UserManager {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("user-loading")).toBeInTheDocument();
     });
@@ -242,13 +300,21 @@ describe("UserManager", () => {
 
   describe("Search", () => {
     it("should render search input", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByPlaceholderText(/search users/i)).toBeInTheDocument();
     });
 
     it("should filter users by name or email", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search users/i);
       fireEvent.change(searchInput, { target: { value: "admin" } });
@@ -260,7 +326,11 @@ describe("UserManager", () => {
 
   describe("Last Login", () => {
     it("should display last login time", () => {
-      render(<UserManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UserManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Check that dates are displayed in some format
       expect(screen.getByText(/12\/10\/2024/)).toBeInTheDocument();

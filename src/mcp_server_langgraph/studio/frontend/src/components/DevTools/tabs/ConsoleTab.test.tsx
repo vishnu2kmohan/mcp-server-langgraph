@@ -15,6 +15,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { ConsoleTab } from "./ConsoleTab";
 import type { ConsoleEntry } from "../types";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // =============================================================================
@@ -110,7 +112,11 @@ describe("ConsoleTab (react-table)", () => {
   });
 
   it("renders entries in a tabular layout with timestamps", () => {
-    render(<ConsoleTab filter="all" onFilterChange={() => {}} />);
+    render(
+      <TestProvider>
+        <ConsoleTab filter="all" onFilterChange={() => {}} />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("console-tab")).toBeInTheDocument();
     expect(screen.getByText("Level")).toBeInTheDocument();
@@ -120,7 +126,11 @@ describe("ConsoleTab (react-table)", () => {
 
   it("filters by level and shows empty state when no matches", () => {
     // Filter to info → only info rows remain
-    render(<ConsoleTab filter="info" onFilterChange={() => {}} />);
+    render(
+      <TestProvider>
+        <ConsoleTab filter="info" onFilterChange={() => {}} />
+      </TestProvider>,
+    );
     expect(screen.getAllByTestId(/^console-entry-/)).toHaveLength(2);
     expect(
       screen.queryByText("Connection retry in 5s"),
@@ -132,13 +142,21 @@ describe("ConsoleTab (react-table)", () => {
       entries: mockEntries.filter((e) => e.level === "warning"),
     };
     cleanup();
-    render(<ConsoleTab filter="error" onFilterChange={() => {}} />);
+    render(
+      <TestProvider>
+        <ConsoleTab filter="error" onFilterChange={() => {}} />
+      </TestProvider>,
+    );
     expect(screen.getByTestId("console-empty-state")).toBeInTheDocument();
   });
 
   it("expands structured payloads and stack traces", async () => {
     const user = userEvent.setup();
-    render(<ConsoleTab filter="all" onFilterChange={() => {}} />);
+    render(
+      <TestProvider>
+        <ConsoleTab filter="all" onFilterChange={() => {}} />
+      </TestProvider>,
+    );
 
     const errorRow = screen.getByTestId("console-entry-entry-3");
     await user.click(within(errorRow).getByTestId("expand-button"));
@@ -149,7 +167,11 @@ describe("ConsoleTab (react-table)", () => {
 
   it("supports search filtering", async () => {
     const user = userEvent.setup();
-    render(<ConsoleTab filter="all" onFilterChange={() => {}} />);
+    render(
+      <TestProvider>
+        <ConsoleTab filter="all" onFilterChange={() => {}} />
+      </TestProvider>,
+    );
 
     await user.type(screen.getByTestId("console-search-input"), "fetch");
 
@@ -163,7 +185,11 @@ describe("ConsoleTab (react-table)", () => {
 
   it("toggles auto-tail via the down arrow control", async () => {
     const user = userEvent.setup();
-    render(<ConsoleTab filter="all" onFilterChange={() => {}} />);
+    render(
+      <TestProvider>
+        <ConsoleTab filter="all" onFilterChange={() => {}} />
+      </TestProvider>,
+    );
 
     const toggle = screen.getByTestId("scroll-to-bottom");
     expect(toggle).toHaveAttribute("aria-pressed", "true");
@@ -173,7 +199,11 @@ describe("ConsoleTab (react-table)", () => {
 
   it("shows copy control on hover", async () => {
     const user = userEvent.setup();
-    render(<ConsoleTab filter="all" onFilterChange={() => {}} />);
+    render(
+      <TestProvider>
+        <ConsoleTab filter="all" onFilterChange={() => {}} />
+      </TestProvider>,
+    );
 
     const firstRow = screen.getByTestId("console-entry-entry-1");
     await user.hover(firstRow);
@@ -182,7 +212,9 @@ describe("ConsoleTab (react-table)", () => {
 
   it("has no obvious accessibility violations", async () => {
     const { container } = render(
-      <ConsoleTab filter="all" onFilterChange={() => {}} />,
+      <TestProvider>
+        <ConsoleTab filter="all" onFilterChange={() => {}} />
+      </TestProvider>,
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();

@@ -21,6 +21,8 @@ import userEvent from "@testing-library/user-event";
 import { ToolSelector } from "./ToolSelector";
 import type { ToolSelectionMode } from "@/types/tools";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ToolSelector", () => {
   const defaultProps = {
     selectedTools: [] as string[],
@@ -44,7 +46,11 @@ describe("ToolSelector", () => {
 
   describe("pill button display", () => {
     it("should render 'Auto' when mode is auto", () => {
-      render(<ToolSelector {...defaultProps} mode="auto" />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} mode="auto" />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       expect(button).toHaveTextContent(/auto/i);
@@ -52,11 +58,13 @@ describe("ToolSelector", () => {
 
     it("should render tool count when mode is manual with selections", () => {
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          selectedTools={["calculator", "web_search"]}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            selectedTools={["calculator", "web_search"]}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button", { name: /tools/i });
@@ -64,14 +72,22 @@ describe("ToolSelector", () => {
     });
 
     it("should render 'None' when mode is none", () => {
-      render(<ToolSelector {...defaultProps} mode="none" />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} mode="none" />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       expect(button).toHaveTextContent(/none/i);
     });
 
     it("should be disabled when disabled prop is true", () => {
-      render(<ToolSelector {...defaultProps} disabled />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} disabled />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       expect(button).toBeDisabled();
@@ -85,7 +101,11 @@ describe("ToolSelector", () => {
   describe("dropdown toggle", () => {
     it("should open dropdown on click", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       await user.click(button);
@@ -95,7 +115,11 @@ describe("ToolSelector", () => {
 
     it("should close dropdown on second click", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       await user.click(button);
@@ -107,7 +131,11 @@ describe("ToolSelector", () => {
 
     it("should close dropdown on escape key", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       await user.click(button);
@@ -120,10 +148,12 @@ describe("ToolSelector", () => {
     it("should close dropdown on outside click", async () => {
       const user = userEvent.setup();
       render(
-        <div>
-          <ToolSelector {...defaultProps} />
-          <button data-testid="outside">Outside</button>
-        </div>,
+        <TestProvider>
+          <div>
+            <ToolSelector {...defaultProps} />
+            <button data-testid="outside">Outside</button>
+          </div>
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button", { name: /tools/i });
@@ -142,7 +172,11 @@ describe("ToolSelector", () => {
   describe("mode toggle", () => {
     it("should show mode options in dropdown", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
 
@@ -156,7 +190,11 @@ describe("ToolSelector", () => {
     it("should call onModeChange when mode is changed", async () => {
       const onModeChange = vi.fn();
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
       await user.click(screen.getByRole("option", { name: /manual/i }));
@@ -166,7 +204,11 @@ describe("ToolSelector", () => {
 
     it("should highlight current mode", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} mode="manual" />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} mode="manual" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
 
@@ -205,11 +247,13 @@ describe("ToolSelector", () => {
     it("should show tool list when mode is manual", async () => {
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -221,11 +265,13 @@ describe("ToolSelector", () => {
     it("should group tools by source", async () => {
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -237,11 +283,13 @@ describe("ToolSelector", () => {
     it("should show checkboxes for tool selection", async () => {
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -253,12 +301,14 @@ describe("ToolSelector", () => {
     it("should check selected tools", async () => {
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          selectedTools={["builtin:calculator"]} // v7: Uses toolId
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            selectedTools={["builtin:calculator"]} // v7: Uses toolId
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -294,12 +344,14 @@ describe("ToolSelector", () => {
       const onSelectionChange = vi.fn();
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          onSelectionChange={onSelectionChange}
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            onSelectionChange={onSelectionChange}
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -313,13 +365,15 @@ describe("ToolSelector", () => {
       const onSelectionChange = vi.fn();
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          selectedTools={["builtin:calculator"]} // v7: Uses toolId
-          onSelectionChange={onSelectionChange}
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            selectedTools={["builtin:calculator"]} // v7: Uses toolId
+            onSelectionChange={onSelectionChange}
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -332,13 +386,15 @@ describe("ToolSelector", () => {
       const onSelectionChange = vi.fn();
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          selectedTools={["builtin:calculator"]} // v7: Uses toolId
-          onSelectionChange={onSelectionChange}
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            selectedTools={["builtin:calculator"]} // v7: Uses toolId
+            onSelectionChange={onSelectionChange}
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -382,11 +438,13 @@ describe("ToolSelector", () => {
     it("should show search input in dropdown", async () => {
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -397,11 +455,13 @@ describe("ToolSelector", () => {
     it("should filter tools by search term", async () => {
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -414,11 +474,13 @@ describe("ToolSelector", () => {
     it("should show 'no results' when no tools match search", async () => {
       const user = userEvent.setup();
       render(
-        <ToolSelector
-          {...defaultProps}
-          mode="manual"
-          availableTools={mockTools}
-        />,
+        <TestProvider>
+          <ToolSelector
+            {...defaultProps}
+            mode="manual"
+            availableTools={mockTools}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
@@ -434,7 +496,11 @@ describe("ToolSelector", () => {
 
   describe("accessibility", () => {
     it("should have proper ARIA attributes on button", () => {
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       expect(button).toHaveAttribute("aria-haspopup", "listbox");
@@ -443,7 +509,11 @@ describe("ToolSelector", () => {
 
     it("should update aria-expanded when opened", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       await user.click(button);
@@ -453,7 +523,11 @@ describe("ToolSelector", () => {
 
     it("should have proper role on dropdown", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
 
@@ -462,7 +536,11 @@ describe("ToolSelector", () => {
 
     it("should have proper role on options", async () => {
       const user = userEvent.setup();
-      render(<ToolSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /tools/i }));
 
@@ -477,13 +555,21 @@ describe("ToolSelector", () => {
 
   describe("loading state", () => {
     it("should show loading indicator when isLoading is true", () => {
-      render(<ToolSelector {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("tool-selector-loading")).toBeInTheDocument();
     });
 
     it("should disable button when loading", () => {
-      render(<ToolSelector {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       expect(button).toBeDisabled();
@@ -496,7 +582,11 @@ describe("ToolSelector", () => {
 
   describe("compact mode", () => {
     it("should render smaller button in compact mode", () => {
-      render(<ToolSelector {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <ToolSelector {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /tools/i });
       expect(button).toHaveClass("text-xs");

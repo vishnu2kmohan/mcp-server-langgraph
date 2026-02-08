@@ -19,6 +19,8 @@ import { http, HttpResponse, delay } from "msw";
 import { server } from "../../mocks/server";
 import { ConnectionBulkActions } from "./ConnectionBulkActions";
 
+import { TestProvider } from "@/test-utils";
+
 const mockConnections = [
   { id: "1", name: "Server 1", status: "connected" },
   { id: "2", name: "Server 2", status: "disconnected" },
@@ -47,22 +49,26 @@ describe("ConnectionBulkActions", () => {
   describe("Component Visibility", () => {
     it("should not render when no items selected", () => {
       const { container } = render(
-        <ConnectionBulkActions
-          selectedIds={[]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={[]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(container.firstChild).toBeNull();
     });
 
     it("should render when items are selected", () => {
       render(
-        <ConnectionBulkActions
-          selectedIds={["1", "2"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1", "2"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("bulk-actions")).toBeInTheDocument();
     });
@@ -71,22 +77,26 @@ describe("ConnectionBulkActions", () => {
   describe("Selection Count", () => {
     it("should display number of selected items", () => {
       render(
-        <ConnectionBulkActions
-          selectedIds={["1", "2"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1", "2"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
     });
 
     it("should update count when selection changes", () => {
       const { rerender } = render(
-        <ConnectionBulkActions
-          selectedIds={["1"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
 
@@ -104,11 +114,13 @@ describe("ConnectionBulkActions", () => {
   describe("Action Buttons", () => {
     it("should show delete button", () => {
       render(
-        <ConnectionBulkActions
-          selectedIds={["1"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /delete/i }),
@@ -117,22 +129,26 @@ describe("ConnectionBulkActions", () => {
 
     it("should show test button", () => {
       render(
-        <ConnectionBulkActions
-          selectedIds={["1"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("button", { name: /test/i })).toBeInTheDocument();
     });
 
     it("should show clear selection button", () => {
       render(
-        <ConnectionBulkActions
-          selectedIds={["1"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /clear/i }),
@@ -143,11 +159,13 @@ describe("ConnectionBulkActions", () => {
   describe("Bulk Delete", () => {
     it("should show confirmation dialog on delete click", () => {
       render(
-        <ConnectionBulkActions
-          selectedIds={["1", "2"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1", "2"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
@@ -160,11 +178,13 @@ describe("ConnectionBulkActions", () => {
       const onActionComplete = vi.fn();
 
       render(
-        <ConnectionBulkActions
-          selectedIds={["1", "2"]}
-          connections={mockConnections}
-          onActionComplete={onActionComplete}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1", "2"]}
+            connections={mockConnections}
+            onActionComplete={onActionComplete}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
@@ -177,11 +197,13 @@ describe("ConnectionBulkActions", () => {
 
     it("should close dialog on cancel", () => {
       render(
-        <ConnectionBulkActions
-          selectedIds={["1"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
@@ -197,11 +219,13 @@ describe("ConnectionBulkActions", () => {
       const onActionComplete = vi.fn();
 
       render(
-        <ConnectionBulkActions
-          selectedIds={["1", "2"]}
-          connections={mockConnections}
-          onActionComplete={onActionComplete}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1", "2"]}
+            connections={mockConnections}
+            onActionComplete={onActionComplete}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /test/i }));
@@ -222,11 +246,13 @@ describe("ConnectionBulkActions", () => {
       );
 
       render(
-        <ConnectionBulkActions
-          selectedIds={["1"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /test/i }));
@@ -244,12 +270,14 @@ describe("ConnectionBulkActions", () => {
     it("should call onClearSelection when clear clicked", () => {
       const onClearSelection = vi.fn();
       render(
-        <ConnectionBulkActions
-          selectedIds={["1", "2"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-          onClearSelection={onClearSelection}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1", "2"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+            onClearSelection={onClearSelection}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /clear/i }));
@@ -267,11 +295,13 @@ describe("ConnectionBulkActions", () => {
       );
 
       render(
-        <ConnectionBulkActions
-          selectedIds={["1"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
@@ -290,11 +320,13 @@ describe("ConnectionBulkActions", () => {
       );
 
       render(
-        <ConnectionBulkActions
-          selectedIds={["1", "2"]}
-          connections={mockConnections}
-          onActionComplete={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectionBulkActions
+            selectedIds={["1", "2"]}
+            connections={mockConnections}
+            onActionComplete={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));

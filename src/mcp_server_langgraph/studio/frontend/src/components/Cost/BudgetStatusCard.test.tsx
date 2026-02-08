@@ -9,6 +9,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { BudgetStatusCard, type BudgetStatus } from "./BudgetStatusCard";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -31,29 +33,49 @@ describe("BudgetStatusCard", () => {
 
   describe("Core Rendering", () => {
     it("renders the component", () => {
-      render(<BudgetStatusCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("budget-status-card")).toBeInTheDocument();
     });
 
     it("displays entity name", () => {
-      render(<BudgetStatusCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/acme/i)).toBeInTheDocument();
     });
 
     it("displays current spend", () => {
-      render(<BudgetStatusCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} />
+        </TestProvider>,
+      );
       // Current spend appears with "Spent:" label
       expect(screen.getByText(/Spent:/)).toBeInTheDocument();
       expect(screen.getAllByText(/\$500\.00/).length).toBeGreaterThan(0);
     });
 
     it("displays monthly limit", () => {
-      render(<BudgetStatusCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/\$1,?000\.00/)).toBeInTheDocument();
     });
 
     it("displays percentage used", () => {
-      render(<BudgetStatusCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/50%/)).toBeInTheDocument();
     });
   });
@@ -63,7 +85,11 @@ describe("BudgetStatusCard", () => {
       const props = {
         status: { ...defaultProps.status, status: "ok" as const },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       const card = screen.getByTestId("budget-status-card");
       expect(card.className).toMatch(/green|success|ok/i);
     });
@@ -76,7 +102,11 @@ describe("BudgetStatusCard", () => {
           percentUsed: 85,
         },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       const card = screen.getByTestId("budget-status-card");
       expect(card.className).toMatch(/yellow|amber|warning/i);
     });
@@ -89,7 +119,11 @@ describe("BudgetStatusCard", () => {
           percentUsed: 100,
         },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       const card = screen.getByTestId("budget-status-card");
       expect(card.className).toMatch(/orange|critical/i);
     });
@@ -103,7 +137,11 @@ describe("BudgetStatusCard", () => {
           remaining: "-200.00",
         },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       const card = screen.getByTestId("budget-status-card");
       expect(card.className).toMatch(/red|exceeded|error/i);
     });
@@ -111,12 +149,20 @@ describe("BudgetStatusCard", () => {
 
   describe("Progress Bar", () => {
     it("shows progress bar", () => {
-      render(<BudgetStatusCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("progressbar")).toBeInTheDocument();
     });
 
     it("progress bar reflects percentage used", () => {
-      render(<BudgetStatusCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByRole("progressbar");
       expect(progressBar.getAttribute("aria-valuenow")).toBe("50");
     });
@@ -129,7 +175,11 @@ describe("BudgetStatusCard", () => {
           percentUsed: 120,
         },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByRole("progressbar");
       // Visual width should cap at 100, but aria value shows actual
       expect(progressBar.getAttribute("aria-valuenow")).toBe("120");
@@ -141,7 +191,11 @@ describe("BudgetStatusCard", () => {
       const props = {
         status: { ...defaultProps.status, entityType: "organization" as const },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("entity-icon")).toBeInTheDocument();
     });
 
@@ -153,7 +207,11 @@ describe("BudgetStatusCard", () => {
           entityId: "project:backend",
         },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("entity-icon")).toBeInTheDocument();
     });
 
@@ -165,7 +223,11 @@ describe("BudgetStatusCard", () => {
           entityId: "team:platform",
         },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("entity-icon")).toBeInTheDocument();
     });
 
@@ -177,21 +239,33 @@ describe("BudgetStatusCard", () => {
           entityId: "user:john",
         },
       };
-      render(<BudgetStatusCard {...props} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...props} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("entity-icon")).toBeInTheDocument();
     });
   });
 
   describe("Loading State", () => {
     it("shows loading skeleton when loading", () => {
-      render(<BudgetStatusCard status={null} loading={true} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard status={null} loading={true} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("budget-status-skeleton")).toBeInTheDocument();
     });
   });
 
   describe("Compact Mode", () => {
     it("renders in compact mode when specified", () => {
-      render(<BudgetStatusCard {...defaultProps} compact={true} />);
+      render(
+        <TestProvider>
+          <BudgetStatusCard {...defaultProps} compact={true} />
+        </TestProvider>,
+      );
       const card = screen.getByTestId("budget-status-card");
       expect(card.className).toMatch(/compact/i);
     });

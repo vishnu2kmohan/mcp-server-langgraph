@@ -16,6 +16,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ChatMessages } from "./ChatMessages";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ChatMessages Integration", () => {
   const mockMessages = [
     {
@@ -48,7 +50,11 @@ describe("ChatMessages Integration", () => {
     });
 
     it("should not show message actions when no callbacks provided", () => {
-      render(<ChatMessages messages={mockMessages} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={mockMessages} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByTestId("message-actions-trigger"),
       ).not.toBeInTheDocument();
@@ -56,12 +62,14 @@ describe("ChatMessages Integration", () => {
 
     it("should show message actions for messages when callbacks are provided", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          onEditMessage={mockOnEdit}
-          onRegenerateMessage={mockOnRegenerate}
-          onDeleteMessage={mockOnDelete}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            onEditMessage={mockOnEdit}
+            onRegenerateMessage={mockOnRegenerate}
+            onDeleteMessage={mockOnDelete}
+          />
+        </TestProvider>,
       );
       const actionTriggers = screen.getAllByTestId("message-actions-trigger");
       expect(actionTriggers.length).toBe(2);
@@ -69,11 +77,13 @@ describe("ChatMessages Integration", () => {
 
     it("should call onEditMessage when edit action is clicked on user message", async () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          onEditMessage={mockOnEdit}
-          onDeleteMessage={mockOnDelete}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            onEditMessage={mockOnEdit}
+            onDeleteMessage={mockOnDelete}
+          />
+        </TestProvider>,
       );
 
       const actionTriggers = screen.getAllByTestId("message-actions-trigger");
@@ -87,11 +97,13 @@ describe("ChatMessages Integration", () => {
 
     it("should call onRegenerateMessage when regenerate action is clicked on assistant message", async () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          onRegenerateMessage={mockOnRegenerate}
-          onDeleteMessage={mockOnDelete}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            onRegenerateMessage={mockOnRegenerate}
+            onDeleteMessage={mockOnDelete}
+          />
+        </TestProvider>,
       );
 
       const actionTriggers = screen.getAllByTestId("message-actions-trigger");
@@ -105,7 +117,12 @@ describe("ChatMessages Integration", () => {
 
     it("should call onDeleteMessage when delete action is confirmed", async () => {
       render(
-        <ChatMessages messages={mockMessages} onDeleteMessage={mockOnDelete} />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            onDeleteMessage={mockOnDelete}
+          />
+        </TestProvider>,
       );
 
       const actionTriggers = screen.getAllByTestId("message-actions-trigger");
@@ -122,11 +139,13 @@ describe("ChatMessages Integration", () => {
 
     it("should show edit action only for user messages", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          onEditMessage={mockOnEdit}
-          onDeleteMessage={mockOnDelete}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            onEditMessage={mockOnEdit}
+            onDeleteMessage={mockOnDelete}
+          />
+        </TestProvider>,
       );
 
       const actionTriggers = screen.getAllByTestId("message-actions-trigger");
@@ -143,11 +162,13 @@ describe("ChatMessages Integration", () => {
 
     it("should show regenerate action only for assistant messages", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          onRegenerateMessage={mockOnRegenerate}
-          onDeleteMessage={mockOnDelete}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            onRegenerateMessage={mockOnRegenerate}
+            onDeleteMessage={mockOnDelete}
+          />
+        </TestProvider>,
       );
 
       const actionTriggers = screen.getAllByTestId("message-actions-trigger");
@@ -163,12 +184,14 @@ describe("ChatMessages Integration", () => {
 
     it("should disable regenerate button when isRegenerating is true", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          onRegenerateMessage={mockOnRegenerate}
-          onDeleteMessage={mockOnDelete}
-          isRegenerating={true}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            onRegenerateMessage={mockOnRegenerate}
+            onDeleteMessage={mockOnDelete}
+            isRegenerating={true}
+          />
+        </TestProvider>,
       );
 
       const actionTriggers = screen.getAllByTestId("message-actions-trigger");
@@ -188,28 +211,32 @@ describe("ChatMessages Integration", () => {
 
     it("should render LLMThinkingTrace when thinking content is present during streaming", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent=""
-          llmThinkingContent="Analyzing the user's request..."
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent=""
+            llmThinkingContent="Analyzing the user's request..."
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
     });
 
     it("should display thinking content text", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent=""
-          llmThinkingContent="I need to consider several factors here..."
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent=""
+            llmThinkingContent="I need to consider several factors here..."
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("thinking-content")).toHaveTextContent(
         "I need to consider several factors here...",
@@ -218,29 +245,33 @@ describe("ChatMessages Integration", () => {
 
     it("should show thinking token count when provided", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent=""
-          llmThinkingContent="Deep analysis in progress..."
-          llmThinkingTokens={1500}
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent=""
+            llmThinkingContent="Deep analysis in progress..."
+            llmThinkingTokens={1500}
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/1,500 tokens/)).toBeInTheDocument();
     });
 
     it("should call onToggleThinking when toggle button is clicked", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent="Some content"
-          llmThinkingContent="Thinking..."
-          isThinkingExpanded={false}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent="Some content"
+            llmThinkingContent="Thinking..."
+            isThinkingExpanded={false}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
 
       const thinkingTrace = screen.getByTestId("llm-thinking-trace");
@@ -255,27 +286,31 @@ describe("ChatMessages Integration", () => {
 
     it("should show streaming indicator during active streaming", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent=""
-          llmThinkingContent="Processing..."
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent=""
+            llmThinkingContent="Processing..."
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("streaming-indicator")).toBeInTheDocument();
     });
 
     it("should not show streaming indicator when not streaming", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={false}
-          llmThinkingContent="Previous thinking content"
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={false}
+            llmThinkingContent="Previous thinking content"
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(
         screen.queryByTestId("streaming-indicator"),
@@ -284,14 +319,16 @@ describe("ChatMessages Integration", () => {
 
     it("should not render LLMThinkingTrace when no thinking content", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent="Response content"
-          llmThinkingContent=""
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent="Response content"
+            llmThinkingContent=""
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(
         screen.queryByTestId("llm-thinking-trace"),
@@ -300,44 +337,50 @@ describe("ChatMessages Integration", () => {
 
     it("should display model name when provided", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent=""
-          llmThinkingContent="Thinking deeply..."
-          llmModelName="claude-opus-4-5"
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent=""
+            llmThinkingContent="Thinking deeply..."
+            llmModelName="claude-opus-4-5"
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/claude-opus-4-5/)).toBeInTheDocument();
     });
 
     it("should show Extended badge for thinking models", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent=""
-          llmThinkingContent="Extended thinking..."
-          isThinkingModel={true}
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent=""
+            llmThinkingContent="Extended thinking..."
+            isThinkingModel={true}
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("thinking-model-badge")).toBeInTheDocument();
     });
 
     it("should render thinking trace above streaming content", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent="Here is my response..."
-          llmThinkingContent="First, I analyzed..."
-          isThinkingExpanded={true}
-          onToggleThinking={mockOnToggleThinking}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent="Here is my response..."
+            llmThinkingContent="First, I analyzed..."
+            isThinkingExpanded={true}
+            onToggleThinking={mockOnToggleThinking}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();

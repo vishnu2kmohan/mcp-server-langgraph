@@ -17,6 +17,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { Tooltip } from "./Tooltip";
 
+import { TestProvider } from "@/test-utils";
+
 describe("Tooltip", () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -32,9 +34,11 @@ describe("Tooltip", () => {
   describe("Basic Behavior", () => {
     it("renders children without tooltip initially", () => {
       render(
-        <Tooltip content="Tooltip text">
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text">
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button")).toBeInTheDocument();
@@ -44,9 +48,11 @@ describe("Tooltip", () => {
     it("shows tooltip on hover after delay", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" delay={200}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" delay={200}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));
@@ -65,9 +71,11 @@ describe("Tooltip", () => {
     it("hides tooltip when mouse leaves", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -89,9 +97,11 @@ describe("Tooltip", () => {
     it("does not show tooltip when disabled", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" disabled delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" disabled delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));
@@ -108,9 +118,11 @@ describe("Tooltip", () => {
     it("positions tooltip on top by default", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));
@@ -126,9 +138,11 @@ describe("Tooltip", () => {
     it("supports bottom position", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" position="bottom" delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" position="bottom" delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));
@@ -144,9 +158,11 @@ describe("Tooltip", () => {
     it("supports left position", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" position="left" delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" position="left" delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));
@@ -162,9 +178,11 @@ describe("Tooltip", () => {
     it("supports right position", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" position="right" delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" position="right" delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));
@@ -182,17 +200,19 @@ describe("Tooltip", () => {
     it("supports JSX content", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip
-          content={
-            <div>
-              <strong>Title</strong>
-              <p>Description</p>
-            </div>
-          }
-          delay={0}
-        >
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip
+            content={
+              <div>
+                <strong>Title</strong>
+                <p>Description</p>
+              </div>
+            }
+            delay={0}
+          >
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));
@@ -211,9 +231,11 @@ describe("Tooltip", () => {
     it("has aria-describedby linking trigger to tooltip", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -230,9 +252,11 @@ describe("Tooltip", () => {
     it("shows tooltip on focus for keyboard users", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" delay={0}>
-          <button>Focus me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" delay={0}>
+            <button>Focus me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.tab();
@@ -247,12 +271,14 @@ describe("Tooltip", () => {
     it("hides tooltip on blur", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <>
-          <Tooltip content="Tooltip text" delay={0}>
-            <button>Focus me</button>
-          </Tooltip>
-          <button>Other button</button>
-        </>,
+        <TestProvider>
+          <>
+            <Tooltip content="Tooltip text" delay={0}>
+              <button>Focus me</button>
+            </Tooltip>
+            <button>Other button</button>
+          </>
+        </TestProvider>,
       );
 
       // Focus the tooltip trigger
@@ -277,9 +303,11 @@ describe("Tooltip", () => {
     it("applies custom className to tooltip", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(
-        <Tooltip content="Tooltip text" className="custom-tooltip" delay={0}>
-          <button>Hover me</button>
-        </Tooltip>,
+        <TestProvider>
+          <Tooltip content="Tooltip text" className="custom-tooltip" delay={0}>
+            <button>Hover me</button>
+          </Tooltip>
+        </TestProvider>,
       );
 
       await user.hover(screen.getByRole("button"));

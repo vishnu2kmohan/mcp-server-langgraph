@@ -15,6 +15,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { MessageList } from "./MessageList";
 import type { ChatMessage } from "./MessageBubble";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // =============================================================================
@@ -96,12 +98,20 @@ describe("MessageList", () => {
 
   describe("Rendering", () => {
     it("should render message list container", () => {
-      render(<MessageList messages={[]} />);
+      render(
+        <TestProvider>
+          <MessageList messages={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("message-list")).toBeInTheDocument();
     });
 
     it("should render all messages", () => {
-      render(<MessageList messages={mockMessages} />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Hello!")).toBeInTheDocument();
       expect(screen.getByText("Hi there! How can I help?")).toBeInTheDocument();
       expect(
@@ -110,14 +120,22 @@ describe("MessageList", () => {
     });
 
     it("should show empty state when no messages", () => {
-      render(<MessageList messages={[]} />);
+      render(
+        <TestProvider>
+          <MessageList messages={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no messages/i)).toBeInTheDocument();
     });
   });
 
   describe("Auto-Scroll", () => {
     it("should scroll to bottom on new messages", () => {
-      const { rerender } = render(<MessageList messages={mockMessages} />);
+      const { rerender } = render(
+        <TestProvider>
+          <MessageList messages={mockMessages} />
+        </TestProvider>,
+      );
 
       const scrollToBottom = vi.fn();
       const listContainer = screen.getByTestId("message-list");
@@ -139,37 +157,55 @@ describe("MessageList", () => {
     });
 
     it("should not auto-scroll when scrolledUp is true", () => {
-      render(<MessageList messages={mockMessages} isScrolledUp />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} isScrolledUp />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("scroll-to-bottom-button")).toBeInTheDocument();
     });
   });
 
   describe("Loading State", () => {
     it("should show loading indicator when isLoading is true", () => {
-      render(<MessageList messages={mockMessages} isLoading />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} isLoading />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
     });
 
     it("should show typing indicator for streaming message", () => {
-      render(<MessageList messages={mockMessages} isStreaming />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} isStreaming />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("streaming-indicator")).toBeInTheDocument();
     });
   });
 
   describe("Scroll Controls", () => {
     it("should show scroll-to-bottom button when scrolled up", () => {
-      render(<MessageList messages={mockMessages} isScrolledUp />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} isScrolledUp />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("scroll-to-bottom-button")).toBeInTheDocument();
     });
 
     it("should call onScrollToBottom when button clicked", () => {
       const onScrollToBottom = vi.fn();
       render(
-        <MessageList
-          messages={mockMessages}
-          isScrolledUp
-          onScrollToBottom={onScrollToBottom}
-        />,
+        <TestProvider>
+          <MessageList
+            messages={mockMessages}
+            isScrolledUp
+            onScrollToBottom={onScrollToBottom}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("scroll-to-bottom-button"));
@@ -179,7 +215,11 @@ describe("MessageList", () => {
 
   describe("Message Grouping", () => {
     it("should group consecutive messages from same sender", () => {
-      render(<MessageList messages={mockMessages} groupMessages />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} groupMessages />
+        </TestProvider>,
+      );
       const groups = screen.getAllByTestId("message-group");
       // User messages and assistant messages should be grouped
       expect(groups.length).toBeGreaterThan(0);
@@ -195,7 +235,11 @@ describe("MessageList", () => {
         timestamp: "2024-01-01T12:00:00Z",
       };
 
-      render(<MessageList messages={[assistantMessage]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[assistantMessage]} enableRichContent />
+        </TestProvider>,
+      );
 
       // MarkdownContent renders bold as <strong> instead of plain text
       expect(screen.getByText("Bold text")).toBeInTheDocument();
@@ -210,7 +254,11 @@ describe("MessageList", () => {
         timestamp: "2024-01-01T12:00:00Z",
       };
 
-      render(<MessageList messages={[mermaidMessage]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[mermaidMessage]} enableRichContent />
+        </TestProvider>,
+      );
 
       // Should find loading fallback for lazy-loaded mermaid or mermaid container
       // The actual mermaid diagram is lazy-loaded with Suspense
@@ -226,7 +274,11 @@ describe("MessageList", () => {
         timestamp: "2024-01-01T12:00:00Z",
       };
 
-      render(<MessageList messages={[chartMessage]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[chartMessage]} enableRichContent />
+        </TestProvider>,
+      );
 
       // Should render without error (chart component handles the JSON)
       expect(screen.getByTestId("message-list")).toBeInTheDocument();
@@ -240,7 +292,11 @@ describe("MessageList", () => {
         timestamp: "2024-01-01T12:00:00Z",
       };
 
-      render(<MessageList messages={[userMessage]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[userMessage]} enableRichContent />
+        </TestProvider>,
+      );
 
       // User messages should use simple MessageBubble, preserving raw content
       expect(screen.getByText("Hello **world**")).toBeInTheDocument();
@@ -255,7 +311,11 @@ describe("MessageList", () => {
       };
 
       // No enableRichContent prop passed - should default to true
-      render(<MessageList messages={[assistantMessage]} />);
+      render(
+        <TestProvider>
+          <MessageList messages={[assistantMessage]} />
+        </TestProvider>,
+      );
 
       // Should render with MarkdownContent (bold as styled text)
       expect(screen.getByText("Bold text")).toBeInTheDocument();
@@ -281,7 +341,11 @@ describe("MessageList", () => {
         timestamp: "2024-01-01T12:00:00Z",
       };
 
-      render(<MessageList messages={[assistantMessage]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[assistantMessage]} enableRichContent />
+        </TestProvider>,
+      );
 
       // Should render the message without error
       expect(screen.getByTestId("message-list")).toBeInTheDocument();
@@ -299,7 +363,11 @@ describe("MessageList", () => {
       };
 
       // Even with potential edge case content, the component should render safely
-      render(<MessageList messages={[malformedContent]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[malformedContent]} enableRichContent />
+        </TestProvider>,
+      );
 
       // Component should be in the document (error boundary catches any render issues)
       expect(screen.getByTestId("message-list")).toBeInTheDocument();
@@ -327,7 +395,11 @@ describe("MessageList", () => {
         },
       ];
 
-      render(<MessageList messages={messages} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={messages} enableRichContent />
+        </TestProvider>,
+      );
 
       // All messages should be visible - each is independently rendered
       expect(screen.getByText("User message before")).toBeInTheDocument();
@@ -344,7 +416,11 @@ describe("MessageList", () => {
         timestamp: "2024-01-01T12:00:00Z",
       };
 
-      render(<MessageList messages={[assistantMessage]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[assistantMessage]} enableRichContent />
+        </TestProvider>,
+      );
 
       // Should render successfully (error boundary is present but not triggered)
       expect(screen.getByTestId("message-list")).toBeInTheDocument();
@@ -367,7 +443,11 @@ describe("MessageList", () => {
         },
       ];
 
-      render(<MessageList messages={messages} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={messages} enableRichContent />
+        </TestProvider>,
+      );
 
       // Both messages should render (independent error boundaries)
       expect(screen.getByText("First assistant message")).toBeInTheDocument();
@@ -377,7 +457,11 @@ describe("MessageList", () => {
 
   describe("Accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<MessageList messages={mockMessages} />);
+      const { container } = render(
+        <TestProvider>
+          <MessageList messages={mockMessages} />
+        </TestProvider>,
+      );
       // Wait for any lazy-loaded Suspense components to settle
       await waitForSuspense();
       const results = await axe(container);
@@ -385,7 +469,11 @@ describe("MessageList", () => {
     });
 
     it("should have no accessibility violations when empty", async () => {
-      const { container } = render(<MessageList messages={[]} />);
+      const { container } = render(
+        <TestProvider>
+          <MessageList messages={[]} />
+        </TestProvider>,
+      );
       // Wait for any lazy-loaded Suspense components to settle
       await waitForSuspense();
       const results = await axe(container);
@@ -394,7 +482,9 @@ describe("MessageList", () => {
 
     it("should have no accessibility violations when loading", async () => {
       const { container } = render(
-        <MessageList messages={mockMessages} isLoading />,
+        <TestProvider>
+          <MessageList messages={mockMessages} isLoading />
+        </TestProvider>,
       );
       // Wait for any lazy-loaded Suspense components to settle
       await waitForSuspense();
@@ -404,7 +494,9 @@ describe("MessageList", () => {
 
     it("should have no accessibility violations when streaming", async () => {
       const { container } = render(
-        <MessageList messages={mockMessages} isStreaming />,
+        <TestProvider>
+          <MessageList messages={mockMessages} isStreaming />
+        </TestProvider>,
       );
       // Wait for any lazy-loaded Suspense components to settle
       await waitForSuspense();
@@ -413,12 +505,20 @@ describe("MessageList", () => {
     });
 
     it("should have accessible list role", () => {
-      render(<MessageList messages={mockMessages} />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("log")).toBeInTheDocument();
     });
 
     it("should have aria-live region for new messages", () => {
-      render(<MessageList messages={mockMessages} />);
+      render(
+        <TestProvider>
+          <MessageList messages={mockMessages} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("message-list")).toHaveAttribute(
         "aria-live",
         "polite",
@@ -447,23 +547,39 @@ describe("MessageList", () => {
     };
 
     it("should render sources section for assistant messages with sources", () => {
-      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[messageWithSources]} enableRichContent />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("sources-section")).toBeInTheDocument();
     });
 
     it("should display source count in sources header", () => {
-      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[messageWithSources]} enableRichContent />
+        </TestProvider>,
+      );
       expect(screen.getByText("Sources (2)")).toBeInTheDocument();
     });
 
     it("should render source links with titles", () => {
-      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[messageWithSources]} enableRichContent />
+        </TestProvider>,
+      );
       expect(screen.getByText("Python Documentation")).toBeInTheDocument();
       expect(screen.getByText("Real Python")).toBeInTheDocument();
     });
 
     it("should have accessible aria-labels on source links", () => {
-      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[messageWithSources]} enableRichContent />
+        </TestProvider>,
+      );
       const links = screen.getAllByRole("link");
       const sourceLinks = links.filter((link) =>
         link.getAttribute("aria-label")?.includes("Source:"),
@@ -476,7 +592,11 @@ describe("MessageList", () => {
     });
 
     it("should open source links in new tab", () => {
-      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[messageWithSources]} enableRichContent />
+        </TestProvider>,
+      );
       const link = screen.getByText("Python Documentation").closest("a");
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
@@ -490,7 +610,11 @@ describe("MessageList", () => {
         timestamp: "2024-01-01T12:00:00Z",
       };
 
-      render(<MessageList messages={[messageNoSources]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[messageNoSources]} enableRichContent />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("sources-section")).not.toBeInTheDocument();
     });
 
@@ -508,7 +632,9 @@ describe("MessageList", () => {
       };
 
       render(
-        <MessageList messages={[messageWithDuplicates]} enableRichContent />,
+        <TestProvider>
+          <MessageList messages={[messageWithDuplicates]} enableRichContent />
+        </TestProvider>,
       );
       // Should only show 2 sources (deduplicated by domain)
       expect(screen.getByText("Sources (2)")).toBeInTheDocument();
@@ -516,7 +642,9 @@ describe("MessageList", () => {
 
     it("should have no accessibility violations with sources", async () => {
       const { container } = render(
-        <MessageList messages={[messageWithSources]} enableRichContent />,
+        <TestProvider>
+          <MessageList messages={[messageWithSources]} enableRichContent />
+        </TestProvider>,
       );
       await waitForSuspense();
       const results = await axe(container);
@@ -526,11 +654,13 @@ describe("MessageList", () => {
     it("should have nav element for source citations", () => {
       // With grouping disabled, nav has "Source citations" label
       render(
-        <MessageList
-          messages={[messageWithSources]}
-          enableRichContent
-          groupSourcesByType={false}
-        />,
+        <TestProvider>
+          <MessageList
+            messages={[messageWithSources]}
+            enableRichContent
+            groupSourcesByType={false}
+          />
+        </TestProvider>,
       );
       const nav = screen.getByRole("navigation", { name: "Source citations" });
       expect(nav).toBeInTheDocument();
@@ -538,7 +668,11 @@ describe("MessageList", () => {
 
     it("should have nav elements for grouped sources", () => {
       // With grouping enabled (default), nav has group-specific labels
-      render(<MessageList messages={[messageWithSources]} enableRichContent />);
+      render(
+        <TestProvider>
+          <MessageList messages={[messageWithSources]} enableRichContent />
+        </TestProvider>,
+      );
       const nav = screen.getByRole("navigation", { name: "Web sources" });
       expect(nav).toBeInTheDocument();
     });
@@ -569,7 +703,9 @@ describe("MessageList", () => {
       };
 
       render(
-        <MessageList messages={[messageWithRelevance]} enableRichContent />,
+        <TestProvider>
+          <MessageList messages={[messageWithRelevance]} enableRichContent />
+        </TestProvider>,
       );
 
       const links = screen.getAllByRole("link");
@@ -596,11 +732,13 @@ describe("MessageList", () => {
       };
 
       render(
-        <MessageList
-          messages={[messageWithMixedSources]}
-          enableRichContent
-          groupSourcesByType
-        />,
+        <TestProvider>
+          <MessageList
+            messages={[messageWithMixedSources]}
+            enableRichContent
+            groupSourcesByType
+          />
+        </TestProvider>,
       );
 
       // Should have separate groups for web and KB
@@ -621,7 +759,9 @@ describe("MessageList", () => {
       };
 
       render(
-        <MessageList messages={[messageWithMixedSources]} enableRichContent />,
+        <TestProvider>
+          <MessageList messages={[messageWithMixedSources]} enableRichContent />
+        </TestProvider>,
       );
 
       // Should have group testids by default (groupSourcesByType defaults to true)
@@ -642,11 +782,13 @@ describe("MessageList", () => {
       };
 
       render(
-        <MessageList
-          messages={[messageWithMixedSources]}
-          enableRichContent
-          groupSourcesByType={false}
-        />,
+        <TestProvider>
+          <MessageList
+            messages={[messageWithMixedSources]}
+            enableRichContent
+            groupSourcesByType={false}
+          />
+        </TestProvider>,
       );
 
       // Should NOT have group testids when explicitly disabled
@@ -680,10 +822,12 @@ describe("MessageList", () => {
       };
 
       render(
-        <MessageList
-          messages={[messageWithDupesAndRelevance]}
-          enableRichContent
-        />,
+        <TestProvider>
+          <MessageList
+            messages={[messageWithDupesAndRelevance]}
+            enableRichContent
+          />
+        </TestProvider>,
       );
 
       // Deduplication keeps first per domain: example.com/low (0.2), other.com/page (0.85)

@@ -9,6 +9,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { VersionTimeline } from "./VersionTimeline";
 import type { ArtifactVersion } from "../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -72,22 +74,26 @@ describe("VersionTimeline", () => {
   describe("Rendering", () => {
     it("should render timeline container", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("version-timeline")).toBeInTheDocument();
     });
 
     it("should render all versions", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/v1/)).toBeInTheDocument();
       expect(screen.getByText(/v2/)).toBeInTheDocument();
@@ -96,22 +102,26 @@ describe("VersionTimeline", () => {
 
     it("should show empty state when no versions", () => {
       render(
-        <VersionTimeline
-          versions={[]}
-          currentVersion={0}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={[]}
+            currentVersion={0}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/no version history/i)).toBeInTheDocument();
     });
 
     it("should highlight current version", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("version-item-3")).toHaveClass("current");
     });
@@ -120,11 +130,13 @@ describe("VersionTimeline", () => {
   describe("Version Details", () => {
     it("should display version timestamp", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       // Should show relative time or formatted date
       expect(screen.getByTestId("version-item-1")).toHaveTextContent(/Jan/);
@@ -132,11 +144,13 @@ describe("VersionTimeline", () => {
 
     it("should show AI badge for AI-generated versions", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const v2Item = screen.getByTestId("version-item-2");
       expect(
@@ -146,11 +160,13 @@ describe("VersionTimeline", () => {
 
     it("should show user indicator for user edits", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const v1Item = screen.getByTestId("version-item-1");
       expect(
@@ -163,11 +179,13 @@ describe("VersionTimeline", () => {
     it("should call onVersionSelect when version clicked", () => {
       const onVersionSelect = vi.fn();
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={onVersionSelect}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={onVersionSelect}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("version-item-1"));
@@ -177,11 +195,13 @@ describe("VersionTimeline", () => {
     it("should not call onVersionSelect when clicking current version", () => {
       const onVersionSelect = vi.fn();
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={onVersionSelect}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={onVersionSelect}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("version-item-3"));
@@ -192,12 +212,14 @@ describe("VersionTimeline", () => {
   describe("Rollback", () => {
     it("should show restore button on hover", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-          onRestore={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+            onRestore={() => {}}
+          />
+        </TestProvider>,
       );
 
       const v1Item = screen.getByTestId("version-item-1");
@@ -208,12 +230,14 @@ describe("VersionTimeline", () => {
 
     it("should hide restore button on mouse leave", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-          onRestore={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+            onRestore={() => {}}
+          />
+        </TestProvider>,
       );
 
       const v1Item = screen.getByTestId("version-item-1");
@@ -227,12 +251,14 @@ describe("VersionTimeline", () => {
     it("should call onRestore when restore button clicked", () => {
       const onRestore = vi.fn();
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-          onRestore={onRestore}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+            onRestore={onRestore}
+          />
+        </TestProvider>,
       );
 
       const v1Item = screen.getByTestId("version-item-1");
@@ -244,12 +270,14 @@ describe("VersionTimeline", () => {
 
     it("should not show restore button on current version", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-          onRestore={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+            onRestore={() => {}}
+          />
+        </TestProvider>,
       );
 
       const v3Item = screen.getByTestId("version-item-3");
@@ -262,12 +290,14 @@ describe("VersionTimeline", () => {
   describe("Diff Preview", () => {
     it("should show diff preview on hover when enabled", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-          showDiffPreview
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+            showDiffPreview
+          />
+        </TestProvider>,
       );
 
       const v1Item = screen.getByTestId("version-item-1");
@@ -287,11 +317,13 @@ describe("VersionTimeline", () => {
       }));
 
       render(
-        <VersionTimeline
-          versions={manyVersions}
-          currentVersion={10}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={manyVersions}
+            currentVersion={10}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("show-more-button")).toBeInTheDocument();
@@ -306,11 +338,13 @@ describe("VersionTimeline", () => {
       }));
 
       render(
-        <VersionTimeline
-          versions={manyVersions}
-          currentVersion={10}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={manyVersions}
+            currentVersion={10}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("show-more-button"));
@@ -324,22 +358,26 @@ describe("VersionTimeline", () => {
   describe("Accessibility", () => {
     it("should have accessible timeline role", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("list")).toBeInTheDocument();
     });
 
     it("should have accessible version items", () => {
       render(
-        <VersionTimeline
-          versions={mockVersions}
-          currentVersion={3}
-          onVersionSelect={() => {}}
-        />,
+        <TestProvider>
+          <VersionTimeline
+            versions={mockVersions}
+            currentVersion={3}
+            onVersionSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getAllByRole("listitem")).toHaveLength(3);
     });

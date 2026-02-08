@@ -12,6 +12,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { NudgeSpotlight } from "./NudgeSpotlight";
 import type { Nudge } from "../../hooks/useNudges";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -58,7 +60,11 @@ describe("NudgeSpotlight", () => {
 
   describe("Rendering", () => {
     it("renders spotlight message", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/check out this new feature/i),
@@ -66,19 +72,31 @@ describe("NudgeSpotlight", () => {
     });
 
     it("renders spotlight overlay", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("spotlight-overlay")).toBeInTheDocument();
     });
 
     it("renders spotlight card", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("spotlight-card")).toBeInTheDocument();
     });
 
     it("renders with correct nudge ID in data attribute", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       const spotlight = screen.getByTestId(`nudge-spotlight-${mockNudge.id}`);
       expect(spotlight).toBeInTheDocument();
@@ -88,7 +106,11 @@ describe("NudgeSpotlight", () => {
   describe("Interactions", () => {
     it("calls onDismiss when overlay clicked", () => {
       const onDismiss = vi.fn();
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("spotlight-overlay"));
       expect(onDismiss).toHaveBeenCalled();
@@ -96,7 +118,11 @@ describe("NudgeSpotlight", () => {
 
     it("calls onDismiss when close button clicked", () => {
       const onDismiss = vi.fn();
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /close/i }));
       expect(onDismiss).toHaveBeenCalled();
@@ -105,11 +131,13 @@ describe("NudgeSpotlight", () => {
     it("calls onAccept when action button clicked", () => {
       const onAccept = vi.fn();
       render(
-        <NudgeSpotlight
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          onAccept={onAccept}
-        />,
+        <TestProvider>
+          <NudgeSpotlight
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            onAccept={onAccept}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /got it/i }));
@@ -118,7 +146,11 @@ describe("NudgeSpotlight", () => {
 
     it("does not dismiss when card is clicked", () => {
       const onDismiss = vi.fn();
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("spotlight-card"));
       expect(onDismiss).not.toHaveBeenCalled();
@@ -127,7 +159,11 @@ describe("NudgeSpotlight", () => {
 
   describe("Target Element Highlighting", () => {
     it("calculates spotlight position based on target element", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       // The spotlight cutout should exist
       const overlay = screen.getByTestId("spotlight-overlay");
@@ -144,7 +180,11 @@ describe("NudgeSpotlight", () => {
       }
 
       // Should still render without crashing
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/check out this new feature/i),
@@ -152,7 +192,11 @@ describe("NudgeSpotlight", () => {
     });
 
     it("renders centered when no target element specified", () => {
-      render(<NudgeSpotlight nudge={mockNudgeNoTarget} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudgeNoTarget} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("spotlight-card");
       expect(card).toHaveClass("spotlight-card-centered");
@@ -161,7 +205,11 @@ describe("NudgeSpotlight", () => {
 
   describe("Priority Styling", () => {
     it("applies high priority styling", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("spotlight-card");
       expect(card).toHaveClass("spotlight-priority-high");
@@ -169,7 +217,11 @@ describe("NudgeSpotlight", () => {
 
     it("applies medium priority styling", () => {
       const mediumNudge = { ...mockNudge, priority: "medium" as const };
-      render(<NudgeSpotlight nudge={mediumNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mediumNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("spotlight-card");
       expect(card).toHaveClass("spotlight-priority-medium");
@@ -177,7 +229,11 @@ describe("NudgeSpotlight", () => {
 
     it("applies low priority styling", () => {
       const lowNudge = { ...mockNudge, priority: "low" as const };
-      render(<NudgeSpotlight nudge={lowNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={lowNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("spotlight-card");
       expect(card).toHaveClass("spotlight-priority-low");
@@ -187,12 +243,14 @@ describe("NudgeSpotlight", () => {
   describe("Custom Actions", () => {
     it("renders custom action text", () => {
       render(
-        <NudgeSpotlight
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          onAccept={() => {}}
-          actionText="Learn More"
-        />,
+        <TestProvider>
+          <NudgeSpotlight
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            onAccept={() => {}}
+            actionText="Learn More"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -202,13 +260,15 @@ describe("NudgeSpotlight", () => {
 
     it("renders secondary action when provided", () => {
       render(
-        <NudgeSpotlight
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          onAccept={() => {}}
-          secondaryActionText="Skip Tour"
-          onSecondaryAction={() => {}}
-        />,
+        <TestProvider>
+          <NudgeSpotlight
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            onAccept={() => {}}
+            secondaryActionText="Skip Tour"
+            onSecondaryAction={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -219,12 +279,14 @@ describe("NudgeSpotlight", () => {
     it("calls onSecondaryAction when secondary button clicked", () => {
       const onSecondary = vi.fn();
       render(
-        <NudgeSpotlight
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          secondaryActionText="Skip"
-          onSecondaryAction={onSecondary}
-        />,
+        <TestProvider>
+          <NudgeSpotlight
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            secondaryActionText="Skip"
+            onSecondaryAction={onSecondary}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /skip/i }));
@@ -235,19 +297,25 @@ describe("NudgeSpotlight", () => {
   describe("Step Indicators", () => {
     it("renders step indicator when step info provided", () => {
       render(
-        <NudgeSpotlight
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          currentStep={1}
-          totalSteps={5}
-        />,
+        <TestProvider>
+          <NudgeSpotlight
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            currentStep={1}
+            totalSteps={5}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument();
     });
 
     it("does not render step indicator when no step info", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByText(/step/i)).not.toBeInTheDocument();
     });
@@ -255,13 +323,21 @@ describe("NudgeSpotlight", () => {
 
   describe("Accessibility", () => {
     it("has accessible dialog structure", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("has aria-label for spotlight", () => {
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-label");
@@ -269,11 +345,13 @@ describe("NudgeSpotlight", () => {
 
     it("traps focus within spotlight", () => {
       render(
-        <NudgeSpotlight
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          onAccept={() => {}}
-        />,
+        <TestProvider>
+          <NudgeSpotlight
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            onAccept={() => {}}
+          />
+        </TestProvider>,
       );
 
       // First focusable element should be the close button
@@ -283,7 +361,11 @@ describe("NudgeSpotlight", () => {
 
     it("handles Escape key to dismiss", () => {
       const onDismiss = vi.fn();
-      render(<NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <NudgeSpotlight nudge={mockNudge} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       fireEvent.keyDown(document, { key: "Escape" });
       expect(onDismiss).toHaveBeenCalled();
@@ -293,11 +375,13 @@ describe("NudgeSpotlight", () => {
   describe("Custom Styling", () => {
     it("applies custom className", () => {
       render(
-        <NudgeSpotlight
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          className="custom-class"
-        />,
+        <TestProvider>
+          <NudgeSpotlight
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
 
       const spotlight = screen.getByTestId(`nudge-spotlight-${mockNudge.id}`);

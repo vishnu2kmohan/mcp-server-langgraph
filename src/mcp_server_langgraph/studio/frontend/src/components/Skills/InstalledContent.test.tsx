@@ -10,6 +10,8 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InstalledContent } from "./InstalledContent";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -32,13 +34,21 @@ describe("InstalledContent", () => {
 
   describe("Rendering", () => {
     it("renders installed skills list", () => {
-      render(<InstalledContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-installed-list")).toBeInTheDocument();
     });
 
     it("displays all installed skills", () => {
-      render(<InstalledContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByTestId("skills-installed-web-research"),
@@ -52,7 +62,11 @@ describe("InstalledContent", () => {
     });
 
     it("shows skill names correctly", () => {
-      render(<InstalledContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("web-research")).toBeInTheDocument();
       expect(screen.getByText("code-review")).toBeInTheDocument();
@@ -60,7 +74,11 @@ describe("InstalledContent", () => {
     });
 
     it("shows uninstall button for each skill", () => {
-      render(<InstalledContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       const uninstallButtons = screen.getAllByRole("button", {
         name: /uninstall/i,
@@ -69,7 +87,11 @@ describe("InstalledContent", () => {
     });
 
     it("shows checkmark icon for each installed skill", () => {
-      render(<InstalledContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Each skill row should have a success checkmark (rendered as SVG)
       // Use exact match to avoid matching skills-installed-list
@@ -91,14 +113,22 @@ describe("InstalledContent", () => {
 
   describe("Empty State", () => {
     it("renders empty state when no skills installed", () => {
-      render(<InstalledContent {...defaultProps} installedSkills={[]} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} installedSkills={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-installed-empty")).toBeInTheDocument();
       expect(screen.getByText("No skills installed")).toBeInTheDocument();
     });
 
     it("shows helpful message in empty state", () => {
-      render(<InstalledContent {...defaultProps} installedSkills={[]} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} installedSkills={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(
@@ -108,7 +138,11 @@ describe("InstalledContent", () => {
     });
 
     it("does not show skills list in empty state", () => {
-      render(<InstalledContent {...defaultProps} installedSkills={[]} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} installedSkills={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("skills-installed-list"),
@@ -125,7 +159,11 @@ describe("InstalledContent", () => {
       const user = userEvent.setup();
       const onUninstall = vi.fn();
 
-      render(<InstalledContent {...defaultProps} onUninstall={onUninstall} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} onUninstall={onUninstall} />
+        </TestProvider>,
+      );
 
       const webResearchRow = screen.getByTestId(
         "skills-installed-web-research",
@@ -142,7 +180,11 @@ describe("InstalledContent", () => {
       const user = userEvent.setup();
       const onUninstall = vi.fn();
 
-      render(<InstalledContent {...defaultProps} onUninstall={onUninstall} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} onUninstall={onUninstall} />
+        </TestProvider>,
+      );
 
       const codeReviewRow = screen.getByTestId("skills-installed-code-review");
       const uninstallButton = within(codeReviewRow).getByRole("button", {
@@ -154,7 +196,11 @@ describe("InstalledContent", () => {
     });
 
     it("disables all uninstall buttons when uninstalling", () => {
-      render(<InstalledContent {...defaultProps} isUninstalling={true} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} isUninstalling={true} />
+        </TestProvider>,
+      );
 
       const uninstallButtons = screen.getAllByRole("button", {
         name: /uninstall/i,
@@ -165,7 +211,11 @@ describe("InstalledContent", () => {
     });
 
     it("enables uninstall buttons when not uninstalling", () => {
-      render(<InstalledContent {...defaultProps} isUninstalling={false} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} isUninstalling={false} />
+        </TestProvider>,
+      );
 
       const uninstallButtons = screen.getAllByRole("button", {
         name: /uninstall/i,
@@ -183,10 +233,12 @@ describe("InstalledContent", () => {
   describe("Single Skill", () => {
     it("renders correctly with single skill", () => {
       render(
-        <InstalledContent
-          {...defaultProps}
-          installedSkills={["web-research"]}
-        />,
+        <TestProvider>
+          <InstalledContent
+            {...defaultProps}
+            installedSkills={["web-research"]}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("skills-installed-list")).toBeInTheDocument();
@@ -217,7 +269,9 @@ describe("InstalledContent", () => {
       ];
 
       render(
-        <InstalledContent {...defaultProps} installedSkills={manySkills} />,
+        <TestProvider>
+          <InstalledContent {...defaultProps} installedSkills={manySkills} />
+        </TestProvider>,
       );
 
       manySkills.forEach((skill) => {
@@ -234,14 +288,22 @@ describe("InstalledContent", () => {
 
   describe("Accessibility", () => {
     it("uninstall buttons have accessible names", () => {
-      render(<InstalledContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       const buttons = screen.getAllByRole("button", { name: /uninstall/i });
       expect(buttons.length).toBeGreaterThan(0);
     });
 
     it("skill names are visible text", () => {
-      render(<InstalledContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InstalledContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       defaultProps.installedSkills.forEach((skill) => {
         expect(screen.getByText(skill)).toBeInTheDocument();

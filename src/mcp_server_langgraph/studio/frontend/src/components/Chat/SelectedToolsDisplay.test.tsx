@@ -13,6 +13,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { describe, expect, it, afterEach, vi } from "vitest";
 import { SelectedToolsDisplay } from "./SelectedToolsDisplay";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -23,10 +25,12 @@ describe("SelectedToolsDisplay", () => {
   describe("rendering", () => {
     it("renders tool names as badges", () => {
       render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator", "search", "translate"]}
-          selectionScores={{}}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator", "search", "translate"]}
+            selectionScores={{}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("calculator")).toBeInTheDocument();
@@ -36,7 +40,9 @@ describe("SelectedToolsDisplay", () => {
 
     it("returns null when no tools selected", () => {
       const { container } = render(
-        <SelectedToolsDisplay selectedTools={[]} selectionScores={{}} />,
+        <TestProvider>
+          <SelectedToolsDisplay selectedTools={[]} selectionScores={{}} />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -44,10 +50,12 @@ describe("SelectedToolsDisplay", () => {
 
     it("shows header with tools icon", () => {
       render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator"]}
-          selectionScores={{}}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator"]}
+            selectionScores={{}}
+          />
+        </TestProvider>,
       );
 
       // Should show "Selected Tools" label or similar
@@ -56,11 +64,13 @@ describe("SelectedToolsDisplay", () => {
 
     it("displays total available tools when provided", () => {
       render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator", "search"]}
-          selectionScores={{}}
-          totalAvailableTools={50}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator", "search"]}
+            selectionScores={{}}
+            totalAvailableTools={50}
+          />
+        </TestProvider>,
       );
 
       // Should show "2 of 50 tools" or similar
@@ -72,10 +82,12 @@ describe("SelectedToolsDisplay", () => {
   describe("selection scores", () => {
     it("displays selection score when available", () => {
       render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator"]}
-          selectionScores={{ calculator: 0.95 }}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator"]}
+            selectionScores={{ calculator: 0.95 }}
+          />
+        </TestProvider>,
       );
 
       // Should show score (95% or 0.95)
@@ -84,10 +96,12 @@ describe("SelectedToolsDisplay", () => {
 
     it("handles tools without scores gracefully", () => {
       render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator", "search"]}
-          selectionScores={{ calculator: 0.9 }}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator", "search"]}
+            selectionScores={{ calculator: 0.9 }}
+          />
+        </TestProvider>,
       );
 
       // Should still render both tools
@@ -99,10 +113,12 @@ describe("SelectedToolsDisplay", () => {
   describe("accessibility", () => {
     it("has accessible role for the tools list", () => {
       render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator"]}
-          selectionScores={{}}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator"]}
+            selectionScores={{}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("list")).toBeInTheDocument();
@@ -110,10 +126,12 @@ describe("SelectedToolsDisplay", () => {
 
     it("each tool badge has listitem role", () => {
       render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator", "search"]}
-          selectionScores={{}}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator", "search"]}
+            selectionScores={{}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getAllByRole("listitem")).toHaveLength(2);
@@ -123,11 +141,13 @@ describe("SelectedToolsDisplay", () => {
   describe("styling", () => {
     it("applies additional className when provided", () => {
       const { container } = render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator"]}
-          selectionScores={{}}
-          className="custom-class"
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator"]}
+            selectionScores={{}}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toHaveClass("custom-class");
@@ -135,11 +155,13 @@ describe("SelectedToolsDisplay", () => {
 
     it("applies compact mode styling", () => {
       const { container } = render(
-        <SelectedToolsDisplay
-          selectedTools={["calculator"]}
-          selectionScores={{}}
-          compact={true}
-        />,
+        <TestProvider>
+          <SelectedToolsDisplay
+            selectedTools={["calculator"]}
+            selectionScores={{}}
+            compact={true}
+          />
+        </TestProvider>,
       );
 
       // Check for compact-specific styles

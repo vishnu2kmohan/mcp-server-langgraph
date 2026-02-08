@@ -9,6 +9,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { SkillCard } from "./SkillCard";
 import type { SkillMetadata } from "../../types/skills";
 
+import { TestProvider } from "@/test-utils";
+
 const mockSkill: SkillMetadata = {
   name: "web-research",
   description: "Search the web for information",
@@ -25,24 +27,28 @@ afterEach(() => {
 describe("SkillCard", () => {
   it("should display skill name", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     expect(screen.getByText("web-research")).toBeInTheDocument();
   });
 
   it("should display skill description", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     expect(
       screen.getByText("Search the web for information"),
@@ -51,24 +57,28 @@ describe("SkillCard", () => {
 
   it("should display version badge", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
   });
 
   it("should display up to 3 tags", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     expect(screen.getByText("research")).toBeInTheDocument();
     expect(screen.getByText("web")).toBeInTheDocument();
@@ -77,12 +87,14 @@ describe("SkillCard", () => {
 
   it("should show Install button when not installed", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     expect(
       screen.getByRole("button", { name: /install/i }),
@@ -91,12 +103,14 @@ describe("SkillCard", () => {
 
   it("should show Installed badge when installed", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={true}
-        onInstall={vi.fn()}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={true}
+          onInstall={vi.fn()}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     expect(screen.getByText("Installed")).toBeInTheDocument();
     expect(
@@ -107,12 +121,14 @@ describe("SkillCard", () => {
   it("should call onInstall when Install button clicked", () => {
     const onInstall = vi.fn();
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={onInstall}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={onInstall}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: /install/i }));
     expect(onInstall).toHaveBeenCalledTimes(1);
@@ -120,36 +136,42 @@ describe("SkillCard", () => {
 
   it("should disable Install button when installing", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={true}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={true}
+        />
+      </TestProvider>,
     );
     expect(screen.getByRole("button")).toBeDisabled();
   });
 
   it("should show loading spinner when installing", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={true}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={true}
+        />
+      </TestProvider>,
     );
     expect(document.querySelector(".animate-spin")).toBeInTheDocument();
   });
 
   it("should have data-testid for testing", () => {
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={false}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={false}
+        />
+      </TestProvider>,
     );
     expect(screen.getByTestId("skills-card-web-research")).toBeInTheDocument();
   });
@@ -157,13 +179,15 @@ describe("SkillCard", () => {
   it("should call onViewDetails when card is clicked", () => {
     const onViewDetails = vi.fn();
     render(
-      <SkillCard
-        skill={mockSkill}
-        isInstalled={false}
-        onInstall={vi.fn()}
-        isInstalling={false}
-        onViewDetails={onViewDetails}
-      />,
+      <TestProvider>
+        <SkillCard
+          skill={mockSkill}
+          isInstalled={false}
+          onInstall={vi.fn()}
+          isInstalling={false}
+          onViewDetails={onViewDetails}
+        />
+      </TestProvider>,
     );
     // Click on card (not the button)
     const card = screen.getByTestId("skills-card-web-research");

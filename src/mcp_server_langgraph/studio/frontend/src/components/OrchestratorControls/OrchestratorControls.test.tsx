@@ -16,6 +16,8 @@ import {
   type OrchestratorConfig,
 } from "./OrchestratorControls";
 
+import { TestProvider } from "@/test-utils";
+
 describe("OrchestratorControls", () => {
   const defaultConfig: OrchestratorConfig = {
     orchestrator: "standard",
@@ -41,36 +43,60 @@ describe("OrchestratorControls", () => {
 
   describe("Rendering", () => {
     it("should render orchestrator controls heading", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(/orchestrator configuration/i),
       ).toBeInTheDocument();
     });
 
     it("should render orchestrator mode selector", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/orchestrator mode/i)).toBeInTheDocument();
     });
 
     it("should render thinking budget selector", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/thinking budget/i)).toBeInTheDocument();
     });
 
     it("should render critique rounds control", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/critique rounds/i)).toBeInTheDocument();
     });
 
     it("should render auto-approve toggle", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/auto-approve/i)).toBeInTheDocument();
     });
   });
 
   describe("Orchestrator Mode", () => {
     it("should display current orchestrator mode", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const select = screen.getByLabelText(
         /orchestrator mode/i,
       ) as HTMLSelectElement;
@@ -78,7 +104,11 @@ describe("OrchestratorControls", () => {
     });
 
     it("should have all orchestrator options", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("option", { name: /standard/i }),
       ).toBeInTheDocument();
@@ -95,7 +125,11 @@ describe("OrchestratorControls", () => {
     });
 
     it("should call onChange when orchestrator mode changes", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const select = screen.getByLabelText(/orchestrator mode/i);
       fireEvent.change(select, { target: { value: "swarm" } });
       expect(defaultProps.onChange).toHaveBeenCalledWith({
@@ -107,7 +141,11 @@ describe("OrchestratorControls", () => {
 
   describe("Thinking Budget", () => {
     it("should display current thinking budget", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const select = screen.getByLabelText(
         /thinking budget/i,
       ) as HTMLSelectElement;
@@ -115,7 +153,11 @@ describe("OrchestratorControls", () => {
     });
 
     it("should have all thinking budget options", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("option", { name: /none/i })).toBeInTheDocument();
       expect(
         screen.getByRole("option", { name: /light/i }),
@@ -127,7 +169,11 @@ describe("OrchestratorControls", () => {
     });
 
     it("should call onChange when thinking budget changes", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const select = screen.getByLabelText(/thinking budget/i);
       fireEvent.change(select, { target: { value: "deep" } });
       expect(defaultProps.onChange).toHaveBeenCalledWith({
@@ -139,7 +185,11 @@ describe("OrchestratorControls", () => {
 
   describe("Critique Rounds", () => {
     it("should display current critique rounds value", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const input = screen.getByLabelText(
         /critique rounds/i,
       ) as HTMLInputElement;
@@ -147,7 +197,11 @@ describe("OrchestratorControls", () => {
     });
 
     it("should have min 0 and max 3", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const input = screen.getByLabelText(
         /critique rounds/i,
       ) as HTMLInputElement;
@@ -156,7 +210,11 @@ describe("OrchestratorControls", () => {
     });
 
     it("should call onChange when critique rounds changes", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const input = screen.getByLabelText(/critique rounds/i);
       fireEvent.change(input, { target: { value: "2" } });
       expect(defaultProps.onChange).toHaveBeenCalledWith({
@@ -168,7 +226,11 @@ describe("OrchestratorControls", () => {
 
   describe("Auto-Approve Toggle", () => {
     it("should display current auto-approve state", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const checkbox = screen.getByLabelText(
         /auto-approve/i,
       ) as HTMLInputElement;
@@ -180,7 +242,11 @@ describe("OrchestratorControls", () => {
         ...defaultProps,
         config: { ...defaultConfig, autoApprove: true },
       };
-      render(<OrchestratorControls {...propsWithAutoApprove} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...propsWithAutoApprove} />
+        </TestProvider>,
+      );
       const checkbox = screen.getByLabelText(
         /auto-approve/i,
       ) as HTMLInputElement;
@@ -188,7 +254,11 @@ describe("OrchestratorControls", () => {
     });
 
     it("should call onChange when auto-approve is toggled", () => {
-      render(<OrchestratorControls {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} />
+        </TestProvider>,
+      );
       const checkbox = screen.getByLabelText(/auto-approve/i);
       fireEvent.click(checkbox);
       expect(defaultProps.onChange).toHaveBeenCalledWith({
@@ -200,22 +270,38 @@ describe("OrchestratorControls", () => {
 
   describe("Disabled State", () => {
     it("should disable orchestrator selector when disabled", () => {
-      render(<OrchestratorControls {...defaultProps} disabled={true} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} disabled={true} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/orchestrator mode/i)).toBeDisabled();
     });
 
     it("should disable thinking budget selector when disabled", () => {
-      render(<OrchestratorControls {...defaultProps} disabled={true} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} disabled={true} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/thinking budget/i)).toBeDisabled();
     });
 
     it("should disable critique rounds input when disabled", () => {
-      render(<OrchestratorControls {...defaultProps} disabled={true} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} disabled={true} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/critique rounds/i)).toBeDisabled();
     });
 
     it("should disable auto-approve toggle when disabled", () => {
-      render(<OrchestratorControls {...defaultProps} disabled={true} />);
+      render(
+        <TestProvider>
+          <OrchestratorControls {...defaultProps} disabled={true} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/auto-approve/i)).toBeDisabled();
     });
   });

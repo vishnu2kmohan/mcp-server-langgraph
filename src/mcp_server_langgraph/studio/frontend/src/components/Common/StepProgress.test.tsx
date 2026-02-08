@@ -17,6 +17,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { StepProgress } from "./StepProgress";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 const mockSteps = [
@@ -42,7 +44,11 @@ describe("StepProgress", () => {
 
   describe("rendering", () => {
     it("should render all steps", () => {
-      render(<StepProgress steps={mockSteps} currentStep={0} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Upload Files")).toBeInTheDocument();
       expect(screen.getByText("Process")).toBeInTheDocument();
@@ -51,7 +57,11 @@ describe("StepProgress", () => {
     });
 
     it("should render step numbers", () => {
-      render(<StepProgress steps={mockSteps} currentStep={0} showNumbers />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} showNumbers />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("1")).toBeInTheDocument();
       expect(screen.getByText("2")).toBeInTheDocument();
@@ -61,7 +71,9 @@ describe("StepProgress", () => {
 
     it("should render step descriptions when showDescriptions is true", () => {
       render(
-        <StepProgress steps={mockSteps} currentStep={0} showDescriptions />,
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} showDescriptions />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Select files to upload")).toBeInTheDocument();
@@ -75,7 +87,11 @@ describe("StepProgress", () => {
 
   describe("step states", () => {
     it("should mark completed steps", () => {
-      render(<StepProgress steps={mockSteps} currentStep={2} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={2} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-1")).toHaveAttribute(
         "data-status",
@@ -88,7 +104,11 @@ describe("StepProgress", () => {
     });
 
     it("should mark current step", () => {
-      render(<StepProgress steps={mockSteps} currentStep={1} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={1} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-2")).toHaveAttribute(
         "data-status",
@@ -97,7 +117,11 @@ describe("StepProgress", () => {
     });
 
     it("should mark pending steps", () => {
-      render(<StepProgress steps={mockSteps} currentStep={1} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={1} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-3")).toHaveAttribute(
         "data-status",
@@ -110,7 +134,11 @@ describe("StepProgress", () => {
     });
 
     it("should mark error step", () => {
-      render(<StepProgress steps={mockSteps} currentStep={2} errorStep={2} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={2} errorStep={2} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-3")).toHaveAttribute(
         "data-status",
@@ -119,7 +147,11 @@ describe("StepProgress", () => {
     });
 
     it("should show check icon for completed steps", () => {
-      render(<StepProgress steps={mockSteps} currentStep={2} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={2} />
+        </TestProvider>,
+      );
 
       const completedSteps = screen.getAllByTestId("step-completed-icon");
       expect(completedSteps).toHaveLength(2);
@@ -135,11 +167,13 @@ describe("StepProgress", () => {
       const onStepClick = vi.fn();
       const user = userEvent.setup();
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={2}
-          onStepClick={onStepClick}
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={2}
+            onStepClick={onStepClick}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Upload Files"));
@@ -151,11 +185,13 @@ describe("StepProgress", () => {
       const onStepClick = vi.fn();
       const user = userEvent.setup();
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={2}
-          onStepClick={onStepClick}
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={2}
+            onStepClick={onStepClick}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Process"));
@@ -167,12 +203,14 @@ describe("StepProgress", () => {
       const onStepClick = vi.fn();
       const user = userEvent.setup();
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={1}
-          onStepClick={onStepClick}
-          allowFutureSteps={false}
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={1}
+            onStepClick={onStepClick}
+            allowFutureSteps={false}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Review"));
@@ -184,12 +222,14 @@ describe("StepProgress", () => {
       const onStepClick = vi.fn();
       const user = userEvent.setup();
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={1}
-          onStepClick={onStepClick}
-          allowFutureSteps={true}
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={1}
+            onStepClick={onStepClick}
+            allowFutureSteps={true}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Review"));
@@ -204,7 +244,11 @@ describe("StepProgress", () => {
 
   describe("layout", () => {
     it("should render horizontal layout by default", () => {
-      render(<StepProgress steps={mockSteps} currentStep={0} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-progress")).toHaveAttribute(
         "data-orientation",
@@ -214,11 +258,13 @@ describe("StepProgress", () => {
 
     it("should render vertical layout", () => {
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={0}
-          orientation="vertical"
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={0}
+            orientation="vertical"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("step-progress")).toHaveAttribute(
@@ -234,14 +280,22 @@ describe("StepProgress", () => {
 
   describe("connector lines", () => {
     it("should render connector lines between steps", () => {
-      render(<StepProgress steps={mockSteps} currentStep={0} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} />
+        </TestProvider>,
+      );
 
       const connectors = screen.getAllByTestId("step-connector");
       expect(connectors).toHaveLength(3); // n-1 connectors for n steps
     });
 
     it("should style completed connectors differently", () => {
-      render(<StepProgress steps={mockSteps} currentStep={2} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={2} />
+        </TestProvider>,
+      );
 
       const connectors = screen.getAllByTestId("step-connector");
       expect(connectors[0]).toHaveAttribute("data-completed", "true");
@@ -256,7 +310,11 @@ describe("StepProgress", () => {
 
   describe("size variants", () => {
     it("should render small size", () => {
-      render(<StepProgress steps={mockSteps} currentStep={0} size="sm" />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} size="sm" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-progress")).toHaveAttribute(
         "data-size",
@@ -265,7 +323,11 @@ describe("StepProgress", () => {
     });
 
     it("should render medium size by default", () => {
-      render(<StepProgress steps={mockSteps} currentStep={0} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-progress")).toHaveAttribute(
         "data-size",
@@ -274,7 +336,11 @@ describe("StepProgress", () => {
     });
 
     it("should render large size", () => {
-      render(<StepProgress steps={mockSteps} currentStep={0} size="lg" />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={0} size="lg" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-progress")).toHaveAttribute(
         "data-size",
@@ -290,7 +356,9 @@ describe("StepProgress", () => {
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <StepProgress steps={mockSteps} currentStep={1} />,
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={1} />
+        </TestProvider>,
       );
 
       const results = await axe(container);
@@ -298,13 +366,21 @@ describe("StepProgress", () => {
     });
 
     it("should have proper navigation role", () => {
-      render(<StepProgress steps={mockSteps} currentStep={1} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={1} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("navigation")).toBeInTheDocument();
     });
 
     it("should have aria-current for current step", () => {
-      render(<StepProgress steps={mockSteps} currentStep={1} />);
+      render(
+        <TestProvider>
+          <StepProgress steps={mockSteps} currentStep={1} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-2")).toHaveAttribute(
         "aria-current",
@@ -314,11 +390,13 @@ describe("StepProgress", () => {
 
     it("should have aria-label for navigation", () => {
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={1}
-          ariaLabel="Workflow progress"
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={1}
+            ariaLabel="Workflow progress"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("navigation")).toHaveAttribute(
@@ -329,11 +407,13 @@ describe("StepProgress", () => {
 
     it("should have proper step button labels for screen readers", () => {
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={2}
-          onStepClick={() => {}}
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={2}
+            onStepClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -349,11 +429,13 @@ describe("StepProgress", () => {
   describe("custom className", () => {
     it("should apply custom className", () => {
       render(
-        <StepProgress
-          steps={mockSteps}
-          currentStep={0}
-          className="custom-class"
-        />,
+        <TestProvider>
+          <StepProgress
+            steps={mockSteps}
+            currentStep={0}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("step-progress")).toHaveClass("custom-class");

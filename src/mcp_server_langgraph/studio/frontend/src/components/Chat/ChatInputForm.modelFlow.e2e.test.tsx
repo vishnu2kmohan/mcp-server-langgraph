@@ -19,6 +19,8 @@ import {
 } from "@testing-library/react";
 import { ChatInputForm, type ModelOption } from "./ChatInputForm";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock drag handlers for file upload
 const mockDragHandlers = {
   onDragEnter: vi.fn(),
@@ -90,17 +92,19 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       const onReasoningEffortChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={onModelChange}
-          modelSupportsThinking={true}
-          reasoningEffort="medium"
-          onReasoningEffortChange={onReasoningEffortChange}
-          enableThinking={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={onModelChange}
+            modelSupportsThinking={true}
+            reasoningEffort="medium"
+            onReasoningEffortChange={onReasoningEffortChange}
+            enableThinking={true}
+          />
+        </TestProvider>,
       );
 
       // WHEN: User opens dropdown and selects a different model
@@ -119,16 +123,18 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
     it("should show thinking controls only when model supports it", () => {
       // GIVEN: A model that supports thinking
       const { rerender } = render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          modelSupportsThinking={true}
-          enableThinking={true}
-          onEnableThinkingChange={vi.fn()}
-          onReasoningEffortChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            modelSupportsThinking={true}
+            enableThinking={true}
+            onEnableThinkingChange={vi.fn()}
+            onReasoningEffortChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // THEN: Thinking toggle should be visible
@@ -156,12 +162,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
     it("should update model button display when selected model changes", () => {
       const { rerender } = render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       // Initially shows Claude
@@ -192,13 +200,15 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -231,13 +241,15 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -264,14 +276,16 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          recentModels={["gpt-4o"]}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            recentModels={["gpt-4o"]}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -295,14 +309,16 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          enableModelSearch={true}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            enableModelSearch={true}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -339,12 +355,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
   describe("Loading State Integration", () => {
     it("should disable model selector when loading and show loading state", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={[]}
-          isModelsLoading={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={[]}
+            isModelsLoading={true}
+          />
+        </TestProvider>,
       );
 
       // Button should be disabled
@@ -362,12 +380,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
     it("should enable model selector when models finish loading", () => {
       const { rerender } = render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={[]}
-          isModelsLoading={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={[]}
+            isModelsLoading={true}
+          />
+        </TestProvider>,
       );
 
       // Initially loading
@@ -394,13 +414,15 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
   describe("Processing State Integration", () => {
     it("should disable model selector when processing a message", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          isProcessing={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            isProcessing={true}
+          />
+        </TestProvider>,
       );
 
       // Button should be disabled while processing
@@ -416,12 +438,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
   describe("Capability Badges Integration", () => {
     it("should display all capability badges for a fully-featured model", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -447,13 +471,15 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       const onModelChange = vi.fn();
 
       const { rerender } = render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Select GPT-4o
@@ -533,12 +559,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
     it("should render model lifecycle status badges from backend data", () => {
       // GIVEN: Models with lifecycle status from backend (simulating ModelRegistry response)
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="claude-opus-4-5"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithLifecycleStatus}
+            selectedModel="claude-opus-4-5"
+          />
+        </TestProvider>,
       );
 
       // WHEN: User opens the model dropdown
@@ -572,12 +600,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
     it("should update selected model button with lifecycle status badge", () => {
       const { rerender } = render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="claude-opus-4-5"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithLifecycleStatus}
+            selectedModel="claude-opus-4-5"
+          />
+        </TestProvider>,
       );
 
       // Initially selected model is current (no status badge)
@@ -617,13 +647,15 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="claude-opus-4-5"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithLifecycleStatus}
+            selectedModel="claude-opus-4-5"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -657,12 +689,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
       ];
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={modelsWithMixedStatus}
-          selectedModel="new-model-with-status"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={modelsWithMixedStatus}
+            selectedModel="new-model-with-status"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -684,12 +718,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
     it("should combine capability badges and lifecycle status badges", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="claude-opus-4-5"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithLifecycleStatus}
+            selectedModel="claude-opus-4-5"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -720,12 +756,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
     it("should use correct semantic colors for lifecycle status badges", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="claude-opus-4-5"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithLifecycleStatus}
+            selectedModel="claude-opus-4-5"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown

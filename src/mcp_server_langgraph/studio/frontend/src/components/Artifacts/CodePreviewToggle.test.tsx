@@ -16,6 +16,8 @@ import { afterEach, describe, it, expect, vi } from "vitest";
 
 import { CodePreviewToggle } from "./CodePreviewToggle";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -26,7 +28,11 @@ describe("CodePreviewToggle", () => {
   describe("Display", () => {
     it("renders Code and Preview buttons", () => {
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="code" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="code" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /code/i })).toBeInTheDocument();
       expect(
@@ -36,7 +42,11 @@ describe("CodePreviewToggle", () => {
 
     it("indicates active mode with aria-pressed", () => {
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="code" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="code" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /code/i })).toHaveAttribute(
         "aria-pressed",
@@ -50,7 +60,11 @@ describe("CodePreviewToggle", () => {
 
     it("shows preview as active when mode is preview", () => {
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="preview" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="preview" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /code/i })).toHaveAttribute(
         "aria-pressed",
@@ -67,7 +81,11 @@ describe("CodePreviewToggle", () => {
     it("calls onModeChange with 'preview' when Preview is clicked", async () => {
       const _user = userEvent.setup();
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="code" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="code" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /preview/i }));
 
@@ -77,7 +95,11 @@ describe("CodePreviewToggle", () => {
     it("calls onModeChange with 'code' when Code is clicked", async () => {
       const _user = userEvent.setup();
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="preview" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="preview" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /code/i }));
 
@@ -87,7 +109,11 @@ describe("CodePreviewToggle", () => {
     it("does not call onModeChange when clicking already active mode", async () => {
       const _user = userEvent.setup();
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="code" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="code" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /code/i }));
 
@@ -99,11 +125,13 @@ describe("CodePreviewToggle", () => {
     it("disables Preview button when previewSupported is false", () => {
       const onModeChange = vi.fn();
       render(
-        <CodePreviewToggle
-          mode="code"
-          onModeChange={onModeChange}
-          previewSupported={false}
-        />,
+        <TestProvider>
+          <CodePreviewToggle
+            mode="code"
+            onModeChange={onModeChange}
+            previewSupported={false}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /preview/i })).toBeDisabled();
@@ -112,11 +140,13 @@ describe("CodePreviewToggle", () => {
     it("enables Preview button when previewSupported is true", () => {
       const onModeChange = vi.fn();
       render(
-        <CodePreviewToggle
-          mode="code"
-          onModeChange={onModeChange}
-          previewSupported={true}
-        />,
+        <TestProvider>
+          <CodePreviewToggle
+            mode="code"
+            onModeChange={onModeChange}
+            previewSupported={true}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -128,11 +158,13 @@ describe("CodePreviewToggle", () => {
       const _user = userEvent.setup();
       const onModeChange = vi.fn();
       render(
-        <CodePreviewToggle
-          mode="code"
-          onModeChange={onModeChange}
-          previewSupported={false}
-        />,
+        <TestProvider>
+          <CodePreviewToggle
+            mode="code"
+            onModeChange={onModeChange}
+            previewSupported={false}
+          />
+        </TestProvider>,
       );
 
       const previewButton = screen.getByRole("button", { name: /preview/i });
@@ -143,7 +175,11 @@ describe("CodePreviewToggle", () => {
   describe("Styling", () => {
     it("applies active styles to selected button", () => {
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="code" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="code" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       const codeButton = screen.getByRole("button", { name: /code/i });
       expect(codeButton).toHaveClass("bg-primary-9");
@@ -152,12 +188,14 @@ describe("CodePreviewToggle", () => {
     it("applies custom className", () => {
       const onModeChange = vi.fn();
       render(
-        <CodePreviewToggle
-          mode="code"
-          onModeChange={onModeChange}
-          className="custom-class"
-          data-testid="toggle-group"
-        />,
+        <TestProvider>
+          <CodePreviewToggle
+            mode="code"
+            onModeChange={onModeChange}
+            className="custom-class"
+            data-testid="toggle-group"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("toggle-group")).toHaveClass("custom-class");
@@ -168,11 +206,13 @@ describe("CodePreviewToggle", () => {
     it("uses role group with accessible name", () => {
       const onModeChange = vi.fn();
       render(
-        <CodePreviewToggle
-          mode="code"
-          onModeChange={onModeChange}
-          aria-label="View mode"
-        />,
+        <TestProvider>
+          <CodePreviewToggle
+            mode="code"
+            onModeChange={onModeChange}
+            aria-label="View mode"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("group")).toHaveAccessibleName("View mode");
@@ -181,7 +221,11 @@ describe("CodePreviewToggle", () => {
     it("supports keyboard navigation", async () => {
       const _user = userEvent.setup();
       const onModeChange = vi.fn();
-      render(<CodePreviewToggle mode="code" onModeChange={onModeChange} />);
+      render(
+        <TestProvider>
+          <CodePreviewToggle mode="code" onModeChange={onModeChange} />
+        </TestProvider>,
+      );
 
       // Tab to first button
       await user.tab();

@@ -12,6 +12,8 @@ import userEvent from "@testing-library/user-event";
 import { FileCode, Bot, Shield } from "lucide-react";
 import { SelectionCard } from "./SelectionCard";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -21,12 +23,14 @@ describe("SelectionCard", () => {
   describe("rendering", () => {
     it("renders with title and description", () => {
       render(
-        <SelectionCard
-          title="Test Option"
-          description="This is a test description"
-          icon={<FileCode data-testid="icon" />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Test Option"
+            description="This is a test description"
+            icon={<FileCode data-testid="icon" />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Test Option")).toBeInTheDocument();
@@ -38,11 +42,13 @@ describe("SelectionCard", () => {
 
     it("renders with only title when description is omitted", () => {
       render(
-        <SelectionCard
-          title="Title Only"
-          icon={<Bot data-testid="icon" />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Title Only"
+            icon={<Bot data-testid="icon" />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Title Only")).toBeInTheDocument();
@@ -51,13 +57,15 @@ describe("SelectionCard", () => {
 
     it("renders badge when provided", () => {
       render(
-        <SelectionCard
-          title="With Badge"
-          description="Has a badge"
-          icon={<Shield />}
-          badge="Recommended"
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="With Badge"
+            description="Has a badge"
+            icon={<Shield />}
+            badge="Recommended"
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Recommended")).toBeInTheDocument();
@@ -67,13 +75,15 @@ describe("SelectionCard", () => {
   describe("selection state", () => {
     it("applies selected styling when selected is true", () => {
       render(
-        <SelectionCard
-          title="Selected Option"
-          description="This is selected"
-          icon={<FileCode />}
-          selected={true}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Selected Option"
+            description="This is selected"
+            icon={<FileCode />}
+            selected={true}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -84,13 +94,15 @@ describe("SelectionCard", () => {
 
     it("applies unselected styling when selected is false", () => {
       render(
-        <SelectionCard
-          title="Unselected Option"
-          description="This is not selected"
-          icon={<FileCode />}
-          selected={false}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Unselected Option"
+            description="This is not selected"
+            icon={<FileCode />}
+            selected={false}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -101,12 +113,14 @@ describe("SelectionCard", () => {
 
     it("defaults to unselected when selected prop is omitted", () => {
       render(
-        <SelectionCard
-          title="Default State"
-          description="No selected prop"
-          icon={<FileCode />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Default State"
+            description="No selected prop"
+            icon={<FileCode />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -120,12 +134,14 @@ describe("SelectionCard", () => {
       const handleClick = vi.fn();
 
       render(
-        <SelectionCard
-          title="Clickable"
-          description="Click me"
-          icon={<FileCode />}
-          onClick={handleClick}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Clickable"
+            description="Click me"
+            icon={<FileCode />}
+            onClick={handleClick}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button"));
@@ -137,13 +153,15 @@ describe("SelectionCard", () => {
       const handleClick = vi.fn();
 
       render(
-        <SelectionCard
-          title="With Value"
-          description="Has a value"
-          icon={<FileCode />}
-          value="test-value"
-          onClick={handleClick}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="With Value"
+            description="Has a value"
+            icon={<FileCode />}
+            value="test-value"
+            onClick={handleClick}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button"));
@@ -154,12 +172,14 @@ describe("SelectionCard", () => {
   describe("accessibility", () => {
     it("has accessible button role", () => {
       render(
-        <SelectionCard
-          title="Accessible"
-          description="Screen reader friendly"
-          icon={<FileCode />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Accessible"
+            description="Screen reader friendly"
+            icon={<FileCode />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button")).toBeInTheDocument();
@@ -167,13 +187,15 @@ describe("SelectionCard", () => {
 
     it("uses aria-label when provided", () => {
       render(
-        <SelectionCard
-          title="Custom Label"
-          description="Has aria-label"
-          icon={<FileCode />}
-          ariaLabel="Select custom option"
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Custom Label"
+            description="Has aria-label"
+            icon={<FileCode />}
+            ariaLabel="Select custom option"
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Select custom option")).toBeInTheDocument();
@@ -181,12 +203,14 @@ describe("SelectionCard", () => {
 
     it("uses title as accessible name by default", () => {
       render(
-        <SelectionCard
-          title="Default Label"
-          description="Uses title"
-          icon={<FileCode />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Default Label"
+            description="Uses title"
+            icon={<FileCode />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -198,13 +222,15 @@ describe("SelectionCard", () => {
   describe("icon container styling", () => {
     it("applies selected icon styling when selected", () => {
       const { container } = render(
-        <SelectionCard
-          title="Selected Icon"
-          description="Icon styling test"
-          icon={<FileCode data-testid="icon" />}
-          selected={true}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Selected Icon"
+            description="Icon styling test"
+            icon={<FileCode data-testid="icon" />}
+            selected={true}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const iconContainer = container.querySelector(
@@ -215,13 +241,15 @@ describe("SelectionCard", () => {
 
     it("applies unselected icon styling when not selected", () => {
       const { container } = render(
-        <SelectionCard
-          title="Unselected Icon"
-          description="Icon styling test"
-          icon={<FileCode data-testid="icon" />}
-          selected={false}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Unselected Icon"
+            description="Icon styling test"
+            icon={<FileCode data-testid="icon" />}
+            selected={false}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const iconContainer = container.querySelector(
@@ -234,12 +262,14 @@ describe("SelectionCard", () => {
   describe("consistent dimensions", () => {
     it("has consistent padding (p-4)", () => {
       render(
-        <SelectionCard
-          title="Padding Test"
-          description="Consistent padding"
-          icon={<FileCode />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Padding Test"
+            description="Consistent padding"
+            icon={<FileCode />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -248,12 +278,14 @@ describe("SelectionCard", () => {
 
     it("has consistent gap (gap-3)", () => {
       render(
-        <SelectionCard
-          title="Gap Test"
-          description="Consistent gap"
-          icon={<FileCode />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Gap Test"
+            description="Consistent gap"
+            icon={<FileCode />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -262,12 +294,14 @@ describe("SelectionCard", () => {
 
     it("has consistent border width (border-2)", () => {
       render(
-        <SelectionCard
-          title="Border Test"
-          description="Consistent border"
-          icon={<FileCode />}
-          onClick={() => {}}
-        />,
+        <TestProvider>
+          <SelectionCard
+            title="Border Test"
+            description="Consistent border"
+            icon={<FileCode />}
+            onClick={() => {}}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");

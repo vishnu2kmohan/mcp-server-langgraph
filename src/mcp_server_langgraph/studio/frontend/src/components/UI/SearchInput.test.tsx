@@ -14,6 +14,8 @@ import {
 } from "@testing-library/react";
 import { SearchInput } from "./SearchInput";
 
+import { TestProvider } from "@/test-utils";
+
 describe("SearchInput", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -27,22 +29,32 @@ describe("SearchInput", () => {
 
   describe("Component Structure", () => {
     it("should render search input", () => {
-      render(<SearchInput value="" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("searchbox")).toBeInTheDocument();
     });
 
     it("should render search icon", () => {
-      render(<SearchInput value="" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("search-icon")).toBeInTheDocument();
     });
 
     it("should display placeholder text", () => {
       render(
-        <SearchInput
-          value=""
-          onChange={vi.fn()}
-          placeholder="Search items..."
-        />,
+        <TestProvider>
+          <SearchInput
+            value=""
+            onChange={vi.fn()}
+            placeholder="Search items..."
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByPlaceholderText("Search items..."),
@@ -50,20 +62,30 @@ describe("SearchInput", () => {
     });
 
     it("should use default placeholder when none provided", () => {
-      render(<SearchInput value="" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument();
     });
   });
 
   describe("Value Handling", () => {
     it("should display current value", () => {
-      render(<SearchInput value="test query" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <SearchInput value="test query" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("searchbox")).toHaveValue("test query");
     });
 
     it("should update input when value prop changes", () => {
       const { rerender } = render(
-        <SearchInput value="initial" onChange={vi.fn()} />,
+        <TestProvider>
+          <SearchInput value="initial" onChange={vi.fn()} />
+        </TestProvider>,
       );
       expect(screen.getByRole("searchbox")).toHaveValue("initial");
 
@@ -75,7 +97,11 @@ describe("SearchInput", () => {
   describe("Debounced onChange", () => {
     it("should not call onChange immediately on input", () => {
       const onChange = vi.fn();
-      render(<SearchInput value="" onChange={onChange} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={onChange} />
+        </TestProvider>,
+      );
 
       fireEvent.change(screen.getByRole("searchbox"), {
         target: { value: "test" },
@@ -86,7 +112,11 @@ describe("SearchInput", () => {
 
     it("should call onChange after debounce delay", async () => {
       const onChange = vi.fn();
-      render(<SearchInput value="" onChange={onChange} debounceMs={300} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={onChange} debounceMs={300} />
+        </TestProvider>,
+      );
 
       fireEvent.change(screen.getByRole("searchbox"), {
         target: { value: "test" },
@@ -103,7 +133,11 @@ describe("SearchInput", () => {
 
     it("should use default debounce of 300ms", async () => {
       const onChange = vi.fn();
-      render(<SearchInput value="" onChange={onChange} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={onChange} />
+        </TestProvider>,
+      );
 
       fireEvent.change(screen.getByRole("searchbox"), {
         target: { value: "test" },
@@ -122,7 +156,11 @@ describe("SearchInput", () => {
 
     it("should reset debounce timer on subsequent inputs", async () => {
       const onChange = vi.fn();
-      render(<SearchInput value="" onChange={onChange} debounceMs={300} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={onChange} debounceMs={300} />
+        </TestProvider>,
+      );
 
       fireEvent.change(screen.getByRole("searchbox"), {
         target: { value: "te" },
@@ -151,14 +189,22 @@ describe("SearchInput", () => {
 
   describe("Clear Button", () => {
     it("should not show clear button when input is empty", () => {
-      render(<SearchInput value="" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByRole("button", { name: /clear/i }),
       ).not.toBeInTheDocument();
     });
 
     it("should show clear button when input has value", () => {
-      render(<SearchInput value="test" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <SearchInput value="test" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /clear/i }),
       ).toBeInTheDocument();
@@ -166,7 +212,11 @@ describe("SearchInput", () => {
 
     it("should call onChange with empty string when clear clicked", () => {
       const onChange = vi.fn();
-      render(<SearchInput value="test" onChange={onChange} />);
+      render(
+        <TestProvider>
+          <SearchInput value="test" onChange={onChange} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /clear/i }));
 
@@ -177,19 +227,31 @@ describe("SearchInput", () => {
 
   describe("Loading State", () => {
     it("should show loading indicator when isLoading is true", () => {
-      render(<SearchInput value="" onChange={vi.fn()} isLoading={true} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={vi.fn()} isLoading={true} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("search-loading")).toBeInTheDocument();
     });
 
     it("should hide search icon when loading", () => {
-      render(<SearchInput value="" onChange={vi.fn()} isLoading={true} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={vi.fn()} isLoading={true} />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("search-icon")).not.toBeInTheDocument();
     });
   });
 
   describe("Accessibility", () => {
     it("should have correct input type", () => {
-      render(<SearchInput value="" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <SearchInput value="" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("searchbox")).toHaveAttribute("type", "search");
     });
   });

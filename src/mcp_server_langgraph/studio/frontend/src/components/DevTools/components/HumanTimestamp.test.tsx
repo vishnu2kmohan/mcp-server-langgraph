@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HumanTimestamp } from "./HumanTimestamp";
 
+import { TestProvider } from "@/test-utils";
+
 // Fixed "now" for testing relative times
 const MOCK_NOW = new Date("2026-01-15T14:30:00.000Z").getTime();
 
@@ -31,7 +33,11 @@ describe("HumanTimestamp", () => {
   describe("time format (explicit)", () => {
     it("renders formatted time and tooltip", () => {
       const ts = Date.UTC(2024, 0, 1, 12, 34, 56, 789);
-      render(<HumanTimestamp timestamp={ts} format="time" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="time" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       expect(el).toBeInTheDocument();
@@ -43,7 +49,11 @@ describe("HumanTimestamp", () => {
 
   describe("invalid timestamps", () => {
     it("returns null for invalid timestamp", () => {
-      const { container } = render(<HumanTimestamp timestamp={"not-a-date"} />);
+      const { container } = render(
+        <TestProvider>
+          <HumanTimestamp timestamp={"not-a-date"} />
+        </TestProvider>,
+      );
       expect(container.textContent).toBe("");
     });
   });
@@ -55,7 +65,11 @@ describe("HumanTimestamp", () => {
   describe("relative format", () => {
     it("should show 'just now' for timestamps less than 1 minute ago", () => {
       const ts = MOCK_NOW - 30 * 1000; // 30 seconds ago
-      render(<HumanTimestamp timestamp={ts} format="relative" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="relative" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       expect(el.textContent).toMatch(/just now|<1m|now/i);
@@ -63,7 +77,11 @@ describe("HumanTimestamp", () => {
 
     it("should show '5m ago' for timestamps 5 minutes ago", () => {
       const ts = MOCK_NOW - 5 * 60 * 1000; // 5 minutes ago
-      render(<HumanTimestamp timestamp={ts} format="relative" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="relative" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       expect(el.textContent).toMatch(/5\s?m(\s?ago)?/i);
@@ -71,7 +89,11 @@ describe("HumanTimestamp", () => {
 
     it("should show '2h ago' for timestamps 2 hours ago", () => {
       const ts = MOCK_NOW - 2 * 60 * 60 * 1000; // 2 hours ago
-      render(<HumanTimestamp timestamp={ts} format="relative" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="relative" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       expect(el.textContent).toMatch(/2\s?h(\s?ago)?/i);
@@ -79,7 +101,11 @@ describe("HumanTimestamp", () => {
 
     it("should show '1d ago' for timestamps 1 day ago", () => {
       const ts = MOCK_NOW - 24 * 60 * 60 * 1000; // 1 day ago
-      render(<HumanTimestamp timestamp={ts} format="relative" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="relative" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       expect(el.textContent).toMatch(/1\s?d(\s?ago)?/i);
@@ -87,7 +113,11 @@ describe("HumanTimestamp", () => {
 
     it("should show full absolute timestamp in tooltip", () => {
       const ts = MOCK_NOW - 5 * 60 * 1000; // 5 minutes ago
-      render(<HumanTimestamp timestamp={ts} format="relative" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="relative" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       expect(el).toHaveAttribute("title");
@@ -96,7 +126,11 @@ describe("HumanTimestamp", () => {
 
     it("should handle future timestamps gracefully", () => {
       const ts = MOCK_NOW + 60 * 60 * 1000; // 1 hour in future
-      render(<HumanTimestamp timestamp={ts} format="relative" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="relative" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       // Should show something like "in 1h" or fallback to absolute time
@@ -111,7 +145,11 @@ describe("HumanTimestamp", () => {
   describe("default format", () => {
     it("should default to relative format when no format specified", () => {
       const ts = MOCK_NOW - 10 * 60 * 1000; // 10 minutes ago
-      render(<HumanTimestamp timestamp={ts} />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       // Default should now be relative
@@ -126,7 +164,11 @@ describe("HumanTimestamp", () => {
   describe("auto-update", () => {
     it("should update relative time display after 30 seconds", async () => {
       const ts = MOCK_NOW - 29 * 1000; // 29 seconds ago - "just now"
-      render(<HumanTimestamp timestamp={ts} format="relative" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="relative" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       const initialText = el.textContent;
@@ -149,7 +191,11 @@ describe("HumanTimestamp", () => {
   describe("both format", () => {
     it("should show relative and absolute time when format is 'both'", () => {
       const ts = MOCK_NOW - 5 * 60 * 1000; // 5 minutes ago
-      render(<HumanTimestamp timestamp={ts} format="both" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="both" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       // Should contain both relative and absolute
@@ -166,7 +212,11 @@ describe("HumanTimestamp", () => {
   describe("datetime format", () => {
     it("should show full datetime with timezone", () => {
       const ts = Date.UTC(2024, 0, 1, 12, 34, 56, 789);
-      render(<HumanTimestamp timestamp={ts} format="datetime" />);
+      render(
+        <TestProvider>
+          <HumanTimestamp timestamp={ts} format="datetime" />
+        </TestProvider>,
+      );
 
       const el = screen.getByTestId("human-timestamp");
       expect(el.textContent).toMatch(/2024/);

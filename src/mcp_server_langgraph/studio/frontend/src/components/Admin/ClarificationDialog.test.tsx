@@ -30,6 +30,8 @@ import {
   type AgentClarificationRequestCamelCase,
 } from "./ClarificationDialog";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -131,32 +133,52 @@ describe("ClarificationDialog", () => {
 
   describe("Basic Rendering", () => {
     it("should render when isOpen is true", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should not render when isOpen is false", () => {
-      render(<ClarificationDialog {...defaultTextProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("should render dialog title", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/agent needs your input/i)).toBeInTheDocument();
     });
 
     it("should render close button", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("close-dialog")).toBeInTheDocument();
     });
 
     it("should call onClose when close button clicked", () => {
       const onClose = vi.fn();
-      render(<ClarificationDialog {...defaultTextProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("close-dialog"));
 
@@ -164,13 +186,21 @@ describe("ClarificationDialog", () => {
     });
 
     it("should display agent name", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Research Assistant/)).toBeInTheDocument();
     });
 
     it("should display the question", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Which date range should I use for the analysis?"),
@@ -180,13 +210,21 @@ describe("ClarificationDialog", () => {
 
   describe("Text Input Type", () => {
     it("should render textarea for text type", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("text-input")).toBeInTheDocument();
     });
 
     it("should show placeholder text", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByPlaceholderText(
@@ -199,7 +237,9 @@ describe("ClarificationDialog", () => {
       const onRespond = vi.fn();
       const user = userEvent.setup();
       render(
-        <ClarificationDialog {...defaultTextProps} onRespond={onRespond} />,
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} onRespond={onRespond} />
+        </TestProvider>,
       );
 
       await user.type(
@@ -219,14 +259,22 @@ describe("ClarificationDialog", () => {
     });
 
     it("should disable submit button when input is empty for required field", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("submit-button")).toBeDisabled();
     });
 
     it("should enable submit button when input has value", async () => {
       const user = userEvent.setup();
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       await user.type(screen.getByTestId("text-input"), "some value");
 
@@ -236,21 +284,33 @@ describe("ClarificationDialog", () => {
 
   describe("Choice Type", () => {
     it("should render options for choice type", () => {
-      render(<ClarificationDialog {...defaultChoiceProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultChoiceProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Fast Analysis")).toBeInTheDocument();
       expect(screen.getByText("Thorough Analysis")).toBeInTheDocument();
     });
 
     it("should display option descriptions", () => {
-      render(<ClarificationDialog {...defaultChoiceProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultChoiceProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("~30 seconds, 85% accuracy")).toBeInTheDocument();
       expect(screen.getByText("~5 minutes, 98% accuracy")).toBeInTheDocument();
     });
 
     it("should mark recommended option", () => {
-      render(<ClarificationDialog {...defaultChoiceProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultChoiceProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Recommended")).toBeInTheDocument();
     });
@@ -259,7 +319,9 @@ describe("ClarificationDialog", () => {
       const onRespond = vi.fn();
       const user = userEvent.setup();
       render(
-        <ClarificationDialog {...defaultChoiceProps} onRespond={onRespond} />,
+        <TestProvider>
+          <ClarificationDialog {...defaultChoiceProps} onRespond={onRespond} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("option-fast"));
@@ -276,14 +338,22 @@ describe("ClarificationDialog", () => {
     });
 
     it("should disable submit button when no option selected", () => {
-      render(<ClarificationDialog {...defaultChoiceProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultChoiceProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("submit-button")).toBeDisabled();
     });
 
     it("should enable submit button when option is selected", async () => {
       const user = userEvent.setup();
-      render(<ClarificationDialog {...defaultChoiceProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultChoiceProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("option-thorough"));
 
@@ -293,14 +363,22 @@ describe("ClarificationDialog", () => {
 
   describe("Confirmation Type", () => {
     it("should render yes/no buttons for confirmation type", () => {
-      render(<ClarificationDialog {...defaultConfirmationProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultConfirmationProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("confirm-yes")).toBeInTheDocument();
       expect(screen.getByTestId("confirm-no")).toBeInTheDocument();
     });
 
     it("should not render submit button for confirmation type", () => {
-      render(<ClarificationDialog {...defaultConfirmationProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultConfirmationProps} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("submit-button")).not.toBeInTheDocument();
     });
@@ -309,10 +387,12 @@ describe("ClarificationDialog", () => {
       const onRespond = vi.fn();
       const user = userEvent.setup();
       render(
-        <ClarificationDialog
-          {...defaultConfirmationProps}
-          onRespond={onRespond}
-        />,
+        <TestProvider>
+          <ClarificationDialog
+            {...defaultConfirmationProps}
+            onRespond={onRespond}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("confirm-yes"));
@@ -331,10 +411,12 @@ describe("ClarificationDialog", () => {
       const onRespond = vi.fn();
       const user = userEvent.setup();
       render(
-        <ClarificationDialog
-          {...defaultConfirmationProps}
-          onRespond={onRespond}
-        />,
+        <TestProvider>
+          <ClarificationDialog
+            {...defaultConfirmationProps}
+            onRespond={onRespond}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("confirm-no"));
@@ -350,7 +432,11 @@ describe("ClarificationDialog", () => {
     });
 
     it("should display warning styling for destructive confirmations", () => {
-      render(<ClarificationDialog {...defaultConfirmationProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultConfirmationProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("confirmation-warning")).toBeInTheDocument();
     });
@@ -358,20 +444,30 @@ describe("ClarificationDialog", () => {
 
   describe("Loading States", () => {
     it("should disable all inputs when submitting", () => {
-      render(<ClarificationDialog {...defaultTextProps} isSubmitting />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} isSubmitting />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("text-input")).toBeDisabled();
     });
 
     it("should show loading spinner when submitting", () => {
-      render(<ClarificationDialog {...defaultTextProps} isSubmitting />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} isSubmitting />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("submit-loading")).toBeInTheDocument();
     });
 
     it("should disable yes/no buttons when submitting confirmation", () => {
       render(
-        <ClarificationDialog {...defaultConfirmationProps} isSubmitting />,
+        <TestProvider>
+          <ClarificationDialog {...defaultConfirmationProps} isSubmitting />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("confirm-yes")).toBeDisabled();
@@ -383,7 +479,11 @@ describe("ClarificationDialog", () => {
     it("should close on Escape key", async () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
-      render(<ClarificationDialog {...defaultTextProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Escape}");
 
@@ -394,10 +494,12 @@ describe("ClarificationDialog", () => {
   describe("Error Handling", () => {
     it("should display error message when provided", () => {
       render(
-        <ClarificationDialog
-          {...defaultTextProps}
-          error="Failed to submit response"
-        />,
+        <TestProvider>
+          <ClarificationDialog
+            {...defaultTextProps}
+            error="Failed to submit response"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/failed to submit/i)).toBeInTheDocument();
@@ -406,14 +508,22 @@ describe("ClarificationDialog", () => {
 
   describe("Context Display", () => {
     it("should display context information when available", () => {
-      render(<ClarificationDialog {...defaultTextProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultTextProps} />
+        </TestProvider>,
+      );
 
       // Context uses camelCase keys per ADR-0091 Phase 10
       expect(screen.getByText(/dataSource/)).toBeInTheDocument();
     });
 
     it("should display destructive operation warning", () => {
-      render(<ClarificationDialog {...defaultConfirmationProps} />);
+      render(
+        <TestProvider>
+          <ClarificationDialog {...defaultConfirmationProps} />
+        </TestProvider>,
+      );
 
       // Context shows recordCount and operation (camelCase per ADR-0091 Phase 10)
       expect(screen.getByText(/recordCount/)).toBeInTheDocument();

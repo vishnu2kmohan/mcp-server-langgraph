@@ -26,6 +26,8 @@ import personaReducer, {
   type SubPersona,
 } from "../store/slices/personaSlice";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -99,9 +101,13 @@ describe("PersonaContext", () => {
         return null;
       };
 
-      expect(() => render(<TestComponent />)).toThrow(
-        "usePersonaContext must be used within a PersonaProvider",
-      );
+      expect(() =>
+        render(
+          <TestProvider>
+            <TestComponent />
+          </TestProvider>,
+        ),
+      ).toThrow("usePersonaContext must be used within a PersonaProvider");
 
       consoleSpy.mockRestore();
     });

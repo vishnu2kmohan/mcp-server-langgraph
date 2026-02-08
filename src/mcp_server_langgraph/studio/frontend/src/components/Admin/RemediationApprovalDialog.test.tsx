@@ -29,6 +29,8 @@ import {
 } from "./RemediationApprovalDialog";
 import type { RemediationRequest, AIRecommendation } from "../../types/api";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -96,32 +98,52 @@ describe("RemediationApprovalDialog", () => {
 
   describe("Basic Rendering", () => {
     it("should render when isOpen is true", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should not render when isOpen is false", () => {
-      render(<RemediationApprovalDialog {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("should render dialog title", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/approve remediation/i)).toBeInTheDocument();
     });
 
     it("should render close button", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("close-dialog")).toBeInTheDocument();
     });
 
     it("should call onClose when close button clicked", () => {
       const onClose = vi.fn();
-      render(<RemediationApprovalDialog {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("close-dialog"));
 
@@ -131,13 +153,21 @@ describe("RemediationApprovalDialog", () => {
 
   describe("Remediation Details", () => {
     it("should display alert name", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("HighCPU")).toBeInTheDocument();
     });
 
     it("should display action description", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Scale up replicas to handle current load"),
@@ -145,7 +175,11 @@ describe("RemediationApprovalDialog", () => {
     });
 
     it("should display command", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Use getAllByText since both remediation command and rollback plan contain similar text
       const commands = screen.getAllByText(
@@ -157,19 +191,31 @@ describe("RemediationApprovalDialog", () => {
     });
 
     it("should display step number", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-number")).toHaveTextContent("1");
     });
 
     it("should display risk level", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("risk-level")).toHaveTextContent(/low/i);
     });
 
     it("should display severity badge", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("severity-badge")).toHaveTextContent(
         /critical/i,
@@ -184,23 +230,33 @@ describe("RemediationApprovalDialog", () => {
         riskLevel: "high" as const,
       };
       render(
-        <RemediationApprovalDialog
-          {...defaultProps}
-          remediation={highRiskRemediation}
-        />,
+        <TestProvider>
+          <RemediationApprovalDialog
+            {...defaultProps}
+            remediation={highRiskRemediation}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("high-risk-warning")).toBeInTheDocument();
     });
 
     it("should not show warning for low risk remediations", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("high-risk-warning")).not.toBeInTheDocument();
     });
 
     it("should show impact analysis", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/minimal impact, additional pods added/i),
@@ -208,7 +264,11 @@ describe("RemediationApprovalDialog", () => {
     });
 
     it("should show rollback plan", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/kubectl scale deployment api-server --replicas=3/i),
@@ -218,7 +278,11 @@ describe("RemediationApprovalDialog", () => {
 
   describe("Approve Action", () => {
     it("should render approve button", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("approve-button")).toBeInTheDocument();
     });
@@ -226,7 +290,9 @@ describe("RemediationApprovalDialog", () => {
     it("should call onApprove with remediation id when clicked", async () => {
       const onApprove = vi.fn();
       render(
-        <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("approve-button"));
@@ -244,7 +310,9 @@ describe("RemediationApprovalDialog", () => {
       const onApprove = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onApprove={onApprove} />
+        </TestProvider>,
       );
 
       await user.type(
@@ -263,13 +331,21 @@ describe("RemediationApprovalDialog", () => {
     });
 
     it("should disable approve button when loading", () => {
-      render(<RemediationApprovalDialog {...defaultProps} isApproving />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} isApproving />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("approve-button")).toBeDisabled();
     });
 
     it("should show loading spinner when approving", () => {
-      render(<RemediationApprovalDialog {...defaultProps} isApproving />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} isApproving />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("approve-loading")).toBeInTheDocument();
     });
@@ -277,7 +353,11 @@ describe("RemediationApprovalDialog", () => {
 
   describe("Reject Action", () => {
     it("should render reject button", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("reject-button")).toBeInTheDocument();
     });
@@ -285,7 +365,9 @@ describe("RemediationApprovalDialog", () => {
     it("should require reason for rejection", async () => {
       const onReject = vi.fn();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        </TestProvider>,
       );
 
       // Click reject without selecting a structured rejection reason
@@ -306,7 +388,9 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        </TestProvider>,
       );
 
       // First select a structured rejection reason (now required)
@@ -325,13 +409,21 @@ describe("RemediationApprovalDialog", () => {
     });
 
     it("should disable reject button when loading", () => {
-      render(<RemediationApprovalDialog {...defaultProps} isRejecting />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} isRejecting />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("reject-button")).toBeDisabled();
     });
 
     it("should show loading spinner when rejecting", () => {
-      render(<RemediationApprovalDialog {...defaultProps} isRejecting />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} isRejecting />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("reject-loading")).toBeInTheDocument();
     });
@@ -341,7 +433,11 @@ describe("RemediationApprovalDialog", () => {
     it("should close on Escape key", async () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
-      render(<RemediationApprovalDialog {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Escape}");
 
@@ -352,10 +448,12 @@ describe("RemediationApprovalDialog", () => {
   describe("Error Handling", () => {
     it("should display error message when provided", () => {
       render(
-        <RemediationApprovalDialog
-          {...defaultProps}
-          error="Failed to approve remediation"
-        />,
+        <TestProvider>
+          <RemediationApprovalDialog
+            {...defaultProps}
+            error="Failed to approve remediation"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/failed to approve/i)).toBeInTheDocument();
@@ -364,13 +462,21 @@ describe("RemediationApprovalDialog", () => {
 
   describe("Structured Rejection Reasons", () => {
     it("should render rejection reason options", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("rejection-reason-select")).toBeInTheDocument();
     });
 
     it("should have all rejection reason options", () => {
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const select = screen.getByTestId("rejection-reason-select");
       expect(select).toBeInTheDocument();
@@ -385,7 +491,9 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        </TestProvider>,
       );
 
       // Type text reason but don't select structured reason
@@ -406,7 +514,9 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        </TestProvider>,
       );
 
       // Select structured reason
@@ -427,7 +537,11 @@ describe("RemediationApprovalDialog", () => {
 
     it("should show detail input when 'other' is selected", async () => {
       const user = userEvent.setup();
-      render(<RemediationApprovalDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Select 'other' reason
       await user.click(screen.getByTestId("rejection-reason-other"));
@@ -440,7 +554,9 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        </TestProvider>,
       );
 
       // Select 'other' reason without providing detail
@@ -461,7 +577,9 @@ describe("RemediationApprovalDialog", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
       render(
-        <RemediationApprovalDialog {...defaultProps} onReject={onReject} />,
+        <TestProvider>
+          <RemediationApprovalDialog {...defaultProps} onReject={onReject} />
+        </TestProvider>,
       );
 
       // Select 'other' and provide detail

@@ -14,6 +14,8 @@ import {
 import userEvent from "@testing-library/user-event";
 import { AIEditOverlay } from "./AIEditOverlay";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -53,48 +55,56 @@ describe("AIEditOverlay", () => {
   describe("Rendering", () => {
     it("should render overlay when visible", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("ai-edit-overlay")).toBeInTheDocument();
     });
 
     it("should not render when not visible", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible={false}
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible={false}
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.queryByTestId("ai-edit-overlay")).not.toBeInTheDocument();
     });
 
     it("should display instruction input", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("instruction-input")).toBeInTheDocument();
     });
 
     it("should show selected code preview", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("selection-preview")).toBeInTheDocument();
     });
@@ -103,12 +113,14 @@ describe("AIEditOverlay", () => {
   describe("Instruction Input", () => {
     it("should update instruction on input", async () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       const input = screen.getByTestId("instruction-input");
       await userEvent.type(input, "make this function async");
@@ -117,12 +129,14 @@ describe("AIEditOverlay", () => {
 
     it("should have placeholder text", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByPlaceholderText(/describe the change/i),
@@ -134,13 +148,15 @@ describe("AIEditOverlay", () => {
     it("should call onRequestEdit when submit clicked", async () => {
       const onRequestEdit = vi.fn().mockResolvedValue(mockEditResult);
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          onRequestEdit={onRequestEdit}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            onRequestEdit={onRequestEdit}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("instruction-input");
@@ -166,13 +182,15 @@ describe("AIEditOverlay", () => {
         );
 
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          onRequestEdit={onRequestEdit}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            onRequestEdit={onRequestEdit}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("instruction-input");
@@ -188,26 +206,30 @@ describe("AIEditOverlay", () => {
   describe("Diff Preview", () => {
     it("should show diff preview after edit request", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          editResult={mockEditResult}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            editResult={mockEditResult}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("diff-preview")).toBeInTheDocument();
     });
 
     it("should highlight added lines", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          editResult={mockEditResult}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            editResult={mockEditResult}
+          />
+        </TestProvider>,
       );
       const addedLines = screen.getAllByTestId("diff-add");
       expect(addedLines.length).toBeGreaterThan(0);
@@ -215,13 +237,15 @@ describe("AIEditOverlay", () => {
 
     it("should highlight removed lines", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          editResult={mockEditResult}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            editResult={mockEditResult}
+          />
+        </TestProvider>,
       );
       const removedLines = screen.getAllByTestId("diff-remove");
       expect(removedLines.length).toBeGreaterThan(0);
@@ -232,13 +256,15 @@ describe("AIEditOverlay", () => {
     it("should call onApply when apply clicked", () => {
       const onApply = vi.fn();
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={onApply}
-          onCancel={() => {}}
-          editResult={mockEditResult}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={onApply}
+            onCancel={() => {}}
+            editResult={mockEditResult}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("apply-edit"));
       expect(onApply).toHaveBeenCalledWith(mockEditResult.newContent);
@@ -247,12 +273,14 @@ describe("AIEditOverlay", () => {
     it("should call onCancel when cancel clicked", () => {
       const onCancel = vi.fn();
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={onCancel}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={onCancel}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("cancel-edit"));
       expect(onCancel).toHaveBeenCalled();
@@ -261,12 +289,14 @@ describe("AIEditOverlay", () => {
     it("should close overlay on Escape", () => {
       const onCancel = vi.fn();
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={onCancel}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={onCancel}
+          />
+        </TestProvider>,
       );
       fireEvent.keyDown(screen.getByTestId("ai-edit-overlay"), {
         key: "Escape",
@@ -278,13 +308,15 @@ describe("AIEditOverlay", () => {
   describe("Regenerate", () => {
     it("should show regenerate button after first result", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          editResult={mockEditResult}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            editResult={mockEditResult}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("regenerate-button")).toBeInTheDocument();
     });
@@ -292,13 +324,15 @@ describe("AIEditOverlay", () => {
     it("should call onRequestEdit again when regenerate clicked", async () => {
       const onRequestEdit = vi.fn().mockResolvedValue(mockEditResult);
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          onRequestEdit={onRequestEdit}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            onRequestEdit={onRequestEdit}
+          />
+        </TestProvider>,
       );
 
       // First, type an instruction and submit to get a result
@@ -322,26 +356,30 @@ describe("AIEditOverlay", () => {
   describe("Error Handling", () => {
     it("should show error message on failure", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          error="Failed to generate edit"
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            error="Failed to generate edit"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Failed to generate edit")).toBeInTheDocument();
     });
 
     it("should show retry button on error", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-          error="Failed to generate edit"
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+            error="Failed to generate edit"
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("retry-button")).toBeInTheDocument();
     });
@@ -350,24 +388,28 @@ describe("AIEditOverlay", () => {
   describe("Accessibility", () => {
     it("should have dialog role", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should focus instruction input when opened", () => {
       render(
-        <AIEditOverlay
-          selection={mockSelection}
-          isVisible
-          onApply={() => {}}
-          onCancel={() => {}}
-        />,
+        <TestProvider>
+          <AIEditOverlay
+            selection={mockSelection}
+            isVisible
+            onApply={() => {}}
+            onCancel={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("instruction-input")).toHaveFocus();
     });

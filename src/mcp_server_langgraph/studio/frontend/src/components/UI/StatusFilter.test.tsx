@@ -8,6 +8,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { StatusFilter } from "./StatusFilter";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -24,14 +26,18 @@ describe("StatusFilter", () => {
   describe("Component Structure", () => {
     it("should render status filter container", () => {
       render(
-        <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />,
+        <TestProvider>
+          <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />
+        </TestProvider>,
       );
       expect(screen.getByTestId("status-filter")).toBeInTheDocument();
     });
 
     it("should render status select", () => {
       render(
-        <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />,
+        <TestProvider>
+          <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("combobox", { name: /status/i }),
@@ -42,7 +48,9 @@ describe("StatusFilter", () => {
   describe("Option Selection", () => {
     it('should display all options including "All" option', () => {
       render(
-        <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />,
+        <TestProvider>
+          <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />
+        </TestProvider>,
       );
 
       const select = screen.getByRole("combobox", { name: /status/i });
@@ -55,7 +63,9 @@ describe("StatusFilter", () => {
 
     it('should show "All" as selected when value is null', () => {
       render(
-        <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />,
+        <TestProvider>
+          <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("combobox", { name: /status/i })).toHaveValue("");
@@ -63,11 +73,13 @@ describe("StatusFilter", () => {
 
     it("should show correct option selected", () => {
       render(
-        <StatusFilter
-          value="active"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <StatusFilter
+            value="active"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("combobox", { name: /status/i })).toHaveValue(
@@ -78,7 +90,13 @@ describe("StatusFilter", () => {
     it("should call onChange with selected value", () => {
       const onChange = vi.fn();
       render(
-        <StatusFilter value={null} options={mockOptions} onChange={onChange} />,
+        <TestProvider>
+          <StatusFilter
+            value={null}
+            options={mockOptions}
+            onChange={onChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByRole("combobox", { name: /status/i }), {
@@ -91,11 +109,13 @@ describe("StatusFilter", () => {
     it('should call onChange with null when "All" selected', () => {
       const onChange = vi.fn();
       render(
-        <StatusFilter
-          value="active"
-          options={mockOptions}
-          onChange={onChange}
-        />,
+        <TestProvider>
+          <StatusFilter
+            value="active"
+            options={mockOptions}
+            onChange={onChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByRole("combobox", { name: /status/i }), {
@@ -109,12 +129,14 @@ describe("StatusFilter", () => {
   describe("Customization", () => {
     it('should use custom "All" label when provided', () => {
       render(
-        <StatusFilter
-          value={null}
-          options={mockOptions}
-          onChange={vi.fn()}
-          allLabel="Any Status"
-        />,
+        <TestProvider>
+          <StatusFilter
+            value={null}
+            options={mockOptions}
+            onChange={vi.fn()}
+            allLabel="Any Status"
+          />
+        </TestProvider>,
       );
 
       const select = screen.getByRole("combobox", { name: /status/i });
@@ -123,12 +145,14 @@ describe("StatusFilter", () => {
 
     it("should use custom aria label when provided", () => {
       render(
-        <StatusFilter
-          value={null}
-          options={mockOptions}
-          onChange={vi.fn()}
-          ariaLabel="Filter by status"
-        />,
+        <TestProvider>
+          <StatusFilter
+            value={null}
+            options={mockOptions}
+            onChange={vi.fn()}
+            ariaLabel="Filter by status"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -140,7 +164,9 @@ describe("StatusFilter", () => {
   describe("Accessibility", () => {
     it("should have default aria label", () => {
       render(
-        <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />,
+        <TestProvider>
+          <StatusFilter value={null} options={mockOptions} onChange={vi.fn()} />
+        </TestProvider>,
       );
 
       expect(

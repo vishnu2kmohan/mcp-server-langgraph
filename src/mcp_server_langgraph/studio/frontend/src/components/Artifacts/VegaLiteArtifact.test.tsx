@@ -13,6 +13,8 @@ import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { VegaLiteArtifact } from "./VegaLiteArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 // Sample Vega-Lite specs for testing
 const SIMPLE_BAR_CHART_SPEC = {
   $schema: "https://vega.github.io/schema/vega-lite/v5.json",
@@ -108,21 +110,31 @@ afterEach(async () => {
 describe("VegaLiteArtifact", () => {
   describe("Rendering", () => {
     it("should render the component container", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
     });
 
     it("should display title when provided", () => {
       render(
-        <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} title="Sales Chart" />,
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} title="Sales Chart" />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Sales Chart")).toBeInTheDocument();
     });
 
     it("should use spec description as fallback title", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("A simple bar chart")).toBeInTheDocument();
     });
@@ -132,13 +144,21 @@ describe("VegaLiteArtifact", () => {
         ...SIMPLE_BAR_CHART_SPEC,
         description: undefined,
       };
-      render(<VegaLiteArtifact spec={specWithoutDescription} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={specWithoutDescription} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Vega-Lite Chart")).toBeInTheDocument();
     });
 
     it("should render chart container for vega-embed", async () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("vega-chart-container")).toBeInTheDocument();
@@ -148,20 +168,32 @@ describe("VegaLiteArtifact", () => {
 
   describe("Spec Handling", () => {
     it("should accept spec as object", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
     });
 
     it("should accept spec as JSON string", () => {
       const specString = JSON.stringify(SIMPLE_BAR_CHART_SPEC);
-      render(<VegaLiteArtifact spec={specString} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={specString} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
     });
 
     it("should handle invalid JSON string gracefully", () => {
-      render(<VegaLiteArtifact spec="{ invalid json }" />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec="{ invalid json }" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
       // Shows error for invalid JSON
@@ -173,7 +205,11 @@ describe("VegaLiteArtifact", () => {
 
   describe("Error Handling", () => {
     it("should display error message for invalid spec", async () => {
-      render(<VegaLiteArtifact spec={INVALID_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={INVALID_SPEC} />
+        </TestProvider>,
+      );
 
       // The component shows an error for invalid specs (missing mark/layer/composition)
       await waitFor(() => {
@@ -187,7 +223,11 @@ describe("VegaLiteArtifact", () => {
     });
 
     it("should display retry button on error", async () => {
-      render(<VegaLiteArtifact spec={INVALID_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={INVALID_SPEC} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("vega-error")).toBeInTheDocument();
@@ -201,7 +241,11 @@ describe("VegaLiteArtifact", () => {
 
   describe("Theme Support", () => {
     it("should apply dark theme when specified", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} theme="dark" />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} theme="dark" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("vega-lite-artifact");
       // The 'dark' class (not 'dark:' prefix) is added when theme="dark"
@@ -209,7 +253,11 @@ describe("VegaLiteArtifact", () => {
     });
 
     it("should apply light theme by default", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("vega-lite-artifact");
       // The 'dark' class should not be present when theme is light (default)
@@ -221,7 +269,11 @@ describe("VegaLiteArtifact", () => {
 
   describe("Loading State", () => {
     it("should show loading indicator while chart is rendering", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       // Initially should show loading
       expect(
@@ -232,7 +284,11 @@ describe("VegaLiteArtifact", () => {
 
   describe("Export Functionality", () => {
     it("should render export button", async () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         const exportButton = screen.queryByRole("button", {
@@ -249,7 +305,9 @@ describe("VegaLiteArtifact", () => {
   describe("Accessibility", () => {
     it("should have accessible chart container", () => {
       render(
-        <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} title="Sales Chart" />,
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} title="Sales Chart" />
+        </TestProvider>,
       );
 
       const container = screen.getByTestId("vega-chart-container");
@@ -260,19 +318,31 @@ describe("VegaLiteArtifact", () => {
 
   describe("Responsiveness", () => {
     it("should accept width prop", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} width={500} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} width={500} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
     });
 
     it("should accept height prop", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} height={300} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} height={300} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
     });
 
     it("should default to responsive width when no width specified", () => {
-      render(<VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />);
+      render(
+        <TestProvider>
+          <VegaLiteArtifact spec={SIMPLE_BAR_CHART_SPEC} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("vega-lite-artifact");
       expect(container.className).toMatch(/w-full|width.*100/);
@@ -302,7 +372,11 @@ describe("VegaLiteArtifact Integration", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={altairSpec} title="Altair Scatter Plot" />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={altairSpec} title="Altair Scatter Plot" />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
     expect(screen.getByText("Altair Scatter Plot")).toBeInTheDocument();
@@ -312,20 +386,32 @@ describe("VegaLiteArtifact Integration", () => {
 describe("VegaLiteArtifact Error Handling", () => {
   it("should handle null spec gracefully", () => {
     // @ts-expect-error - Testing null handling
-    render(<VegaLiteArtifact spec={null} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={null} />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
   });
 
   it("should handle undefined spec gracefully", () => {
     // @ts-expect-error - Testing undefined handling
-    render(<VegaLiteArtifact spec={undefined} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={undefined} />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("vega-lite-artifact")).toBeInTheDocument();
   });
 
   it("should handle empty object spec", async () => {
-    render(<VegaLiteArtifact spec={{}} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={{}} />
+      </TestProvider>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId("vega-error")).toBeInTheDocument();
@@ -341,7 +427,11 @@ describe("VegaLiteArtifact Error Handling", () => {
       data: { values: [{ x: 1, y: 2 }] },
     };
 
-    render(<VegaLiteArtifact spec={specWithOnlyData} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={specWithOnlyData} />
+      </TestProvider>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId("vega-error")).toBeInTheDocument();
@@ -350,13 +440,21 @@ describe("VegaLiteArtifact Error Handling", () => {
 
   it("should handle deeply nested invalid JSON string", () => {
     const badJson = "{ 'invalid': 'single quotes not allowed' }";
-    render(<VegaLiteArtifact spec={badJson} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={badJson} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText(/failed to parse/i)).toBeInTheDocument();
   });
 
   it("should display error icon in error state", async () => {
-    render(<VegaLiteArtifact spec={INVALID_SPEC} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={INVALID_SPEC} />
+      </TestProvider>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId("vega-error")).toBeInTheDocument();
@@ -369,7 +467,11 @@ describe("VegaLiteArtifact Error Handling", () => {
 
   it("should allow retry after error", async () => {
     const user = userEvent.setup();
-    render(<VegaLiteArtifact spec={INVALID_SPEC} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={INVALID_SPEC} />
+      </TestProvider>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId("vega-error")).toBeInTheDocument();
@@ -388,7 +490,11 @@ describe("VegaLiteArtifact Error Handling", () => {
   });
 
   it("should not show export button when in error state", async () => {
-    render(<VegaLiteArtifact spec={INVALID_SPEC} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={INVALID_SPEC} />
+      </TestProvider>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId("vega-error")).toBeInTheDocument();
@@ -415,7 +521,11 @@ describe("VegaLiteArtifact Title Extraction", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={specWithStringTitle} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={specWithStringTitle} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Sales by Region")).toBeInTheDocument();
   });
@@ -436,7 +546,11 @@ describe("VegaLiteArtifact Title Extraction", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={specWithObjectTitle} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={specWithObjectTitle} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Revenue Analysis 2024")).toBeInTheDocument();
   });
@@ -453,7 +567,11 @@ describe("VegaLiteArtifact Title Extraction", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={specWithDescription} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={specWithDescription} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Monthly sales trends")).toBeInTheDocument();
   });
@@ -471,7 +589,11 @@ describe("VegaLiteArtifact Title Extraction", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={specWithBoth} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={specWithBoth} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Preferred Title")).toBeInTheDocument();
     expect(
@@ -491,7 +613,11 @@ describe("VegaLiteArtifact Title Extraction", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={specWithTitle} title="Prop Title" />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={specWithTitle} title="Prop Title" />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Prop Title")).toBeInTheDocument();
     expect(screen.queryByText("Spec Title")).not.toBeInTheDocument();
@@ -519,7 +645,11 @@ describe("VegaLiteArtifact Title Extraction", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={altairSpecWithTitle} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={altairSpecWithTitle} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Altair Generated Title")).toBeInTheDocument();
   });
@@ -535,7 +665,11 @@ describe("VegaLiteArtifact Title Extraction", () => {
       },
     };
 
-    render(<VegaLiteArtifact spec={specWithoutTitleOrDescription} />);
+    render(
+      <TestProvider>
+        <VegaLiteArtifact spec={specWithoutTitleOrDescription} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Vega-Lite Chart")).toBeInTheDocument();
   });

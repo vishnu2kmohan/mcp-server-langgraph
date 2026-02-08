@@ -16,6 +16,8 @@ import {
 import userEvent from "@testing-library/user-event";
 import { UninstallDialog } from "./UninstallDialog";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -40,37 +42,61 @@ describe("UninstallDialog", () => {
 
   describe("Rendering", () => {
     it("should render dialog when open", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("uninstall-dialog")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
-      render(<UninstallDialog {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("uninstall-dialog")).not.toBeInTheDocument();
     });
 
     it("should not render when skillName is null", () => {
-      render(<UninstallDialog {...defaultProps} skillName={null} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} skillName={null} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("uninstall-dialog")).not.toBeInTheDocument();
     });
 
     it("should display dialog title", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Uninstall Skill")).toBeInTheDocument();
     });
 
     it("should display skill name in confirmation message", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/web-research/)).toBeInTheDocument();
     });
 
     it("should display warning about data loss", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/this action cannot be undone/i),
@@ -78,7 +104,11 @@ describe("UninstallDialog", () => {
     });
 
     it("should have Cancel button", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /cancel/i }),
@@ -86,7 +116,11 @@ describe("UninstallDialog", () => {
     });
 
     it("should have Uninstall button", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /uninstall/i }),
@@ -103,7 +137,11 @@ describe("UninstallDialog", () => {
       const user = userEvent.setup();
       const onClose = vi.fn();
 
-      render(<UninstallDialog {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /cancel/i }));
       expect(onClose).toHaveBeenCalledTimes(1);
@@ -113,7 +151,11 @@ describe("UninstallDialog", () => {
       const user = userEvent.setup();
       const onConfirm = vi.fn();
 
-      render(<UninstallDialog {...defaultProps} onConfirm={onConfirm} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} onConfirm={onConfirm} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /uninstall/i }));
       expect(onConfirm).toHaveBeenCalledTimes(1);
@@ -123,7 +165,11 @@ describe("UninstallDialog", () => {
       const user = userEvent.setup();
       const onClose = vi.fn();
 
-      render(<UninstallDialog {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       // Click the backdrop (the outer div with onClick)
       const backdrop = screen.getByTestId("uninstall-dialog").parentElement;
@@ -137,7 +183,11 @@ describe("UninstallDialog", () => {
       const user = userEvent.setup();
       const onClose = vi.fn();
 
-      render(<UninstallDialog {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("uninstall-dialog"));
       expect(onClose).not.toHaveBeenCalled();
@@ -150,19 +200,31 @@ describe("UninstallDialog", () => {
 
   describe("Loading State", () => {
     it("should disable Cancel button when uninstalling", () => {
-      render(<UninstallDialog {...defaultProps} isUninstalling={true} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} isUninstalling={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
     });
 
     it("should disable Uninstall button when uninstalling", () => {
-      render(<UninstallDialog {...defaultProps} isUninstalling={true} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} isUninstalling={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /uninstall/i })).toBeDisabled();
     });
 
     it("should show loading text on Uninstall button when uninstalling", () => {
-      render(<UninstallDialog {...defaultProps} isUninstalling={true} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} isUninstalling={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Uninstalling...")).toBeInTheDocument();
     });
@@ -172,11 +234,13 @@ describe("UninstallDialog", () => {
       const onConfirm = vi.fn();
 
       render(
-        <UninstallDialog
-          {...defaultProps}
-          onConfirm={onConfirm}
-          isUninstalling={true}
-        />,
+        <TestProvider>
+          <UninstallDialog
+            {...defaultProps}
+            onConfirm={onConfirm}
+            isUninstalling={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button", { name: /uninstall/i });
@@ -193,7 +257,11 @@ describe("UninstallDialog", () => {
     it("should close on Escape key when not uninstalling", async () => {
       const onClose = vi.fn();
 
-      render(<UninstallDialog {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       fireEvent.keyDown(document, { key: "Escape", code: "Escape" });
 
@@ -206,11 +274,13 @@ describe("UninstallDialog", () => {
       const onClose = vi.fn();
 
       render(
-        <UninstallDialog
-          {...defaultProps}
-          onClose={onClose}
-          isUninstalling={true}
-        />,
+        <TestProvider>
+          <UninstallDialog
+            {...defaultProps}
+            onClose={onClose}
+            isUninstalling={true}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(document, { key: "Escape", code: "Escape" });
@@ -227,19 +297,31 @@ describe("UninstallDialog", () => {
 
   describe("Accessibility", () => {
     it("should have dialog role", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have aria-modal attribute", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
     });
 
     it("should have accessible title via aria-labelledby", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-labelledby");
@@ -251,7 +333,11 @@ describe("UninstallDialog", () => {
     });
 
     it("should have focusable buttons", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
       const uninstallButton = screen.getByRole("button", {
@@ -269,7 +355,11 @@ describe("UninstallDialog", () => {
 
   describe("Visual Styling", () => {
     it("should have danger styling on Uninstall button", () => {
-      render(<UninstallDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const uninstallButton = screen.getByRole("button", {
         name: /uninstall/i,
@@ -285,19 +375,31 @@ describe("UninstallDialog", () => {
 
   describe("Enhanced Loading States", () => {
     it("should show progress indicator when uninstalling", () => {
-      render(<UninstallDialog {...defaultProps} isUninstalling={true} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} isUninstalling={true} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("uninstall-progress")).toBeInTheDocument();
     });
 
     it("should show progress message when uninstalling", () => {
-      render(<UninstallDialog {...defaultProps} isUninstalling={true} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} isUninstalling={true} />
+        </TestProvider>,
+      );
       expect(
         screen.getByTestId("uninstall-progress-message"),
       ).toBeInTheDocument();
     });
 
     it("should hide progress indicator when not uninstalling", () => {
-      render(<UninstallDialog {...defaultProps} isUninstalling={false} />);
+      render(
+        <TestProvider>
+          <UninstallDialog {...defaultProps} isUninstalling={false} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByTestId("uninstall-progress"),
       ).not.toBeInTheDocument();

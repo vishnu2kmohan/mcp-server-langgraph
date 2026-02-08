@@ -13,6 +13,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ErrorState } from "./ErrorState";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -21,29 +23,49 @@ afterEach(() => {
 describe("ErrorState", () => {
   describe("Display", () => {
     it("should display the error message", () => {
-      render(<ErrorState message="Failed to load data" onRetry={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorState message="Failed to load data" onRetry={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Failed to load data")).toBeInTheDocument();
     });
 
     it("should display default message when none provided", () => {
-      render(<ErrorState onRetry={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorState onRetry={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     });
 
     it("should display error icon", () => {
-      render(<ErrorState message="Error" onRetry={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorState message="Error" onRetry={() => {}} />
+        </TestProvider>,
+      );
       expect(document.querySelector("svg")).toBeInTheDocument();
     });
 
     it("should display retry button", () => {
-      render(<ErrorState message="Error" onRetry={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorState message="Error" onRetry={() => {}} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /retry/i }),
       ).toBeInTheDocument();
     });
 
     it("should not display retry button when onRetry is not provided", () => {
-      render(<ErrorState message="Error" />);
+      render(
+        <TestProvider>
+          <ErrorState message="Error" />
+        </TestProvider>,
+      );
       expect(
         screen.queryByRole("button", { name: /retry/i }),
       ).not.toBeInTheDocument();
@@ -53,7 +75,11 @@ describe("ErrorState", () => {
   describe("Retry Functionality", () => {
     it("should call onRetry when retry button is clicked", () => {
       const onRetry = vi.fn();
-      render(<ErrorState message="Error" onRetry={onRetry} />);
+      render(
+        <TestProvider>
+          <ErrorState message="Error" onRetry={onRetry} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /retry/i }));
 
@@ -64,13 +90,23 @@ describe("ErrorState", () => {
   describe("Title", () => {
     it("should display custom title when provided", () => {
       render(
-        <ErrorState title="Load Failed" message="Details" onRetry={() => {}} />,
+        <TestProvider>
+          <ErrorState
+            title="Load Failed"
+            message="Details"
+            onRetry={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Load Failed")).toBeInTheDocument();
     });
 
     it("should display default title when none provided", () => {
-      render(<ErrorState message="Details" onRetry={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorState message="Details" onRetry={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Error")).toBeInTheDocument();
     });
   });
@@ -78,21 +114,27 @@ describe("ErrorState", () => {
   describe("Styling", () => {
     it("should apply compact styling", () => {
       const { container } = render(
-        <ErrorState message="Error" onRetry={() => {}} variant="compact" />,
+        <TestProvider>
+          <ErrorState message="Error" onRetry={() => {}} variant="compact" />
+        </TestProvider>,
       );
       expect(container.querySelector(".py-8")).toBeInTheDocument();
     });
 
     it("should apply full height styling by default", () => {
       const { container } = render(
-        <ErrorState message="Error" onRetry={() => {}} />,
+        <TestProvider>
+          <ErrorState message="Error" onRetry={() => {}} />
+        </TestProvider>,
       );
       expect(container.querySelector(".h-64")).toBeInTheDocument();
     });
 
     it("should apply full-screen styling when specified", () => {
       const { container } = render(
-        <ErrorState message="Error" onRetry={() => {}} variant="fullscreen" />,
+        <TestProvider>
+          <ErrorState message="Error" onRetry={() => {}} variant="fullscreen" />
+        </TestProvider>,
       );
       expect(container.querySelector(".h-full")).toBeInTheDocument();
     });
@@ -101,7 +143,13 @@ describe("ErrorState", () => {
   describe("Custom Button Text", () => {
     it("should use custom retry button text", () => {
       render(
-        <ErrorState message="Error" onRetry={() => {}} retryText="Try Again" />,
+        <TestProvider>
+          <ErrorState
+            message="Error"
+            onRetry={() => {}}
+            retryText="Try Again"
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /try again/i }),
@@ -111,7 +159,11 @@ describe("ErrorState", () => {
 
   describe("Accessibility", () => {
     it("should have accessible role for error container", () => {
-      render(<ErrorState message="Error" onRetry={() => {}} />);
+      render(
+        <TestProvider>
+          <ErrorState message="Error" onRetry={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
   });

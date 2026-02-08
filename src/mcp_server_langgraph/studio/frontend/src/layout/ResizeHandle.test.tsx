@@ -18,6 +18,8 @@ vi.mock("motion/react", () => ({
 
 import { ResizeHandle } from "./ResizeHandle";
 
+import { TestProvider } from "@/test-utils";
+
 // Wrapper to render ResizeHandle in valid context
 // PanelResizeHandle must be a direct child of PanelGroup
 function TestWrapper({
@@ -51,7 +53,11 @@ describe("ResizeHandle", () => {
 
   describe("rendering", () => {
     it("should render the resize handle", () => {
-      render(<TestWrapper />);
+      render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
 
       // PanelResizeHandle adds data-panel-resize-handle-id
       const handle = document.querySelector("[data-panel-resize-handle-id]");
@@ -59,7 +65,11 @@ describe("ResizeHandle", () => {
     });
 
     it("should apply base styling classes", () => {
-      render(<TestWrapper />);
+      render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
       expect(handle).toHaveClass("w-1");
@@ -69,14 +79,22 @@ describe("ResizeHandle", () => {
 
   describe("styling", () => {
     it("should apply custom className", () => {
-      render(<TestWrapper className="custom-class" />);
+      render(
+        <TestProvider>
+          <TestWrapper className="custom-class" />
+        </TestProvider>,
+      );
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
       expect(handle).toHaveClass("custom-class");
     });
 
     it("should have hover transition classes when motion is allowed", () => {
-      render(<TestWrapper />);
+      render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
       // WCAG 2.2 AA: transition-colors applied when reduced motion is not preferred
@@ -84,7 +102,11 @@ describe("ResizeHandle", () => {
     });
 
     it("should have visible background by default for discoverability", () => {
-      render(<TestWrapper />);
+      render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
       expect(handle).toHaveClass("bg-neutral-4");
@@ -93,7 +115,11 @@ describe("ResizeHandle", () => {
 
   describe("interaction", () => {
     it("should have col-resize cursor for horizontal layout", () => {
-      render(<TestWrapper />);
+      render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
       expect(handle).toHaveClass("cursor-col-resize");
@@ -102,14 +128,22 @@ describe("ResizeHandle", () => {
 
   describe("accessibility", () => {
     it("should have separator role from react-resizable-panels", () => {
-      render(<TestWrapper />);
+      render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
       expect(handle).toHaveAttribute("role", "separator");
     });
 
     it("should be focusable via keyboard", () => {
-      render(<TestWrapper />);
+      render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
 
       const handle = document.querySelector("[data-panel-resize-handle-id]");
       expect(handle).toHaveAttribute("tabindex", "0");
@@ -120,7 +154,11 @@ describe("ResizeHandle", () => {
     // dynamically during resize operations. We skip the axe test here.
     // See: https://github.com/bvaughn/react-resizable-panels/issues
     it.skip("should have no accessibility violations (skipped - library limitation)", async () => {
-      const { container } = render(<TestWrapper />);
+      const { container } = render(
+        <TestProvider>
+          <TestWrapper />
+        </TestProvider>,
+      );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });

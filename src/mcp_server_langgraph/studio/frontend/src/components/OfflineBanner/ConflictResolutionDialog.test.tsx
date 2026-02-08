@@ -22,6 +22,8 @@ import type {
   ConflictResolution as _ConflictResolution,
 } from "../../hooks/useOfflineQueue";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Fixtures
 // =============================================================================
@@ -60,13 +62,19 @@ describe("ConflictResolutionDialog", () => {
   describe("Rendering", () => {
     it("renders nothing when conflicts array is empty", () => {
       const { container } = render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={[]} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={[]} />
+        </TestProvider>,
       );
       expect(container).toBeEmptyDOMElement();
     });
 
     it("renders dialog when conflicts exist", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("dialog", { name: /sync conflict/i }),
       ).toBeInTheDocument();
@@ -79,19 +87,29 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "3" }),
       ];
       render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />
+        </TestProvider>,
       );
       expect(screen.getByText(/3 conflicts/i)).toBeInTheDocument();
     });
 
     it("shows field name in conflict details", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
       // Field name is shown as "Field: title" - use more specific query
       expect(screen.getByText(/^field:/i)).toBeInTheDocument();
     });
 
     it("displays local and server versions", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/local title/i)).toBeInTheDocument();
       expect(screen.getByText(/server title/i)).toBeInTheDocument();
     });
@@ -99,7 +117,11 @@ describe("ConflictResolutionDialog", () => {
 
   describe("Resolution Options", () => {
     it("renders all three resolution options", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /keep local/i }),
@@ -113,7 +135,11 @@ describe("ConflictResolutionDialog", () => {
     });
 
     it("highlights suggested resolution", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const keepServerButton = screen.getByRole("button", {
         name: /keep server/i,
@@ -125,7 +151,9 @@ describe("ConflictResolutionDialog", () => {
       const user = userEvent.setup();
       const onResolve = vi.fn();
       render(
-        <ConflictResolutionDialog {...defaultProps} onResolve={onResolve} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} onResolve={onResolve} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /keep local/i }));
@@ -137,7 +165,9 @@ describe("ConflictResolutionDialog", () => {
       const user = userEvent.setup();
       const onResolve = vi.fn();
       render(
-        <ConflictResolutionDialog {...defaultProps} onResolve={onResolve} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} onResolve={onResolve} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /keep server/i }));
@@ -149,7 +179,9 @@ describe("ConflictResolutionDialog", () => {
       const user = userEvent.setup();
       const onResolve = vi.fn();
       render(
-        <ConflictResolutionDialog {...defaultProps} onResolve={onResolve} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} onResolve={onResolve} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /merge/i }));
@@ -165,7 +197,9 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "2" }),
       ];
       render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />
+        </TestProvider>,
       );
 
       expect(
@@ -174,7 +208,11 @@ describe("ConflictResolutionDialog", () => {
     });
 
     it("does not render 'Resolve All' button for single conflict", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByRole("button", { name: /resolve all/i }),
@@ -195,11 +233,13 @@ describe("ConflictResolutionDialog", () => {
         }),
       ];
       render(
-        <ConflictResolutionDialog
-          {...defaultProps}
-          conflicts={conflicts}
-          onResolveAll={onResolveAll}
-        />,
+        <TestProvider>
+          <ConflictResolutionDialog
+            {...defaultProps}
+            conflicts={conflicts}
+            onResolveAll={onResolveAll}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /resolve all/i }));
@@ -215,7 +255,9 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "2", field: "description" }),
       ];
       render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/1 of 2/i)).toBeInTheDocument();
@@ -228,7 +270,9 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "2", field: "description" }),
       ];
       render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /next/i }));
@@ -244,7 +288,9 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "2", field: "description" }),
       ];
       render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />
+        </TestProvider>,
       );
 
       // Go to second conflict
@@ -262,7 +308,9 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "2" }),
       ];
       render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
@@ -275,7 +323,9 @@ describe("ConflictResolutionDialog", () => {
         createMockConflict({ actionId: "2" }),
       ];
       render(
-        <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />,
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} conflicts={conflicts} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /next/i }));
@@ -286,19 +336,31 @@ describe("ConflictResolutionDialog", () => {
 
   describe("Accessibility", () => {
     it("has accessible dialog role", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("has accessible name for dialog", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("dialog", { name: /sync conflict/i }),
       ).toBeInTheDocument();
     });
 
     it("resolution buttons have accessible labels", () => {
-      render(<ConflictResolutionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConflictResolutionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const buttons = screen.getAllByRole("button");
       buttons.forEach((button) => {

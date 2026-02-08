@@ -21,6 +21,8 @@ import {
   type ReasoningEffortSelectorProps,
 } from "./ReasoningEffortSelector";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ReasoningEffortSelector", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,19 +40,31 @@ describe("ReasoningEffortSelector", () => {
 
   describe("rendering", () => {
     it("should render the selector container", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByTestId("reasoning-effort-selector"),
       ).toBeInTheDocument();
     });
 
     it("should display label 'Thinking'", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/thinking/i)).toBeInTheDocument();
     });
 
     it("should render all five effort level options", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       // All 5 levels: none, low, medium, high, ultra
       expect(
         screen.getByRole("button", { name: /^none$/i }),
@@ -70,7 +84,11 @@ describe("ReasoningEffortSelector", () => {
     });
 
     it("should highlight the selected option", () => {
-      render(<ReasoningEffortSelector {...defaultProps} value="high" />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} value="high" />
+        </TestProvider>,
+      );
       const highButton = screen.getByRole("button", { name: /high/i });
       // Selected state is indicated by aria-pressed attribute
       expect(highButton).toHaveAttribute("aria-pressed", "true");
@@ -80,7 +98,11 @@ describe("ReasoningEffortSelector", () => {
     });
 
     it("should show brain icon", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("brain-icon")).toBeInTheDocument();
     });
   });
@@ -88,7 +110,11 @@ describe("ReasoningEffortSelector", () => {
   describe("selection", () => {
     it("should call onChange with 'low' when low button clicked", () => {
       const onChange = vi.fn();
-      render(<ReasoningEffortSelector {...defaultProps} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} onChange={onChange} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /low/i }));
       expect(onChange).toHaveBeenCalledWith("low");
@@ -97,11 +123,13 @@ describe("ReasoningEffortSelector", () => {
     it("should call onChange with 'medium' when medium button clicked", () => {
       const onChange = vi.fn();
       render(
-        <ReasoningEffortSelector
-          {...defaultProps}
-          onChange={onChange}
-          value="low"
-        />,
+        <TestProvider>
+          <ReasoningEffortSelector
+            {...defaultProps}
+            onChange={onChange}
+            value="low"
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /medium/i }));
@@ -110,7 +138,11 @@ describe("ReasoningEffortSelector", () => {
 
     it("should call onChange with 'high' when high button clicked", () => {
       const onChange = vi.fn();
-      render(<ReasoningEffortSelector {...defaultProps} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} onChange={onChange} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /high/i }));
       expect(onChange).toHaveBeenCalledWith("high");
@@ -119,11 +151,13 @@ describe("ReasoningEffortSelector", () => {
     it("should not call onChange when clicking already selected option", () => {
       const onChange = vi.fn();
       render(
-        <ReasoningEffortSelector
-          {...defaultProps}
-          onChange={onChange}
-          value="medium"
-        />,
+        <TestProvider>
+          <ReasoningEffortSelector
+            {...defaultProps}
+            onChange={onChange}
+            value="medium"
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /medium/i }));
@@ -133,20 +167,32 @@ describe("ReasoningEffortSelector", () => {
 
   describe("tooltips", () => {
     it("should show tooltip for low option", async () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       const lowButton = screen.getByRole("button", { name: /low/i });
       expect(lowButton).toHaveAttribute("title");
       expect(lowButton.getAttribute("title")).toMatch(/quick|fast|minimal/i);
     });
 
     it("should show tooltip for medium option", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       const mediumButton = screen.getByRole("button", { name: /medium/i });
       expect(mediumButton.getAttribute("title")).toMatch(/balanced|default/i);
     });
 
     it("should show tooltip for high option", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       const highButton = screen.getByRole("button", { name: /high/i });
       expect(highButton.getAttribute("title")).toMatch(
         /deep|comprehensive|thorough/i,
@@ -156,7 +202,11 @@ describe("ReasoningEffortSelector", () => {
 
   describe("disabled state", () => {
     it("should disable all buttons when disabled prop is true", () => {
-      render(<ReasoningEffortSelector {...defaultProps} disabled={true} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} disabled={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /low/i })).toBeDisabled();
       expect(screen.getByRole("button", { name: /medium/i })).toBeDisabled();
@@ -166,11 +216,13 @@ describe("ReasoningEffortSelector", () => {
     it("should not call onChange when disabled", () => {
       const onChange = vi.fn();
       render(
-        <ReasoningEffortSelector
-          {...defaultProps}
-          onChange={onChange}
-          disabled={true}
-        />,
+        <TestProvider>
+          <ReasoningEffortSelector
+            {...defaultProps}
+            onChange={onChange}
+            disabled={true}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /high/i }));
@@ -178,7 +230,11 @@ describe("ReasoningEffortSelector", () => {
     });
 
     it("should show disabled styling", () => {
-      render(<ReasoningEffortSelector {...defaultProps} disabled={true} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} disabled={true} />
+        </TestProvider>,
+      );
       const container = screen.getByTestId("reasoning-effort-selector");
       expect(container).toHaveClass("opacity-50");
     });
@@ -187,30 +243,36 @@ describe("ReasoningEffortSelector", () => {
   describe("model compatibility", () => {
     it("should show 'Not supported' message when model doesn't support thinking", () => {
       render(
-        <ReasoningEffortSelector
-          {...defaultProps}
-          modelSupportsThinking={false}
-        />,
+        <TestProvider>
+          <ReasoningEffortSelector
+            {...defaultProps}
+            modelSupportsThinking={false}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/not supported/i)).toBeInTheDocument();
     });
 
     it("should disable selector when model doesn't support thinking", () => {
       render(
-        <ReasoningEffortSelector
-          {...defaultProps}
-          modelSupportsThinking={false}
-        />,
+        <TestProvider>
+          <ReasoningEffortSelector
+            {...defaultProps}
+            modelSupportsThinking={false}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("button", { name: /low/i })).toBeDisabled();
     });
 
     it("should show model name when provided", () => {
       render(
-        <ReasoningEffortSelector
-          {...defaultProps}
-          modelName="claude-opus-4-5-20251101"
-        />,
+        <TestProvider>
+          <ReasoningEffortSelector
+            {...defaultProps}
+            modelName="claude-opus-4-5-20251101"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/claude-opus/i)).toBeInTheDocument();
     });
@@ -218,13 +280,21 @@ describe("ReasoningEffortSelector", () => {
 
   describe("compact mode", () => {
     it("should render in compact mode when compact prop is true", () => {
-      render(<ReasoningEffortSelector {...defaultProps} compact={true} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} compact={true} />
+        </TestProvider>,
+      );
       const container = screen.getByTestId("reasoning-effort-selector");
       expect(container).toHaveClass("gap-1");
     });
 
     it("should show abbreviated labels in compact mode", () => {
-      render(<ReasoningEffortSelector {...defaultProps} compact={true} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} compact={true} />
+        </TestProvider>,
+      );
       // Should show L/M/H instead of Low/Medium/High
       expect(screen.getByText("L")).toBeInTheDocument();
       expect(screen.getByText("M")).toBeInTheDocument();
@@ -234,12 +304,20 @@ describe("ReasoningEffortSelector", () => {
 
   describe("accessibility", () => {
     it("should have proper role='radiogroup'", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("should have aria-label for the group", () => {
-      render(<ReasoningEffortSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("radiogroup")).toHaveAttribute(
         "aria-label",
         "Reasoning effort level",
@@ -247,14 +325,22 @@ describe("ReasoningEffortSelector", () => {
     });
 
     it("should mark selected option with aria-checked", () => {
-      render(<ReasoningEffortSelector {...defaultProps} value="high" />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} value="high" />
+        </TestProvider>,
+      );
       const highButton = screen.getByRole("button", { name: /high/i });
       expect(highButton).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should support keyboard navigation", () => {
       const onChange = vi.fn();
-      render(<ReasoningEffortSelector {...defaultProps} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} onChange={onChange} />
+        </TestProvider>,
+      );
 
       const mediumButton = screen.getByRole("button", { name: /medium/i });
       mediumButton.focus();
@@ -268,7 +354,9 @@ describe("ReasoningEffortSelector", () => {
   describe("custom className", () => {
     it("should apply custom className", () => {
       render(
-        <ReasoningEffortSelector {...defaultProps} className="custom-class" />,
+        <TestProvider>
+          <ReasoningEffortSelector {...defaultProps} className="custom-class" />
+        </TestProvider>,
       );
       expect(screen.getByTestId("reasoning-effort-selector")).toHaveClass(
         "custom-class",
@@ -279,11 +367,13 @@ describe("ReasoningEffortSelector", () => {
   describe("effort level descriptions", () => {
     it("should show effort description when showDescription is true", () => {
       render(
-        <ReasoningEffortSelector
-          {...defaultProps}
-          showDescription={true}
-          value="high"
-        />,
+        <TestProvider>
+          <ReasoningEffortSelector
+            {...defaultProps}
+            showDescription={true}
+            value="high"
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("effort-description")).toBeInTheDocument();
       expect(

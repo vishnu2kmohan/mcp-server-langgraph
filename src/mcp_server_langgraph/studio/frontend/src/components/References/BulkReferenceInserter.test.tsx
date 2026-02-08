@@ -20,6 +20,8 @@ import userEvent from "@testing-library/user-event";
 import { BulkReferenceInserter } from "./BulkReferenceInserter";
 import type { ReferenceItem } from "./BulkReferenceInserter";
 
+import { TestProvider } from "@/test-utils";
+
 // Test fixtures
 const mockTools: ReferenceItem[] = [
   {
@@ -93,32 +95,50 @@ describe("BulkReferenceInserter", () => {
   describe("rendering", () => {
     it("should render nothing when closed", () => {
       const { container } = render(
-        <BulkReferenceInserter {...defaultProps} isOpen={false} />,
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} isOpen={false} />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
     });
 
     it("should render dialog when open", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should display title", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Insert References/i)).toBeInTheDocument();
     });
 
     it("should display search input", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("searchbox")).toBeInTheDocument();
     });
 
     it("should display type filter tabs", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("tablist")).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /All/i })).toBeInTheDocument();
@@ -130,7 +150,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should display all items by default", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("read_file")).toBeInTheDocument();
       expect(screen.getByText("Code Review")).toBeInTheDocument();
@@ -138,7 +162,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should show item count", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/7 items/i)).toBeInTheDocument();
     });
@@ -147,7 +175,11 @@ describe("BulkReferenceInserter", () => {
   describe("filtering", () => {
     it("should filter by search text", async () => {
       const user = userEvent.setup();
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const search = screen.getByRole("searchbox");
       await user.type(search, "file");
@@ -158,7 +190,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should filter by type tab", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("tab", { name: /Tools/i }));
 
@@ -168,7 +204,11 @@ describe("BulkReferenceInserter", () => {
 
     it("should combine search and type filters", async () => {
       const user = userEvent.setup();
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("tab", { name: /Tools/i }));
       const search = screen.getByRole("searchbox");
@@ -180,7 +220,11 @@ describe("BulkReferenceInserter", () => {
 
     it("should show empty state when no matches", async () => {
       const user = userEvent.setup();
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const search = screen.getByRole("searchbox");
       await user.type(search, "nonexistent");
@@ -189,7 +233,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should update count when filtering", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("tab", { name: /Skills/i }));
 
@@ -199,7 +247,11 @@ describe("BulkReferenceInserter", () => {
 
   describe("selection", () => {
     it("should allow selecting items via checkbox", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const checkbox = screen.getAllByRole("checkbox")[0];
       fireEvent.click(checkbox);
@@ -208,7 +260,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should show selected count", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const checkboxes = screen.getAllByRole("checkbox");
       fireEvent.click(checkboxes[0]);
@@ -219,7 +275,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should allow selecting all visible items", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /Select all/i }));
 
@@ -230,7 +290,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should allow deselecting all items", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Select all first
       fireEvent.click(screen.getByRole("button", { name: /Select all/i }));
@@ -244,7 +308,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should preserve selection when filtering", async () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Select first item
       const checkboxes = screen.getAllByRole("checkbox");
@@ -267,7 +335,11 @@ describe("BulkReferenceInserter", () => {
   describe("insertion", () => {
     it("should call onInsert with selected references", () => {
       const onInsert = vi.fn();
-      render(<BulkReferenceInserter {...defaultProps} onInsert={onInsert} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} onInsert={onInsert} />
+        </TestProvider>,
+      );
 
       // Select items
       const checkboxes = screen.getAllByRole("checkbox");
@@ -285,7 +357,11 @@ describe("BulkReferenceInserter", () => {
 
     it("should close dialog after insertion", () => {
       const onClose = vi.fn();
-      render(<BulkReferenceInserter {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       const checkboxes = screen.getAllByRole("checkbox");
       fireEvent.click(checkboxes[0]);
@@ -295,13 +371,21 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should disable insert button when nothing selected", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /Insert/i })).toBeDisabled();
     });
 
     it("should enable insert button when items are selected", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const checkboxes = screen.getAllByRole("checkbox");
       fireEvent.click(checkboxes[0]);
@@ -315,7 +399,11 @@ describe("BulkReferenceInserter", () => {
   describe("keyboard navigation", () => {
     it("should close on Escape", () => {
       const onClose = vi.fn();
-      render(<BulkReferenceInserter {...defaultProps} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} onClose={onClose} />
+        </TestProvider>,
+      );
 
       fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
 
@@ -323,7 +411,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should focus search on open", async () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Focus happens via setTimeout, wait for it
       await waitFor(() => {
@@ -333,7 +425,11 @@ describe("BulkReferenceInserter", () => {
 
     it("should navigate items with arrow keys", async () => {
       const user = userEvent.setup();
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Tab to list
       await user.tab();
@@ -350,7 +446,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should toggle item by clicking row", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Click the item row to toggle selection
       const options = screen.getAllByRole("option");
@@ -363,38 +463,62 @@ describe("BulkReferenceInserter", () => {
 
   describe("accessibility", () => {
     it("should have dialog role", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have aria-modal", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
     });
 
     it("should have aria-labelledby", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-labelledby");
     });
 
     it("should have tablist for type filters", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("tablist")).toBeInTheDocument();
     });
 
     it("should have listbox for items", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
     it("should announce selection changes", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const checkbox = screen.getAllByRole("checkbox")[0];
       fireEvent.click(checkbox);
@@ -410,7 +534,11 @@ describe("BulkReferenceInserter", () => {
 
   describe("preview", () => {
     it("should show preview of markdown to be inserted", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const checkboxes = screen.getAllByRole("checkbox");
       fireEvent.click(checkboxes[0]); // filesystem:read_file
@@ -421,7 +549,11 @@ describe("BulkReferenceInserter", () => {
     });
 
     it("should update preview as selection changes", () => {
-      render(<BulkReferenceInserter {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkReferenceInserter {...defaultProps} />
+        </TestProvider>,
+      );
 
       const checkboxes = screen.getAllByRole("checkbox");
       fireEvent.click(checkboxes[0]);

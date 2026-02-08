@@ -13,6 +13,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { ArtifactRenderer, detectArtifactType } from "./ArtifactRenderer";
 import type { Artifact } from "../../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock GenerativeWidget for widget tests
 vi.mock("../../generative/GenerativeWidget", () => ({
   GenerativeWidget: vi.fn(({ config, className }) => (
@@ -117,7 +119,11 @@ describe("ArtifactRenderer", () => {
         type: "json",
         data: { key: "value" },
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-json")).toBeInTheDocument();
     });
@@ -128,7 +134,11 @@ describe("ArtifactRenderer", () => {
         type: "mermaid",
         data: "graph TD\n  A --> B",
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
     });
@@ -140,7 +150,11 @@ describe("ArtifactRenderer", () => {
         data: 'console.log("hello")',
         config: { language: "javascript" },
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-code")).toBeInTheDocument();
     });
@@ -157,7 +171,11 @@ describe("ArtifactRenderer", () => {
           ],
         },
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-table")).toBeInTheDocument();
     });
@@ -169,7 +187,11 @@ describe("ArtifactRenderer", () => {
         data: [{ label: "A", value: 10 }],
         config: { chartType: "bar" },
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-chart")).toBeInTheDocument();
     });
@@ -180,7 +202,11 @@ describe("ArtifactRenderer", () => {
         type: "text",
         data: "Plain text content",
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-text")).toBeInTheDocument();
       expect(screen.getByText("Plain text content")).toBeInTheDocument();
@@ -192,7 +218,11 @@ describe("ArtifactRenderer", () => {
         type: "image",
         data: "https://example.com/image.png",
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-image")).toBeInTheDocument();
     });
@@ -208,7 +238,11 @@ describe("ArtifactRenderer", () => {
           data: { labels: ["A", "B"], values: [10, 20] },
         },
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-widget")).toBeInTheDocument();
       expect(screen.getByTestId("generative-widget")).toBeInTheDocument();
@@ -233,7 +267,11 @@ describe("ArtifactRenderer", () => {
           data: { columns: ["Name", "Age"], rows: [["Alice", "30"]] },
         },
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-widget")).toBeInTheDocument();
       expect(screen.getByTestId("generative-widget")).toHaveAttribute(
@@ -253,7 +291,11 @@ describe("ArtifactRenderer", () => {
           data: { content: "This is a summary." },
         },
       };
-      render(<ArtifactRenderer artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-widget")).toBeInTheDocument();
       expect(screen.getByTestId("generative-widget")).toHaveAttribute(
@@ -273,7 +315,11 @@ describe("ArtifactRenderer", () => {
           data: { labels: ["X"], values: [1] },
         },
       };
-      render(<ArtifactRenderer artifact={artifact} className="custom-class" />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer artifact={artifact} className="custom-class" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-widget")).toHaveClass("custom-class");
     });
@@ -281,13 +327,21 @@ describe("ArtifactRenderer", () => {
 
   describe("Auto-detection mode", () => {
     it("should auto-detect and render JSON from raw data", () => {
-      render(<ArtifactRenderer data={{ key: "value" }} autoDetect />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer data={{ key: "value" }} autoDetect />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("artifact-json")).toBeInTheDocument();
     });
 
     it("should auto-detect and render mermaid from diagram string", () => {
-      render(<ArtifactRenderer data="graph TD\n  A --> B" autoDetect />);
+      render(
+        <TestProvider>
+          <ArtifactRenderer data="graph TD\n  A --> B" autoDetect />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
     });

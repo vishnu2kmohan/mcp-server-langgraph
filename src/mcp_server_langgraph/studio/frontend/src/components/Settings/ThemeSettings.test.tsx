@@ -14,6 +14,8 @@ import type {
   CodeFontTheme,
 } from "../../types/preferences";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock the hooks
 vi.mock("../../contexts/PreferencesContext", () => ({
   useTheme: vi.fn(),
@@ -62,7 +64,11 @@ describe("ThemeSettings", () => {
 
   describe("rendering", () => {
     it("renders the component with header", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("theme-settings")).toBeInTheDocument();
       expect(screen.getByText("Theme & Appearance")).toBeInTheDocument();
@@ -72,7 +78,11 @@ describe("ThemeSettings", () => {
     });
 
     it("renders all theme mode options", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("theme-mode-light")).toBeInTheDocument();
       expect(screen.getByTestId("theme-mode-dark")).toBeInTheDocument();
@@ -80,7 +90,11 @@ describe("ThemeSettings", () => {
     });
 
     it("renders all color theme options", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("color-theme-violet-sage")).toBeInTheDocument();
       expect(screen.getByTestId("color-theme-teal-sage")).toBeInTheDocument();
@@ -91,7 +105,11 @@ describe("ThemeSettings", () => {
     });
 
     it("renders all code font options", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("code-font-jetbrains")).toBeInTheDocument();
       expect(screen.getByTestId("code-font-firacode")).toBeInTheDocument();
@@ -99,7 +117,11 @@ describe("ThemeSettings", () => {
     });
 
     it("renders reset to defaults button", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("reset-theme-defaults")).toBeInTheDocument();
       expect(screen.getByText("Reset to Defaults")).toBeInTheDocument();
@@ -112,14 +134,22 @@ describe("ThemeSettings", () => {
 
   describe("theme mode selection", () => {
     it("shows system theme as selected by default", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       const systemButton = screen.getByTestId("theme-mode-system");
       expect(systemButton).toHaveAttribute("aria-checked", "true");
     });
 
     it("calls setTheme when light mode is clicked", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("theme-mode-light"));
 
@@ -127,7 +157,11 @@ describe("ThemeSettings", () => {
     });
 
     it("calls setTheme when dark mode is clicked", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("theme-mode-dark"));
 
@@ -141,7 +175,11 @@ describe("ThemeSettings", () => {
         setTheme: mockSetTheme,
       });
 
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       const darkButton = screen.getByTestId("theme-mode-dark");
       expect(darkButton).toHaveAttribute("aria-checked", "true");
@@ -154,14 +192,22 @@ describe("ThemeSettings", () => {
 
   describe("color theme selection", () => {
     it("shows violet-sage as selected by default", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       const violetSageButton = screen.getByTestId("color-theme-violet-sage");
       expect(violetSageButton).toHaveAttribute("aria-checked", "true");
     });
 
     it("calls updateGeneralPreferences when teal-sage is clicked", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("color-theme-teal-sage"));
 
@@ -171,7 +217,11 @@ describe("ThemeSettings", () => {
     });
 
     it("calls updateGeneralPreferences when violet-olive is clicked", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("color-theme-violet-olive"));
 
@@ -181,7 +231,11 @@ describe("ThemeSettings", () => {
     });
 
     it("displays color swatches for each theme", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       // Each theme button should contain a color swatch
       const violetSageButton = screen.getByTestId("color-theme-violet-sage");
@@ -195,14 +249,22 @@ describe("ThemeSettings", () => {
 
   describe("code font selection", () => {
     it("shows jetbrains as selected by default", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       const jetbrainsButton = screen.getByTestId("code-font-jetbrains");
       expect(jetbrainsButton).toHaveAttribute("aria-checked", "true");
     });
 
     it("calls updateGeneralPreferences when firacode is clicked", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("code-font-firacode"));
 
@@ -212,7 +274,11 @@ describe("ThemeSettings", () => {
     });
 
     it("calls updateGeneralPreferences when monaspace is clicked", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("code-font-monaspace"));
 
@@ -222,7 +288,11 @@ describe("ThemeSettings", () => {
     });
 
     it("displays font preview for each option", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       // Each code font should display the character preview "0O1l"
       expect(screen.getAllByText("0O1l")).toHaveLength(3);
@@ -235,7 +305,11 @@ describe("ThemeSettings", () => {
 
   describe("reset to defaults", () => {
     it("calls resetToDefaults when button is clicked", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("reset-theme-defaults"));
 
@@ -249,14 +323,22 @@ describe("ThemeSettings", () => {
 
   describe("accessibility", () => {
     it("uses radiogroup role for theme mode selector", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       const radiogroup = screen.getByRole("radiogroup", { name: "Theme mode" });
       expect(radiogroup).toBeInTheDocument();
     });
 
     it("uses radiogroup role for color theme selector", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       const radiogroup = screen.getByRole("radiogroup", {
         name: "Color theme",
@@ -265,14 +347,22 @@ describe("ThemeSettings", () => {
     });
 
     it("uses radiogroup role for code font selector", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       const radiogroup = screen.getByRole("radiogroup", { name: "Code font" });
       expect(radiogroup).toBeInTheDocument();
     });
 
     it("has correct aria-checked states for theme modes", () => {
-      render(<ThemeSettings />);
+      render(
+        <TestProvider>
+          <ThemeSettings />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("theme-mode-light")).toHaveAttribute(
         "aria-checked",
@@ -295,7 +385,11 @@ describe("ThemeSettings", () => {
 
   describe("custom className", () => {
     it("applies custom className to root element", () => {
-      render(<ThemeSettings className="custom-class" />);
+      render(
+        <TestProvider>
+          <ThemeSettings className="custom-class" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("theme-settings")).toHaveClass("custom-class");
     });

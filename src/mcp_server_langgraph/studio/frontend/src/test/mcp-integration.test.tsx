@@ -31,6 +31,8 @@ import {
 import { renderHook } from "@testing-library/react";
 import { createTestStore, TestRouter } from "../test-utils";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Component - Keyboard Shortcut Handler
 // =============================================================================
@@ -190,11 +192,13 @@ describe("MCP Full Flow Integration", () => {
       const onPromptTest = vi.fn();
 
       render(
-        <MockShortcutHandler
-          onToolInvoke={onToolInvoke}
-          onResourceView={onResourceView}
-          onPromptTest={onPromptTest}
-        />,
+        <TestProvider>
+          <MockShortcutHandler
+            onToolInvoke={onToolInvoke}
+            onResourceView={onResourceView}
+            onPromptTest={onPromptTest}
+          />
+        </TestProvider>,
       );
 
       // Simulate Cmd+Shift+T for tool invocation
@@ -300,7 +304,11 @@ describe("MCP Full Flow Integration", () => {
         </Provider>
       );
 
-      render(<TestComponent />);
+      render(
+        <TestProvider>
+          <TestComponent />
+        </TestProvider>,
+      );
 
       // Should show loading initially or component
       await waitFor(() => {

@@ -12,6 +12,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { SkillVersionWarning } from "./SkillVersionWarning";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -21,11 +23,13 @@ describe("SkillVersionWarning", () => {
   describe("rendering", () => {
     it("should render nothing when versions match", () => {
       const { container } = render(
-        <SkillVersionWarning
-          referencedVersion="1.2.0"
-          installedVersion="1.2.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.2.0"
+            installedVersion="1.2.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -33,11 +37,13 @@ describe("SkillVersionWarning", () => {
 
     it("should render nothing when no versions provided", () => {
       const { container } = render(
-        <SkillVersionWarning
-          referencedVersion={undefined}
-          installedVersion={undefined}
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion={undefined}
+            installedVersion={undefined}
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -45,11 +51,13 @@ describe("SkillVersionWarning", () => {
 
     it("should render warning when versions differ", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -57,11 +65,13 @@ describe("SkillVersionWarning", () => {
 
     it("should show referenced version in warning", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/1\.0\.0/)).toBeInTheDocument();
@@ -69,11 +79,13 @@ describe("SkillVersionWarning", () => {
 
     it("should show installed version in warning", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/2\.0\.0/)).toBeInTheDocument();
@@ -81,11 +93,13 @@ describe("SkillVersionWarning", () => {
 
     it("should show skill name in warning", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/code-review/)).toBeInTheDocument();
@@ -95,11 +109,13 @@ describe("SkillVersionWarning", () => {
   describe("severity levels", () => {
     it("should show major version warning for major version mismatch", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/Major version/i)).toBeInTheDocument();
@@ -107,11 +123,13 @@ describe("SkillVersionWarning", () => {
 
     it("should show minor version warning for minor version mismatch", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="1.1.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="1.1.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/Minor version/i)).toBeInTheDocument();
@@ -119,11 +137,13 @@ describe("SkillVersionWarning", () => {
 
     it("should show patch version warning for patch version mismatch", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="1.0.1"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="1.0.1"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/Patch version/i)).toBeInTheDocument();
@@ -131,11 +151,13 @@ describe("SkillVersionWarning", () => {
 
     it("should use error styling for major version mismatch", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="3.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="3.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       const alert = screen.getByRole("alert");
@@ -144,11 +166,13 @@ describe("SkillVersionWarning", () => {
 
     it("should use warning styling for minor version mismatch", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="1.2.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="1.2.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       const alert = screen.getByRole("alert");
@@ -157,11 +181,13 @@ describe("SkillVersionWarning", () => {
 
     it("should use info styling for patch version mismatch", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="1.0.5"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="1.0.5"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       const alert = screen.getByRole("alert");
@@ -172,11 +198,13 @@ describe("SkillVersionWarning", () => {
   describe("upgrade/downgrade indication", () => {
     it("should indicate upgrade when installed is newer", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/newer version installed/i)).toBeInTheDocument();
@@ -184,11 +212,13 @@ describe("SkillVersionWarning", () => {
 
     it("should indicate downgrade warning when installed is older", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="2.0.0"
-          installedVersion="1.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="2.0.0"
+            installedVersion="1.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/older version installed/i)).toBeInTheDocument();
@@ -198,11 +228,13 @@ describe("SkillVersionWarning", () => {
   describe("recommendations", () => {
     it("should suggest updating reference for major upgrade", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -212,11 +244,13 @@ describe("SkillVersionWarning", () => {
 
     it("should show breaking changes warning for major version difference", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="3.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="3.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/breaking changes/i)).toBeInTheDocument();
@@ -226,12 +260,14 @@ describe("SkillVersionWarning", () => {
   describe("compact mode", () => {
     it("should render compact version when compact prop is true", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-          compact
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+            compact
+          />
+        </TestProvider>,
       );
 
       // Compact shows just icon and brief text
@@ -241,12 +277,14 @@ describe("SkillVersionWarning", () => {
 
     it("should still show version numbers in compact mode", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-          compact
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+            compact
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/1\.0\.0/)).toBeInTheDocument();
@@ -257,11 +295,13 @@ describe("SkillVersionWarning", () => {
   describe("accessibility", () => {
     it("should have alert role", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -269,11 +309,13 @@ describe("SkillVersionWarning", () => {
 
     it("should have warning icon with aria-hidden", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       const alert = screen.getByRole("alert");
@@ -283,11 +325,13 @@ describe("SkillVersionWarning", () => {
 
     it("should have descriptive text for screen readers", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="2.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="2.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       const alert = screen.getByRole("alert");
@@ -300,11 +344,13 @@ describe("SkillVersionWarning", () => {
   describe("edge cases", () => {
     it("should handle prerelease versions", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0-alpha"
-          installedVersion="1.0.0"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0-alpha"
+            installedVersion="1.0.0"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -312,11 +358,13 @@ describe("SkillVersionWarning", () => {
 
     it("should handle build metadata in versions", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0+build.123"
-          installedVersion="1.0.0+build.456"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0+build.123"
+            installedVersion="1.0.0+build.456"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       // Build metadata should be ignored, versions are equal
@@ -325,11 +373,13 @@ describe("SkillVersionWarning", () => {
 
     it("should handle latest as installed version", () => {
       render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion="latest"
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion="latest"
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       // Cannot compare, show info message
@@ -340,11 +390,13 @@ describe("SkillVersionWarning", () => {
 
     it("should handle missing installed version gracefully", () => {
       const { container } = render(
-        <SkillVersionWarning
-          referencedVersion="1.0.0"
-          installedVersion={undefined}
-          skillName="code-review"
-        />,
+        <TestProvider>
+          <SkillVersionWarning
+            referencedVersion="1.0.0"
+            installedVersion={undefined}
+            skillName="code-review"
+          />
+        </TestProvider>,
       );
 
       // Should not crash, render nothing

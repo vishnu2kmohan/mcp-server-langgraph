@@ -15,6 +15,8 @@ import {
 } from "@testing-library/react";
 import { InteractiveChart } from "./InteractiveChart";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock ResizeObserver
 // Vitest 4 requires class/function syntax for constructor mocks (arrow functions don't work with `new`)
 class MockResizeObserver {
@@ -46,19 +48,31 @@ describe("InteractiveChart", () => {
 
   describe("Rendering", () => {
     it("should render the chart with title", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Sales by Month")).toBeInTheDocument();
     });
 
     it("should render chart type selector", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("chart-container")).toBeInTheDocument();
     });
 
     it("should display control buttons", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Toggle fullscreen")).toBeInTheDocument();
       expect(screen.getByLabelText("Copy data")).toBeInTheDocument();
@@ -68,7 +82,11 @@ describe("InteractiveChart", () => {
 
   describe("Chart Type Toggle", () => {
     it("should show chart type buttons for switching", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Line chart")).toBeInTheDocument();
       expect(screen.getByLabelText("Bar chart")).toBeInTheDocument();
@@ -76,7 +94,11 @@ describe("InteractiveChart", () => {
     });
 
     it("should switch to line chart when clicked", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       const lineButton = screen.getByLabelText("Line chart");
       fireEvent.click(lineButton);
@@ -88,7 +110,11 @@ describe("InteractiveChart", () => {
 
   describe("Data Table", () => {
     it("should toggle data table when button is clicked", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       // Initially no data table
       expect(screen.queryByRole("table")).not.toBeInTheDocument();
@@ -103,7 +129,11 @@ describe("InteractiveChart", () => {
     });
 
     it("should display chart data in table format", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByLabelText("Toggle data table"));
 
@@ -123,7 +153,11 @@ describe("InteractiveChart", () => {
         clipboard: { writeText },
       });
 
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByLabelText("Copy data"));
 
@@ -138,7 +172,11 @@ describe("InteractiveChart", () => {
 
   describe("Fullscreen", () => {
     it("should toggle fullscreen when button is clicked", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("chart-container");
       expect(container.classList.contains("fixed")).toBe(false);
@@ -158,7 +196,11 @@ describe("InteractiveChart", () => {
         data: [],
       };
 
-      render(<InteractiveChart chartData={invalidData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={invalidData} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("chart-container")).toBeInTheDocument();
     });
@@ -166,7 +208,11 @@ describe("InteractiveChart", () => {
 
   describe("Keyboard Shortcuts", () => {
     it("should exit fullscreen with Escape key", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       // Enter fullscreen
       fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
@@ -190,7 +236,11 @@ describe("InteractiveChart", () => {
 
   describe("Accessibility", () => {
     it("should have proper aria labels for all controls", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Toggle fullscreen")).toBeInTheDocument();
       expect(screen.getByLabelText("Copy data")).toBeInTheDocument();
@@ -201,7 +251,11 @@ describe("InteractiveChart", () => {
     });
 
     it("should be focusable for keyboard navigation", async () => {
-      render(<InteractiveChart chartData={sampleChartData} />);
+      render(
+        <TestProvider>
+          <InteractiveChart chartData={sampleChartData} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("chart-container");
       expect(container).toHaveAttribute("tabIndex", "0");

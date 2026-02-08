@@ -16,6 +16,8 @@ import {
 import { ConsoleTab } from "./ConsoleTab";
 import type { ConsoleEntry } from "../types";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mocks
 // =============================================================================
@@ -83,11 +85,13 @@ describe("ConsoleTab Performance", () => {
 
       const start = performance.now();
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
       const renderTime = performance.now() - start;
 
@@ -101,11 +105,13 @@ describe("ConsoleTab Performance", () => {
       mockEntries.push(...generateMockEntries(500));
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       const countElement = screen.getByTestId("entry-count");
@@ -116,11 +122,13 @@ describe("ConsoleTab Performance", () => {
       mockEntries.push(...generateMockEntries(200));
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       const list = screen.getByTestId("console-entries-list");
@@ -142,11 +150,13 @@ describe("ConsoleTab Performance", () => {
 
       const handleFilterChange = vi.fn();
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={handleFilterChange}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={handleFilterChange}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       const select = screen.getByTestId("console-filter-select");
@@ -169,11 +179,13 @@ describe("ConsoleTab Performance", () => {
       mockEntries.push(...entriesWithData);
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       // Get first expand button
@@ -201,11 +213,13 @@ describe("ConsoleTab Performance", () => {
       mockEntries.push(...entriesWithData);
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       const expandButtons = screen.getAllByTestId("expand-button");
@@ -226,11 +240,13 @@ describe("ConsoleTab Performance", () => {
       mockEntries.push(...generateMockEntries(100));
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       const list = screen.getByTestId("console-entries-list");
@@ -261,11 +277,13 @@ describe("ConsoleTab Performance", () => {
       });
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       // Hover over first entry to show copy button
@@ -287,11 +305,13 @@ describe("ConsoleTab Performance", () => {
       mockEntries.push(...generateMockEntries(500));
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="test-session"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="test-session"
+          />
+        </TestProvider>,
       );
 
       const clearButton = screen.getByTestId("clear-console-button");
@@ -311,11 +331,13 @@ describe("ConsoleTab Performance", () => {
       mockEntries.push(...generateMockEntries(100));
 
       const { unmount, rerender } = render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={vi.fn()}
-          contextEntityId="session-1"
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={vi.fn()}
+            contextEntityId="session-1"
+          />
+        </TestProvider>,
       );
 
       // Re-render multiple times with different props

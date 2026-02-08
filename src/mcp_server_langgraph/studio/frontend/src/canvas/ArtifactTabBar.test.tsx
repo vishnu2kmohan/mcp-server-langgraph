@@ -9,6 +9,8 @@ import userEvent from "@testing-library/user-event";
 import { ArtifactTabBar } from "./ArtifactTabBar";
 import type { CanvasArtifact } from "../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock @dnd-kit
 vi.mock("@dnd-kit/core", () => ({
   DndContext: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -92,7 +94,11 @@ describe("ArtifactTabBar", () => {
 
   describe("rendering", () => {
     it("should render all artifacts as tabs", () => {
-      render(<ArtifactTabBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("First Artifact")).toBeInTheDocument();
       expect(screen.getByText("Second Artifact")).toBeInTheDocument();
       expect(screen.getByText("Third Artifact")).toBeInTheDocument();
@@ -103,7 +109,11 @@ describe("ArtifactTabBar", () => {
         ...defaultProps,
         tabOrder: ["artifact-3", "artifact-1", "artifact-2"],
       };
-      render(<ArtifactTabBar {...props} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...props} />
+        </TestProvider>,
+      );
       const tabs = screen.getAllByRole("tab");
       expect(tabs[0]).toHaveTextContent("Third Artifact");
       expect(tabs[1]).toHaveTextContent("First Artifact");
@@ -111,12 +121,20 @@ describe("ArtifactTabBar", () => {
     });
 
     it("should have tablist role on container", () => {
-      render(<ArtifactTabBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("tablist")).toBeInTheDocument();
     });
 
     it("should have accessible label on tablist", () => {
-      render(<ArtifactTabBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("tablist")).toHaveAccessibleName(
         /artifact tabs/i,
       );
@@ -125,14 +143,22 @@ describe("ArtifactTabBar", () => {
 
   describe("selection", () => {
     it("should mark the selected tab as selected", () => {
-      render(<ArtifactTabBar {...defaultProps} selectedId="artifact-2" />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} selectedId="artifact-2" />
+        </TestProvider>,
+      );
       const tabs = screen.getAllByRole("tab");
       expect(tabs[1]).toHaveAttribute("aria-selected", "true");
     });
 
     it("should call onSelect when a tab is clicked", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTabBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Second Artifact"));
       expect(defaultProps.onSelect).toHaveBeenCalledWith(mockArtifacts[1]);
@@ -142,7 +168,11 @@ describe("ArtifactTabBar", () => {
   describe("close", () => {
     it("should call onClose with artifact id when close button is clicked", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTabBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       const closeButtons = screen.getAllByLabelText(/close/i);
       await user.click(closeButtons[0]);
@@ -154,7 +184,11 @@ describe("ArtifactTabBar", () => {
   describe("rename", () => {
     it("should call onRename with artifact id and new title", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTabBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       const firstTab = screen.getByText("First Artifact");
       await user.dblClick(firstTab);
@@ -172,14 +206,22 @@ describe("ArtifactTabBar", () => {
 
   describe("empty state", () => {
     it("should render empty message when no artifacts", () => {
-      render(<ArtifactTabBar {...defaultProps} artifacts={[]} tabOrder={[]} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} artifacts={[]} tabOrder={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no artifacts/i)).toBeInTheDocument();
     });
   });
 
   describe("overflow scrolling", () => {
     it("should have overflow-x-auto class for horizontal scrolling", () => {
-      render(<ArtifactTabBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTabBar {...defaultProps} />
+        </TestProvider>,
+      );
       const tablist = screen.getByRole("tablist");
       expect(tablist).toHaveClass("overflow-x-auto");
     });

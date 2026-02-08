@@ -9,6 +9,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { NudgeTooltip } from "./NudgeTooltip";
 import type { Nudge } from "../../hooks/useNudges";
 
+import { TestProvider } from "@/test-utils";
+
 const mockNudge: Nudge = {
   id: "keyboard-shortcuts",
   type: "tooltip",
@@ -25,14 +27,22 @@ describe("NudgeTooltip", () => {
   });
 
   it("renders nudge message", () => {
-    render(<NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />);
+    render(
+      <TestProvider>
+        <NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText(/pro tip/i)).toBeInTheDocument();
   });
 
   it("calls onDismiss when dismiss button clicked", () => {
     const onDismiss = vi.fn();
-    render(<NudgeTooltip nudge={mockNudge} onDismiss={onDismiss} />);
+    render(
+      <TestProvider>
+        <NudgeTooltip nudge={mockNudge} onDismiss={onDismiss} />
+      </TestProvider>,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
     expect(onDismiss).toHaveBeenCalled();
@@ -41,11 +51,13 @@ describe("NudgeTooltip", () => {
   it("calls onAccept when action button clicked", () => {
     const onAccept = vi.fn();
     render(
-      <NudgeTooltip
-        nudge={mockNudge}
-        onDismiss={() => {}}
-        onAccept={onAccept}
-      />,
+      <TestProvider>
+        <NudgeTooltip
+          nudge={mockNudge}
+          onDismiss={() => {}}
+          onAccept={onAccept}
+        />
+      </TestProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /got it/i }));
@@ -54,20 +66,32 @@ describe("NudgeTooltip", () => {
 
   it("shows priority badge for high priority nudges", () => {
     const highPriorityNudge = { ...mockNudge, priority: "high" as const };
-    render(<NudgeTooltip nudge={highPriorityNudge} onDismiss={() => {}} />);
+    render(
+      <TestProvider>
+        <NudgeTooltip nudge={highPriorityNudge} onDismiss={() => {}} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText(/high/i)).toBeInTheDocument();
   });
 
   it("has accessible structure", () => {
-    render(<NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />);
+    render(
+      <TestProvider>
+        <NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />
+      </TestProvider>,
+    );
 
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
   });
 
   describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
     it("dismiss button meets minimum 24x24px touch target", () => {
-      render(<NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />);
+      render(
+        <TestProvider>
+          <NudgeTooltip nudge={mockNudge} onDismiss={() => {}} />
+        </TestProvider>,
+      );
 
       const dismissButton = screen.getByRole("button", { name: /dismiss/i });
       // Check for min-h-6 min-w-6 (24px) classes
@@ -77,11 +101,13 @@ describe("NudgeTooltip", () => {
 
     it("action button meets minimum 24x24px touch target when present", () => {
       render(
-        <NudgeTooltip
-          nudge={mockNudge}
-          onDismiss={() => {}}
-          onAccept={() => {}}
-        />,
+        <TestProvider>
+          <NudgeTooltip
+            nudge={mockNudge}
+            onDismiss={() => {}}
+            onAccept={() => {}}
+          />
+        </TestProvider>,
       );
 
       const actionButton = screen.getByRole("button", { name: /got it/i });

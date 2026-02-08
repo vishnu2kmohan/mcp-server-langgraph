@@ -54,6 +54,8 @@ vi.mock("./ConnectedChatInputForm", () => ({
 // Import after mocks
 import { ConversationPanel } from "./ConversationPanel";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -97,7 +99,11 @@ describe("ConversationPanel - UnifiedMessageList Feature Flag", () => {
     });
 
     it("should render MessageList when unified_message_list flag is disabled", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("message-list")).toBeInTheDocument();
       expect(
@@ -111,21 +117,33 @@ describe("ConversationPanel - UnifiedMessageList Feature Flag", () => {
         createMockMessage({ content: "Second" }),
       ];
 
-      render(<ConversationPanel {...defaultProps} messages={messages} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} messages={messages} />
+        </TestProvider>,
+      );
 
       expect(mockMessageList).toHaveBeenCalled();
       expect(mockMessageList.mock.calls[0][0].messages).toEqual(messages);
     });
 
     it("should pass isLoading to MessageList", () => {
-      render(<ConversationPanel {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(mockMessageList).toHaveBeenCalled();
       expect(mockMessageList.mock.calls[0][0].isLoading).toBe(true);
     });
 
     it("should pass isStreaming to MessageList", () => {
-      render(<ConversationPanel {...defaultProps} isStreaming={true} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isStreaming={true} />
+        </TestProvider>,
+      );
 
       expect(mockMessageList).toHaveBeenCalled();
       expect(mockMessageList.mock.calls[0][0].isStreaming).toBe(true);
@@ -141,7 +159,11 @@ describe("ConversationPanel - UnifiedMessageList Feature Flag", () => {
     });
 
     it("should render UnifiedMessageList when unified_message_list flag is enabled", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("unified-message-list")).toBeInTheDocument();
       expect(screen.queryByTestId("message-list")).not.toBeInTheDocument();
@@ -153,7 +175,11 @@ describe("ConversationPanel - UnifiedMessageList Feature Flag", () => {
         createMockMessage({ content: "Second" }),
       ];
 
-      render(<ConversationPanel {...defaultProps} messages={messages} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} messages={messages} />
+        </TestProvider>,
+      );
 
       expect(mockUnifiedMessageList).toHaveBeenCalled();
       expect(mockUnifiedMessageList.mock.calls[0][0].messages).toEqual(
@@ -162,21 +188,33 @@ describe("ConversationPanel - UnifiedMessageList Feature Flag", () => {
     });
 
     it("should pass isLoading to UnifiedMessageList", () => {
-      render(<ConversationPanel {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(mockUnifiedMessageList).toHaveBeenCalled();
       expect(mockUnifiedMessageList.mock.calls[0][0].isLoading).toBe(true);
     });
 
     it("should pass isStreaming to UnifiedMessageList", () => {
-      render(<ConversationPanel {...defaultProps} isStreaming={true} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} isStreaming={true} />
+        </TestProvider>,
+      );
 
       expect(mockUnifiedMessageList).toHaveBeenCalled();
       expect(mockUnifiedMessageList.mock.calls[0][0].isStreaming).toBe(true);
     });
 
     it("should pass className to UnifiedMessageList", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(mockUnifiedMessageList).toHaveBeenCalled();
       expect(mockUnifiedMessageList.mock.calls[0][0].className).toBe("flex-1");
@@ -185,7 +223,11 @@ describe("ConversationPanel - UnifiedMessageList Feature Flag", () => {
 
   describe("Feature Flag Check", () => {
     it("should call isEnabled with 'unified_message_list'", () => {
-      render(<ConversationPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ConversationPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(mockIsEnabled).toHaveBeenCalledWith("unified_message_list");
     });

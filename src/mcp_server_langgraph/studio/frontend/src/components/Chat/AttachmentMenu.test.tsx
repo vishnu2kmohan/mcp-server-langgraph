@@ -21,6 +21,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { AttachmentMenu, type AttachmentMenuProps } from "./AttachmentMenu";
 
+import { TestProvider } from "@/test-utils";
+
 describe("AttachmentMenu", () => {
   const mockOnFileSelect = vi.fn();
   const mockOnKBFocusChange = vi.fn();
@@ -50,7 +52,11 @@ describe("AttachmentMenu", () => {
 
   describe("rendering", () => {
     it("should render plus button", () => {
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", {
         name: /add attachment or action/i,
@@ -59,19 +65,31 @@ describe("AttachmentMenu", () => {
     });
 
     it("should render with data-testid", () => {
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("attachment-menu-button")).toBeInTheDocument();
     });
 
     it("should not show menu by default", () => {
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("attachment-menu")).not.toBeInTheDocument();
     });
 
     it("should disable button when disabled prop is true", () => {
-      render(<AttachmentMenu {...defaultProps} disabled={true} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} disabled={true} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", {
         name: /add attachment or action/i,
@@ -80,7 +98,11 @@ describe("AttachmentMenu", () => {
     });
 
     it("should disable button when uploading", () => {
-      render(<AttachmentMenu {...defaultProps} isUploading={true} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} isUploading={true} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", {
         name: /add attachment or action/i,
@@ -92,7 +114,11 @@ describe("AttachmentMenu", () => {
   describe("menu open/close", () => {
     it("should open menu on click", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("attachment-menu-button");
       await user.click(button);
@@ -102,7 +128,11 @@ describe("AttachmentMenu", () => {
 
     it("should close menu on second click", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("attachment-menu-button");
       await user.click(button);
@@ -118,7 +148,11 @@ describe("AttachmentMenu", () => {
     it.skip("should close menu on outside click", async () => {
       const user = userEvent.setup();
 
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       expect(screen.getByTestId("attachment-menu")).toBeInTheDocument();
@@ -133,7 +167,11 @@ describe("AttachmentMenu", () => {
 
     it("should close menu on escape key", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       expect(screen.getByTestId("attachment-menu")).toBeInTheDocument();
@@ -146,7 +184,11 @@ describe("AttachmentMenu", () => {
   describe("menu items", () => {
     it("should show Upload file option", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -155,7 +197,11 @@ describe("AttachmentMenu", () => {
 
     it("should show Knowledge Base Focus option when showKBFocus is true", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} showKBFocus={true} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} showKBFocus={true} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -164,7 +210,11 @@ describe("AttachmentMenu", () => {
 
     it("should not show Knowledge Base Focus when showKBFocus is false", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} showKBFocus={false} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} showKBFocus={false} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -175,7 +225,11 @@ describe("AttachmentMenu", () => {
 
     it("should show Code snippet option", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -184,7 +238,11 @@ describe("AttachmentMenu", () => {
 
     it("should show Mention option", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -195,7 +253,11 @@ describe("AttachmentMenu", () => {
   describe("file upload", () => {
     it("should trigger file input on Upload file click", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -209,7 +271,11 @@ describe("AttachmentMenu", () => {
     });
 
     it("should call onFileSelect when files are selected", async () => {
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const fileInput = screen.getByTestId("attachment-file-input");
       const file = new File(["test content"], "test.txt", {
@@ -222,7 +288,11 @@ describe("AttachmentMenu", () => {
     });
 
     it("should support multiple file selection", async () => {
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const fileInput = screen.getByTestId("attachment-file-input");
       expect(fileInput).toHaveAttribute("multiple");
@@ -232,7 +302,11 @@ describe("AttachmentMenu", () => {
   describe("KB Focus submenu", () => {
     it("should show KB Focus submenu options on hover/click", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -248,7 +322,11 @@ describe("AttachmentMenu", () => {
 
     it("should call onKBFocusChange when mode is selected", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/knowledge base focus/i));
@@ -259,7 +337,11 @@ describe("AttachmentMenu", () => {
 
     it("should show check mark on currently selected mode", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} kbFocusValue="kb_only" />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} kbFocusValue="kb_only" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/knowledge base focus/i));
@@ -274,7 +356,11 @@ describe("AttachmentMenu", () => {
 
     it("should close menu after KB Focus mode selection", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/knowledge base focus/i));
@@ -287,7 +373,11 @@ describe("AttachmentMenu", () => {
   describe("code snippet insertion", () => {
     it("should call onInsertCodeBlock when Code snippet is clicked", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/code snippet/i));
@@ -297,7 +387,11 @@ describe("AttachmentMenu", () => {
 
     it("should close menu after Code snippet selection", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/code snippet/i));
@@ -309,7 +403,11 @@ describe("AttachmentMenu", () => {
   describe("mention insertion", () => {
     it("should call onInsertMention when Mention is clicked", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/mention/i));
@@ -319,7 +417,11 @@ describe("AttachmentMenu", () => {
 
     it("should close menu after Mention selection", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
       await user.click(screen.getByText(/mention/i));
@@ -331,7 +433,11 @@ describe("AttachmentMenu", () => {
   describe("keyboard navigation", () => {
     it("should focus first item when menu opens", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -341,7 +447,11 @@ describe("AttachmentMenu", () => {
 
     it("should navigate with arrow keys", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -360,7 +470,11 @@ describe("AttachmentMenu", () => {
 
     it("should wrap around when reaching end", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} showKBFocus={false} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} showKBFocus={false} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -380,7 +494,11 @@ describe("AttachmentMenu", () => {
 
     it("should select item on Enter", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -395,7 +513,11 @@ describe("AttachmentMenu", () => {
 
   describe("ARIA attributes", () => {
     it("should have correct ARIA attributes on trigger button", () => {
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("attachment-menu-button");
       expect(button).toHaveAttribute("aria-haspopup", "menu");
@@ -404,7 +526,11 @@ describe("AttachmentMenu", () => {
 
     it("should update aria-expanded when menu opens", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("attachment-menu-button");
       await user.click(button);
@@ -414,7 +540,11 @@ describe("AttachmentMenu", () => {
 
     it("should have role=menu on the dropdown", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -424,7 +554,11 @@ describe("AttachmentMenu", () => {
 
     it("should have role=menuitem on menu options", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -434,7 +568,11 @@ describe("AttachmentMenu", () => {
 
     it("should have aria-label on the menu", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 
@@ -445,7 +583,11 @@ describe("AttachmentMenu", () => {
 
   describe("styling", () => {
     it("should render plus icon button with rounded-full styling", () => {
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("attachment-menu-button");
       expect(button.className).toMatch(/rounded-full/);
@@ -453,7 +595,11 @@ describe("AttachmentMenu", () => {
 
     it("should position menu above the button", async () => {
       const user = userEvent.setup();
-      render(<AttachmentMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("attachment-menu-button"));
 

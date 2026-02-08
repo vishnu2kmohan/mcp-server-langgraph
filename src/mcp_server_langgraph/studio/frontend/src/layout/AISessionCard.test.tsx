@@ -16,6 +16,8 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock the hooks
 vi.mock("../hooks/useSessionIntelligence", () => ({
   useSessionSummary: vi.fn(() => ({
@@ -62,13 +64,15 @@ describe("AISessionCard", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-123"
-          title="React Development"
-          userId="user-123"
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-123"
+            title="React Development"
+            userId="user-123"
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     expect(screen.getByText("React Development")).toBeInTheDocument();
@@ -79,14 +83,16 @@ describe("AISessionCard", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-123"
-          title="React Development"
-          userId="user-123"
-          showSummary
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-123"
+            title="React Development"
+            userId="user-123"
+            showSummary
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     expect(
@@ -99,14 +105,16 @@ describe("AISessionCard", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-123"
-          title="React Development"
-          userId="user-123"
-          showTopics
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-123"
+            title="React Development"
+            userId="user-123"
+            showTopics
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     expect(screen.getByText("React")).toBeInTheDocument();
@@ -130,14 +138,16 @@ describe("AISessionCard", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-loading"
-          title="Loading Session"
-          userId="user-123"
-          showSummary
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-loading"
+            title="Loading Session"
+            userId="user-123"
+            showSummary
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     // Should show a loading indicator (skeleton or spinner)
@@ -153,14 +163,16 @@ describe("AISessionCard", () => {
     const timestamp = new Date("2024-01-15T10:30:00Z");
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-123"
-          title="Timestamped Session"
-          userId="user-123"
-          timestamp={timestamp}
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-123"
+            title="Timestamped Session"
+            userId="user-123"
+            timestamp={timestamp}
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     expect(screen.getByText("Timestamped Session")).toBeInTheDocument();
@@ -172,14 +184,16 @@ describe("AISessionCard", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-123"
-          title="Clickable Session"
-          userId="user-123"
-          onClick={handleClick}
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-123"
+            title="Clickable Session"
+            userId="user-123"
+            onClick={handleClick}
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     const card = screen.getByText("Clickable Session").closest("div");
@@ -193,14 +207,16 @@ describe("AISessionCard", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-123"
-          title="Active Session"
-          userId="user-123"
-          isActive
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-123"
+            title="Active Session"
+            userId="user-123"
+            isActive
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     const card = screen
@@ -214,14 +230,16 @@ describe("AISessionCard", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-123"
-          title="Basic Session"
-          userId="user-123"
-          enableAI={false}
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-123"
+            title="Basic Session"
+            userId="user-123"
+            enableAI={false}
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     expect(screen.getByText("Basic Session")).toBeInTheDocument();
@@ -247,14 +265,16 @@ describe("AISessionCard - Error States", () => {
     const Wrapper = createWrapper();
 
     render(
-      <Wrapper>
-        <AISessionCard
-          sessionId="session-error"
-          title="Error Session"
-          userId="user-123"
-          showSummary
-        />
-      </Wrapper>,
+      <TestProvider>
+        <Wrapper>
+          <AISessionCard
+            sessionId="session-error"
+            title="Error Session"
+            userId="user-123"
+            showSummary
+          />
+        </Wrapper>
+      </TestProvider>,
     );
 
     // Should still render the card title

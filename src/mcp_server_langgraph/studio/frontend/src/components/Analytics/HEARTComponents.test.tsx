@@ -19,6 +19,8 @@ import {
   TimeRangeSelector,
 } from "./HEARTComponents";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // DimensionCard Tests
 // =============================================================================
@@ -29,27 +31,41 @@ describe("DimensionCard", () => {
     vi.clearAllMocks();
   });
   it("renders dimension with label and icon", () => {
-    render(<DimensionCard dimension="happiness" score={85} hasData />);
+    render(
+      <TestProvider>
+        <DimensionCard dimension="happiness" score={85} hasData />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Happiness")).toBeInTheDocument();
     expect(screen.getByText("😊")).toBeInTheDocument();
   });
 
   it("displays score when hasData is true", () => {
-    render(<DimensionCard dimension="engagement" score={75} hasData />);
+    render(
+      <TestProvider>
+        <DimensionCard dimension="engagement" score={75} hasData />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("75")).toBeInTheDocument();
   });
 
   it("displays 'No data' when hasData is false", () => {
-    render(<DimensionCard dimension="adoption" score={0} hasData={false} />);
+    render(
+      <TestProvider>
+        <DimensionCard dimension="adoption" score={0} hasData={false} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("No data")).toBeInTheDocument();
   });
 
   it("applies correct color based on dimension", () => {
     const { container } = render(
-      <DimensionCard dimension="retention" score={80} hasData />,
+      <TestProvider>
+        <DimensionCard dimension="retention" score={80} hasData />
+      </TestProvider>,
     );
 
     const card = container.querySelector(".dimension-card");
@@ -57,7 +73,11 @@ describe("DimensionCard", () => {
   });
 
   it("has correct ARIA role and label", () => {
-    render(<DimensionCard dimension="task_success" score={90} hasData />);
+    render(
+      <TestProvider>
+        <DimensionCard dimension="task_success" score={90} hasData />
+      </TestProvider>,
+    );
 
     expect(
       screen.getByRole("region", { name: "Task Success" }),
@@ -75,7 +95,9 @@ describe("DimensionCard", () => {
 
     dimensions.forEach(({ dimension, icon }) => {
       const { unmount } = render(
-        <DimensionCard dimension={dimension} score={75} hasData />,
+        <TestProvider>
+          <DimensionCard dimension={dimension} score={75} hasData />
+        </TestProvider>,
       );
       expect(screen.getByText(icon)).toBeInTheDocument();
       unmount();
@@ -93,48 +115,76 @@ describe("OverallHealthScore", () => {
     vi.clearAllMocks();
   });
   it("renders overall health score", () => {
-    render(<OverallHealthScore score={78} />);
+    render(
+      <TestProvider>
+        <OverallHealthScore score={78} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("78")).toBeInTheDocument();
     expect(screen.getByText("Overall Health")).toBeInTheDocument();
   });
 
   it("has correct test ID", () => {
-    render(<OverallHealthScore score={85} />);
+    render(
+      <TestProvider>
+        <OverallHealthScore score={85} />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("overall-health-score")).toBeInTheDocument();
   });
 
   it("applies green color for high scores (>=80)", () => {
-    const { container } = render(<OverallHealthScore score={85} />);
+    const { container } = render(
+      <TestProvider>
+        <OverallHealthScore score={85} />
+      </TestProvider>,
+    );
 
     const circle = container.querySelector(".health-score-circle");
     expect(circle).toHaveStyle({ borderColor: "#22c55e" });
   });
 
   it("applies yellow color for medium scores (60-79)", () => {
-    const { container } = render(<OverallHealthScore score={65} />);
+    const { container } = render(
+      <TestProvider>
+        <OverallHealthScore score={65} />
+      </TestProvider>,
+    );
 
     const circle = container.querySelector(".health-score-circle");
     expect(circle).toHaveStyle({ borderColor: "#eab308" });
   });
 
   it("applies orange color for low scores (40-59)", () => {
-    const { container } = render(<OverallHealthScore score={50} />);
+    const { container } = render(
+      <TestProvider>
+        <OverallHealthScore score={50} />
+      </TestProvider>,
+    );
 
     const circle = container.querySelector(".health-score-circle");
     expect(circle).toHaveStyle({ borderColor: "#f97316" });
   });
 
   it("applies red color for very low scores (<40)", () => {
-    const { container } = render(<OverallHealthScore score={30} />);
+    const { container } = render(
+      <TestProvider>
+        <OverallHealthScore score={30} />
+      </TestProvider>,
+    );
 
     const circle = container.querySelector(".health-score-circle");
     expect(circle).toHaveStyle({ borderColor: "#ef4444" });
   });
 
   it("has correct ARIA label", () => {
-    render(<OverallHealthScore score={70} />);
+    render(
+      <TestProvider>
+        <OverallHealthScore score={70} />
+      </TestProvider>,
+    );
 
     expect(
       screen.getByRole("region", { name: "Overall Health Score" }),
@@ -152,14 +202,22 @@ describe("TimeRangeSelector", () => {
     vi.clearAllMocks();
   });
   it("renders with initial value", () => {
-    render(<TimeRangeSelector value="30d" onChange={vi.fn()} />);
+    render(
+      <TestProvider>
+        <TimeRangeSelector value="30d" onChange={vi.fn()} />
+      </TestProvider>,
+    );
 
     const select = screen.getByLabelText("Time range");
     expect(select).toHaveValue("30d");
   });
 
   it("shows all time range options", () => {
-    render(<TimeRangeSelector value="7d" onChange={vi.fn()} />);
+    render(
+      <TestProvider>
+        <TimeRangeSelector value="7d" onChange={vi.fn()} />
+      </TestProvider>,
+    );
 
     expect(
       screen.getByRole("option", { name: "Last 7 days" }),
@@ -174,7 +232,11 @@ describe("TimeRangeSelector", () => {
 
   it("calls onChange when selection changes", () => {
     const onChange = vi.fn();
-    render(<TimeRangeSelector value="7d" onChange={onChange} />);
+    render(
+      <TestProvider>
+        <TimeRangeSelector value="7d" onChange={onChange} />
+      </TestProvider>,
+    );
 
     const select = screen.getByLabelText("Time range");
     fireEvent.change(select, { target: { value: "90d" } });
@@ -184,7 +246,9 @@ describe("TimeRangeSelector", () => {
 
   it("updates displayed value when prop changes", () => {
     const { rerender } = render(
-      <TimeRangeSelector value="7d" onChange={vi.fn()} />,
+      <TestProvider>
+        <TimeRangeSelector value="7d" onChange={vi.fn()} />
+      </TestProvider>,
     );
 
     expect(screen.getByLabelText("Time range")).toHaveValue("7d");
@@ -195,7 +259,11 @@ describe("TimeRangeSelector", () => {
   });
 
   it("has accessible label", () => {
-    render(<TimeRangeSelector value="30d" onChange={vi.fn()} />);
+    render(
+      <TestProvider>
+        <TimeRangeSelector value="30d" onChange={vi.fn()} />
+      </TestProvider>,
+    );
 
     expect(screen.getByLabelText("Time range")).toBeInTheDocument();
   });

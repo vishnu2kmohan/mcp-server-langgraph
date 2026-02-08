@@ -15,6 +15,8 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AddMarketplaceDialog } from "./AddMarketplaceDialog";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -39,66 +41,114 @@ describe("AddMarketplaceDialog", () => {
 
   describe("Rendering", () => {
     it("does not render when isOpen is false", () => {
-      render(<AddMarketplaceDialog {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("renders dialog when isOpen is true", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("has data-testid", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("add-marketplace-dialog")).toBeInTheDocument();
     });
 
     it("displays dialog title", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("heading", { name: /add marketplace/i }),
       ).toBeInTheDocument();
     });
 
     it("renders name input field", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     });
 
     it("renders URI input field", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/uri/i)).toBeInTheDocument();
     });
 
     it("renders type select field", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
     });
 
     it("renders trusted checkbox", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/trusted/i)).toBeInTheDocument();
     });
 
     it("renders auto-sync checkbox", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/auto-sync/i)).toBeInTheDocument();
     });
 
     it("renders requires approval checkbox", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/requires approval/i)).toBeInTheDocument();
     });
 
     it("renders Cancel button", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /cancel/i }),
       ).toBeInTheDocument();
     });
 
     it("renders Add button", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /^add$/i }),
       ).toBeInTheDocument();
@@ -112,7 +162,11 @@ describe("AddMarketplaceDialog", () => {
   describe("Form Interaction", () => {
     it("allows typing in name field", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await user.type(nameInput, "my-marketplace");
@@ -121,7 +175,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("allows typing in URI field", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const uriInput = screen.getByLabelText(/uri/i);
       await user.type(uriInput, "https://github.com/test/skills");
@@ -130,7 +188,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("allows changing type selection", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const typeSelect = screen.getByLabelText(/type/i);
       await user.selectOptions(typeSelect, "oci");
@@ -139,7 +201,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("allows toggling trusted checkbox", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const trustedCheckbox = screen.getByLabelText(/trusted/i);
       expect(trustedCheckbox).not.toBeChecked();
@@ -150,7 +216,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("allows toggling auto-sync checkbox", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const autoSyncCheckbox = screen.getByLabelText(/auto-sync/i);
       expect(autoSyncCheckbox).not.toBeChecked();
@@ -160,7 +230,11 @@ describe("AddMarketplaceDialog", () => {
     });
 
     it("has requires approval checked by default", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       const requiresApprovalCheckbox =
         screen.getByLabelText(/requires approval/i);
       expect(requiresApprovalCheckbox).toBeChecked();
@@ -174,7 +248,11 @@ describe("AddMarketplaceDialog", () => {
   describe("Form Submission", () => {
     it("calls onSubmit with form data when Add clicked", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.type(screen.getByLabelText(/name/i), "test-marketplace");
       await user.type(
@@ -195,7 +273,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("calls onClose when Cancel clicked", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /cancel/i }));
       expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
@@ -203,7 +285,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("does not call onSubmit when name is empty", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.type(
         screen.getByLabelText(/uri/i),
@@ -216,7 +302,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("does not call onSubmit when URI is empty", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.type(screen.getByLabelText(/name/i), "test-marketplace");
       await user.click(screen.getByRole("button", { name: /^add$/i }));
@@ -226,7 +316,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("shows validation error for empty name", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.type(
         screen.getByLabelText(/uri/i),
@@ -239,7 +333,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("shows validation error for empty URI", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.type(screen.getByLabelText(/name/i), "test-marketplace");
       await user.click(screen.getByRole("button", { name: /^add$/i }));
@@ -254,17 +352,29 @@ describe("AddMarketplaceDialog", () => {
 
   describe("Loading State", () => {
     it("disables Add button when submitting", () => {
-      render(<AddMarketplaceDialog {...defaultProps} isSubmitting={true} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} isSubmitting={true} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /adding/i })).toBeDisabled();
     });
 
     it("shows loading spinner when submitting", () => {
-      render(<AddMarketplaceDialog {...defaultProps} isSubmitting={true} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} isSubmitting={true} />
+        </TestProvider>,
+      );
       expect(document.querySelector(".animate-spin")).toBeInTheDocument();
     });
 
     it("disables form fields when submitting", () => {
-      render(<AddMarketplaceDialog {...defaultProps} isSubmitting={true} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} isSubmitting={true} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/name/i)).toBeDisabled();
       expect(screen.getByLabelText(/uri/i)).toBeDisabled();
     });
@@ -277,10 +387,12 @@ describe("AddMarketplaceDialog", () => {
   describe("Error State", () => {
     it("displays error message when error prop provided", () => {
       render(
-        <AddMarketplaceDialog
-          {...defaultProps}
-          error="Marketplace already exists"
-        />,
+        <TestProvider>
+          <AddMarketplaceDialog
+            {...defaultProps}
+            error="Marketplace already exists"
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByText(/marketplace already exists/i),
@@ -289,10 +401,12 @@ describe("AddMarketplaceDialog", () => {
 
     it("shows error with alert role", () => {
       render(
-        <AddMarketplaceDialog
-          {...defaultProps}
-          error="Marketplace already exists"
-        />,
+        <TestProvider>
+          <AddMarketplaceDialog
+            {...defaultProps}
+            error="Marketplace already exists"
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
@@ -304,12 +418,20 @@ describe("AddMarketplaceDialog", () => {
 
   describe("Accessibility", () => {
     it("has accessible dialog", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
     });
 
     it("has labels for all form fields", () => {
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // All inputs should have associated labels
       expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
@@ -322,7 +444,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("closes on Escape key", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Escape}");
       expect(defaultProps.onClose).toHaveBeenCalled();
@@ -330,7 +456,11 @@ describe("AddMarketplaceDialog", () => {
 
     it("has focusable elements in dialog", async () => {
       const user = userEvent.setup();
-      render(<AddMarketplaceDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Tab to first focusable element (close button or form field)
       await user.tab();
@@ -347,7 +477,11 @@ describe("AddMarketplaceDialog", () => {
   describe("Form Reset", () => {
     it("clears form when dialog closes and reopens", async () => {
       const user = userEvent.setup();
-      const { rerender } = render(<AddMarketplaceDialog {...defaultProps} />);
+      const { rerender } = render(
+        <TestProvider>
+          <AddMarketplaceDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Fill in the form
       await user.type(screen.getByLabelText(/name/i), "test-marketplace");

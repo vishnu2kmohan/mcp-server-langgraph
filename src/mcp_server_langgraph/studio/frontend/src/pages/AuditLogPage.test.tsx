@@ -30,6 +30,8 @@ vi.mock("../api", () => ({
 
 import { useListAuditLogsQuery } from "../api";
 
+import { TestProvider } from "@/test-utils";
+
 // Cast to vi.Mock for type safety
 const mockUseListAuditLogsQuery = useListAuditLogsQuery as ReturnType<
   typeof vi.fn
@@ -93,9 +95,11 @@ describe("AuditLogPage", () => {
   describe("Header", () => {
     it("should render page title", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText("Audit Logs")).toBeInTheDocument();
@@ -103,9 +107,11 @@ describe("AuditLogPage", () => {
 
     it("should render page description", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(
@@ -115,9 +121,11 @@ describe("AuditLogPage", () => {
 
     it("should render export button", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(
@@ -127,9 +135,11 @@ describe("AuditLogPage", () => {
 
     it("should render refresh button", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(
@@ -141,9 +151,11 @@ describe("AuditLogPage", () => {
   describe("Filters", () => {
     it("should render action filter input", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(
@@ -153,9 +165,11 @@ describe("AuditLogPage", () => {
 
     it("should render user filter input", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(
@@ -165,9 +179,11 @@ describe("AuditLogPage", () => {
 
     it("should filter logs by action", async () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText("alice@example.com")).toBeInTheDocument();
@@ -183,9 +199,11 @@ describe("AuditLogPage", () => {
 
     it("should filter logs by user", async () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText("alice@example.com")).toBeInTheDocument();
@@ -201,9 +219,11 @@ describe("AuditLogPage", () => {
 
     it("should show count of filtered results", async () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText(/3 of 3 entries/i)).toBeInTheDocument();
@@ -220,9 +240,11 @@ describe("AuditLogPage", () => {
   describe("Log List", () => {
     it("should render log entries after loading", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText("alice@example.com")).toBeInTheDocument();
@@ -232,9 +254,11 @@ describe("AuditLogPage", () => {
 
     it("should display action badges", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText("user.login")).toBeInTheDocument();
@@ -244,9 +268,11 @@ describe("AuditLogPage", () => {
 
     it("should display resource type and ID", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText("session/session-abc")).toBeInTheDocument();
@@ -255,9 +281,11 @@ describe("AuditLogPage", () => {
 
     it("should display IP addresses", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText("192.168.1.100")).toBeInTheDocument();
@@ -268,9 +296,11 @@ describe("AuditLogPage", () => {
   describe("Log Details Expansion", () => {
     it("should expand log details on click", async () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       // Click on alice's log
@@ -285,9 +315,11 @@ describe("AuditLogPage", () => {
 
     it("should collapse log details on second click", async () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const aliceEmail = screen.getByText("alice@example.com");
@@ -309,9 +341,11 @@ describe("AuditLogPage", () => {
   describe("API Integration", () => {
     it("should call refetch when refresh button is clicked", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const refreshButton = screen.getByRole("button", { name: /refresh/i });
@@ -348,9 +382,11 @@ describe("AuditLogPage", () => {
       );
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const exportButton = screen.getByRole("button", { name: /export/i });
@@ -377,9 +413,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(document.querySelector(".animate-spin")).toBeInTheDocument();
@@ -396,9 +434,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText(/Failed to load/i)).toBeInTheDocument();
@@ -413,9 +453,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(
@@ -434,9 +476,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no audit logs found/i)).toBeInTheDocument();
@@ -446,9 +490,11 @@ describe("AuditLogPage", () => {
   describe("Action Color Coding", () => {
     it("should color delete actions red", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const deleteAction = screen.getByText("api_key.delete");
@@ -457,9 +503,11 @@ describe("AuditLogPage", () => {
 
     it("should color create actions green", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const createAction = screen.getByText("workflow.create");
@@ -468,9 +516,11 @@ describe("AuditLogPage", () => {
 
     it("should color login actions blue", () => {
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const loginAction = screen.getByText("user.login");
@@ -493,9 +543,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cursor-pagination")).toBeInTheDocument();
@@ -515,9 +567,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const nextButton = screen.getByRole("button", { name: /next page/i });
@@ -538,9 +592,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const prevButton = screen.getByRole("button", { name: /previous page/i });
@@ -556,9 +612,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const nextButton = screen.getByRole("button", { name: /next page/i });
@@ -579,9 +637,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       const nextButton = screen.getByRole("button", { name: /next page/i });
@@ -610,9 +670,11 @@ describe("AuditLogPage", () => {
       });
 
       render(
-        <TestRouter>
-          <AuditLogPage />
-        </TestRouter>,
+        <TestProvider>
+          <TestRouter>
+            <AuditLogPage />
+          </TestRouter>
+        </TestProvider>,
       );
 
       // Pagination component should show item count

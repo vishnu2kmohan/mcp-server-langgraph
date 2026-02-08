@@ -10,6 +10,8 @@ import userEvent from "@testing-library/user-event";
 import { SuggestionsFooterBar } from "./SuggestionsFooterBar";
 import type { AISuggestion } from "../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Fixtures
 // =============================================================================
@@ -53,34 +55,58 @@ describe("SuggestionsFooterBar", () => {
 
   describe("Rendering", () => {
     it("should render with data-testid", () => {
-      render(<SuggestionsFooterBar suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("suggestions-footer-bar")).toBeInTheDocument();
     });
 
     it("should show collapsed state by default", () => {
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByTestId("suggestions-content"),
       ).not.toBeInTheDocument();
     });
 
     it("should display suggestion count badge", () => {
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
       expect(screen.getByText("3")).toBeInTheDocument();
     });
 
     it("should not show count badge when no suggestions", () => {
-      render(<SuggestionsFooterBar suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} />
+        </TestProvider>,
+      );
       expect(screen.queryByText("0")).not.toBeInTheDocument();
     });
 
     it("should display AI Suggestions label", () => {
-      render(<SuggestionsFooterBar suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText("AI Suggestions")).toBeInTheDocument();
     });
 
     it("should have sparkles icon", () => {
-      render(<SuggestionsFooterBar suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("sparkles-icon")).toBeInTheDocument();
     });
   });
@@ -88,7 +114,11 @@ describe("SuggestionsFooterBar", () => {
   describe("Expand/Collapse", () => {
     it("should expand when header is clicked", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
 
       const header = screen.getByTestId("suggestions-header");
       await user.click(header);
@@ -98,7 +128,11 @@ describe("SuggestionsFooterBar", () => {
 
     it("should collapse when header is clicked again", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
 
       const header = screen.getByTestId("suggestions-header");
       await user.click(header); // expand
@@ -111,7 +145,11 @@ describe("SuggestionsFooterBar", () => {
 
     it("should have aria-expanded attribute", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
 
       const header = screen.getByTestId("suggestions-header");
       expect(header).toHaveAttribute("aria-expanded", "false");
@@ -121,13 +159,21 @@ describe("SuggestionsFooterBar", () => {
     });
 
     it("should show chevron up when collapsed", () => {
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("chevron-up-icon")).toBeInTheDocument();
     });
 
     it("should show chevron down when expanded", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("suggestions-header"));
       expect(screen.getByTestId("chevron-down-icon")).toBeInTheDocument();
@@ -137,7 +183,11 @@ describe("SuggestionsFooterBar", () => {
   describe("Suggestions Display", () => {
     it("should display suggestion items when expanded", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("suggestions-header"));
 
@@ -148,7 +198,11 @@ describe("SuggestionsFooterBar", () => {
 
     it("should display suggestion descriptions", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("suggestions-header"));
 
@@ -159,7 +213,11 @@ describe("SuggestionsFooterBar", () => {
 
     it("should show empty state when no suggestions", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("suggestions-header"));
 
@@ -172,10 +230,12 @@ describe("SuggestionsFooterBar", () => {
       const user = userEvent.setup();
       const onAccept = vi.fn();
       render(
-        <SuggestionsFooterBar
-          suggestions={mockSuggestions}
-          onAccept={onAccept}
-        />,
+        <TestProvider>
+          <SuggestionsFooterBar
+            suggestions={mockSuggestions}
+            onAccept={onAccept}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("suggestions-header"));
@@ -188,10 +248,12 @@ describe("SuggestionsFooterBar", () => {
       const user = userEvent.setup();
       const onDismiss = vi.fn();
       render(
-        <SuggestionsFooterBar
-          suggestions={mockSuggestions}
-          onDismiss={onDismiss}
-        />,
+        <TestProvider>
+          <SuggestionsFooterBar
+            suggestions={mockSuggestions}
+            onDismiss={onDismiss}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("suggestions-header"));
@@ -203,14 +265,22 @@ describe("SuggestionsFooterBar", () => {
 
   describe("Refresh", () => {
     it("should have refresh button", () => {
-      render(<SuggestionsFooterBar suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("refresh-button")).toBeInTheDocument();
     });
 
     it("should call onRefresh when refresh button clicked", async () => {
       const user = userEvent.setup();
       const onRefresh = vi.fn();
-      render(<SuggestionsFooterBar suggestions={[]} onRefresh={onRefresh} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} onRefresh={onRefresh} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("refresh-button"));
 
@@ -218,19 +288,31 @@ describe("SuggestionsFooterBar", () => {
     });
 
     it("should show loading spinner when isLoading is true", () => {
-      render(<SuggestionsFooterBar suggestions={[]} isLoading />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} isLoading />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
     });
 
     it("should disable refresh button when loading", () => {
-      render(<SuggestionsFooterBar suggestions={[]} isLoading />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} isLoading />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("refresh-button")).toBeDisabled();
     });
   });
 
   describe("Styling", () => {
     it("should have border-t for visual separation", () => {
-      render(<SuggestionsFooterBar suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("suggestions-footer-bar")).toHaveClass(
         "border-t",
       );
@@ -238,7 +320,9 @@ describe("SuggestionsFooterBar", () => {
 
     it("should apply custom className", () => {
       render(
-        <SuggestionsFooterBar suggestions={[]} className="custom-class" />,
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={[]} className="custom-class" />
+        </TestProvider>,
       );
       expect(screen.getByTestId("suggestions-footer-bar")).toHaveClass(
         "custom-class",
@@ -247,7 +331,11 @@ describe("SuggestionsFooterBar", () => {
 
     it("should have max-height constraint on expanded content", async () => {
       const user = userEvent.setup();
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("suggestions-header"));
 
@@ -259,7 +347,11 @@ describe("SuggestionsFooterBar", () => {
 
   describe("Controlled Mode", () => {
     it("should respect isExpanded prop", () => {
-      render(<SuggestionsFooterBar suggestions={mockSuggestions} isExpanded />);
+      render(
+        <TestProvider>
+          <SuggestionsFooterBar suggestions={mockSuggestions} isExpanded />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("suggestions-content")).toBeInTheDocument();
     });
 
@@ -267,11 +359,13 @@ describe("SuggestionsFooterBar", () => {
       const user = userEvent.setup();
       const onToggle = vi.fn();
       render(
-        <SuggestionsFooterBar
-          suggestions={mockSuggestions}
-          isExpanded={false}
-          onToggle={onToggle}
-        />,
+        <TestProvider>
+          <SuggestionsFooterBar
+            suggestions={mockSuggestions}
+            isExpanded={false}
+            onToggle={onToggle}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("suggestions-header"));

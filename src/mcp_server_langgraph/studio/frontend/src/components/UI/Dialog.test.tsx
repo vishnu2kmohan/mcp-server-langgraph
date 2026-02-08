@@ -15,6 +15,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { Dialog } from "./Dialog";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -24,9 +26,11 @@ describe("Dialog", () => {
   describe("Rendering", () => {
     it("should not render when open is false", () => {
       render(
-        <Dialog open={false} onClose={vi.fn()} title="Test Dialog">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={false} onClose={vi.fn()} title="Test Dialog">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -34,9 +38,11 @@ describe("Dialog", () => {
 
     it("should render when open is true", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test Dialog">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test Dialog">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -44,9 +50,11 @@ describe("Dialog", () => {
 
     it("should render title in header", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="My Dialog Title">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="My Dialog Title">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.getByText("My Dialog Title")).toBeInTheDocument();
@@ -54,9 +62,11 @@ describe("Dialog", () => {
 
     it("should render children content", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Dialog content here</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Dialog content here</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.getByText("Dialog content here")).toBeInTheDocument();
@@ -64,9 +74,11 @@ describe("Dialog", () => {
 
     it("should render close button", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
@@ -77,9 +89,11 @@ describe("Dialog", () => {
     it("should call onClose when close button is clicked", () => {
       const onClose = vi.fn();
       render(
-        <Dialog open={true} onClose={onClose} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={onClose} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Close" }));
@@ -90,9 +104,11 @@ describe("Dialog", () => {
     it("should call onClose when backdrop is clicked", () => {
       const onClose = vi.fn();
       render(
-        <Dialog open={true} onClose={onClose} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={onClose} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const backdrop = screen.getByTestId("dialog-backdrop");
@@ -104,9 +120,11 @@ describe("Dialog", () => {
     it("should not close when clicking inside the dialog content", () => {
       const onClose = vi.fn();
       render(
-        <Dialog open={true} onClose={onClose} title="Test">
-          <div>Click me</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={onClose} title="Test">
+            <div>Click me</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Click me"));
@@ -117,9 +135,11 @@ describe("Dialog", () => {
     it("should call onClose when Escape key is pressed", () => {
       const onClose = vi.fn();
       render(
-        <Dialog open={true} onClose={onClose} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={onClose} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       fireEvent.keyDown(document, { key: "Escape" });
@@ -131,9 +151,11 @@ describe("Dialog", () => {
   describe("Accessibility", () => {
     it('should have role="dialog"', () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -141,9 +163,11 @@ describe("Dialog", () => {
 
     it('should have aria-modal="true"', () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
@@ -151,9 +175,11 @@ describe("Dialog", () => {
 
     it("should have aria-labelledby pointing to title", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Accessible Dialog">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Accessible Dialog">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const dialog = screen.getByRole("dialog");
@@ -168,9 +194,11 @@ describe("Dialog", () => {
   describe("Sizes", () => {
     it("should render with default size (md)", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const dialogPanel = screen.getByRole("dialog").querySelector(".max-w-md");
@@ -179,9 +207,11 @@ describe("Dialog", () => {
 
     it("should render with sm size", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test" size="sm">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test" size="sm">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const dialogPanel = screen.getByRole("dialog").querySelector(".max-w-sm");
@@ -190,9 +220,11 @@ describe("Dialog", () => {
 
     it("should render with lg size", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test" size="lg">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test" size="lg">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const dialogPanel = screen.getByRole("dialog").querySelector(".max-w-lg");
@@ -201,9 +233,11 @@ describe("Dialog", () => {
 
     it("should render with xl size", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test" size="xl">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test" size="xl">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const dialogPanel = screen.getByRole("dialog").querySelector(".max-w-xl");
@@ -214,14 +248,16 @@ describe("Dialog", () => {
   describe("Footer", () => {
     it("should render footer when provided", () => {
       render(
-        <Dialog
-          open={true}
-          onClose={vi.fn()}
-          title="Test"
-          footer={<button>Save</button>}
-        >
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog
+            open={true}
+            onClose={vi.fn()}
+            title="Test"
+            footer={<button>Save</button>}
+          >
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
@@ -229,9 +265,11 @@ describe("Dialog", () => {
 
     it("should not render footer section when not provided", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       // Footer section should not exist
@@ -242,14 +280,16 @@ describe("Dialog", () => {
   describe("Custom Styling", () => {
     it("should apply custom className to content", () => {
       render(
-        <Dialog
-          open={true}
-          onClose={vi.fn()}
-          title="Test"
-          contentClassName="custom-class"
-        >
-          <div data-testid="content">Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog
+            open={true}
+            onClose={vi.fn()}
+            title="Test"
+            contentClassName="custom-class"
+          >
+            <div data-testid="content">Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const content = screen.getByTestId("dialog-content");
@@ -267,9 +307,11 @@ describe("Dialog", () => {
   describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
     it("close button meets minimum 24x24px touch target", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const closeButton = screen.getByRole("button", { name: "Close" });
@@ -280,9 +322,11 @@ describe("Dialog", () => {
 
     it("close button has adequate padding for touch interaction", () => {
       render(
-        <Dialog open={true} onClose={vi.fn()} title="Test">
-          <div>Content</div>
-        </Dialog>,
+        <TestProvider>
+          <Dialog open={true} onClose={vi.fn()} title="Test">
+            <div>Content</div>
+          </Dialog>
+        </TestProvider>,
       );
 
       const closeButton = screen.getByRole("button", { name: "Close" });

@@ -11,6 +11,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import React from "react";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock shortcuts that would come from StudioShellLayout
 const mockShortcuts = {
   "meta+k": vi.fn(),
@@ -48,11 +50,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -64,11 +68,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={false}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={false}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -79,11 +85,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       // Should show common shortcuts
@@ -99,11 +107,13 @@ describe("KeyboardShortcutOverlay", () => {
 
       const onClose = vi.fn();
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={onClose}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={onClose}
+          />
+        </TestProvider>,
       );
 
       const closeButton = screen.getByRole("button", {
@@ -120,11 +130,13 @@ describe("KeyboardShortcutOverlay", () => {
 
       const onClose = vi.fn();
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={onClose}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={onClose}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(document, { key: "Escape" });
@@ -138,11 +150,13 @@ describe("KeyboardShortcutOverlay", () => {
 
       const onClose = vi.fn();
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={onClose}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={onClose}
+          />
+        </TestProvider>,
       );
 
       const backdrop = screen.getByTestId("overlay-backdrop");
@@ -158,11 +172,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       const dialog = screen.getByRole("dialog");
@@ -174,11 +190,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       const dialog = screen.getByRole("dialog");
@@ -192,11 +210,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       // Should have category headers (from the component's category logic)
@@ -211,11 +231,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       // Should only show one version of command palette shortcut
@@ -228,11 +250,13 @@ describe("KeyboardShortcutOverlay", () => {
         await import("./KeyboardShortcutOverlay");
 
       render(
-        <KeyboardShortcutOverlay
-          shortcuts={mockShortcuts}
-          isOpen={true}
-          onClose={() => {}}
-        />,
+        <TestProvider>
+          <KeyboardShortcutOverlay
+            shortcuts={mockShortcuts}
+            isOpen={true}
+            onClose={() => {}}
+          />
+        </TestProvider>,
       );
 
       // Should display ⌘ for meta key

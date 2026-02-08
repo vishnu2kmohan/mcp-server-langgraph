@@ -14,6 +14,8 @@ import type {
   JSONRPCError as _JSONRPCError,
 } from "@/types/mcp";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -44,11 +46,13 @@ describe("InboundElicitationModal", () => {
   describe("rendering", () => {
     it("renders the modal with server message", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -57,11 +61,13 @@ describe("InboundElicitationModal", () => {
 
     it("renders form fields from schema", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
@@ -69,11 +75,13 @@ describe("InboundElicitationModal", () => {
 
     it("renders server ID for context", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/test-server/)).toBeInTheDocument();
@@ -81,11 +89,13 @@ describe("InboundElicitationModal", () => {
 
     it("marks required fields appropriately", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const nameInput = screen.getByLabelText(/name/i);
@@ -98,11 +108,13 @@ describe("InboundElicitationModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const nameInput = screen.getByLabelText(/name/i);
@@ -120,11 +132,13 @@ describe("InboundElicitationModal", () => {
 
     it("disables submit button when required fields are empty", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const submitButton = screen.getByRole("button", {
@@ -137,11 +151,13 @@ describe("InboundElicitationModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const nameInput = screen.getByLabelText(/name/i);
@@ -159,11 +175,13 @@ describe("InboundElicitationModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const cancelButton = screen.getByRole("button", {
@@ -178,11 +196,13 @@ describe("InboundElicitationModal", () => {
       const user = userEvent.setup();
 
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const backdrop = screen.getByTestId("modal-backdrop");
@@ -195,11 +215,13 @@ describe("InboundElicitationModal", () => {
   describe("accessibility", () => {
     it("has proper dialog role", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -207,11 +229,13 @@ describe("InboundElicitationModal", () => {
 
     it("has accessible title", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -221,11 +245,13 @@ describe("InboundElicitationModal", () => {
 
     it("focuses first input on mount", async () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -237,11 +263,13 @@ describe("InboundElicitationModal", () => {
   describe("schema types", () => {
     it("renders text input for string type", () => {
       render(
-        <InboundElicitationModal
-          request={defaultRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={defaultRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByLabelText(/name/i);
@@ -260,11 +288,13 @@ describe("InboundElicitationModal", () => {
       };
 
       render(
-        <InboundElicitationModal
-          request={numberRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={numberRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByLabelText(/age/i);
@@ -283,11 +313,13 @@ describe("InboundElicitationModal", () => {
       };
 
       render(
-        <InboundElicitationModal
-          request={booleanRequest}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={booleanRequest}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       const checkbox = screen.getByRole("checkbox");
@@ -300,11 +332,13 @@ describe("InboundElicitationModal", () => {
       const request = { ...defaultRequest, id: 123 };
 
       render(
-        <InboundElicitationModal
-          request={request}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={request}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -314,11 +348,13 @@ describe("InboundElicitationModal", () => {
       const request = { ...defaultRequest, id: "request-456" };
 
       render(
-        <InboundElicitationModal
-          request={request}
-          onRespond={mockOnRespond}
-          onCancel={mockOnCancel}
-        />,
+        <TestProvider>
+          <InboundElicitationModal
+            request={request}
+            onRespond={mockOnRespond}
+            onCancel={mockOnCancel}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();

@@ -11,6 +11,8 @@ import userEvent from "@testing-library/user-event";
 import { BrowseContent } from "./BrowseContent";
 import type { SkillMetadata } from "../../types/skills";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock skill data
 const mockSkills: SkillMetadata[] = [
   {
@@ -65,7 +67,11 @@ describe("BrowseContent", () => {
 
   describe("Rendering", () => {
     it("renders skill cards in a grid", () => {
-      render(<BrowseContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-browse-list")).toBeInTheDocument();
       expect(
@@ -78,7 +84,11 @@ describe("BrowseContent", () => {
     });
 
     it("displays correct number of skill cards", () => {
-      render(<BrowseContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       const cards = screen.getAllByTestId(/^skills-card-/);
       expect(cards).toHaveLength(3);
@@ -86,7 +96,9 @@ describe("BrowseContent", () => {
 
     it("shows installed badge for installed skills", () => {
       render(
-        <BrowseContent {...defaultProps} installedSkills={["web-research"]} />,
+        <TestProvider>
+          <BrowseContent {...defaultProps} installedSkills={["web-research"]} />
+        </TestProvider>,
       );
 
       const webResearchCard = screen.getByTestId("skills-card-web-research");
@@ -97,7 +109,9 @@ describe("BrowseContent", () => {
 
     it("shows install button for non-installed skills", () => {
       render(
-        <BrowseContent {...defaultProps} installedSkills={["web-research"]} />,
+        <TestProvider>
+          <BrowseContent {...defaultProps} installedSkills={["web-research"]} />
+        </TestProvider>,
       );
 
       const codeReviewCard = screen.getByTestId("skills-card-code-review");
@@ -113,7 +127,11 @@ describe("BrowseContent", () => {
 
   describe("Empty State", () => {
     it("renders empty state when no skills", () => {
-      render(<BrowseContent {...defaultProps} skills={[]} total={0} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} skills={[]} total={0} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-browse-empty")).toBeInTheDocument();
       expect(screen.getByText("No skills found")).toBeInTheDocument();
@@ -123,7 +141,11 @@ describe("BrowseContent", () => {
     });
 
     it("does not show skill grid when empty", () => {
-      render(<BrowseContent {...defaultProps} skills={[]} total={0} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} skills={[]} total={0} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("skills-browse-list"),
@@ -138,11 +160,13 @@ describe("BrowseContent", () => {
   describe("Error State", () => {
     it("renders error state with retry button for network errors", () => {
       render(
-        <BrowseContent
-          {...defaultProps}
-          skills={[]}
-          error={{ status: 500, message: "Internal Server Error" }}
-        />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={[]}
+            error={{ status: 500, message: "Internal Server Error" }}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("skills-browse-error")).toBeInTheDocument();
@@ -155,12 +179,14 @@ describe("BrowseContent", () => {
       const onRetry = vi.fn();
 
       render(
-        <BrowseContent
-          {...defaultProps}
-          skills={[]}
-          error={{ status: 500 }}
-          onRetry={onRetry}
-        />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={[]}
+            error={{ status: 500 }}
+            onRetry={onRetry}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("skills-retry-button"));
@@ -169,7 +195,13 @@ describe("BrowseContent", () => {
 
     it("shows Access Denied for 403 errors", () => {
       render(
-        <BrowseContent {...defaultProps} skills={[]} error={{ status: 403 }} />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={[]}
+            error={{ status: 403 }}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Access Denied")).toBeInTheDocument();
@@ -177,7 +209,13 @@ describe("BrowseContent", () => {
 
     it("does not show retry button for 403 errors", () => {
       render(
-        <BrowseContent {...defaultProps} skills={[]} error={{ status: 403 }} />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={[]}
+            error={{ status: 403 }}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -187,11 +225,13 @@ describe("BrowseContent", () => {
 
     it("displays custom error message from API for non-403 errors", () => {
       render(
-        <BrowseContent
-          {...defaultProps}
-          skills={[]}
-          error={{ status: 400, data: { detail: "Custom validation error" } }}
-        />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={[]}
+            error={{ status: 400, data: { detail: "Custom validation error" } }}
+          />
+        </TestProvider>,
       );
 
       // For non-403 errors, the generic message is shown, not the detail
@@ -202,7 +242,13 @@ describe("BrowseContent", () => {
 
     it("displays generic permission message for 403 without detail", () => {
       render(
-        <BrowseContent {...defaultProps} skills={[]} error={{ status: 403 }} />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={[]}
+            error={{ status: 403 }}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/don't have permission/i)).toBeInTheDocument();
@@ -215,7 +261,11 @@ describe("BrowseContent", () => {
 
   describe("Pagination", () => {
     it("shows pagination info when skills exist", () => {
-      render(<BrowseContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-pagination")).toBeInTheDocument();
       expect(screen.getByText(/showing 3 of 3 skills/i)).toBeInTheDocument();
@@ -223,11 +273,13 @@ describe("BrowseContent", () => {
 
     it("shows Load More button when more skills available", () => {
       render(
-        <BrowseContent
-          {...defaultProps}
-          skills={mockSkills.slice(0, 2)}
-          total={5}
-        />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={mockSkills.slice(0, 2)}
+            total={5}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("skills-load-more")).toBeInTheDocument();
@@ -235,7 +287,11 @@ describe("BrowseContent", () => {
     });
 
     it("hides Load More button when all skills loaded", () => {
-      render(<BrowseContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("skills-load-more")).not.toBeInTheDocument();
     });
@@ -245,12 +301,14 @@ describe("BrowseContent", () => {
       const onLoadMore = vi.fn();
 
       render(
-        <BrowseContent
-          {...defaultProps}
-          skills={mockSkills.slice(0, 2)}
-          total={5}
-          onLoadMore={onLoadMore}
-        />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={mockSkills.slice(0, 2)}
+            total={5}
+            onLoadMore={onLoadMore}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("skills-load-more"));
@@ -259,19 +317,25 @@ describe("BrowseContent", () => {
 
     it("disables Load More button when loading more", () => {
       render(
-        <BrowseContent
-          {...defaultProps}
-          skills={mockSkills.slice(0, 2)}
-          total={5}
-          isLoadingMore={true}
-        />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={mockSkills.slice(0, 2)}
+            total={5}
+            isLoadingMore={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("skills-load-more")).toBeDisabled();
     });
 
     it("does not show pagination when total is 0", () => {
-      render(<BrowseContent {...defaultProps} skills={[]} total={0} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} skills={[]} total={0} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("skills-pagination")).not.toBeInTheDocument();
     });
@@ -286,7 +350,11 @@ describe("BrowseContent", () => {
       const user = userEvent.setup();
       const onInstall = vi.fn();
 
-      render(<BrowseContent {...defaultProps} onInstall={onInstall} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} onInstall={onInstall} />
+        </TestProvider>,
+      );
 
       const codeReviewCard = screen.getByTestId("skills-card-code-review");
       const installButton = within(codeReviewCard).getByRole("button", {
@@ -301,7 +369,11 @@ describe("BrowseContent", () => {
       const user = userEvent.setup();
       const onViewDetails = vi.fn();
 
-      render(<BrowseContent {...defaultProps} onViewDetails={onViewDetails} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} onViewDetails={onViewDetails} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("skills-card-web-research");
       await user.click(card);
@@ -310,7 +382,11 @@ describe("BrowseContent", () => {
     });
 
     it("disables install buttons when installing", () => {
-      render(<BrowseContent {...defaultProps} isInstalling={true} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} isInstalling={true} />
+        </TestProvider>,
+      );
 
       const codeReviewCard = screen.getByTestId("skills-card-code-review");
       const installButton = within(codeReviewCard).getByRole("button");
@@ -325,7 +401,11 @@ describe("BrowseContent", () => {
 
   describe("Accessibility", () => {
     it("has accessible skill cards with article role", () => {
-      render(<BrowseContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BrowseContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       const articles = screen.getAllByRole("article");
       expect(articles.length).toBeGreaterThan(0);
@@ -333,7 +413,13 @@ describe("BrowseContent", () => {
 
     it("retry button is keyboard accessible", () => {
       render(
-        <BrowseContent {...defaultProps} skills={[]} error={{ status: 500 }} />,
+        <TestProvider>
+          <BrowseContent
+            {...defaultProps}
+            skills={[]}
+            error={{ status: 500 }}
+          />
+        </TestProvider>,
       );
 
       const retryButton = screen.getByTestId("skills-retry-button");

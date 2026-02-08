@@ -9,6 +9,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ChatSuggestions } from "./ChatSuggestions";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ChatSuggestions", () => {
   const mockSuggestions = [
     {
@@ -46,10 +48,12 @@ describe("ChatSuggestions", () => {
   describe("Rendering", () => {
     it("should render suggestions when provided", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -61,7 +65,9 @@ describe("ChatSuggestions", () => {
 
     it("should render nothing when suggestions array is empty", () => {
       const { container } = render(
-        <ChatSuggestions suggestions={[]} onSelect={mockOnSelect} />,
+        <TestProvider>
+          <ChatSuggestions suggestions={[]} onSelect={mockOnSelect} />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -69,11 +75,13 @@ describe("ChatSuggestions", () => {
 
     it("should apply custom className when provided", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-          className="custom-class"
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
 
       const container = screen.getByRole("list");
@@ -84,10 +92,12 @@ describe("ChatSuggestions", () => {
   describe("Interaction", () => {
     it("should call onSelect with suggestion text when clicked", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Write a Python function"));
@@ -98,10 +108,12 @@ describe("ChatSuggestions", () => {
 
     it("should handle keyboard navigation with Enter key", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+          />
+        </TestProvider>,
       );
 
       const suggestion = screen.getByText("Explain quantum computing");
@@ -114,11 +126,13 @@ describe("ChatSuggestions", () => {
   describe("Loading State", () => {
     it("should show loading skeleton when isLoading is true", () => {
       render(
-        <ChatSuggestions
-          suggestions={[]}
-          onSelect={mockOnSelect}
-          isLoading={true}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={[]}
+            onSelect={mockOnSelect}
+            isLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestions-loading")).toBeInTheDocument();
@@ -126,11 +140,13 @@ describe("ChatSuggestions", () => {
 
     it("should not show loading skeleton when isLoading is false", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-          isLoading={false}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+            isLoading={false}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -142,10 +158,12 @@ describe("ChatSuggestions", () => {
   describe("Visibility Control", () => {
     it("should be visible by default", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("list")).toBeVisible();
@@ -153,11 +171,13 @@ describe("ChatSuggestions", () => {
 
     it("should hide when show prop is false", () => {
       const { container } = render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-          show={false}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+            show={false}
+          />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
@@ -167,10 +187,12 @@ describe("ChatSuggestions", () => {
   describe("Title", () => {
     it("should show default title when suggestions exist", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Try asking")).toBeInTheDocument();
@@ -178,11 +200,13 @@ describe("ChatSuggestions", () => {
 
     it("should show custom title when provided", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-          title="Start with"
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+            title="Start with"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Start with")).toBeInTheDocument();
@@ -192,11 +216,13 @@ describe("ChatSuggestions", () => {
   describe("Max Suggestions", () => {
     it("should limit displayed suggestions when maxItems is provided", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-          maxItems={2}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+            maxItems={2}
+          />
+        </TestProvider>,
       );
 
       const buttons = screen.getAllByRole("button");
@@ -205,10 +231,12 @@ describe("ChatSuggestions", () => {
 
     it("should show all suggestions when maxItems is not provided", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+          />
+        </TestProvider>,
       );
 
       const buttons = screen.getAllByRole("button");
@@ -219,11 +247,13 @@ describe("ChatSuggestions", () => {
   describe("Compact Mode", () => {
     it("should apply compact styling when compact prop is true", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-          compact={true}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+            compact={true}
+          />
+        </TestProvider>,
       );
 
       const container = screen.getByRole("list");
@@ -232,11 +262,13 @@ describe("ChatSuggestions", () => {
 
     it("should apply normal styling when compact prop is false", () => {
       render(
-        <ChatSuggestions
-          suggestions={mockSuggestions}
-          onSelect={mockOnSelect}
-          compact={false}
-        />,
+        <TestProvider>
+          <ChatSuggestions
+            suggestions={mockSuggestions}
+            onSelect={mockOnSelect}
+            compact={false}
+          />
+        </TestProvider>,
       );
 
       const container = screen.getByRole("list");

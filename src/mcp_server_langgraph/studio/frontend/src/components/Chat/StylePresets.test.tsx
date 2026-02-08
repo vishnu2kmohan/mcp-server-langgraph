@@ -11,6 +11,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { StylePresets, type StylePresetsProps } from "./StylePresets";
 
+import { TestProvider } from "@/test-utils";
+
 describe("StylePresets", () => {
   const mockOnSelect = vi.fn();
 
@@ -29,7 +31,11 @@ describe("StylePresets", () => {
 
   describe("rendering", () => {
     it("should render all three preset buttons", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("preset-creative")).toBeInTheDocument();
       expect(screen.getByTestId("preset-balanced")).toBeInTheDocument();
@@ -37,7 +43,11 @@ describe("StylePresets", () => {
     });
 
     it("should display preset labels", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Creative")).toBeInTheDocument();
       expect(screen.getByText("Balanced")).toBeInTheDocument();
@@ -45,7 +55,11 @@ describe("StylePresets", () => {
     });
 
     it("should show tooltips with descriptions", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByTitle(/imaginative.*temperature.*1\.2/i),
@@ -61,7 +75,11 @@ describe("StylePresets", () => {
 
   describe("selection", () => {
     it("should call onSelect with Creative preset values", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("preset-creative"));
 
@@ -73,7 +91,11 @@ describe("StylePresets", () => {
     });
 
     it("should call onSelect with Balanced preset values", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("preset-balanced"));
 
@@ -85,7 +107,11 @@ describe("StylePresets", () => {
     });
 
     it("should call onSelect with Precise preset values", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("preset-precise"));
 
@@ -99,14 +125,22 @@ describe("StylePresets", () => {
 
   describe("active state", () => {
     it("should highlight the currently active preset", () => {
-      render(<StylePresets {...defaultProps} activePreset="balanced" />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} activePreset="balanced" />
+        </TestProvider>,
+      );
 
       const balancedButton = screen.getByTestId("preset-balanced");
       expect(balancedButton).toHaveClass("bg-brand-primary");
     });
 
     it("should not highlight inactive presets", () => {
-      render(<StylePresets {...defaultProps} activePreset="balanced" />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} activePreset="balanced" />
+        </TestProvider>,
+      );
 
       const creativeButton = screen.getByTestId("preset-creative");
       const preciseButton = screen.getByTestId("preset-precise");
@@ -116,7 +150,11 @@ describe("StylePresets", () => {
     });
 
     it("should have no active preset by default", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       const buttons = screen.getAllByRole("button");
       buttons.forEach((button) => {
@@ -127,7 +165,11 @@ describe("StylePresets", () => {
 
   describe("disabled state", () => {
     it("should disable all buttons when disabled prop is true", () => {
-      render(<StylePresets {...defaultProps} disabled />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} disabled />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("preset-creative")).toBeDisabled();
       expect(screen.getByTestId("preset-balanced")).toBeDisabled();
@@ -135,7 +177,11 @@ describe("StylePresets", () => {
     });
 
     it("should not call onSelect when disabled", () => {
-      render(<StylePresets {...defaultProps} disabled />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} disabled />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("preset-creative"));
 
@@ -145,7 +191,11 @@ describe("StylePresets", () => {
 
   describe("compact mode", () => {
     it("should render smaller buttons in compact mode", () => {
-      render(<StylePresets {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("style-presets-container");
       expect(container).toHaveClass("gap-1");
@@ -154,7 +204,11 @@ describe("StylePresets", () => {
 
   describe("accessibility", () => {
     it("should have aria-label on buttons", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("preset-creative")).toHaveAttribute(
         "aria-label",
@@ -168,7 +222,11 @@ describe("StylePresets", () => {
     });
 
     it("should have aria-pressed for toggle state", () => {
-      render(<StylePresets {...defaultProps} activePreset="balanced" />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} activePreset="balanced" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("preset-balanced")).toHaveAttribute(
         "aria-pressed",
@@ -181,7 +239,11 @@ describe("StylePresets", () => {
     });
 
     it("should support keyboard navigation", () => {
-      render(<StylePresets {...defaultProps} />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} />
+        </TestProvider>,
+      );
 
       const balancedButton = screen.getByTestId("preset-balanced");
       fireEvent.keyDown(balancedButton, { key: "Enter" });
@@ -192,7 +254,11 @@ describe("StylePresets", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<StylePresets {...defaultProps} className="custom-class" />);
+      render(
+        <TestProvider>
+          <StylePresets {...defaultProps} className="custom-class" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("style-presets-container");
       expect(container).toHaveClass("custom-class");

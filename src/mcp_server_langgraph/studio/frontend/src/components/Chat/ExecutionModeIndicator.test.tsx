@@ -13,6 +13,8 @@ import userEvent from "@testing-library/user-event";
 import { ExecutionModeIndicator } from "./ExecutionModeIndicator";
 import type { ExecutionMode } from "@/store/slices/executionModeSlice";
 
+import { TestProvider } from "@/test-utils";
+
 // Motion-specific props that should not be passed to DOM elements
 const MOTION_PROPS = new Set([
   "whileHover",
@@ -81,7 +83,11 @@ describe("ExecutionModeIndicator", () => {
 
   describe("Rendering", () => {
     it("renders with default mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByTestId("execution-mode-indicator"),
@@ -90,24 +96,34 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("renders with plan mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="plan" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="plan" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Plan")).toBeInTheDocument();
     });
 
     it("renders with auto_accept mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="auto_accept" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="auto_accept" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Auto")).toBeInTheDocument();
     });
 
     it("renders with bypass mode for admin", () => {
       render(
-        <ExecutionModeIndicator
-          {...defaultProps}
-          mode="bypass"
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ExecutionModeIndicator
+            {...defaultProps}
+            mode="bypass"
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Bypass")).toBeInTheDocument();
@@ -116,7 +132,11 @@ describe("ExecutionModeIndicator", () => {
 
   describe("Styling", () => {
     it("applies default mode styling", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="default" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="default" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveClass("bg-neutral-3");
@@ -124,7 +144,11 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("applies plan mode styling", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="plan" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="plan" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveClass("bg-primary-3");
@@ -132,7 +156,11 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("applies auto_accept mode styling", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="auto_accept" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="auto_accept" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveClass("bg-success-3");
@@ -141,11 +169,13 @@ describe("ExecutionModeIndicator", () => {
 
     it("applies bypass mode styling", () => {
       render(
-        <ExecutionModeIndicator
-          {...defaultProps}
-          mode="bypass"
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ExecutionModeIndicator
+            {...defaultProps}
+            mode="bypass"
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("execution-mode-indicator");
@@ -154,7 +184,11 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("applies minimum touch target size for WCAG 2.5.8", () => {
-      render(<ExecutionModeIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveClass("min-h-8");
@@ -166,7 +200,11 @@ describe("ExecutionModeIndicator", () => {
       const onClick = vi.fn();
       const user = userEvent.setup();
 
-      render(<ExecutionModeIndicator {...defaultProps} onClick={onClick} />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} onClick={onClick} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("execution-mode-indicator"));
       expect(onClick).toHaveBeenCalledTimes(1);
@@ -177,11 +215,13 @@ describe("ExecutionModeIndicator", () => {
       const user = userEvent.setup();
 
       render(
-        <ExecutionModeIndicator
-          {...defaultProps}
-          onClick={onClick}
-          disabled={true}
-        />,
+        <TestProvider>
+          <ExecutionModeIndicator
+            {...defaultProps}
+            onClick={onClick}
+            disabled={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("execution-mode-indicator");
@@ -194,7 +234,11 @@ describe("ExecutionModeIndicator", () => {
 
   describe("Accessibility", () => {
     it("has correct aria-label for default mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="default" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="default" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveAttribute(
@@ -204,7 +248,11 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("has correct aria-label for plan mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="plan" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="plan" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveAttribute(
@@ -214,7 +262,11 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("has correct aria-label for auto_accept mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="auto_accept" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="auto_accept" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveAttribute(
@@ -225,11 +277,13 @@ describe("ExecutionModeIndicator", () => {
 
     it("has correct aria-label for bypass mode", () => {
       render(
-        <ExecutionModeIndicator
-          {...defaultProps}
-          mode="bypass"
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ExecutionModeIndicator
+            {...defaultProps}
+            mode="bypass"
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("execution-mode-indicator");
@@ -240,7 +294,11 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("is focusable via keyboard", () => {
-      render(<ExecutionModeIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       button.focus();
@@ -251,11 +309,13 @@ describe("ExecutionModeIndicator", () => {
   describe("Admin Indicator", () => {
     it("shows admin indicator for bypass mode", () => {
       render(
-        <ExecutionModeIndicator
-          {...defaultProps}
-          mode="bypass"
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ExecutionModeIndicator
+            {...defaultProps}
+            mode="bypass"
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       // Should display "(Admin)" indicator or special styling
@@ -268,11 +328,13 @@ describe("ExecutionModeIndicator", () => {
       // Non-admin users should never see bypass mode rendered
       // The parent component should prevent this, but indicator should handle gracefully
       render(
-        <ExecutionModeIndicator
-          {...defaultProps}
-          mode="bypass"
-          isAdmin={false}
-        />,
+        <TestProvider>
+          <ExecutionModeIndicator
+            {...defaultProps}
+            mode="bypass"
+            isAdmin={false}
+          />
+        </TestProvider>,
       );
 
       // Should still render but may show warning or fallback
@@ -284,7 +346,11 @@ describe("ExecutionModeIndicator", () => {
 
   describe("Tooltips", () => {
     it("displays tooltip content via title attribute", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="default" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="default" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveAttribute(
@@ -294,14 +360,22 @@ describe("ExecutionModeIndicator", () => {
     });
 
     it("displays correct tooltip for plan mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="plan" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="plan" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveAttribute("title", "All tasks require approval");
     });
 
     it("displays correct tooltip for auto_accept mode", () => {
-      render(<ExecutionModeIndicator {...defaultProps} mode="auto_accept" />);
+      render(
+        <TestProvider>
+          <ExecutionModeIndicator {...defaultProps} mode="auto_accept" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("execution-mode-indicator");
       expect(button).toHaveAttribute(
@@ -312,11 +386,13 @@ describe("ExecutionModeIndicator", () => {
 
     it("displays correct tooltip for bypass mode", () => {
       render(
-        <ExecutionModeIndicator
-          {...defaultProps}
-          mode="bypass"
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ExecutionModeIndicator
+            {...defaultProps}
+            mode="bypass"
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("execution-mode-indicator");

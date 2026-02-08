@@ -23,6 +23,8 @@ import {
 } from "@testing-library/react";
 import React from "react";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mock Data
 // =============================================================================
@@ -88,7 +90,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should render audit log header", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Approval Audit Log/i)).toBeInTheDocument();
     });
@@ -96,7 +102,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should display audit entries", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Research Assistant")).toBeInTheDocument();
       expect(screen.getByText("Data Analyzer")).toBeInTheDocument();
@@ -106,7 +116,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should display decision status with appropriate styling", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       // Should have approved and rejected indicators
       const approvedElements = screen.getAllByText(/approved/i);
@@ -119,7 +133,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should display confidence scores", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       // Should show confidence percentages
       expect(screen.getByText(/65%/)).toBeInTheDocument();
@@ -129,7 +147,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should display who made the decision", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       // admin@example.com appears twice (two approved entries)
       const adminElements = screen.getAllByText(/admin@example.com/);
@@ -140,7 +162,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should show empty state when no entries", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={[]} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/No approval history/i)).toBeInTheDocument();
     });
@@ -150,7 +176,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should have filter controls", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       // Should have filter options
       expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -159,7 +189,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should filter by decision type", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       // Select "Approved Only" filter
       const select = screen.getByRole("combobox");
@@ -177,7 +211,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should have export button", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /export/i }),
@@ -189,10 +227,12 @@ describe("AgentApprovalAuditLog", () => {
 
       const onExport = vi.fn();
       render(
-        <AgentApprovalAuditLog
-          entries={mockAuditEntries}
-          onExport={onExport}
-        />,
+        <TestProvider>
+          <AgentApprovalAuditLog
+            entries={mockAuditEntries}
+            onExport={onExport}
+          />
+        </TestProvider>,
       );
 
       const exportButton = screen.getByRole("button", { name: /export/i });
@@ -206,7 +246,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should show loading state when isLoading is true", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={[]} isLoading={true} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={[]} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Loading/i)).toBeInTheDocument();
     });
@@ -216,7 +260,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should expand entry to show reason", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       // Click on an entry row to expand
       const entryRow = screen.getByText("Research Assistant").closest("tr");
@@ -234,7 +282,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should have proper table structure", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("table")).toBeInTheDocument();
       expect(screen.getAllByRole("row").length).toBeGreaterThan(0);
@@ -243,7 +295,11 @@ describe("AgentApprovalAuditLog", () => {
     it("should have proper column headers", async () => {
       const { AgentApprovalAuditLog } = await import("./AgentApprovalAuditLog");
 
-      render(<AgentApprovalAuditLog entries={mockAuditEntries} />);
+      render(
+        <TestProvider>
+          <AgentApprovalAuditLog entries={mockAuditEntries} />
+        </TestProvider>,
+      );
 
       // Check for column headers within the table (using more specific selectors)
       const table = screen.getByRole("table");

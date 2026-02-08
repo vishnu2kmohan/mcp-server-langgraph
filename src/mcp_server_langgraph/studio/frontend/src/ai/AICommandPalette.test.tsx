@@ -17,6 +17,8 @@ expect.extend(toHaveNoViolations);
 import userEvent from "@testing-library/user-event";
 import { AICommandPalette, type Command } from "./AICommandPalette";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -69,24 +71,28 @@ describe("AICommandPalette", () => {
   describe("Rendering", () => {
     it("should render when open", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("ai-command-palette")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen={false}
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen={false}
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(
         screen.queryByTestId("ai-command-palette"),
@@ -95,24 +101,28 @@ describe("AICommandPalette", () => {
 
     it("should render search input", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("command-search")).toBeInTheDocument();
     });
 
     it("should render all commands", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("New Chat")).toBeInTheDocument();
       expect(screen.getByText("Clear Chat")).toBeInTheDocument();
@@ -123,12 +133,14 @@ describe("AICommandPalette", () => {
   describe("Search", () => {
     it("should filter commands based on search", async () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       const input = screen.getByTestId("command-search");
       await userEvent.type(input, "new");
@@ -138,12 +150,14 @@ describe("AICommandPalette", () => {
 
     it("should show no results message when no matches", async () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       const input = screen.getByTestId("command-search");
       await userEvent.type(input, "nonexistent");
@@ -160,13 +174,15 @@ describe("AICommandPalette", () => {
       });
 
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-          onAIInterpret={onAIInterpret}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+            onAIInterpret={onAIInterpret}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("command-search");
@@ -185,13 +201,15 @@ describe("AICommandPalette", () => {
       });
 
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-          onAIInterpret={onAIInterpret}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+            onAIInterpret={onAIInterpret}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("command-search");
@@ -207,12 +225,14 @@ describe("AICommandPalette", () => {
     it("should call onExecute when command clicked", () => {
       const onExecute = vi.fn();
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={onExecute}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={onExecute}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByText("New Chat"));
       expect(onExecute).toHaveBeenCalledWith(mockCommands[0]);
@@ -221,12 +241,14 @@ describe("AICommandPalette", () => {
     it("should close palette after execution", () => {
       const onClose = vi.fn();
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={onClose}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={onClose}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByText("New Chat"));
       expect(onClose).toHaveBeenCalled();
@@ -236,12 +258,14 @@ describe("AICommandPalette", () => {
   describe("Keyboard Navigation", () => {
     it("should navigate with arrow keys", async () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       // First item is already selected (index 0), ArrowDown moves to second item (index 1)
       const input = screen.getByTestId("command-search");
@@ -254,12 +278,14 @@ describe("AICommandPalette", () => {
     it("should execute on Enter key", async () => {
       const onExecute = vi.fn();
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={onExecute}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={onExecute}
+          />
+        </TestProvider>,
       );
       const input = screen.getByTestId("command-search");
       fireEvent.keyDown(input, { key: "ArrowDown" });
@@ -270,12 +296,14 @@ describe("AICommandPalette", () => {
     it("should close on Escape", () => {
       const onClose = vi.fn();
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={onClose}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={onClose}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       const input = screen.getByTestId("command-search");
       fireEvent.keyDown(input, { key: "Escape" });
@@ -286,13 +314,15 @@ describe("AICommandPalette", () => {
   describe("Categories", () => {
     it("should group commands by category", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-          groupByCategory
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+            groupByCategory
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("category-chat")).toBeInTheDocument();
       expect(screen.getByTestId("category-app")).toBeInTheDocument();
@@ -302,12 +332,14 @@ describe("AICommandPalette", () => {
   describe("Shortcuts", () => {
     it("should display command shortcuts", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Cmd+N")).toBeInTheDocument();
     });
@@ -316,48 +348,56 @@ describe("AICommandPalette", () => {
   describe("Accessibility", () => {
     it("should have dialog role", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have combobox role on search", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("combobox")).toBeInTheDocument();
     });
 
     it("should focus search input when opened", () => {
       render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("command-search")).toHaveFocus();
     });
 
     it("should have no accessibility violations when open", async () => {
       const { container } = render(
-        <AICommandPalette
-          commands={mockCommands}
-          isOpen
-          onClose={() => {}}
-          onExecute={() => {}}
-        />,
+        <TestProvider>
+          <AICommandPalette
+            commands={mockCommands}
+            isOpen
+            onClose={() => {}}
+            onExecute={() => {}}
+          />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();

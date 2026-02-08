@@ -20,6 +20,8 @@ import {
 } from "@testing-library/react";
 import { MermaidArtifact } from "./MermaidArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 describe("MermaidArtifact", () => {
   const sampleDiagram = `graph TD
     A[Start] --> B{Decision}
@@ -39,19 +41,31 @@ describe("MermaidArtifact", () => {
 
   describe("Rendering", () => {
     it("should render mermaid diagram code", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/graph TD/)).toBeInTheDocument();
     });
 
     it("should display title when provided", () => {
-      render(<MermaidArtifact code={sampleDiagram} title="Workflow Diagram" />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} title="Workflow Diagram" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Workflow Diagram")).toBeInTheDocument();
     });
 
     it("should show Mermaid label when no title", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Mermaid Diagram")).toBeInTheDocument();
     });
@@ -59,7 +73,11 @@ describe("MermaidArtifact", () => {
 
   describe("Copy Functionality", () => {
     it("should have copy button", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTitle("Copy code")).toBeInTheDocument();
     });
@@ -70,7 +88,11 @@ describe("MermaidArtifact", () => {
         clipboard: { writeText: mockWriteText },
       });
 
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByTitle("Copy code");
       await act(async () => {
@@ -85,7 +107,11 @@ describe("MermaidArtifact", () => {
 
   describe("Open in Mermaid.live", () => {
     it("should have open in mermaid.live button", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTitle("Open in Mermaid Live")).toBeInTheDocument();
     });
@@ -94,7 +120,11 @@ describe("MermaidArtifact", () => {
       const mockOpen = vi.fn();
       vi.stubGlobal("open", mockOpen);
 
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
 
       const openButton = screen.getByTitle("Open in Mermaid Live");
       fireEvent.click(openButton);
@@ -107,13 +137,21 @@ describe("MermaidArtifact", () => {
 
   describe("Expand/Collapse", () => {
     it("should have expand button when expandable is true", () => {
-      render(<MermaidArtifact code={sampleDiagram} expandable />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} expandable />
+        </TestProvider>,
+      );
 
       expect(screen.getByTitle(/Expand|Collapse/i)).toBeInTheDocument();
     });
 
     it("should toggle expanded state when clicked", () => {
-      render(<MermaidArtifact code={sampleDiagram} expandable />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} expandable />
+        </TestProvider>,
+      );
 
       const expandButton = screen.getByTitle(/Expand/i);
       fireEvent.click(expandButton);
@@ -126,7 +164,11 @@ describe("MermaidArtifact", () => {
     it("should render flowchart diagram", () => {
       const flowchart = `flowchart LR
     A --> B --> C`;
-      render(<MermaidArtifact code={flowchart} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={flowchart} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/flowchart LR/)).toBeInTheDocument();
     });
@@ -134,7 +176,11 @@ describe("MermaidArtifact", () => {
     it("should render sequence diagram", () => {
       const sequence = `sequenceDiagram
     Alice->>Bob: Hello Bob`;
-      render(<MermaidArtifact code={sequence} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sequence} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/sequenceDiagram/)).toBeInTheDocument();
     });
@@ -142,7 +188,11 @@ describe("MermaidArtifact", () => {
     it("should render class diagram", () => {
       const classDiagram = `classDiagram
     Animal <|-- Duck`;
-      render(<MermaidArtifact code={classDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={classDiagram} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/classDiagram/)).toBeInTheDocument();
     });
@@ -150,14 +200,22 @@ describe("MermaidArtifact", () => {
 
   describe("Theme", () => {
     it("should apply default theme", () => {
-      render(<MermaidArtifact code={sampleDiagram} theme="default" />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} theme="default" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("mermaid-container");
       expect(container).toBeInTheDocument();
     });
 
     it("should apply dark theme", () => {
-      render(<MermaidArtifact code={sampleDiagram} theme="dark" />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} theme="dark" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("mermaid-container");
       expect(container).toHaveClass("dark");
@@ -166,14 +224,22 @@ describe("MermaidArtifact", () => {
 
   describe("ArtifactExporter Integration", () => {
     it("should show export menu when export button clicked", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(screen.getByTestId("export-menu")).toBeInTheDocument();
     });
 
     it("should show PNG option in export menu", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -182,7 +248,11 @@ describe("MermaidArtifact", () => {
     });
 
     it("should show SVG option in export menu", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -191,7 +261,11 @@ describe("MermaidArtifact", () => {
     });
 
     it("should show Code option in export menu for mermaid diagrams", () => {
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -208,7 +282,11 @@ describe("MermaidArtifact", () => {
       URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
       URL.revokeObjectURL = vi.fn();
 
-      render(<MermaidArtifact code={sampleDiagram} />);
+      render(
+        <TestProvider>
+          <MermaidArtifact code={sampleDiagram} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
 

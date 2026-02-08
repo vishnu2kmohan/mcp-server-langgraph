@@ -12,6 +12,8 @@ import { WebSocketHealthIndicator } from "./WebSocketHealthIndicator";
 import { websocketTelemetry } from "../../utils/websocketTelemetry";
 import type { AggregatedWebSocketMetrics } from "../../utils/websocketTelemetry";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mock Data Helpers
 // =============================================================================
@@ -49,7 +51,11 @@ describe("WebSocketHealthIndicator", () => {
 
   describe("rendering", () => {
     it("should render the health indicator component", () => {
-      render(<WebSocketHealthIndicator />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("ws-health-indicator")).toBeInTheDocument();
     });
@@ -59,7 +65,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ totalConnections: 7 }),
       );
 
-      render(<WebSocketHealthIndicator />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/7/)).toBeInTheDocument();
     });
@@ -72,7 +82,11 @@ describe("WebSocketHealthIndicator", () => {
         }),
       );
 
-      render(<WebSocketHealthIndicator />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/no connections/i)).toBeInTheDocument();
     });
@@ -84,7 +98,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: 95 }),
       );
 
-      render(<WebSocketHealthIndicator />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator />
+        </TestProvider>,
+      );
 
       const indicator = screen.getByTestId("ws-health-status");
       expect(indicator).toHaveClass("bg-success-9");
@@ -95,7 +113,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: 75 }),
       );
 
-      render(<WebSocketHealthIndicator />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator />
+        </TestProvider>,
+      );
 
       const indicator = screen.getByTestId("ws-health-status");
       expect(indicator).toHaveClass("bg-warning-9");
@@ -106,7 +128,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: 50 }),
       );
 
-      render(<WebSocketHealthIndicator />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator />
+        </TestProvider>,
+      );
 
       const indicator = screen.getByTestId("ws-health-status");
       expect(indicator).toHaveClass("bg-error-9");
@@ -117,7 +143,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: null }),
       );
 
-      render(<WebSocketHealthIndicator />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator />
+        </TestProvider>,
+      );
 
       const indicator = screen.getByTestId("ws-health-status");
       expect(indicator).toHaveClass("bg-neutral-4");
@@ -130,7 +160,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: 92 }),
       );
 
-      render(<WebSocketHealthIndicator showLabel />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator showLabel />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/healthy/i)).toBeInTheDocument();
     });
@@ -140,7 +174,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: 78 }),
       );
 
-      render(<WebSocketHealthIndicator showLabel />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator showLabel />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/warning/i)).toBeInTheDocument();
     });
@@ -150,7 +188,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: 45 }),
       );
 
-      render(<WebSocketHealthIndicator showLabel />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator showLabel />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/critical/i)).toBeInTheDocument();
     });
@@ -162,7 +204,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ avgSuccessRate: 85 }),
       );
 
-      render(<WebSocketHealthIndicator showDetails />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator showDetails />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/85%/)).toBeInTheDocument();
     });
@@ -172,7 +218,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics({ totalReconnectionAttempts: 15 }),
       );
 
-      render(<WebSocketHealthIndicator showDetails />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator showDetails />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/15/)).toBeInTheDocument();
     });
@@ -184,7 +234,11 @@ describe("WebSocketHealthIndicator", () => {
         createMockAggregatedMetrics(),
       );
 
-      render(<WebSocketHealthIndicator compact />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator compact />
+        </TestProvider>,
+      );
 
       const indicator = screen.getByTestId("ws-health-indicator");
       expect(indicator).toHaveClass("compact");
@@ -197,7 +251,11 @@ describe("WebSocketHealthIndicator", () => {
         .spyOn(websocketTelemetry, "getAggregatedMetrics")
         .mockReturnValue(createMockAggregatedMetrics({ avgSuccessRate: 90 }));
 
-      render(<WebSocketHealthIndicator autoRefresh refreshInterval={5000} />);
+      render(
+        <TestProvider>
+          <WebSocketHealthIndicator autoRefresh refreshInterval={5000} />
+        </TestProvider>,
+      );
 
       // Initial call
       expect(getMetricsSpy).toHaveBeenCalledTimes(1);

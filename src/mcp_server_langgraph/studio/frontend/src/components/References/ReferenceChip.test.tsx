@@ -11,6 +11,8 @@ import { ReferenceChip } from "./ReferenceChip";
 import { ReferenceResolverProvider as _ReferenceResolverProvider } from "@/contexts/ReferenceResolverContext";
 import type { ResolvedReference } from "@/types/references";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock the context provider for isolated tests
 const mockResolvedRefs = new Map<string, ResolvedReference>();
 
@@ -39,7 +41,9 @@ describe("ReferenceChip", () => {
   describe("rendering", () => {
     it("should render tool reference with wrench icon", () => {
       render(
-        <ReferenceChip type="tool" qualifier="filesystem" id="read_file" />,
+        <TestProvider>
+          <ReferenceChip type="tool" qualifier="filesystem" id="read_file" />
+        </TestProvider>,
       );
 
       expect(screen.getByText("read_file")).toBeInTheDocument();
@@ -50,7 +54,13 @@ describe("ReferenceChip", () => {
 
     it("should render skill reference with sparkles icon", () => {
       render(
-        <ReferenceChip type="skill" qualifier="code-review" id="code-review" />,
+        <TestProvider>
+          <ReferenceChip
+            type="skill"
+            qualifier="code-review"
+            id="code-review"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("code-review")).toBeInTheDocument();
@@ -60,7 +70,9 @@ describe("ReferenceChip", () => {
 
     it("should render artifact reference with file icon", () => {
       render(
-        <ReferenceChip type="artifact" qualifier="chart-123" id="chart-123" />,
+        <TestProvider>
+          <ReferenceChip type="artifact" qualifier="chart-123" id="chart-123" />
+        </TestProvider>,
       );
 
       expect(screen.getByText("chart-123")).toBeInTheDocument();
@@ -70,7 +82,9 @@ describe("ReferenceChip", () => {
 
     it("should render memory reference with brain icon (Phase 4)", () => {
       render(
-        <ReferenceChip type="memory" qualifier="note-123" id="note-123" />,
+        <TestProvider>
+          <ReferenceChip type="memory" qualifier="note-123" id="note-123" />
+        </TestProvider>,
       );
 
       expect(screen.getByText("note-123")).toBeInTheDocument();
@@ -80,7 +94,11 @@ describe("ReferenceChip", () => {
     });
 
     it("should render plan reference with list icon (Phase 4)", () => {
-      render(<ReferenceChip type="plan" qualifier="plan-456" id="plan-456" />);
+      render(
+        <TestProvider>
+          <ReferenceChip type="plan" qualifier="plan-456" id="plan-456" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("plan-456")).toBeInTheDocument();
       const chip = screen.getByRole("button");
@@ -90,12 +108,14 @@ describe("ReferenceChip", () => {
 
     it("should use custom label when provided", () => {
       render(
-        <ReferenceChip
-          type="tool"
-          qualifier="fs"
-          id="read"
-          label="Read File"
-        />,
+        <TestProvider>
+          <ReferenceChip
+            type="tool"
+            qualifier="fs"
+            id="read"
+            label="Read File"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Read File")).toBeInTheDocument();
@@ -114,7 +134,9 @@ describe("ReferenceChip", () => {
       });
 
       render(
-        <ReferenceChip type="tool" qualifier="filesystem" id="read_file" />,
+        <TestProvider>
+          <ReferenceChip type="tool" qualifier="filesystem" id="read_file" />
+        </TestProvider>,
       );
 
       // Should show resolved displayName
@@ -130,7 +152,11 @@ describe("ReferenceChip", () => {
         status: "not_found",
       });
 
-      render(<ReferenceChip type="tool" qualifier="fs" id="missing" />);
+      render(
+        <TestProvider>
+          <ReferenceChip type="tool" qualifier="fs" id="missing" />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button");
       expect(chip).toHaveClass("opacity-50");
@@ -146,7 +172,11 @@ describe("ReferenceChip", () => {
         status: "unauthorized",
       });
 
-      render(<ReferenceChip type="artifact" qualifier="secret" id="data" />);
+      render(
+        <TestProvider>
+          <ReferenceChip type="artifact" qualifier="secret" id="data" />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button");
       expect(chip).toHaveClass("opacity-50");
@@ -156,13 +186,21 @@ describe("ReferenceChip", () => {
 
   describe("accessibility", () => {
     it("should have accessible role", () => {
-      render(<ReferenceChip type="skill" qualifier="analyze" id="analyze" />);
+      render(
+        <TestProvider>
+          <ReferenceChip type="skill" qualifier="analyze" id="analyze" />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button")).toBeInTheDocument();
     });
 
     it("should have aria-label describing the reference", () => {
-      render(<ReferenceChip type="tool" qualifier="server" id="tool_name" />);
+      render(
+        <TestProvider>
+          <ReferenceChip type="tool" qualifier="server" id="tool_name" />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button");
       expect(chip).toHaveAttribute(
@@ -174,7 +212,11 @@ describe("ReferenceChip", () => {
     it("should be keyboard navigable", async () => {
       const user = userEvent.setup();
 
-      render(<ReferenceChip type="skill" qualifier="test" id="test" />);
+      render(
+        <TestProvider>
+          <ReferenceChip type="skill" qualifier="test" id="test" />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button");
       await user.tab();
@@ -195,7 +237,11 @@ describe("ReferenceChip", () => {
         status: "valid",
       });
 
-      render(<ReferenceChip type="tool" qualifier="fs" id="read" />);
+      render(
+        <TestProvider>
+          <ReferenceChip type="tool" qualifier="fs" id="read" />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button");
       await user.hover(chip);

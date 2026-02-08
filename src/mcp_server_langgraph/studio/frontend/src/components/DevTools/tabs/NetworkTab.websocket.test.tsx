@@ -12,6 +12,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { NetworkTab } from "./NetworkTab";
 import type { NetworkEntry } from "../types";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -109,10 +111,12 @@ describe("NetworkTab WebSocket Integration", () => {
       // The NetworkTab should be able to receive entries from parent
       // (from useDevToolsWebSocket) via externalEntries prop
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("network-tab")).toBeInTheDocument();
@@ -140,10 +144,12 @@ describe("NetworkTab WebSocket Integration", () => {
       };
 
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       // Should show both local and external entries
@@ -171,10 +177,12 @@ describe("NetworkTab WebSocket Integration", () => {
       };
 
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       // Check order
@@ -196,10 +204,12 @@ describe("NetworkTab WebSocket Integration", () => {
       const user = userEvent.setup();
 
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       // Click MCP filter
@@ -218,10 +228,12 @@ describe("NetworkTab WebSocket Integration", () => {
       const user = userEvent.setup();
 
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       const searchInput = screen.getByTestId("network-search");
@@ -239,10 +251,12 @@ describe("NetworkTab WebSocket Integration", () => {
 
     it("should show correct request count with external entries", () => {
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("3 requests")).toBeInTheDocument();
@@ -260,10 +274,12 @@ describe("NetworkTab WebSocket Integration", () => {
       ];
 
       const { rerender } = render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       // Verify pending status
@@ -303,10 +319,12 @@ describe("NetworkTab WebSocket Integration", () => {
       };
 
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+          />
+        </TestProvider>,
       );
 
       // Should show only 3 entries (deduplicated by ID)
@@ -320,7 +338,11 @@ describe("NetworkTab WebSocket Integration", () => {
         entries: [mockWebSocketNetworkEntries[0]],
       };
 
-      render(<NetworkTab contextEntityId={null} externalEntries={[]} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId={null} externalEntries={[]} />
+        </TestProvider>,
+      );
 
       // Should still show local entries
       expect(screen.getByTestId("network-entry-ws-net-1")).toBeInTheDocument();
@@ -333,10 +355,12 @@ describe("NetworkTab WebSocket Integration", () => {
       };
 
       render(
-        <NetworkTab
-          contextEntityId={null}
-          // externalEntries not provided (undefined)
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            // externalEntries not provided (undefined)
+          />
+        </TestProvider>,
       );
 
       // Should show local entries without error
@@ -351,11 +375,13 @@ describe("NetworkTab WebSocket Integration", () => {
       const handleClearExternal = vi.fn();
 
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-          onClearExternal={handleClearExternal}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+            onClearExternal={handleClearExternal}
+          />
+        </TestProvider>,
       );
 
       const clearButton = screen.getByTestId("clear-network-button");
@@ -369,11 +395,13 @@ describe("NetworkTab WebSocket Integration", () => {
   describe("showMCPCalls with external entries", () => {
     it("should hide MCP entries when showMCPCalls is false", () => {
       render(
-        <NetworkTab
-          contextEntityId={null}
-          externalEntries={mockWebSocketNetworkEntries}
-          showMCPCalls={false}
-        />,
+        <TestProvider>
+          <NetworkTab
+            contextEntityId={null}
+            externalEntries={mockWebSocketNetworkEntries}
+            showMCPCalls={false}
+          />
+        </TestProvider>,
       );
 
       // MCP entries should be hidden

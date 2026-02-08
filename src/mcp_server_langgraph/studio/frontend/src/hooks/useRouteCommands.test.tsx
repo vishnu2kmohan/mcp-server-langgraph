@@ -17,6 +17,8 @@ import {
 import { useRouteCommands } from "./useRouteCommands";
 import type { Command } from "../ai/AICommandPalette";
 
+import { TestProvider } from "@/test-utils";
+
 // ==============================================================================
 // Test Setup
 // ==============================================================================
@@ -78,11 +80,13 @@ describe("useRouteCommands", () => {
   describe("route-based registration", () => {
     it("should register workflow commands for /studio/workflows", () => {
       render(
-        <TestWrapper initialPath="/studio/workflows">
-          <Routes>
-            <Route path="/studio/workflows" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/workflows">
+            <Routes>
+              <Route path="/studio/workflows" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       // Should have base command + workflow-specific commands
@@ -92,11 +96,16 @@ describe("useRouteCommands", () => {
 
     it("should register observability commands for /studio/observability", () => {
       render(
-        <TestWrapper initialPath="/studio/observability">
-          <Routes>
-            <Route path="/studio/observability" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/observability">
+            <Routes>
+              <Route
+                path="/studio/observability"
+                element={<CommandDisplay />}
+              />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       // Should have base command + observability-specific commands
@@ -106,11 +115,13 @@ describe("useRouteCommands", () => {
 
     it("should register connections commands for /studio/connections", () => {
       render(
-        <TestWrapper initialPath="/studio/connections">
-          <Routes>
-            <Route path="/studio/connections" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/connections">
+            <Routes>
+              <Route path="/studio/connections" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -121,11 +132,13 @@ describe("useRouteCommands", () => {
 
     it("should not register route commands for unknown paths", () => {
       render(
-        <TestWrapper initialPath="/studio/unknown">
-          <Routes>
-            <Route path="/studio/unknown" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/unknown">
+            <Routes>
+              <Route path="/studio/unknown" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       // Should only have base command
@@ -136,11 +149,13 @@ describe("useRouteCommands", () => {
     // New route tests for Sprint 4 expansion
     it("should register MCP commands for /studio/mcp", () => {
       render(
-        <TestWrapper initialPath="/studio/mcp">
-          <Routes>
-            <Route path="/studio/mcp" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/mcp">
+            <Routes>
+              <Route path="/studio/mcp" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -149,11 +164,13 @@ describe("useRouteCommands", () => {
 
     it("should register agents commands for /studio/agents", () => {
       render(
-        <TestWrapper initialPath="/studio/agents">
-          <Routes>
-            <Route path="/studio/agents" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/agents">
+            <Routes>
+              <Route path="/studio/agents" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -164,11 +181,13 @@ describe("useRouteCommands", () => {
 
     it("should register artifacts commands for /studio/artifacts", () => {
       render(
-        <TestWrapper initialPath="/studio/artifacts">
-          <Routes>
-            <Route path="/studio/artifacts" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/artifacts">
+            <Routes>
+              <Route path="/studio/artifacts" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -179,11 +198,13 @@ describe("useRouteCommands", () => {
 
     it("should register cost commands for /studio/cost", () => {
       render(
-        <TestWrapper initialPath="/studio/cost">
-          <Routes>
-            <Route path="/studio/cost" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/cost">
+            <Routes>
+              <Route path="/studio/cost" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -192,11 +213,13 @@ describe("useRouteCommands", () => {
 
     it("should register help commands for /studio/help", () => {
       render(
-        <TestWrapper initialPath="/studio/help">
-          <Routes>
-            <Route path="/studio/help" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/help">
+            <Routes>
+              <Route path="/studio/help" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -205,11 +228,13 @@ describe("useRouteCommands", () => {
 
     it("should register compliance commands for /studio/compliance", () => {
       render(
-        <TestWrapper initialPath="/studio/compliance">
-          <Routes>
-            <Route path="/studio/compliance" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/compliance">
+            <Routes>
+              <Route path="/studio/compliance" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -220,11 +245,13 @@ describe("useRouteCommands", () => {
 
     it("should register audit commands for /studio/audit", () => {
       render(
-        <TestWrapper initialPath="/studio/audit">
-          <Routes>
-            <Route path="/studio/audit" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/audit">
+            <Routes>
+              <Route path="/studio/audit" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -235,11 +262,13 @@ describe("useRouteCommands", () => {
 
     it("should register vectors commands for /studio/vectors", () => {
       render(
-        <TestWrapper initialPath="/studio/vectors">
-          <Routes>
-            <Route path="/studio/vectors" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/vectors">
+            <Routes>
+              <Route path="/studio/vectors" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -250,11 +279,13 @@ describe("useRouteCommands", () => {
 
     it("should register analytics commands for /studio/analytics", () => {
       render(
-        <TestWrapper initialPath="/studio/analytics">
-          <Routes>
-            <Route path="/studio/analytics" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/analytics">
+            <Routes>
+              <Route path="/studio/analytics" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -263,11 +294,13 @@ describe("useRouteCommands", () => {
 
     it("should register skills commands for /studio/skills", () => {
       render(
-        <TestWrapper initialPath="/studio/skills">
-          <Routes>
-            <Route path="/studio/skills" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/skills">
+            <Routes>
+              <Route path="/studio/skills" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -278,11 +311,13 @@ describe("useRouteCommands", () => {
 
     it("should register admin commands for /studio/admin", () => {
       render(
-        <TestWrapper initialPath="/studio/admin">
-          <Routes>
-            <Route path="/studio/admin" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/admin">
+            <Routes>
+              <Route path="/studio/admin" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("cmd-base-command")).toBeInTheDocument();
@@ -294,11 +329,13 @@ describe("useRouteCommands", () => {
     it("should unregister commands when component unmounts", () => {
       // This tests the cleanup function of useEffect
       const { unmount } = render(
-        <TestWrapper initialPath="/studio/workflows">
-          <Routes>
-            <Route path="/studio/workflows" element={<CommandDisplay />} />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/workflows">
+            <Routes>
+              <Route path="/studio/workflows" element={<CommandDisplay />} />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       // Verify commands are registered
@@ -314,14 +351,16 @@ describe("useRouteCommands", () => {
   describe("nested routes", () => {
     it("should register parent route commands for nested paths", () => {
       render(
-        <TestWrapper initialPath="/studio/workflows/123/edit">
-          <Routes>
-            <Route
-              path="/studio/workflows/:id/edit"
-              element={<CommandDisplay />}
-            />
-          </Routes>
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper initialPath="/studio/workflows/123/edit">
+            <Routes>
+              <Route
+                path="/studio/workflows/:id/edit"
+                element={<CommandDisplay />}
+              />
+            </Routes>
+          </TestWrapper>
+        </TestProvider>,
       );
 
       // Should still register workflow commands for nested path

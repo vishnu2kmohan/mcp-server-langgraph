@@ -10,6 +10,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConnectorCard } from "./ConnectorCard";
 import type { ConnectionTemplateCamelCase } from "@/types/connectionTemplate";
 
+import { TestProvider } from "@/test-utils";
+
 // Motion mock is provided globally in src/test/setup.ts
 // with proper motion prop filtering to prevent React warnings
 
@@ -36,12 +38,20 @@ afterEach(() => {
 describe("ConnectorCard", () => {
   describe("Rendering", () => {
     it("should render the connector name", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText("GitHub")).toBeInTheDocument();
     });
 
     it("should render the connector description", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(
           "Access GitHub repositories, issues, and pull requests",
@@ -50,23 +60,39 @@ describe("ConnectorCard", () => {
     });
 
     it("should render the icon", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       // Icon is rendered as emoji
       expect(screen.getByTestId("connector-icon")).toBeInTheDocument();
     });
 
     it("should render the auth type badge", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText("OAuth2")).toBeInTheDocument();
     });
 
     it("should render the category badge", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText("development")).toBeInTheDocument();
     });
 
     it("should render the Connect button", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /connect/i }),
       ).toBeInTheDocument();
@@ -76,14 +102,22 @@ describe("ConnectorCard", () => {
   describe("Interactions", () => {
     it("should call onConnect when Connect button is clicked", () => {
       const onConnect = vi.fn();
-      render(<ConnectorCard template={mockTemplate} onConnect={onConnect} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={onConnect} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /connect/i }));
       expect(onConnect).toHaveBeenCalledWith(mockTemplate);
     });
 
     it("should show documentation link when documentationUrl is provided", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       const docsLink = screen.getByRole("link", { name: /docs/i });
       expect(docsLink).toHaveAttribute("href", "https://docs.github.com/");
     });
@@ -94,7 +128,9 @@ describe("ConnectorCard", () => {
         documentationUrl: null,
       };
       render(
-        <ConnectorCard template={templateWithoutDocs} onConnect={vi.fn()} />,
+        <TestProvider>
+          <ConnectorCard template={templateWithoutDocs} onConnect={vi.fn()} />
+        </TestProvider>,
       );
       expect(
         screen.queryByRole("link", { name: /docs/i }),
@@ -104,19 +140,31 @@ describe("ConnectorCard", () => {
 
   describe("Auth Type Display", () => {
     it("should display OAuth2 badge for oauth2 auth type", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText("OAuth2")).toBeInTheDocument();
     });
 
     it("should display API Key badge for api_key auth type", () => {
       const apiKeyTemplate = { ...mockTemplate, authType: "api_key" as const };
-      render(<ConnectorCard template={apiKeyTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={apiKeyTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText("API Key")).toBeInTheDocument();
     });
 
     it("should display No Auth badge for none auth type", () => {
       const noAuthTemplate = { ...mockTemplate, authType: "none" as const };
-      render(<ConnectorCard template={noAuthTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={noAuthTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText("No Auth")).toBeInTheDocument();
     });
   });
@@ -124,11 +172,13 @@ describe("ConnectorCard", () => {
   describe("Connected State", () => {
     it("should show Connected badge when isConnected is true", () => {
       render(
-        <ConnectorCard
-          template={mockTemplate}
-          onConnect={vi.fn()}
-          isConnected={true}
-        />,
+        <TestProvider>
+          <ConnectorCard
+            template={mockTemplate}
+            onConnect={vi.fn()}
+            isConnected={true}
+          />
+        </TestProvider>,
       );
       // Both the badge and button text show "Connected"
       const connectedElements = screen.getAllByText("Connected");
@@ -137,11 +187,13 @@ describe("ConnectorCard", () => {
 
     it("should disable Connect button when isConnected is true", () => {
       render(
-        <ConnectorCard
-          template={mockTemplate}
-          onConnect={vi.fn()}
-          isConnected={true}
-        />,
+        <TestProvider>
+          <ConnectorCard
+            template={mockTemplate}
+            onConnect={vi.fn()}
+            isConnected={true}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("button", { name: /connected/i })).toBeDisabled();
     });
@@ -149,14 +201,22 @@ describe("ConnectorCard", () => {
 
   describe("Accessibility", () => {
     it("should have accessible name for the card", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("article", { name: /github connector/i }),
       ).toBeInTheDocument();
     });
 
     it("should have accessible external link indicator for docs", () => {
-      render(<ConnectorCard template={mockTemplate} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorCard template={mockTemplate} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       const docsLink = screen.getByRole("link", { name: /docs/i });
       expect(docsLink).toHaveAttribute("target", "_blank");
       expect(docsLink).toHaveAttribute("rel", "noopener noreferrer");

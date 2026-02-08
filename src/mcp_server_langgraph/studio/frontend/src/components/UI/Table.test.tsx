@@ -16,6 +16,8 @@ import {
   TableCell,
 } from "./Table";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -29,20 +31,22 @@ describe("Table", () => {
   describe("rendering", () => {
     it("renders a basic table with all compound components", () => {
       render(
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>Name</TableHeaderCell>
-              <TableHeaderCell>Status</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Item 1</TableCell>
-              <TableCell>Active</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Name</TableHeaderCell>
+                <TableHeaderCell>Status</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Item 1</TableCell>
+                <TableCell>Active</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("table")).toBeInTheDocument();
@@ -54,13 +58,15 @@ describe("Table", () => {
 
     it("renders with custom className on Table", () => {
       render(
-        <Table className="custom-class">
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table className="custom-class">
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const table = screen.getByRole("table");
@@ -69,14 +75,16 @@ describe("Table", () => {
 
     it("renders empty table without errors", () => {
       render(
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>Column</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody />
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Column</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody />
+          </Table>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("table")).toBeInTheDocument();
@@ -90,13 +98,15 @@ describe("Table", () => {
   describe("accessibility", () => {
     it("has correct table role", () => {
       render(
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("table")).toBeInTheDocument();
@@ -104,20 +114,22 @@ describe("Table", () => {
 
     it("header cells have scope='col' attribute", () => {
       render(
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>Name</TableHeaderCell>
-              <TableHeaderCell>Status</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Item</TableCell>
-              <TableCell>Active</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Name</TableHeaderCell>
+                <TableHeaderCell>Status</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Item</TableCell>
+                <TableCell>Active</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const headers = screen.getAllByRole("columnheader");
@@ -128,13 +140,15 @@ describe("Table", () => {
 
     it("supports aria-label on Table", () => {
       render(
-        <Table aria-label="User list">
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table aria-label="User list">
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("table")).toHaveAttribute(
@@ -145,16 +159,18 @@ describe("Table", () => {
 
     it("supports aria-describedby on Table", () => {
       render(
-        <>
-          <p id="table-desc">A list of active users</p>
-          <Table aria-describedby="table-desc">
-            <TableBody>
-              <TableRow>
-                <TableCell>Content</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </>,
+        <TestProvider>
+          <>
+            <p id="table-desc">A list of active users</p>
+            <Table aria-describedby="table-desc">
+              <TableBody>
+                <TableRow>
+                  <TableCell>Content</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("table")).toHaveAttribute(
@@ -171,13 +187,15 @@ describe("Table", () => {
   describe("design system compliance", () => {
     it("applies default styling to Table", () => {
       render(
-        <Table data-testid="table">
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table data-testid="table">
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const table = screen.getByTestId("table");
@@ -187,18 +205,20 @@ describe("Table", () => {
 
     it("applies design system colors to header", () => {
       render(
-        <Table>
-          <TableHead data-testid="thead">
-            <TableRow>
-              <TableHeaderCell>Name</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead data-testid="thead">
+              <TableRow>
+                <TableHeaderCell>Name</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const thead = screen.getByTestId("thead");
@@ -209,18 +229,22 @@ describe("Table", () => {
 
     it("applies consistent padding to header cells", () => {
       render(
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell data-testid="header-cell">Name</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell data-testid="header-cell">
+                  Name
+                </TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const headerCell = screen.getByTestId("header-cell");
@@ -230,13 +254,15 @@ describe("Table", () => {
 
     it("applies consistent padding to data cells", () => {
       render(
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell data-testid="data-cell">Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell data-testid="data-cell">Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const dataCell = screen.getByTestId("data-cell");
@@ -246,16 +272,18 @@ describe("Table", () => {
 
     it("applies row dividers using design system tokens", () => {
       render(
-        <Table>
-          <TableBody data-testid="tbody">
-            <TableRow>
-              <TableCell>Row 1</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Row 2</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody data-testid="tbody">
+              <TableRow>
+                <TableCell>Row 1</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Row 2</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const tbody = screen.getByTestId("tbody");
@@ -271,18 +299,22 @@ describe("Table", () => {
   describe("variants", () => {
     it("supports 'compact' size variant with smaller padding", () => {
       render(
-        <Table size="compact">
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell data-testid="header-cell">Name</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell data-testid="data-cell">Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table size="compact">
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell data-testid="header-cell">
+                  Name
+                </TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell data-testid="data-cell">Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const headerCell = screen.getByTestId("header-cell");
@@ -295,16 +327,18 @@ describe("Table", () => {
 
     it("supports 'striped' variant for alternating row colors", () => {
       render(
-        <Table striped>
-          <TableBody data-testid="tbody">
-            <TableRow>
-              <TableCell>Row 1</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Row 2</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table striped>
+            <TableBody data-testid="tbody">
+              <TableRow>
+                <TableCell>Row 1</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Row 2</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const tbody = screen.getByTestId("tbody");
@@ -316,13 +350,15 @@ describe("Table", () => {
 
     it("supports 'hoverable' variant for row hover states", () => {
       render(
-        <Table hoverable>
-          <TableBody>
-            <TableRow data-testid="row">
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table hoverable>
+            <TableBody>
+              <TableRow data-testid="row">
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const row = screen.getByTestId("row");
@@ -331,13 +367,15 @@ describe("Table", () => {
 
     it("supports 'bordered' variant for cell borders", () => {
       render(
-        <Table bordered>
-          <TableBody>
-            <TableRow>
-              <TableCell data-testid="cell">Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table bordered>
+            <TableBody>
+              <TableRow>
+                <TableCell data-testid="cell">Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const cell = screen.getByTestId("cell");
@@ -353,13 +391,15 @@ describe("Table", () => {
   describe("interactive rows", () => {
     it("applies clickable styles when TableRow has onClick", () => {
       render(
-        <Table>
-          <TableBody>
-            <TableRow data-testid="row" onClick={() => {}}>
-              <TableCell>Clickable</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody>
+              <TableRow data-testid="row" onClick={() => {}}>
+                <TableCell>Clickable</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const row = screen.getByTestId("row");
@@ -368,13 +408,15 @@ describe("Table", () => {
 
     it("applies selected state to TableRow", () => {
       render(
-        <Table>
-          <TableBody>
-            <TableRow data-testid="row" selected>
-              <TableCell>Selected</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody>
+              <TableRow data-testid="row" selected>
+                <TableCell>Selected</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const row = screen.getByTestId("row");
@@ -389,13 +431,15 @@ describe("Table", () => {
   describe("dark mode", () => {
     it("includes dark mode classes for row dividers", () => {
       render(
-        <Table>
-          <TableBody data-testid="tbody">
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody data-testid="tbody">
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const tbody = screen.getByTestId("tbody");
@@ -404,18 +448,20 @@ describe("Table", () => {
 
     it("includes dark mode classes for header", () => {
       render(
-        <Table>
-          <TableHead data-testid="thead">
-            <TableRow>
-              <TableHeaderCell>Name</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead data-testid="thead">
+              <TableRow>
+                <TableHeaderCell>Name</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const thead = screen.getByTestId("thead");
@@ -430,15 +476,17 @@ describe("Table", () => {
   describe("responsive", () => {
     it("supports responsive wrapper for horizontal scroll", () => {
       const { container } = render(
-        <div className="overflow-x-auto">
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell>Content</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>,
+        <TestProvider>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Content</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </TestProvider>,
       );
 
       const wrapper = container.firstChild as HTMLElement;
@@ -453,18 +501,20 @@ describe("Table", () => {
   describe("header cell alignment", () => {
     it("supports left alignment (default)", () => {
       render(
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell data-testid="header">Name</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell data-testid="header">Name</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const header = screen.getByTestId("header");
@@ -473,20 +523,22 @@ describe("Table", () => {
 
     it("supports center alignment", () => {
       render(
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell data-testid="header" align="center">
-                Status
-              </TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell data-testid="header" align="center">
+                  Status
+                </TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const header = screen.getByTestId("header");
@@ -495,20 +547,22 @@ describe("Table", () => {
 
     it("supports right alignment", () => {
       render(
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell data-testid="header" align="right">
-                Amount
-              </TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell data-testid="header" align="right">
+                  Amount
+                </TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const header = screen.getByTestId("header");
@@ -523,13 +577,15 @@ describe("Table", () => {
   describe("data cell alignment", () => {
     it("supports left alignment (default)", () => {
       render(
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell data-testid="cell">Content</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell data-testid="cell">Content</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const cell = screen.getByTestId("cell");
@@ -538,15 +594,17 @@ describe("Table", () => {
 
     it("supports center alignment", () => {
       render(
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell data-testid="cell" align="center">
-                Content
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell data-testid="cell" align="center">
+                  Content
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const cell = screen.getByTestId("cell");
@@ -555,15 +613,17 @@ describe("Table", () => {
 
     it("supports right alignment", () => {
       render(
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableCell data-testid="cell" align="right">
-                $100.00
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>,
+        <TestProvider>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell data-testid="cell" align="right">
+                  $100.00
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TestProvider>,
       );
 
       const cell = screen.getByTestId("cell");

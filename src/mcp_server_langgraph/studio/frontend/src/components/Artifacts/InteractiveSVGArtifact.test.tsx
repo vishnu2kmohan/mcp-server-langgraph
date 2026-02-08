@@ -15,6 +15,8 @@ import {
 } from "@testing-library/react";
 import { InteractiveSVGArtifact } from "./InteractiveSVGArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 describe("InteractiveSVGArtifact", () => {
   const sampleSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
     <circle cx="50" cy="50" r="40" fill="blue" />
@@ -31,25 +33,41 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Rendering", () => {
     it("should render the SVG content", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("svg-container")).toBeInTheDocument();
     });
 
     it("should render title when provided", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} title="My SVG" />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} title="My SVG" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("My SVG")).toBeInTheDocument();
     });
 
     it("should render error for invalid SVG", async () => {
-      render(<InteractiveSVGArtifact data="not valid svg" />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data="not valid svg" />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("should render error for empty data", async () => {
-      render(<InteractiveSVGArtifact data="" />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data="" />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
@@ -57,31 +75,51 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Zoom Controls", () => {
     it("should display zoom level indicator", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("100%")).toBeInTheDocument();
     });
 
     it("should have zoom in button", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Zoom in")).toBeInTheDocument();
     });
 
     it("should have zoom out button", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Zoom out")).toBeInTheDocument();
     });
 
     it("should have reset zoom button", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Reset zoom")).toBeInTheDocument();
     });
 
     it("should increase zoom when zoom in is clicked", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByLabelText("Zoom in"));
 
@@ -91,7 +129,11 @@ describe("InteractiveSVGArtifact", () => {
     });
 
     it("should decrease zoom when zoom out is clicked", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByLabelText("Zoom out"));
 
@@ -101,7 +143,11 @@ describe("InteractiveSVGArtifact", () => {
     });
 
     it("should reset zoom and position when reset is clicked", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       // Zoom in first
       fireEvent.click(screen.getByLabelText("Zoom in"));
@@ -120,13 +166,21 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Fullscreen", () => {
     it("should have fullscreen toggle button", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Toggle fullscreen")).toBeInTheDocument();
     });
 
     it("should toggle fullscreen mode", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("svg-container");
       expect(container.classList.contains("fixed")).toBe(false);
@@ -141,7 +195,11 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Copy Functionality", () => {
     it("should have copy button", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Copy SVG")).toBeInTheDocument();
     });
@@ -152,7 +210,11 @@ describe("InteractiveSVGArtifact", () => {
         clipboard: { writeText },
       });
 
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByLabelText("Copy SVG"));
 
@@ -164,13 +226,21 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Download Functionality", () => {
     it("should have download SVG button", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Download SVG")).toBeInTheDocument();
     });
 
     it("should have download PNG button", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Download PNG")).toBeInTheDocument();
     });
@@ -178,13 +248,21 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Pan Support", () => {
     it("should have pannable viewport", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("svg-viewport")).toBeInTheDocument();
     });
 
     it("should show grab cursor on viewport", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       const viewport = screen.getByTestId("svg-viewport");
       expect(viewport.classList.contains("cursor-grab")).toBe(true);
@@ -193,7 +271,11 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Accessibility", () => {
     it("should have proper aria labels for all controls", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Zoom in")).toBeInTheDocument();
       expect(screen.getByLabelText("Zoom out")).toBeInTheDocument();
@@ -210,7 +292,11 @@ describe("InteractiveSVGArtifact", () => {
       const base64SVG = btoa(sampleSVG);
       const dataUrl = `data:image/svg+xml;base64,${base64SVG}`;
 
-      render(<InteractiveSVGArtifact data={dataUrl} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={dataUrl} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("svg-container")).toBeInTheDocument();
     });
@@ -219,7 +305,11 @@ describe("InteractiveSVGArtifact", () => {
       const encodedSVG = encodeURIComponent(sampleSVG);
       const dataUrl = `data:image/svg+xml,${encodedSVG}`;
 
-      render(<InteractiveSVGArtifact data={dataUrl} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={dataUrl} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("svg-container")).toBeInTheDocument();
     });
@@ -227,7 +317,11 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Keyboard Shortcuts", () => {
     it("should zoom in with + key", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("svg-container");
       fireEvent.keyDown(container, { key: "+" });
@@ -238,7 +332,11 @@ describe("InteractiveSVGArtifact", () => {
     });
 
     it("should zoom out with - key", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("svg-container");
       fireEvent.keyDown(container, { key: "-" });
@@ -249,7 +347,11 @@ describe("InteractiveSVGArtifact", () => {
     });
 
     it("should reset zoom with 0 key", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       // First zoom in
       fireEvent.click(screen.getByLabelText("Zoom in"));
@@ -267,7 +369,11 @@ describe("InteractiveSVGArtifact", () => {
     });
 
     it("should exit fullscreen with Escape key", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       // Enter fullscreen
       fireEvent.click(screen.getByLabelText("Toggle fullscreen"));
@@ -291,7 +397,11 @@ describe("InteractiveSVGArtifact", () => {
 
   describe("Touch Gestures", () => {
     it("should have touch event handlers on viewport", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       const viewport = screen.getByTestId("svg-viewport");
       expect(viewport).toBeInTheDocument();
@@ -300,7 +410,11 @@ describe("InteractiveSVGArtifact", () => {
     });
 
     it("should handle single touch for pan", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       const viewport = screen.getByTestId("svg-viewport");
 
@@ -320,7 +434,11 @@ describe("InteractiveSVGArtifact", () => {
     });
 
     it("should handle pinch-to-zoom with two fingers", async () => {
-      render(<InteractiveSVGArtifact data={sampleSVG} />);
+      render(
+        <TestProvider>
+          <InteractiveSVGArtifact data={sampleSVG} />
+        </TestProvider>,
+      );
 
       const viewport = screen.getByTestId("svg-viewport");
 

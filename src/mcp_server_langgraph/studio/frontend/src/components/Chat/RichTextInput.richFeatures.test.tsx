@@ -15,6 +15,8 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RichTextInput } from "./RichTextInput";
 
+import { TestProvider } from "@/test-utils";
+
 describe("RichTextInput - Rich Features", () => {
   const mockOnSubmit = vi.fn();
 
@@ -31,13 +33,15 @@ describe("RichTextInput - Rich Features", () => {
     it("should show mention suggestions when @ is typed", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          mentionOptions={[
-            { type: "model", value: "claude" },
-            { type: "model", value: "gpt-4" },
-          ]}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            mentionOptions={[
+              { type: "model", value: "claude" },
+              { type: "model", value: "gpt-4" },
+            ]}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -51,13 +55,15 @@ describe("RichTextInput - Rich Features", () => {
     it("should filter mention suggestions based on input", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          mentionOptions={[
-            { type: "model", value: "claude" },
-            { type: "model", value: "gpt-4" },
-          ]}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            mentionOptions={[
+              { type: "model", value: "claude" },
+              { type: "model", value: "gpt-4" },
+            ]}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -72,10 +78,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert mention when suggestion is selected", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          mentionOptions={[{ type: "model", value: "claude" }]}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            mentionOptions={[{ type: "model", value: "claude" }]}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -94,10 +102,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should close suggestions on escape", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          mentionOptions={[{ type: "model", value: "claude" }]}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            mentionOptions={[{ type: "model", value: "claude" }]}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -118,7 +128,12 @@ describe("RichTextInput - Rich Features", () => {
   describe("code block", () => {
     it("should render code block button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /code block/i }),
@@ -128,7 +143,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert code block template", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const codeBlockButton = screen.getByRole("button", {
@@ -143,7 +163,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should wrap selected text in code block", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -162,7 +187,12 @@ describe("RichTextInput - Rich Features", () => {
   describe("strikethrough formatting", () => {
     it("should render strikethrough button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /strikethrough/i }),
@@ -172,7 +202,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should wrap selected text with strikethrough markers", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -191,7 +226,11 @@ describe("RichTextInput - Rich Features", () => {
 
     it("should apply strikethrough with Ctrl+Shift+X shortcut", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "test");
@@ -206,7 +245,12 @@ describe("RichTextInput - Rich Features", () => {
   describe("list formatting", () => {
     it("should render ordered list button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /ordered list/i }),
@@ -215,7 +259,12 @@ describe("RichTextInput - Rich Features", () => {
 
     it("should render bullet list button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /bullet list/i }),
@@ -225,7 +274,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert ordered list prefix at line start", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -240,7 +294,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert bullet list prefix at line start", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -255,7 +314,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert ordered list on empty input", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const listButton = screen.getByRole("button", { name: /ordered list/i });
@@ -268,7 +332,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert bullet list on empty input", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const listButton = screen.getByRole("button", { name: /bullet list/i });
@@ -282,7 +351,12 @@ describe("RichTextInput - Rich Features", () => {
   describe("quote formatting", () => {
     it("should render quote button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /quote/i }),
@@ -292,7 +366,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert quote prefix at line start", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -307,7 +386,12 @@ describe("RichTextInput - Rich Features", () => {
     it("should insert quote prefix on empty input", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const quoteButton = screen.getByRole("button", { name: /quote/i });

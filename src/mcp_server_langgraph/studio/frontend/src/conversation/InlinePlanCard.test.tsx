@@ -13,6 +13,8 @@ import userEvent from "@testing-library/user-event";
 import { InlinePlanCard } from "./InlinePlanCard";
 import type { ExecutionPlan } from "@/store/slices/executionModeSlice";
 
+import { TestProvider } from "@/test-utils";
+
 // Motion-specific props that should not be passed to DOM elements
 const MOTION_PROPS = new Set([
   "whileHover",
@@ -150,25 +152,41 @@ describe("InlinePlanCard", () => {
 
   describe("Rendering", () => {
     it("renders plan card with data-testid", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("inline-plan-card")).toBeInTheDocument();
     });
 
     it("displays plan header", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Execution Plan/i)).toBeInTheDocument();
     });
 
     it("displays complexity badge", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Complicated/i)).toBeInTheDocument();
     });
 
     it("displays risk level", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Risk level should be displayed
       const riskBadges = screen.getAllByText(/Medium/i);
@@ -176,32 +194,52 @@ describe("InlinePlanCard", () => {
     });
 
     it("displays task type", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/code_generation/i)).toBeInTheDocument();
     });
 
     it("displays executor model", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/claude-opus-4-5/i)).toBeInTheDocument();
     });
 
     it("displays estimated cost", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/\$0\.15/)).toBeInTheDocument();
     });
 
     it("displays tools needed", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/code_executor/i)).toBeInTheDocument();
       expect(screen.getByText(/file_writer/i)).toBeInTheDocument();
     });
 
     it("displays thinking budget", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Should display thinking budget (may be part of details)
       expect(screen.getByText(/thinking/i)).toBeInTheDocument();
@@ -210,7 +248,11 @@ describe("InlinePlanCard", () => {
 
   describe("Action Buttons", () => {
     it("renders approve button", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /approve/i }),
@@ -218,7 +260,11 @@ describe("InlinePlanCard", () => {
     });
 
     it("renders reject button", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /reject/i }),
@@ -226,7 +272,11 @@ describe("InlinePlanCard", () => {
     });
 
     it("renders edit plan button", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
     });
@@ -235,7 +285,11 @@ describe("InlinePlanCard", () => {
       const onApprove = vi.fn();
       const user = userEvent.setup();
 
-      render(<InlinePlanCard {...defaultProps} onApprove={onApprove} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} onApprove={onApprove} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /approve/i }));
       expect(onApprove).toHaveBeenCalledWith(mockPlan.planId);
@@ -245,7 +299,11 @@ describe("InlinePlanCard", () => {
       const onReject = vi.fn();
       const user = userEvent.setup();
 
-      render(<InlinePlanCard {...defaultProps} onReject={onReject} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} onReject={onReject} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /reject/i }));
       expect(onReject).toHaveBeenCalledWith(mockPlan.planId);
@@ -256,7 +314,11 @@ describe("InlinePlanCard", () => {
     it("expands edit section when edit button clicked", async () => {
       const user = userEvent.setup();
 
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Edit section should be collapsed initially
       expect(
@@ -273,7 +335,11 @@ describe("InlinePlanCard", () => {
     it("collapses edit section when edit button clicked again", async () => {
       const user = userEvent.setup();
 
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Expand
       await user.click(screen.getByRole("button", { name: /edit/i }));
@@ -290,7 +356,11 @@ describe("InlinePlanCard", () => {
       const onEdit = vi.fn();
       const user = userEvent.setup();
 
-      render(<InlinePlanCard {...defaultProps} onEdit={onEdit} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} onEdit={onEdit} />
+        </TestProvider>,
+      );
 
       // Expand edit section
       await user.click(screen.getByRole("button", { name: /edit/i }));
@@ -307,7 +377,11 @@ describe("InlinePlanCard", () => {
   describe("Risk Level Variants", () => {
     it("applies low risk styling", () => {
       const lowRiskPlan = { ...mockPlan, riskLevel: "low" as const };
-      render(<InlinePlanCard {...defaultProps} plan={lowRiskPlan} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={lowRiskPlan} />
+        </TestProvider>,
+      );
 
       // Low risk should have success styling
       const card = screen.getByTestId("inline-plan-card");
@@ -315,7 +389,11 @@ describe("InlinePlanCard", () => {
     });
 
     it("applies medium risk styling", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("inline-plan-card");
       expect(card).toBeInTheDocument();
@@ -323,7 +401,11 @@ describe("InlinePlanCard", () => {
 
     it("applies high risk styling", () => {
       const highRiskPlan = { ...mockPlan, riskLevel: "high" as const };
-      render(<InlinePlanCard {...defaultProps} plan={highRiskPlan} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={highRiskPlan} />
+        </TestProvider>,
+      );
 
       const card = screen.getByTestId("inline-plan-card");
       expect(card).toBeInTheDocument();
@@ -333,7 +415,11 @@ describe("InlinePlanCard", () => {
   describe("Complexity Variants", () => {
     it("renders simple complexity", () => {
       const simplePlan = { ...mockPlan, complexity: "simple" as const };
-      render(<InlinePlanCard {...defaultProps} plan={simplePlan} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={simplePlan} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Simple/i)).toBeInTheDocument();
     });
@@ -343,14 +429,22 @@ describe("InlinePlanCard", () => {
         ...mockPlan,
         complexity: "complicated" as const,
       };
-      render(<InlinePlanCard {...defaultProps} plan={complicatedPlan} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={complicatedPlan} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Complicated/i)).toBeInTheDocument();
     });
 
     it("renders complex complexity", () => {
       const complexPlan = { ...mockPlan, complexity: "complex" as const };
-      render(<InlinePlanCard {...defaultProps} plan={complexPlan} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={complexPlan} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Complex/i)).toBeInTheDocument();
     });
@@ -358,7 +452,11 @@ describe("InlinePlanCard", () => {
 
   describe("Loading State", () => {
     it("hides action buttons when loading", () => {
-      render(<InlinePlanCard {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       // When loading, action buttons are not rendered (isActionable is false)
       expect(
@@ -370,7 +468,11 @@ describe("InlinePlanCard", () => {
     });
 
     it("still renders card when loading", () => {
-      render(<InlinePlanCard {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       // Card should still be visible
       const card = screen.getByTestId("inline-plan-card");
@@ -380,19 +482,31 @@ describe("InlinePlanCard", () => {
 
   describe("Status States", () => {
     it("shows approved state", () => {
-      render(<InlinePlanCard {...defaultProps} status="approved" />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} status="approved" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/approved/i)).toBeInTheDocument();
     });
 
     it("shows rejected state", () => {
-      render(<InlinePlanCard {...defaultProps} status="rejected" />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} status="rejected" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/rejected/i)).toBeInTheDocument();
     });
 
     it("hides action buttons when approved", () => {
-      render(<InlinePlanCard {...defaultProps} status="approved" />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} status="approved" />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByRole("button", { name: /approve/i }),
@@ -400,7 +514,11 @@ describe("InlinePlanCard", () => {
     });
 
     it("hides action buttons when rejected", () => {
-      render(<InlinePlanCard {...defaultProps} status="rejected" />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} status="rejected" />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByRole("button", { name: /reject/i }),
@@ -410,7 +528,11 @@ describe("InlinePlanCard", () => {
 
   describe("Accessibility", () => {
     it("has proper heading structure", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Card should have a heading
       const heading = screen.getByRole("heading", { level: 3 });
@@ -420,7 +542,11 @@ describe("InlinePlanCard", () => {
     it("buttons are keyboard accessible", async () => {
       const onApprove = vi.fn();
 
-      render(<InlinePlanCard {...defaultProps} onApprove={onApprove} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} onApprove={onApprove} />
+        </TestProvider>,
+      );
 
       const approveButton = screen.getByRole("button", { name: /approve/i });
       approveButton.focus();
@@ -428,7 +554,11 @@ describe("InlinePlanCard", () => {
     });
 
     it("has proper aria labels on badges", () => {
-      render(<InlinePlanCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Badges should have proper labels for screen readers
       const card = screen.getByTestId("inline-plan-card");
@@ -445,7 +575,11 @@ describe("InlinePlanCard", () => {
       const user = userEvent.setup();
       const onApprove = vi.fn();
 
-      render(<InlinePlanCard {...defaultProps} onApprove={onApprove} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} onApprove={onApprove} />
+        </TestProvider>,
+      );
 
       const approveButton = screen.getByRole("button", { name: /approve/i });
       await user.click(approveButton);
@@ -465,7 +599,11 @@ describe("InlinePlanCard", () => {
       const user = userEvent.setup();
       const onReject = vi.fn();
 
-      render(<InlinePlanCard {...defaultProps} onReject={onReject} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} onReject={onReject} />
+        </TestProvider>,
+      );
 
       const rejectButton = screen.getByRole("button", { name: /reject/i });
       await user.click(rejectButton);
@@ -485,7 +623,11 @@ describe("InlinePlanCard", () => {
       const user = userEvent.setup();
       const highRiskPlan = { ...mockPlan, riskLevel: "high" as const };
 
-      render(<InlinePlanCard {...defaultProps} plan={highRiskPlan} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={highRiskPlan} />
+        </TestProvider>,
+      );
 
       const approveButton = screen.getByRole("button", { name: /approve/i });
       await user.click(approveButton);
@@ -501,7 +643,11 @@ describe("InlinePlanCard", () => {
       const user = userEvent.setup();
       const complexPlan = { ...mockPlan, complexity: "complex" as const };
 
-      render(<InlinePlanCard {...defaultProps} plan={complexPlan} />);
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={complexPlan} />
+        </TestProvider>,
+      );
 
       const approveButton = screen.getByRole("button", { name: /approve/i });
       await user.click(approveButton);

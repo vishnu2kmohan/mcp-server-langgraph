@@ -14,6 +14,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AuditLogFilters } from "./AuditLogFilters";
 
+import { TestProvider } from "@/test-utils";
+
 describe("AuditLogFilters", () => {
   afterEach(() => {
     cleanup();
@@ -29,26 +31,42 @@ describe("AuditLogFilters", () => {
 
   describe("Rendering", () => {
     it("should render date range picker", () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/start date/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/end date/i)).toBeInTheDocument();
     });
 
     it("should render action type filter", () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/action type/i)).toBeInTheDocument();
     });
 
     it("should render user search input", () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByPlaceholderText(/search user/i)).toBeInTheDocument();
     });
 
     it("should render export button", () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /export/i }),
@@ -60,10 +78,12 @@ describe("AuditLogFilters", () => {
     it("should call onDateRangeChange when start date changes", async () => {
       const onDateRangeChange = vi.fn();
       render(
-        <AuditLogFilters
-          {...defaultProps}
-          onDateRangeChange={onDateRangeChange}
-        />,
+        <TestProvider>
+          <AuditLogFilters
+            {...defaultProps}
+            onDateRangeChange={onDateRangeChange}
+          />
+        </TestProvider>,
       );
 
       const startDateInput = screen.getByLabelText(/start date/i);
@@ -75,10 +95,12 @@ describe("AuditLogFilters", () => {
     it("should call onDateRangeChange when end date changes", async () => {
       const onDateRangeChange = vi.fn();
       render(
-        <AuditLogFilters
-          {...defaultProps}
-          onDateRangeChange={onDateRangeChange}
-        />,
+        <TestProvider>
+          <AuditLogFilters
+            {...defaultProps}
+            onDateRangeChange={onDateRangeChange}
+          />
+        </TestProvider>,
       );
 
       const endDateInput = screen.getByLabelText(/end date/i);
@@ -90,7 +112,11 @@ describe("AuditLogFilters", () => {
 
   describe("Action Type Filter", () => {
     it("should show action type options", async () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       const select = screen.getByLabelText(/action type/i);
       fireEvent.click(select);
@@ -107,10 +133,12 @@ describe("AuditLogFilters", () => {
     it("should call onActionTypeChange when action type is selected", async () => {
       const onActionTypeChange = vi.fn();
       render(
-        <AuditLogFilters
-          {...defaultProps}
-          onActionTypeChange={onActionTypeChange}
-        />,
+        <TestProvider>
+          <AuditLogFilters
+            {...defaultProps}
+            onActionTypeChange={onActionTypeChange}
+          />
+        </TestProvider>,
       );
 
       const select = screen.getByLabelText(/action type/i);
@@ -123,7 +151,11 @@ describe("AuditLogFilters", () => {
   describe("User Search", () => {
     it("should call onUserSearch when typing in search", async () => {
       const onUserSearch = vi.fn();
-      render(<AuditLogFilters {...defaultProps} onUserSearch={onUserSearch} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} onUserSearch={onUserSearch} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search user/i);
       await userEvent.type(searchInput, "alice");
@@ -133,7 +165,11 @@ describe("AuditLogFilters", () => {
 
     it("should call onUserSearch for each character typed", async () => {
       const onUserSearch = vi.fn();
-      render(<AuditLogFilters {...defaultProps} onUserSearch={onUserSearch} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} onUserSearch={onUserSearch} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search user/i);
       fireEvent.change(searchInput, { target: { value: "alice" } });
@@ -145,7 +181,11 @@ describe("AuditLogFilters", () => {
   describe("Export", () => {
     it("should call onExport when export button is clicked", () => {
       const onExport = vi.fn();
-      render(<AuditLogFilters {...defaultProps} onExport={onExport} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} onExport={onExport} />
+        </TestProvider>,
+      );
 
       const exportButton = screen.getByRole("button", { name: /export csv/i });
       fireEvent.click(exportButton);
@@ -154,7 +194,11 @@ describe("AuditLogFilters", () => {
     });
 
     it("should show export format options", () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Export button should indicate CSV format
       expect(
@@ -165,7 +209,11 @@ describe("AuditLogFilters", () => {
 
   describe("Reset Filters", () => {
     it("should show reset button", () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /reset/i }),
@@ -174,7 +222,11 @@ describe("AuditLogFilters", () => {
 
     it("should call onReset when reset button is clicked", () => {
       const onReset = vi.fn();
-      render(<AuditLogFilters {...defaultProps} onReset={onReset} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} onReset={onReset} />
+        </TestProvider>,
+      );
 
       const resetButton = screen.getByRole("button", {
         name: /reset filters/i,
@@ -187,7 +239,11 @@ describe("AuditLogFilters", () => {
 
   describe("Accessibility", () => {
     it("should have accessible labels for all inputs", () => {
-      render(<AuditLogFilters {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AuditLogFilters {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/start date/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/end date/i)).toBeInTheDocument();

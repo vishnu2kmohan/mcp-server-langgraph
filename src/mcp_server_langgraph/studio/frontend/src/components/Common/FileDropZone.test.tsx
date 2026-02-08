@@ -17,6 +17,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { FileDropZone } from "./FileDropZone";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 describe("FileDropZone", () => {
@@ -33,32 +35,52 @@ describe("FileDropZone", () => {
 
   describe("rendering", () => {
     it("should render the drop zone", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("file-drop-zone")).toBeInTheDocument();
     });
 
     it("should display instruction text", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(/drag and drop|drop files here/i),
       ).toBeInTheDocument();
     });
 
     it("should render file input", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/browse files/i)).toBeInTheDocument();
     });
   });
 
   describe("drag states", () => {
     it("should show normal state initially", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
       expect(dropZone).not.toHaveAttribute("data-dragging", "true");
     });
 
     it("should show dragging state on drag enter", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
 
       fireEvent.dragEnter(dropZone);
@@ -66,7 +88,11 @@ describe("FileDropZone", () => {
     });
 
     it("should remove dragging state on drag leave", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
 
       fireEvent.dragEnter(dropZone);
@@ -77,7 +103,11 @@ describe("FileDropZone", () => {
 
   describe("file drop", () => {
     it("should call onFilesSelected when files are dropped", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
 
       const file = new File(["content"], "test.txt", { type: "text/plain" });
@@ -92,7 +122,11 @@ describe("FileDropZone", () => {
     });
 
     it("should handle multiple files", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
 
       const file1 = new File(["content1"], "test1.txt", { type: "text/plain" });
@@ -114,7 +148,11 @@ describe("FileDropZone", () => {
   describe("file input", () => {
     it("should trigger file input on browse click", async () => {
       const user = userEvent.setup();
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
 
       const browseButton = screen.getByRole("button", { name: /browse/i });
       const fileInput = document.querySelector(
@@ -132,7 +170,12 @@ describe("FileDropZone", () => {
   describe("accept types", () => {
     it("should set accept attribute on file input", () => {
       render(
-        <FileDropZone onFilesSelected={mockOnFilesSelected} accept="image/*" />,
+        <TestProvider>
+          <FileDropZone
+            onFilesSelected={mockOnFilesSelected}
+            accept="image/*"
+          />
+        </TestProvider>,
       );
       const fileInput = document.querySelector('input[type="file"]');
       expect(fileInput).toHaveAttribute("accept", "image/*");
@@ -141,14 +184,23 @@ describe("FileDropZone", () => {
 
   describe("multiple files", () => {
     it("should allow multiple files by default", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const fileInput = document.querySelector('input[type="file"]');
       expect(fileInput).toHaveAttribute("multiple");
     });
 
     it("should respect multiple=false prop", () => {
       render(
-        <FileDropZone onFilesSelected={mockOnFilesSelected} multiple={false} />,
+        <TestProvider>
+          <FileDropZone
+            onFilesSelected={mockOnFilesSelected}
+            multiple={false}
+          />
+        </TestProvider>,
       );
       const fileInput = document.querySelector('input[type="file"]');
       expect(fileInput).not.toHaveAttribute("multiple");
@@ -157,13 +209,21 @@ describe("FileDropZone", () => {
 
   describe("disabled state", () => {
     it("should be disabled when disabled prop is true", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} disabled />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} disabled />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
       expect(dropZone).toHaveAttribute("aria-disabled", "true");
     });
 
     it("should not respond to drops when disabled", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} disabled />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} disabled />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
 
       const file = new File(["content"], "test.txt", { type: "text/plain" });
@@ -181,9 +241,11 @@ describe("FileDropZone", () => {
   describe("custom children", () => {
     it("should render custom children", () => {
       render(
-        <FileDropZone onFilesSelected={mockOnFilesSelected}>
-          <div data-testid="custom-content">Custom drop zone content</div>
-        </FileDropZone>,
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected}>
+            <div data-testid="custom-content">Custom drop zone content</div>
+          </FileDropZone>
+        </TestProvider>,
       );
       expect(screen.getByTestId("custom-content")).toBeInTheDocument();
     });
@@ -192,20 +254,30 @@ describe("FileDropZone", () => {
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <FileDropZone onFilesSelected={mockOnFilesSelected} />,
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have accessible role", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
       expect(dropZone).toHaveAttribute("role", "region");
     });
 
     it("should have accessible label", () => {
-      render(<FileDropZone onFilesSelected={mockOnFilesSelected} />);
+      render(
+        <TestProvider>
+          <FileDropZone onFilesSelected={mockOnFilesSelected} />
+        </TestProvider>,
+      );
       const dropZone = screen.getByTestId("file-drop-zone");
       expect(dropZone).toHaveAttribute("aria-label");
     });

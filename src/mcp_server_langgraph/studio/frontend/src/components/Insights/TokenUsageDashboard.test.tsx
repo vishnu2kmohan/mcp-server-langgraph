@@ -17,6 +17,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { TokenUsageDashboard } from "./TokenUsageDashboard";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // Mock useTokenUsage hook
@@ -58,20 +60,32 @@ describe("TokenUsageDashboard", () => {
 
   describe("rendering", () => {
     it("should render the dashboard", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("token-usage-dashboard")).toBeInTheDocument();
     });
 
     it("should display total tokens", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("4,500")).toBeInTheDocument();
       expect(screen.getByText(/total tokens/i)).toBeInTheDocument();
     });
 
     it("should display input and output token breakdown", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("1,500")).toBeInTheDocument();
       expect(screen.getByText("3,000")).toBeInTheDocument();
@@ -80,13 +94,21 @@ describe("TokenUsageDashboard", () => {
     });
 
     it("should display estimated cost", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("$0.05")).toBeInTheDocument();
     });
 
     it("should display context window usage", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/3\.5%/)).toBeInTheDocument();
       expect(screen.getByText(/128,000/)).toBeInTheDocument();
@@ -114,7 +136,11 @@ describe("TokenUsageDashboard", () => {
       }));
 
       // For this test, we'll check the warning is present via the progress bar color
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       const progressBar = screen.getByTestId("context-window-progress");
       expect(progressBar).toBeInTheDocument();
@@ -138,7 +164,11 @@ describe("TokenUsageDashboard", () => {
         }),
       }));
 
-      render(<TokenUsageDashboard sessionId="session-1" showLoading />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" showLoading />
+        </TestProvider>,
+      );
 
       // Dashboard should still render with current values
       expect(screen.getByTestId("token-usage-dashboard")).toBeInTheDocument();
@@ -151,7 +181,11 @@ describe("TokenUsageDashboard", () => {
 
   describe("refresh", () => {
     it("should render refresh button", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /refresh/i }),
@@ -160,7 +194,11 @@ describe("TokenUsageDashboard", () => {
 
     it("should call refresh when refresh button is clicked", async () => {
       const user = userEvent.setup();
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /refresh/i }));
 
@@ -174,7 +212,11 @@ describe("TokenUsageDashboard", () => {
 
   describe("compact mode", () => {
     it("should render in compact mode", () => {
-      render(<TokenUsageDashboard sessionId="session-1" compact />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" compact />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("token-usage-dashboard")).toHaveAttribute(
         "data-compact",
@@ -189,7 +231,11 @@ describe("TokenUsageDashboard", () => {
 
   describe("history chart", () => {
     it("should render usage history chart", () => {
-      render(<TokenUsageDashboard sessionId="session-1" showHistory />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" showHistory />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("usage-history-chart")).toBeInTheDocument();
     });
@@ -202,7 +248,9 @@ describe("TokenUsageDashboard", () => {
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <TokenUsageDashboard sessionId="session-1" />,
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
       );
 
       const results = await axe(container);
@@ -210,7 +258,11 @@ describe("TokenUsageDashboard", () => {
     });
 
     it("should have proper heading structure", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("heading", { name: /token usage/i }),
@@ -218,7 +270,11 @@ describe("TokenUsageDashboard", () => {
     });
 
     it("should have accessible labels for metrics", () => {
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       // Progress bar should have accessible name
       const progressBar = screen.getByTestId("context-window-progress");
@@ -227,7 +283,11 @@ describe("TokenUsageDashboard", () => {
 
     it("should be keyboard navigable", async () => {
       const user = userEvent.setup();
-      render(<TokenUsageDashboard sessionId="session-1" />);
+      render(
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" />
+        </TestProvider>,
+      );
 
       await user.tab();
 
@@ -243,7 +303,9 @@ describe("TokenUsageDashboard", () => {
   describe("custom className", () => {
     it("should apply custom className", () => {
       render(
-        <TokenUsageDashboard sessionId="session-1" className="custom-class" />,
+        <TestProvider>
+          <TokenUsageDashboard sessionId="session-1" className="custom-class" />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("token-usage-dashboard")).toHaveClass(

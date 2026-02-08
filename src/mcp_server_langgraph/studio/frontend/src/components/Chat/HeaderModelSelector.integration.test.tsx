@@ -151,7 +151,11 @@ describe("HeaderModelSelector Integration", () => {
 
   describe("Session Header Integration", () => {
     it("renders model selector alongside session title", () => {
-      render(<SessionHeaderWithModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SessionHeaderWithModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("session-header")).toBeInTheDocument();
       expect(screen.getByTestId("session-title")).toHaveTextContent(
@@ -161,7 +165,11 @@ describe("HeaderModelSelector Integration", () => {
     });
 
     it("displays compact model name in header context", () => {
-      render(<SessionHeaderWithModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SessionHeaderWithModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       // In compact mode, "Claude Opus 4.5" should show as "Opus 4.5"
       expect(screen.getByText(/Opus/)).toBeInTheDocument();
@@ -169,10 +177,12 @@ describe("HeaderModelSelector Integration", () => {
 
     it("displays thinking level for thinking-capable models", () => {
       render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          thinkingLevel="high"
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            thinkingLevel="high"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/High/i)).toBeInTheDocument();
@@ -180,10 +190,12 @@ describe("HeaderModelSelector Integration", () => {
 
     it("hides thinking level for non-thinking models", () => {
       render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel="gpt-4o"
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel="gpt-4o"
+          />
+        </TestProvider>,
       );
 
       // GPT-4o doesn't support thinking, so no level should be shown
@@ -199,10 +211,12 @@ describe("HeaderModelSelector Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -219,12 +233,14 @@ describe("HeaderModelSelector Integration", () => {
       const onSendMessage = vi.fn();
 
       render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel="gemini-2.5-pro"
-          thinkingLevel="high"
-          onSendMessage={onSendMessage}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel="gemini-2.5-pro"
+            thinkingLevel="high"
+            onSendMessage={onSendMessage}
+          />
+        </TestProvider>,
       );
 
       // Click send
@@ -241,11 +257,13 @@ describe("HeaderModelSelector Integration", () => {
       });
 
       const { rerender } = render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Initial state - Opus shown
@@ -275,10 +293,12 @@ describe("HeaderModelSelector Integration", () => {
       const onThinkingLevelChange = vi.fn();
 
       render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          onThinkingLevelChange={onThinkingLevelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            onThinkingLevelChange={onThinkingLevelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -295,11 +315,13 @@ describe("HeaderModelSelector Integration", () => {
       const onSendMessage = vi.fn();
 
       render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          thinkingLevel="low"
-          onSendMessage={onSendMessage}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            thinkingLevel="low"
+            onSendMessage={onSendMessage}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("send-button"));
@@ -310,7 +332,11 @@ describe("HeaderModelSelector Integration", () => {
     it("thinking level section appears for thinking-capable models", async () => {
       const user = userEvent.setup();
 
-      render(<SessionHeaderWithModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SessionHeaderWithModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -321,10 +347,12 @@ describe("HeaderModelSelector Integration", () => {
       const user = userEvent.setup();
 
       render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel="gpt-4o"
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel="gpt-4o"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -344,11 +372,13 @@ describe("HeaderModelSelector Integration", () => {
       });
 
       const { rerender } = render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Initially thinking level should be visible
@@ -378,11 +408,13 @@ describe("HeaderModelSelector Integration", () => {
       });
 
       const { rerender } = render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Initially thinking level should be hidden
@@ -419,14 +451,16 @@ describe("HeaderModelSelector Integration", () => {
       const onSendMessage = vi.fn();
 
       const { rerender } = render(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          thinkingLevel={thinkingLevel}
-          onModelChange={onModelChange}
-          onThinkingLevelChange={onThinkingLevelChange}
-          onSendMessage={onSendMessage}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            thinkingLevel={thinkingLevel}
+            onModelChange={onModelChange}
+            onThinkingLevelChange={onThinkingLevelChange}
+            onSendMessage={onSendMessage}
+          />
+        </TestProvider>,
       );
 
       // Step 1: Open dropdown
@@ -478,7 +512,11 @@ describe("HeaderModelSelector Integration", () => {
     it("dropdown remains open after changing thinking level", async () => {
       const user = userEvent.setup();
 
-      render(<SessionHeaderWithModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SessionHeaderWithModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Open dropdown
       await user.click(screen.getByTestId("header-model-selector"));
@@ -494,7 +532,11 @@ describe("HeaderModelSelector Integration", () => {
     it("dropdown closes after model selection", async () => {
       const user = userEvent.setup();
 
-      render(<SessionHeaderWithModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SessionHeaderWithModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Open dropdown
       await user.click(screen.getByTestId("header-model-selector"));
@@ -514,7 +556,11 @@ describe("HeaderModelSelector Integration", () => {
     it("shows preview badge in dropdown for preview models", async () => {
       const user = userEvent.setup();
 
-      render(<SessionHeaderWithModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SessionHeaderWithModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -527,7 +573,11 @@ describe("HeaderModelSelector Integration", () => {
     it("shows thinking badge for thinking-capable models in dropdown", async () => {
       const user = userEvent.setup();
 
-      render(<SessionHeaderWithModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SessionHeaderWithModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 

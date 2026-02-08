@@ -9,6 +9,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import * as api from "../api";
 import { ConnectedComplianceDashboard } from "./ConnectedComplianceDashboard";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mock Data
 // =============================================================================
@@ -95,7 +97,11 @@ describe("ConnectedComplianceDashboard", () => {
         refetch: vi.fn(),
       });
 
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("compliance-dashboard")).toBeInTheDocument();
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
@@ -104,7 +110,11 @@ describe("ConnectedComplianceDashboard", () => {
 
   describe("Successful Data Fetch", () => {
     it("should display compliance summary after successful fetch", () => {
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Compliance Overview")).toBeInTheDocument();
 
@@ -116,7 +126,11 @@ describe("ConnectedComplianceDashboard", () => {
     });
 
     it("should display correct percentages", () => {
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("94%")).toBeInTheDocument();
       expect(screen.getByText("100%")).toBeInTheDocument();
@@ -125,7 +139,11 @@ describe("ConnectedComplianceDashboard", () => {
     });
 
     it("should display control counts", () => {
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("47/50 controls")).toBeInTheDocument();
       expect(screen.getByText("25/25 controls")).toBeInTheDocument();
@@ -134,7 +152,11 @@ describe("ConnectedComplianceDashboard", () => {
     });
 
     it("should display FedRAMP auth level", () => {
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("P-ATO")).toBeInTheDocument();
     });
@@ -149,7 +171,11 @@ describe("ConnectedComplianceDashboard", () => {
         refetch: vi.fn(),
       });
 
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/failed to load compliance data/i),
@@ -164,7 +190,11 @@ describe("ConnectedComplianceDashboard", () => {
         refetch: vi.fn(),
       });
 
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("retry-button")).toBeInTheDocument();
     });
@@ -178,7 +208,11 @@ describe("ConnectedComplianceDashboard", () => {
         refetch: mockRefetch,
       });
 
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByTestId("retry-button"));
       expect(mockRefetch).toHaveBeenCalled();
@@ -191,10 +225,12 @@ describe("ConnectedComplianceDashboard", () => {
       const endTime = "2024-12-31T23:59:59Z";
 
       render(
-        <ConnectedComplianceDashboard
-          startTime={startTime}
-          endTime={endTime}
-        />,
+        <TestProvider>
+          <ConnectedComplianceDashboard
+            startTime={startTime}
+            endTime={endTime}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Compliance Overview")).toBeInTheDocument();
@@ -206,7 +242,11 @@ describe("ConnectedComplianceDashboard", () => {
     });
 
     it("should default to last 30 days if no date range provided", () => {
-      render(<ConnectedComplianceDashboard />);
+      render(
+        <TestProvider>
+          <ConnectedComplianceDashboard />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Compliance Overview")).toBeInTheDocument();
       // Verify the hook was called with default date range (30 days ago to now)

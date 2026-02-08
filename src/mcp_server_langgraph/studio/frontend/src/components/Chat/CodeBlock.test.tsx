@@ -20,6 +20,8 @@ import {
 
 import { CodeBlock } from "./CodeBlock";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock clipboard API
 const mockWriteText = vi.fn();
 Object.assign(navigator, {
@@ -47,26 +49,42 @@ describe("CodeBlock", () => {
 
   describe("Basic Rendering", () => {
     it("should render code content", () => {
-      render(<CodeBlock>const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock>const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       expect(screen.getByText("const x = 1;")).toBeInTheDocument();
     });
 
     it("should render with language label when provided", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       expect(screen.getByText("javascript")).toBeInTheDocument();
     });
 
     it("should not render language label when not provided", () => {
-      render(<CodeBlock>const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock>const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       // No language label should be present
       expect(screen.queryByText("javascript")).not.toBeInTheDocument();
     });
 
     it("should render with proper accessibility attributes", () => {
-      render(<CodeBlock language="python">print("hello")</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="python">print("hello")</CodeBlock>
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("toolbar")).toHaveAttribute(
         "aria-label",
@@ -78,7 +96,11 @@ describe("CodeBlock", () => {
   describe("Copy to Clipboard", () => {
     it("should copy code when copy button is clicked", async () => {
       const code = 'console.log("test");';
-      render(<CodeBlock language="javascript">{code}</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">{code}</CodeBlock>
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByRole("button", {
         name: "Copy code to clipboard",
@@ -91,7 +113,11 @@ describe("CodeBlock", () => {
     });
 
     it("should have copy button initially showing copy state", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByRole("button", {
         name: "Copy code to clipboard",
@@ -102,7 +128,11 @@ describe("CodeBlock", () => {
 
     it("should handle copy button click and call clipboard API", async () => {
       const code = "test code";
-      render(<CodeBlock language="javascript">{code}</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">{code}</CodeBlock>
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByRole("button", {
         name: "Copy code to clipboard",
@@ -118,7 +148,11 @@ describe("CodeBlock", () => {
 
   describe("Word Wrap Toggle", () => {
     it("should render word wrap button", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: "Enable word wrap" }),
@@ -126,7 +160,11 @@ describe("CodeBlock", () => {
     });
 
     it("should toggle word wrap when button is clicked", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       const wrapButton = screen.getByRole("button", {
         name: "Enable word wrap",
@@ -141,7 +179,11 @@ describe("CodeBlock", () => {
     });
 
     it("should toggle word wrap off when clicked again", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       const wrapButton = screen.getByRole("button", {
         name: "Enable word wrap",
@@ -175,7 +217,11 @@ describe("CodeBlock", () => {
     });
 
     it("should render download button", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: "Download code as file" }),
@@ -205,7 +251,11 @@ describe("CodeBlock", () => {
         return originalCreateElement(tagName);
       });
 
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       const downloadButton = screen.getByRole("button", {
         name: "Download code as file",
@@ -235,7 +285,11 @@ describe("CodeBlock", () => {
         return originalCreateElement(tagName);
       });
 
-      render(<CodeBlock language="python">print("hello")</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="python">print("hello")</CodeBlock>
+        </TestProvider>,
+      );
 
       const downloadButton = screen.getByRole("button", {
         name: "Download code as file",
@@ -264,7 +318,11 @@ describe("CodeBlock", () => {
         return originalCreateElement(tagName);
       });
 
-      render(<CodeBlock language="unknownlang">some code</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="unknownlang">some code</CodeBlock>
+        </TestProvider>,
+      );
 
       const downloadButton = screen.getByRole("button", {
         name: "Download code as file",
@@ -293,7 +351,11 @@ describe("CodeBlock", () => {
         return originalCreateElement(tagName);
       });
 
-      render(<CodeBlock>some plain text</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock>some plain text</CodeBlock>
+        </TestProvider>,
+      );
 
       const downloadButton = screen.getByRole("button", {
         name: "Download code as file",
@@ -306,7 +368,11 @@ describe("CodeBlock", () => {
 
   describe("Accessibility", () => {
     it("should have accessible button labels", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: "Enable word wrap" }),
@@ -320,7 +386,11 @@ describe("CodeBlock", () => {
     });
 
     it("should have toolbar with correct aria-label", () => {
-      render(<CodeBlock language="javascript">const x = 1;</CodeBlock>);
+      render(
+        <TestProvider>
+          <CodeBlock language="javascript">const x = 1;</CodeBlock>
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("toolbar")).toHaveAttribute(
         "aria-label",

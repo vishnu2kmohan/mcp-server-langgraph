@@ -11,6 +11,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { OTELDataTable } from "./OTELDataTable";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data Types
 // =============================================================================
@@ -77,25 +79,41 @@ afterEach(() => {
 describe("OTELDataTable", () => {
   describe("basic rendering", () => {
     it("should render table with data", () => {
-      render(<OTELDataTable data={mockLogs} columns={testColumns} />);
+      render(
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("table")).toBeInTheDocument();
     });
 
     it("should render table headers", () => {
-      render(<OTELDataTable data={mockLogs} columns={testColumns} />);
+      render(
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Time")).toBeInTheDocument();
       expect(screen.getByText("Level")).toBeInTheDocument();
       expect(screen.getByText("Message")).toBeInTheDocument();
     });
 
     it("should render data rows", () => {
-      render(<OTELDataTable data={mockLogs} columns={testColumns} />);
+      render(
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Request received")).toBeInTheDocument();
       expect(screen.getByText("Connection failed")).toBeInTheDocument();
     });
 
     it("should show empty state when no data", () => {
-      render(<OTELDataTable data={[]} columns={testColumns} />);
+      render(
+        <TestProvider>
+          <OTELDataTable data={[]} columns={testColumns} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no data/i)).toBeInTheDocument();
     });
   });
@@ -107,7 +125,9 @@ describe("OTELDataTable", () => {
   describe("sorting", () => {
     it("should render sortable header buttons", () => {
       render(
-        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />
+        </TestProvider>,
       );
       const headers = screen.getAllByRole("columnheader");
       expect(headers.length).toBeGreaterThan(0);
@@ -116,7 +136,9 @@ describe("OTELDataTable", () => {
     it("should sort by column when header clicked", async () => {
       const user = userEvent.setup();
       render(
-        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />
+        </TestProvider>,
       );
 
       // Click Level header to sort
@@ -131,7 +153,9 @@ describe("OTELDataTable", () => {
     it("should toggle sort direction on repeated click", async () => {
       const user = userEvent.setup();
       render(
-        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />
+        </TestProvider>,
       );
 
       const levelHeader = screen.getByText("Level");
@@ -149,12 +173,14 @@ describe("OTELDataTable", () => {
 
     it("should use defaultSort when provided", () => {
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          enableSorting
-          defaultSort={{ id: "level", desc: false }}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            enableSorting
+            defaultSort={{ id: "level", desc: false }}
+          />
+        </TestProvider>,
       );
 
       // Table should be rendered with default sort applied
@@ -174,11 +200,13 @@ describe("OTELDataTable", () => {
       );
 
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          renderExpandedRow={renderExpandedRow}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            renderExpandedRow={renderExpandedRow}
+          />
+        </TestProvider>,
       );
 
       // Click first row
@@ -196,11 +224,13 @@ describe("OTELDataTable", () => {
       );
 
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          renderExpandedRow={renderExpandedRow}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            renderExpandedRow={renderExpandedRow}
+          />
+        </TestProvider>,
       );
 
       const rows = screen.getAllByRole("row");
@@ -219,12 +249,14 @@ describe("OTELDataTable", () => {
       const user = userEvent.setup();
 
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          onRowExpand={onRowExpand}
-          renderExpandedRow={() => <div>Expanded</div>}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            onRowExpand={onRowExpand}
+            renderExpandedRow={() => <div>Expanded</div>}
+          />
+        </TestProvider>,
       );
 
       const rows = screen.getAllByRole("row");
@@ -239,12 +271,14 @@ describe("OTELDataTable", () => {
       );
 
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          expandedRowId="2"
-          renderExpandedRow={renderExpandedRow}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            expandedRowId="2"
+            renderExpandedRow={renderExpandedRow}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Details for 2")).toBeInTheDocument();
@@ -263,11 +297,13 @@ describe("OTELDataTable", () => {
       };
 
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          getRowClassName={getRowClassName}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            getRowClassName={getRowClassName}
+          />
+        </TestProvider>,
       );
 
       // Find the error row and check for custom class
@@ -276,7 +312,11 @@ describe("OTELDataTable", () => {
     });
 
     it("should highlight row on hover", () => {
-      render(<OTELDataTable data={mockLogs} columns={testColumns} />);
+      render(
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} />
+        </TestProvider>,
+      );
 
       const rows = screen.getAllByRole("row");
       // Data rows should have hover styling (check class presence)
@@ -299,11 +339,13 @@ describe("OTELDataTable", () => {
       }));
 
       render(
-        <OTELDataTable
-          data={largeData}
-          columns={testColumns}
-          virtualizeThreshold={100}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={largeData}
+            columns={testColumns}
+            virtualizeThreshold={100}
+          />
+        </TestProvider>,
       );
 
       // Table should still render
@@ -317,11 +359,13 @@ describe("OTELDataTable", () => {
 
     it("should not virtualize when data is below threshold", () => {
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          virtualizeThreshold={100}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            virtualizeThreshold={100}
+          />
+        </TestProvider>,
       );
 
       // All 5 rows + 1 header should be rendered
@@ -345,7 +389,13 @@ describe("OTELDataTable", () => {
       }));
 
       render(
-        <OTELDataTable data={largeData} columns={testColumns} enableAutoTail />,
+        <TestProvider>
+          <OTELDataTable
+            data={largeData}
+            columns={testColumns}
+            enableAutoTail
+          />
+        </TestProvider>,
       );
 
       // Should have table rendered
@@ -367,11 +417,13 @@ describe("OTELDataTable", () => {
       }));
 
       render(
-        <OTELDataTable
-          data={largeData}
-          columns={testColumns}
-          maxEntries={50}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={largeData}
+            columns={testColumns}
+            maxEntries={50}
+          />
+        </TestProvider>,
       );
 
       // Only the last 50 entries should be displayed
@@ -389,12 +441,14 @@ describe("OTELDataTable", () => {
       }));
 
       render(
-        <OTELDataTable
-          data={largeData}
-          columns={testColumns}
-          maxEntries={50}
-          onBufferFull={onBufferFull}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={largeData}
+            columns={testColumns}
+            maxEntries={50}
+            onBufferFull={onBufferFull}
+          />
+        </TestProvider>,
       );
 
       expect(onBufferFull).toHaveBeenCalled();
@@ -408,7 +462,9 @@ describe("OTELDataTable", () => {
   describe("export functionality", () => {
     it("should show export button when enableExport is true", () => {
       render(
-        <OTELDataTable data={mockLogs} columns={testColumns} enableExport />,
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} enableExport />
+        </TestProvider>,
       );
 
       expect(
@@ -418,11 +474,13 @@ describe("OTELDataTable", () => {
 
     it("should hide export button when enableExport is false", () => {
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          enableExport={false}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            enableExport={false}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -437,7 +495,11 @@ describe("OTELDataTable", () => {
 
   describe("accessibility", () => {
     it("should have proper table structure with thead and tbody", () => {
-      render(<OTELDataTable data={mockLogs} columns={testColumns} />);
+      render(
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} />
+        </TestProvider>,
+      );
 
       const table = screen.getByRole("table");
       expect(
@@ -449,11 +511,13 @@ describe("OTELDataTable", () => {
     it("should have keyboard navigable rows", async () => {
       const user = userEvent.setup();
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          renderExpandedRow={() => <div>Expanded</div>}
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            renderExpandedRow={() => <div>Expanded</div>}
+          />
+        </TestProvider>,
       );
 
       const rows = screen.getAllByRole("row");
@@ -469,7 +533,9 @@ describe("OTELDataTable", () => {
     it("should announce sort order changes to screen readers", async () => {
       const user = userEvent.setup();
       render(
-        <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />,
+        <TestProvider>
+          <OTELDataTable data={mockLogs} columns={testColumns} enableSorting />
+        </TestProvider>,
       );
 
       const levelHeader = screen.getByText("Level");
@@ -488,11 +554,13 @@ describe("OTELDataTable", () => {
   describe("className prop", () => {
     it("should merge custom className with default styles", () => {
       render(
-        <OTELDataTable
-          data={mockLogs}
-          columns={testColumns}
-          className="custom-table"
-        />,
+        <TestProvider>
+          <OTELDataTable
+            data={mockLogs}
+            columns={testColumns}
+            className="custom-table"
+          />
+        </TestProvider>,
       );
 
       // className is on the outer wrapper, two levels up from table

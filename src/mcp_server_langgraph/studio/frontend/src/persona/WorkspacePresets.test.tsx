@@ -7,6 +7,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { WorkspacePresets, type WorkspacePreset } from "./WorkspacePresets";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -75,22 +77,26 @@ describe("WorkspacePresets", () => {
   describe("Rendering", () => {
     it("should render presets container", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("workspace-presets")).toBeInTheDocument();
     });
 
     it("should render all preset options", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Default Layout")).toBeInTheDocument();
       expect(screen.getByText("Focus Chat")).toBeInTheDocument();
@@ -100,11 +106,13 @@ describe("WorkspacePresets", () => {
 
     it("should display preset descriptions", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByText("Standard chat + canvas layout"),
@@ -115,11 +123,13 @@ describe("WorkspacePresets", () => {
   describe("Selection", () => {
     it("should highlight current preset", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="focus-chat"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="focus-chat"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       const focusChatPreset = screen.getByTestId("preset-focus-chat");
       expect(focusChatPreset).toHaveClass("selected");
@@ -128,11 +138,13 @@ describe("WorkspacePresets", () => {
     it("should call onApply when preset clicked", () => {
       const onApply = vi.fn();
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={onApply}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={onApply}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByText("Focus Canvas"));
       expect(onApply).toHaveBeenCalledWith(mockPresets[2]);
@@ -141,11 +153,13 @@ describe("WorkspacePresets", () => {
     it("should not call onApply when clicking current preset", () => {
       const onApply = vi.fn();
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={onApply}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={onApply}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByText("Default Layout"));
       expect(onApply).not.toHaveBeenCalled();
@@ -155,12 +169,14 @@ describe("WorkspacePresets", () => {
   describe("Layout Preview", () => {
     it("should show layout preview on hover", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-          showPreview
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+            showPreview
+          />
+        </TestProvider>,
       );
       fireEvent.mouseEnter(screen.getByTestId("preset-focus-canvas"));
       expect(screen.getByTestId("layout-preview")).toBeInTheDocument();
@@ -168,12 +184,14 @@ describe("WorkspacePresets", () => {
 
     it("should display layout percentages in preview", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-          showPreview
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+            showPreview
+          />
+        </TestProvider>,
       );
       fireEvent.mouseEnter(screen.getByTestId("preset-focus-canvas"));
       expect(screen.getByText("60%")).toBeInTheDocument(); // Canvas percentage
@@ -183,23 +201,27 @@ describe("WorkspacePresets", () => {
   describe("Grid vs List View", () => {
     it("should render as grid by default", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("workspace-presets")).toHaveClass("grid");
     });
 
     it("should render as list when variant is list", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-          variant="list"
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+            variant="list"
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("workspace-presets")).toHaveClass("list");
     });
@@ -208,12 +230,14 @@ describe("WorkspacePresets", () => {
   describe("Custom Presets", () => {
     it("should show save button when allowCustom is true", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-          allowCustom
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+            allowCustom
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("save-custom-preset")).toBeInTheDocument();
     });
@@ -221,13 +245,15 @@ describe("WorkspacePresets", () => {
     it("should call onSaveCustom when save clicked", () => {
       const onSaveCustom = vi.fn();
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-          allowCustom
-          onSaveCustom={onSaveCustom}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+            allowCustom
+            onSaveCustom={onSaveCustom}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("save-custom-preset"));
       expect(onSaveCustom).toHaveBeenCalled();
@@ -237,33 +263,39 @@ describe("WorkspacePresets", () => {
   describe("Accessibility", () => {
     it("should have radiogroup role", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("should have radio role for preset items", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getAllByRole("radio")).toHaveLength(4);
     });
 
     it("should indicate selected preset with aria-checked", () => {
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="focus-chat"
-          onApply={() => {}}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="focus-chat"
+            onApply={() => {}}
+          />
+        </TestProvider>,
       );
       const focusChatPreset = screen.getByTestId("preset-focus-chat");
       expect(focusChatPreset).toHaveAttribute("aria-checked", "true");
@@ -274,11 +306,13 @@ describe("WorkspacePresets", () => {
     it("should navigate with arrow keys", () => {
       const onApply = vi.fn();
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={onApply}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={onApply}
+          />
+        </TestProvider>,
       );
       // Focus the first preset, navigate right, then press Enter to verify focus moved
       const firstPreset = screen.getByTestId("preset-default");
@@ -293,11 +327,13 @@ describe("WorkspacePresets", () => {
     it("should select preset on Enter", () => {
       const onApply = vi.fn();
       render(
-        <WorkspacePresets
-          presets={mockPresets}
-          currentPreset="default"
-          onApply={onApply}
-        />,
+        <TestProvider>
+          <WorkspacePresets
+            presets={mockPresets}
+            currentPreset="default"
+            onApply={onApply}
+          />
+        </TestProvider>,
       );
       const focusChatPreset = screen.getByTestId("preset-focus-chat");
       focusChatPreset.focus();

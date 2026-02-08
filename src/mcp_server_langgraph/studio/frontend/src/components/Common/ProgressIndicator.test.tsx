@@ -18,6 +18,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { ProgressIndicator } from "./ProgressIndicator";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 describe("ProgressIndicator", () => {
@@ -36,7 +38,11 @@ describe("ProgressIndicator", () => {
 
   describe("determinate progress", () => {
     it("should render progress bar with percentage", () => {
-      render(<ProgressIndicator value={50} max={100} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} max={100} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("progressbar")).toBeInTheDocument();
       expect(screen.getByRole("progressbar")).toHaveAttribute(
@@ -46,13 +52,21 @@ describe("ProgressIndicator", () => {
     });
 
     it("should show percentage text", () => {
-      render(<ProgressIndicator value={75} max={100} showPercentage />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={75} max={100} showPercentage />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("75%")).toBeInTheDocument();
     });
 
     it("should update progress bar width via CSS custom property", () => {
-      render(<ProgressIndicator value={60} max={100} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={60} max={100} />
+        </TestProvider>,
+      );
 
       const progressFill = screen.getByTestId("progress-fill");
       // Uses CSS custom property for width (applied via progress-bar-fill class)
@@ -61,13 +75,21 @@ describe("ProgressIndicator", () => {
     });
 
     it("should handle custom max value", () => {
-      render(<ProgressIndicator value={5} max={10} showPercentage />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={5} max={10} showPercentage />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("50%")).toBeInTheDocument();
     });
 
     it("should clamp value to 0-100%", () => {
-      render(<ProgressIndicator value={150} max={100} showPercentage />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={150} max={100} showPercentage />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("100%")).toBeInTheDocument();
     });
@@ -79,19 +101,31 @@ describe("ProgressIndicator", () => {
 
   describe("indeterminate progress", () => {
     it("should render spinner when indeterminate", () => {
-      render(<ProgressIndicator indeterminate />);
+      render(
+        <TestProvider>
+          <ProgressIndicator indeterminate />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-spinner")).toBeInTheDocument();
     });
 
     it("should not show percentage when indeterminate", () => {
-      render(<ProgressIndicator indeterminate showPercentage />);
+      render(
+        <TestProvider>
+          <ProgressIndicator indeterminate showPercentage />
+        </TestProvider>,
+      );
 
       expect(screen.queryByText(/%/)).not.toBeInTheDocument();
     });
 
     it("should have aria-busy when indeterminate", () => {
-      render(<ProgressIndicator indeterminate />);
+      render(
+        <TestProvider>
+          <ProgressIndicator indeterminate />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("progressbar")).toHaveAttribute(
         "aria-busy",
@@ -106,14 +140,20 @@ describe("ProgressIndicator", () => {
 
   describe("status text", () => {
     it("should display status message", () => {
-      render(<ProgressIndicator value={50} status="Processing files..." />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} status="Processing files..." />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Processing files...")).toBeInTheDocument();
     });
 
     it("should update status dynamically", () => {
       const { rerender } = render(
-        <ProgressIndicator value={25} status="Step 1 of 4" />,
+        <TestProvider>
+          <ProgressIndicator value={25} status="Step 1 of 4" />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Step 1 of 4")).toBeInTheDocument();
@@ -130,7 +170,11 @@ describe("ProgressIndicator", () => {
 
   describe("cancel button", () => {
     it("should show cancel button when onCancel is provided", () => {
-      render(<ProgressIndicator value={50} onCancel={() => {}} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} onCancel={() => {}} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /cancel/i }),
@@ -140,7 +184,11 @@ describe("ProgressIndicator", () => {
     it("should call onCancel when cancel button clicked", async () => {
       const onCancel = vi.fn();
       const user = userEvent.setup();
-      render(<ProgressIndicator value={50} onCancel={onCancel} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} onCancel={onCancel} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /cancel/i }));
 
@@ -148,7 +196,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should hide cancel button when not provided", () => {
-      render(<ProgressIndicator value={50} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByRole("button", { name: /cancel/i }),
@@ -157,7 +209,9 @@ describe("ProgressIndicator", () => {
 
     it("should disable cancel button when cancelling prop is true", () => {
       render(
-        <ProgressIndicator value={50} onCancel={() => {}} cancelling={true} />,
+        <TestProvider>
+          <ProgressIndicator value={50} onCancel={() => {}} cancelling={true} />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
@@ -170,13 +224,21 @@ describe("ProgressIndicator", () => {
 
   describe("ETA display", () => {
     it("should show ETA when provided", () => {
-      render(<ProgressIndicator value={50} eta="2 minutes remaining" />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} eta="2 minutes remaining" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("2 minutes remaining")).toBeInTheDocument();
     });
 
     it("should hide ETA when not provided", () => {
-      render(<ProgressIndicator value={50} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByText(/remaining/i)).not.toBeInTheDocument();
     });
@@ -188,7 +250,11 @@ describe("ProgressIndicator", () => {
 
   describe("size variants", () => {
     it("should render small size", () => {
-      render(<ProgressIndicator value={50} size="sm" />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} size="sm" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-indicator")).toHaveAttribute(
         "data-size",
@@ -197,7 +263,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should render medium size by default", () => {
-      render(<ProgressIndicator value={50} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-indicator")).toHaveAttribute(
         "data-size",
@@ -206,7 +276,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should render large size", () => {
-      render(<ProgressIndicator value={50} size="lg" />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} size="lg" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-indicator")).toHaveAttribute(
         "data-size",
@@ -221,7 +295,11 @@ describe("ProgressIndicator", () => {
 
   describe("color variants", () => {
     it("should render default color", () => {
-      render(<ProgressIndicator value={50} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-indicator")).toHaveAttribute(
         "data-color",
@@ -230,7 +308,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should render success color", () => {
-      render(<ProgressIndicator value={100} color="success" />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={100} color="success" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-indicator")).toHaveAttribute(
         "data-color",
@@ -239,7 +321,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should render warning color", () => {
-      render(<ProgressIndicator value={50} color="warning" />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} color="warning" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-indicator")).toHaveAttribute(
         "data-color",
@@ -255,7 +341,9 @@ describe("ProgressIndicator", () => {
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <ProgressIndicator value={50} status="Loading..." />,
+        <TestProvider>
+          <ProgressIndicator value={50} status="Loading..." />
+        </TestProvider>,
       );
 
       const results = await axe(container);
@@ -263,7 +351,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should have proper aria-valuemin and aria-valuemax", () => {
-      render(<ProgressIndicator value={50} max={100} />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} max={100} />
+        </TestProvider>,
+      );
 
       const progressbar = screen.getByRole("progressbar");
       expect(progressbar).toHaveAttribute("aria-valuemin", "0");
@@ -271,7 +363,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should have aria-label", () => {
-      render(<ProgressIndicator value={50} label="Upload progress" />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} label="Upload progress" />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("progressbar")).toHaveAttribute(
         "aria-label",
@@ -280,7 +376,11 @@ describe("ProgressIndicator", () => {
     });
 
     it("should announce progress changes to screen readers", () => {
-      render(<ProgressIndicator value={50} status="Uploading..." />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} status="Uploading..." />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("status")).toBeInTheDocument();
     });
@@ -292,7 +392,11 @@ describe("ProgressIndicator", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<ProgressIndicator value={50} className="custom-class" />);
+      render(
+        <TestProvider>
+          <ProgressIndicator value={50} className="custom-class" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("progress-indicator")).toHaveClass(
         "custom-class",

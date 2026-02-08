@@ -10,6 +10,8 @@ import userEvent from "@testing-library/user-event";
 
 import { OTELDetailsPanel } from "./OTELDetailsPanel";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Basic Rendering Tests
 // =============================================================================
@@ -23,17 +25,29 @@ describe("OTELDetailsPanel", () => {
   describe("basic rendering", () => {
     it("should render with data", () => {
       const data = { key: "value", count: 42 };
-      render(<OTELDetailsPanel data={data} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region")).toBeInTheDocument();
     });
 
     it("should render title when provided", () => {
-      render(<OTELDetailsPanel data={{ test: true }} title="Attributes" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} title="Attributes" />
+        </TestProvider>,
+      );
       expect(screen.getByText("Attributes")).toBeInTheDocument();
     });
 
     it("should render in summary view by default", () => {
-      render(<OTELDetailsPanel data={{ name: "test" }} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ name: "test" }} />
+        </TestProvider>,
+      );
       // Summary view shows formatted key-value pairs
       expect(screen.getByText("name")).toBeInTheDocument();
       expect(screen.getByText("test")).toBeInTheDocument();
@@ -51,7 +65,11 @@ describe("OTELDetailsPanel", () => {
         "http.method": "GET",
         "http.status_code": 200,
       };
-      render(<OTELDetailsPanel data={data} defaultView="summary" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} defaultView="summary" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("service.name")).toBeInTheDocument();
       expect(screen.getByText("api-gateway")).toBeInTheDocument();
@@ -64,11 +82,13 @@ describe("OTELDetailsPanel", () => {
         timestamp: "2026-01-15T14:30:00Z",
       };
       render(
-        <OTELDetailsPanel
-          data={data}
-          defaultView="summary"
-          formatHints={{ timestamp: "timestamp" }}
-        />,
+        <TestProvider>
+          <OTELDetailsPanel
+            data={data}
+            defaultView="summary"
+            formatHints={{ timestamp: "timestamp" }}
+          />
+        </TestProvider>,
       );
 
       // Should show relative time for timestamp
@@ -80,11 +100,13 @@ describe("OTELDetailsPanel", () => {
         duration_ms: 1234,
       };
       render(
-        <OTELDetailsPanel
-          data={data}
-          defaultView="summary"
-          formatHints={{ duration_ms: "duration" }}
-        />,
+        <TestProvider>
+          <OTELDetailsPanel
+            data={data}
+            defaultView="summary"
+            formatHints={{ duration_ms: "duration" }}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("duration_ms")).toBeInTheDocument();
@@ -97,11 +119,13 @@ describe("OTELDetailsPanel", () => {
         response_size: 1536,
       };
       render(
-        <OTELDetailsPanel
-          data={data}
-          defaultView="summary"
-          formatHints={{ response_size: "bytes" }}
-        />,
+        <TestProvider>
+          <OTELDetailsPanel
+            data={data}
+            defaultView="summary"
+            formatHints={{ response_size: "bytes" }}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("response_size")).toBeInTheDocument();
@@ -115,7 +139,11 @@ describe("OTELDetailsPanel", () => {
           email: "user@example.com",
         },
       };
-      render(<OTELDetailsPanel data={data} defaultView="summary" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} defaultView="summary" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("user")).toBeInTheDocument();
       // Nested object should show summary or be expandable
@@ -126,7 +154,11 @@ describe("OTELDetailsPanel", () => {
       const data = {
         tags: ["production", "critical", "monitored"],
       };
-      render(<OTELDetailsPanel data={data} defaultView="summary" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} defaultView="summary" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("tags")).toBeInTheDocument();
       expect(screen.getByText(/3 items/)).toBeInTheDocument();
@@ -140,7 +172,11 @@ describe("OTELDetailsPanel", () => {
   describe("raw view", () => {
     it("should display full JSON with syntax highlighting", () => {
       const data = { key: "value", nested: { inner: true } };
-      render(<OTELDetailsPanel data={data} defaultView="raw" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} defaultView="raw" />
+        </TestProvider>,
+      );
 
       // Should contain JSON structure
       const preElement = screen.getByRole("region").querySelector("pre");
@@ -151,7 +187,11 @@ describe("OTELDetailsPanel", () => {
 
     it("should format JSON with proper indentation", () => {
       const data = { key: "value" };
-      render(<OTELDetailsPanel data={data} defaultView="raw" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} defaultView="raw" />
+        </TestProvider>,
+      );
 
       const preElement = screen.getByRole("region").querySelector("pre");
       // Check for newlines indicating pretty-printed JSON
@@ -165,12 +205,20 @@ describe("OTELDetailsPanel", () => {
 
   describe("view toggle", () => {
     it("should show toggle button when showViewToggle is true", () => {
-      render(<OTELDetailsPanel data={{ test: true }} showViewToggle />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} showViewToggle />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /raw/i })).toBeInTheDocument();
     });
 
     it("should hide toggle button when showViewToggle is false", () => {
-      render(<OTELDetailsPanel data={{ test: true }} showViewToggle={false} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} showViewToggle={false} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByRole("button", { name: /raw/i }),
       ).not.toBeInTheDocument();
@@ -178,7 +226,11 @@ describe("OTELDetailsPanel", () => {
 
     it("should toggle between summary and raw views", async () => {
       const user = userEvent.setup();
-      render(<OTELDetailsPanel data={{ key: "value" }} showViewToggle />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ key: "value" }} showViewToggle />
+        </TestProvider>,
+      );
 
       // Initially in summary view
       expect(screen.getByText("key")).toBeInTheDocument();
@@ -195,11 +247,13 @@ describe("OTELDetailsPanel", () => {
     it("should toggle back to summary from raw", async () => {
       const user = userEvent.setup();
       render(
-        <OTELDetailsPanel
-          data={{ key: "value" }}
-          defaultView="raw"
-          showViewToggle
-        />,
+        <TestProvider>
+          <OTELDetailsPanel
+            data={{ key: "value" }}
+            defaultView="raw"
+            showViewToggle
+          />
+        </TestProvider>,
       );
 
       // Click toggle to switch to summary
@@ -225,7 +279,11 @@ describe("OTELDetailsPanel", () => {
         },
         { key: "body", label: "Body", data: { message: "Hello" } },
       ];
-      render(<OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("tablist")).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Headers" })).toBeInTheDocument();
@@ -241,7 +299,11 @@ describe("OTELDetailsPanel", () => {
         },
         { key: "body", label: "Body", data: { message: "Hello" } },
       ];
-      render(<OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Content-Type")).toBeInTheDocument();
       expect(screen.getByText("application/json")).toBeInTheDocument();
@@ -257,7 +319,11 @@ describe("OTELDetailsPanel", () => {
         },
         { key: "body", label: "Body", data: { message: "Hello" } },
       ];
-      render(<OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />
+        </TestProvider>,
+      );
 
       // Click Body tab
       await user.click(screen.getByRole("tab", { name: "Body" }));
@@ -273,7 +339,11 @@ describe("OTELDetailsPanel", () => {
 
   describe("copy functionality", () => {
     it("should show copy button", () => {
-      render(<OTELDetailsPanel data={{ test: true }} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     });
 
@@ -288,7 +358,11 @@ describe("OTELDetailsPanel", () => {
         configurable: true,
       });
 
-      render(<OTELDetailsPanel data={{ test: true }} onCopy={onCopy} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} onCopy={onCopy} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /copy/i }));
 
@@ -304,7 +378,11 @@ describe("OTELDetailsPanel", () => {
       });
 
       const data = { key: "value" };
-      render(<OTELDetailsPanel data={data} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} />
+        </TestProvider>,
+      );
 
       // Use fireEvent for direct event triggering
       fireEvent.click(screen.getByRole("button", { name: /copy/i }));
@@ -325,14 +403,22 @@ describe("OTELDetailsPanel", () => {
   describe("close functionality", () => {
     it("should show close button when onClose is provided", () => {
       const onClose = vi.fn();
-      render(<OTELDetailsPanel data={{ test: true }} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} onClose={onClose} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /close/i }),
       ).toBeInTheDocument();
     });
 
     it("should not show close button when onClose is not provided", () => {
-      render(<OTELDetailsPanel data={{ test: true }} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByRole("button", { name: /close/i }),
       ).not.toBeInTheDocument();
@@ -342,7 +428,11 @@ describe("OTELDetailsPanel", () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
 
-      render(<OTELDetailsPanel data={{ test: true }} onClose={onClose} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} onClose={onClose} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /close/i }));
 
@@ -356,13 +446,19 @@ describe("OTELDetailsPanel", () => {
 
   describe("empty state", () => {
     it("should handle empty object", () => {
-      render(<OTELDetailsPanel data={{}} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{}} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no data/i)).toBeInTheDocument();
     });
 
     it("should handle null data gracefully", () => {
       render(
-        <OTELDetailsPanel data={null as unknown as Record<string, unknown>} />,
+        <TestProvider>
+          <OTELDetailsPanel data={null as unknown as Record<string, unknown>} />
+        </TestProvider>,
       );
       expect(screen.getByText(/no data/i)).toBeInTheDocument();
     });
@@ -374,7 +470,11 @@ describe("OTELDetailsPanel", () => {
 
   describe("accessibility", () => {
     it("should have role=region with accessible name", () => {
-      render(<OTELDetailsPanel data={{ test: true }} title="Details" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} title="Details" />
+        </TestProvider>,
+      );
       const region = screen.getByRole("region");
       expect(region).toHaveAccessibleName("Details");
     });
@@ -385,7 +485,11 @@ describe("OTELDetailsPanel", () => {
         { key: "a", label: "Tab A", data: { a: 1 } },
         { key: "b", label: "Tab B", data: { b: 2 } },
       ];
-      render(<OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={{}} variant="tabbed" tabs={tabs} />
+        </TestProvider>,
+      );
 
       const tabA = screen.getByRole("tab", { name: "Tab A" });
       tabA.focus();
@@ -405,7 +509,9 @@ describe("OTELDetailsPanel", () => {
   describe("className prop", () => {
     it("should merge custom className", () => {
       render(
-        <OTELDetailsPanel data={{ test: true }} className="custom-class" />,
+        <TestProvider>
+          <OTELDetailsPanel data={{ test: true }} className="custom-class" />
+        </TestProvider>,
       );
       const region = screen.getByRole("region");
       expect(region).toHaveClass("custom-class");
@@ -423,7 +529,11 @@ describe("OTELDetailsPanel", () => {
         Authorization: "Bearer token123",
         "X-Request-ID": "abc-123",
       };
-      render(<OTELDetailsPanel data={data} variant="headers" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} variant="headers" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Content-Type")).toBeInTheDocument();
       expect(screen.getByText("application/json")).toBeInTheDocument();
@@ -431,7 +541,11 @@ describe("OTELDetailsPanel", () => {
 
     it("should display headers in monospace font", () => {
       const data = { "Content-Type": "application/json" };
-      render(<OTELDetailsPanel data={data} variant="headers" />);
+      render(
+        <TestProvider>
+          <OTELDetailsPanel data={data} variant="headers" />
+        </TestProvider>,
+      );
 
       // Values should use monospace font
       const valueElement = screen.getByText("application/json");

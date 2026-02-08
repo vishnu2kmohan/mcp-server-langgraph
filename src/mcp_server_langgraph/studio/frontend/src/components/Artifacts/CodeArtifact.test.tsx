@@ -10,6 +10,8 @@ import userEvent from "@testing-library/user-event";
 import { CodeArtifact } from "./CodeArtifact";
 import type { CodeArtifact as CodeArtifactType } from "../../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 describe("CodeArtifact", () => {
   const mockArtifact: CodeArtifactType = {
     id: "code-1",
@@ -38,14 +40,22 @@ describe("CodeArtifact", () => {
 
   describe("Rendering", () => {
     it("should render code content", () => {
-      const { container } = render(<CodeArtifact artifact={mockArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <CodeArtifact artifact={mockArtifact} />
+        </TestProvider>,
+      );
       // Syntax highlighter breaks code into tokens, so check the full container text
       expect(container.textContent).toContain("console");
       expect(container.textContent).toContain("log");
     });
 
     it("should display language label", () => {
-      render(<CodeArtifact artifact={mockArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={mockArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText("javascript")).toBeInTheDocument();
     });
 
@@ -54,7 +64,11 @@ describe("CodeArtifact", () => {
         ...mockArtifact,
         title: "My Code Example",
       };
-      render(<CodeArtifact artifact={artifactWithTitle} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={artifactWithTitle} />
+        </TestProvider>,
+      );
       expect(screen.getByText("My Code Example")).toBeInTheDocument();
     });
 
@@ -64,7 +78,9 @@ describe("CodeArtifact", () => {
         data: "function greet(name) {\n  console.log(`Hello, ${name}!`);\n}",
       };
       const { container } = render(
-        <CodeArtifact artifact={multilineArtifact} />,
+        <TestProvider>
+          <CodeArtifact artifact={multilineArtifact} />
+        </TestProvider>,
       );
       // Syntax highlighter breaks code into tokens
       expect(container.textContent).toContain("function");
@@ -74,7 +90,11 @@ describe("CodeArtifact", () => {
 
   describe("Line Numbers", () => {
     it("should show line numbers by default", () => {
-      render(<CodeArtifact artifact={mockArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={mockArtifact} />
+        </TestProvider>,
+      );
       const codeContainer = screen.getByRole("region", { name: /code/i });
       expect(codeContainer).toBeInTheDocument();
     });
@@ -87,7 +107,11 @@ describe("CodeArtifact", () => {
           showLineNumbers: false,
         },
       };
-      render(<CodeArtifact artifact={artifactNoLineNumbers} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={artifactNoLineNumbers} />
+        </TestProvider>,
+      );
       const codeContainer = screen.getByRole("region", { name: /code/i });
       expect(codeContainer).toBeInTheDocument();
     });
@@ -95,13 +119,21 @@ describe("CodeArtifact", () => {
 
   describe("Copy Functionality", () => {
     it("should have copy button", () => {
-      render(<CodeArtifact artifact={mockArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={mockArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     });
 
     it("should show feedback after copying", async () => {
       const user = userEvent.setup();
-      render(<CodeArtifact artifact={mockArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={mockArtifact} />
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByRole("button", { name: /copy/i });
       await user.click(copyButton);
@@ -130,7 +162,11 @@ describe("CodeArtifact", () => {
           data: `// ${language} code`,
           config: { language },
         };
-        render(<CodeArtifact artifact={artifact} />);
+        render(
+          <TestProvider>
+            <CodeArtifact artifact={artifact} />
+          </TestProvider>,
+        );
         expect(screen.getByText(language)).toBeInTheDocument();
       });
     });
@@ -145,7 +181,11 @@ describe("CodeArtifact", () => {
           theme: "light",
         },
       };
-      const { container } = render(<CodeArtifact artifact={lightArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <CodeArtifact artifact={lightArtifact} />
+        </TestProvider>,
+      );
       const codeContainer = container.querySelector('[data-theme="light"]');
       expect(codeContainer).toBeInTheDocument();
     });
@@ -158,7 +198,11 @@ describe("CodeArtifact", () => {
           theme: "dark",
         },
       };
-      const { container } = render(<CodeArtifact artifact={darkArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <CodeArtifact artifact={darkArtifact} />
+        </TestProvider>,
+      );
       const codeContainer = container.querySelector('[data-theme="dark"]');
       expect(codeContainer).toBeInTheDocument();
     });
@@ -171,7 +215,11 @@ describe("CodeArtifact", () => {
         ...mockArtifact,
         data: longCode,
       };
-      const { container } = render(<CodeArtifact artifact={longArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <CodeArtifact artifact={longArtifact} />
+        </TestProvider>,
+      );
       // Syntax highlighter tokenizes code - check container text
       expect(container.textContent).toContain("console");
       expect(container.textContent).toContain("log");
@@ -186,7 +234,9 @@ describe("CodeArtifact", () => {
         },
       };
       const { container } = render(
-        <CodeArtifact artifact={artifactWithMaxHeight} />,
+        <TestProvider>
+          <CodeArtifact artifact={artifactWithMaxHeight} />
+        </TestProvider>,
       );
       const codeContainer = container.querySelector('[style*="max-height"]');
       expect(codeContainer).toBeInTheDocument();
@@ -199,7 +249,11 @@ describe("CodeArtifact", () => {
         ...mockArtifact,
         data: "",
       };
-      render(<CodeArtifact artifact={emptyArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={emptyArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region", { name: /code/i })).toBeInTheDocument();
     });
 
@@ -208,7 +262,11 @@ describe("CodeArtifact", () => {
         ...mockArtifact,
         data: '<script>alert("XSS")</script>',
       };
-      render(<CodeArtifact artifact={specialCharsArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={specialCharsArtifact} />
+        </TestProvider>,
+      );
       // Should render as text, not execute - use getAllByText due to "javascript" language label
       const elements = screen.getAllByText(/script/i);
       expect(elements.length).toBeGreaterThan(0);
@@ -222,7 +280,11 @@ describe("CodeArtifact", () => {
         data: 'const greeting = "Hello";',
         config: { language: "javascript" },
       };
-      const { container } = render(<CodeArtifact artifact={jsArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <CodeArtifact artifact={jsArtifact} />
+        </TestProvider>,
+      );
 
       // react-syntax-highlighter wraps content in <pre><code> with class
       const highlightedCode = container.querySelector("pre code");
@@ -237,7 +299,11 @@ describe("CodeArtifact", () => {
           theme: "dark",
         },
       };
-      const { container } = render(<CodeArtifact artifact={darkArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <CodeArtifact artifact={darkArtifact} />
+        </TestProvider>,
+      );
 
       // Dark theme should have dark background on the pre element
       const preElement = container.querySelector("pre");
@@ -250,7 +316,11 @@ describe("CodeArtifact", () => {
         data: "some random text",
         config: { language: "unknownlang" },
       };
-      render(<CodeArtifact artifact={unknownLangArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={unknownLangArtifact} />
+        </TestProvider>,
+      );
 
       // Should still render without errors
       expect(screen.getByText(/some random text/)).toBeInTheDocument();
@@ -266,7 +336,9 @@ describe("CodeArtifact", () => {
         },
       };
       const { container } = render(
-        <CodeArtifact artifact={multilineArtifact} />,
+        <TestProvider>
+          <CodeArtifact artifact={multilineArtifact} />
+        </TestProvider>,
       );
 
       // Line numbers should be present
@@ -277,7 +349,11 @@ describe("CodeArtifact", () => {
 
   describe("Download Functionality", () => {
     it("should have download button", () => {
-      render(<CodeArtifact artifact={mockArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={mockArtifact} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /download/i }),
       ).toBeInTheDocument();
@@ -292,7 +368,11 @@ describe("CodeArtifact", () => {
       URL.createObjectURL = createObjectURLMock;
       URL.revokeObjectURL = revokeObjectURLMock;
 
-      render(<CodeArtifact artifact={mockArtifact} />);
+      render(
+        <TestProvider>
+          <CodeArtifact artifact={mockArtifact} />
+        </TestProvider>,
+      );
       const downloadButton = screen.getByRole("button", { name: /download/i });
       await user.click(downloadButton);
 

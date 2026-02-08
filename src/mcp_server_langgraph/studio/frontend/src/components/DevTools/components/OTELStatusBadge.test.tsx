@@ -9,6 +9,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 
 import { OTELStatusBadge } from "./OTELStatusBadge";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Helper for class matching (matches partial class names)
 // =============================================================================
@@ -33,35 +35,55 @@ afterEach(() => {
 describe("OTELStatusBadge", () => {
   describe("log-level type", () => {
     it("should render debug level with neutral styling", () => {
-      render(<OTELStatusBadge type="log-level" value="debug" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="debug" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("DEBUG");
       expect(hasClassStartingWith(badge, "bg-neutral")).toBe(true);
     });
 
     it("should render info level with primary styling", () => {
-      render(<OTELStatusBadge type="log-level" value="info" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="info" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("INFO");
       expect(hasClassStartingWith(badge, "bg-primary")).toBe(true);
     });
 
     it("should render warning level with warning styling", () => {
-      render(<OTELStatusBadge type="log-level" value="warning" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="warning" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("WARN");
       expect(hasClassStartingWith(badge, "bg-warning")).toBe(true);
     });
 
     it("should render error level with error styling", () => {
-      render(<OTELStatusBadge type="log-level" value="error" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="error" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("ERROR");
       expect(hasClassStartingWith(badge, "bg-error")).toBe(true);
     });
 
     it("should show icon by default for log levels", () => {
-      render(<OTELStatusBadge type="log-level" value="error" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="error" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       // Icon should be present (aria-hidden)
       expect(badge.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
@@ -69,7 +91,9 @@ describe("OTELStatusBadge", () => {
 
     it("should hide icon when showIcon is false", () => {
       render(
-        <OTELStatusBadge type="log-level" value="error" showIcon={false} />,
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="error" showIcon={false} />
+        </TestProvider>,
       );
       const badge = screen.getByRole("status");
       expect(
@@ -84,28 +108,44 @@ describe("OTELStatusBadge", () => {
 
   describe("alert-state type", () => {
     it("should render firing state with error styling", () => {
-      render(<OTELStatusBadge type="alert-state" value="firing" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-state" value="firing" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("FIRING");
       expect(hasClassStartingWith(badge, "bg-error")).toBe(true);
     });
 
     it("should render pending state with warning styling", () => {
-      render(<OTELStatusBadge type="alert-state" value="pending" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-state" value="pending" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("PENDING");
       expect(hasClassStartingWith(badge, "bg-warning")).toBe(true);
     });
 
     it("should render resolved state with success styling", () => {
-      render(<OTELStatusBadge type="alert-state" value="resolved" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-state" value="resolved" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("RESOLVED");
       expect(hasClassStartingWith(badge, "bg-success")).toBe(true);
     });
 
     it("should render silenced state with neutral styling", () => {
-      render(<OTELStatusBadge type="alert-state" value="silenced" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-state" value="silenced" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("SILENCED");
       expect(hasClassStartingWith(badge, "bg-neutral")).toBe(true);
@@ -118,21 +158,33 @@ describe("OTELStatusBadge", () => {
 
   describe("alert-severity type", () => {
     it("should render critical severity with error styling", () => {
-      render(<OTELStatusBadge type="alert-severity" value="critical" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-severity" value="critical" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("CRITICAL");
       expect(hasClassStartingWith(badge, "bg-error")).toBe(true);
     });
 
     it("should render warning severity with warning styling", () => {
-      render(<OTELStatusBadge type="alert-severity" value="warning" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-severity" value="warning" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("WARNING");
       expect(hasClassStartingWith(badge, "bg-warning")).toBe(true);
     });
 
     it("should render info severity with primary styling", () => {
-      render(<OTELStatusBadge type="alert-severity" value="info" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-severity" value="info" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("INFO");
       expect(hasClassStartingWith(badge, "bg-primary")).toBe(true);
@@ -145,21 +197,33 @@ describe("OTELStatusBadge", () => {
 
   describe("span-status type", () => {
     it("should render ok status with success styling", () => {
-      render(<OTELStatusBadge type="span-status" value="ok" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="span-status" value="ok" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("OK");
       expect(hasClassStartingWith(badge, "bg-success")).toBe(true);
     });
 
     it("should render error status with error styling", () => {
-      render(<OTELStatusBadge type="span-status" value="error" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="span-status" value="error" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("ERROR");
       expect(hasClassStartingWith(badge, "bg-error")).toBe(true);
     });
 
     it("should render unset status with neutral styling", () => {
-      render(<OTELStatusBadge type="span-status" value="unset" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="span-status" value="unset" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("UNSET");
       expect(hasClassStartingWith(badge, "bg-neutral")).toBe(true);
@@ -172,42 +236,66 @@ describe("OTELStatusBadge", () => {
 
   describe("http-status type", () => {
     it("should render 2xx status with success styling", () => {
-      render(<OTELStatusBadge type="http-status" value={200} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={200} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("200");
       expect(hasClassStartingWith(badge, "bg-success")).toBe(true);
     });
 
     it("should render 201 with success styling", () => {
-      render(<OTELStatusBadge type="http-status" value={201} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={201} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("201");
       expect(hasClassStartingWith(badge, "bg-success")).toBe(true);
     });
 
     it("should render 3xx status with info styling", () => {
-      render(<OTELStatusBadge type="http-status" value={301} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={301} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("301");
       expect(hasClassStartingWith(badge, "bg-primary")).toBe(true);
     });
 
     it("should render 4xx status with warning styling", () => {
-      render(<OTELStatusBadge type="http-status" value={404} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={404} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("404");
       expect(hasClassStartingWith(badge, "bg-warning")).toBe(true);
     });
 
     it("should render 5xx status with error styling", () => {
-      render(<OTELStatusBadge type="http-status" value={500} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={500} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("500");
       expect(hasClassStartingWith(badge, "bg-error")).toBe(true);
     });
 
     it("should render 503 with error styling", () => {
-      render(<OTELStatusBadge type="http-status" value={503} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={503} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("503");
       expect(hasClassStartingWith(badge, "bg-error")).toBe(true);
@@ -220,42 +308,66 @@ describe("OTELStatusBadge", () => {
 
   describe("http-method type", () => {
     it("should render GET with success styling", () => {
-      render(<OTELStatusBadge type="http-method" value="GET" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-method" value="GET" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("GET");
       expect(hasClassStartingWith(badge, "bg-success")).toBe(true);
     });
 
     it("should render POST with primary styling", () => {
-      render(<OTELStatusBadge type="http-method" value="POST" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-method" value="POST" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("POST");
       expect(hasClassStartingWith(badge, "bg-primary")).toBe(true);
     });
 
     it("should render PUT with warning styling", () => {
-      render(<OTELStatusBadge type="http-method" value="PUT" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-method" value="PUT" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("PUT");
       expect(hasClassStartingWith(badge, "bg-warning")).toBe(true);
     });
 
     it("should render DELETE with error styling", () => {
-      render(<OTELStatusBadge type="http-method" value="DELETE" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-method" value="DELETE" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("DELETE");
       expect(hasClassStartingWith(badge, "bg-error")).toBe(true);
     });
 
     it("should render PATCH with insight styling", () => {
-      render(<OTELStatusBadge type="http-method" value="PATCH" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-method" value="PATCH" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("PATCH");
       expect(hasClassStartingWith(badge, "bg-insight")).toBe(true);
     });
 
     it("should handle lowercase method input", () => {
-      render(<OTELStatusBadge type="http-method" value="get" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-method" value="get" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("GET");
     });
@@ -267,20 +379,32 @@ describe("OTELStatusBadge", () => {
 
   describe("size variants", () => {
     it("should render sm size with correct classes", () => {
-      render(<OTELStatusBadge type="log-level" value="info" size="sm" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="info" size="sm" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveClass("text-xs");
     });
 
     it("should render sm size by default", () => {
-      render(<OTELStatusBadge type="log-level" value="info" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="info" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       // Default is "sm" in CVA
       expect(badge).toHaveClass("text-xs");
     });
 
     it("should render md size when specified", () => {
-      render(<OTELStatusBadge type="log-level" value="info" size="md" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="info" size="md" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveClass("text-sm");
     });
@@ -292,24 +416,40 @@ describe("OTELStatusBadge", () => {
 
   describe("accessibility", () => {
     it("should have role=status for screen readers", () => {
-      render(<OTELStatusBadge type="log-level" value="error" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="error" />
+        </TestProvider>,
+      );
       expect(screen.getByRole("status")).toBeInTheDocument();
     });
 
     it("should have accessible label describing the status", () => {
-      render(<OTELStatusBadge type="log-level" value="error" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="error" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveAttribute("aria-label", "Log level: error");
     });
 
     it("should have accessible label for HTTP status", () => {
-      render(<OTELStatusBadge type="http-status" value={404} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={404} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveAttribute("aria-label", "HTTP status: 404");
     });
 
     it("should have accessible label for alert state", () => {
-      render(<OTELStatusBadge type="alert-state" value="firing" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="alert-state" value="firing" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveAttribute("aria-label", "Alert state: firing");
     });
@@ -322,11 +462,13 @@ describe("OTELStatusBadge", () => {
   describe("className prop", () => {
     it("should merge custom className with default styles", () => {
       render(
-        <OTELStatusBadge
-          type="log-level"
-          value="info"
-          className="custom-class"
-        />,
+        <TestProvider>
+          <OTELStatusBadge
+            type="log-level"
+            value="info"
+            className="custom-class"
+          />
+        </TestProvider>,
       );
       const badge = screen.getByRole("status");
       expect(badge).toHaveClass("custom-class");
@@ -340,21 +482,33 @@ describe("OTELStatusBadge", () => {
 
   describe("edge cases", () => {
     it("should handle unknown log level gracefully", () => {
-      render(<OTELStatusBadge type="log-level" value="unknown" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="log-level" value="unknown" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("UNKNOWN");
       expect(hasClassStartingWith(badge, "bg-neutral")).toBe(true);
     });
 
     it("should handle unknown HTTP method gracefully", () => {
-      render(<OTELStatusBadge type="http-method" value="OPTIONS" />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-method" value="OPTIONS" />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("OPTIONS");
       expect(hasClassStartingWith(badge, "bg-neutral")).toBe(true);
     });
 
     it("should handle undefined status code gracefully", () => {
-      render(<OTELStatusBadge type="http-status" value={0} />);
+      render(
+        <TestProvider>
+          <OTELStatusBadge type="http-status" value={0} />
+        </TestProvider>,
+      );
       const badge = screen.getByRole("status");
       expect(badge).toHaveTextContent("0");
       expect(hasClassStartingWith(badge, "bg-neutral")).toBe(true);

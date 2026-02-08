@@ -16,6 +16,8 @@ import {
 } from "./CommandPaletteContext";
 import type { Command } from "../ai/AICommandPalette";
 
+import { TestProvider } from "@/test-utils";
+
 // ==============================================================================
 // Test Setup
 // ==============================================================================
@@ -120,9 +122,11 @@ describe("CommandPaletteContext", () => {
       let capturedCommands: Command[] = [];
 
       render(
-        <TestWrapper>
-          <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper>
+            <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(capturedCommands).toHaveLength(2);
@@ -136,7 +140,11 @@ describe("CommandPaletteContext", () => {
         .mockImplementation(() => {});
 
       expect(() => {
-        render(<TestConsumer />);
+        render(
+          <TestProvider>
+            <TestConsumer />
+          </TestProvider>,
+        );
       }).toThrow(
         "useCommandPalette must be used within CommandPaletteProvider",
       );
@@ -150,9 +158,11 @@ describe("CommandPaletteContext", () => {
       let capturedCommands: Command[] = [];
 
       render(
-        <TestWrapper>
-          <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper>
+            <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(capturedCommands).toHaveLength(2);
@@ -170,9 +180,11 @@ describe("CommandPaletteContext", () => {
       let capturedCommands: Command[] = [];
 
       render(
-        <TestWrapper>
-          <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper>
+            <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(capturedCommands).toHaveLength(2);
@@ -192,9 +204,11 @@ describe("CommandPaletteContext", () => {
   describe("unregisterCommands", () => {
     it("should remove commands by id", async () => {
       render(
-        <TestWrapper>
-          <TestConsumer />
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper>
+            <TestConsumer />
+          </TestWrapper>
+        </TestProvider>,
       );
 
       // First register
@@ -216,9 +230,11 @@ describe("CommandPaletteContext", () => {
       let capturedCommands: Command[] = [];
 
       render(
-        <TestWrapper>
-          <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper>
+            <TestConsumer onRender={(cmds) => (capturedCommands = cmds)} />
+          </TestWrapper>
+        </TestProvider>,
       );
 
       // Register and then unregister
@@ -272,9 +288,11 @@ describe("CommandPaletteContext", () => {
       };
 
       render(
-        <TestWrapper>
-          <RegisterMultiple />
-        </TestWrapper>,
+        <TestProvider>
+          <TestWrapper>
+            <RegisterMultiple />
+          </TestWrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("count").textContent).toBe("2");

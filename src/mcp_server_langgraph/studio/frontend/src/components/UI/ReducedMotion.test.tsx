@@ -53,6 +53,8 @@ import { FormField } from "./FormField";
 import { FormErrorSummary } from "./FormErrorSummary";
 import { Input } from "./Input";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Suite
 // =============================================================================
@@ -72,7 +74,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
     it("disables motion variants when reduced motion is preferred", () => {
       vi.mocked(useReducedMotion).mockReturnValue(true);
 
-      render(<Button>Click me</Button>);
+      render(
+        <TestProvider>
+          <Button>Click me</Button>
+        </TestProvider>,
+      );
 
       // Button should render as regular button (not motion.button) when disabled
       // or motion.button without hover/tap variants
@@ -84,7 +90,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
     it("enables motion variants when reduced motion is not preferred", () => {
       vi.mocked(useReducedMotion).mockReturnValue(false);
 
-      render(<Button>Click me</Button>);
+      render(
+        <TestProvider>
+          <Button>Click me</Button>
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toBeInTheDocument();
@@ -95,7 +105,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
     it("respects explicit disableMotion prop regardless of preference", () => {
       vi.mocked(useReducedMotion).mockReturnValue(false);
 
-      render(<Button disableMotion>Click me</Button>);
+      render(
+        <TestProvider>
+          <Button disableMotion>Click me</Button>
+        </TestProvider>,
+      );
 
       // Should use regular button when disableMotion is true
       const button = screen.getByRole("button");
@@ -109,7 +123,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
     it("disables hover animation when reduced motion is preferred", () => {
       vi.mocked(useReducedMotion).mockReturnValue(true);
 
-      render(<Card interactive>Interactive Card</Card>);
+      render(
+        <TestProvider>
+          <Card interactive>Interactive Card</Card>
+        </TestProvider>,
+      );
 
       const card = screen.getByText("Interactive Card").closest("div");
       expect(card).toBeInTheDocument();
@@ -120,7 +138,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
     it("enables hover animation when reduced motion is not preferred", () => {
       vi.mocked(useReducedMotion).mockReturnValue(false);
 
-      render(<Card interactive>Interactive Card</Card>);
+      render(
+        <TestProvider>
+          <Card interactive>Interactive Card</Card>
+        </TestProvider>,
+      );
 
       const card = screen.getByText("Interactive Card").closest("div");
       expect(card).toBeInTheDocument();
@@ -136,9 +158,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       vi.mocked(useReducedMotion).mockReturnValue(true);
 
       render(
-        <Dialog open onClose={() => {}} title="Test Dialog">
-          Dialog content
-        </Dialog>,
+        <TestProvider>
+          <Dialog open onClose={() => {}} title="Test Dialog">
+            Dialog content
+          </Dialog>
+        </TestProvider>,
       );
 
       // Dialog should be visible
@@ -153,9 +177,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       vi.mocked(useReducedMotion).mockReturnValue(false);
 
       render(
-        <Dialog open onClose={() => {}} title="Test Dialog">
-          Dialog content
-        </Dialog>,
+        <TestProvider>
+          <Dialog open onClose={() => {}} title="Test Dialog">
+            Dialog content
+          </Dialog>
+        </TestProvider>,
       );
 
       // Dialog should be visible
@@ -180,9 +206,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       const user = userEvent.setup();
 
       render(
-        <ContextMenu items={mockItems} aria-label="Test menu">
-          <div data-testid="trigger">Right click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={mockItems} aria-label="Test menu">
+            <div data-testid="trigger">Right click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       // Open context menu
@@ -205,9 +233,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       const user = userEvent.setup();
 
       render(
-        <ContextMenu items={mockItems} aria-label="Test menu">
-          <div data-testid="trigger">Right click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={mockItems} aria-label="Test menu">
+            <div data-testid="trigger">Right click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       await user.pointer({
@@ -229,9 +259,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       vi.mocked(useReducedMotion).mockReturnValue(true);
 
       render(
-        <FormField label="Email" name="email" error="Invalid email">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       // Error should be visible
@@ -246,9 +278,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       vi.mocked(useReducedMotion).mockReturnValue(false);
 
       render(
-        <FormField label="Email" name="email" error="Invalid email">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       // Error should be visible
@@ -269,7 +303,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
     it("uses simple opacity transition when reduced motion is preferred", () => {
       vi.mocked(useReducedMotion).mockReturnValue(true);
 
-      render(<FormErrorSummary errors={errors} />);
+      render(
+        <TestProvider>
+          <FormErrorSummary errors={errors} />
+        </TestProvider>,
+      );
 
       // Summary should be visible
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -279,7 +317,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
     it("content is accessible regardless of motion preference", () => {
       vi.mocked(useReducedMotion).mockReturnValue(true);
 
-      render(<FormErrorSummary errors={errors} />);
+      render(
+        <TestProvider>
+          <FormErrorSummary errors={errors} />
+        </TestProvider>,
+      );
 
       // All errors should be visible and navigable
       const links = screen.getAllByRole("link");
@@ -295,7 +337,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       const onClick = vi.fn();
       const user = userEvent.setup();
 
-      render(<Button onClick={onClick}>Click me</Button>);
+      render(
+        <TestProvider>
+          <Button onClick={onClick}>Click me</Button>
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button"));
       expect(onClick).toHaveBeenCalledTimes(1);
@@ -307,9 +353,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       const user = userEvent.setup();
 
       render(
-        <Dialog open onClose={onClose} title="Test">
-          Content
-        </Dialog>,
+        <TestProvider>
+          <Dialog open onClose={onClose} title="Test">
+            Content
+          </Dialog>
+        </TestProvider>,
       );
 
       // Press Escape to close
@@ -328,9 +376,11 @@ describe("Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       ];
 
       render(
-        <ContextMenu items={items} aria-label="Test menu">
-          <div data-testid="trigger">Right click me</div>
-        </ContextMenu>,
+        <TestProvider>
+          <ContextMenu items={items} aria-label="Test menu">
+            <div data-testid="trigger">Right click me</div>
+          </ContextMenu>
+        </TestProvider>,
       );
 
       // Open menu

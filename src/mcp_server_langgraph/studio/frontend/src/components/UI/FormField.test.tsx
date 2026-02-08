@@ -13,6 +13,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { FormField } from "./FormField";
 import { Input } from "./Input";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -26,9 +28,11 @@ describe("FormField", () => {
   describe("rendering", () => {
     it("renders with label and child input", () => {
       render(
-        <FormField label="Email" name="email">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Email")).toBeInTheDocument();
@@ -36,9 +40,11 @@ describe("FormField", () => {
 
     it("renders label with correct htmlFor attribute", () => {
       render(
-        <FormField label="Username" name="username">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Username" name="username">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const label = screen.getByText("Username");
@@ -47,9 +53,11 @@ describe("FormField", () => {
 
     it("sets id on child input matching name", () => {
       render(
-        <FormField label="Password" name="password">
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Password" name="password">
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -58,9 +66,11 @@ describe("FormField", () => {
 
     it("sets name attribute on child input", () => {
       render(
-        <FormField label="Email" name="email">
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email">
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -75,9 +85,11 @@ describe("FormField", () => {
   describe("required field", () => {
     it("shows visual required indicator (*)", () => {
       render(
-        <FormField label="Email" name="email" required>
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" required>
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       expect(screen.getByText("*")).toBeInTheDocument();
@@ -85,9 +97,11 @@ describe("FormField", () => {
 
     it("hides visual indicator from screen readers", () => {
       render(
-        <FormField label="Email" name="email" required>
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" required>
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const asterisk = screen.getByText("*");
@@ -96,9 +110,11 @@ describe("FormField", () => {
 
     it("provides screen reader text for required", () => {
       render(
-        <FormField label="Email" name="email" required>
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" required>
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       expect(screen.getByText("(required)")).toHaveClass("sr-only");
@@ -106,9 +122,11 @@ describe("FormField", () => {
 
     it("sets aria-required on child input", () => {
       render(
-        <FormField label="Email" name="email" required>
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" required>
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -123,13 +141,15 @@ describe("FormField", () => {
   describe("hint text", () => {
     it("renders hint text when provided", () => {
       render(
-        <FormField
-          label="Password"
-          name="password"
-          hint="Must be 8+ characters"
-        >
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField
+            label="Password"
+            name="password"
+            hint="Must be 8+ characters"
+          >
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       expect(screen.getByText("Must be 8+ characters")).toBeInTheDocument();
@@ -137,13 +157,15 @@ describe("FormField", () => {
 
     it("associates hint with input via aria-describedby", () => {
       render(
-        <FormField
-          label="Password"
-          name="password"
-          hint="Must be 8+ characters"
-        >
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField
+            label="Password"
+            name="password"
+            hint="Must be 8+ characters"
+          >
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -152,13 +174,15 @@ describe("FormField", () => {
 
     it("hint has correct id for association", () => {
       render(
-        <FormField
-          label="Password"
-          name="password"
-          hint="Must be 8+ characters"
-        >
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField
+            label="Password"
+            name="password"
+            hint="Must be 8+ characters"
+          >
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const hint = screen.getByText("Must be 8+ characters");
@@ -167,14 +191,16 @@ describe("FormField", () => {
 
     it("does not show hint when error is present", () => {
       render(
-        <FormField
-          label="Password"
-          name="password"
-          hint="Must be 8+ characters"
-          error="Password is too short"
-        >
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField
+            label="Password"
+            name="password"
+            hint="Must be 8+ characters"
+            error="Password is too short"
+          >
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       expect(
@@ -191,9 +217,11 @@ describe("FormField", () => {
   describe("error state", () => {
     it("renders error message when provided", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid email address">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email address">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       expect(screen.getByText("Invalid email address")).toBeInTheDocument();
@@ -201,9 +229,11 @@ describe("FormField", () => {
 
     it("error has role=alert for screen readers", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid email address">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email address">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const error = screen.getByRole("alert");
@@ -212,9 +242,11 @@ describe("FormField", () => {
 
     it("error has aria-live=assertive for immediate announcement", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid email address">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email address">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const error = screen.getByRole("alert");
@@ -223,9 +255,11 @@ describe("FormField", () => {
 
     it("sets aria-invalid on child input when error", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid email address">
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email address">
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -234,9 +268,11 @@ describe("FormField", () => {
 
     it("associates error with input via aria-describedby", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid email address">
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email address">
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -245,9 +281,11 @@ describe("FormField", () => {
 
     it("error has correct id for association", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid email address">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email address">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const error = screen.getByRole("alert");
@@ -256,9 +294,11 @@ describe("FormField", () => {
 
     it("displays error icon for visual indication (WCAG 1.4.1)", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid email address">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid email address">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       // Error should have an icon, not just color
@@ -274,9 +314,11 @@ describe("FormField", () => {
   describe("accessibility", () => {
     it("label is associated with input for screen readers", () => {
       render(
-        <FormField label="Full Name" name="fullName">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Full Name" name="fullName">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByLabelText("Full Name");
@@ -285,9 +327,11 @@ describe("FormField", () => {
 
     it("no aria-describedby when no hint or error", () => {
       render(
-        <FormField label="Email" name="email">
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email">
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -296,9 +340,11 @@ describe("FormField", () => {
 
     it("no aria-invalid when no error", () => {
       render(
-        <FormField label="Email" name="email">
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email">
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -313,9 +359,11 @@ describe("FormField", () => {
   describe("styling", () => {
     it("applies error styling class to child input when error", () => {
       render(
-        <FormField label="Email" name="email" error="Invalid">
-          <Input data-testid="input" />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" error="Invalid">
+            <Input data-testid="input" />
+          </FormField>
+        </TestProvider>,
       );
 
       const input = screen.getByTestId("input");
@@ -324,9 +372,11 @@ describe("FormField", () => {
 
     it("has proper spacing between elements", () => {
       const { container } = render(
-        <FormField label="Email" name="email" hint="Hint text">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" hint="Hint text">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const wrapper = container.firstChild;
@@ -341,9 +391,11 @@ describe("FormField", () => {
   describe("customization", () => {
     it("accepts custom className for wrapper", () => {
       const { container } = render(
-        <FormField label="Email" name="email" className="custom-wrapper">
-          <Input />
-        </FormField>,
+        <TestProvider>
+          <FormField label="Email" name="email" className="custom-wrapper">
+            <Input />
+          </FormField>
+        </TestProvider>,
       );
 
       const wrapper = container.firstChild;

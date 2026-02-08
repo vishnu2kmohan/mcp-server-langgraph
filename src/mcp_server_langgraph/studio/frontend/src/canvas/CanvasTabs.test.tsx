@@ -8,6 +8,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { CanvasTabs } from "./CanvasTabs";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -24,25 +26,41 @@ describe("CanvasTabs", () => {
 
   describe("Rendering", () => {
     it("should render tabs container", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("canvas-tabs")).toBeInTheDocument();
     });
 
     it("should render all three tabs", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("tab", { name: /code/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /preview/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /data/i })).toBeInTheDocument();
     });
 
     it("should highlight active tab", () => {
-      render(<CanvasTabs activeTab="preview" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="preview" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       const previewTab = screen.getByRole("tab", { name: /preview/i });
       expect(previewTab).toHaveAttribute("aria-selected", "true");
     });
 
     it("should not highlight inactive tabs", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       const previewTab = screen.getByRole("tab", { name: /preview/i });
       expect(previewTab).toHaveAttribute("aria-selected", "false");
     });
@@ -51,7 +69,11 @@ describe("CanvasTabs", () => {
   describe("Tab Switching", () => {
     it("should call onTabChange with 'code' when code tab clicked", () => {
       const onTabChange = vi.fn();
-      render(<CanvasTabs activeTab="preview" onTabChange={onTabChange} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="preview" onTabChange={onTabChange} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("tab", { name: /code/i }));
       expect(onTabChange).toHaveBeenCalledWith("code");
@@ -59,7 +81,11 @@ describe("CanvasTabs", () => {
 
     it("should call onTabChange with 'preview' when preview tab clicked", () => {
       const onTabChange = vi.fn();
-      render(<CanvasTabs activeTab="code" onTabChange={onTabChange} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={onTabChange} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("tab", { name: /preview/i }));
       expect(onTabChange).toHaveBeenCalledWith("preview");
@@ -67,7 +93,11 @@ describe("CanvasTabs", () => {
 
     it("should call onTabChange with 'data' when data tab clicked", () => {
       const onTabChange = vi.fn();
-      render(<CanvasTabs activeTab="code" onTabChange={onTabChange} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={onTabChange} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("tab", { name: /data/i }));
       expect(onTabChange).toHaveBeenCalledWith("data");
@@ -75,7 +105,11 @@ describe("CanvasTabs", () => {
 
     it("should not call onTabChange when clicking already active tab", () => {
       const onTabChange = vi.fn();
-      render(<CanvasTabs activeTab="code" onTabChange={onTabChange} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={onTabChange} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("tab", { name: /code/i }));
       expect(onTabChange).not.toHaveBeenCalled();
@@ -84,7 +118,11 @@ describe("CanvasTabs", () => {
 
   describe("Disabled Tabs", () => {
     it("should disable tabs when disabled prop is true", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} disabled />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} disabled />
+        </TestProvider>,
+      );
 
       const tabs = screen.getAllByRole("tab");
       tabs.forEach((tab) => {
@@ -94,11 +132,13 @@ describe("CanvasTabs", () => {
 
     it("should disable specific tabs via disabledTabs prop", () => {
       render(
-        <CanvasTabs
-          activeTab="code"
-          onTabChange={() => {}}
-          disabledTabs={["preview", "data"]}
-        />,
+        <TestProvider>
+          <CanvasTabs
+            activeTab="code"
+            onTabChange={() => {}}
+            disabledTabs={["preview", "data"]}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("tab", { name: /code/i })).not.toBeDisabled();
@@ -109,17 +149,29 @@ describe("CanvasTabs", () => {
 
   describe("Icons", () => {
     it("should display code icon for code tab", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("code-icon")).toBeInTheDocument();
     });
 
     it("should display preview icon for preview tab", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("preview-icon")).toBeInTheDocument();
     });
 
     it("should display data icon for data tab", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("data-icon")).toBeInTheDocument();
     });
   });
@@ -127,7 +179,11 @@ describe("CanvasTabs", () => {
   describe("Keyboard Navigation", () => {
     it("should support arrow key navigation between tabs", () => {
       const onTabChange = vi.fn();
-      render(<CanvasTabs activeTab="code" onTabChange={onTabChange} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={onTabChange} />
+        </TestProvider>,
+      );
 
       const codeTab = screen.getByRole("tab", { name: /code/i });
       codeTab.focus();
@@ -138,7 +194,11 @@ describe("CanvasTabs", () => {
 
     it("should wrap around when navigating past last tab", () => {
       const onTabChange = vi.fn();
-      render(<CanvasTabs activeTab="data" onTabChange={onTabChange} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="data" onTabChange={onTabChange} />
+        </TestProvider>,
+      );
 
       const dataTab = screen.getByRole("tab", { name: /data/i });
       dataTab.focus();
@@ -150,12 +210,20 @@ describe("CanvasTabs", () => {
 
   describe("Accessibility", () => {
     it("should have tablist role on container", () => {
-      render(<CanvasTabs activeTab="code" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="code" onTabChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("tablist")).toBeInTheDocument();
     });
 
     it("should have correct aria-selected on tabs", () => {
-      render(<CanvasTabs activeTab="preview" onTabChange={() => {}} />);
+      render(
+        <TestProvider>
+          <CanvasTabs activeTab="preview" onTabChange={() => {}} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("tab", { name: /code/i })).toHaveAttribute(
         "aria-selected",

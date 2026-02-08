@@ -14,6 +14,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ChatInputForm, type ModelOption } from "./ChatInputForm";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock drag handlers for file upload
 const mockDragHandlers = {
   onDragEnter: vi.fn(),
@@ -59,18 +61,24 @@ describe("ChatInputForm Model Selection Integration", () => {
 
   describe("Model Selector Visibility", () => {
     it("should not show model selector when showModelSelector is false", () => {
-      render(<ChatInputForm {...defaultProps} showModelSelector={false} />);
+      render(
+        <TestProvider>
+          <ChatInputForm {...defaultProps} showModelSelector={false} />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("model-selector")).not.toBeInTheDocument();
     });
 
     it("should show model selector when showModelSelector is true", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("model-selector")).toBeInTheDocument();
     });
@@ -79,12 +87,14 @@ describe("ChatInputForm Model Selection Integration", () => {
   describe("Loading State", () => {
     it("should show loading spinner when isModelsLoading is true", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          isModelsLoading={true}
-          availableModels={[]}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            isModelsLoading={true}
+            availableModels={[]}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("model-selector-loading")).toBeInTheDocument();
@@ -93,12 +103,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should disable model selector button when loading", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          isModelsLoading={true}
-          availableModels={[]}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            isModelsLoading={true}
+            availableModels={[]}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -107,12 +119,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should show aria-busy when loading", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          isModelsLoading={true}
-          availableModels={[]}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            isModelsLoading={true}
+            availableModels={[]}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -121,13 +135,15 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should show models when not loading", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          isModelsLoading={false}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            isModelsLoading={false}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -140,12 +156,14 @@ describe("ChatInputForm Model Selection Integration", () => {
   describe("Model Selection Dropdown", () => {
     it("should display the selected model name", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="gpt-4o"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="gpt-4o"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("gpt-4o")).toBeInTheDocument();
@@ -153,12 +171,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should display provider badge for selected model", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("anthropic")).toBeInTheDocument();
@@ -166,12 +186,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should open dropdown when button is clicked", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -188,12 +210,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should show all available models in dropdown", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -207,12 +231,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should show checkmark next to selected model", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -230,13 +256,15 @@ describe("ChatInputForm Model Selection Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -252,13 +280,15 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should close dropdown after selection", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -281,13 +311,15 @@ describe("ChatInputForm Model Selection Integration", () => {
   describe("Processing State", () => {
     it("should disable model selector when processing", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-          isProcessing={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+            isProcessing={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -296,13 +328,15 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should not open dropdown when disabled", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-          isProcessing={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+            isProcessing={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -317,12 +351,14 @@ describe("ChatInputForm Model Selection Integration", () => {
   describe("Accessibility", () => {
     it("should have proper ARIA attributes on model selector", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -332,12 +368,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should have aria-expanded when dropdown is open", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -352,12 +390,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should have role=listbox on dropdown menu", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -369,12 +409,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should have role=option on each model option", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -388,12 +430,14 @@ describe("ChatInputForm Model Selection Integration", () => {
   describe("No Models Available", () => {
     it("should show Select model placeholder when no model is selected", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel={undefined}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel={undefined}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Select model")).toBeInTheDocument();
@@ -401,12 +445,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should handle empty available models gracefully", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={[]}
-          selectedModel={undefined}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={[]}
+            selectedModel={undefined}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -422,15 +468,17 @@ describe("ChatInputForm Model Selection Integration", () => {
   describe("Thinking Model Support", () => {
     it("should show reasoning effort selector when model supports thinking", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-          modelSupportsThinking={true}
-          enableThinking={true}
-          onReasoningEffortChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+            modelSupportsThinking={true}
+            enableThinking={true}
+            onReasoningEffortChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // The reasoning effort selector should be visible
@@ -443,14 +491,16 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should not show thinking toggle when model does not support thinking", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="gpt-4o"
-          modelSupportsThinking={false}
-          enableThinking={false}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="gpt-4o"
+            modelSupportsThinking={false}
+            enableThinking={false}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -462,12 +512,14 @@ describe("ChatInputForm Model Selection Integration", () => {
   describe("Keyboard Navigation", () => {
     it("should close dropdown on Escape key", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -484,12 +536,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should navigate down with ArrowDown key", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -506,12 +560,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should navigate up with ArrowUp key", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="gemini-2.5-flash"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="gemini-2.5-flash"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -531,13 +587,15 @@ describe("ChatInputForm Model Selection Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -559,12 +617,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should open dropdown with Enter key when closed", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("model-selector-button");
@@ -581,12 +641,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should jump to first option with Home key", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="gemini-2.5-flash"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="gemini-2.5-flash"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -602,12 +664,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should jump to last option with End key", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -625,12 +689,14 @@ describe("ChatInputForm Model Selection Integration", () => {
 
     it("should wrap around when navigating past last option", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+          />
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -653,14 +719,16 @@ describe("ChatInputForm Model Selection Integration", () => {
       const onModelChange = vi.fn();
 
       render(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          enableModelSearch={true}
-          availableModels={mockModels}
-          selectedModel="claude-3-5-sonnet"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            enableModelSearch={true}
+            availableModels={mockModels}
+            selectedModel="claude-3-5-sonnet"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Open dropdown

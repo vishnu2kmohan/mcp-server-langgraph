@@ -10,6 +10,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UpdatesContent } from "./UpdatesContent";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -37,19 +39,31 @@ describe("UpdatesContent", () => {
 
   describe("Rendering", () => {
     it("renders updates list when updates available", () => {
-      render(<UpdatesContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-updates-list")).toBeInTheDocument();
     });
 
     it("displays update count", () => {
-      render(<UpdatesContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/2 update\(s\) available/i)).toBeInTheDocument();
     });
 
     it("shows Apply All Updates button", () => {
-      render(<UpdatesContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-apply-updates")).toBeInTheDocument();
       expect(
@@ -64,13 +78,21 @@ describe("UpdatesContent", () => {
 
   describe("Up-to-date State", () => {
     it("renders up-to-date state when no updates", () => {
-      render(<UpdatesContent {...defaultProps} updates={[]} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-updates-empty")).toBeInTheDocument();
     });
 
     it("shows success message when up to date", () => {
-      render(<UpdatesContent {...defaultProps} updates={[]} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("All skills are up to date")).toBeInTheDocument();
       expect(
@@ -79,7 +101,11 @@ describe("UpdatesContent", () => {
     });
 
     it("does not show updates list when up to date", () => {
-      render(<UpdatesContent {...defaultProps} updates={[]} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("skills-updates-list"),
@@ -87,7 +113,11 @@ describe("UpdatesContent", () => {
     });
 
     it("does not show apply button when up to date", () => {
-      render(<UpdatesContent {...defaultProps} updates={[]} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("skills-apply-updates"),
@@ -101,13 +131,21 @@ describe("UpdatesContent", () => {
 
   describe("Single Update", () => {
     it("displays singular count for one update", () => {
-      render(<UpdatesContent {...defaultProps} updates={[mockUpdates[0]]} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={[mockUpdates[0]]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/1 update\(s\) available/i)).toBeInTheDocument();
     });
 
     it("shows apply button for single update", () => {
-      render(<UpdatesContent {...defaultProps} updates={[mockUpdates[0]]} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={[mockUpdates[0]]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-apply-updates")).toBeInTheDocument();
     });
@@ -122,20 +160,32 @@ describe("UpdatesContent", () => {
       const user = userEvent.setup();
       const onApplyAll = vi.fn();
 
-      render(<UpdatesContent {...defaultProps} onApplyAll={onApplyAll} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} onApplyAll={onApplyAll} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("skills-apply-updates"));
       expect(onApplyAll).toHaveBeenCalledTimes(1);
     });
 
     it("disables button when applying updates", () => {
-      render(<UpdatesContent {...defaultProps} isApplying={true} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} isApplying={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-apply-updates")).toBeDisabled();
     });
 
     it("enables button when not applying", () => {
-      render(<UpdatesContent {...defaultProps} isApplying={false} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} isApplying={false} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("skills-apply-updates")).not.toBeDisabled();
     });
@@ -155,7 +205,11 @@ describe("UpdatesContent", () => {
         { name: "skill-5", currentVersion: "1.0.0", newVersion: "2.0.0" },
       ];
 
-      render(<UpdatesContent {...defaultProps} updates={manyUpdates} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={manyUpdates} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/5 update\(s\) available/i)).toBeInTheDocument();
     });
@@ -167,20 +221,32 @@ describe("UpdatesContent", () => {
 
   describe("Accessibility", () => {
     it("apply button has accessible name", () => {
-      render(<UpdatesContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button", { name: /apply all updates/i });
       expect(button).toBeInTheDocument();
     });
 
     it("update count is visible text", () => {
-      render(<UpdatesContent {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/update\(s\) available/i)).toBeInTheDocument();
     });
 
     it("success message is visible in up-to-date state", () => {
-      render(<UpdatesContent {...defaultProps} updates={[]} />);
+      render(
+        <TestProvider>
+          <UpdatesContent {...defaultProps} updates={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("All skills are up to date")).toBeInTheDocument();
     });

@@ -15,6 +15,8 @@ import {
   type FollowUpSuggestion,
 } from "./AIFollowUpSuggestions";
 
+import { TestProvider } from "@/test-utils";
+
 describe("AIFollowUpSuggestions", () => {
   const mockOnSelect = vi.fn();
 
@@ -40,13 +42,21 @@ describe("AIFollowUpSuggestions", () => {
 
   describe("rendering", () => {
     it("should render the suggestions container", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
     });
 
     it("should render all suggestions", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Can you explain this in more detail?"),
@@ -59,7 +69,9 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should not render when suggestions array is empty", () => {
       render(
-        <AIFollowUpSuggestions suggestions={[]} onSelect={mockOnSelect} />,
+        <TestProvider>
+          <AIFollowUpSuggestions suggestions={[]} onSelect={mockOnSelect} />
+        </TestProvider>,
       );
 
       expect(
@@ -68,7 +80,11 @@ describe("AIFollowUpSuggestions", () => {
     });
 
     it("should render header text", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/follow-up|related|explore/i),
@@ -78,7 +94,11 @@ describe("AIFollowUpSuggestions", () => {
 
   describe("selection", () => {
     it("should call onSelect when a suggestion is clicked", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByText("What are the alternatives?"));
 
@@ -86,7 +106,11 @@ describe("AIFollowUpSuggestions", () => {
     });
 
     it("should call onSelect with correct suggestion object", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByText("Show me an example"));
 
@@ -100,11 +124,13 @@ describe("AIFollowUpSuggestions", () => {
   describe("loading state", () => {
     it("should show loading state when isLoading is true", () => {
       render(
-        <AIFollowUpSuggestions
-          suggestions={[]}
-          onSelect={mockOnSelect}
-          isLoading
-        />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            suggestions={[]}
+            onSelect={mockOnSelect}
+            isLoading
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestions-loading")).toBeInTheDocument();
@@ -112,11 +138,13 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should show skeleton loaders during loading", () => {
       render(
-        <AIFollowUpSuggestions
-          suggestions={[]}
-          onSelect={mockOnSelect}
-          isLoading
-        />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            suggestions={[]}
+            onSelect={mockOnSelect}
+            isLoading
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -125,7 +153,11 @@ describe("AIFollowUpSuggestions", () => {
     });
 
     it("should not show loading state when isLoading is false", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} isLoading={false} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} isLoading={false} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("suggestions-loading"),
@@ -135,7 +167,11 @@ describe("AIFollowUpSuggestions", () => {
 
   describe("disabled state", () => {
     it("should disable all suggestions when disabled is true", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} disabled />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} disabled />
+        </TestProvider>,
+      );
 
       const buttons = screen.getAllByRole("button");
       buttons.forEach((button) => {
@@ -144,7 +180,11 @@ describe("AIFollowUpSuggestions", () => {
     });
 
     it("should not call onSelect when disabled", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} disabled />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} disabled />
+        </TestProvider>,
+      );
 
       const button = screen.getByText("What are the alternatives?");
       fireEvent.click(button);
@@ -164,11 +204,13 @@ describe("AIFollowUpSuggestions", () => {
       ];
 
       render(
-        <AIFollowUpSuggestions
-          suggestions={manySuggestions}
-          onSelect={mockOnSelect}
-          maxSuggestions={3}
-        />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            suggestions={manySuggestions}
+            onSelect={mockOnSelect}
+            maxSuggestions={3}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Question 1")).toBeInTheDocument();
@@ -181,7 +223,11 @@ describe("AIFollowUpSuggestions", () => {
 
   describe("icons", () => {
     it("should show icon for each suggestion", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       const icons = screen.getAllByTestId("suggestion-icon");
       expect(icons).toHaveLength(defaultSuggestions.length);
@@ -190,14 +236,22 @@ describe("AIFollowUpSuggestions", () => {
 
   describe("accessibility", () => {
     it("should have role button for each suggestion", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       const buttons = screen.getAllByRole("button");
       expect(buttons).toHaveLength(defaultSuggestions.length);
     });
 
     it("should be keyboard accessible", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       const firstButton = screen.getAllByRole("button")[0];
       firstButton.focus();
@@ -210,7 +264,9 @@ describe("AIFollowUpSuggestions", () => {
   describe("custom className", () => {
     it("should apply custom className", () => {
       render(
-        <AIFollowUpSuggestions {...defaultProps} className="custom-class" />,
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} className="custom-class" />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("follow-up-suggestions")).toHaveClass(
@@ -221,7 +277,11 @@ describe("AIFollowUpSuggestions", () => {
 
   describe("compact mode", () => {
     it("should render in compact mode with smaller text", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("follow-up-suggestions");
       expect(container).toHaveClass("text-xs");
@@ -236,11 +296,13 @@ describe("AIFollowUpSuggestions", () => {
       ];
 
       render(
-        <AIFollowUpSuggestions
-          suggestions={categorizedSuggestions}
-          onSelect={mockOnSelect}
-          showCategories
-        />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            suggestions={categorizedSuggestions}
+            onSelect={mockOnSelect}
+            showCategories
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/clarify/i)).toBeInTheDocument();
@@ -257,7 +319,12 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should render feedback buttons when onFeedback prop is provided", () => {
       render(
-        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            {...defaultProps}
+            onFeedback={mockOnFeedback}
+          />
+        </TestProvider>,
       );
 
       // Each suggestion should have thumbs up and thumbs down buttons
@@ -269,7 +336,11 @@ describe("AIFollowUpSuggestions", () => {
     });
 
     it("should not render feedback buttons when onFeedback prop is not provided", () => {
-      render(<AIFollowUpSuggestions {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIFollowUpSuggestions {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("feedback-positive")).not.toBeInTheDocument();
       expect(screen.queryByTestId("feedback-negative")).not.toBeInTheDocument();
@@ -277,7 +348,12 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should call onFeedback with positive feedback when thumbs up is clicked", () => {
       render(
-        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            {...defaultProps}
+            onFeedback={mockOnFeedback}
+          />
+        </TestProvider>,
       );
 
       const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
@@ -291,7 +367,12 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should call onFeedback with negative feedback when thumbs down is clicked", () => {
       render(
-        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            {...defaultProps}
+            onFeedback={mockOnFeedback}
+          />
+        </TestProvider>,
       );
 
       const thumbsDownButtons = screen.getAllByTestId("feedback-negative");
@@ -305,7 +386,12 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should prevent click event propagation when feedback button is clicked", () => {
       render(
-        <AIFollowUpSuggestions {...defaultProps} onFeedback={mockOnFeedback} />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            {...defaultProps}
+            onFeedback={mockOnFeedback}
+          />
+        </TestProvider>,
       );
 
       const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
@@ -317,11 +403,13 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should disable feedback buttons when suggestion is disabled", () => {
       render(
-        <AIFollowUpSuggestions
-          {...defaultProps}
-          onFeedback={mockOnFeedback}
-          disabled
-        />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            {...defaultProps}
+            onFeedback={mockOnFeedback}
+            disabled
+          />
+        </TestProvider>,
       );
 
       const thumbsUpButtons = screen.getAllByTestId("feedback-positive");
@@ -337,11 +425,13 @@ describe("AIFollowUpSuggestions", () => {
 
     it("should show feedback buttons on hover in compact mode", () => {
       render(
-        <AIFollowUpSuggestions
-          {...defaultProps}
-          onFeedback={mockOnFeedback}
-          compact
-        />,
+        <TestProvider>
+          <AIFollowUpSuggestions
+            {...defaultProps}
+            onFeedback={mockOnFeedback}
+            compact
+          />
+        </TestProvider>,
       );
 
       // Buttons should exist (visibility controlled by CSS)

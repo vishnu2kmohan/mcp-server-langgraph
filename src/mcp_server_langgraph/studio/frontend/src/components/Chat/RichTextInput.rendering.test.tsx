@@ -15,6 +15,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RichTextInput } from "./RichTextInput";
 
+import { TestProvider } from "@/test-utils";
+
 describe("RichTextInput - Rendering", () => {
   const mockOnSubmit = vi.fn();
   const mockOnChange = vi.fn();
@@ -30,16 +32,22 @@ describe("RichTextInput - Rendering", () => {
 
   describe("rendering", () => {
     it("should render the text input area", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
 
     it("should render placeholder text", () => {
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          placeholder="Type a message..."
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            placeholder="Type a message..."
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByPlaceholderText("Type a message..."),
@@ -48,21 +56,36 @@ describe("RichTextInput - Rendering", () => {
 
     it("should render formatting toolbar when expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("formatting-toolbar")).toBeInTheDocument();
     });
 
     it("should render bold button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("button", { name: /bold/i })).toBeInTheDocument();
     });
 
     it("should render italic button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /italic/i }),
@@ -71,7 +94,12 @@ describe("RichTextInput - Rendering", () => {
 
     it("should render code button when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /^code$/i }),
@@ -82,7 +110,11 @@ describe("RichTextInput - Rendering", () => {
   describe("text input", () => {
     it("should accept text input", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} onChange={mockOnChange} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} onChange={mockOnChange} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       await user.type(input, "Hello world");
@@ -92,7 +124,11 @@ describe("RichTextInput - Rendering", () => {
 
     it("should display entered text", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       await user.type(input, "Test message");
@@ -102,7 +138,9 @@ describe("RichTextInput - Rendering", () => {
 
     it("should support controlled value", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} value="Controlled value" />,
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} value="Controlled value" />
+        </TestProvider>,
       );
       expect(screen.getByRole("textbox")).toHaveValue("Controlled value");
     });
@@ -112,7 +150,12 @@ describe("RichTextInput - Rendering", () => {
     it("should wrap selected text with bold markers", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -130,7 +173,12 @@ describe("RichTextInput - Rendering", () => {
     it("should wrap selected text with italic markers", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -148,7 +196,12 @@ describe("RichTextInput - Rendering", () => {
     it("should wrap selected text with inline code markers", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -166,7 +219,12 @@ describe("RichTextInput - Rendering", () => {
     it("should insert markers at cursor when no text selected", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -182,7 +240,11 @@ describe("RichTextInput - Rendering", () => {
   describe("keyboard shortcuts", () => {
     it("should apply bold with Cmd/Ctrl+B", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "test");
@@ -195,7 +257,11 @@ describe("RichTextInput - Rendering", () => {
 
     it("should apply italic with Cmd/Ctrl+I", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "test");
@@ -208,7 +274,11 @@ describe("RichTextInput - Rendering", () => {
 
     it("should apply code with Cmd/Ctrl+`", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "test");
@@ -222,17 +292,23 @@ describe("RichTextInput - Rendering", () => {
 
   describe("disabled state", () => {
     it("should disable input when disabled prop is true", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} disabled />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} disabled />
+        </TestProvider>,
+      );
       expect(screen.getByRole("textbox")).toBeDisabled();
     });
 
     it("should disable formatting buttons when disabled and toolbar expanded", () => {
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          disabled
-          defaultToolbarExpanded={true}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            disabled
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("button", { name: /bold/i })).toBeDisabled();
       expect(screen.getByRole("button", { name: /italic/i })).toBeDisabled();

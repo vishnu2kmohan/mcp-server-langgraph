@@ -8,6 +8,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { CodePanel } from "./CodePanel";
 
+import { TestProvider } from "@/test-utils";
+
 describe("CodePanel", () => {
   const defaultProps = {
     code: "def my_workflow():\n    pass",
@@ -28,25 +30,41 @@ describe("CodePanel", () => {
 
   describe("Rendering", () => {
     it("should render the code panel when open", () => {
-      render(<CodePanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Generated Code")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
-      render(<CodePanel {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByText("Generated Code")).not.toBeInTheDocument();
     });
 
     it("should display the code content", () => {
-      render(<CodePanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/def my_workflow/)).toBeInTheDocument();
     });
 
     it("should render close button", () => {
-      render(<CodePanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /close/i }),
@@ -54,7 +72,11 @@ describe("CodePanel", () => {
     });
 
     it("should render copy button", () => {
-      render(<CodePanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     });
@@ -62,14 +84,22 @@ describe("CodePanel", () => {
 
   describe("Interactions", () => {
     it("should call onClose when close button is clicked", () => {
-      render(<CodePanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /close/i }));
       expect(defaultProps.onClose).toHaveBeenCalled();
     });
 
     it("should call onCopy when copy button is clicked", () => {
-      render(<CodePanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /copy/i }));
       expect(defaultProps.onCopy).toHaveBeenCalled();
@@ -78,7 +108,11 @@ describe("CodePanel", () => {
 
   describe("Empty State", () => {
     it("should show placeholder when code is empty", () => {
-      render(<CodePanel {...defaultProps} code="" />);
+      render(
+        <TestProvider>
+          <CodePanel {...defaultProps} code="" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/no code generated/i)).toBeInTheDocument();
     });
@@ -87,7 +121,9 @@ describe("CodePanel", () => {
   describe("Styling", () => {
     it("should apply dark mode styles", () => {
       const { container } = render(
-        <CodePanel {...defaultProps} isDarkMode={true} />,
+        <TestProvider>
+          <CodePanel {...defaultProps} isDarkMode={true} />
+        </TestProvider>,
       );
 
       const panel = container.querySelector('[data-testid="code-panel"]');
@@ -96,7 +132,9 @@ describe("CodePanel", () => {
 
     it("should apply light mode styles", () => {
       const { container } = render(
-        <CodePanel {...defaultProps} isDarkMode={false} />,
+        <TestProvider>
+          <CodePanel {...defaultProps} isDarkMode={false} />
+        </TestProvider>,
       );
 
       const panel = container.querySelector('[data-testid="code-panel"]');

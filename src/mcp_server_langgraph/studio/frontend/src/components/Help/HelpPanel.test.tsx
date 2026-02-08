@@ -9,6 +9,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { HelpPanel, HelpPanelProps, HelpArticle, HelpTip } from "./HelpPanel";
 
+import { TestProvider } from "@/test-utils";
+
 const mockTips: HelpTip[] = [
   {
     id: "tip-1",
@@ -62,31 +64,51 @@ describe("HelpPanel", () => {
 
   describe("Visibility", () => {
     it("should render when isOpen is true", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("complementary")).toBeInTheDocument();
     });
 
     it("should not render when isOpen is false", () => {
-      render(<HelpPanel {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
       expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
     });
   });
 
   describe("Header", () => {
     it("should display help title", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/help/i)).toBeInTheDocument();
     });
 
     it("should have close button", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /close/i }),
       ).toBeInTheDocument();
     });
 
     it("should call onClose when close button clicked", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /close/i }));
       expect(defaultProps.onClose).toHaveBeenCalled();
     });
@@ -94,12 +116,20 @@ describe("HelpPanel", () => {
 
   describe("Tips Section", () => {
     it("should display tips section heading", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/tips/i)).toBeInTheDocument();
     });
 
     it("should display all tips", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/drag nodes from palette/i)).toBeInTheDocument();
       expect(
         screen.getByText(/connect nodes to create flow/i),
@@ -108,32 +138,52 @@ describe("HelpPanel", () => {
     });
 
     it("should handle empty tips gracefully", () => {
-      render(<HelpPanel {...defaultProps} tips={[]} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} tips={[]} />
+        </TestProvider>,
+      );
       expect(screen.queryByText(/tips/i)).not.toBeInTheDocument();
     });
   });
 
   describe("Articles Section", () => {
     it("should display articles section heading", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/documentation/i)).toBeInTheDocument();
     });
 
     it("should display all articles", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Workflow Basics")).toBeInTheDocument();
       expect(screen.getByText("Node Types")).toBeInTheDocument();
     });
 
     it("should display article descriptions", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(/learn how to create and manage/i),
       ).toBeInTheDocument();
     });
 
     it("should render articles as links", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       const workflowLink = screen.getByRole("link", {
         name: /workflow basics/i,
       });
@@ -141,19 +191,31 @@ describe("HelpPanel", () => {
     });
 
     it("should handle empty articles gracefully", () => {
-      render(<HelpPanel {...defaultProps} articles={[]} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} articles={[]} />
+        </TestProvider>,
+      );
       expect(screen.queryByText(/documentation/i)).not.toBeInTheDocument();
     });
   });
 
   describe("Search", () => {
     it("should display search input", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByPlaceholderText(/search help/i)).toBeInTheDocument();
     });
 
     it("should filter tips by search query", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       const searchInput = screen.getByPlaceholderText(/search help/i);
       fireEvent.change(searchInput, { target: { value: "drag" } });
 
@@ -162,7 +224,11 @@ describe("HelpPanel", () => {
     });
 
     it("should filter articles by search query", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       const searchInput = screen.getByPlaceholderText(/search help/i);
       fireEvent.change(searchInput, { target: { value: "workflow" } });
 
@@ -171,7 +237,11 @@ describe("HelpPanel", () => {
     });
 
     it("should show no results message when nothing matches", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       const searchInput = screen.getByPlaceholderText(/search help/i);
       fireEvent.change(searchInput, { target: { value: "xyz123" } });
 
@@ -182,7 +252,9 @@ describe("HelpPanel", () => {
   describe("Context-Specific Content", () => {
     it("should display context-specific title when provided", () => {
       render(
-        <HelpPanel {...defaultProps} contextTitle="Workflow Builder Help" />,
+        <TestProvider>
+          <HelpPanel {...defaultProps} contextTitle="Workflow Builder Help" />
+        </TestProvider>,
       );
       expect(screen.getByText("Workflow Builder Help")).toBeInTheDocument();
     });
@@ -200,7 +272,11 @@ describe("HelpPanel", () => {
         },
       ];
 
-      render(<HelpPanel {...defaultProps} tips={tipsWithDetails} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} tips={tipsWithDetails} />
+        </TestProvider>,
+      );
       const expandButton = screen.getByRole("button", { name: /more/i });
       fireEvent.click(expandButton);
 
@@ -212,7 +288,11 @@ describe("HelpPanel", () => {
 
   describe("Keyboard Navigation", () => {
     it("should close on Escape key", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.keyDown(document, { key: "Escape" });
       expect(defaultProps.onClose).toHaveBeenCalled();
     });
@@ -220,12 +300,20 @@ describe("HelpPanel", () => {
 
   describe("Accessibility", () => {
     it("should have complementary role", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("complementary")).toBeInTheDocument();
     });
 
     it("should have accessible panel label", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       const panel = screen.getByRole("complementary");
       expect(panel).toHaveAttribute(
         "aria-label",
@@ -234,7 +322,11 @@ describe("HelpPanel", () => {
     });
 
     it("should have searchbox role for search input", () => {
-      render(<HelpPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HelpPanel {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("searchbox")).toBeInTheDocument();
     });
   });

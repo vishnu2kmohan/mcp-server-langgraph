@@ -15,6 +15,8 @@ import {
 } from "@testing-library/react";
 import { SandpackExecutor } from "./SandpackExecutor";
 
+import { TestProvider } from "@/test-utils";
+
 describe("SandpackExecutor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -28,10 +30,12 @@ describe("SandpackExecutor", () => {
   describe("Rendering", () => {
     it("should render the component with code preview by default", () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Hello</div>; }"
-          language="tsx"
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Hello</div>; }"
+            language="tsx"
+          />
+        </TestProvider>,
       );
 
       // Shows code preview before running
@@ -42,11 +46,13 @@ describe("SandpackExecutor", () => {
 
     it("should show a Run button when showRunButton is true", () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Hello</div>; }"
-          language="tsx"
-          showRunButton={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Hello</div>; }"
+            language="tsx"
+            showRunButton={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /run/i })).toBeInTheDocument();
@@ -54,12 +60,14 @@ describe("SandpackExecutor", () => {
 
     it("should not show Run button when showRunButton is false and autoRun is true", () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Hello</div>; }"
-          language="tsx"
-          showRunButton={false}
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Hello</div>; }"
+            language="tsx"
+            showRunButton={false}
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       // With autoRun=true, there should be no Run button visible
@@ -70,18 +78,24 @@ describe("SandpackExecutor", () => {
 
     it("should display the title when provided", () => {
       render(
-        <SandpackExecutor
-          code="const x = 1;"
-          language="javascript"
-          title="My Component"
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="const x = 1;"
+            language="javascript"
+            title="My Component"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("My Component")).toBeInTheDocument();
     });
 
     it("should show language badge", () => {
-      render(<SandpackExecutor code="const x = 1;" language="typescript" />);
+      render(
+        <TestProvider>
+          <SandpackExecutor code="const x = 1;" language="typescript" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("typescript")).toBeInTheDocument();
     });
@@ -90,11 +104,13 @@ describe("SandpackExecutor", () => {
   describe("Execution Control", () => {
     it("should not show Sandpack preview before Run is clicked", () => {
       render(
-        <SandpackExecutor
-          code="console.log('test')"
-          language="javascript"
-          showRunButton={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="console.log('test')"
+            language="javascript"
+            showRunButton={true}
+          />
+        </TestProvider>,
       );
 
       // Preview should not be visible until Run is clicked
@@ -103,11 +119,13 @@ describe("SandpackExecutor", () => {
 
     it("should show Sandpack when Run button is clicked", async () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Hello</div>; }"
-          language="tsx"
-          showRunButton={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Hello</div>; }"
+            language="tsx"
+            showRunButton={true}
+          />
+        </TestProvider>,
       );
 
       const runButton = screen.getByRole("button", { name: /run/i });
@@ -120,11 +138,13 @@ describe("SandpackExecutor", () => {
 
     it("should show Sandpack immediately when autoRun is true", () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Hello</div>; }"
-          language="tsx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Hello</div>; }"
+            language="tsx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -133,12 +153,14 @@ describe("SandpackExecutor", () => {
     it("should call onExecute callback when Run is clicked", async () => {
       const onExecute = vi.fn();
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Hello</div>; }"
-          language="tsx"
-          showRunButton={true}
-          onExecute={onExecute}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Hello</div>; }"
+            language="tsx"
+            showRunButton={true}
+            onExecute={onExecute}
+          />
+        </TestProvider>,
       );
 
       const runButton = screen.getByRole("button", { name: /run/i });
@@ -151,11 +173,13 @@ describe("SandpackExecutor", () => {
   describe("Language Support", () => {
     it("should support tsx files", () => {
       render(
-        <SandpackExecutor
-          code="export default () => <div>TSX</div>"
-          language="tsx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default () => <div>TSX</div>"
+            language="tsx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -163,11 +187,13 @@ describe("SandpackExecutor", () => {
 
     it("should support jsx files", () => {
       render(
-        <SandpackExecutor
-          code="export default () => <div>JSX</div>"
-          language="jsx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default () => <div>JSX</div>"
+            language="jsx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -175,11 +201,13 @@ describe("SandpackExecutor", () => {
 
     it("should support MDX content", () => {
       render(
-        <SandpackExecutor
-          code="# Hello\n\n<Button>Click me</Button>"
-          language="mdx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="# Hello\n\n<Button>Click me</Button>"
+            language="mdx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -187,11 +215,13 @@ describe("SandpackExecutor", () => {
 
     it("should support plain JavaScript", () => {
       render(
-        <SandpackExecutor
-          code="console.log('hello')"
-          language="javascript"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="console.log('hello')"
+            language="javascript"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -199,10 +229,12 @@ describe("SandpackExecutor", () => {
 
     it("should display the correct language badge", () => {
       render(
-        <SandpackExecutor
-          code="export default () => <div>TSX</div>"
-          language="tsx"
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default () => <div>TSX</div>"
+            language="tsx"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("tsx")).toBeInTheDocument();
@@ -212,12 +244,14 @@ describe("SandpackExecutor", () => {
   describe("Dependencies", () => {
     it("should render component when custom dependencies are provided", () => {
       render(
-        <SandpackExecutor
-          code="import dayjs from 'dayjs'; export default () => <div>{dayjs().format()}</div>"
-          language="tsx"
-          dependencies={{ dayjs: "1.11.10" }}
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="import dayjs from 'dayjs'; export default () => <div>{dayjs().format()}</div>"
+            language="tsx"
+            dependencies={{ dayjs: "1.11.10" }}
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -225,12 +259,14 @@ describe("SandpackExecutor", () => {
 
     it("should render component with allowedDependencies", () => {
       render(
-        <SandpackExecutor
-          code="import React from 'react'; export default () => <div />"
-          language="tsx"
-          allowedDependencies={["react", "react-dom"]}
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="import React from 'react'; export default () => <div />"
+            language="tsx"
+            allowedDependencies={["react", "react-dom"]}
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -240,12 +276,14 @@ describe("SandpackExecutor", () => {
   describe("Theme Support", () => {
     it("should render with dark theme", () => {
       render(
-        <SandpackExecutor
-          code="const x = 1"
-          language="javascript"
-          theme="dark"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="const x = 1"
+            language="javascript"
+            theme="dark"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -253,12 +291,14 @@ describe("SandpackExecutor", () => {
 
     it("should render with light theme", () => {
       render(
-        <SandpackExecutor
-          code="const x = 1"
-          language="javascript"
-          theme="light"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="const x = 1"
+            language="javascript"
+            theme="light"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sandpack-executor")).toBeInTheDocument();
@@ -268,11 +308,13 @@ describe("SandpackExecutor", () => {
   describe("UI Controls", () => {
     it("should show Stop button when running", async () => {
       render(
-        <SandpackExecutor
-          code="const x = 1"
-          language="javascript"
-          showRunButton={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="const x = 1"
+            language="javascript"
+            showRunButton={true}
+          />
+        </TestProvider>,
       );
 
       const runButton = screen.getByRole("button", { name: /run/i });
@@ -286,7 +328,11 @@ describe("SandpackExecutor", () => {
     });
 
     it("should show Sandpack badge", () => {
-      render(<SandpackExecutor code="const x = 1" language="javascript" />);
+      render(
+        <TestProvider>
+          <SandpackExecutor code="const x = 1" language="javascript" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Sandpack")).toBeInTheDocument();
     });
@@ -300,11 +346,13 @@ describe("SandpackExecutor", () => {
         .mockImplementation(() => {});
 
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Test</div>; }"
-          language="tsx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Test</div>; }"
+            language="tsx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       // The error boundary should be present in the DOM
@@ -317,12 +365,14 @@ describe("SandpackExecutor", () => {
       const onError = vi.fn();
 
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Test</div>; }"
-          language="tsx"
-          autoRun={true}
-          onError={onError}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Test</div>; }"
+            language="tsx"
+            autoRun={true}
+            onError={onError}
+          />
+        </TestProvider>,
       );
 
       // Component should render without crashing
@@ -332,11 +382,13 @@ describe("SandpackExecutor", () => {
     it("should show code preview with Run button when not auto-running", () => {
       // This tests the initial placeholder UI before clicking Run
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Test</div>; }"
-          language="tsx"
-          showRunButton={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Test</div>; }"
+            language="tsx"
+            showRunButton={true}
+          />
+        </TestProvider>,
       );
 
       // Should show the Run button and code preview
@@ -348,11 +400,13 @@ describe("SandpackExecutor", () => {
   describe("Loading State", () => {
     it("should show loading skeleton when Sandpack is initializing", async () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Test</div>; }"
-          language="tsx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Test</div>; }"
+            language="tsx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       // The Sandpack container should be present
@@ -361,11 +415,13 @@ describe("SandpackExecutor", () => {
 
     it("should show initializing state before Sandpack is fully loaded", async () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Test</div>; }"
-          language="tsx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Test</div>; }"
+            language="tsx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       // Should have the executor container
@@ -378,11 +434,13 @@ describe("SandpackExecutor", () => {
   describe("Error Boundary", () => {
     it("should have error boundary wrapper around Sandpack content", () => {
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Test</div>; }"
-          language="tsx"
-          autoRun={true}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Test</div>; }"
+            language="tsx"
+            autoRun={true}
+          />
+        </TestProvider>,
       );
 
       // Sandpack executor should render with error boundary protection
@@ -392,12 +450,14 @@ describe("SandpackExecutor", () => {
     it("should support retry functionality", async () => {
       const onExecute = vi.fn();
       render(
-        <SandpackExecutor
-          code="export default function App() { return <div>Test</div>; }"
-          language="tsx"
-          showRunButton={true}
-          onExecute={onExecute}
-        />,
+        <TestProvider>
+          <SandpackExecutor
+            code="export default function App() { return <div>Test</div>; }"
+            language="tsx"
+            showRunButton={true}
+            onExecute={onExecute}
+          />
+        </TestProvider>,
       );
 
       // Click run to start

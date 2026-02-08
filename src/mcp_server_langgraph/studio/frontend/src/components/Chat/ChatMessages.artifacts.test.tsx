@@ -9,6 +9,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { ChatMessages } from "./ChatMessages";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ChatMessages Artifacts", () => {
   // Cleanup after each test to prevent DOM leakage and state pollution
   afterEach(() => {
@@ -44,18 +46,30 @@ describe("ChatMessages Artifacts", () => {
     ];
 
     it("should display sources section when assistant message has sources", () => {
-      render(<ChatMessages messages={messagesWithSources} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={messagesWithSources} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Sources:")).toBeInTheDocument();
     });
 
     it("should render source links", () => {
-      render(<ChatMessages messages={messagesWithSources} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={messagesWithSources} />
+        </TestProvider>,
+      );
       expect(screen.getByText("LangGraph Documentation")).toBeInTheDocument();
       expect(screen.getByText("LangChain Blog")).toBeInTheDocument();
     });
 
     it("should have correct href on source links", () => {
-      render(<ChatMessages messages={messagesWithSources} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={messagesWithSources} />
+        </TestProvider>,
+      );
       const docLink = screen.getByText("LangGraph Documentation");
       expect(docLink).toHaveAttribute(
         "href",
@@ -64,7 +78,11 @@ describe("ChatMessages Artifacts", () => {
     });
 
     it("should open links in new tab", () => {
-      render(<ChatMessages messages={messagesWithSources} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={messagesWithSources} />
+        </TestProvider>,
+      );
       const docLink = screen.getByText("LangGraph Documentation");
       expect(docLink).toHaveAttribute("target", "_blank");
       expect(docLink).toHaveAttribute("rel", "noopener noreferrer");
@@ -80,7 +98,11 @@ describe("ChatMessages Artifacts", () => {
           sources: [{ title: "Test", url: "https://test.com" }],
         },
       ];
-      render(<ChatMessages messages={userWithSources} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={userWithSources} />
+        </TestProvider>,
+      );
       expect(screen.queryByText("Sources:")).not.toBeInTheDocument();
     });
 
@@ -94,7 +116,11 @@ describe("ChatMessages Artifacts", () => {
           sources: [],
         },
       ];
-      render(<ChatMessages messages={noSources} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={noSources} />
+        </TestProvider>,
+      );
       expect(screen.queryByText("Sources:")).not.toBeInTheDocument();
     });
   });
@@ -110,7 +136,11 @@ describe("ChatMessages Artifacts", () => {
           timestamp: Date.now(),
         },
       ];
-      render(<ChatMessages messages={mermaidMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={mermaidMessage} />
+        </TestProvider>,
+      );
       // Should render the mermaid diagram container, not just code
       const diagramContainer = document.querySelector(
         ".bg-neutral-1, .dark\\:bg-neutral-3",
@@ -127,7 +157,11 @@ describe("ChatMessages Artifacts", () => {
           timestamp: Date.now(),
         },
       ];
-      render(<ChatMessages messages={jsCodeMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={jsCodeMessage} />
+        </TestProvider>,
+      );
       // Should show the code block with language label
       expect(
         await screen.findByText("javascript", {}, { timeout: 5000 }),
@@ -149,7 +183,11 @@ describe("ChatMessages Artifacts", () => {
           timestamp: Date.now(),
         },
       ];
-      render(<ChatMessages messages={chartMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={chartMessage} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Sales")).toBeInTheDocument();
     });
   });
@@ -166,7 +204,9 @@ describe("ChatMessages Artifacts", () => {
         },
       ];
       render(
-        <ChatMessages messages={mermaidMessage} enableInteractiveArtifacts />,
+        <TestProvider>
+          <ChatMessages messages={mermaidMessage} enableInteractiveArtifacts />
+        </TestProvider>,
       );
       const diagramContainer = document.querySelector(
         ".bg-neutral-1, .dark\\:bg-neutral-3",
@@ -185,7 +225,9 @@ describe("ChatMessages Artifacts", () => {
         },
       ];
       render(
-        <ChatMessages messages={chartMessage} enableInteractiveArtifacts />,
+        <TestProvider>
+          <ChatMessages messages={chartMessage} enableInteractiveArtifacts />
+        </TestProvider>,
       );
       expect(screen.getByText("Test Chart")).toBeInTheDocument();
     });
@@ -201,10 +243,12 @@ describe("ChatMessages Artifacts", () => {
         },
       ];
       render(
-        <ChatMessages
-          messages={mermaidMessage}
-          enableInteractiveArtifacts={false}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mermaidMessage}
+            enableInteractiveArtifacts={false}
+          />
+        </TestProvider>,
       );
       expect(await screen.findByText("mermaid")).toBeInTheDocument();
     });
@@ -220,10 +264,12 @@ describe("ChatMessages Artifacts", () => {
         },
       ];
       render(
-        <ChatMessages
-          messages={chartMessage}
-          enableInteractiveArtifacts={false}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={chartMessage}
+            enableInteractiveArtifacts={false}
+          />
+        </TestProvider>,
       );
       expect(await screen.findByText("chart")).toBeInTheDocument();
     });
@@ -238,7 +284,11 @@ describe("ChatMessages Artifacts", () => {
           timestamp: Date.now(),
         },
       ];
-      render(<ChatMessages messages={chartMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={chartMessage} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Default Enabled")).toBeInTheDocument();
     });
   });
@@ -255,27 +305,47 @@ describe("ChatMessages Artifacts", () => {
     ];
 
     it("should render code block with language label", async () => {
-      render(<ChatMessages messages={codeMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={codeMessage} />
+        </TestProvider>,
+      );
       expect(await screen.findByText("python")).toBeInTheDocument();
     });
 
     it("should have copy button", async () => {
-      render(<ChatMessages messages={codeMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={codeMessage} />
+        </TestProvider>,
+      );
       expect(await screen.findByTitle("Copy code")).toBeInTheDocument();
     });
 
     it("should have word wrap toggle button", async () => {
-      render(<ChatMessages messages={codeMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={codeMessage} />
+        </TestProvider>,
+      );
       expect(await screen.findByTitle("Toggle word wrap")).toBeInTheDocument();
     });
 
     it("should have download button", async () => {
-      render(<ChatMessages messages={codeMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={codeMessage} />
+        </TestProvider>,
+      );
       expect(await screen.findByTitle("Download file")).toBeInTheDocument();
     });
 
     it("should show line numbers", async () => {
-      render(<ChatMessages messages={codeMessage} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={codeMessage} />
+        </TestProvider>,
+      );
       await screen.findByText("python");
       const codeBlock = document.querySelector("pre");
       expect(codeBlock).toBeInTheDocument();

@@ -15,6 +15,8 @@ import {
 import { NetworkTab } from "./NetworkTab";
 import type { NetworkEntry } from "../types";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mocks
 // =============================================================================
@@ -93,7 +95,11 @@ describe("NetworkTab Performance", () => {
       mockEntries.push(...generateMockEntries(500));
 
       const start = performance.now();
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
       const renderTime = performance.now() - start;
 
       // Should render within 500ms even with many entries
@@ -104,7 +110,11 @@ describe("NetworkTab Performance", () => {
     it("should render 1000 entries without crashing", () => {
       mockEntries.push(...generateMockEntries(1000));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       // Table should render
       expect(screen.getByRole("table")).toBeInTheDocument();
@@ -113,7 +123,11 @@ describe("NetworkTab Performance", () => {
     it("should show correct request count for large lists", () => {
       mockEntries.push(...generateMockEntries(500));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("500 requests")).toBeInTheDocument();
     });
@@ -123,7 +137,11 @@ describe("NetworkTab Performance", () => {
     it("should filter entries with debounced search", async () => {
       mockEntries.push(...generateMockEntries(100));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByTestId("network-search");
 
@@ -139,7 +157,11 @@ describe("NetworkTab Performance", () => {
     it("should handle rapid search input", async () => {
       mockEntries.push(...generateMockEntries(200));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByTestId("network-search");
 
@@ -158,7 +180,11 @@ describe("NetworkTab Performance", () => {
     it("should switch filters quickly", async () => {
       mockEntries.push(...generateMockEntries(300));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       const filters = ["all", "api", "mcp", "all"];
       const filterTimes: number[] = [];
@@ -180,7 +206,11 @@ describe("NetworkTab Performance", () => {
     it("should select rows efficiently", async () => {
       mockEntries.push(...generateMockEntries(100));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       // Select multiple rows in sequence
       for (let i = 0; i < 5; i++) {
@@ -202,7 +232,11 @@ describe("NetworkTab Performance", () => {
       }));
       mockEntries.push(...entriesWithDetails);
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       // Select first entry
       fireEvent.click(screen.getByTestId("network-entry-net-0"));
@@ -218,7 +252,11 @@ describe("NetworkTab Performance", () => {
     it("should toggle recording quickly", () => {
       mockEntries.push(...generateMockEntries(100));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       const toggleButton = screen.getByTestId("recording-toggle");
 
@@ -237,7 +275,11 @@ describe("NetworkTab Performance", () => {
     it("should clear entries quickly", () => {
       mockEntries.push(...generateMockEntries(500));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       const clearButton = screen.getByTestId("clear-network-button");
 
@@ -254,7 +296,11 @@ describe("NetworkTab Performance", () => {
     it("should handle scroll events efficiently", () => {
       mockEntries.push(...generateMockEntries(200));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       const tableContainer = screen.getByRole("table").parentElement!;
 
@@ -272,7 +318,11 @@ describe("NetworkTab Performance", () => {
     it("should export JSON efficiently with many entries", async () => {
       mockEntries.push(...generateMockEntries(500));
 
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
 
       // Mock download functions after render to avoid interfering with React DOM
       const mockClick = vi.fn();
@@ -320,7 +370,9 @@ describe("NetworkTab Performance", () => {
       mockEntries.push(...generateMockEntries(100));
 
       const { unmount, rerender } = render(
-        <NetworkTab contextEntityId="session-1" showMCPCalls={true} />,
+        <TestProvider>
+          <NetworkTab contextEntityId="session-1" showMCPCalls={true} />
+        </TestProvider>,
       );
 
       // Re-render multiple times
@@ -347,7 +399,11 @@ describe("NetworkTab Performance", () => {
       mockEntries.length = 0;
 
       const start = performance.now();
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
       const renderTime = performance.now() - start;
 
       expect(renderTime).toBeLessThan(100);
@@ -372,7 +428,11 @@ describe("NetworkTab Performance", () => {
       mockEntries.push(...complexEntries);
 
       const start = performance.now();
-      render(<NetworkTab contextEntityId="test-session" showMCPCalls={true} />);
+      render(
+        <TestProvider>
+          <NetworkTab contextEntityId="test-session" showMCPCalls={true} />
+        </TestProvider>,
+      );
       const renderTime = performance.now() - start;
 
       // Should parse and render URLs efficiently

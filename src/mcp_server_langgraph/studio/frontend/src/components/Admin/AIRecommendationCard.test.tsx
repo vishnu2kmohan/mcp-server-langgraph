@@ -23,6 +23,8 @@ import {
 } from "./AIRecommendationCard";
 import type { AIRecommendation } from "../../types/api";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -86,19 +88,31 @@ describe("AIRecommendationCard", () => {
 
   describe("Basic Rendering", () => {
     it("should render the card", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("ai-recommendation-card")).toBeInTheDocument();
     });
 
     it("should render recommendation title", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/ai recommendation/i)).toBeInTheDocument();
     });
 
     it("should render model info", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/claude-3-5-sonnet/i)).toBeInTheDocument();
     });
@@ -106,14 +120,22 @@ describe("AIRecommendationCard", () => {
 
   describe("Root Cause Analysis", () => {
     it("should render root cause section header", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Use getByRole for the header to avoid matching step description
       expect(screen.getByText("Root Cause Analysis")).toBeInTheDocument();
     });
 
     it("should display root cause analysis text", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/memory leak/i)).toBeInTheDocument();
     });
@@ -121,13 +143,21 @@ describe("AIRecommendationCard", () => {
 
   describe("Remediation Steps", () => {
     it("should render remediation steps section", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/remediation steps/i)).toBeInTheDocument();
     });
 
     it("should render all steps", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-1")).toBeInTheDocument();
       expect(screen.getByTestId("step-2")).toBeInTheDocument();
@@ -135,7 +165,11 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should display step descriptions", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Scale up replicas to handle current load"),
@@ -146,7 +180,11 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should display step commands", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/kubectl scale deployment api-server/),
@@ -154,13 +192,21 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should show 'No command' for steps without commands", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/manual step/i)).toBeInTheDocument();
     });
 
     it("should show requires approval indicator", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Steps 1 and 2 require approval
       const approvalIndicators = screen.getAllByTestId(/requires-approval/);
@@ -168,7 +214,11 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should display risk level for each step", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-1-risk")).toHaveTextContent(/low/i);
       expect(screen.getByTestId("step-2-risk")).toHaveTextContent(/medium/i);
@@ -177,13 +227,21 @@ describe("AIRecommendationCard", () => {
 
   describe("Risk Assessment", () => {
     it("should render risk assessment section", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/risk assessment/i)).toBeInTheDocument();
     });
 
     it("should display overall risk level", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveTextContent(
         /medium/i,
@@ -191,7 +249,11 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should style risk badge based on level", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
         "bg-warning-9",
@@ -199,7 +261,11 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should display impact analysis", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/brief service interruption/i),
@@ -207,7 +273,11 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should display rollback plan", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/kubectl rollout undo/i)).toBeInTheDocument();
     });
@@ -221,10 +291,12 @@ describe("AIRecommendationCard", () => {
         },
       };
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={highRiskRecommendation}
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={highRiskRecommendation}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
@@ -241,10 +313,12 @@ describe("AIRecommendationCard", () => {
         },
       };
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={lowRiskRecommendation}
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={lowRiskRecommendation}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("overall-risk-badge")).toHaveClass(
@@ -255,7 +329,11 @@ describe("AIRecommendationCard", () => {
 
   describe("Regenerate Button", () => {
     it("should render regenerate button", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("regenerate-button")).toBeInTheDocument();
     });
@@ -263,7 +341,9 @@ describe("AIRecommendationCard", () => {
     it("should call onRegenerate when clicked", () => {
       const onRegenerate = vi.fn();
       render(
-        <AIRecommendationCard {...defaultProps} onRegenerate={onRegenerate} />,
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} onRegenerate={onRegenerate} />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("regenerate-button"));
@@ -272,13 +352,21 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should disable button when regenerating", () => {
-      render(<AIRecommendationCard {...defaultProps} isRegenerating />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} isRegenerating />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("regenerate-button")).toBeDisabled();
     });
 
     it("should show loading state when regenerating", () => {
-      render(<AIRecommendationCard {...defaultProps} isRegenerating />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} isRegenerating />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("regenerate-loading")).toBeInTheDocument();
     });
@@ -286,7 +374,11 @@ describe("AIRecommendationCard", () => {
 
   describe("Cache Freshness", () => {
     it("should display generation time", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("generated-at")).toBeInTheDocument();
     });
@@ -298,10 +390,12 @@ describe("AIRecommendationCard", () => {
         generatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
       };
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={oldRecommendation}
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={oldRecommendation}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("stale-indicator")).toBeInTheDocument();
@@ -313,10 +407,12 @@ describe("AIRecommendationCard", () => {
         generatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
       };
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={freshRecommendation}
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={freshRecommendation}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("stale-indicator")).not.toBeInTheDocument();
@@ -325,13 +421,21 @@ describe("AIRecommendationCard", () => {
 
   describe("Runbook Link", () => {
     it("should render runbook link when available", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("runbook-link")).toBeInTheDocument();
     });
 
     it("should have correct href", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("runbook-link")).toHaveAttribute(
         "href",
@@ -340,7 +444,11 @@ describe("AIRecommendationCard", () => {
     });
 
     it("should open in new tab", () => {
-      render(<AIRecommendationCard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("runbook-link")).toHaveAttribute(
         "target",
@@ -354,10 +462,12 @@ describe("AIRecommendationCard", () => {
         runbookReference: null,
       };
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={noRunbookRecommendation}
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={noRunbookRecommendation}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("runbook-link")).not.toBeInTheDocument();
@@ -366,13 +476,21 @@ describe("AIRecommendationCard", () => {
 
   describe("Loading State", () => {
     it("should show loading skeleton when loading", () => {
-      render(<AIRecommendationCard {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("recommendation-skeleton")).toBeInTheDocument();
     });
 
     it("should not show content when loading", () => {
-      render(<AIRecommendationCard {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <AIRecommendationCard {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       expect(screen.queryByText(/root cause/i)).not.toBeInTheDocument();
     });
@@ -381,11 +499,13 @@ describe("AIRecommendationCard", () => {
   describe("Error State", () => {
     it("should show error message when error provided", () => {
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={null}
-          error="Failed to generate recommendation"
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={null}
+            error="Failed to generate recommendation"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/failed to generate/i)).toBeInTheDocument();
@@ -393,11 +513,13 @@ describe("AIRecommendationCard", () => {
 
     it("should show retry button on error", () => {
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={null}
-          error="Failed to generate recommendation"
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={null}
+            error="Failed to generate recommendation"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("retry-button")).toBeInTheDocument();
@@ -406,12 +528,14 @@ describe("AIRecommendationCard", () => {
     it("should call onRegenerate when retry clicked", () => {
       const onRegenerate = vi.fn();
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={null}
-          error="Failed to generate recommendation"
-          onRegenerate={onRegenerate}
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={null}
+            error="Failed to generate recommendation"
+            onRegenerate={onRegenerate}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByTestId("retry-button"));
@@ -423,11 +547,13 @@ describe("AIRecommendationCard", () => {
   describe("Empty State", () => {
     it("should show empty state when no recommendation and no error", () => {
       render(
-        <AIRecommendationCard
-          {...defaultProps}
-          recommendation={null}
-          isLoading={false}
-        />,
+        <TestProvider>
+          <AIRecommendationCard
+            {...defaultProps}
+            recommendation={null}
+            isLoading={false}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no recommendation/i)).toBeInTheDocument();

@@ -20,6 +20,8 @@ import { http, HttpResponse } from "msw";
 import { server } from "../../mocks/server";
 import { ConnectionAuditLog } from "./ConnectionAuditLog";
 
+import { TestProvider } from "@/test-utils";
+
 const mockLogs = [
   {
     id: "1",
@@ -85,19 +87,31 @@ describe("ConnectionAuditLog", () => {
 
   describe("Component Structure", () => {
     it("should render title", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getByText(/audit log/i)).toBeInTheDocument();
       });
     });
 
     it("should show loading state initially", () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("loading-audit-logs")).toBeInTheDocument();
     });
 
     it("should display audit logs after loading", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getByText("connection.created")).toBeInTheDocument();
         expect(screen.getByText("connection.tested")).toBeInTheDocument();
@@ -107,21 +121,33 @@ describe("ConnectionAuditLog", () => {
 
   describe("Log Entry Display", () => {
     it("should display event type", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getByText("connection.created")).toBeInTheDocument();
       });
     });
 
     it("should display actor ID", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getAllByText("user-456").length).toBeGreaterThan(0);
       });
     });
 
     it("should display timestamp", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
       await waitFor(() => {
         // Should show formatted date (multiple logs have dates)
         const timestamps = screen.getAllByText(/Jan 15, 2024/);
@@ -130,7 +156,11 @@ describe("ConnectionAuditLog", () => {
     });
 
     it("should show action badge", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getByText("create")).toBeInTheDocument();
         expect(screen.getByText("test")).toBeInTheDocument();
@@ -140,7 +170,11 @@ describe("ConnectionAuditLog", () => {
 
   describe("Log Details", () => {
     it("should expand to show details on click", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("connection.created")).toBeInTheDocument();
@@ -157,7 +191,11 @@ describe("ConnectionAuditLog", () => {
     });
 
     it("should show IP address in details", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("connection.created")).toBeInTheDocument();
@@ -174,7 +212,11 @@ describe("ConnectionAuditLog", () => {
 
   describe("API Calls", () => {
     it("should fetch and display logs for specific connection", async () => {
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       // Verify logs are displayed (proves fetch happened)
       await waitFor(() => {
@@ -196,7 +238,11 @@ describe("ConnectionAuditLog", () => {
         }),
       );
 
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("connection.created")).toBeInTheDocument();
@@ -225,7 +271,11 @@ describe("ConnectionAuditLog", () => {
         }),
       );
 
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText(/no audit logs/i)).toBeInTheDocument();
@@ -241,7 +291,11 @@ describe("ConnectionAuditLog", () => {
         }),
       );
 
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
@@ -255,7 +309,11 @@ describe("ConnectionAuditLog", () => {
         }),
       );
 
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(
@@ -291,7 +349,11 @@ describe("ConnectionAuditLog", () => {
         }),
       );
 
-      render(<ConnectionAuditLog connectionId="conn-123" />);
+      render(
+        <TestProvider>
+          <ConnectionAuditLog connectionId="conn-123" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("connection.created")).toBeInTheDocument();

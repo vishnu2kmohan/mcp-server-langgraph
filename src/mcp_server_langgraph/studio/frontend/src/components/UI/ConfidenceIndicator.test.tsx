@@ -9,6 +9,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { ConfidenceIndicator } from "./ConfidenceIndicator";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -17,48 +19,80 @@ afterEach(() => {
 describe("ConfidenceIndicator", () => {
   describe("rendering", () => {
     it("renders with confidence score", () => {
-      render(<ConfidenceIndicator score={0.85} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("confidence-indicator")).toBeInTheDocument();
     });
 
     it("displays percentage by default", () => {
-      render(<ConfidenceIndicator score={0.85} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} />
+        </TestProvider>,
+      );
       expect(screen.getByText("85%")).toBeInTheDocument();
     });
 
     it("displays decimal when showDecimal is true", () => {
-      render(<ConfidenceIndicator score={0.85} showDecimal />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} showDecimal />
+        </TestProvider>,
+      );
       expect(screen.getByText("0.85")).toBeInTheDocument();
     });
   });
 
   describe("confidence levels", () => {
     it("renders high confidence (>= 0.9) with success colors", () => {
-      render(<ConfidenceIndicator score={0.95} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.95} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-success-10");
     });
 
     it("renders medium confidence (>= 0.7, < 0.9) with warning colors", () => {
-      render(<ConfidenceIndicator score={0.75} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.75} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-warning-9");
     });
 
     it("renders low confidence (< 0.7) with error colors", () => {
-      render(<ConfidenceIndicator score={0.5} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.5} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-error-10");
     });
 
     it("handles edge case at 0.9 boundary", () => {
-      render(<ConfidenceIndicator score={0.9} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.9} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-success-10");
     });
 
     it("handles edge case at 0.7 boundary", () => {
-      render(<ConfidenceIndicator score={0.7} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.7} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-warning-9");
     });
@@ -66,19 +100,31 @@ describe("ConfidenceIndicator", () => {
 
   describe("dark mode support", () => {
     it("includes dark mode classes for high confidence", () => {
-      render(<ConfidenceIndicator score={0.95} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.95} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator.className).toMatch(/dark:text-success-7/);
     });
 
     it("includes dark mode classes for medium confidence", () => {
-      render(<ConfidenceIndicator score={0.75} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.75} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator.className).toMatch(/dark:text-warning-9/);
     });
 
     it("includes dark mode classes for low confidence", () => {
-      render(<ConfidenceIndicator score={0.5} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.5} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator.className).toMatch(/dark:text-error-7/);
     });
@@ -86,14 +132,22 @@ describe("ConfidenceIndicator", () => {
 
   describe("with label", () => {
     it("renders with custom label", () => {
-      render(<ConfidenceIndicator score={0.85} label="Confidence" />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} label="Confidence" />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator.textContent).toContain("Confidence:");
       expect(indicator.textContent).toContain("85%");
     });
 
     it("renders label before score", () => {
-      render(<ConfidenceIndicator score={0.85} label="AI Score" />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} label="AI Score" />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator.textContent).toBe("AI Score: 85%");
     });
@@ -101,19 +155,31 @@ describe("ConfidenceIndicator", () => {
 
   describe("sizes", () => {
     it("renders small size", () => {
-      render(<ConfidenceIndicator score={0.85} size="sm" />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} size="sm" />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-xs");
     });
 
     it("renders medium size (default)", () => {
-      render(<ConfidenceIndicator score={0.85} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-sm");
     });
 
     it("renders large size", () => {
-      render(<ConfidenceIndicator score={0.85} size="lg" />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} size="lg" />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("text-base");
     });
@@ -121,7 +187,11 @@ describe("ConfidenceIndicator", () => {
 
   describe("customization", () => {
     it("accepts custom className", () => {
-      render(<ConfidenceIndicator score={0.85} className="custom-class" />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} className="custom-class" />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveClass("custom-class");
     });
@@ -129,7 +199,11 @@ describe("ConfidenceIndicator", () => {
 
   describe("accessibility", () => {
     it("includes aria-label with confidence value", () => {
-      render(<ConfidenceIndicator score={0.85} />);
+      render(
+        <TestProvider>
+          <ConfidenceIndicator score={0.85} />
+        </TestProvider>,
+      );
       const indicator = screen.getByTestId("confidence-indicator");
       expect(indicator).toHaveAttribute("aria-label", "Confidence: 85%");
     });

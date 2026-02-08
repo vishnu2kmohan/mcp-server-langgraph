@@ -26,6 +26,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { AIIntelligenceProvider } from "../../contexts/AIIntelligenceContext";
 import { AIErrorBoundary } from "./AIErrorBoundary";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock useAIErrorRecovery hook
 const mockAnalyze = vi.fn();
 const mockUseAIErrorRecovery = vi.fn(() => ({
@@ -89,11 +91,13 @@ describe("AIErrorBoundary", () => {
     it("should render children when no error occurs", () => {
       const Wrapper = createWrapper({ enabled: true });
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={false} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={false} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("child-content")).toBeInTheDocument();
@@ -105,11 +109,13 @@ describe("AIErrorBoundary", () => {
     it("should catch errors and display fallback UI", () => {
       const Wrapper = createWrapper({ enabled: true });
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("child-content")).not.toBeInTheDocument();
@@ -119,11 +125,13 @@ describe("AIErrorBoundary", () => {
     it("should display feature name in fallback UI", () => {
       const Wrapper = createWrapper({ enabled: true });
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="Navigation Predictions">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="Navigation Predictions">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByText(/Navigation Predictions/i)).toBeInTheDocument();
@@ -132,11 +140,13 @@ describe("AIErrorBoundary", () => {
     it("should display error message in fallback UI", () => {
       const Wrapper = createWrapper({ enabled: true });
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(
@@ -149,11 +159,13 @@ describe("AIErrorBoundary", () => {
     it("should provide a retry button", () => {
       const Wrapper = createWrapper({ enabled: true });
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(
@@ -166,11 +178,13 @@ describe("AIErrorBoundary", () => {
       let shouldThrow = true;
 
       const { rerender } = render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={shouldThrow} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={shouldThrow} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Error should be shown
@@ -205,11 +219,16 @@ describe("AIErrorBoundary", () => {
       );
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature" fallback={customFallback}>
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary
+              featureName="test-feature"
+              fallback={customFallback}
+            >
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("custom-fallback")).toBeInTheDocument();
@@ -226,11 +245,13 @@ describe("AIErrorBoundary", () => {
       ));
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature" fallback={fallbackFn}>
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature" fallback={fallbackFn}>
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("fallback-fn")).toBeInTheDocument();
@@ -247,11 +268,13 @@ describe("AIErrorBoundary", () => {
     it("should hide error UI when silent mode is enabled", () => {
       const Wrapper = createWrapper({ enabled: true });
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature" silent>
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature" silent>
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should not show error fallback
@@ -261,11 +284,13 @@ describe("AIErrorBoundary", () => {
     it("should render nothing in silent mode on error", () => {
       const Wrapper = createWrapper({ enabled: true });
       const { container } = render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature" silent>
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature" silent>
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Container should be empty (error boundary renders null)
@@ -279,11 +304,13 @@ describe("AIErrorBoundary", () => {
       const onError = vi.fn();
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature" onError={onError}>
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature" onError={onError}>
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(onError).toHaveBeenCalledWith(
@@ -299,11 +326,13 @@ describe("AIErrorBoundary", () => {
       const onReset = vi.fn();
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature" onReset={onReset}>
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature" onReset={onReset}>
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /retry/i }));
@@ -320,11 +349,13 @@ describe("AIErrorBoundary", () => {
       // This is tested by checking that the boundary doesn't render fallback
       // Note: This behavior depends on implementation choice
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature" disabled>
-            <div data-testid="normal-content">Normal content</div>
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature" disabled>
+              <div data-testid="normal-content">Normal content</div>
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("normal-content")).toBeInTheDocument();
@@ -349,11 +380,13 @@ describe("AIErrorBoundary", () => {
       });
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="AI Suggestions">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="AI Suggestions">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Verify analyze was called with error and context
@@ -380,11 +413,13 @@ describe("AIErrorBoundary", () => {
       });
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(
@@ -424,11 +459,13 @@ describe("AIErrorBoundary", () => {
       });
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Check suggestions are displayed
@@ -464,11 +501,13 @@ describe("AIErrorBoundary", () => {
       });
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(
@@ -501,11 +540,13 @@ describe("AIErrorBoundary", () => {
       });
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should only show 3 suggestions
@@ -535,11 +576,13 @@ describe("AIErrorBoundary", () => {
       });
 
       render(
-        <Wrapper>
-          <AIErrorBoundary featureName="test-feature">
-            <ThrowingComponent shouldThrow={true} />
-          </AIErrorBoundary>
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIErrorBoundary featureName="test-feature">
+              <ThrowingComponent shouldThrow={true} />
+            </AIErrorBoundary>
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(

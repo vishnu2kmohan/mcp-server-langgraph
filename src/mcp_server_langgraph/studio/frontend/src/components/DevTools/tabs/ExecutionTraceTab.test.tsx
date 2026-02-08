@@ -13,6 +13,8 @@ expect.extend(toHaveNoViolations);
 
 import { ExecutionTraceTab } from "./ExecutionTraceTab";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mock Data
 // =============================================================================
@@ -101,13 +103,21 @@ describe("ExecutionTraceTab", () => {
 
   describe("rendering", () => {
     it("should render with data-testid", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("execution-trace-tab")).toBeInTheDocument();
     });
 
     it("should display workflow ID", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("workflow-123")).toBeInTheDocument();
     });
@@ -121,7 +131,11 @@ describe("ExecutionTraceTab", () => {
         currentStepId: null,
       });
 
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("execution-trace-loading")).toBeInTheDocument();
     });
@@ -135,7 +149,11 @@ describe("ExecutionTraceTab", () => {
         currentStepId: null,
       });
 
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("execution-trace-empty")).toBeInTheDocument();
     });
@@ -143,7 +161,11 @@ describe("ExecutionTraceTab", () => {
 
   describe("step display", () => {
     it("should display all execution steps", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Start")).toBeInTheDocument();
       expect(screen.getByText("Process Data")).toBeInTheDocument();
@@ -151,7 +173,11 @@ describe("ExecutionTraceTab", () => {
     });
 
     it("should show step status indicators", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("step-status-step-1")).toBeInTheDocument();
       expect(screen.getByTestId("step-status-step-2")).toBeInTheDocument();
@@ -159,14 +185,22 @@ describe("ExecutionTraceTab", () => {
     });
 
     it("should show step duration for completed steps", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("10ms")).toBeInTheDocument();
       expect(screen.getByText("150ms")).toBeInTheDocument();
     });
 
     it("should highlight current step", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       const currentStep = screen.getByTestId("execution-step-step-3");
       expect(currentStep).toHaveAttribute("data-current", "true");
@@ -178,10 +212,12 @@ describe("ExecutionTraceTab", () => {
       const handleNodeHighlight = vi.fn();
 
       render(
-        <ExecutionTraceTab
-          workflowId="workflow-123"
-          onNodeHighlight={handleNodeHighlight}
-        />,
+        <TestProvider>
+          <ExecutionTraceTab
+            workflowId="workflow-123"
+            onNodeHighlight={handleNodeHighlight}
+          />
+        </TestProvider>,
       );
 
       const step = screen.getByTestId("execution-step-step-1");
@@ -194,10 +230,12 @@ describe("ExecutionTraceTab", () => {
       const handleNodeHighlight = vi.fn();
 
       render(
-        <ExecutionTraceTab
-          workflowId="workflow-123"
-          onNodeHighlight={handleNodeHighlight}
-        />,
+        <TestProvider>
+          <ExecutionTraceTab
+            workflowId="workflow-123"
+            onNodeHighlight={handleNodeHighlight}
+          />
+        </TestProvider>,
       );
 
       const step = screen.getByTestId("execution-step-step-1");
@@ -214,7 +252,11 @@ describe("ExecutionTraceTab", () => {
     it("should expand step details on click", async () => {
       const user = userEvent.setup();
 
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       const expandButton = screen.getByTestId("expand-step-step-1");
       await user.click(expandButton);
@@ -225,7 +267,11 @@ describe("ExecutionTraceTab", () => {
     it("should show input/output data when expanded", async () => {
       const user = userEvent.setup();
 
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       const expandButton = screen.getByTestId("expand-step-step-1");
       await user.click(expandButton);
@@ -237,7 +283,11 @@ describe("ExecutionTraceTab", () => {
 
   describe("refresh", () => {
     it("should have refresh button", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByTestId("refresh-execution-button"),
@@ -256,7 +306,11 @@ describe("ExecutionTraceTab", () => {
         currentStepId: "step-3",
       });
 
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("refresh-execution-button"));
 
@@ -274,7 +328,11 @@ describe("ExecutionTraceTab", () => {
         currentStepId: null,
       });
 
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("execution-trace-error")).toBeInTheDocument();
       expect(
@@ -285,7 +343,11 @@ describe("ExecutionTraceTab", () => {
 
   describe("accessibility", () => {
     it("should have accessible heading", () => {
-      render(<ExecutionTraceTab workflowId="workflow-123" />);
+      render(
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("heading", { name: /execution/i }),
@@ -294,7 +356,9 @@ describe("ExecutionTraceTab", () => {
 
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <ExecutionTraceTab workflowId="workflow-123" />,
+        <TestProvider>
+          <ExecutionTraceTab workflowId="workflow-123" />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();

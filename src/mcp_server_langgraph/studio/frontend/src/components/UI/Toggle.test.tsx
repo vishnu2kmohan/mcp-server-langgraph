@@ -9,6 +9,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Toggle } from "./Toggle";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -18,32 +20,46 @@ afterEach(() => {
 describe("Toggle", () => {
   describe("rendering", () => {
     it("renders as a button with switch role", () => {
-      render(<Toggle checked={false} onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("switch")).toBeInTheDocument();
     });
 
     it("renders with label when provided", () => {
       render(
-        <Toggle checked={false} onChange={() => {}} label="Enable feature" />,
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} label="Enable feature" />
+        </TestProvider>,
       );
       expect(screen.getByText("Enable feature")).toBeInTheDocument();
     });
 
     it("renders with description when provided", () => {
       render(
-        <Toggle
-          checked={false}
-          onChange={() => {}}
-          label="Enable feature"
-          description="This enables the feature"
-        />,
+        <TestProvider>
+          <Toggle
+            checked={false}
+            onChange={() => {}}
+            label="Enable feature"
+            description="This enables the feature"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("This enables the feature")).toBeInTheDocument();
     });
 
     it("applies custom className", () => {
       render(
-        <Toggle checked={false} onChange={() => {}} className="custom-class" />,
+        <TestProvider>
+          <Toggle
+            checked={false}
+            onChange={() => {}}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("switch").parentElement).toHaveClass(
         "custom-class",
@@ -53,7 +69,11 @@ describe("Toggle", () => {
 
   describe("checked state", () => {
     it("has aria-checked false when unchecked", () => {
-      render(<Toggle checked={false} onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("switch")).toHaveAttribute(
         "aria-checked",
         "false",
@@ -61,7 +81,11 @@ describe("Toggle", () => {
     });
 
     it("has aria-checked true when checked", () => {
-      render(<Toggle checked={true} onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Toggle checked={true} onChange={() => {}} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("switch")).toHaveAttribute(
         "aria-checked",
         "true",
@@ -69,13 +93,21 @@ describe("Toggle", () => {
     });
 
     it("applies checked visual styles when checked", () => {
-      render(<Toggle checked={true} onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Toggle checked={true} onChange={() => {}} />
+        </TestProvider>,
+      );
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveClass("bg-primary-9");
     });
 
     it("applies unchecked visual styles when unchecked", () => {
-      render(<Toggle checked={false} onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} />
+        </TestProvider>,
+      );
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveClass("bg-neutral-3");
     });
@@ -85,7 +117,11 @@ describe("Toggle", () => {
     it("calls onChange when clicked", async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(<Toggle checked={false} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={onChange} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("switch"));
       expect(onChange).toHaveBeenCalledWith(true);
@@ -94,7 +130,11 @@ describe("Toggle", () => {
     it("calls onChange with false when checked toggle is clicked", async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(<Toggle checked={true} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <Toggle checked={true} onChange={onChange} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("switch"));
       expect(onChange).toHaveBeenCalledWith(false);
@@ -103,7 +143,11 @@ describe("Toggle", () => {
     it("can be toggled with keyboard space", async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(<Toggle checked={false} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={onChange} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByRole("switch");
       toggle.focus();
@@ -115,7 +159,11 @@ describe("Toggle", () => {
     it("can be toggled with keyboard enter", async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(<Toggle checked={false} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={onChange} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByRole("switch");
       toggle.focus();
@@ -129,21 +177,33 @@ describe("Toggle", () => {
     it("does not call onChange when disabled", async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(<Toggle checked={false} onChange={onChange} disabled />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={onChange} disabled />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("switch"));
       expect(onChange).not.toHaveBeenCalled();
     });
 
     it("applies disabled styles", () => {
-      render(<Toggle checked={false} onChange={() => {}} disabled />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} disabled />
+        </TestProvider>,
+      );
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveClass("cursor-not-allowed");
       expect(toggle).toHaveClass("opacity-50");
     });
 
     it("has aria-disabled when disabled", () => {
-      render(<Toggle checked={false} onChange={() => {}} disabled />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} disabled />
+        </TestProvider>,
+      );
       expect(screen.getByRole("switch")).toHaveAttribute(
         "aria-disabled",
         "true",
@@ -153,21 +213,33 @@ describe("Toggle", () => {
 
   describe("sizes", () => {
     it("renders small size", () => {
-      render(<Toggle checked={false} onChange={() => {}} size="sm" />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} size="sm" />
+        </TestProvider>,
+      );
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveClass("h-5");
       expect(toggle).toHaveClass("w-9");
     });
 
     it("renders medium size (default)", () => {
-      render(<Toggle checked={false} onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} />
+        </TestProvider>,
+      );
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveClass("h-6");
       expect(toggle).toHaveClass("w-11");
     });
 
     it("renders large size", () => {
-      render(<Toggle checked={false} onChange={() => {}} size="lg" />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} size="lg" />
+        </TestProvider>,
+      );
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveClass("h-7");
       expect(toggle).toHaveClass("w-14");
@@ -177,11 +249,13 @@ describe("Toggle", () => {
   describe("accessibility", () => {
     it("supports aria-label", () => {
       render(
-        <Toggle
-          checked={false}
-          onChange={() => {}}
-          aria-label="Toggle dark mode"
-        />,
+        <TestProvider>
+          <Toggle
+            checked={false}
+            onChange={() => {}}
+            aria-label="Toggle dark mode"
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("switch")).toHaveAttribute(
         "aria-label",
@@ -191,10 +265,16 @@ describe("Toggle", () => {
 
     it("supports aria-describedby", () => {
       render(
-        <>
-          <Toggle checked={false} onChange={() => {}} aria-describedby="desc" />
-          <span id="desc">Additional description</span>
-        </>,
+        <TestProvider>
+          <>
+            <Toggle
+              checked={false}
+              onChange={() => {}}
+              aria-describedby="desc"
+            />
+            <span id="desc">Additional description</span>
+          </>
+        </TestProvider>,
       );
       expect(screen.getByRole("switch")).toHaveAttribute(
         "aria-describedby",
@@ -203,7 +283,11 @@ describe("Toggle", () => {
     });
 
     it("is focusable", () => {
-      render(<Toggle checked={false} onChange={() => {}} />);
+      render(
+        <TestProvider>
+          <Toggle checked={false} onChange={() => {}} />
+        </TestProvider>,
+      );
       const toggle = screen.getByRole("switch");
       toggle.focus();
       expect(toggle).toHaveFocus();

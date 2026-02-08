@@ -12,6 +12,8 @@ import {
   HallucinationIndicatorProps,
 } from "./HallucinationIndicator";
 
+import { TestProvider } from "@/test-utils";
+
 describe("HallucinationIndicator", () => {
   const defaultProps: HallucinationIndicatorProps = {
     messageId: "msg-123",
@@ -29,7 +31,11 @@ describe("HallucinationIndicator", () => {
 
   describe("Visibility", () => {
     it("should render flag button", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /report|flag/i }),
       ).toBeInTheDocument();
@@ -38,19 +44,31 @@ describe("HallucinationIndicator", () => {
 
   describe("Report Dialog", () => {
     it("should open dialog when flag button clicked", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should display report title", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
       expect(screen.getByText(/report inaccuracy/i)).toBeInTheDocument();
     });
 
     it("should show category options", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       expect(screen.getByText(/factual error/i)).toBeInTheDocument();
@@ -60,7 +78,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should allow selecting a category", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       const factualErrorButton = screen
@@ -73,14 +95,22 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should use radiogroup pattern for single selection", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("should have optional details textarea", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       expect(
@@ -91,7 +121,11 @@ describe("HallucinationIndicator", () => {
 
   describe("Submission", () => {
     it("should disable submit until category selected", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       const submitButton = screen.getByRole("button", { name: /submit/i });
@@ -99,7 +133,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should enable submit after category selected", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       fireEvent.click(screen.getByText(/factual error/i).closest("button")!);
@@ -108,7 +146,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should call onReport with correct data", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       // Select category
@@ -134,7 +176,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should close dialog after submission", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       fireEvent.click(screen.getByText(/factual error/i).closest("button")!);
@@ -144,7 +190,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should show thank you message after submission", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       fireEvent.click(screen.getByText(/factual error/i).closest("button")!);
@@ -156,7 +206,11 @@ describe("HallucinationIndicator", () => {
 
   describe("Cancel", () => {
     it("should have cancel button", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       expect(
@@ -165,7 +219,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should close dialog on cancel", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
       fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
@@ -173,7 +231,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should not call onReport on cancel", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
       fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
@@ -183,12 +245,20 @@ describe("HallucinationIndicator", () => {
 
   describe("Already Reported", () => {
     it("should show reported state when isReported is true", () => {
-      render(<HallucinationIndicator {...defaultProps} isReported={true} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} isReported={true} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/reported/i)).toBeInTheDocument();
     });
 
     it("should not render flag button when already reported", () => {
-      render(<HallucinationIndicator {...defaultProps} isReported={true} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} isReported={true} />
+        </TestProvider>,
+      );
       // Flag button should not be present when already reported
       expect(
         screen.queryByRole("button", { name: /report|flag/i }),
@@ -198,13 +268,21 @@ describe("HallucinationIndicator", () => {
 
   describe("Accessibility", () => {
     it("should have accessible button label", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /report|flag/i });
       expect(button).toHaveAttribute("aria-label");
     });
 
     it("should have modal dialog role", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       const dialog = screen.getByRole("dialog");
@@ -212,7 +290,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should have aria-labelledby and aria-describedby on dialog", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       const dialog = screen.getByRole("dialog");
@@ -221,7 +303,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should close dialog on ESC key", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
       expect(screen.getByRole("dialog")).toBeInTheDocument();
 
@@ -230,7 +316,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should have role=status with aria-label for reported state", () => {
-      render(<HallucinationIndicator {...defaultProps} isReported={true} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} isReported={true} />
+        </TestProvider>,
+      );
       const status = screen.getByRole("status");
       expect(status).toHaveAttribute(
         "aria-label",
@@ -239,7 +329,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should have role=status with aria-live for thank you message", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
       fireEvent.click(screen.getByText(/factual error/i).closest("button")!);
       fireEvent.click(screen.getByRole("button", { name: /submit/i }));
@@ -249,7 +343,11 @@ describe("HallucinationIndicator", () => {
     });
 
     it("should have associated label for details textarea", () => {
-      render(<HallucinationIndicator {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HallucinationIndicator {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /report|flag/i }));
 
       const textarea = screen.getByLabelText(/additional details/i);

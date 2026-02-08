@@ -16,6 +16,8 @@ import React from "react";
 import { TimelineBar } from "./TimelineBar";
 import { DevToolsTimelineProvider } from "./context/DevToolsTimelineProvider";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Utilities
 // =============================================================================
@@ -48,13 +50,15 @@ function renderTimelineBar(options: RenderOptions = {}) {
 
   return {
     ...render(
-      <DevToolsTimelineProvider initialEvents={initialEvents}>
-        <TimelineBar
-          showBookmarkButton={true}
-          onBookmarkAdd={onBookmarkAdd}
-          onBookmarkRemove={onBookmarkRemove}
-        />
-      </DevToolsTimelineProvider>,
+      <TestProvider>
+        <DevToolsTimelineProvider initialEvents={initialEvents}>
+          <TimelineBar
+            showBookmarkButton={true}
+            onBookmarkAdd={onBookmarkAdd}
+            onBookmarkRemove={onBookmarkRemove}
+          />
+        </DevToolsTimelineProvider>
+      </TestProvider>,
     ),
     onBookmarkAdd,
     onBookmarkRemove,
@@ -270,9 +274,11 @@ describe("TimelineBar Bookmark Management E2E", () => {
   describe("edge cases", () => {
     it("should disable bookmark button when no events", () => {
       render(
-        <DevToolsTimelineProvider initialEvents={[]}>
-          <TimelineBar showBookmarkButton={true} />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider initialEvents={[]}>
+            <TimelineBar showBookmarkButton={true} />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button", { name: /add bookmark/i });

@@ -30,6 +30,7 @@ vi.mock("../../hooks/useSessionIntelligence", () => ({
 
 // Import the mocked hook for test manipulation
 import { useSessionSimilarity } from "../../hooks/useSessionIntelligence";
+import { TestProvider } from "@/test-utils";
 const mockUseSessionSimilarity = useSessionSimilarity as ReturnType<
   typeof vi.fn
 >;
@@ -71,7 +72,9 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
+        <TestProvider>
+          <SimilarSessionsPanel sessionId="session-123" userId="user-123" />
+        </TestProvider>,
       );
 
       expect(
@@ -88,7 +91,9 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
+        <TestProvider>
+          <SimilarSessionsPanel sessionId="session-123" userId="user-123" />
+        </TestProvider>,
       );
 
       expect(
@@ -116,14 +121,16 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel
-          sessionId="session-123"
-          userId="user-123"
-          sessionNames={{
-            "similar-1": "React Component Work",
-            "similar-2": "Testing Strategy",
-          }}
-        />,
+        <TestProvider>
+          <SimilarSessionsPanel
+            sessionId="session-123"
+            userId="user-123"
+            sessionNames={{
+              "similar-1": "React Component Work",
+              "similar-2": "Testing Strategy",
+            }}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("React Component Work")).toBeInTheDocument();
@@ -141,7 +148,9 @@ describe("SimilarSessionsPanel", () => {
       });
 
       const { container } = render(
-        <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
+        <TestProvider>
+          <SimilarSessionsPanel sessionId="session-123" userId="user-123" />
+        </TestProvider>,
       );
 
       // Component returns null when no similar sessions
@@ -172,12 +181,14 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel
-          sessionId="session-123"
-          userId="user-123"
-          sessionNames={{ "similar-1": "React Work" }}
-          onSessionSelect={onSessionSelect}
-        />,
+        <TestProvider>
+          <SimilarSessionsPanel
+            sessionId="session-123"
+            userId="user-123"
+            sessionNames={{ "similar-1": "React Work" }}
+            onSessionSelect={onSessionSelect}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("React Work"));
@@ -200,7 +211,9 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
+        <TestProvider>
+          <SimilarSessionsPanel sessionId="session-123" userId="user-123" />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("similar-sessions-error")).toBeInTheDocument();
@@ -219,7 +232,9 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
+        <TestProvider>
+          <SimilarSessionsPanel sessionId="session-123" userId="user-123" />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button", { name: /retry/i }));
@@ -248,11 +263,13 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel
-          sessionId="session-123"
-          userId="user-123"
-          sessionNames={{ "similar-1": "Work Session" }}
-        />,
+        <TestProvider>
+          <SimilarSessionsPanel
+            sessionId="session-123"
+            userId="user-123"
+            sessionNames={{ "similar-1": "Work Session" }}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("React")).toBeInTheDocument();
@@ -281,11 +298,13 @@ describe("SimilarSessionsPanel", () => {
       });
 
       const { container } = render(
-        <SimilarSessionsPanel
-          sessionId="session-123"
-          userId="user-123"
-          sessionNames={{ "similar-1": "Work Session" }}
-        />,
+        <TestProvider>
+          <SimilarSessionsPanel
+            sessionId="session-123"
+            userId="user-123"
+            sessionNames={{ "similar-1": "Work Session" }}
+          />
+        </TestProvider>,
       );
 
       const results = await axe(container);
@@ -307,7 +326,9 @@ describe("SimilarSessionsPanel", () => {
       });
 
       render(
-        <SimilarSessionsPanel sessionId="session-123" userId="user-123" />,
+        <TestProvider>
+          <SimilarSessionsPanel sessionId="session-123" userId="user-123" />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("heading")).toBeInTheDocument();

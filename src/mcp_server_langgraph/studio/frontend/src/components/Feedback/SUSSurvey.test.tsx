@@ -13,6 +13,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { SUSSurvey } from "./SUSSurvey";
 
+import { TestProvider } from "@/test-utils";
+
 describe("SUSSurvey", () => {
   const defaultProps = {
     onSubmit: vi.fn(),
@@ -26,13 +28,21 @@ describe("SUSSurvey", () => {
 
   describe("Rendering", () => {
     it("should render survey title", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/System Usability Survey/i)).toBeInTheDocument();
     });
 
     it("should render all 10 SUS questions", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Standard SUS questions
       expect(
@@ -62,7 +72,11 @@ describe("SUSSurvey", () => {
     });
 
     it("should render 5-point scale for each question", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Each question has 5 radio buttons (Strongly Disagree to Strongly Agree)
       const radioGroups = screen.getAllByRole("radiogroup");
@@ -70,7 +84,11 @@ describe("SUSSurvey", () => {
     });
 
     it("should show scale labels", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Strongly Disagree")).toBeInTheDocument();
       expect(screen.getByText("Strongly Agree")).toBeInTheDocument();
@@ -79,7 +97,11 @@ describe("SUSSurvey", () => {
 
   describe("Rating Selection", () => {
     it("should allow selecting a rating for each question", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       const firstQuestionRadios = screen.getAllByRole("radio").slice(0, 5);
       fireEvent.click(firstQuestionRadios[3]); // Select rating 4
@@ -88,7 +110,11 @@ describe("SUSSurvey", () => {
     });
 
     it("should highlight selected rating", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       const firstQuestionRadios = screen.getAllByRole("radio").slice(0, 5);
       fireEvent.click(firstQuestionRadios[2]); // Select rating 3
@@ -100,14 +126,22 @@ describe("SUSSurvey", () => {
 
   describe("Submission", () => {
     it("should disable submit button until all questions answered", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       const submitButton = screen.getByRole("button", { name: /submit/i });
       expect(submitButton).toBeDisabled();
     });
 
     it("should enable submit button when all questions answered", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Answer all 10 questions
       const radios = screen.getAllByRole("radio");
@@ -121,7 +155,11 @@ describe("SUSSurvey", () => {
 
     it("should call onSubmit with calculated SUS score", () => {
       const onSubmit = vi.fn();
-      render(<SUSSurvey {...defaultProps} onSubmit={onSubmit} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} onSubmit={onSubmit} />
+        </TestProvider>,
+      );
 
       // Answer all 10 questions with rating 3 (middle)
       const radios = screen.getAllByRole("radio");
@@ -142,7 +180,11 @@ describe("SUSSurvey", () => {
 
     it("should calculate correct SUS score", () => {
       const onSubmit = vi.fn();
-      render(<SUSSurvey {...defaultProps} onSubmit={onSubmit} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} onSubmit={onSubmit} />
+        </TestProvider>,
+      );
 
       // Answer odd questions (1,3,5,7,9) with 5 and even questions (2,4,6,8,10) with 1
       // This gives max score: (5-1)*5 + (5-1)*5 = 20*2.5 = 50... wait
@@ -174,7 +216,11 @@ describe("SUSSurvey", () => {
 
   describe("Dismissal", () => {
     it("should render dismiss button", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /maybe later/i }),
@@ -183,7 +229,11 @@ describe("SUSSurvey", () => {
 
     it("should call onDismiss when dismiss button clicked", () => {
       const onDismiss = vi.fn();
-      render(<SUSSurvey {...defaultProps} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       const dismissButton = screen.getByRole("button", {
         name: /maybe later/i,
@@ -196,13 +246,21 @@ describe("SUSSurvey", () => {
 
   describe("Progress", () => {
     it("should show progress indicator", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/0 of 10/i)).toBeInTheDocument();
     });
 
     it("should update progress as questions are answered", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       const radios = screen.getAllByRole("radio");
       fireEvent.click(radios[2]); // Answer first question
@@ -213,7 +271,11 @@ describe("SUSSurvey", () => {
 
   describe("Accessibility", () => {
     it("should have accessible question labels", () => {
-      render(<SUSSurvey {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SUSSurvey {...defaultProps} />
+        </TestProvider>,
+      );
 
       const radioGroups = screen.getAllByRole("radiogroup");
       radioGroups.forEach((group) => {

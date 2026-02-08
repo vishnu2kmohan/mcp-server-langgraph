@@ -14,6 +14,8 @@ import {
   type TokenUsageDisplayProps,
 } from "./TokenUsageDisplay";
 
+import { TestProvider } from "@/test-utils";
+
 describe("TokenUsageDisplay", () => {
   const defaultProps: TokenUsageDisplayProps = {
     promptTokens: 150,
@@ -27,7 +29,11 @@ describe("TokenUsageDisplay", () => {
 
   describe("rendering", () => {
     it("should render token counts", () => {
-      render(<TokenUsageDisplay {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("token-usage-container")).toBeInTheDocument();
       expect(screen.getByText(/150/)).toBeInTheDocument();
@@ -35,13 +41,21 @@ describe("TokenUsageDisplay", () => {
     });
 
     it("should display total tokens", () => {
-      render(<TokenUsageDisplay {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/400/)).toBeInTheDocument();
     });
 
     it("should show labels for token types", () => {
-      render(<TokenUsageDisplay {...defaultProps} showLabels />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay {...defaultProps} showLabels />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/input/i)).toBeInTheDocument();
       expect(screen.getByText(/output/i)).toBeInTheDocument();
@@ -51,7 +65,13 @@ describe("TokenUsageDisplay", () => {
   describe("cost estimation", () => {
     it("should show estimated cost when showCost is true", () => {
       render(
-        <TokenUsageDisplay {...defaultProps} showCost modelProvider="openai" />,
+        <TestProvider>
+          <TokenUsageDisplay
+            {...defaultProps}
+            showCost
+            modelProvider="openai"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("estimated-cost")).toBeInTheDocument();
@@ -60,14 +80,24 @@ describe("TokenUsageDisplay", () => {
     });
 
     it("should not show cost when showCost is false", () => {
-      render(<TokenUsageDisplay {...defaultProps} showCost={false} />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay {...defaultProps} showCost={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("estimated-cost")).not.toBeInTheDocument();
     });
 
     it("should calculate cost for different providers", () => {
       const { rerender } = render(
-        <TokenUsageDisplay {...defaultProps} showCost modelProvider="openai" />,
+        <TestProvider>
+          <TokenUsageDisplay
+            {...defaultProps}
+            showCost
+            modelProvider="openai"
+          />
+        </TestProvider>,
       );
 
       const openAICost = screen.getByTestId("estimated-cost").textContent;
@@ -89,7 +119,11 @@ describe("TokenUsageDisplay", () => {
 
   describe("zero tokens", () => {
     it("should handle zero prompt tokens", () => {
-      render(<TokenUsageDisplay promptTokens={0} completionTokens={100} />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay promptTokens={0} completionTokens={100} />
+        </TestProvider>,
+      );
 
       // Should render the container with token info
       const container = screen.getByTestId("token-usage-container");
@@ -99,7 +133,11 @@ describe("TokenUsageDisplay", () => {
     });
 
     it("should not render when both are zero", () => {
-      render(<TokenUsageDisplay promptTokens={0} completionTokens={0} />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay promptTokens={0} completionTokens={0} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("token-usage-container"),
@@ -109,7 +147,11 @@ describe("TokenUsageDisplay", () => {
 
   describe("formatting", () => {
     it("should format large numbers with commas", () => {
-      render(<TokenUsageDisplay promptTokens={1500} completionTokens={2500} />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay promptTokens={1500} completionTokens={2500} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/1,500/)).toBeInTheDocument();
       expect(screen.getByText(/2,500/)).toBeInTheDocument();
@@ -118,7 +160,11 @@ describe("TokenUsageDisplay", () => {
 
   describe("compact mode", () => {
     it("should render smaller in compact mode", () => {
-      render(<TokenUsageDisplay {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("token-usage-container");
       expect(container).toHaveClass("text-xs");
@@ -127,7 +173,11 @@ describe("TokenUsageDisplay", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<TokenUsageDisplay {...defaultProps} className="custom-class" />);
+      render(
+        <TestProvider>
+          <TokenUsageDisplay {...defaultProps} className="custom-class" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("token-usage-container");
       expect(container).toHaveClass("custom-class");

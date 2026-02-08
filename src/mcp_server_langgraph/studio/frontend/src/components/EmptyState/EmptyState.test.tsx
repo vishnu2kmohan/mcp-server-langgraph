@@ -13,6 +13,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { EmptyState, type EmptyStateContext } from "./EmptyState";
 
+import { TestProvider } from "@/test-utils";
+
 describe("EmptyState", () => {
   afterEach(() => {
     cleanup();
@@ -22,12 +24,14 @@ describe("EmptyState", () => {
   describe("rendering", () => {
     it("renders with required props", () => {
       render(
-        <EmptyState
-          context="sessions"
-          title="No sessions yet"
-          motivation="Start a conversation to see your sessions here"
-          trigger={<button>Start Chat</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions yet"
+            motivation="Start a conversation to see your sessions here"
+            trigger={<button>Start Chat</button>}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("No sessions yet")).toBeInTheDocument();
@@ -41,13 +45,15 @@ describe("EmptyState", () => {
 
     it("renders with optional ability text", () => {
       render(
-        <EmptyState
-          context="workflows"
-          title="No workflows"
-          motivation="Build automated workflows"
-          ability="Takes about 2 minutes"
-          trigger={<button>Create Workflow</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="workflows"
+            title="No workflows"
+            motivation="Build automated workflows"
+            ability="Takes about 2 minutes"
+            trigger={<button>Create Workflow</button>}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Takes about 2 minutes")).toBeInTheDocument();
@@ -55,13 +61,15 @@ describe("EmptyState", () => {
 
     it("renders with optional description", () => {
       render(
-        <EmptyState
-          context="projects"
-          title="No projects"
-          motivation="Organize your work"
-          description="Projects help you group related sessions and workflows together."
-          trigger={<button>New Project</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="projects"
+            title="No projects"
+            motivation="Organize your work"
+            description="Projects help you group related sessions and workflows together."
+            trigger={<button>New Project</button>}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -73,12 +81,14 @@ describe("EmptyState", () => {
 
     it("renders context-appropriate icon when no custom icon provided", () => {
       const { container } = render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+          />
+        </TestProvider>,
       );
 
       // Should have an icon element
@@ -91,13 +101,15 @@ describe("EmptyState", () => {
       const CustomIcon = () => <svg data-testid="custom-icon" />;
 
       render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-          icon={<CustomIcon />}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+            icon={<CustomIcon />}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("custom-icon")).toBeInTheDocument();
@@ -119,12 +131,14 @@ describe("EmptyState", () => {
     contexts.forEach((context) => {
       it(`renders correctly for ${context} context`, () => {
         const { container } = render(
-          <EmptyState
-            context={context}
-            title={`No ${context}`}
-            motivation="Take action"
-            trigger={<button>Action</button>}
-          />,
+          <TestProvider>
+            <EmptyState
+              context={context}
+              title={`No ${context}`}
+              motivation="Take action"
+              trigger={<button>Action</button>}
+            />
+          </TestProvider>,
         );
 
         expect(
@@ -137,12 +151,14 @@ describe("EmptyState", () => {
   describe("accessibility", () => {
     it("has proper ARIA structure", () => {
       render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+          />
+        </TestProvider>,
       );
 
       const emptyState = screen.getByRole("region");
@@ -154,12 +170,14 @@ describe("EmptyState", () => {
 
     it("icon is hidden from screen readers", () => {
       const { container } = render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+          />
+        </TestProvider>,
       );
 
       const iconContainer = container.querySelector(
@@ -172,12 +190,14 @@ describe("EmptyState", () => {
   describe("variants", () => {
     it("renders default variant", () => {
       const { container } = render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -187,13 +207,15 @@ describe("EmptyState", () => {
 
     it("renders compact variant with smaller spacing", () => {
       const { container } = render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-          variant="compact"
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+            variant="compact"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -203,13 +225,15 @@ describe("EmptyState", () => {
 
     it("renders inline variant", () => {
       const { container } = render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-          variant="inline"
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+            variant="inline"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -221,13 +245,15 @@ describe("EmptyState", () => {
   describe("secondary action", () => {
     it("renders secondary action when provided", () => {
       render(
-        <EmptyState
-          context="workflows"
-          title="No workflows"
-          motivation="Build automated workflows"
-          trigger={<button>Create Workflow</button>}
-          secondaryTrigger={<button>Import Workflow</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="workflows"
+            title="No workflows"
+            motivation="Build automated workflows"
+            trigger={<button>Create Workflow</button>}
+            secondaryTrigger={<button>Import Workflow</button>}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -242,13 +268,15 @@ describe("EmptyState", () => {
   describe("loading state", () => {
     it("shows loading spinner when isLoading is true", () => {
       render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-          isLoading={true}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+            isLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("empty-state-loading")).toBeInTheDocument();
@@ -256,13 +284,15 @@ describe("EmptyState", () => {
 
     it("hides trigger when loading", () => {
       render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-          isLoading={true}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+            isLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -274,12 +304,14 @@ describe("EmptyState", () => {
   describe("data-testid", () => {
     it("has correct data-testid", () => {
       render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("empty-state-sessions")).toBeInTheDocument();
@@ -287,13 +319,15 @@ describe("EmptyState", () => {
 
     it("uses custom testId when provided", () => {
       render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-          testId="custom-empty-state"
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+            testId="custom-empty-state"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("custom-empty-state")).toBeInTheDocument();
@@ -303,13 +337,15 @@ describe("EmptyState", () => {
   describe("className extension", () => {
     it("accepts additional className", () => {
       const { container } = render(
-        <EmptyState
-          context="sessions"
-          title="No sessions"
-          motivation="Start chatting"
-          trigger={<button>Start</button>}
-          className="custom-class"
-        />,
+        <TestProvider>
+          <EmptyState
+            context="sessions"
+            title="No sessions"
+            motivation="Start chatting"
+            trigger={<button>Start</button>}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toHaveClass("custom-class");

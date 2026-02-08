@@ -13,6 +13,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RichTextInput } from "./RichTextInput";
 
+import { TestProvider } from "@/test-utils";
+
 describe("RichTextInput - Submit Handling", () => {
   const mockOnSubmit = vi.fn();
 
@@ -29,7 +31,11 @@ describe("RichTextInput - Submit Handling", () => {
     describe("submitOnEnter=true (default, ChatGPT-style)", () => {
       it("should submit on Enter", async () => {
         const user = userEvent.setup();
-        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+        render(
+          <TestProvider>
+            <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+          </TestProvider>,
+        );
 
         const input = screen.getByRole("textbox");
         await user.type(input, "Test message");
@@ -40,7 +46,11 @@ describe("RichTextInput - Submit Handling", () => {
 
       it("should not submit on Shift+Enter (allows newline)", async () => {
         const user = userEvent.setup();
-        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+        render(
+          <TestProvider>
+            <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+          </TestProvider>,
+        );
 
         const input = screen.getByRole("textbox");
         await user.type(input, "Test message");
@@ -51,7 +61,11 @@ describe("RichTextInput - Submit Handling", () => {
 
       it("should clear input after successful submit", async () => {
         const user = userEvent.setup();
-        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+        render(
+          <TestProvider>
+            <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+          </TestProvider>,
+        );
 
         const input = screen.getByRole("textbox");
         await user.type(input, "Test message");
@@ -64,7 +78,11 @@ describe("RichTextInput - Submit Handling", () => {
     describe("submitOnEnter=false (legacy, Ctrl+Enter style)", () => {
       it("should submit on Ctrl+Enter", async () => {
         const user = userEvent.setup();
-        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />);
+        render(
+          <TestProvider>
+            <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />
+          </TestProvider>,
+        );
 
         const input = screen.getByRole("textbox");
         await user.type(input, "Test message");
@@ -75,7 +93,11 @@ describe("RichTextInput - Submit Handling", () => {
 
       it("should not submit on Enter alone", async () => {
         const user = userEvent.setup();
-        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />);
+        render(
+          <TestProvider>
+            <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />
+          </TestProvider>,
+        );
 
         const input = screen.getByRole("textbox");
         await user.type(input, "Test message");
@@ -86,7 +108,11 @@ describe("RichTextInput - Submit Handling", () => {
 
       it("should clear input after successful submit", async () => {
         const user = userEvent.setup();
-        render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />);
+        render(
+          <TestProvider>
+            <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />
+          </TestProvider>,
+        );
 
         const input = screen.getByRole("textbox");
         await user.type(input, "Test message");
@@ -98,7 +124,11 @@ describe("RichTextInput - Submit Handling", () => {
 
     it("should not submit empty input", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       input.focus();
@@ -111,7 +141,11 @@ describe("RichTextInput - Submit Handling", () => {
   describe("auto-continue lists on Enter (Slack-style)", () => {
     it("should auto-continue ordered list when pressing Shift+Enter after numbered item", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "1. First item");
@@ -125,7 +159,11 @@ describe("RichTextInput - Submit Handling", () => {
 
     it("should auto-continue bullet list when pressing Shift+Enter after bullet item", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "- First item");
@@ -137,7 +175,11 @@ describe("RichTextInput - Submit Handling", () => {
 
     it("should auto-continue quote when pressing Shift+Enter after quote line", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "> First line");
@@ -149,7 +191,11 @@ describe("RichTextInput - Submit Handling", () => {
 
     it("should increment ordered list number", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "5. Item five");
@@ -161,7 +207,11 @@ describe("RichTextInput - Submit Handling", () => {
 
     it("should exit list mode on empty list item (double Enter)", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={true} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "- Item");
@@ -176,7 +226,11 @@ describe("RichTextInput - Submit Handling", () => {
 
     it("should work with submitOnEnter=false (Enter for newline)", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} submitOnEnter={false} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
       await user.type(input, "1. First item");

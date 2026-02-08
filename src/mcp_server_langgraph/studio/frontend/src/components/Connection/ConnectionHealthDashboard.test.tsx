@@ -70,6 +70,7 @@ vi.mock("../../hooks/useConnectionHealthWebSocket", () => ({
 }));
 
 import { useConnectionHealthWebSocket } from "../../hooks/useConnectionHealthWebSocket";
+import { TestProvider } from "@/test-utils";
 const mockedUseConnectionHealthWebSocket = vi.mocked(
   useConnectionHealthWebSocket,
 );
@@ -86,19 +87,31 @@ describe("ConnectionHealthDashboard", () => {
 
   describe("Component Structure", () => {
     it("should render dashboard title", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByText(/connection health/i)).toBeInTheDocument();
     });
 
     it("should show WebSocket connection status", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       // WebSocket status uses data-testid
       const wsStatus = screen.getByTestId("ws-status");
       expect(wsStatus).toHaveTextContent("Connected");
     });
 
     it("should show refresh button", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /refresh/i }),
       ).toBeInTheDocument();
@@ -107,56 +120,92 @@ describe("ConnectionHealthDashboard", () => {
 
   describe("Health Summary", () => {
     it("should display total connections count", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByText("3")).toBeInTheDocument();
     });
 
     it("should display connected count with indicator", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       // Should have a connected indicator
       expect(screen.getByTestId("summary-connected")).toHaveTextContent("1");
     });
 
     it("should display disconnected count", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("summary-disconnected")).toHaveTextContent("1");
     });
 
     it("should display error count", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("summary-error")).toHaveTextContent("1");
     });
   });
 
   describe("Connection List", () => {
     it("should display all connections", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByText("GitHub MCP")).toBeInTheDocument();
       expect(screen.getByText("Slack MCP")).toBeInTheDocument();
       expect(screen.getByText("Local MCP")).toBeInTheDocument();
     });
 
     it("should show status indicators for each connection", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       // Each connection should have a status indicator
       const statusIndicators = screen.getAllByTestId(/status-indicator/);
       expect(statusIndicators.length).toBe(3);
     });
 
     it("should show tool counts for connected servers", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByText(/5 tools/i)).toBeInTheDocument();
     });
 
     it("should show error message for errored connections", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByText(/connection refused/i)).toBeInTheDocument();
     });
   });
 
   describe("Actions", () => {
     it("should call refresh when button clicked", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /refresh/i }));
 
@@ -164,14 +213,22 @@ describe("ConnectionHealthDashboard", () => {
     });
 
     it("should have check health button for each connection", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
 
       const checkButtons = screen.getAllByRole("button", { name: /check/i });
       expect(checkButtons.length).toBe(3);
     });
 
     it("should call checkHealth with connection id", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
 
       const checkButtons = screen.getAllByRole("button", { name: /check/i });
       fireEvent.click(checkButtons[0]);
@@ -201,7 +258,11 @@ describe("ConnectionHealthDashboard", () => {
         checkHealth: mockCheckHealth,
       });
 
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       // WebSocket status uses data-testid
       const wsStatus = screen.getByTestId("ws-status");
       expect(wsStatus).toHaveTextContent("Disconnected");
@@ -227,7 +288,11 @@ describe("ConnectionHealthDashboard", () => {
         checkHealth: mockCheckHealth,
       });
 
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /reconnect/i }),
       ).toBeInTheDocument();
@@ -253,7 +318,11 @@ describe("ConnectionHealthDashboard", () => {
         checkHealth: mockCheckHealth,
       });
 
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /reconnect/i }));
 
       expect(mockReconnect).toHaveBeenCalled();
@@ -281,7 +350,11 @@ describe("ConnectionHealthDashboard", () => {
         checkHealth: mockCheckHealth,
       });
 
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(
         screen.getByText(/websocket connection failed/i),
       ).toBeInTheDocument();
@@ -290,7 +363,11 @@ describe("ConnectionHealthDashboard", () => {
 
   describe("Auto-connect", () => {
     it("should auto-connect on mount by default", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       // useConnectionHealthWebSocket auto-connects by default (no options needed)
       expect(mockedUseConnectionHealthWebSocket).toHaveBeenCalled();
     });
@@ -317,14 +394,22 @@ describe("ConnectionHealthDashboard", () => {
         checkHealth: mockCheckHealth,
       });
 
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no connections/i)).toBeInTheDocument();
     });
   });
 
   describe("Last Pong Indicator", () => {
     it("should show last heartbeat time", () => {
-      render(<ConnectionHealthDashboard />);
+      render(
+        <TestProvider>
+          <ConnectionHealthDashboard />
+        </TestProvider>,
+      );
       expect(screen.getByText(/last heartbeat/i)).toBeInTheDocument();
     });
   });

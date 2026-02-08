@@ -7,7 +7,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
 import type { ReactNode } from "react";
 
 // Mock motion/react for reduced motion testing
@@ -77,6 +76,8 @@ vi.mock("../hooks/useNewChat", () => ({
 // Import after mocks
 import { SessionNav } from "./SessionNav";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Suite
 // =============================================================================
@@ -97,9 +98,9 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
 
     it("renders all sessions correctly with reduced motion", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionNav />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Test Session 1")).toBeInTheDocument();
@@ -108,9 +109,9 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
 
     it("calls useReducedMotion hook", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionNav />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(mockUseReducedMotion).toHaveBeenCalled();
@@ -124,9 +125,9 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
 
     it("renders all sessions correctly without reduced motion", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionNav />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByText("Test Session 1")).toBeInTheDocument();
@@ -135,9 +136,9 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
 
     it("calls useReducedMotion hook", () => {
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionNav />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(mockUseReducedMotion).toHaveBeenCalled();
@@ -149,9 +150,9 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       mockUseReducedMotion.mockReturnValue(true);
 
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionNav />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const searchInput = screen.getByPlaceholderText("Search sessions...");
@@ -162,9 +163,9 @@ describe("SessionNav Reduced Motion Accessibility (WCAG 2.2 AA)", () => {
       mockUseReducedMotion.mockReturnValue(true);
 
       render(
-        <MemoryRouter>
+        <TestProvider>
           <SessionNav />
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       const newChatButton = screen.getByTestId("new-chat-button");

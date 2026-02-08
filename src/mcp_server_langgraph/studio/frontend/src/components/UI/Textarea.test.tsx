@@ -10,6 +10,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Textarea } from "./Textarea";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -18,23 +20,37 @@ afterEach(() => {
 describe("Textarea", () => {
   describe("rendering", () => {
     it("renders with default props", () => {
-      render(<Textarea />);
+      render(
+        <TestProvider>
+          <Textarea />
+        </TestProvider>,
+      );
       expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
 
     it("renders with placeholder", () => {
-      render(<Textarea placeholder="Enter text..." />);
+      render(
+        <TestProvider>
+          <Textarea placeholder="Enter text..." />
+        </TestProvider>,
+      );
       expect(screen.getByPlaceholderText("Enter text...")).toBeInTheDocument();
     });
 
     it("renders with value", () => {
-      render(<Textarea defaultValue="Hello World" />);
+      render(
+        <TestProvider>
+          <Textarea defaultValue="Hello World" />
+        </TestProvider>,
+      );
       expect(screen.getByDisplayValue("Hello World")).toBeInTheDocument();
     });
 
     it("renders with controlled value", () => {
       const { rerender } = render(
-        <Textarea value="Initial" onChange={() => {}} />,
+        <TestProvider>
+          <Textarea value="Initial" onChange={() => {}} />
+        </TestProvider>,
       );
       expect(screen.getByDisplayValue("Initial")).toBeInTheDocument();
 
@@ -45,21 +61,33 @@ describe("Textarea", () => {
 
   describe("sizes", () => {
     it("renders small size", () => {
-      render(<Textarea size="sm" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea size="sm" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("text-xs");
       expect(textarea).toHaveClass("p-2");
     });
 
     it("renders medium size (default)", () => {
-      render(<Textarea size="md" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea size="md" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("text-sm");
       expect(textarea).toHaveClass("p-3");
     });
 
     it("renders large size", () => {
-      render(<Textarea size="lg" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea size="lg" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("text-base");
       expect(textarea).toHaveClass("p-4");
@@ -68,19 +96,31 @@ describe("Textarea", () => {
 
   describe("variants", () => {
     it("renders default variant", () => {
-      render(<Textarea variant="default" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea variant="default" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("border-neutral-5");
     });
 
     it("renders error variant", () => {
-      render(<Textarea variant="error" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea variant="error" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("border-error-9");
     });
 
     it("renders success variant", () => {
-      render(<Textarea variant="success" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea variant="success" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("border-success-9");
     });
@@ -88,20 +128,32 @@ describe("Textarea", () => {
 
   describe("states", () => {
     it("renders disabled state", () => {
-      render(<Textarea disabled data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea disabled data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toBeDisabled();
       expect(textarea).toHaveClass("cursor-not-allowed");
     });
 
     it("renders readonly state", () => {
-      render(<Textarea readOnly data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea readOnly data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveAttribute("readonly");
     });
 
     it("renders required state", () => {
-      render(<Textarea required data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea required data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toBeRequired();
     });
@@ -109,19 +161,31 @@ describe("Textarea", () => {
 
   describe("resize", () => {
     it("allows vertical resize by default", () => {
-      render(<Textarea data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("resize-y");
     });
 
     it("allows no resize when resize is none", () => {
-      render(<Textarea resize="none" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea resize="none" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("resize-none");
     });
 
     it("allows both directions when resize is both", () => {
-      render(<Textarea resize="both" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea resize="both" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("resize");
     });
@@ -129,13 +193,21 @@ describe("Textarea", () => {
 
   describe("rows", () => {
     it("renders with default rows", () => {
-      render(<Textarea data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveAttribute("rows", "3");
     });
 
     it("renders with custom rows", () => {
-      render(<Textarea rows={5} data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea rows={5} data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveAttribute("rows", "5");
     });
@@ -143,13 +215,21 @@ describe("Textarea", () => {
 
   describe("fullWidth", () => {
     it("renders full width when prop is true", () => {
-      render(<Textarea fullWidth data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea fullWidth data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("w-full");
     });
 
     it("renders auto width when fullWidth is false", () => {
-      render(<Textarea fullWidth={false} data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea fullWidth={false} data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).not.toHaveClass("w-full");
     });
@@ -160,7 +240,11 @@ describe("Textarea", () => {
       const handleChange = vi.fn();
       const user = userEvent.setup();
 
-      render(<Textarea onChange={handleChange} />);
+      render(
+        <TestProvider>
+          <Textarea onChange={handleChange} />
+        </TestProvider>,
+      );
       const textarea = screen.getByRole("textbox");
 
       await user.type(textarea, "Hello");
@@ -171,7 +255,11 @@ describe("Textarea", () => {
       const handleFocus = vi.fn();
       const user = userEvent.setup();
 
-      render(<Textarea onFocus={handleFocus} />);
+      render(
+        <TestProvider>
+          <Textarea onFocus={handleFocus} />
+        </TestProvider>,
+      );
       const textarea = screen.getByRole("textbox");
 
       await user.click(textarea);
@@ -182,7 +270,11 @@ describe("Textarea", () => {
       const handleBlur = vi.fn();
       const user = userEvent.setup();
 
-      render(<Textarea onBlur={handleBlur} />);
+      render(
+        <TestProvider>
+          <Textarea onBlur={handleBlur} />
+        </TestProvider>,
+      );
       const textarea = screen.getByRole("textbox");
 
       await user.click(textarea);
@@ -193,14 +285,23 @@ describe("Textarea", () => {
 
   describe("customization", () => {
     it("accepts custom className", () => {
-      render(<Textarea className="custom-class" data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea className="custom-class" data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("custom-class");
     });
 
     it("passes through additional props", () => {
       render(
-        <Textarea data-testid="custom-textarea" aria-label="Custom textarea" />,
+        <TestProvider>
+          <Textarea
+            data-testid="custom-textarea"
+            aria-label="Custom textarea"
+          />
+        </TestProvider>,
       );
       const textarea = screen.getByTestId("custom-textarea");
       expect(textarea).toHaveAttribute("aria-label", "Custom textarea");
@@ -208,7 +309,11 @@ describe("Textarea", () => {
 
     it("forwards ref to textarea element", () => {
       const ref = vi.fn();
-      render(<Textarea ref={ref} />);
+      render(
+        <TestProvider>
+          <Textarea ref={ref} />
+        </TestProvider>,
+      );
       expect(ref).toHaveBeenCalled();
       expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLTextAreaElement);
     });
@@ -217,10 +322,12 @@ describe("Textarea", () => {
   describe("accessibility", () => {
     it("associates label with textarea using id", () => {
       render(
-        <>
-          <label htmlFor="test-textarea">Test Label</label>
-          <Textarea id="test-textarea" />
-        </>,
+        <TestProvider>
+          <>
+            <label htmlFor="test-textarea">Test Label</label>
+            <Textarea id="test-textarea" />
+          </>
+        </TestProvider>,
       );
       const textarea = screen.getByLabelText("Test Label");
       expect(textarea).toBeInTheDocument();
@@ -228,17 +335,23 @@ describe("Textarea", () => {
 
     it("supports aria-describedby for error messages", () => {
       render(
-        <>
-          <Textarea aria-describedby="error-message" variant="error" />
-          <span id="error-message">This field is required</span>
-        </>,
+        <TestProvider>
+          <>
+            <Textarea aria-describedby="error-message" variant="error" />
+            <span id="error-message">This field is required</span>
+          </>
+        </TestProvider>,
       );
       const textarea = screen.getByRole("textbox");
       expect(textarea).toHaveAttribute("aria-describedby", "error-message");
     });
 
     it("has proper focus ring styles", () => {
-      render(<Textarea data-testid="textarea" />);
+      render(
+        <TestProvider>
+          <Textarea data-testid="textarea" />
+        </TestProvider>,
+      );
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveClass("focus:ring-2");
     });

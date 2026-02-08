@@ -20,6 +20,8 @@ import { http, HttpResponse } from "msw";
 import { server } from "../../mocks/server";
 import { ConnectionTemplateSelector } from "./ConnectionTemplateSelector";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock data - raw API response format (snake_case per ADR-0091)
 const mockTemplatesRaw = [
   {
@@ -145,19 +147,31 @@ describe("ConnectionTemplateSelector", () => {
 
   describe("Component Structure", () => {
     it("should render title", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getByText(/choose a template/i)).toBeInTheDocument();
       });
     });
 
     it("should show loading state initially", () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("loading-templates")).toBeInTheDocument();
     });
 
     it("should display templates after loading", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getByText("GitHub")).toBeInTheDocument();
         expect(screen.getByText("Slack")).toBeInTheDocument();
@@ -167,7 +181,11 @@ describe("ConnectionTemplateSelector", () => {
 
   describe("Template Cards", () => {
     it("should display template name and description", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getByText("GitHub")).toBeInTheDocument();
         expect(
@@ -177,14 +195,22 @@ describe("ConnectionTemplateSelector", () => {
     });
 
     it("should show auth type badge", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
       await waitFor(() => {
         expect(screen.getAllByText(/oauth2/i).length).toBeGreaterThan(0);
       });
     });
 
     it("should show category for each template", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
       await waitFor(() => {
         // Check for category badges on template cards (uses getAllBy since multiple elements match)
         expect(screen.getAllByText(/development/i).length).toBeGreaterThan(0);
@@ -196,7 +222,11 @@ describe("ConnectionTemplateSelector", () => {
   describe("Template Selection", () => {
     it("should call onSelect when template clicked", async () => {
       const onSelect = vi.fn();
-      render(<ConnectionTemplateSelector onSelect={onSelect} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={onSelect} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("GitHub")).toBeInTheDocument();
@@ -210,7 +240,11 @@ describe("ConnectionTemplateSelector", () => {
     });
 
     it("should highlight selected template", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("GitHub")).toBeInTheDocument();
@@ -225,7 +259,11 @@ describe("ConnectionTemplateSelector", () => {
 
   describe("Category Filtering", () => {
     it("should show category filter buttons", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(
@@ -246,7 +284,11 @@ describe("ConnectionTemplateSelector", () => {
         }),
       );
 
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("GitHub")).toBeInTheDocument();
@@ -264,7 +306,11 @@ describe("ConnectionTemplateSelector", () => {
     });
 
     it('should show "All" filter as active by default', async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         const allButton = screen.getByRole("button", { name: /all/i });
@@ -275,7 +321,11 @@ describe("ConnectionTemplateSelector", () => {
 
   describe("Search", () => {
     it("should show search input", async () => {
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(
@@ -293,7 +343,11 @@ describe("ConnectionTemplateSelector", () => {
         }),
       );
 
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("GitHub")).toBeInTheDocument();
@@ -316,7 +370,11 @@ describe("ConnectionTemplateSelector", () => {
         }),
       );
 
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText(/no templates found/i)).toBeInTheDocument();
@@ -332,7 +390,11 @@ describe("ConnectionTemplateSelector", () => {
         }),
       );
 
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(
@@ -348,7 +410,11 @@ describe("ConnectionTemplateSelector", () => {
         }),
       );
 
-      render(<ConnectionTemplateSelector onSelect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(
@@ -361,7 +427,9 @@ describe("ConnectionTemplateSelector", () => {
   describe("Custom Template Option", () => {
     it('should show "Custom Connection" option', async () => {
       render(
-        <ConnectionTemplateSelector onSelect={vi.fn()} showCustomOption />,
+        <TestProvider>
+          <ConnectionTemplateSelector onSelect={vi.fn()} showCustomOption />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -375,11 +443,13 @@ describe("ConnectionTemplateSelector", () => {
     it("should call onCustom when custom option clicked", async () => {
       const onCustom = vi.fn();
       render(
-        <ConnectionTemplateSelector
-          onSelect={vi.fn()}
-          onCustom={onCustom}
-          showCustomOption
-        />,
+        <TestProvider>
+          <ConnectionTemplateSelector
+            onSelect={vi.fn()}
+            onCustom={onCustom}
+            showCustomOption
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {

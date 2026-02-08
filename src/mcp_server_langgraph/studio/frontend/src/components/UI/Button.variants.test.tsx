@@ -15,6 +15,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { Button, buttonVariants } from "./Button";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -150,35 +152,55 @@ describe("Button Variants", () => {
 
   describe("Button component rendering", () => {
     it("should render with primary variant classes by default", () => {
-      render(<Button>Click me</Button>);
+      render(
+        <TestProvider>
+          <Button>Click me</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /click me/i });
       expect(button).toHaveClass("bg-brand-primary");
       expect(button).toHaveClass("text-neutral-12");
     });
 
     it("should render with secondary variant classes", () => {
-      render(<Button variant="secondary">Secondary</Button>);
+      render(
+        <TestProvider>
+          <Button variant="secondary">Secondary</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /secondary/i });
       expect(button).toHaveClass("bg-neutral-2");
       expect(button).toHaveClass("text-neutral-12");
     });
 
     it("should render with danger variant classes", () => {
-      render(<Button variant="danger">Delete</Button>);
+      render(
+        <TestProvider>
+          <Button variant="danger">Delete</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /delete/i });
       expect(button).toHaveClass("bg-error-9");
       expect(button).toHaveClass("text-neutral-12");
     });
 
     it("should render with ghost variant classes", () => {
-      render(<Button variant="ghost">Ghost</Button>);
+      render(
+        <TestProvider>
+          <Button variant="ghost">Ghost</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /ghost/i });
       expect(button).toHaveClass("bg-transparent");
       expect(button).toHaveClass("text-neutral-11");
     });
 
     it("should render with sm size classes", () => {
-      render(<Button size="sm">Small</Button>);
+      render(
+        <TestProvider>
+          <Button size="sm">Small</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /small/i });
       expect(button).toHaveClass("px-3");
       expect(button).toHaveClass("py-1.5");
@@ -186,7 +208,11 @@ describe("Button Variants", () => {
     });
 
     it("should render with lg size classes", () => {
-      render(<Button size="lg">Large</Button>);
+      render(
+        <TestProvider>
+          <Button size="lg">Large</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /large/i });
       expect(button).toHaveClass("px-6");
       expect(button).toHaveClass("py-3");
@@ -194,7 +220,11 @@ describe("Button Variants", () => {
     });
 
     it("should apply disabled styling when disabled", () => {
-      render(<Button disabled>Disabled</Button>);
+      render(
+        <TestProvider>
+          <Button disabled>Disabled</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /disabled/i });
       expect(button).toBeDisabled();
       expect(button).toHaveClass("opacity-50");
@@ -202,7 +232,11 @@ describe("Button Variants", () => {
     });
 
     it("should apply loading state styling", () => {
-      render(<Button loading>Loading</Button>);
+      render(
+        <TestProvider>
+          <Button loading>Loading</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /loading/i });
       expect(button).toBeDisabled();
       expect(button).toHaveClass("opacity-50");
@@ -211,13 +245,21 @@ describe("Button Variants", () => {
     });
 
     it("should apply fullWidth styling", () => {
-      render(<Button fullWidth>Full Width</Button>);
+      render(
+        <TestProvider>
+          <Button fullWidth>Full Width</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /full width/i });
       expect(button).toHaveClass("w-full");
     });
 
     it("should merge custom className with variant classes", () => {
-      render(<Button className="custom-class">Custom</Button>);
+      render(
+        <TestProvider>
+          <Button className="custom-class">Custom</Button>
+        </TestProvider>,
+      );
       const button = screen.getByRole("button", { name: /custom/i });
       expect(button).toHaveClass("custom-class");
       expect(button).toHaveClass("bg-brand-primary"); // Still has variant

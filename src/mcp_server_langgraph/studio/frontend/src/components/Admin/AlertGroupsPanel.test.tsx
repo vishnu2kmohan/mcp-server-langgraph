@@ -18,6 +18,8 @@ import userEvent from "@testing-library/user-event";
 import { AlertGroupsPanel } from "./AlertGroupsPanel";
 import type { AlertGroup, Alert } from "../../store/slices/alertSlice";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Helpers
 // =============================================================================
@@ -81,13 +83,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("alert-group-api:CPUHigh")).toBeInTheDocument();
@@ -107,13 +111,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("CPUHigh")).toBeInTheDocument();
@@ -132,13 +138,15 @@ describe("AlertGroupsPanel", () => {
       });
 
       render(
-        <AlertGroupsPanel
-          groups={[criticalGroup, warningGroup]}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={[criticalGroup, warningGroup]}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const criticalBadge = screen.getByTestId("severity-badge-api:Critical");
@@ -150,13 +158,15 @@ describe("AlertGroupsPanel", () => {
 
     it("should show empty state when no groups", () => {
       render(
-        <AlertGroupsPanel
-          groups={[]}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={[]}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no alert groups/i)).toBeInTheDocument();
@@ -170,13 +180,15 @@ describe("AlertGroupsPanel", () => {
       const groups = [createMockGroup({ groupKey: "api:CPUHigh" })];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={onToggleGroup}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={onToggleGroup}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("group-header-api:CPUHigh"));
@@ -202,13 +214,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set(["api:CPUHigh"])}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set(["api:CPUHigh"])}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("First alert")).toBeInTheDocument();
@@ -233,13 +247,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByText("First alert")).not.toBeInTheDocument();
@@ -253,13 +269,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set(["api:Expanded"])}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set(["api:Expanded"])}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -285,13 +303,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={onSelectAlert}
-          expandedGroups={new Set(["api:CPUHigh"])}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={onSelectAlert}
+            expandedGroups={new Set(["api:CPUHigh"])}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("alert-item-a1"));
@@ -311,13 +331,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId="a1"
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set(["api:CPUHigh"])}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId="a1"
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set(["api:CPUHigh"])}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const selectedItem = screen.getByTestId("alert-item-a1");
@@ -335,13 +357,15 @@ describe("AlertGroupsPanel", () => {
       const groups = [createMockGroup({ groupKey: "api:CPUHigh" })];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={onToggleGroup}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={onToggleGroup}
+          />
+        </TestProvider>,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");
@@ -357,13 +381,15 @@ describe("AlertGroupsPanel", () => {
       const groups = [createMockGroup({ groupKey: "api:CPUHigh" })];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={onToggleGroup}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={onToggleGroup}
+          />
+        </TestProvider>,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");
@@ -384,13 +410,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("state-badge-api:Firing")).toHaveTextContent(
@@ -407,13 +435,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("state-badge-api:Resolved")).toHaveTextContent(
@@ -433,13 +463,15 @@ describe("AlertGroupsPanel", () => {
       ];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set()}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set()}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");
@@ -451,13 +483,15 @@ describe("AlertGroupsPanel", () => {
       const groups = [createMockGroup({ groupKey: "api:CPUHigh" })];
 
       render(
-        <AlertGroupsPanel
-          groups={groups}
-          selectedAlertId={null}
-          onSelectAlert={vi.fn()}
-          expandedGroups={new Set(["api:CPUHigh"])}
-          onToggleGroup={vi.fn()}
-        />,
+        <TestProvider>
+          <AlertGroupsPanel
+            groups={groups}
+            selectedAlertId={null}
+            onSelectAlert={vi.fn()}
+            expandedGroups={new Set(["api:CPUHigh"])}
+            onToggleGroup={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const header = screen.getByTestId("group-header-api:CPUHigh");

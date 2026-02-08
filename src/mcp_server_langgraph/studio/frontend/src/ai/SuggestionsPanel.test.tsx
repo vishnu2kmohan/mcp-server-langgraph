@@ -11,6 +11,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { SuggestionsPanel } from "./SuggestionsPanel";
 import type { Suggestion } from "./InlineSuggestions";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -41,20 +43,32 @@ describe("SuggestionsPanel", () => {
 
   describe("rendering", () => {
     it("renders the panel with suggestions table", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("suggestions-panel")).toBeInTheDocument();
       expect(screen.getByText("AI Suggestions")).toBeInTheDocument();
     });
 
     it("shows suggestion count in header", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("3")).toBeInTheDocument();
     });
 
     it("renders each suggestion row with type, content, and confidence", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Add null check")).toBeInTheDocument();
       expect(screen.getByText("Fix type error")).toBeInTheDocument();
@@ -67,7 +81,11 @@ describe("SuggestionsPanel", () => {
     });
 
     it("renders type badges for each suggestion", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("completion")).toBeInTheDocument();
       expect(screen.getByText("fix")).toBeInTheDocument();
@@ -78,7 +96,11 @@ describe("SuggestionsPanel", () => {
   describe("actions", () => {
     it("calls onAccept when accept button is clicked", () => {
       const onAccept = vi.fn();
-      render(<SuggestionsPanel {...defaultProps} onAccept={onAccept} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} onAccept={onAccept} />
+        </TestProvider>,
+      );
 
       const acceptButtons = screen.getAllByLabelText("Accept suggestion");
       fireEvent.click(acceptButtons[0]);
@@ -88,7 +110,11 @@ describe("SuggestionsPanel", () => {
 
     it("calls onDismiss when dismiss button is clicked", () => {
       const onDismiss = vi.fn();
-      render(<SuggestionsPanel {...defaultProps} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       const dismissButtons = screen.getAllByLabelText("Dismiss suggestion");
       fireEvent.click(dismissButtons[1]);
@@ -98,7 +124,11 @@ describe("SuggestionsPanel", () => {
 
     it("calls onRefresh when refresh button is clicked", () => {
       const onRefresh = vi.fn();
-      render(<SuggestionsPanel {...defaultProps} onRefresh={onRefresh} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} onRefresh={onRefresh} />
+        </TestProvider>,
+      );
 
       const refreshButton = screen.getByLabelText("Refresh suggestions");
       fireEvent.click(refreshButton);
@@ -109,7 +139,9 @@ describe("SuggestionsPanel", () => {
     it("calls onToggleExpand when header is clicked", () => {
       const onToggleExpand = vi.fn();
       render(
-        <SuggestionsPanel {...defaultProps} onToggleExpand={onToggleExpand} />,
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} onToggleExpand={onToggleExpand} />
+        </TestProvider>,
       );
 
       const header = screen.getByRole("button", { name: /AI Suggestions/i });
@@ -121,7 +153,11 @@ describe("SuggestionsPanel", () => {
 
   describe("collapsed state", () => {
     it("hides table when collapsed", () => {
-      render(<SuggestionsPanel {...defaultProps} isExpanded={false} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} isExpanded={false} />
+        </TestProvider>,
+      );
 
       // Header should still be visible
       expect(screen.getByText("AI Suggestions")).toBeInTheDocument();
@@ -131,7 +167,11 @@ describe("SuggestionsPanel", () => {
     });
 
     it("shows expand indicator when collapsed", () => {
-      render(<SuggestionsPanel {...defaultProps} isExpanded={false} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} isExpanded={false} />
+        </TestProvider>,
+      );
 
       // Should show count even when collapsed
       expect(screen.getByText("3")).toBeInTheDocument();
@@ -140,13 +180,21 @@ describe("SuggestionsPanel", () => {
 
   describe("loading state", () => {
     it("shows loading spinner when isLoading is true", () => {
-      render(<SuggestionsPanel {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("suggestions-loading")).toBeInTheDocument();
     });
 
     it("disables refresh button when loading", () => {
-      render(<SuggestionsPanel {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       const refreshButton = screen.getByLabelText("Refresh suggestions");
       expect(refreshButton).toBeDisabled();
@@ -155,7 +203,11 @@ describe("SuggestionsPanel", () => {
 
   describe("empty state", () => {
     it("shows empty message when no suggestions", () => {
-      render(<SuggestionsPanel {...defaultProps} suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} suggestions={[]} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("No suggestions available. Click refresh to fetch."),
@@ -163,7 +215,11 @@ describe("SuggestionsPanel", () => {
     });
 
     it("shows count of 0 when no suggestions", () => {
-      render(<SuggestionsPanel {...defaultProps} suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} suggestions={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("0")).toBeInTheDocument();
     });
@@ -171,14 +227,22 @@ describe("SuggestionsPanel", () => {
 
   describe("accessibility", () => {
     it("has accessible table structure", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("table")).toBeInTheDocument();
       expect(screen.getAllByRole("row")).toHaveLength(4); // 1 header + 3 data rows
     });
 
     it("accept and dismiss buttons have accessible labels", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getAllByLabelText("Accept suggestion")).toHaveLength(3);
       expect(screen.getAllByLabelText("Dismiss suggestion")).toHaveLength(3);
@@ -187,7 +251,11 @@ describe("SuggestionsPanel", () => {
 
   describe("confidence colors", () => {
     it("uses success color for high confidence (>=90%)", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       // 95% confidence should have success styling (semantic token)
       const highConfidence = screen.getByText("95%");
@@ -195,7 +263,11 @@ describe("SuggestionsPanel", () => {
     });
 
     it("uses warning color for medium confidence (70-89%)", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       // 85% and 70% should have warning styling (semantic token)
       const medConfidence = screen.getByText("85%");
@@ -205,7 +277,11 @@ describe("SuggestionsPanel", () => {
 
   describe("Accessibility - Touch Targets (WCAG 2.5.8)", () => {
     it("accept button meets minimum 24x24px touch target", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const acceptButtons = screen.getAllByLabelText("Accept suggestion");
       acceptButtons.forEach((button) => {
@@ -215,7 +291,11 @@ describe("SuggestionsPanel", () => {
     });
 
     it("dismiss button meets minimum 24x24px touch target", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dismissButtons = screen.getAllByLabelText("Dismiss suggestion");
       dismissButtons.forEach((button) => {
@@ -225,7 +305,11 @@ describe("SuggestionsPanel", () => {
     });
 
     it("refresh button meets minimum 24x24px touch target", () => {
-      render(<SuggestionsPanel {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionsPanel {...defaultProps} />
+        </TestProvider>,
+      );
 
       const refreshButton = screen.getByLabelText("Refresh suggestions");
       expect(refreshButton.className).toMatch(/min-h-6|h-6/);

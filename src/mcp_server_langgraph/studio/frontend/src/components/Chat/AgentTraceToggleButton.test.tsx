@@ -10,6 +10,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { AgentTraceToggleButton } from "./AgentTraceToggleButton";
 
+import { TestProvider } from "@/test-utils";
+
 describe("AgentTraceToggleButton", () => {
   afterEach(() => {
     cleanup();
@@ -18,7 +20,11 @@ describe("AgentTraceToggleButton", () => {
 
   describe("rendering", () => {
     it("renders button with correct aria-label", () => {
-      render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /toggle agent execution trace/i }),
@@ -26,7 +32,11 @@ describe("AgentTraceToggleButton", () => {
     });
 
     it("renders GitBranch icon", () => {
-      render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       // GitBranch icon from lucide-react
@@ -36,35 +46,55 @@ describe("AgentTraceToggleButton", () => {
 
   describe("expanded state", () => {
     it("has aria-expanded=true when isExpanded is true", () => {
-      render(<AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("aria-expanded", "true");
     });
 
     it("has aria-expanded=false when isExpanded is false", () => {
-      render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("aria-expanded", "false");
     });
 
     it("shows 'Hide execution trace' title when expanded", () => {
-      render(<AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("title", "Hide execution trace");
     });
 
     it("shows 'Show execution trace' title when collapsed", () => {
-      render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("title", "Show execution trace");
     });
 
     it("has aria-expanded=true when expanded", () => {
-      render(<AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={true} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("aria-expanded", "true");
@@ -72,7 +102,11 @@ describe("AgentTraceToggleButton", () => {
     });
 
     it("has aria-expanded=false when collapsed", () => {
-      render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("aria-expanded", "false");
@@ -84,7 +118,9 @@ describe("AgentTraceToggleButton", () => {
     it("calls onToggle when clicked", () => {
       const handleToggle = vi.fn();
       render(
-        <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />,
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -96,7 +132,9 @@ describe("AgentTraceToggleButton", () => {
     it("calls onToggle on each click", () => {
       const handleToggle = vi.fn();
       render(
-        <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />,
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={handleToggle} />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button");
@@ -110,7 +148,11 @@ describe("AgentTraceToggleButton", () => {
 
   describe("accessibility", () => {
     it("is focusable", () => {
-      render(<AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />);
+      render(
+        <TestProvider>
+          <AgentTraceToggleButton isExpanded={false} onToggle={() => {}} />
+        </TestProvider>,
+      );
 
       const button = screen.getByRole("button");
       button.focus();

@@ -9,6 +9,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { TableArtifact, TableArtifactProps } from "./TableArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 const sampleData: TableArtifactProps = {
   title: "Sales Data",
   columns: [
@@ -32,12 +34,20 @@ describe("TableArtifact", () => {
 
   describe("Rendering", () => {
     it("should render table title", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Sales Data")).toBeInTheDocument();
     });
 
     it("should render all column headers", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Name")).toBeInTheDocument();
       expect(screen.getByText("Region")).toBeInTheDocument();
       expect(screen.getByText("Amount")).toBeInTheDocument();
@@ -45,14 +55,22 @@ describe("TableArtifact", () => {
     });
 
     it("should render all data rows", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Product A")).toBeInTheDocument();
       expect(screen.getByText("Product B")).toBeInTheDocument();
       expect(screen.getByText("Product C")).toBeInTheDocument();
     });
 
     it("should render all cell values", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       expect(screen.getByText("West")).toBeInTheDocument();
       expect(screen.getByText("East")).toBeInTheDocument();
       expect(screen.getByText("1500")).toBeInTheDocument();
@@ -60,14 +78,22 @@ describe("TableArtifact", () => {
     });
 
     it("should show empty state when no data", () => {
-      render(<TableArtifact {...sampleData} data={[]} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} data={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no data/i)).toBeInTheDocument();
     });
   });
 
   describe("Sorting", () => {
     it("should sort by column when header clicked", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       const nameHeader = screen.getByText("Name");
       fireEvent.click(nameHeader);
       // First click should sort ascending
@@ -76,7 +102,11 @@ describe("TableArtifact", () => {
     });
 
     it("should toggle sort direction on second click", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       const nameHeader = screen.getByText("Name");
       fireEvent.click(nameHeader);
       fireEvent.click(nameHeader);
@@ -86,7 +116,11 @@ describe("TableArtifact", () => {
     });
 
     it("should sort numbers correctly", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       const amountHeader = screen.getByText("Amount");
       fireEvent.click(amountHeader);
       const rows = screen.getAllByRole("row");
@@ -97,7 +131,11 @@ describe("TableArtifact", () => {
 
   describe("Actions", () => {
     it("should render export button", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /export/i }),
       ).toBeInTheDocument();
@@ -105,7 +143,11 @@ describe("TableArtifact", () => {
 
     it("should call onExport when export format selected", () => {
       const onExport = vi.fn();
-      render(<TableArtifact {...sampleData} onExport={onExport} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} onExport={onExport} />
+        </TestProvider>,
+      );
       // Click the export button to open menu
       fireEvent.click(screen.getByRole("button", { name: /export/i }));
       // Click CSV option in the menu
@@ -115,7 +157,11 @@ describe("TableArtifact", () => {
 
     it("should call onRowClick when row clicked", () => {
       const onRowClick = vi.fn();
-      render(<TableArtifact {...sampleData} onRowClick={onRowClick} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} onRowClick={onRowClick} />
+        </TestProvider>,
+      );
       const firstRow = screen.getAllByRole("row")[1];
       fireEvent.click(firstRow);
       expect(onRowClick).toHaveBeenCalledWith(sampleData.data[0]);
@@ -124,14 +170,22 @@ describe("TableArtifact", () => {
 
   describe("Expandable", () => {
     it("should show expand button when expandable", () => {
-      render(<TableArtifact {...sampleData} expandable />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} expandable />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /expand/i }),
       ).toBeInTheDocument();
     });
 
     it("should collapse when collapse button clicked", () => {
-      render(<TableArtifact {...sampleData} expandable />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} expandable />
+        </TestProvider>,
+      );
       const expandButton = screen.getByRole("button", { name: /expand/i });
       fireEvent.click(expandButton);
       // After expanding, should show collapse button
@@ -143,26 +197,42 @@ describe("TableArtifact", () => {
 
   describe("Layout", () => {
     it("should have proper test id", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("table-artifact")).toBeInTheDocument();
     });
 
     it("should apply custom className", () => {
-      render(<TableArtifact {...sampleData} className="custom-class" />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} className="custom-class" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("table-artifact")).toHaveClass("custom-class");
     });
   });
 
   describe("ArtifactExporter Integration", () => {
     it("should show export menu when export button clicked", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(screen.getByTestId("export-menu")).toBeInTheDocument();
     });
 
     it("should show CSV option in export menu", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -171,7 +241,11 @@ describe("TableArtifact", () => {
     });
 
     it("should show Excel option in export menu", () => {
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -188,7 +262,11 @@ describe("TableArtifact", () => {
       URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
       URL.revokeObjectURL = vi.fn();
 
-      render(<TableArtifact {...sampleData} />);
+      render(
+        <TestProvider>
+          <TableArtifact {...sampleData} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
 

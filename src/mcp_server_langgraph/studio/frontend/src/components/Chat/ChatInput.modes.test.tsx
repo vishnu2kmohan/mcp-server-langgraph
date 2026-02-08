@@ -16,6 +16,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatInput } from "./ChatInput";
 
+import { TestProvider } from "@/test-utils";
+
 // Motion-specific props that should not be passed to DOM elements
 // See test-utils.tsx for the authoritative list
 const MOTION_PROPS = new Set([
@@ -100,11 +102,13 @@ describe("ChatInput Execution Mode", () => {
     it("calls onCycleExecutionMode when Ctrl+Shift+M is pressed", async () => {
       const onCycleExecutionMode = vi.fn();
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -120,11 +124,13 @@ describe("ChatInput Execution Mode", () => {
     it("calls onCycleExecutionMode when Cmd+Shift+M is pressed (Mac)", async () => {
       const onCycleExecutionMode = vi.fn();
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -140,11 +146,13 @@ describe("ChatInput Execution Mode", () => {
     it("does not call onCycleExecutionMode when just M is pressed", async () => {
       const onCycleExecutionMode = vi.fn();
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -156,11 +164,13 @@ describe("ChatInput Execution Mode", () => {
     it("does not call onCycleExecutionMode when Shift+M is pressed without Ctrl/Cmd", async () => {
       const onCycleExecutionMode = vi.fn();
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -175,11 +185,13 @@ describe("ChatInput Execution Mode", () => {
     it("does not call onCycleExecutionMode when Ctrl+M is pressed without Shift", async () => {
       const onCycleExecutionMode = vi.fn();
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -194,11 +206,13 @@ describe("ChatInput Execution Mode", () => {
     it("prevents default behavior when shortcut is triggered", async () => {
       const onCycleExecutionMode = vi.fn();
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -221,11 +235,13 @@ describe("ChatInput Execution Mode", () => {
   describe("Execution Mode Display", () => {
     it("shows ExecutionModeIndicator when executionMode prop is provided", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -235,11 +251,13 @@ describe("ChatInput Execution Mode", () => {
 
     it("displays default mode correctly", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Default")).toBeInTheDocument();
@@ -247,11 +265,13 @@ describe("ChatInput Execution Mode", () => {
 
     it("displays plan mode correctly", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="plan"
-          onCycleExecutionMode={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="plan"
+            onCycleExecutionMode={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Plan")).toBeInTheDocument();
@@ -259,11 +279,13 @@ describe("ChatInput Execution Mode", () => {
 
     it("displays auto_accept mode correctly", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="auto_accept"
-          onCycleExecutionMode={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="auto_accept"
+            onCycleExecutionMode={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Auto")).toBeInTheDocument();
@@ -271,12 +293,14 @@ describe("ChatInput Execution Mode", () => {
 
     it("displays bypass mode for users with permission", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="bypass"
-          onCycleExecutionMode={vi.fn()}
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="bypass"
+            onCycleExecutionMode={vi.fn()}
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Bypass")).toBeInTheDocument();
@@ -289,11 +313,13 @@ describe("ChatInput Execution Mode", () => {
       const onCycleExecutionMode = vi.fn();
 
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const indicator = screen.getByTestId("execution-mode-indicator");
@@ -304,12 +330,14 @@ describe("ChatInput Execution Mode", () => {
 
     it("indicator is disabled when ChatInput is disabled", async () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          disabled={true}
-          executionMode="default"
-          onCycleExecutionMode={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            disabled={true}
+            executionMode="default"
+            onCycleExecutionMode={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const indicator = screen.getByTestId("execution-mode-indicator");
@@ -320,12 +348,14 @@ describe("ChatInput Execution Mode", () => {
   describe("Bypass Permission", () => {
     it("passes hasBypassPermission to ExecutionModeIndicator", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="bypass"
-          onCycleExecutionMode={vi.fn()}
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="bypass"
+            onCycleExecutionMode={vi.fn()}
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       // Bypass mode should be visible when permission is granted
@@ -336,12 +366,14 @@ describe("ChatInput Execution Mode", () => {
       // When hasBypassPermission is false, the indicator should still render
       // but bypass mode should not be accessible
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onCycleExecutionMode={vi.fn()}
-          hasBypassPermission={false}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onCycleExecutionMode={vi.fn()}
+            hasBypassPermission={false}
+          />
+        </TestProvider>,
       );
 
       // The indicator should be present
@@ -357,13 +389,15 @@ describe("ChatInput Execution Mode", () => {
       const onCycleExecutionMode = vi.fn();
 
       render(
-        <ChatInput
-          {...defaultProps}
-          value="test message"
-          onSubmit={onSubmit}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            value="test message"
+            onSubmit={onSubmit}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -378,13 +412,15 @@ describe("ChatInput Execution Mode", () => {
       const onCycleExecutionMode = vi.fn();
 
       render(
-        <ChatInput
-          {...defaultProps}
-          value="test message"
-          onSubmit={onSubmit}
-          executionMode="default"
-          onCycleExecutionMode={onCycleExecutionMode}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            value="test message"
+            onSubmit={onSubmit}
+            executionMode="default"
+            onCycleExecutionMode={onCycleExecutionMode}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -402,11 +438,13 @@ describe("ChatInput Execution Mode", () => {
   describe("SegmentedControl Mode Selector", () => {
     it("renders SegmentedControl when onExecutionModeChange is provided", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onExecutionModeChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onExecutionModeChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -417,12 +455,14 @@ describe("ChatInput Execution Mode", () => {
 
     it("renders all four mode options", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onExecutionModeChange={vi.fn()}
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onExecutionModeChange={vi.fn()}
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -444,11 +484,13 @@ describe("ChatInput Execution Mode", () => {
       const onExecutionModeChange = vi.fn();
 
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onExecutionModeChange={onExecutionModeChange}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onExecutionModeChange={onExecutionModeChange}
+          />
+        </TestProvider>,
       );
 
       const planOption = screen.getByRole("radio", { name: /plan mode/i });
@@ -459,11 +501,13 @@ describe("ChatInput Execution Mode", () => {
 
     it("marks current mode as selected (aria-checked)", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="plan"
-          onExecutionModeChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="plan"
+            onExecutionModeChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const planOption = screen.getByRole("radio", { name: /plan mode/i });
@@ -477,12 +521,14 @@ describe("ChatInput Execution Mode", () => {
 
     it("disables bypass segment when hasBypassPermission is false", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onExecutionModeChange={vi.fn()}
-          hasBypassPermission={false}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onExecutionModeChange={vi.fn()}
+            hasBypassPermission={false}
+          />
+        </TestProvider>,
       );
 
       const bypassOption = screen.getByRole("radio", { name: /bypass mode/i });
@@ -491,12 +537,14 @@ describe("ChatInput Execution Mode", () => {
 
     it("enables bypass segment when hasBypassPermission is true", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onExecutionModeChange={vi.fn()}
-          hasBypassPermission={true}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onExecutionModeChange={vi.fn()}
+            hasBypassPermission={true}
+          />
+        </TestProvider>,
       );
 
       const bypassOption = screen.getByRole("radio", { name: /bypass mode/i });
@@ -505,12 +553,14 @@ describe("ChatInput Execution Mode", () => {
 
     it("is disabled when ChatInput is disabled", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          disabled={true}
-          executionMode="default"
-          onExecutionModeChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            disabled={true}
+            executionMode="default"
+            onExecutionModeChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const segmented = screen.getByTestId("execution-mode-segmented");
@@ -520,11 +570,13 @@ describe("ChatInput Execution Mode", () => {
 
     it("has accessible aria-label describing keyboard shortcut", () => {
       render(
-        <ChatInput
-          {...defaultProps}
-          executionMode="default"
-          onExecutionModeChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInput
+            {...defaultProps}
+            executionMode="default"
+            onExecutionModeChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const radiogroup = screen.getByRole("radiogroup");

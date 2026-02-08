@@ -11,6 +11,8 @@ import userEvent from "@testing-library/user-event";
 import { Input } from "./Input";
 import { Search, Mail } from "lucide-react";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -19,23 +21,37 @@ afterEach(() => {
 describe("Input", () => {
   describe("rendering", () => {
     it("renders with default props", () => {
-      render(<Input />);
+      render(
+        <TestProvider>
+          <Input />
+        </TestProvider>,
+      );
       expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
 
     it("renders with placeholder", () => {
-      render(<Input placeholder="Enter text..." />);
+      render(
+        <TestProvider>
+          <Input placeholder="Enter text..." />
+        </TestProvider>,
+      );
       expect(screen.getByPlaceholderText("Enter text...")).toBeInTheDocument();
     });
 
     it("renders with value", () => {
-      render(<Input defaultValue="Hello" />);
+      render(
+        <TestProvider>
+          <Input defaultValue="Hello" />
+        </TestProvider>,
+      );
       expect(screen.getByDisplayValue("Hello")).toBeInTheDocument();
     });
 
     it("renders with controlled value", () => {
       const { rerender } = render(
-        <Input value="Initial" onChange={() => {}} />,
+        <TestProvider>
+          <Input value="Initial" onChange={() => {}} />
+        </TestProvider>,
       );
       expect(screen.getByDisplayValue("Initial")).toBeInTheDocument();
 
@@ -46,21 +62,33 @@ describe("Input", () => {
 
   describe("sizes", () => {
     it("renders small size", () => {
-      render(<Input size="sm" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input size="sm" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("text-xs");
       expect(input).toHaveClass("py-1.5");
     });
 
     it("renders medium size (default)", () => {
-      render(<Input size="md" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input size="md" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("text-sm");
       expect(input).toHaveClass("py-2");
     });
 
     it("renders large size", () => {
-      render(<Input size="lg" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input size="lg" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("text-base");
       expect(input).toHaveClass("py-2.5");
@@ -69,19 +97,31 @@ describe("Input", () => {
 
   describe("variants", () => {
     it("renders default variant", () => {
-      render(<Input variant="default" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input variant="default" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("border-neutral-5");
     });
 
     it("renders error variant", () => {
-      render(<Input variant="error" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input variant="error" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("border-error-9");
     });
 
     it("renders success variant", () => {
-      render(<Input variant="success" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input variant="success" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("border-success-9");
     });
@@ -89,20 +129,32 @@ describe("Input", () => {
 
   describe("states", () => {
     it("renders disabled state", () => {
-      render(<Input disabled data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input disabled data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toBeDisabled();
       expect(input).toHaveClass("cursor-not-allowed");
     });
 
     it("renders readonly state", () => {
-      render(<Input readOnly data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input readOnly data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveAttribute("readonly");
     });
 
     it("renders required state", () => {
-      render(<Input required data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input required data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toBeRequired();
     });
@@ -110,34 +162,52 @@ describe("Input", () => {
 
   describe("icons", () => {
     it("renders with left icon", () => {
-      render(<Input leftIcon={<Search data-testid="left-icon" />} />);
+      render(
+        <TestProvider>
+          <Input leftIcon={<Search data-testid="left-icon" />} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("left-icon")).toBeInTheDocument();
     });
 
     it("renders with right icon", () => {
-      render(<Input rightIcon={<Mail data-testid="right-icon" />} />);
+      render(
+        <TestProvider>
+          <Input rightIcon={<Mail data-testid="right-icon" />} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("right-icon")).toBeInTheDocument();
     });
 
     it("renders with both icons", () => {
       render(
-        <Input
-          leftIcon={<Search data-testid="left-icon" />}
-          rightIcon={<Mail data-testid="right-icon" />}
-        />,
+        <TestProvider>
+          <Input
+            leftIcon={<Search data-testid="left-icon" />}
+            rightIcon={<Mail data-testid="right-icon" />}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("left-icon")).toBeInTheDocument();
       expect(screen.getByTestId("right-icon")).toBeInTheDocument();
     });
 
     it("adds padding for left icon", () => {
-      render(<Input leftIcon={<Search />} data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input leftIcon={<Search />} data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("pl-10");
     });
 
     it("adds padding for right icon", () => {
-      render(<Input rightIcon={<Mail />} data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input rightIcon={<Mail />} data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("pr-10");
     });
@@ -145,13 +215,21 @@ describe("Input", () => {
 
   describe("fullWidth", () => {
     it("renders full width when prop is true", () => {
-      render(<Input fullWidth data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input fullWidth data-testid="input" />
+        </TestProvider>,
+      );
       const wrapper = screen.getByTestId("input").parentElement;
       expect(wrapper).toHaveClass("w-full");
     });
 
     it("renders auto width when fullWidth is false", () => {
-      render(<Input fullWidth={false} data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input fullWidth={false} data-testid="input" />
+        </TestProvider>,
+      );
       const wrapper = screen.getByTestId("input").parentElement;
       expect(wrapper).not.toHaveClass("w-full");
     });
@@ -162,7 +240,11 @@ describe("Input", () => {
       const handleChange = vi.fn();
       const user = userEvent.setup();
 
-      render(<Input onChange={handleChange} />);
+      render(
+        <TestProvider>
+          <Input onChange={handleChange} />
+        </TestProvider>,
+      );
       const input = screen.getByRole("textbox");
 
       await user.type(input, "Hello");
@@ -173,7 +255,11 @@ describe("Input", () => {
       const handleFocus = vi.fn();
       const user = userEvent.setup();
 
-      render(<Input onFocus={handleFocus} />);
+      render(
+        <TestProvider>
+          <Input onFocus={handleFocus} />
+        </TestProvider>,
+      );
       const input = screen.getByRole("textbox");
 
       await user.click(input);
@@ -184,7 +270,11 @@ describe("Input", () => {
       const handleBlur = vi.fn();
       const user = userEvent.setup();
 
-      render(<Input onBlur={handleBlur} />);
+      render(
+        <TestProvider>
+          <Input onBlur={handleBlur} />
+        </TestProvider>,
+      );
       const input = screen.getByRole("textbox");
 
       await user.click(input);
@@ -195,25 +285,41 @@ describe("Input", () => {
 
   describe("input types", () => {
     it("renders text type by default", () => {
-      render(<Input data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveAttribute("type", "text");
     });
 
     it("renders email type", () => {
-      render(<Input type="email" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input type="email" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveAttribute("type", "email");
     });
 
     it("renders password type", () => {
-      render(<Input type="password" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input type="password" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveAttribute("type", "password");
     });
 
     it("renders number type", () => {
-      render(<Input type="number" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input type="number" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveAttribute("type", "number");
     });
@@ -221,20 +327,32 @@ describe("Input", () => {
 
   describe("customization", () => {
     it("accepts custom className", () => {
-      render(<Input className="custom-class" data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input className="custom-class" data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("custom-class");
     });
 
     it("passes through additional props", () => {
-      render(<Input data-testid="custom-input" aria-label="Custom input" />);
+      render(
+        <TestProvider>
+          <Input data-testid="custom-input" aria-label="Custom input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("custom-input");
       expect(input).toHaveAttribute("aria-label", "Custom input");
     });
 
     it("forwards ref to input element", () => {
       const ref = vi.fn();
-      render(<Input ref={ref} />);
+      render(
+        <TestProvider>
+          <Input ref={ref} />
+        </TestProvider>,
+      );
       expect(ref).toHaveBeenCalled();
       expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLInputElement);
     });
@@ -243,10 +361,12 @@ describe("Input", () => {
   describe("accessibility", () => {
     it("associates label with input using id", () => {
       render(
-        <>
-          <label htmlFor="test-input">Test Label</label>
-          <Input id="test-input" />
-        </>,
+        <TestProvider>
+          <>
+            <label htmlFor="test-input">Test Label</label>
+            <Input id="test-input" />
+          </>
+        </TestProvider>,
       );
       const input = screen.getByLabelText("Test Label");
       expect(input).toBeInTheDocument();
@@ -254,17 +374,23 @@ describe("Input", () => {
 
     it("supports aria-describedby for error messages", () => {
       render(
-        <>
-          <Input aria-describedby="error-message" variant="error" />
-          <span id="error-message">This field is required</span>
-        </>,
+        <TestProvider>
+          <>
+            <Input aria-describedby="error-message" variant="error" />
+            <span id="error-message">This field is required</span>
+          </>
+        </TestProvider>,
       );
       const input = screen.getByRole("textbox");
       expect(input).toHaveAttribute("aria-describedby", "error-message");
     });
 
     it("has proper focus ring styles", () => {
-      render(<Input data-testid="input" />);
+      render(
+        <TestProvider>
+          <Input data-testid="input" />
+        </TestProvider>,
+      );
       const input = screen.getByTestId("input");
       expect(input).toHaveClass("focus:ring-2");
     });

@@ -16,6 +16,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { SuggestionChips } from "./SuggestionChips";
 import type { AISuggestion } from "../../types/api";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock suggestions
 const mockSuggestions: AISuggestion[] = [
   {
@@ -59,7 +61,11 @@ describe("SuggestionChips", () => {
 
   describe("Rendering", () => {
     it("should render suggestion chips when suggestions exist", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Add a retry mechanism to handle failures"),
@@ -73,14 +79,24 @@ describe("SuggestionChips", () => {
     });
 
     it("should render empty state when no suggestions", () => {
-      render(<SuggestionChips {...defaultProps} suggestions={[]} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} suggestions={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/no suggestions/i)).toBeInTheDocument();
     });
 
     it("should show loading state", () => {
       render(
-        <SuggestionChips {...defaultProps} isLoading={true} suggestions={[]} />,
+        <TestProvider>
+          <SuggestionChips
+            {...defaultProps}
+            isLoading={true}
+            suggestions={[]}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/analyzing workflow/i)).toBeInTheDocument();
@@ -88,10 +104,12 @@ describe("SuggestionChips", () => {
 
     it("should show error state", () => {
       render(
-        <SuggestionChips
-          {...defaultProps}
-          error="Failed to fetch suggestions"
-        />,
+        <TestProvider>
+          <SuggestionChips
+            {...defaultProps}
+            error="Failed to fetch suggestions"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -100,7 +118,11 @@ describe("SuggestionChips", () => {
     });
 
     it("should display AI label in header", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/ai suggestions/i)).toBeInTheDocument();
     });
@@ -108,7 +130,11 @@ describe("SuggestionChips", () => {
 
   describe("Confidence Indicators", () => {
     it("should show high confidence indicator for confidence >= 0.9", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       // The first suggestion has 0.92 confidence
       const chips = screen.getAllByTestId("suggestion-chip");
@@ -116,7 +142,11 @@ describe("SuggestionChips", () => {
     });
 
     it("should show medium confidence indicator for confidence 0.7-0.9", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       // The second suggestion has 0.85 confidence
       const chips = screen.getAllByTestId("suggestion-chip");
@@ -132,10 +162,12 @@ describe("SuggestionChips", () => {
       };
 
       render(
-        <SuggestionChips
-          {...defaultProps}
-          suggestions={[lowConfidenceSuggestion]}
-        />,
+        <TestProvider>
+          <SuggestionChips
+            {...defaultProps}
+            suggestions={[lowConfidenceSuggestion]}
+          />
+        </TestProvider>,
       );
 
       const chips = screen.getAllByTestId("suggestion-chip");
@@ -145,14 +177,22 @@ describe("SuggestionChips", () => {
 
   describe("Suggestion Types", () => {
     it("should display icon for add_node type", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       const chips = screen.getAllByTestId("suggestion-chip");
       expect(chips[0].querySelector('[data-icon="add"]')).toBeInTheDocument();
     });
 
     it("should display icon for optimize type", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       const chips = screen.getAllByTestId("suggestion-chip");
       expect(
@@ -161,7 +201,11 @@ describe("SuggestionChips", () => {
     });
 
     it("should display icon for warning type", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       const chips = screen.getAllByTestId("suggestion-chip");
       expect(
@@ -173,7 +217,11 @@ describe("SuggestionChips", () => {
   describe("Interactions", () => {
     it("should call onApply when apply button is clicked", () => {
       const onApply = vi.fn();
-      render(<SuggestionChips {...defaultProps} onApply={onApply} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} onApply={onApply} />
+        </TestProvider>,
+      );
 
       const applyButtons = screen.getAllByRole("button", { name: /apply/i });
       fireEvent.click(applyButtons[0]);
@@ -183,7 +231,11 @@ describe("SuggestionChips", () => {
 
     it("should call onDismiss when dismiss button is clicked", () => {
       const onDismiss = vi.fn();
-      render(<SuggestionChips {...defaultProps} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       const dismissButtons = screen.getAllByRole("button", {
         name: /dismiss/i,
@@ -195,7 +247,11 @@ describe("SuggestionChips", () => {
 
     it("should call onRefresh when refresh button is clicked", () => {
       const onRefresh = vi.fn();
-      render(<SuggestionChips {...defaultProps} onRefresh={onRefresh} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} onRefresh={onRefresh} />
+        </TestProvider>,
+      );
 
       const refreshButton = screen.getByRole("button", { name: /refresh/i });
       fireEvent.click(refreshButton);
@@ -206,7 +262,11 @@ describe("SuggestionChips", () => {
 
   describe("Collapsible Behavior", () => {
     it("should be expanded by default", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("suggestions-container")).toHaveAttribute(
         "data-expanded",
@@ -215,7 +275,11 @@ describe("SuggestionChips", () => {
     });
 
     it("should collapse when collapse button is clicked", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       const collapseButton = screen.getByRole("button", { name: /collapse/i });
       fireEvent.click(collapseButton);
@@ -227,7 +291,11 @@ describe("SuggestionChips", () => {
     });
 
     it("should show count badge when collapsed", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       const collapseButton = screen.getByRole("button", { name: /collapse/i });
       fireEvent.click(collapseButton);
@@ -238,7 +306,11 @@ describe("SuggestionChips", () => {
 
   describe("Accessibility", () => {
     it("should have accessible labels for action buttons", () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       const applyButtons = screen.getAllByRole("button", { name: /apply/i });
       const dismissButtons = screen.getAllByRole("button", {
@@ -250,13 +322,21 @@ describe("SuggestionChips", () => {
     });
 
     it('should have role="list" for suggestions container', () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("list")).toBeInTheDocument();
     });
 
     it('should have role="listitem" for each suggestion', () => {
-      render(<SuggestionChips {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SuggestionChips {...defaultProps} />
+        </TestProvider>,
+      );
 
       const listitems = screen.getAllByRole("listitem");
       expect(listitems).toHaveLength(3);
@@ -276,11 +356,13 @@ describe("SuggestionChips", () => {
       );
 
       render(
-        <SuggestionChips
-          {...defaultProps}
-          suggestions={manySuggestions}
-          maxVisible={5}
-        />,
+        <TestProvider>
+          <SuggestionChips
+            {...defaultProps}
+            suggestions={manySuggestions}
+            maxVisible={5}
+          />
+        </TestProvider>,
       );
 
       const chips = screen.getAllByTestId("suggestion-chip");
@@ -299,11 +381,13 @@ describe("SuggestionChips", () => {
       );
 
       render(
-        <SuggestionChips
-          {...defaultProps}
-          suggestions={manySuggestions}
-          maxVisible={5}
-        />,
+        <TestProvider>
+          <SuggestionChips
+            {...defaultProps}
+            suggestions={manySuggestions}
+            maxVisible={5}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/show 5 more/i)).toBeInTheDocument();

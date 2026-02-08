@@ -10,6 +10,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScopeSelector } from "./ScopeSelector";
 import type { ConnectionScope } from "@/types/connection";
 
+import { TestProvider } from "@/test-utils";
+
 // Motion mock is provided globally in src/test/setup.ts
 
 afterEach(() => {
@@ -20,14 +22,22 @@ afterEach(() => {
 describe("ScopeSelector", () => {
   describe("Rendering", () => {
     it("should render all three scope options", () => {
-      render(<ScopeSelector value="user" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Personal")).toBeInTheDocument();
       expect(screen.getByText("Project")).toBeInTheDocument();
       expect(screen.getByText("Session Only")).toBeInTheDocument();
     });
 
     it("should render descriptions for each scope", () => {
-      render(<ScopeSelector value="user" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/only you can access/i)).toBeInTheDocument();
       expect(
         screen.getByText(/project members can access/i),
@@ -36,12 +46,20 @@ describe("ScopeSelector", () => {
     });
 
     it("should render icons for each scope option", () => {
-      render(<ScopeSelector value="user" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("scope-selector")).toBeInTheDocument();
     });
 
     it("should mark the selected scope as checked", () => {
-      render(<ScopeSelector value="project" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="project" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       const projectRadio = screen.getByRole("radio", { name: /project/i });
       expect(projectRadio).toBeChecked();
     });
@@ -50,7 +68,11 @@ describe("ScopeSelector", () => {
   describe("Selection", () => {
     it("should call onChange when user scope is selected", () => {
       const onChange = vi.fn();
-      render(<ScopeSelector value="project" onChange={onChange} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="project" onChange={onChange} />
+        </TestProvider>,
+      );
 
       const userRadio = screen.getByRole("radio", { name: /personal/i });
       fireEvent.click(userRadio);
@@ -60,7 +82,11 @@ describe("ScopeSelector", () => {
 
     it("should call onChange when project scope is selected", () => {
       const onChange = vi.fn();
-      render(<ScopeSelector value="user" onChange={onChange} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={onChange} />
+        </TestProvider>,
+      );
 
       const projectRadio = screen.getByRole("radio", { name: /project/i });
       fireEvent.click(projectRadio);
@@ -70,7 +96,11 @@ describe("ScopeSelector", () => {
 
     it("should call onChange when session scope is selected", () => {
       const onChange = vi.fn();
-      render(<ScopeSelector value="user" onChange={onChange} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={onChange} />
+        </TestProvider>,
+      );
 
       const sessionRadio = screen.getByRole("radio", { name: /session only/i });
       fireEvent.click(sessionRadio);
@@ -81,7 +111,11 @@ describe("ScopeSelector", () => {
 
   describe("Disabled State", () => {
     it("should disable all options when disabled prop is true", () => {
-      render(<ScopeSelector value="user" onChange={vi.fn()} disabled />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={vi.fn()} disabled />
+        </TestProvider>,
+      );
 
       const radios = screen.getAllByRole("radio");
       radios.forEach((radio) => {
@@ -91,7 +125,11 @@ describe("ScopeSelector", () => {
 
     it("should not call onChange when disabled and clicked", () => {
       const onChange = vi.fn();
-      render(<ScopeSelector value="user" onChange={onChange} disabled />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={onChange} disabled />
+        </TestProvider>,
+      );
 
       const projectRadio = screen.getByRole("radio", { name: /project/i });
       fireEvent.click(projectRadio);
@@ -102,12 +140,20 @@ describe("ScopeSelector", () => {
 
   describe("Accessibility", () => {
     it("should have a radiogroup role", () => {
-      render(<ScopeSelector value="user" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("should have accessible labels for screen readers", () => {
-      render(<ScopeSelector value="user" onChange={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ScopeSelector value="user" onChange={vi.fn()} />
+        </TestProvider>,
+      );
       const radioGroup = screen.getByRole("radiogroup");
       expect(radioGroup).toHaveAccessibleName(/connection scope/i);
     });
@@ -118,7 +164,11 @@ describe("ScopeSelector", () => {
 
     scopes.forEach((scope) => {
       it(`should render correctly with ${scope} as selected value`, () => {
-        render(<ScopeSelector value={scope} onChange={vi.fn()} />);
+        render(
+          <TestProvider>
+            <ScopeSelector value={scope} onChange={vi.fn()} />
+          </TestProvider>,
+        );
         expect(screen.getByTestId("scope-selector")).toBeInTheDocument();
       });
     });

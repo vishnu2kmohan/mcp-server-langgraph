@@ -15,6 +15,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { OnboardingWizard, OnboardingWizardProps } from "./OnboardingWizard";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock useAIOnboarding hook to avoid Redux dependency in tests
 vi.mock("../../hooks/useAIOnboarding", () => ({
   useAIOnboarding: () => ({
@@ -65,29 +67,49 @@ describe("OnboardingWizard", () => {
 
   describe("Visibility", () => {
     it("should render when isOpen is true", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should not render when isOpen is false", () => {
-      render(<OnboardingWizard {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
   });
 
   describe("Step 1: Welcome", () => {
     it("should display welcome message on first step", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/welcome to agent studio/i)).toBeInTheDocument();
     });
 
     it("should show value proposition", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/build ai agents/i)).toBeInTheDocument();
     });
 
     it("should display Next button to proceed", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /get started|next/i }),
       ).toBeInTheDocument();
@@ -96,17 +118,29 @@ describe("OnboardingWizard", () => {
 
   describe("Progress Indicator", () => {
     it("should show step 1 of 4 initially", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument();
     });
 
     it("should display progress bar", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("progressbar")).toBeInTheDocument();
     });
 
     it("should update progress as user advances", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByRole("progressbar");
       expect(progressBar).toHaveAttribute("aria-valuenow", "1");
 
@@ -120,7 +154,11 @@ describe("OnboardingWizard", () => {
 
   describe("Step 2: Persona Selection", () => {
     it("should show persona options after clicking next", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
       );
@@ -131,7 +169,11 @@ describe("OnboardingWizard", () => {
     });
 
     it("should display admin, developer, and user persona options", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
       );
@@ -142,7 +184,11 @@ describe("OnboardingWizard", () => {
     });
 
     it("should allow selecting a persona", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
       );
@@ -154,7 +200,11 @@ describe("OnboardingWizard", () => {
     });
 
     it("should enable next button only after persona selection", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
       );
@@ -170,7 +220,11 @@ describe("OnboardingWizard", () => {
 
   describe("Step 3: Template Selection", () => {
     const goToStep3 = () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       // Step 1 → Step 2
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
@@ -210,7 +264,11 @@ describe("OnboardingWizard", () => {
 
   describe("Step 4: Quick Tour", () => {
     const goToStep4 = () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       // Step 1 → Step 2
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
@@ -258,7 +316,11 @@ describe("OnboardingWizard", () => {
 
   describe("Navigation", () => {
     it("should allow going back to previous steps", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       // Go to step 2
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
@@ -271,14 +333,22 @@ describe("OnboardingWizard", () => {
     });
 
     it("should not show back button on step 1", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByRole("button", { name: /back/i }),
       ).not.toBeInTheDocument();
     });
 
     it("should preserve selections when going back and forward", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       // Go to step 2 and select persona
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
@@ -297,12 +367,20 @@ describe("OnboardingWizard", () => {
 
   describe("Skip Functionality", () => {
     it("should show skip button on all steps", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /skip/i })).toBeInTheDocument();
     });
 
     it("should call onSkip when skip is clicked", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByRole("button", { name: /skip/i }));
       expect(defaultProps.onSkip).toHaveBeenCalled();
     });
@@ -310,18 +388,30 @@ describe("OnboardingWizard", () => {
 
   describe("Accessibility", () => {
     it("should have accessible dialog role", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
     });
 
     it("should have aria-labelledby for dialog title", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-labelledby");
     });
 
     it("should announce step changes to screen readers", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("progressbar")).toHaveAttribute(
         "aria-valuemin",
         "1",
@@ -335,7 +425,11 @@ describe("OnboardingWizard", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty templates gracefully on step 3", () => {
-      render(<OnboardingWizard {...defaultProps} templates={[]} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} templates={[]} />
+        </TestProvider>,
+      );
       // Go to step 3
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),
@@ -347,7 +441,11 @@ describe("OnboardingWizard", () => {
     });
 
     it("should allow completing without template when none selected", () => {
-      render(<OnboardingWizard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OnboardingWizard {...defaultProps} />
+        </TestProvider>,
+      );
       // Go through all steps
       fireEvent.click(
         screen.getByRole("button", { name: /get started|next/i }),

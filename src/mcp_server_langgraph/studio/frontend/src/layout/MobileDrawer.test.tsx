@@ -84,6 +84,8 @@ import sessionReducer, {
 import { MobileDrawer } from "./MobileDrawer";
 import { HamburgerMenu } from "./HamburgerMenu";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // TEST HELPERS
 // =============================================================================
@@ -351,17 +353,29 @@ describe("HamburgerMenu", () => {
 
   describe("rendering", () => {
     it("should render with data-testid", () => {
-      render(<HamburgerMenu onClick={vi.fn()} />);
+      render(
+        <TestProvider>
+          <HamburgerMenu onClick={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("hamburger-menu")).toBeInTheDocument();
     });
 
     it("should render hamburger icon by default", () => {
-      render(<HamburgerMenu onClick={vi.fn()} />);
+      render(
+        <TestProvider>
+          <HamburgerMenu onClick={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("hamburger-icon")).toBeInTheDocument();
     });
 
     it("should render close icon when isOpen is true", () => {
-      render(<HamburgerMenu onClick={vi.fn()} isOpen />);
+      render(
+        <TestProvider>
+          <HamburgerMenu onClick={vi.fn()} isOpen />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("hamburger-close-icon")).toBeInTheDocument();
     });
   });
@@ -371,7 +385,11 @@ describe("HamburgerMenu", () => {
       const user = userEvent.setup();
       const onClick = vi.fn();
 
-      render(<HamburgerMenu onClick={onClick} />);
+      render(
+        <TestProvider>
+          <HamburgerMenu onClick={onClick} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("hamburger-menu"));
       expect(onClick).toHaveBeenCalledTimes(1);
@@ -381,7 +399,11 @@ describe("HamburgerMenu", () => {
       const user = userEvent.setup();
       const onClick = vi.fn();
 
-      render(<HamburgerMenu onClick={onClick} />);
+      render(
+        <TestProvider>
+          <HamburgerMenu onClick={onClick} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("hamburger-menu");
       button.focus();
@@ -393,13 +415,21 @@ describe("HamburgerMenu", () => {
 
   describe("accessibility", () => {
     it("should have aria-label", () => {
-      render(<HamburgerMenu onClick={vi.fn()} />);
+      render(
+        <TestProvider>
+          <HamburgerMenu onClick={vi.fn()} />
+        </TestProvider>,
+      );
       const button = screen.getByTestId("hamburger-menu");
       expect(button).toHaveAttribute("aria-label");
     });
 
     it("should have aria-expanded matching isOpen prop", () => {
-      const { rerender } = render(<HamburgerMenu onClick={vi.fn()} />);
+      const { rerender } = render(
+        <TestProvider>
+          <HamburgerMenu onClick={vi.fn()} />
+        </TestProvider>,
+      );
       let button = screen.getByTestId("hamburger-menu");
       expect(button).toHaveAttribute("aria-expanded", "false");
 
@@ -409,13 +439,21 @@ describe("HamburgerMenu", () => {
     });
 
     it("should have aria-controls for drawer", () => {
-      render(<HamburgerMenu onClick={vi.fn()} />);
+      render(
+        <TestProvider>
+          <HamburgerMenu onClick={vi.fn()} />
+        </TestProvider>,
+      );
       const button = screen.getByTestId("hamburger-menu");
       expect(button).toHaveAttribute("aria-controls", "mobile-drawer");
     });
 
     it("should have no accessibility violations", async () => {
-      const { container } = render(<HamburgerMenu onClick={vi.fn()} />);
+      const { container } = render(
+        <TestProvider>
+          <HamburgerMenu onClick={vi.fn()} />
+        </TestProvider>,
+      );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });

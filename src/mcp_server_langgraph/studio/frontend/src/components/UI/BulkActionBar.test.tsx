@@ -20,6 +20,8 @@ import {
 } from "@testing-library/react";
 import { BulkActionBar } from "./BulkActionBar";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -38,33 +40,51 @@ describe("BulkActionBar", () => {
 
   describe("Rendering", () => {
     it("should render when items are selected", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("3 selected")).toBeInTheDocument();
     });
 
     it("should not render when no items are selected", () => {
       const { container } = render(
-        <BulkActionBar {...defaultProps} selectedCount={0} />,
+        <TestProvider>
+          <BulkActionBar {...defaultProps} selectedCount={0} />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
     });
 
     it("should display singular text for 1 item", () => {
-      render(<BulkActionBar {...defaultProps} selectedCount={1} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} selectedCount={1} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("1 selected")).toBeInTheDocument();
     });
 
     it("should have clear selection button", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText("Clear selection")).toBeInTheDocument();
     });
 
     it("should have delete button", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /delete/i }),
@@ -74,7 +94,11 @@ describe("BulkActionBar", () => {
 
   describe("Clear Selection", () => {
     it("should call onClearSelection when clear button is clicked", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByLabelText("Clear selection"));
 
@@ -84,7 +108,11 @@ describe("BulkActionBar", () => {
 
   describe("Delete Action", () => {
     it("should show confirmation dialog when delete is clicked", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
 
@@ -94,7 +122,11 @@ describe("BulkActionBar", () => {
 
     it("should call onDelete when confirmed", async () => {
       const onDelete = vi.fn().mockResolvedValue(undefined);
-      render(<BulkActionBar {...defaultProps} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
       fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
@@ -105,7 +137,11 @@ describe("BulkActionBar", () => {
     });
 
     it("should close dialog when cancelled", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
       expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
@@ -116,7 +152,11 @@ describe("BulkActionBar", () => {
     });
 
     it("should not call onDelete when cancelled", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
       fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
@@ -132,7 +172,11 @@ describe("BulkActionBar", () => {
         .mockImplementation(
           () => new Promise((resolve) => setTimeout(resolve, 100)),
         );
-      render(<BulkActionBar {...defaultProps} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
       fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
@@ -146,7 +190,11 @@ describe("BulkActionBar", () => {
         .mockImplementation(
           () => new Promise((resolve) => setTimeout(resolve, 100)),
         );
-      render(<BulkActionBar {...defaultProps} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /delete/i }));
       fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
@@ -166,7 +214,11 @@ describe("BulkActionBar", () => {
         },
       ];
 
-      render(<BulkActionBar {...defaultProps} customActions={customActions} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} customActions={customActions} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /archive/i }),
@@ -181,7 +233,9 @@ describe("BulkActionBar", () => {
       };
 
       render(
-        <BulkActionBar {...defaultProps} customActions={[customAction]} />,
+        <TestProvider>
+          <BulkActionBar {...defaultProps} customActions={[customAction]} />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /export/i }));
@@ -198,7 +252,9 @@ describe("BulkActionBar", () => {
       };
 
       render(
-        <BulkActionBar {...defaultProps} customActions={[customAction]} />,
+        <TestProvider>
+          <BulkActionBar {...defaultProps} customActions={[customAction]} />
+        </TestProvider>,
       );
 
       fireEvent.click(
@@ -217,14 +273,22 @@ describe("BulkActionBar", () => {
 
   describe("Accessibility", () => {
     it("should have proper ARIA attributes", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       const bar = screen.getByRole("toolbar");
       expect(bar).toHaveAttribute("aria-label", "Bulk actions");
     });
 
     it("should announce selection count to screen readers", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("status")).toHaveTextContent("3 selected");
     });
@@ -232,7 +296,11 @@ describe("BulkActionBar", () => {
 
   describe("Styling", () => {
     it("should have fixed position at bottom", () => {
-      render(<BulkActionBar {...defaultProps} />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} />
+        </TestProvider>,
+      );
 
       const bar = screen.getByRole("toolbar");
       expect(bar).toHaveClass("fixed");
@@ -240,7 +308,11 @@ describe("BulkActionBar", () => {
     });
 
     it("should apply custom className", () => {
-      render(<BulkActionBar {...defaultProps} className="custom-class" />);
+      render(
+        <TestProvider>
+          <BulkActionBar {...defaultProps} className="custom-class" />
+        </TestProvider>,
+      );
 
       const bar = screen.getByRole("toolbar");
       expect(bar).toHaveClass("custom-class");

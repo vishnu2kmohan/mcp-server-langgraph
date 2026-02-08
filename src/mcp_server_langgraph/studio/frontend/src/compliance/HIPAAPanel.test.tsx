@@ -8,6 +8,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { HIPAAPanel, type HIPAAControl } from "./HIPAAPanel";
 
+import { TestProvider } from "@/test-utils";
+
 describe("HIPAAPanel", () => {
   afterEach(() => {
     cleanup();
@@ -40,17 +42,29 @@ describe("HIPAAPanel", () => {
 
   describe("Rendering", () => {
     it("renders the panel container", () => {
-      render(<HIPAAPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={mockControls} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("hipaa-panel")).toBeInTheDocument();
     });
 
     it("renders panel header with HIPAA title", () => {
-      render(<HIPAAPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={mockControls} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/hipaa/i)).toBeInTheDocument();
     });
 
     it("renders all controls", () => {
-      render(<HIPAAPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={mockControls} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText("Security Management Process"),
       ).toBeInTheDocument();
@@ -59,43 +73,71 @@ describe("HIPAAPanel", () => {
     });
 
     it("shows empty state when no controls", () => {
-      render(<HIPAAPanel controls={[]} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no controls/i)).toBeInTheDocument();
     });
   });
 
   describe("Category Display", () => {
     it("shows administrative category label", () => {
-      render(<HIPAAPanel controls={[mockControls[0]]} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={[mockControls[0]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/administrative/i)).toBeInTheDocument();
     });
 
     it("shows physical category label", () => {
-      render(<HIPAAPanel controls={[mockControls[1]]} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={[mockControls[1]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/physical/i)).toBeInTheDocument();
     });
 
     it("shows technical category label", () => {
-      render(<HIPAAPanel controls={[mockControls[2]]} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={[mockControls[2]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/technical/i)).toBeInTheDocument();
     });
   });
 
   describe("PHI Access Tracking", () => {
     it("shows PHI access count when available", () => {
-      render(<HIPAAPanel controls={[mockControls[2]]} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={[mockControls[2]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/42/)).toBeInTheDocument();
     });
 
     it("shows PHI access indicator", () => {
-      render(<HIPAAPanel controls={[mockControls[2]]} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={[mockControls[2]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/phi access/i)).toBeInTheDocument();
     });
   });
 
   describe("Summary Statistics", () => {
     it("shows compliance percentage", () => {
-      render(<HIPAAPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={mockControls} />
+        </TestProvider>,
+      );
       // 2 compliant out of 3 = 67%
       expect(screen.getByText(/67%/)).toBeInTheDocument();
     });
@@ -103,7 +145,11 @@ describe("HIPAAPanel", () => {
 
   describe("Loading State", () => {
     it("shows loading spinner when isLoading is true", () => {
-      render(<HIPAAPanel controls={[]} isLoading={true} />);
+      render(
+        <TestProvider>
+          <HIPAAPanel controls={[]} isLoading={true} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
   });

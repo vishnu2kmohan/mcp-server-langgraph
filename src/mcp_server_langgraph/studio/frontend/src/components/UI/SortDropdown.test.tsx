@@ -8,6 +8,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { SortDropdown } from "./SortDropdown";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -23,24 +25,28 @@ describe("SortDropdown", () => {
   describe("Component Structure", () => {
     it("should render sort dropdown container", () => {
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("sort-dropdown")).toBeInTheDocument();
     });
 
     it("should render field select", () => {
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("combobox", { name: /sort by/i }),
@@ -49,12 +55,14 @@ describe("SortDropdown", () => {
 
     it("should render order toggle button", () => {
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /sort order/i }),
@@ -65,12 +73,14 @@ describe("SortDropdown", () => {
   describe("Field Selection", () => {
     it("should display all options", () => {
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const select = screen.getByRole("combobox", { name: /sort by/i });
@@ -81,12 +91,14 @@ describe("SortDropdown", () => {
 
     it("should have correct option selected", () => {
       render(
-        <SortDropdown
-          sortBy="created_at"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="created_at"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("combobox", { name: /sort by/i })).toHaveValue(
@@ -97,12 +109,14 @@ describe("SortDropdown", () => {
     it("should call onChange with new sortBy when field changes", () => {
       const onChange = vi.fn();
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={onChange}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={onChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByRole("combobox", { name: /sort by/i }), {
@@ -116,12 +130,14 @@ describe("SortDropdown", () => {
   describe("Sort Order Toggle", () => {
     it("should show ascending indicator when sortOrder is asc", () => {
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sort-asc-icon")).toBeInTheDocument();
@@ -129,12 +145,14 @@ describe("SortDropdown", () => {
 
     it("should show descending indicator when sortOrder is desc", () => {
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="desc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="desc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("sort-desc-icon")).toBeInTheDocument();
@@ -143,12 +161,14 @@ describe("SortDropdown", () => {
     it("should toggle order from asc to desc when clicked", () => {
       const onChange = vi.fn();
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={onChange}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={onChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /sort order/i }));
@@ -159,12 +179,14 @@ describe("SortDropdown", () => {
     it("should toggle order from desc to asc when clicked", () => {
       const onChange = vi.fn();
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="desc"
-          options={mockOptions}
-          onChange={onChange}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="desc"
+            options={mockOptions}
+            onChange={onChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /sort order/i }));
@@ -176,12 +198,14 @@ describe("SortDropdown", () => {
   describe("Accessibility", () => {
     it("should have proper aria labels", () => {
       render(
-        <SortDropdown
-          sortBy="name"
-          sortOrder="asc"
-          options={mockOptions}
-          onChange={vi.fn()}
-        />,
+        <TestProvider>
+          <SortDropdown
+            sortBy="name"
+            sortOrder="asc"
+            options={mockOptions}
+            onChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(

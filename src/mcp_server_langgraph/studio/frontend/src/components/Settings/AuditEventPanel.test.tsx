@@ -22,6 +22,8 @@ vi.mock("../../hooks/useAuditWebSocket", () => ({
 // Import after mocks
 import { AuditEventPanel } from "./AuditEventPanel";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -77,18 +79,30 @@ describe("AuditEventPanel", () => {
 
   describe("basic rendering", () => {
     it("should render the audit event panel", () => {
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("audit-event-panel")).toBeInTheDocument();
     });
 
     it("should show connection status", () => {
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("audit-status")).toBeInTheDocument();
       expect(screen.getByText(/connected/i)).toBeInTheDocument();
     });
 
     it("should show empty state when no events", () => {
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no audit events/i)).toBeInTheDocument();
     });
   });
@@ -109,7 +123,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByText("user@example.com")).toBeInTheDocument();
       expect(screen.getByText("admin@example.com")).toBeInTheDocument();
     });
@@ -129,7 +147,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByText(/authentication/i)).toBeInTheDocument();
       expect(screen.getByText(/data_access/i)).toBeInTheDocument();
     });
@@ -137,7 +159,11 @@ describe("AuditEventPanel", () => {
 
   describe("controls", () => {
     it("should have pause/resume button", () => {
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("pause-button")).toBeInTheDocument();
     });
 
@@ -157,7 +183,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByTestId("pause-button"));
       await waitFor(() => {
         expect(mockPause).toHaveBeenCalled();
@@ -179,7 +209,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByText(/resume/i)).toBeInTheDocument();
     });
 
@@ -198,7 +232,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("clear-button")).toBeInTheDocument();
     });
 
@@ -218,7 +256,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByTestId("clear-button"));
       await waitFor(() => {
         expect(mockClearEvents).toHaveBeenCalled();
@@ -242,7 +284,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
     });
 
@@ -261,7 +307,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("reconnect-button")).toBeInTheDocument();
     });
   });
@@ -282,7 +332,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("connecting-spinner")).toBeInTheDocument();
     });
 
@@ -301,7 +355,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByText(/reconnecting/i)).toBeInTheDocument();
       expect(screen.getByTestId("reconnecting-spinner")).toBeInTheDocument();
     });
@@ -309,12 +367,20 @@ describe("AuditEventPanel", () => {
 
   describe("filtering", () => {
     it("should render filter controls", () => {
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("filter-toggle")).toBeInTheDocument();
     });
 
     it("should expand filter panel when filter button clicked", async () => {
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       const filterToggle = screen.getByTestId("filter-toggle");
       fireEvent.click(filterToggle);
 
@@ -324,7 +390,11 @@ describe("AuditEventPanel", () => {
     });
 
     it("should show category filter options", async () => {
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       const filterToggle = screen.getByTestId("filter-toggle");
       fireEvent.click(filterToggle);
 
@@ -351,7 +421,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
 
       // Open filter panel
       const filterToggle = screen.getByTestId("filter-toggle");
@@ -381,7 +455,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("filter-active-badge")).toBeInTheDocument();
     });
 
@@ -401,7 +479,11 @@ describe("AuditEventPanel", () => {
         disconnect: vi.fn(),
         reconnect: vi.fn(),
       });
-      render(<AuditEventPanel />);
+      render(
+        <TestProvider>
+          <AuditEventPanel />
+        </TestProvider>,
+      );
 
       const clearFilterButton = screen.getByTestId("clear-filter-button");
       fireEvent.click(clearFilterButton);

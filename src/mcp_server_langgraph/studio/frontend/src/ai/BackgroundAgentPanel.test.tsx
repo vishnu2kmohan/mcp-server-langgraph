@@ -11,6 +11,8 @@ import {
   type BackgroundAgent,
 } from "./BackgroundAgentPanel";
 
+import { TestProvider } from "@/test-utils";
+
 describe("BackgroundAgentPanel", () => {
   const mockAgents: BackgroundAgent[] = [
     {
@@ -63,11 +65,13 @@ describe("BackgroundAgentPanel", () => {
   describe("Rendering", () => {
     it("renders the panel container", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("background-agent-panel")).toBeInTheDocument();
@@ -75,11 +79,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("renders panel header", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/background agents/i)).toBeInTheDocument();
@@ -87,11 +93,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("shows agent count", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("4")).toBeInTheDocument();
@@ -99,11 +107,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("renders all agents", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Code Analyzer")).toBeInTheDocument();
@@ -114,11 +124,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("shows empty state when no agents", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no active agents/i)).toBeInTheDocument();
@@ -128,11 +140,13 @@ describe("BackgroundAgentPanel", () => {
   describe("Agent Status", () => {
     it("shows running status with progress", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[0]]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[0]]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/running/i)).toBeInTheDocument();
@@ -141,11 +155,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("shows queued status", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[1]]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[1]]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/queued/i)).toBeInTheDocument();
@@ -153,11 +169,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("shows completed status", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[2]]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[2]]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/completed/i)).toBeInTheDocument();
@@ -165,11 +183,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("shows failed status with error message", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[3]]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[3]]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/failed/i)).toBeInTheDocument();
@@ -180,11 +200,13 @@ describe("BackgroundAgentPanel", () => {
   describe("Interactions", () => {
     it("calls onCancel when cancel button is clicked for running agent", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[0]]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[0]]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       const cancelButton = screen.getByLabelText(/cancel/i);
@@ -195,11 +217,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("calls onRetry when retry button is clicked for failed agent", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[3]]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[3]]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       const retryButton = screen.getByLabelText(/retry/i);
@@ -210,11 +234,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("does not show cancel button for completed agent", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[2]]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[2]]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByLabelText(/cancel/i)).not.toBeInTheDocument();
@@ -224,12 +250,14 @@ describe("BackgroundAgentPanel", () => {
   describe("Collapsibility", () => {
     it("can be collapsed", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-          defaultCollapsed={false}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+            defaultCollapsed={false}
+          />
+        </TestProvider>,
       );
 
       const toggleButton = screen.getByLabelText(/collapse/i);
@@ -241,12 +269,14 @@ describe("BackgroundAgentPanel", () => {
 
     it("can start collapsed", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-          defaultCollapsed={true}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+            defaultCollapsed={true}
+          />
+        </TestProvider>,
       );
 
       // Agent list should be hidden
@@ -257,12 +287,14 @@ describe("BackgroundAgentPanel", () => {
 
     it("can expand from collapsed state", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-          defaultCollapsed={true}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+            defaultCollapsed={true}
+          />
+        </TestProvider>,
       );
 
       const toggleButton = screen.getByLabelText(/expand/i);
@@ -286,11 +318,13 @@ describe("BackgroundAgentPanel", () => {
       };
 
       render(
-        <BackgroundAgentPanel
-          agents={[hourAgoAgent]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[hourAgoAgent]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       // Should show hours format
@@ -309,11 +343,13 @@ describe("BackgroundAgentPanel", () => {
       };
 
       render(
-        <BackgroundAgentPanel
-          agents={[minuteAgent]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[minuteAgent]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       // Should show minutes format
@@ -332,11 +368,13 @@ describe("BackgroundAgentPanel", () => {
       };
 
       render(
-        <BackgroundAgentPanel
-          agents={[secondsAgent]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[secondsAgent]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       // Should show seconds format (approximately, due to test timing)
@@ -347,11 +385,13 @@ describe("BackgroundAgentPanel", () => {
   describe("Cancel button for queued agents", () => {
     it("shows cancel button for queued agent", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[1]]} // queued agent
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[1]]} // queued agent
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       const cancelButton = screen.getByLabelText(/cancel/i);
@@ -360,11 +400,13 @@ describe("BackgroundAgentPanel", () => {
 
     it("calls onCancel when cancel button is clicked for queued agent", () => {
       render(
-        <BackgroundAgentPanel
-          agents={[mockAgents[1]]} // queued agent
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[mockAgents[1]]} // queued agent
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       const cancelButton = screen.getByLabelText(/cancel/i);
@@ -387,11 +429,13 @@ describe("BackgroundAgentPanel", () => {
       };
 
       render(
-        <BackgroundAgentPanel
-          agents={[failedNoError]}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={[failedNoError]}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+          />
+        </TestProvider>,
       );
 
       // Should show the agent name and failed status
@@ -405,12 +449,14 @@ describe("BackgroundAgentPanel", () => {
   describe("Custom className", () => {
     it("applies custom className to panel", () => {
       render(
-        <BackgroundAgentPanel
-          agents={mockAgents}
-          onCancel={mockOnCancel}
-          onRetry={mockOnRetry}
-          className="custom-class"
-        />,
+        <TestProvider>
+          <BackgroundAgentPanel
+            agents={mockAgents}
+            onCancel={mockOnCancel}
+            onRetry={mockOnRetry}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
 
       const panel = screen.getByTestId("background-agent-panel");

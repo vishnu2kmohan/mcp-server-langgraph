@@ -40,6 +40,8 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import disclosureReducer from "../store/slices/disclosureSlice";
 import { api } from "../api";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -371,12 +373,14 @@ describe("OfflineBanner Component Integration", () => {
     const onSync = vi.fn();
 
     render(
-      <OfflineBanner
-        isOffline={true}
-        pendingCount={5}
-        onSync={onSync}
-        testId="offline-banner"
-      />,
+      <TestProvider>
+        <OfflineBanner
+          isOffline={true}
+          pendingCount={5}
+          onSync={onSync}
+          testId="offline-banner"
+        />
+      </TestProvider>,
     );
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -392,11 +396,13 @@ describe("OfflineBanner Component Integration", () => {
 
   it("hides when online with no pending actions", () => {
     render(
-      <OfflineBanner
-        isOffline={false}
-        pendingCount={0}
-        testId="offline-banner"
-      />,
+      <TestProvider>
+        <OfflineBanner
+          isOffline={false}
+          pendingCount={0}
+          testId="offline-banner"
+        />
+      </TestProvider>,
     );
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -406,13 +412,15 @@ describe("OfflineBanner Component Integration", () => {
     const onSync = vi.fn();
 
     render(
-      <OfflineBanner
-        isOffline={true}
-        pendingCount={3}
-        onSync={onSync}
-        isSyncing={true}
-        testId="offline-banner"
-      />,
+      <TestProvider>
+        <OfflineBanner
+          isOffline={true}
+          pendingCount={3}
+          onSync={onSync}
+          isSyncing={true}
+          testId="offline-banner"
+        />
+      </TestProvider>,
     );
 
     const syncButton = screen.getByRole("button", { name: /syncing/i });
@@ -456,9 +464,11 @@ describe("useProgressiveDisclosure Integration", () => {
     }
 
     render(
-      <TestWrapper store={store}>
-        <DisclosureIntegration />
-      </TestWrapper>,
+      <TestProvider>
+        <TestWrapper store={store}>
+          <DisclosureIntegration />
+        </TestWrapper>
+      </TestProvider>,
     );
 
     // Initial level is beginner

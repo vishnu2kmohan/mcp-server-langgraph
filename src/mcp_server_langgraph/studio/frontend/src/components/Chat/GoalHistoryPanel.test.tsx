@@ -14,6 +14,8 @@ import React from "react";
 
 import { GoalHistoryPanel, type SessionGoalHistory } from "./GoalHistoryPanel";
 
+import { TestProvider } from "@/test-utils";
+
 describe("GoalHistoryPanel", () => {
   const mockGoals: SessionGoalHistory[] = [
     {
@@ -49,19 +51,31 @@ describe("GoalHistoryPanel", () => {
 
   describe("Rendering", () => {
     it("renders the component with test id", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("goal-history-panel")).toBeInTheDocument();
     });
 
     it("renders panel header with title", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Goal History")).toBeInTheDocument();
     });
 
     it("renders all goals in the list", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Complete the data analysis"),
@@ -71,7 +85,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("displays achievement status badges correctly", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Achieved")).toBeInTheDocument();
       expect(screen.getByText("Partial")).toBeInTheDocument();
@@ -79,7 +97,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("displays feedback when available", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("All analysis done successfully"),
@@ -89,7 +111,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("formats timestamps correctly", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       // Should display relative or formatted time - at least verify timestamps are rendered
       const goalItems = screen.getAllByTestId(/goal-item-/);
@@ -99,17 +125,23 @@ describe("GoalHistoryPanel", () => {
 
   describe("Empty State", () => {
     it("displays empty state when no goals", () => {
-      render(<GoalHistoryPanel goals={[]} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("No goals recorded yet")).toBeInTheDocument();
     });
 
     it("renders custom empty message when provided", () => {
       render(
-        <GoalHistoryPanel
-          goals={[]}
-          emptyMessage="Start by setting a goal above"
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={[]}
+            emptyMessage="Start by setting a goal above"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -120,13 +152,21 @@ describe("GoalHistoryPanel", () => {
 
   describe("Loading State", () => {
     it("displays loading state when isLoading is true", () => {
-      render(<GoalHistoryPanel goals={[]} isLoading />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={[]} isLoading />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("goal-history-loading")).toBeInTheDocument();
     });
 
     it("shows loading skeleton items", () => {
-      render(<GoalHistoryPanel goals={[]} isLoading />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={[]} isLoading />
+        </TestProvider>,
+      );
 
       const skeletons = screen.getAllByTestId(/goal-skeleton-/);
       expect(skeletons.length).toBeGreaterThan(0);
@@ -135,7 +175,11 @@ describe("GoalHistoryPanel", () => {
 
   describe("Accessibility", () => {
     it("has proper ARIA attributes", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       const panel = screen.getByTestId("goal-history-panel");
       expect(panel).toHaveAttribute("role", "region");
@@ -143,7 +187,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("goal items have proper list semantics", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       const list = screen.getByRole("list");
       expect(list).toBeInTheDocument();
@@ -153,7 +201,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("achievement badges have accessible labels", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       // Verify status badges are accessible (use getAllByLabelText since there are multiple)
       const achievedBadges = screen.getAllByLabelText(/status: achieved/i);
@@ -169,14 +221,22 @@ describe("GoalHistoryPanel", () => {
 
   describe("Compact Mode", () => {
     it("renders in compact mode when compact prop is true", () => {
-      render(<GoalHistoryPanel goals={mockGoals} compact />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} compact />
+        </TestProvider>,
+      );
 
       const panel = screen.getByTestId("goal-history-panel");
       expect(panel).toHaveClass("compact");
     });
 
     it("hides feedback in compact mode", () => {
-      render(<GoalHistoryPanel goals={mockGoals} compact />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} compact />
+        </TestProvider>,
+      );
 
       // Feedback should not be visible in compact mode
       expect(
@@ -187,13 +247,21 @@ describe("GoalHistoryPanel", () => {
 
   describe("Goal Count Badge", () => {
     it("displays goal count in header", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("3")).toBeInTheDocument();
     });
 
     it("does not show count badge when empty", () => {
-      render(<GoalHistoryPanel goals={[]} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={[]} />
+        </TestProvider>,
+      );
 
       const badges = screen.queryAllByTestId("goal-count-badge");
       expect(badges).toHaveLength(0);
@@ -203,7 +271,11 @@ describe("GoalHistoryPanel", () => {
   describe("Collapsible Behavior", () => {
     it("can be collapsed when collapsible prop is true", async () => {
       const user = userEvent.setup();
-      render(<GoalHistoryPanel goals={mockGoals} collapsible />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} collapsible />
+        </TestProvider>,
+      );
 
       const header = screen.getByRole("button", { name: /goal history/i });
       expect(header).toBeInTheDocument();
@@ -224,7 +296,9 @@ describe("GoalHistoryPanel", () => {
 
     it("starts collapsed when defaultCollapsed is true", () => {
       render(
-        <GoalHistoryPanel goals={mockGoals} collapsible defaultCollapsed />,
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} collapsible defaultCollapsed />
+        </TestProvider>,
       );
 
       expect(
@@ -235,7 +309,11 @@ describe("GoalHistoryPanel", () => {
 
   describe("Achievement Filtering", () => {
     it("filters by achievement status when filter is provided", () => {
-      render(<GoalHistoryPanel goals={mockGoals} filter="achieved" />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} filter="achieved" />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText("Complete the data analysis"),
@@ -247,7 +325,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("shows partial goals when filter is 'partial'", () => {
-      render(<GoalHistoryPanel goals={mockGoals} filter="partial" />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} filter="partial" />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByText("Complete the data analysis"),
@@ -257,7 +339,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("shows not achieved goals when filter is 'not-achieved'", () => {
-      render(<GoalHistoryPanel goals={mockGoals} filter="not-achieved" />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} filter="not-achieved" />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByText("Complete the data analysis"),
@@ -271,7 +357,11 @@ describe("GoalHistoryPanel", () => {
 
   describe("Time Ordering", () => {
     it("displays goals in reverse chronological order by default", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       const goalItems = screen.getAllByTestId(/goal-item-/);
 
@@ -282,7 +372,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("displays in chronological order when order='chronological'", () => {
-      render(<GoalHistoryPanel goals={mockGoals} order="chronological" />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} order="chronological" />
+        </TestProvider>,
+      );
 
       const goalItems = screen.getAllByTestId(/goal-item-/);
 
@@ -295,21 +389,33 @@ describe("GoalHistoryPanel", () => {
 
   describe("Max Items", () => {
     it("limits displayed items when maxItems is set", () => {
-      render(<GoalHistoryPanel goals={mockGoals} maxItems={2} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} maxItems={2} />
+        </TestProvider>,
+      );
 
       const goalItems = screen.getAllByTestId(/goal-item-/);
       expect(goalItems).toHaveLength(2);
     });
 
     it("shows 'show more' button when items exceed maxItems", () => {
-      render(<GoalHistoryPanel goals={mockGoals} maxItems={2} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} maxItems={2} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/show 1 more/i)).toBeInTheDocument();
     });
 
     it("expands to show all items when 'show more' is clicked", async () => {
       const user = userEvent.setup();
-      render(<GoalHistoryPanel goals={mockGoals} maxItems={2} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} maxItems={2} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText(/show 1 more/i));
 
@@ -321,7 +427,11 @@ describe("GoalHistoryPanel", () => {
   describe("Delete Functionality", () => {
     it("renders delete button when onDelete prop is provided", () => {
       const onDelete = vi.fn();
-      render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", {
         name: /delete goal/i,
@@ -330,7 +440,11 @@ describe("GoalHistoryPanel", () => {
     });
 
     it("does not render delete button when onDelete is not provided", () => {
-      render(<GoalHistoryPanel goals={mockGoals} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.queryAllByRole("button", {
         name: /delete goal/i,
@@ -341,7 +455,11 @@ describe("GoalHistoryPanel", () => {
     it("calls onDelete with goal id when delete button is clicked", async () => {
       const user = userEvent.setup();
       const onDelete = vi.fn();
-      render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", {
         name: /delete goal/i,
@@ -357,11 +475,13 @@ describe("GoalHistoryPanel", () => {
       const user = userEvent.setup();
       const onDelete = vi.fn();
       render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          onDelete={onDelete}
-          showDeleteConfirmation
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            onDelete={onDelete}
+            showDeleteConfirmation
+          />
+        </TestProvider>,
       );
 
       const deleteButtons = screen.getAllByRole("button", {
@@ -380,11 +500,13 @@ describe("GoalHistoryPanel", () => {
       const user = userEvent.setup();
       const onDelete = vi.fn();
       render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          onDelete={onDelete}
-          showDeleteConfirmation
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            onDelete={onDelete}
+            showDeleteConfirmation
+          />
+        </TestProvider>,
       );
 
       const deleteButtons = screen.getAllByRole("button", {
@@ -403,11 +525,13 @@ describe("GoalHistoryPanel", () => {
       const user = userEvent.setup();
       const onDelete = vi.fn();
       render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          onDelete={onDelete}
-          showDeleteConfirmation
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            onDelete={onDelete}
+            showDeleteConfirmation
+          />
+        </TestProvider>,
       );
 
       const deleteButtons = screen.getAllByRole("button", {
@@ -424,7 +548,11 @@ describe("GoalHistoryPanel", () => {
 
     it("delete button has appropriate styling and icon", () => {
       const onDelete = vi.fn();
-      render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", {
         name: /delete goal/i,
@@ -440,7 +568,11 @@ describe("GoalHistoryPanel", () => {
     it("delete button can be activated with Enter key", async () => {
       const user = userEvent.setup();
       const onDelete = vi.fn();
-      render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", {
         name: /delete goal/i,
@@ -457,7 +589,11 @@ describe("GoalHistoryPanel", () => {
     it("delete button can be activated with Space key", async () => {
       const user = userEvent.setup();
       const onDelete = vi.fn();
-      render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", {
         name: /delete goal/i,
@@ -475,11 +611,13 @@ describe("GoalHistoryPanel", () => {
       const user = userEvent.setup();
       const onDelete = vi.fn();
       render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          onDelete={onDelete}
-          showDeleteConfirmation
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            onDelete={onDelete}
+            showDeleteConfirmation
+          />
+        </TestProvider>,
       );
 
       const deleteButtons = screen.getAllByRole("button", {
@@ -503,7 +641,11 @@ describe("GoalHistoryPanel", () => {
 
     it("all delete buttons are focusable in sequence", () => {
       const onDelete = vi.fn();
-      render(<GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />);
+      render(
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} onDelete={onDelete} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", {
         name: /delete goal/i,
@@ -520,7 +662,9 @@ describe("GoalHistoryPanel", () => {
     it("uses isCollapsed prop when provided (controlled mode)", () => {
       // When isCollapsed=false, content should be visible
       const { rerender } = render(
-        <GoalHistoryPanel goals={mockGoals} collapsible isCollapsed={false} />,
+        <TestProvider>
+          <GoalHistoryPanel goals={mockGoals} collapsible isCollapsed={false} />
+        </TestProvider>,
       );
       expect(
         screen.getByText("Complete the data analysis"),
@@ -540,12 +684,14 @@ describe("GoalHistoryPanel", () => {
       const onCollapsedChange = vi.fn();
 
       render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          collapsible
-          isCollapsed={false}
-          onCollapsedChange={onCollapsedChange}
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            collapsible
+            isCollapsed={false}
+            onCollapsedChange={onCollapsedChange}
+          />
+        </TestProvider>,
       );
 
       // Click the toggle button
@@ -564,12 +710,14 @@ describe("GoalHistoryPanel", () => {
 
       // Start expanded (isCollapsed=false)
       render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          collapsible
-          isCollapsed={false}
-          onCollapsedChange={onCollapsedChange}
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            collapsible
+            isCollapsed={false}
+            onCollapsedChange={onCollapsedChange}
+          />
+        </TestProvider>,
       );
 
       // Content should be visible
@@ -595,11 +743,13 @@ describe("GoalHistoryPanel", () => {
 
       // Render without isCollapsed prop (uncontrolled mode)
       render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          collapsible
-          defaultCollapsed={false}
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            collapsible
+            defaultCollapsed={false}
+          />
+        </TestProvider>,
       );
 
       // Content should be visible
@@ -624,12 +774,14 @@ describe("GoalHistoryPanel", () => {
 
       // This simulates the key use case: parent controls state, panel doesn't reset
       const { rerender } = render(
-        <GoalHistoryPanel
-          goals={mockGoals}
-          collapsible
-          isCollapsed={false}
-          onCollapsedChange={onCollapsedChange}
-        />,
+        <TestProvider>
+          <GoalHistoryPanel
+            goals={mockGoals}
+            collapsible
+            isCollapsed={false}
+            onCollapsedChange={onCollapsedChange}
+          />
+        </TestProvider>,
       );
 
       expect(

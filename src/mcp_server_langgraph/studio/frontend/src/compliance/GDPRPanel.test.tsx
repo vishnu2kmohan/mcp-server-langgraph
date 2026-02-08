@@ -8,6 +8,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { GDPRPanel, type GDPRControl } from "./GDPRPanel";
 
+import { TestProvider } from "@/test-utils";
+
 describe("GDPRPanel", () => {
   afterEach(() => {
     cleanup();
@@ -40,50 +42,82 @@ describe("GDPRPanel", () => {
 
   describe("Rendering", () => {
     it("renders the panel container", () => {
-      render(<GDPRPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={mockControls} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("gdpr-panel")).toBeInTheDocument();
     });
 
     it("renders panel header with GDPR title", () => {
-      render(<GDPRPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={mockControls} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/gdpr/i)).toBeInTheDocument();
     });
 
     it("renders all controls", () => {
-      render(<GDPRPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={mockControls} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Principles of Processing")).toBeInTheDocument();
       expect(screen.getByText("Lawfulness of Processing")).toBeInTheDocument();
       expect(screen.getByText("Right to Erasure")).toBeInTheDocument();
     });
 
     it("shows empty state when no controls", () => {
-      render(<GDPRPanel controls={[]} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no controls/i)).toBeInTheDocument();
     });
   });
 
   describe("Article Display", () => {
     it("shows article reference", () => {
-      render(<GDPRPanel controls={[mockControls[0]]} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={[mockControls[0]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/article 5/i)).toBeInTheDocument();
     });
   });
 
   describe("Data Subject Requests", () => {
     it("shows pending requests count when available", () => {
-      render(<GDPRPanel controls={[mockControls[2]]} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={[mockControls[2]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/3/)).toBeInTheDocument();
     });
 
     it("shows pending requests label", () => {
-      render(<GDPRPanel controls={[mockControls[2]]} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={[mockControls[2]]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/pending request/i)).toBeInTheDocument();
     });
   });
 
   describe("Summary Statistics", () => {
     it("shows compliance percentage", () => {
-      render(<GDPRPanel controls={mockControls} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={mockControls} />
+        </TestProvider>,
+      );
       // 2 compliant out of 3 = 67%
       expect(screen.getByText(/67%/)).toBeInTheDocument();
     });
@@ -91,7 +125,11 @@ describe("GDPRPanel", () => {
 
   describe("Loading State", () => {
     it("shows loading spinner when isLoading is true", () => {
-      render(<GDPRPanel controls={[]} isLoading={true} />);
+      render(
+        <TestProvider>
+          <GDPRPanel controls={[]} isLoading={true} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
   });

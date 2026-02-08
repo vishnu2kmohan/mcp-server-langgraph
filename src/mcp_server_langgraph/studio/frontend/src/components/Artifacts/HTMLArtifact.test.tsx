@@ -13,6 +13,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { HTMLArtifact } from "./HTMLArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 // Sample HTML content for testing
 const SIMPLE_HTML = `<div><h1>Hello World</h1><p>This is a test.</p></div>`;
 
@@ -49,25 +51,41 @@ describe("HTMLArtifact", () => {
 
   describe("Rendering", () => {
     it("should render the component container", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("html-artifact")).toBeInTheDocument();
     });
 
     it("should display title when provided", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} title="My HTML Content" />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} title="My HTML Content" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("My HTML Content")).toBeInTheDocument();
     });
 
     it("should display default title when not provided", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("HTML")).toBeInTheDocument();
     });
 
     it("should render HTML content in an iframe", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       expect(iframe).toBeInTheDocument();
@@ -75,7 +93,11 @@ describe("HTMLArtifact", () => {
     });
 
     it("should apply sandbox attribute to iframe for security", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       expect(iframe).toHaveAttribute("sandbox");
@@ -84,7 +106,11 @@ describe("HTMLArtifact", () => {
 
   describe("Bokeh Support", () => {
     it("should detect Bokeh HTML and show Bokeh indicator", () => {
-      render(<HTMLArtifact data={BOKEH_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={BOKEH_HTML} />
+        </TestProvider>,
+      );
 
       // Should detect it's a Bokeh chart - look for the badge specifically
       const bokehBadges = screen.getAllByText(/bokeh/i);
@@ -92,7 +118,11 @@ describe("HTMLArtifact", () => {
     });
 
     it("should render Bokeh HTML with scripts enabled", () => {
-      render(<HTMLArtifact data={BOKEH_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={BOKEH_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       // Bokeh requires scripts to run
@@ -101,7 +131,11 @@ describe("HTMLArtifact", () => {
     });
 
     it("should display Bokeh chart title when provided", () => {
-      render(<HTMLArtifact data={BOKEH_HTML} title="Sales Dashboard" />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={BOKEH_HTML} title="Sales Dashboard" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Sales Dashboard")).toBeInTheDocument();
     });
@@ -109,7 +143,11 @@ describe("HTMLArtifact", () => {
 
   describe("Security", () => {
     it("should use sandboxed iframe for HTML content", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       // Sandbox attribute should be present (empty string is valid and most restrictive)
@@ -117,7 +155,11 @@ describe("HTMLArtifact", () => {
     });
 
     it("should not allow same-origin for untrusted content", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       const _sandbox = iframe.getAttribute("sandbox");
@@ -126,7 +168,11 @@ describe("HTMLArtifact", () => {
     });
 
     it("should allow scripts only when necessary (Bokeh)", () => {
-      render(<HTMLArtifact data={BOKEH_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={BOKEH_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       const _sandbox = iframe.getAttribute("sandbox");
@@ -135,7 +181,11 @@ describe("HTMLArtifact", () => {
     });
 
     it("should not render inline JavaScript for simple HTML", () => {
-      render(<HTMLArtifact data={UNSAFE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={UNSAFE_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       const _sandbox = iframe.getAttribute("sandbox");
@@ -147,14 +197,22 @@ describe("HTMLArtifact", () => {
 
   describe("Error Handling", () => {
     it("should handle empty HTML content", () => {
-      render(<HTMLArtifact data="" />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data="" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("html-artifact")).toBeInTheDocument();
     });
 
     it("should display error for malformed HTML gracefully", () => {
       const malformedHTML = "<div><p>Unclosed tags";
-      render(<HTMLArtifact data={malformedHTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={malformedHTML} />
+        </TestProvider>,
+      );
 
       // Should still render without crashing
       expect(screen.getByTestId("html-artifact")).toBeInTheDocument();
@@ -163,14 +221,22 @@ describe("HTMLArtifact", () => {
 
   describe("Sizing", () => {
     it("should accept height prop", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} height={500} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} height={500} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("html-artifact");
       expect(container).toBeInTheDocument();
     });
 
     it("should default to reasonable height", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       // Should have some default height
@@ -180,14 +246,22 @@ describe("HTMLArtifact", () => {
 
   describe("Theme Support", () => {
     it("should apply dark theme styling when specified", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} theme="dark" />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} theme="dark" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("html-artifact");
       expect(container.className).toMatch(/dark/);
     });
 
     it("should apply light theme by default", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("html-artifact");
       expect(container).toBeInTheDocument();
@@ -196,7 +270,11 @@ describe("HTMLArtifact", () => {
 
   describe("Accessibility", () => {
     it("should have accessible iframe with title", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} title="My Content" />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} title="My Content" />
+        </TestProvider>,
+      );
 
       const iframe = screen.getByTestId("html-iframe");
       expect(iframe).toHaveAttribute("title");
@@ -205,7 +283,11 @@ describe("HTMLArtifact", () => {
 
   describe("Controls", () => {
     it("should have expand button for full-screen view", () => {
-      render(<HTMLArtifact data={SIMPLE_HTML} />);
+      render(
+        <TestProvider>
+          <HTMLArtifact data={SIMPLE_HTML} />
+        </TestProvider>,
+      );
 
       const expandButton = screen.queryByRole("button", {
         name: /expand|fullscreen|maximize/i,
@@ -232,7 +314,11 @@ describe("HTMLArtifact Integration", () => {
       </html>
     `;
 
-    render(<HTMLArtifact data={executionHTML} title="Output" />);
+    render(
+      <TestProvider>
+        <HTMLArtifact data={executionHTML} title="Output" />
+      </TestProvider>,
+    );
 
     expect(screen.getByTestId("html-artifact")).toBeInTheDocument();
     expect(screen.getByText("Output")).toBeInTheDocument();

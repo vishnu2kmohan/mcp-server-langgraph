@@ -7,6 +7,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ComplianceGuides, type Guide } from "./ComplianceGuides";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -95,12 +97,20 @@ describe("ComplianceGuides", () => {
 
   describe("Rendering", () => {
     it("should render guides container", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("compliance-guides")).toBeInTheDocument();
     });
 
     it("should display all guides", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText("SOC-2 Access Review Process"),
       ).toBeInTheDocument();
@@ -109,14 +119,22 @@ describe("ComplianceGuides", () => {
     });
 
     it("should show guide summaries", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       expect(
         screen.getByText("Quarterly review of user access permissions"),
       ).toBeInTheDocument();
     });
 
     it("should display framework badges", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("framework-badge-soc2")).toBeInTheDocument();
       expect(screen.getByTestId("framework-badge-hipaa")).toBeInTheDocument();
       expect(screen.getByTestId("framework-badge-gdpr")).toBeInTheDocument();
@@ -126,7 +144,11 @@ describe("ComplianceGuides", () => {
 
   describe("Filtering", () => {
     it("should filter by framework", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const filter = screen.getByTestId("framework-filter");
       fireEvent.change(filter, { target: { value: "hipaa" } });
 
@@ -137,7 +159,11 @@ describe("ComplianceGuides", () => {
     });
 
     it("should show all guides when filter is 'all'", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const filter = screen.getByTestId("framework-filter");
       fireEvent.change(filter, { target: { value: "all" } });
 
@@ -149,7 +175,11 @@ describe("ComplianceGuides", () => {
     });
 
     it("should filter by search text", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const search = screen.getByTestId("guide-search");
       fireEvent.change(search, { target: { value: "incident" } });
 
@@ -162,7 +192,11 @@ describe("ComplianceGuides", () => {
 
   describe("Expansion", () => {
     it("should expand guide on click", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       fireEvent.click(guideItem);
 
@@ -170,7 +204,11 @@ describe("ComplianceGuides", () => {
     });
 
     it("should show steps when expanded", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       fireEvent.click(guideItem);
 
@@ -180,7 +218,11 @@ describe("ComplianceGuides", () => {
     });
 
     it("should collapse guide on second click", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       fireEvent.click(guideItem);
       fireEvent.click(guideItem);
@@ -191,7 +233,11 @@ describe("ComplianceGuides", () => {
 
   describe("Step Progress", () => {
     it("should allow marking steps complete", () => {
-      render(<ComplianceGuides guides={mockGuides} enableProgress />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} enableProgress />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       fireEvent.click(guideItem);
 
@@ -202,7 +248,11 @@ describe("ComplianceGuides", () => {
     });
 
     it("should show progress indicator", () => {
-      render(<ComplianceGuides guides={mockGuides} enableProgress />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} enableProgress />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       fireEvent.click(guideItem);
 
@@ -218,11 +268,13 @@ describe("ComplianceGuides", () => {
     it("should call onProgressChange when step toggled", () => {
       const onProgressChange = vi.fn();
       render(
-        <ComplianceGuides
-          guides={mockGuides}
-          enableProgress
-          onProgressChange={onProgressChange}
-        />,
+        <TestProvider>
+          <ComplianceGuides
+            guides={mockGuides}
+            enableProgress
+            onProgressChange={onProgressChange}
+          />
+        </TestProvider>,
       );
 
       const guideItem = screen.getByTestId("guide-soc2-access-review");
@@ -241,7 +293,11 @@ describe("ComplianceGuides", () => {
 
   describe("Actions", () => {
     it("should show print button when expanded", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       fireEvent.click(guideItem);
 
@@ -250,7 +306,11 @@ describe("ComplianceGuides", () => {
 
     it("should call onPrint when print clicked", () => {
       const onPrint = vi.fn();
-      render(<ComplianceGuides guides={mockGuides} onPrint={onPrint} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} onPrint={onPrint} />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       fireEvent.click(guideItem);
 
@@ -262,12 +322,20 @@ describe("ComplianceGuides", () => {
 
   describe("Empty State", () => {
     it("should show empty state when no guides", () => {
-      render(<ComplianceGuides guides={[]} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no compliance guides/i)).toBeInTheDocument();
     });
 
     it("should show empty state when no matches", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const search = screen.getByTestId("guide-search");
       fireEvent.change(search, { target: { value: "nonexistent" } });
 
@@ -277,12 +345,20 @@ describe("ComplianceGuides", () => {
 
   describe("Accessibility", () => {
     it("should have accessible search input", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("searchbox")).toBeInTheDocument();
     });
 
     it("should use expandable section pattern", () => {
-      render(<ComplianceGuides guides={mockGuides} />);
+      render(
+        <TestProvider>
+          <ComplianceGuides guides={mockGuides} />
+        </TestProvider>,
+      );
       const guideItem = screen.getByTestId("guide-soc2-access-review");
       expect(guideItem).toHaveAttribute("aria-expanded", "false");
 

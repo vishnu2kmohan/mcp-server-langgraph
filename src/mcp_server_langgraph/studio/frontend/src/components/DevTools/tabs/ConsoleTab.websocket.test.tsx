@@ -12,6 +12,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { ConsoleTab } from "./ConsoleTab";
 import type { ConsoleEntry } from "../types";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -91,11 +93,13 @@ describe("ConsoleTab WebSocket Integration", () => {
       // The ConsoleTab should be able to receive entries from parent
       // (from useDevToolsWebSocket) via externalEntries prop
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          externalEntries={mockWebSocketEntries}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            externalEntries={mockWebSocketEntries}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("console-tab")).toBeInTheDocument();
@@ -124,11 +128,13 @@ describe("ConsoleTab WebSocket Integration", () => {
       };
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          externalEntries={mockWebSocketEntries}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            externalEntries={mockWebSocketEntries}
+          />
+        </TestProvider>,
       );
 
       // Should show both local and external entries
@@ -155,11 +161,13 @@ describe("ConsoleTab WebSocket Integration", () => {
       };
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          externalEntries={mockWebSocketEntries}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            externalEntries={mockWebSocketEntries}
+          />
+        </TestProvider>,
       );
 
       // Check order by finding all entries and verifying sequence
@@ -185,11 +193,13 @@ describe("ConsoleTab WebSocket Integration", () => {
 
     it("should update count to include external entries", () => {
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          externalEntries={mockWebSocketEntries}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            externalEntries={mockWebSocketEntries}
+          />
+        </TestProvider>,
       );
 
       // Count should include external entries
@@ -198,11 +208,13 @@ describe("ConsoleTab WebSocket Integration", () => {
 
     it("should filter external entries by level", () => {
       render(
-        <ConsoleTab
-          filter="error"
-          onFilterChange={() => {}}
-          externalEntries={mockWebSocketEntries}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="error"
+            onFilterChange={() => {}}
+            externalEntries={mockWebSocketEntries}
+          />
+        </TestProvider>,
       );
 
       // Only error entries should show
@@ -228,11 +240,13 @@ describe("ConsoleTab WebSocket Integration", () => {
       };
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          externalEntries={mockWebSocketEntries}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            externalEntries={mockWebSocketEntries}
+          />
+        </TestProvider>,
       );
 
       // Should show only 2 entries (deduplicated by ID)
@@ -249,11 +263,13 @@ describe("ConsoleTab WebSocket Integration", () => {
       };
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          externalEntries={[]}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            externalEntries={[]}
+          />
+        </TestProvider>,
       );
 
       // Should still show local entries
@@ -271,11 +287,13 @@ describe("ConsoleTab WebSocket Integration", () => {
       };
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          // externalEntries not provided (undefined)
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            // externalEntries not provided (undefined)
+          />
+        </TestProvider>,
       );
 
       // Should show local entries without error
@@ -292,12 +310,14 @@ describe("ConsoleTab WebSocket Integration", () => {
       const handleClearExternal = vi.fn();
 
       render(
-        <ConsoleTab
-          filter="all"
-          onFilterChange={() => {}}
-          externalEntries={mockWebSocketEntries}
-          onClearExternal={handleClearExternal}
-        />,
+        <TestProvider>
+          <ConsoleTab
+            filter="all"
+            onFilterChange={() => {}}
+            externalEntries={mockWebSocketEntries}
+            onClearExternal={handleClearExternal}
+          />
+        </TestProvider>,
       );
 
       const clearButton = screen.getByTestId("clear-console-button");

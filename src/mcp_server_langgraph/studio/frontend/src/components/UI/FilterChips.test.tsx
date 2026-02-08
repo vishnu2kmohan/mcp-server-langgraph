@@ -9,6 +9,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { FilterChips } from "./FilterChips";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -22,7 +24,9 @@ describe("FilterChips", () => {
 
   it("renders all filter options", () => {
     render(
-      <FilterChips options={defaultOptions} value={null} onChange={vi.fn()} />,
+      <TestProvider>
+        <FilterChips options={defaultOptions} value={null} onChange={vi.fn()} />
+      </TestProvider>,
     );
 
     expect(screen.getByRole("button", { name: /active/i })).toBeInTheDocument();
@@ -33,11 +37,13 @@ describe("FilterChips", () => {
 
   it("highlights the selected option", () => {
     render(
-      <FilterChips
-        options={defaultOptions}
-        value="active"
-        onChange={vi.fn()}
-      />,
+      <TestProvider>
+        <FilterChips
+          options={defaultOptions}
+          value="active"
+          onChange={vi.fn()}
+        />
+      </TestProvider>,
     );
 
     const activeButton = screen.getByRole("button", { name: /active/i });
@@ -47,11 +53,13 @@ describe("FilterChips", () => {
   it("calls onChange with value when clicking an unselected option", () => {
     const handleChange = vi.fn();
     render(
-      <FilterChips
-        options={defaultOptions}
-        value={null}
-        onChange={handleChange}
-      />,
+      <TestProvider>
+        <FilterChips
+          options={defaultOptions}
+          value={null}
+          onChange={handleChange}
+        />
+      </TestProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /active/i }));
@@ -61,11 +69,13 @@ describe("FilterChips", () => {
   it("calls onChange with null when clicking the already selected option (toggle off)", () => {
     const handleChange = vi.fn();
     render(
-      <FilterChips
-        options={defaultOptions}
-        value="active"
-        onChange={handleChange}
-      />,
+      <TestProvider>
+        <FilterChips
+          options={defaultOptions}
+          value="active"
+          onChange={handleChange}
+        />
+      </TestProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /active/i }));
@@ -78,7 +88,11 @@ describe("FilterChips", () => {
       { value: "completed", label: "Completed" },
     ];
 
-    render(<FilterChips options={options} value={null} onChange={vi.fn()} />);
+    render(
+      <TestProvider>
+        <FilterChips options={options} value={null} onChange={vi.fn()} />
+      </TestProvider>,
+    );
 
     expect(
       screen.getByRole("button", { name: /pending/i }),
@@ -90,12 +104,14 @@ describe("FilterChips", () => {
 
   it("applies custom className", () => {
     const { container } = render(
-      <FilterChips
-        options={defaultOptions}
-        value={null}
-        onChange={vi.fn()}
-        className="custom-class"
-      />,
+      <TestProvider>
+        <FilterChips
+          options={defaultOptions}
+          value={null}
+          onChange={vi.fn()}
+          className="custom-class"
+        />
+      </TestProvider>,
     );
 
     expect(container.firstChild).toHaveClass("custom-class");
@@ -103,12 +119,14 @@ describe("FilterChips", () => {
 
   it("has proper accessibility attributes", () => {
     render(
-      <FilterChips
-        options={defaultOptions}
-        value="active"
-        onChange={vi.fn()}
-        ariaLabel="Filter by status"
-      />,
+      <TestProvider>
+        <FilterChips
+          options={defaultOptions}
+          value="active"
+          onChange={vi.fn()}
+          ariaLabel="Filter by status"
+        />
+      </TestProvider>,
     );
 
     const group = screen.getByRole("group", { name: /filter by status/i });

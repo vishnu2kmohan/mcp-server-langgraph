@@ -15,6 +15,8 @@ import {
 } from "@testing-library/react";
 import { InteractiveMermaidDiagram } from "./InteractiveMermaidDiagram";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock mermaid
 vi.mock("mermaid", () => ({
   default: {
@@ -40,7 +42,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Rendering", () => {
     it("should render the mermaid diagram", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -48,7 +54,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should display zoom controls", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByLabelText("Zoom in")).toBeInTheDocument();
@@ -58,7 +68,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should display fullscreen button", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByLabelText("Toggle fullscreen")).toBeInTheDocument();
@@ -66,7 +80,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should display copy source button", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByLabelText("Copy source")).toBeInTheDocument();
@@ -76,7 +94,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Zoom Controls", () => {
     it("should zoom in when zoom in button is clicked", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -90,7 +112,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should zoom out when zoom out button is clicked", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -104,7 +130,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should reset zoom when reset button is clicked", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -122,7 +152,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should display current zoom level", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("100%")).toBeInTheDocument();
@@ -143,7 +177,11 @@ describe("InteractiveMermaidDiagram", () => {
         clipboard: { writeText },
       });
 
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByLabelText("Copy source")).toBeInTheDocument();
@@ -164,7 +202,11 @@ describe("InteractiveMermaidDiagram", () => {
         new Error("Parse error"),
       );
 
-      render(<InteractiveMermaidDiagram code="invalid mermaid code" />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code="invalid mermaid code" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText(/diagram error/i)).toBeInTheDocument();
@@ -177,7 +219,11 @@ describe("InteractiveMermaidDiagram", () => {
         new Error("Parse error"),
       );
 
-      render(<InteractiveMermaidDiagram code="invalid code" />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code="invalid code" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("View source")).toBeInTheDocument();
@@ -187,7 +233,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Download", () => {
     it("should display download button", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByLabelText("Download as PNG")).toBeInTheDocument();
@@ -197,7 +247,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Keyboard Shortcuts", () => {
     it("should zoom in with + key", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -212,7 +266,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should zoom out with - key", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -227,7 +285,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should reset zoom with 0 key", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -249,7 +311,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should exit fullscreen with Escape key", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -277,7 +343,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Accessibility", () => {
     it("should have proper aria labels for all controls", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByLabelText("Zoom in")).toBeInTheDocument();
@@ -290,7 +360,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should be focusable for keyboard navigation", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         const container = screen.getByTestId("mermaid-container");
@@ -301,7 +375,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Touch Gestures", () => {
     it("should handle pinch-to-zoom with two fingers", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
@@ -339,7 +417,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should handle single finger pan", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
@@ -366,7 +448,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Mouse Interactions", () => {
     it("should pan with mouse drag", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
@@ -384,7 +470,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should stop dragging on mouse leave", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
@@ -401,7 +491,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should zoom with ctrl + mouse wheel scroll down", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
@@ -418,7 +512,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should zoom with meta + mouse wheel scroll up", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
@@ -435,7 +533,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should not zoom without ctrl/meta key on wheel", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-viewport")).toBeInTheDocument();
@@ -453,7 +555,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Alternative Keyboard Shortcuts", () => {
     it("should zoom in with = key", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -468,7 +574,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should zoom out with _ key", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -483,7 +593,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should not exit fullscreen with Escape when not in fullscreen", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -512,7 +626,11 @@ describe("InteractiveMermaidDiagram", () => {
         },
       });
 
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByLabelText("Copy source")).toBeInTheDocument();
@@ -538,7 +656,11 @@ describe("InteractiveMermaidDiagram", () => {
         "string error message",
       );
 
-      render(<InteractiveMermaidDiagram code="invalid mermaid syntax here" />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code="invalid mermaid syntax here" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText(/diagram error/i)).toBeInTheDocument();
@@ -554,7 +676,11 @@ describe("InteractiveMermaidDiagram", () => {
         new Error("Syntax error at line 1"),
       );
 
-      render(<InteractiveMermaidDiagram code="bad mermaid syntax" />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code="bad mermaid syntax" />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("Syntax error at line 1")).toBeInTheDocument();
@@ -564,7 +690,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Zoom Limits", () => {
     it("should not exceed maximum zoom of 400%", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -584,7 +714,11 @@ describe("InteractiveMermaidDiagram", () => {
     });
 
     it("should not go below minimum zoom of 25%", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -606,7 +740,11 @@ describe("InteractiveMermaidDiagram", () => {
 
   describe("Fullscreen Toggle", () => {
     it("should toggle fullscreen mode when button is clicked", async () => {
-      render(<InteractiveMermaidDiagram code={sampleCode} />);
+      render(
+        <TestProvider>
+          <InteractiveMermaidDiagram code={sampleCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-container")).toBeInTheDocument();
@@ -636,10 +774,12 @@ describe("InteractiveMermaidDiagram", () => {
   describe("Custom className", () => {
     it("should apply custom className to container", async () => {
       render(
-        <InteractiveMermaidDiagram
-          code={sampleCode}
-          className="custom-class"
-        />,
+        <TestProvider>
+          <InteractiveMermaidDiagram
+            code={sampleCode}
+            className="custom-class"
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {

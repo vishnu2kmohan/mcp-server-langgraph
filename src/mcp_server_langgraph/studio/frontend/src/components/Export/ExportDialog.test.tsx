@@ -16,6 +16,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { ExportDialog, ExportDialogProps } from "./ExportDialog";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 const mockMessages = [
@@ -55,26 +57,42 @@ describe("ExportDialog", () => {
 
   describe("rendering", () => {
     it("should render when open", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("export-dialog")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
-      render(<ExportDialog {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("export-dialog")).not.toBeInTheDocument();
     });
 
     it("should render format options", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/markdown/i)).toBeInTheDocument();
       expect(screen.getByText(/json/i)).toBeInTheDocument();
     });
 
     it("should render export options", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/include timestamps/i)).toBeInTheDocument();
       expect(screen.getByText(/include token counts/i)).toBeInTheDocument();
@@ -87,7 +105,11 @@ describe("ExportDialog", () => {
 
   describe("format selection", () => {
     it("should default to markdown format", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("format-markdown")).toHaveAttribute(
         "aria-checked",
@@ -97,7 +119,11 @@ describe("ExportDialog", () => {
 
     it("should allow selecting JSON format", async () => {
       const user = userEvent.setup();
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("format-json"));
 
@@ -115,7 +141,11 @@ describe("ExportDialog", () => {
   describe("export options", () => {
     it("should toggle timestamp option", async () => {
       const user = userEvent.setup();
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByTestId("option-timestamps");
       await user.click(toggle);
@@ -125,7 +155,11 @@ describe("ExportDialog", () => {
 
     it("should toggle token count option", async () => {
       const user = userEvent.setup();
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByTestId("option-tokens");
       await user.click(toggle);
@@ -140,13 +174,21 @@ describe("ExportDialog", () => {
 
   describe("actions", () => {
     it("should render copy button", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     });
 
     it("should render download button", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /download/i }),
@@ -155,7 +197,11 @@ describe("ExportDialog", () => {
 
     it("should close dialog on cancel", async () => {
       const user = userEvent.setup();
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("button", { name: /cancel/i }));
 
@@ -169,14 +215,22 @@ describe("ExportDialog", () => {
 
   describe("preview", () => {
     it("should show export preview", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("export-preview")).toBeInTheDocument();
     });
 
     it("should update preview when format changes", async () => {
       const user = userEvent.setup();
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Default is markdown
       expect(screen.getByTestId("export-preview")).toHaveTextContent("Hello");
@@ -194,20 +248,32 @@ describe("ExportDialog", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<ExportDialog {...defaultProps} />);
+      const { container } = render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have proper dialog role", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have proper heading", () => {
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("heading", { name: /export/i }),
@@ -216,7 +282,11 @@ describe("ExportDialog", () => {
 
     it("should be keyboard navigable", async () => {
       const user = userEvent.setup();
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.tab();
 
@@ -226,7 +296,11 @@ describe("ExportDialog", () => {
 
     it("should close on Escape key", async () => {
       const user = userEvent.setup();
-      render(<ExportDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Escape}");
 
@@ -240,7 +314,11 @@ describe("ExportDialog", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<ExportDialog {...defaultProps} className="custom-class" />);
+      render(
+        <TestProvider>
+          <ExportDialog {...defaultProps} className="custom-class" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("export-dialog")).toHaveClass("custom-class");
     });

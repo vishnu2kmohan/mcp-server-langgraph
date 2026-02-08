@@ -23,11 +23,15 @@ import userEvent from "@testing-library/user-event";
 // Note: We test the rendered output, not the Storybook meta
 import * as ThemeSwitcherStories from "./ThemeSwitcher.stories";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ThemeSwitcher Stories", () => {
   describe("DarkVsLight - Side-by-Side Comparison", () => {
     it("should render both light and dark mode panels", () => {
       const { container: _container } = render(
-        <ThemeSwitcherStories.DarkVsLight.render />,
+        <TestProvider>
+          <ThemeSwitcherStories.DarkVsLight.render />
+        </TestProvider>,
       );
 
       // Both panels should be present
@@ -45,7 +49,9 @@ describe("ThemeSwitcher Stories", () => {
 
     it("should have different background colors for light vs dark panels", () => {
       const { container: _container } = render(
-        <ThemeSwitcherStories.DarkVsLight.render />,
+        <TestProvider>
+          <ThemeSwitcherStories.DarkVsLight.render />
+        </TestProvider>,
       );
 
       const lightPanel = screen.getByText("Light Mode").closest("div");
@@ -60,7 +66,11 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should render component previews in both panels", () => {
-      render(<ThemeSwitcherStories.DarkVsLight.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.DarkVsLight.render />
+        </TestProvider>,
+      );
 
       // Each panel should have buttons
       const primaryButtons = screen.getAllByRole("button", { name: "Primary" });
@@ -76,7 +86,11 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should have status badges in both panels", () => {
-      render(<ThemeSwitcherStories.DarkVsLight.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.DarkVsLight.render />
+        </TestProvider>,
+      );
 
       // Each panel should have all status badges
       const successBadges = screen.getAllByText("Success");
@@ -110,7 +124,11 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should render appearance controls", () => {
-      render(<ThemeSwitcherStories.Interactive.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Interactive.render />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Appearance")).toBeInTheDocument();
       expect(
@@ -123,7 +141,11 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should render color theme controls", () => {
-      render(<ThemeSwitcherStories.Interactive.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Interactive.render />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Color Theme")).toBeInTheDocument();
       expect(
@@ -135,7 +157,11 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should render code font controls", () => {
-      render(<ThemeSwitcherStories.Interactive.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Interactive.render />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Code Font")).toBeInTheDocument();
       expect(
@@ -148,7 +174,11 @@ describe("ThemeSwitcher Stories", () => {
 
     it("should apply dark class when Dark button is clicked", async () => {
       const user = userEvent.setup();
-      render(<ThemeSwitcherStories.Interactive.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Interactive.render />
+        </TestProvider>,
+      );
 
       const darkButton = screen.getByRole("button", { name: /Dark/i });
       await user.click(darkButton);
@@ -158,7 +188,11 @@ describe("ThemeSwitcher Stories", () => {
 
     it("should apply light class when Light button is clicked", async () => {
       const user = userEvent.setup();
-      render(<ThemeSwitcherStories.Interactive.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Interactive.render />
+        </TestProvider>,
+      );
 
       const lightButton = screen.getByRole("button", { name: /Light/i });
       await user.click(lightButton);
@@ -169,7 +203,11 @@ describe("ThemeSwitcher Stories", () => {
 
     it("should update color theme data attribute when theme is selected", async () => {
       const user = userEvent.setup();
-      render(<ThemeSwitcherStories.Interactive.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Interactive.render />
+        </TestProvider>,
+      );
 
       const tealSageButton = screen.getByRole("button", {
         name: /Teal \+ Sage/i,
@@ -181,7 +219,11 @@ describe("ThemeSwitcher Stories", () => {
 
     it("should update code font data attribute when font is selected", async () => {
       const user = userEvent.setup();
-      render(<ThemeSwitcherStories.Interactive.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Interactive.render />
+        </TestProvider>,
+      );
 
       const firaCodeButton = screen.getByRole("button", {
         name: /Fira Code/i,
@@ -194,7 +236,11 @@ describe("ThemeSwitcher Stories", () => {
 
   describe("Comparison - Color Theme Options", () => {
     it("should render all four color theme options", () => {
-      render(<ThemeSwitcherStories.Comparison.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.Comparison.render />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Violet + Sage (Default)")).toBeInTheDocument();
       expect(screen.getByText("Teal + Sage")).toBeInTheDocument();
@@ -203,7 +249,11 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should have data-color-theme attributes on theme panels", () => {
-      const { container } = render(<ThemeSwitcherStories.Comparison.render />);
+      const { container } = render(
+        <TestProvider>
+          <ThemeSwitcherStories.Comparison.render />
+        </TestProvider>,
+      );
 
       const violetSagePanel = container.querySelector(
         '[data-color-theme="violet-sage"]',
@@ -227,7 +277,11 @@ describe("ThemeSwitcher Stories", () => {
 
   describe("CSSVariables - Reference Documentation", () => {
     it("should render semantic color reference table", () => {
-      render(<ThemeSwitcherStories.CSSVariables.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.CSSVariables.render />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("CSS Variables Reference")).toBeInTheDocument();
 
@@ -238,7 +292,11 @@ describe("ThemeSwitcher Stories", () => {
     });
 
     it("should list all semantic color categories", () => {
-      render(<ThemeSwitcherStories.CSSVariables.render />);
+      render(
+        <TestProvider>
+          <ThemeSwitcherStories.CSSVariables.render />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("primary")).toBeInTheDocument();
       expect(screen.getByText("neutral")).toBeInTheDocument();
@@ -258,14 +316,16 @@ describe("Theme CSS Variable Scoping", () => {
     // In JSDOM we can't test actual computed styles, but we can verify structure
 
     const { container: _container } = render(
-      <div className="parent">
-        <div className="light" data-testid="light-container">
-          <div className="bg-neutral-1" data-testid="light-bg" />
+      <TestProvider>
+        <div className="parent">
+          <div className="light" data-testid="light-container">
+            <div className="bg-neutral-1" data-testid="light-bg" />
+          </div>
+          <div className="dark" data-testid="dark-container">
+            <div className="bg-neutral-1" data-testid="dark-bg" />
+          </div>
         </div>
-        <div className="dark" data-testid="dark-container">
-          <div className="bg-neutral-1" data-testid="dark-bg" />
-        </div>
-      </div>,
+      </TestProvider>,
     );
 
     const lightContainer = screen.getByTestId("light-container");

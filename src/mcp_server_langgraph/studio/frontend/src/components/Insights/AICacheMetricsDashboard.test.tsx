@@ -12,6 +12,8 @@ import {
   type AICacheMetricsDashboardProps,
 } from "./AICacheMetricsDashboard";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Fixtures
 // =============================================================================
@@ -65,49 +67,81 @@ describe("AICacheMetricsDashboard", () => {
   });
   describe("Rendering", () => {
     it("renders dashboard with testid", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByTestId("ai-cache-metrics-dashboard"),
       ).toBeInTheDocument();
     });
 
     it("displays dashboard title", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("AI Cache Metrics")).toBeInTheDocument();
     });
 
     it("displays cache hit ratio as percentage", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("80.0%")).toBeInTheDocument();
       expect(screen.getByText("Cache Hit Ratio")).toBeInTheDocument();
     });
 
     it("displays total cache hits count", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("80")).toBeInTheDocument();
       expect(screen.getByText("Cache Hits")).toBeInTheDocument();
     });
 
     it("displays total cache misses count", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("20")).toBeInTheDocument();
       expect(screen.getByText("Cache Misses")).toBeInTheDocument();
     });
 
     it("displays error rate as percentage", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("5.0%")).toBeInTheDocument();
       expect(screen.getByText("Error Rate")).toBeInTheDocument();
     });
 
     it("displays average latency in milliseconds", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("150ms")).toBeInTheDocument();
       expect(screen.getByText("Avg Latency")).toBeInTheDocument();
     });
 
     it("displays request count", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("100")).toBeInTheDocument();
       expect(screen.getByText("Total Requests")).toBeInTheDocument();
     });
@@ -115,7 +149,11 @@ describe("AICacheMetricsDashboard", () => {
 
   describe("Cache Hit Ratio Progress Bar", () => {
     it("renders cache hit ratio progress bar", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByRole("progressbar", {
         name: /cache hit ratio/i,
       });
@@ -124,7 +162,11 @@ describe("AICacheMetricsDashboard", () => {
     });
 
     it("shows green color for high cache hit ratio (>= 70%)", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByTestId("cache-hit-progress-bar");
       expect(progressBar).toHaveClass("bg-success-9");
     });
@@ -132,7 +174,12 @@ describe("AICacheMetricsDashboard", () => {
     it("shows yellow color for medium cache hit ratio (50-70%)", () => {
       const lowHitSnapshot = { ...mockMetricsSnapshot, cacheHitRatio: 0.6 };
       render(
-        <AICacheMetricsDashboard {...defaultProps} snapshot={lowHitSnapshot} />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            snapshot={lowHitSnapshot}
+          />
+        </TestProvider>,
       );
       const progressBar = screen.getByTestId("cache-hit-progress-bar");
       expect(progressBar).toHaveClass("bg-warning-9");
@@ -141,10 +188,12 @@ describe("AICacheMetricsDashboard", () => {
     it("shows red color for low cache hit ratio (< 50%)", () => {
       const veryLowHitSnapshot = { ...mockMetricsSnapshot, cacheHitRatio: 0.3 };
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          snapshot={veryLowHitSnapshot}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            snapshot={veryLowHitSnapshot}
+          />
+        </TestProvider>,
       );
       const progressBar = screen.getByTestId("cache-hit-progress-bar");
       expect(progressBar).toHaveClass("bg-error-9");
@@ -153,19 +202,31 @@ describe("AICacheMetricsDashboard", () => {
 
   describe("Feature Breakdown", () => {
     it("renders feature breakdown section", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Per-Feature Breakdown")).toBeInTheDocument();
     });
 
     it("displays each feature name", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("nav_prediction")).toBeInTheDocument();
       expect(screen.getByText("contextual_help")).toBeInTheDocument();
       expect(screen.getByText("risk_assessment")).toBeInTheDocument();
     });
 
     it("displays request count for each feature", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       // Check that request counts are displayed
       expect(
         screen.getByTestId("feature-nav_prediction-requests"),
@@ -176,7 +237,11 @@ describe("AICacheMetricsDashboard", () => {
     });
 
     it("displays average latency for each feature", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByTestId("feature-nav_prediction-latency"),
       ).toHaveTextContent("120ms");
@@ -188,13 +253,21 @@ describe("AICacheMetricsDashboard", () => {
 
   describe("Compact Mode", () => {
     it("renders in compact mode when prop is set", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} compact />
+        </TestProvider>,
+      );
       const dashboard = screen.getByTestId("ai-cache-metrics-dashboard");
       expect(dashboard).toHaveAttribute("data-compact", "true");
     });
 
     it("hides feature breakdown in compact mode", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} compact />
+        </TestProvider>,
+      );
       expect(
         screen.queryByText("Per-Feature Breakdown"),
       ).not.toBeInTheDocument();
@@ -203,7 +276,11 @@ describe("AICacheMetricsDashboard", () => {
 
   describe("Refresh Button", () => {
     it("renders refresh button", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /refresh/i }),
       ).toBeInTheDocument();
@@ -212,7 +289,9 @@ describe("AICacheMetricsDashboard", () => {
     it("calls onRefresh when clicked", () => {
       const onRefresh = vi.fn();
       render(
-        <AICacheMetricsDashboard {...defaultProps} onRefresh={onRefresh} />,
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} onRefresh={onRefresh} />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /refresh/i }));
@@ -230,11 +309,13 @@ describe("AICacheMetricsDashboard", () => {
         cacheHitRatio: 0,
       };
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          snapshot={emptySnapshot}
-          featureMetrics={{}}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            snapshot={emptySnapshot}
+            featureMetrics={{}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/no cache data/i)).toBeInTheDocument();
     });
@@ -242,14 +323,22 @@ describe("AICacheMetricsDashboard", () => {
 
   describe("Loading State", () => {
     it("shows loading indicator when isLoading is true", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} isLoading />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
     });
   });
 
   describe("Accessibility", () => {
     it("has accessible progress bar", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByRole("progressbar");
       expect(progressBar).toHaveAttribute("aria-valuemin", "0");
       expect(progressBar).toHaveAttribute("aria-valuemax", "100");
@@ -258,7 +347,9 @@ describe("AICacheMetricsDashboard", () => {
     it("refresh button is keyboard accessible", () => {
       const onRefresh = vi.fn();
       render(
-        <AICacheMetricsDashboard {...defaultProps} onRefresh={onRefresh} />,
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} onRefresh={onRefresh} />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button", { name: /refresh/i });
@@ -271,10 +362,12 @@ describe("AICacheMetricsDashboard", () => {
     it("shows green error rate when below 5%", () => {
       const lowErrorSnapshot = { ...mockMetricsSnapshot, errorRate: 0.02 };
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          snapshot={lowErrorSnapshot}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            snapshot={lowErrorSnapshot}
+          />
+        </TestProvider>,
       );
       const errorRateElement = screen.getByTestId("error-rate-value");
       expect(errorRateElement).toHaveClass("text-success-10");
@@ -283,10 +376,12 @@ describe("AICacheMetricsDashboard", () => {
     it("shows yellow error rate between 5-10%", () => {
       const medErrorSnapshot = { ...mockMetricsSnapshot, errorRate: 0.07 };
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          snapshot={medErrorSnapshot}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            snapshot={medErrorSnapshot}
+          />
+        </TestProvider>,
       );
       const errorRateElement = screen.getByTestId("error-rate-value");
       expect(errorRateElement).toHaveClass("text-warning-9");
@@ -295,10 +390,12 @@ describe("AICacheMetricsDashboard", () => {
     it("shows red error rate above 10%", () => {
       const highErrorSnapshot = { ...mockMetricsSnapshot, errorRate: 0.15 };
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          snapshot={highErrorSnapshot}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            snapshot={highErrorSnapshot}
+          />
+        </TestProvider>,
       );
       const errorRateElement = screen.getByTestId("error-rate-value");
       expect(errorRateElement).toHaveClass("text-error-10");
@@ -315,16 +412,22 @@ describe("AICacheMetricsDashboard", () => {
 
     it("displays L1/L2 breakdown section when tieredCacheStats is provided", () => {
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={mockTieredCacheStats}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={mockTieredCacheStats}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Tiered Cache Breakdown")).toBeInTheDocument();
     });
 
     it("does not show tiered breakdown when tieredCacheStats is not provided", () => {
-      render(<AICacheMetricsDashboard {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AICacheMetricsDashboard {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByText("Tiered Cache Breakdown"),
       ).not.toBeInTheDocument();
@@ -332,10 +435,12 @@ describe("AICacheMetricsDashboard", () => {
 
     it("displays L1 (in-memory) hits count", () => {
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={mockTieredCacheStats}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={mockTieredCacheStats}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("l1-hits-value")).toHaveTextContent("50");
       expect(screen.getByText(/L1.*Memory/i)).toBeInTheDocument();
@@ -343,10 +448,12 @@ describe("AICacheMetricsDashboard", () => {
 
     it("displays L2 (sessionStorage) hits count", () => {
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={mockTieredCacheStats}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={mockTieredCacheStats}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("l2-hits-value")).toHaveTextContent("30");
       expect(screen.getByText(/L2.*Session/i)).toBeInTheDocument();
@@ -354,20 +461,24 @@ describe("AICacheMetricsDashboard", () => {
 
     it("displays cache misses count", () => {
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={mockTieredCacheStats}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={mockTieredCacheStats}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("tiered-misses-value")).toHaveTextContent("20");
     });
 
     it("displays cache age in human-readable format", () => {
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={mockTieredCacheStats}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={mockTieredCacheStats}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("cache-age-value")).toHaveTextContent("45s");
     });
@@ -375,31 +486,37 @@ describe("AICacheMetricsDashboard", () => {
     it("displays cache age in minutes when over 60 seconds", () => {
       const oldCache = { ...mockTieredCacheStats, age: 180000 }; // 3 minutes
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={oldCache}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={oldCache}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("cache-age-value")).toHaveTextContent("3m");
     });
 
     it("shows tiered cache progress bar visualization", () => {
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={mockTieredCacheStats}
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={mockTieredCacheStats}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("tiered-cache-bar")).toBeInTheDocument();
     });
 
     it("hides tiered breakdown in compact mode", () => {
       render(
-        <AICacheMetricsDashboard
-          {...defaultProps}
-          tieredCacheStats={mockTieredCacheStats}
-          compact
-        />,
+        <TestProvider>
+          <AICacheMetricsDashboard
+            {...defaultProps}
+            tieredCacheStats={mockTieredCacheStats}
+            compact
+          />
+        </TestProvider>,
       );
       expect(
         screen.queryByText("Tiered Cache Breakdown"),

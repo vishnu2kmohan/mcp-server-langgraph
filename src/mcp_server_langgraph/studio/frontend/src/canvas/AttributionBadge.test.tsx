@@ -8,6 +8,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { AttributionBadge } from "./AttributionBadge";
 import type { EditMetadata } from "../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -16,7 +18,11 @@ afterEach(() => {
 describe("AttributionBadge", () => {
   describe("getAttributionType helper", () => {
     it('should return "user-created" when metadata is undefined', () => {
-      render(<AttributionBadge metadata={undefined} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={undefined} />
+        </TestProvider>,
+      );
       expect(screen.getByText("User-created")).toBeInTheDocument();
     });
 
@@ -26,7 +32,11 @@ describe("AttributionBadge", () => {
         modified: false,
         lastEditedBy: "ai",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       expect(screen.getByText("AI-generated")).toBeInTheDocument();
     });
 
@@ -36,7 +46,11 @@ describe("AttributionBadge", () => {
         modified: true,
         lastEditedBy: "user",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       expect(screen.getByText("User-modified")).toBeInTheDocument();
     });
 
@@ -46,7 +60,11 @@ describe("AttributionBadge", () => {
         modified: false,
         lastEditedBy: "user",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       expect(screen.getByText("User-created")).toBeInTheDocument();
     });
 
@@ -56,7 +74,11 @@ describe("AttributionBadge", () => {
         modified: true,
         lastEditedBy: "user",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       expect(screen.getByText("User-created")).toBeInTheDocument();
     });
   });
@@ -68,7 +90,11 @@ describe("AttributionBadge", () => {
         modified: false,
         lastEditedBy: "ai",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       const badge = screen.getByText("AI-generated").closest("span");
       expect(badge).toHaveClass("bg-insight-3");
       expect(badge).toHaveClass("text-insight-11");
@@ -80,7 +106,11 @@ describe("AttributionBadge", () => {
         modified: true,
         lastEditedBy: "user",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       const badge = screen.getByText("User-modified").closest("span");
       expect(badge).toHaveClass("bg-primary-3");
       expect(badge).toHaveClass("text-primary-11");
@@ -92,7 +122,11 @@ describe("AttributionBadge", () => {
         modified: false,
         lastEditedBy: "user",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       const badge = screen.getByText("User-created").closest("span");
       expect(badge).toHaveClass("bg-neutral-2");
       expect(badge).toHaveClass("text-neutral-11");
@@ -106,7 +140,11 @@ describe("AttributionBadge", () => {
         modified: false,
         lastEditedBy: "ai",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("sparkles-icon")).toBeInTheDocument();
     });
 
@@ -116,12 +154,20 @@ describe("AttributionBadge", () => {
         modified: true,
         lastEditedBy: "user",
       };
-      render(<AttributionBadge metadata={metadata} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("pencil-icon")).toBeInTheDocument();
     });
 
     it("should show user icon for User-created", () => {
-      render(<AttributionBadge metadata={undefined} />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={undefined} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("user-icon")).toBeInTheDocument();
     });
   });
@@ -133,7 +179,11 @@ describe("AttributionBadge", () => {
         modified: false,
         lastEditedBy: "ai",
       };
-      render(<AttributionBadge metadata={metadata} compact />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} compact />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("sparkles-icon")).toBeInTheDocument();
       expect(screen.queryByText("AI-generated")).not.toBeInTheDocument();
     });
@@ -144,7 +194,11 @@ describe("AttributionBadge", () => {
         modified: false,
         lastEditedBy: "ai",
       };
-      render(<AttributionBadge metadata={metadata} compact />);
+      render(
+        <TestProvider>
+          <AttributionBadge metadata={metadata} compact />
+        </TestProvider>,
+      );
       const badge = screen.getByLabelText("AI-generated");
       expect(badge).toBeInTheDocument();
     });

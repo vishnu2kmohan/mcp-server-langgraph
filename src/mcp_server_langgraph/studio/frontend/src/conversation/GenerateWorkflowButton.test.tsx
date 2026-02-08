@@ -32,6 +32,8 @@ import { useGenerateWorkflowFromChat } from "../hooks/useGenerateWorkflowFromCha
 import { useGetFeatureFlagsQuery } from "../api";
 import { GenerateWorkflowButton } from "./GenerateWorkflowButton";
 
+import { TestProvider } from "@/test-utils";
+
 describe("GenerateWorkflowButton", () => {
   const mockGenerate = vi.fn();
   const mockReset = vi.fn();
@@ -63,7 +65,11 @@ describe("GenerateWorkflowButton", () => {
 
   describe("rendering", () => {
     it("should render the button when feature is enabled", () => {
-      render(<GenerateWorkflowButton sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("generate-workflow-button");
       expect(button).toBeInTheDocument();
@@ -75,7 +81,11 @@ describe("GenerateWorkflowButton", () => {
         isLoading: false,
       });
 
-      render(<GenerateWorkflowButton sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("generate-workflow-button"),
@@ -83,7 +93,11 @@ describe("GenerateWorkflowButton", () => {
     });
 
     it("should show tooltip with description", async () => {
-      render(<GenerateWorkflowButton sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("generate-workflow-button");
       expect(button).toHaveAttribute(
@@ -103,7 +117,11 @@ describe("GenerateWorkflowButton", () => {
         },
       );
 
-      render(<GenerateWorkflowButton sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("generate-workflow-button");
       expect(button).toBeDisabled();
@@ -125,7 +143,11 @@ describe("GenerateWorkflowButton", () => {
         },
       });
 
-      render(<GenerateWorkflowButton sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("generate-workflow-button");
       await user.click(button);
@@ -146,14 +168,22 @@ describe("GenerateWorkflowButton", () => {
         },
       );
 
-      render(<GenerateWorkflowButton sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("generate-workflow-button");
       expect(button).toBeDisabled();
     });
 
     it("should be disabled when no sessionId provided", () => {
-      render(<GenerateWorkflowButton sessionId="" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="" />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("generate-workflow-button");
       expect(button).toBeDisabled();
@@ -172,7 +202,11 @@ describe("GenerateWorkflowButton", () => {
         },
       );
 
-      render(<GenerateWorkflowButton sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // Button should show error styling
       const button = screen.getByTestId("generate-workflow-button");
@@ -185,10 +219,12 @@ describe("GenerateWorkflowButton", () => {
       const onSuccess = vi.fn();
 
       render(
-        <GenerateWorkflowButton
-          sessionId="session-123"
-          onSuccess={onSuccess}
-        />,
+        <TestProvider>
+          <GenerateWorkflowButton
+            sessionId="session-123"
+            onSuccess={onSuccess}
+          />
+        </TestProvider>,
       );
 
       // Verify the hook was called with navigateOnSuccess and the callback
@@ -204,7 +240,9 @@ describe("GenerateWorkflowButton", () => {
       const onError = vi.fn();
 
       render(
-        <GenerateWorkflowButton sessionId="session-123" onError={onError} />,
+        <TestProvider>
+          <GenerateWorkflowButton sessionId="session-123" onError={onError} />
+        </TestProvider>,
       );
 
       // Verify the hook was called with the error callback

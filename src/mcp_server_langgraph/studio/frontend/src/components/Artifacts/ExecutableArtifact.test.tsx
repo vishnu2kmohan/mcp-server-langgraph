@@ -8,6 +8,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ExecutableArtifact } from "./ExecutableArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ExecutableArtifact", () => {
   afterEach(() => {
     cleanup();
@@ -19,27 +21,41 @@ describe("ExecutableArtifact", () => {
 
   describe("rendering", () => {
     it("should render code block with language label", () => {
-      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableArtifact data={pythonCode} config={defaultConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByText("python")).toBeInTheDocument();
     });
 
     it("should render the source code", () => {
-      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableArtifact data={pythonCode} config={defaultConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/print.*Hello, World!/)).toBeInTheDocument();
     });
 
     it("should render run button", () => {
-      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableArtifact data={pythonCode} config={defaultConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /run/i })).toBeInTheDocument();
     });
 
     it("should render title if provided", () => {
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          title="My Script"
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            title="My Script"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("My Script")).toBeInTheDocument();
     });
@@ -48,11 +64,13 @@ describe("ExecutableArtifact", () => {
   describe("execution", () => {
     it("should show loading state when running", () => {
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          requireConfirmation={false}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            requireConfirmation={false}
+          />
+        </TestProvider>,
       );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
@@ -67,11 +85,13 @@ describe("ExecutableArtifact", () => {
         executionTime: 150,
       };
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          result={result}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            result={result}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Hello, World!")).toBeInTheDocument();
       expect(screen.getByText(/exit code: 0/i)).toBeInTheDocument();
@@ -84,11 +104,13 @@ describe("ExecutableArtifact", () => {
         exitCode: 1,
       };
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          result={result}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            result={result}
+          />
+        </TestProvider>,
       );
       const errorOutput = screen.getByText(/Something went wrong/);
       expect(errorOutput).toBeInTheDocument();
@@ -103,11 +125,13 @@ describe("ExecutableArtifact", () => {
         executionTime: 250,
       };
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          result={result}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            result={result}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/250ms/)).toBeInTheDocument();
     });
@@ -116,20 +140,24 @@ describe("ExecutableArtifact", () => {
   describe("runtime options", () => {
     it("should display runtime type when configured", () => {
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={{ ...defaultConfig, runtime: "docker" }}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={{ ...defaultConfig, runtime: "docker" }}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/docker/i)).toBeInTheDocument();
     });
 
     it("should display kubernetes runtime", () => {
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={{ ...defaultConfig, runtime: "kubernetes" }}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={{ ...defaultConfig, runtime: "kubernetes" }}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/kubernetes/i)).toBeInTheDocument();
     });
@@ -139,12 +167,14 @@ describe("ExecutableArtifact", () => {
     it("should call onExecute when run button clicked (with confirmation disabled)", () => {
       const onExecute = vi.fn();
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          onExecute={onExecute}
-          requireConfirmation={false}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            onExecute={onExecute}
+            requireConfirmation={false}
+          />
+        </TestProvider>,
       );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
@@ -154,7 +184,11 @@ describe("ExecutableArtifact", () => {
 
   describe("error handling", () => {
     it("should show error for empty code", () => {
-      render(<ExecutableArtifact data="" config={defaultConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableArtifact data="" config={defaultConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no code provided/i)).toBeInTheDocument();
     });
   });
@@ -165,7 +199,11 @@ describe("ExecutableArtifact", () => {
 
   describe("execution confirmation (HITL)", () => {
     it("should show confirmation dialog by default before execution", () => {
-      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableArtifact data={pythonCode} config={defaultConfig} />
+        </TestProvider>,
+      );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
       // Confirmation dialog should appear
@@ -173,7 +211,11 @@ describe("ExecutableArtifact", () => {
     });
 
     it("should display warning message in confirmation dialog", () => {
-      render(<ExecutableArtifact data={pythonCode} config={defaultConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableArtifact data={pythonCode} config={defaultConfig} />
+        </TestProvider>,
+      );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
       expect(
@@ -183,10 +225,12 @@ describe("ExecutableArtifact", () => {
 
     it("should show runtime type in confirmation dialog", () => {
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={{ ...defaultConfig, runtime: "docker" }}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={{ ...defaultConfig, runtime: "docker" }}
+          />
+        </TestProvider>,
       );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
@@ -198,11 +242,13 @@ describe("ExecutableArtifact", () => {
     it("should execute code when Confirm button clicked", () => {
       const onExecute = vi.fn();
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          onExecute={onExecute}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            onExecute={onExecute}
+          />
+        </TestProvider>,
       );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
@@ -215,11 +261,13 @@ describe("ExecutableArtifact", () => {
     it("should close dialog and not execute when Cancel clicked", () => {
       const onExecute = vi.fn();
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          onExecute={onExecute}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            onExecute={onExecute}
+          />
+        </TestProvider>,
       );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);
@@ -235,12 +283,14 @@ describe("ExecutableArtifact", () => {
     it("should skip confirmation when requireConfirmation prop is false", () => {
       const onExecute = vi.fn();
       render(
-        <ExecutableArtifact
-          data={pythonCode}
-          config={defaultConfig}
-          onExecute={onExecute}
-          requireConfirmation={false}
-        />,
+        <TestProvider>
+          <ExecutableArtifact
+            data={pythonCode}
+            config={defaultConfig}
+            onExecute={onExecute}
+            requireConfirmation={false}
+          />
+        </TestProvider>,
       );
       const runButton = screen.getByRole("button", { name: /run/i });
       fireEvent.click(runButton);

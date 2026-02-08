@@ -22,6 +22,8 @@ import React from "react";
 
 import { RetryIndicator, type RetryIndicatorProps } from "./RetryIndicator";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Helpers
 // =============================================================================
@@ -36,7 +38,11 @@ const defaultProps: RetryIndicatorProps = {
 
 function renderRetryIndicator(overrides: Partial<RetryIndicatorProps> = {}) {
   const props = { ...defaultProps, ...overrides };
-  return render(<RetryIndicator {...props} />);
+  return render(
+    <TestProvider>
+      <RetryIndicator {...props} />
+    </TestProvider>,
+  );
 }
 
 // =============================================================================
@@ -224,7 +230,9 @@ describe("RetryIndicator", () => {
   describe("Paused State", () => {
     it("pauses countdown when paused prop is true", async () => {
       const { rerender } = render(
-        <RetryIndicator {...defaultProps} delayMs={5000} paused={false} />,
+        <TestProvider>
+          <RetryIndicator {...defaultProps} delayMs={5000} paused={false} />
+        </TestProvider>,
       );
 
       const countdown = screen.getByTestId("retry-countdown");

@@ -23,6 +23,8 @@ import type { ReasoningEffortLevel } from "./ReasoningEffortSelector";
 import type { KBFocusMode } from "./KnowledgeBaseFocus";
 import type { ToolSelectionMode } from "@/types/tools";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // Mock lucide-react to avoid SVG rendering issues
@@ -78,27 +80,43 @@ describe("PreferencesMenu", () => {
 
   describe("Rendering", () => {
     it("renders the preferences button", () => {
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       expect(button).toBeInTheDocument();
     });
 
     it("renders with settings icon", () => {
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("icon-settings")).toBeInTheDocument();
     });
 
     it("applies custom className when provided", () => {
-      render(<PreferencesMenu {...defaultProps} className="custom-class" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} className="custom-class" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("preferences-menu");
       expect(container).toHaveClass("custom-class");
     });
 
     it("is disabled when disabled prop is true", () => {
-      render(<PreferencesMenu {...defaultProps} disabled />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} disabled />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       expect(button).toBeDisabled();
@@ -108,7 +126,11 @@ describe("PreferencesMenu", () => {
   describe("Menu Interaction", () => {
     it("opens dropdown when button is clicked", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       await user.click(button);
@@ -118,7 +140,11 @@ describe("PreferencesMenu", () => {
 
     it("closes dropdown when clicking outside", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Open menu
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -134,7 +160,11 @@ describe("PreferencesMenu", () => {
 
     it("closes dropdown when Escape is pressed", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Open menu
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -152,7 +182,9 @@ describe("PreferencesMenu", () => {
     it("displays thinking submenu trigger in dropdown", async () => {
       const user = userEvent.setup();
       render(
-        <PreferencesMenu {...defaultProps} selectedModel="claude-opus-4-5" />,
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} selectedModel="claude-opus-4-5" />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -165,7 +197,11 @@ describe("PreferencesMenu", () => {
 
     it("displays current thinking level", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} thinkingLevel="high" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} thinkingLevel="high" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -178,10 +214,12 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onThinkingLevelChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...defaultProps}
-          onThinkingLevelChange={onThinkingLevelChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...defaultProps}
+            onThinkingLevelChange={onThinkingLevelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -211,7 +249,11 @@ describe("PreferencesMenu", () => {
   describe("Tools Section", () => {
     it("displays current tool mode", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} toolMode="manual" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} toolMode="manual" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -224,10 +266,12 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onToolModeChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...defaultProps}
-          onToolModeChange={onToolModeChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...defaultProps}
+            onToolModeChange={onToolModeChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -256,7 +300,11 @@ describe("PreferencesMenu", () => {
   describe("KB Focus Section", () => {
     it("displays current KB focus mode", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} kbFocusMode="kb_only" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} kbFocusMode="kb_only" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -269,7 +317,12 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onKBFocusChange = vi.fn();
       render(
-        <PreferencesMenu {...defaultProps} onKBFocusChange={onKBFocusChange} />,
+        <TestProvider>
+          <PreferencesMenu
+            {...defaultProps}
+            onKBFocusChange={onKBFocusChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -297,7 +350,11 @@ describe("PreferencesMenu", () => {
 
   describe("Accessibility", () => {
     it("has correct aria-label", () => {
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       expect(button).toHaveAttribute("aria-label", "Open preferences menu");
@@ -305,7 +362,11 @@ describe("PreferencesMenu", () => {
 
     it("has aria-expanded reflecting menu state", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       expect(button).toHaveAttribute("aria-expanded", "false");
@@ -316,7 +377,11 @@ describe("PreferencesMenu", () => {
 
     it("dropdown has role='menu'", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -326,7 +391,11 @@ describe("PreferencesMenu", () => {
 
     it("is keyboard navigable", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Tab to button and open with Enter
       await user.tab();
@@ -336,7 +405,11 @@ describe("PreferencesMenu", () => {
     });
 
     it("meets WCAG 2.5.8 touch target size", () => {
-      render(<PreferencesMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       expect(button).toHaveClass("min-h-8"); // 32px = 8 * 4px
@@ -345,14 +418,22 @@ describe("PreferencesMenu", () => {
 
   describe("Compact Mode", () => {
     it("renders in compact mode when compact prop is true", () => {
-      render(<PreferencesMenu {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       expect(button).toHaveClass("px-2");
     });
 
     it("hides label text in compact mode", () => {
-      render(<PreferencesMenu {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       // In compact mode, no "Preferences" text should be visible
       expect(screen.queryByText("Preferences")).not.toBeInTheDocument();
@@ -361,13 +442,21 @@ describe("PreferencesMenu", () => {
 
   describe("Loading States", () => {
     it("shows loading indicator when isLoading is true", () => {
-      render(<PreferencesMenu {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("preferences-loading")).toBeInTheDocument();
     });
 
     it("disables button when loading", () => {
-      render(<PreferencesMenu {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       const button = screen.getByTestId("preferences-menu-trigger");
       expect(button).toBeDisabled();
@@ -395,7 +484,9 @@ describe("PreferencesMenu", () => {
     it("displays current model value in collapsed trigger", async () => {
       const user = userEvent.setup();
       render(
-        <PreferencesMenu {...modelsProps} selectedModel="claude-opus-4-5" />,
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} selectedModel="claude-opus-4-5" />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -406,7 +497,11 @@ describe("PreferencesMenu", () => {
 
     it("displays current thinking level in collapsed trigger", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} thinkingLevel="high" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} thinkingLevel="high" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -416,7 +511,11 @@ describe("PreferencesMenu", () => {
 
     it("displays current tool mode in collapsed trigger", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} toolMode="manual" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} toolMode="manual" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -426,7 +525,11 @@ describe("PreferencesMenu", () => {
 
     it("displays current KB focus mode in collapsed trigger", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} kbFocusMode="kb_only" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} kbFocusMode="kb_only" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -436,7 +539,11 @@ describe("PreferencesMenu", () => {
 
     it("opens model submenu on hover", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -453,11 +560,13 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onThinkingLevelChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          thinkingLevel="medium"
-          onThinkingLevelChange={onThinkingLevelChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            thinkingLevel="medium"
+            onThinkingLevelChange={onThinkingLevelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -483,7 +592,11 @@ describe("PreferencesMenu", () => {
 
     it("opens tools submenu with nested tool provider sub-submenu", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} toolPreference="auto" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} toolPreference="auto" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -500,7 +613,11 @@ describe("PreferencesMenu", () => {
 
     it("supports keyboard navigation with ArrowRight to open submenu", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -514,7 +631,11 @@ describe("PreferencesMenu", () => {
 
     it("supports keyboard navigation with ArrowLeft to close submenu", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -534,7 +655,11 @@ describe("PreferencesMenu", () => {
 
     it("closes entire menu with Escape key", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -553,7 +678,11 @@ describe("PreferencesMenu", () => {
 
     it("shows empty state when no models available", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...defaultProps} availableModels={[]} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} availableModels={[]} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -568,11 +697,13 @@ describe("PreferencesMenu", () => {
     it("shows loading state when models are loading", async () => {
       const user = userEvent.setup();
       render(
-        <PreferencesMenu
-          {...defaultProps}
-          availableModels={[]}
-          isModelsLoading={true}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...defaultProps}
+            availableModels={[]}
+            isModelsLoading={true}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -602,7 +733,11 @@ describe("PreferencesMenu", () => {
 
     it("submenu triggers have aria-haspopup='menu'", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -612,7 +747,11 @@ describe("PreferencesMenu", () => {
 
     it("submenu items have role='menuitemradio' for selection", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} thinkingLevel="medium" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} thinkingLevel="medium" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -626,7 +765,11 @@ describe("PreferencesMenu", () => {
 
     it("selected submenu item has aria-checked='true'", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} thinkingLevel="medium" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} thinkingLevel="medium" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -655,7 +798,11 @@ describe("PreferencesMenu", () => {
 
     it("main menu shows 4 compact items (Model, Thinking, Tools, KB)", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -670,7 +817,11 @@ describe("PreferencesMenu", () => {
 
     it("menu fits within viewport (no overflow)", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -698,7 +849,11 @@ describe("PreferencesMenu", () => {
     };
 
     it("has no accessibility violations when closed", async () => {
-      const { container } = render(<PreferencesMenu {...modelsProps} />);
+      const { container } = render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -706,7 +861,11 @@ describe("PreferencesMenu", () => {
 
     it("has no accessibility violations when menu is open", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
       await screen.findByTestId("preferences-dropdown");
@@ -721,7 +880,11 @@ describe("PreferencesMenu", () => {
 
     it("has no accessibility violations with submenu open", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
       await user.click(screen.getByTestId("submenu-trigger-thinking"));
@@ -750,7 +913,11 @@ describe("PreferencesMenu", () => {
 
     it("restores focus to trigger after closing with Escape", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("preferences-menu-trigger");
       await user.click(trigger);
@@ -769,11 +936,13 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onThinkingLevelChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          thinkingLevel="medium"
-          onThinkingLevelChange={onThinkingLevelChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            thinkingLevel="medium"
+            onThinkingLevelChange={onThinkingLevelChange}
+          />
+        </TestProvider>,
       );
 
       const trigger = screen.getByTestId("preferences-menu-trigger");
@@ -807,7 +976,11 @@ describe("PreferencesMenu", () => {
 
     it("renders Provider submenu trigger inside Tools submenu", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -824,7 +997,11 @@ describe("PreferencesMenu", () => {
 
     it("Provider submenu trigger displays current preference value", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} toolPreference="native" />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} toolPreference="native" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -841,7 +1018,11 @@ describe("PreferencesMenu", () => {
 
     it("closes Tools submenu and all nested with Escape", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
 
@@ -880,7 +1061,11 @@ describe("PreferencesMenu", () => {
 
     it("has motion-reduce classes on dropdown content for accessibility", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
       const dropdown = await screen.findByTestId("preferences-dropdown");
@@ -892,7 +1077,11 @@ describe("PreferencesMenu", () => {
 
     it("has motion-reduce classes on submenu content", async () => {
       const user = userEvent.setup();
-      render(<PreferencesMenu {...modelsProps} />);
+      render(
+        <TestProvider>
+          <PreferencesMenu {...modelsProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
       await user.click(screen.getByTestId("submenu-trigger-thinking"));
@@ -925,11 +1114,13 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onToolModeChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          toolMode="auto"
-          onToolModeChange={onToolModeChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            toolMode="auto"
+            onToolModeChange={onToolModeChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -956,12 +1147,14 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onExecutorModelChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          critiqueLoopEnabled={true}
-          executorModel={null}
-          onExecutorModelChange={onExecutorModelChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            critiqueLoopEnabled={true}
+            executorModel={null}
+            onExecutorModelChange={onExecutorModelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -989,12 +1182,14 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onCriticModelChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          critiqueLoopEnabled={true}
-          criticModel={null}
-          onCriticModelChange={onCriticModelChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            critiqueLoopEnabled={true}
+            criticModel={null}
+            onCriticModelChange={onCriticModelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1020,11 +1215,13 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onModelChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          selectedModel="claude-opus-4-5"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            selectedModel="claude-opus-4-5"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1051,11 +1248,13 @@ describe("PreferencesMenu", () => {
       // unreliable in JSDOM. This test verifies the UI wiring is correct.
       const user = userEvent.setup();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          toolPreference="native"
-          onToolPreferenceChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            toolPreference="native"
+            onToolPreferenceChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1109,13 +1308,15 @@ describe("PreferencesMenu", () => {
     it("shows selected tools submenu when toolMode is manual", async () => {
       const user = userEvent.setup();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          toolMode="manual"
-          availableTools={mockTools}
-          selectedTools={["web_search"]}
-          onToolsChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            toolMode="manual"
+            availableTools={mockTools}
+            selectedTools={["web_search"]}
+            onToolsChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1134,13 +1335,15 @@ describe("PreferencesMenu", () => {
     it("hides selected tools submenu when toolMode is auto", async () => {
       const user = userEvent.setup();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          toolMode="auto"
-          availableTools={mockTools}
-          selectedTools={[]}
-          onToolsChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            toolMode="auto"
+            availableTools={mockTools}
+            selectedTools={[]}
+            onToolsChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1159,13 +1362,15 @@ describe("PreferencesMenu", () => {
     it("displays count of selected tools in trigger", async () => {
       const user = userEvent.setup();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          toolMode="manual"
-          availableTools={mockTools}
-          selectedTools={["web_search", "code_execution"]}
-          onToolsChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            toolMode="manual"
+            availableTools={mockTools}
+            selectedTools={["web_search", "code_execution"]}
+            onToolsChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1186,13 +1391,15 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onToolsChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          toolMode="manual"
-          availableTools={mockTools}
-          selectedTools={["web_search"]}
-          onToolsChange={onToolsChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            toolMode="manual"
+            availableTools={mockTools}
+            selectedTools={["web_search"]}
+            onToolsChange={onToolsChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));
@@ -1219,13 +1426,15 @@ describe("PreferencesMenu", () => {
       const user = userEvent.setup({ pointerEventsCheck: 0 });
       const onToolsChange = vi.fn();
       render(
-        <PreferencesMenu
-          {...modelsProps}
-          toolMode="manual"
-          availableTools={mockTools}
-          selectedTools={["web_search", "code_execution"]}
-          onToolsChange={onToolsChange}
-        />,
+        <TestProvider>
+          <PreferencesMenu
+            {...modelsProps}
+            toolMode="manual"
+            availableTools={mockTools}
+            selectedTools={["web_search", "code_execution"]}
+            onToolsChange={onToolsChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("preferences-menu-trigger"));

@@ -23,6 +23,8 @@ import {
   mdxComponents,
 } from "./MDXArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 describe("MDXArtifact", () => {
   afterEach(() => {
     cleanup();
@@ -31,17 +33,29 @@ describe("MDXArtifact", () => {
 
   describe("Main Component", () => {
     it("should render MDX content", () => {
-      render(<MDXArtifact data="# Hello World" />);
+      render(
+        <TestProvider>
+          <MDXArtifact data="# Hello World" />
+        </TestProvider>,
+      );
       expect(screen.getByText("# Hello World")).toBeInTheDocument();
     });
 
     it("should render with title when provided", () => {
-      render(<MDXArtifact data="content" title="Test Document" />);
+      render(
+        <TestProvider>
+          <MDXArtifact data="content" title="Test Document" />
+        </TestProvider>,
+      );
       expect(screen.getByText("Test Document")).toBeInTheDocument();
     });
 
     it("should render without title when not provided", () => {
-      render(<MDXArtifact data="content" />);
+      render(
+        <TestProvider>
+          <MDXArtifact data="content" />
+        </TestProvider>,
+      );
       expect(screen.queryByRole("heading")).not.toBeInTheDocument();
     });
 
@@ -52,12 +66,20 @@ describe("MDXArtifact", () => {
       };
       // Custom components are merged with built-in components for rendering
       // The component renders successfully when custom components are provided
-      render(<MDXArtifact data="content" components={customComponents} />);
+      render(
+        <TestProvider>
+          <MDXArtifact data="content" components={customComponents} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("mdx-artifact")).toBeInTheDocument();
     });
 
     it("should not show components badge when no custom components", () => {
-      render(<MDXArtifact data="content" />);
+      render(
+        <TestProvider>
+          <MDXArtifact data="content" />
+        </TestProvider>,
+      );
       expect(screen.queryByText(/custom components/)).not.toBeInTheDocument();
     });
   });
@@ -65,9 +87,11 @@ describe("MDXArtifact", () => {
   describe("Accordion Component", () => {
     it("should render collapsed by default", () => {
       render(
-        <Accordion title="Click me">
-          <p>Hidden content</p>
-        </Accordion>,
+        <TestProvider>
+          <Accordion title="Click me">
+            <p>Hidden content</p>
+          </Accordion>
+        </TestProvider>,
       );
       expect(screen.getByText("Click me")).toBeInTheDocument();
       expect(screen.queryByText("Hidden content")).not.toBeInTheDocument();
@@ -75,9 +99,11 @@ describe("MDXArtifact", () => {
 
     it("should expand when clicked", () => {
       render(
-        <Accordion title="Click me">
-          <p>Hidden content</p>
-        </Accordion>,
+        <TestProvider>
+          <Accordion title="Click me">
+            <p>Hidden content</p>
+          </Accordion>
+        </TestProvider>,
       );
       fireEvent.click(screen.getByRole("button"));
       expect(screen.getByText("Hidden content")).toBeInTheDocument();
@@ -85,9 +111,11 @@ describe("MDXArtifact", () => {
 
     it("should collapse when clicked again", () => {
       render(
-        <Accordion title="Click me">
-          <p>Hidden content</p>
-        </Accordion>,
+        <TestProvider>
+          <Accordion title="Click me">
+            <p>Hidden content</p>
+          </Accordion>
+        </TestProvider>,
       );
       const button = screen.getByRole("button");
       fireEvent.click(button);
@@ -98,18 +126,22 @@ describe("MDXArtifact", () => {
 
     it("should render open when defaultOpen is true", () => {
       render(
-        <Accordion title="Click me" defaultOpen>
-          <p>Visible content</p>
-        </Accordion>,
+        <TestProvider>
+          <Accordion title="Click me" defaultOpen>
+            <p>Visible content</p>
+          </Accordion>
+        </TestProvider>,
       );
       expect(screen.getByText("Visible content")).toBeInTheDocument();
     });
 
     it("should render icon when provided", () => {
       render(
-        <Accordion title="Click me" icon={<span data-testid="icon">🎉</span>}>
-          <p>Content</p>
-        </Accordion>,
+        <TestProvider>
+          <Accordion title="Click me" icon={<span data-testid="icon">🎉</span>}>
+            <p>Content</p>
+          </Accordion>
+        </TestProvider>,
       );
       expect(screen.getByTestId("icon")).toBeInTheDocument();
     });
@@ -118,10 +150,12 @@ describe("MDXArtifact", () => {
   describe("AccordionGroup Component", () => {
     it("should render children", () => {
       render(
-        <AccordionGroup>
-          <Accordion title="First">Content 1</Accordion>
-          <Accordion title="Second">Content 2</Accordion>
-        </AccordionGroup>,
+        <TestProvider>
+          <AccordionGroup>
+            <Accordion title="First">Content 1</Accordion>
+            <Accordion title="Second">Content 2</Accordion>
+          </AccordionGroup>
+        </TestProvider>,
       );
       expect(screen.getByText("First")).toBeInTheDocument();
       expect(screen.getByText("Second")).toBeInTheDocument();
@@ -130,92 +164,148 @@ describe("MDXArtifact", () => {
 
   describe("Callout Component", () => {
     it("should render note type by default", () => {
-      render(<Callout>This is a note</Callout>);
+      render(
+        <TestProvider>
+          <Callout>This is a note</Callout>
+        </TestProvider>,
+      );
       expect(screen.getByText("This is a note")).toBeInTheDocument();
     });
 
     it("should render with title when provided", () => {
-      render(<Callout title="Important">Content here</Callout>);
+      render(
+        <TestProvider>
+          <Callout title="Important">Content here</Callout>
+        </TestProvider>,
+      );
       expect(screen.getByText("Important")).toBeInTheDocument();
       expect(screen.getByText("Content here")).toBeInTheDocument();
     });
 
     it("should render with emoji when provided", () => {
-      render(<Callout emoji="🚀">Rocket content</Callout>);
+      render(
+        <TestProvider>
+          <Callout emoji="🚀">Rocket content</Callout>
+        </TestProvider>,
+      );
       expect(screen.getByText("🚀")).toBeInTheDocument();
     });
 
     it("should render warning type", () => {
-      render(<Callout type="warning">Warning message</Callout>);
+      render(
+        <TestProvider>
+          <Callout type="warning">Warning message</Callout>
+        </TestProvider>,
+      );
       expect(screen.getByText("Warning message")).toBeInTheDocument();
     });
 
     it("should render tip type", () => {
-      render(<Callout type="tip">Helpful tip</Callout>);
+      render(
+        <TestProvider>
+          <Callout type="tip">Helpful tip</Callout>
+        </TestProvider>,
+      );
       expect(screen.getByText("Helpful tip")).toBeInTheDocument();
     });
 
     it("should render info type", () => {
-      render(<Callout type="info">Info message</Callout>);
+      render(
+        <TestProvider>
+          <Callout type="info">Info message</Callout>
+        </TestProvider>,
+      );
       expect(screen.getByText("Info message")).toBeInTheDocument();
     });
 
     it("should render check type", () => {
-      render(<Callout type="check">Success message</Callout>);
+      render(
+        <TestProvider>
+          <Callout type="check">Success message</Callout>
+        </TestProvider>,
+      );
       expect(screen.getByText("Success message")).toBeInTheDocument();
     });
   });
 
   describe("Shorthand Callouts", () => {
     it("should render Note component", () => {
-      render(<Note>Note content</Note>);
+      render(
+        <TestProvider>
+          <Note>Note content</Note>
+        </TestProvider>,
+      );
       expect(screen.getByText("Note content")).toBeInTheDocument();
     });
 
     it("should render Warning component", () => {
-      render(<Warning>Warning content</Warning>);
+      render(
+        <TestProvider>
+          <Warning>Warning content</Warning>
+        </TestProvider>,
+      );
       expect(screen.getByText("Warning content")).toBeInTheDocument();
     });
 
     it("should render Tip component", () => {
-      render(<Tip>Tip content</Tip>);
+      render(
+        <TestProvider>
+          <Tip>Tip content</Tip>
+        </TestProvider>,
+      );
       expect(screen.getByText("Tip content")).toBeInTheDocument();
     });
   });
 
   describe("Card Component", () => {
     it("should render card with title", () => {
-      render(<Card title="Card Title">Card content</Card>);
+      render(
+        <TestProvider>
+          <Card title="Card Title">Card content</Card>
+        </TestProvider>,
+      );
       expect(screen.getByText("Card Title")).toBeInTheDocument();
       expect(screen.getByText("Card content")).toBeInTheDocument();
     });
 
     it("should render card without children", () => {
-      render(<Card title="Title Only" />);
+      render(
+        <TestProvider>
+          <Card title="Title Only" />
+        </TestProvider>,
+      );
       expect(screen.getByText("Title Only")).toBeInTheDocument();
     });
 
     it("should render card with icon", () => {
       render(
-        <Card title="Card" icon={<span data-testid="card-icon">📦</span>}>
-          Content
-        </Card>,
+        <TestProvider>
+          <Card title="Card" icon={<span data-testid="card-icon">📦</span>}>
+            Content
+          </Card>
+        </TestProvider>,
       );
       expect(screen.getByTestId("card-icon")).toBeInTheDocument();
     });
 
     it("should render as link when href provided", () => {
       render(
-        <Card title="Link Card" href="/some-path">
-          Clickable
-        </Card>,
+        <TestProvider>
+          <Card title="Link Card" href="/some-path">
+            Clickable
+          </Card>
+        </TestProvider>,
       );
       const link = screen.getByRole("link");
       expect(link).toHaveAttribute("href", "/some-path");
     });
 
     it("should not render as link when no href", () => {
-      render(<Card title="No Link">Not clickable</Card>);
+      render(
+        <TestProvider>
+          <Card title="No Link">Not clickable</Card>
+        </TestProvider>,
+      );
       expect(screen.queryByRole("link")).not.toBeInTheDocument();
     });
   });
@@ -223,10 +313,12 @@ describe("MDXArtifact", () => {
   describe("CardGroup Component", () => {
     it("should render cards in grid", () => {
       render(
-        <CardGroup>
-          <Card title="Card 1">Content 1</Card>
-          <Card title="Card 2">Content 2</Card>
-        </CardGroup>,
+        <TestProvider>
+          <CardGroup>
+            <Card title="Card 1">Content 1</Card>
+            <Card title="Card 2">Content 2</Card>
+          </CardGroup>
+        </TestProvider>,
       );
       expect(screen.getByText("Card 1")).toBeInTheDocument();
       expect(screen.getByText("Card 2")).toBeInTheDocument();
@@ -234,9 +326,11 @@ describe("MDXArtifact", () => {
 
     it("should use custom column count", () => {
       const { container } = render(
-        <CardGroup cols={3}>
-          <Card title="Card 1">Content</Card>
-        </CardGroup>,
+        <TestProvider>
+          <CardGroup cols={3}>
+            <Card title="Card 1">Content</Card>
+          </CardGroup>
+        </TestProvider>,
       );
       const grid = container.querySelector('[style*="repeat(3"]');
       expect(grid).toBeInTheDocument();
@@ -246,20 +340,24 @@ describe("MDXArtifact", () => {
   describe("Tabs Component", () => {
     it("should render first tab content by default", () => {
       render(
-        <Tabs>
-          <Tab title="First">First content</Tab>
-          <Tab title="Second">Second content</Tab>
-        </Tabs>,
+        <TestProvider>
+          <Tabs>
+            <Tab title="First">First content</Tab>
+            <Tab title="Second">Second content</Tab>
+          </Tabs>
+        </TestProvider>,
       );
       expect(screen.getByText("First content")).toBeInTheDocument();
     });
 
     it("should switch tabs when clicked", () => {
       render(
-        <Tabs>
-          <Tab title="First">First content</Tab>
-          <Tab title="Second">Second content</Tab>
-        </Tabs>,
+        <TestProvider>
+          <Tabs>
+            <Tab title="First">First content</Tab>
+            <Tab title="Second">Second content</Tab>
+          </Tabs>
+        </TestProvider>,
       );
       fireEvent.click(screen.getByText("Second"));
       expect(screen.getByText("Second content")).toBeInTheDocument();
@@ -267,17 +365,23 @@ describe("MDXArtifact", () => {
 
     it("should render tab buttons", () => {
       render(
-        <Tabs>
-          <Tab title="Tab A">Content A</Tab>
-          <Tab title="Tab B">Content B</Tab>
-        </Tabs>,
+        <TestProvider>
+          <Tabs>
+            <Tab title="Tab A">Content A</Tab>
+            <Tab title="Tab B">Content B</Tab>
+          </Tabs>
+        </TestProvider>,
       );
       expect(screen.getByText("Tab A")).toBeInTheDocument();
       expect(screen.getByText("Tab B")).toBeInTheDocument();
     });
 
     it("should handle empty tabs gracefully", () => {
-      render(<Tabs>{null}</Tabs>);
+      render(
+        <TestProvider>
+          <Tabs>{null}</Tabs>
+        </TestProvider>,
+      );
       // Should not crash
       expect(document.body).toBeInTheDocument();
     });
@@ -286,10 +390,12 @@ describe("MDXArtifact", () => {
   describe("Steps Component", () => {
     it("should render steps", () => {
       render(
-        <Steps>
-          <Step title="Step 1">First step content</Step>
-          <Step title="Step 2">Second step content</Step>
-        </Steps>,
+        <TestProvider>
+          <Steps>
+            <Step title="Step 1">First step content</Step>
+            <Step title="Step 2">Second step content</Step>
+          </Steps>
+        </TestProvider>,
       );
       expect(screen.getByText("Step 1")).toBeInTheDocument();
       expect(screen.getByText("First step content")).toBeInTheDocument();
@@ -310,12 +416,20 @@ describe("MDXArtifact", () => {
 
     describe("Info Component", () => {
       it("should render info callout", () => {
-        render(<Info>Information message</Info>);
+        render(
+          <TestProvider>
+            <Info>Information message</Info>
+          </TestProvider>,
+        );
         expect(screen.getByText("Information message")).toBeInTheDocument();
       });
 
       it("should render with title", () => {
-        render(<Info title="FYI">Details here</Info>);
+        render(
+          <TestProvider>
+            <Info title="FYI">Details here</Info>
+          </TestProvider>,
+        );
         expect(screen.getByText("FYI")).toBeInTheDocument();
         expect(screen.getByText("Details here")).toBeInTheDocument();
       });
@@ -323,14 +437,22 @@ describe("MDXArtifact", () => {
 
     describe("Check Component", () => {
       it("should render check/success callout", () => {
-        render(<Check>Task completed successfully!</Check>);
+        render(
+          <TestProvider>
+            <Check>Task completed successfully!</Check>
+          </TestProvider>,
+        );
         expect(
           screen.getByText("Task completed successfully!"),
         ).toBeInTheDocument();
       });
 
       it("should render with title", () => {
-        render(<Check title="Done">All tests passed</Check>);
+        render(
+          <TestProvider>
+            <Check title="Done">All tests passed</Check>
+          </TestProvider>,
+        );
         expect(screen.getByText("Done")).toBeInTheDocument();
         expect(screen.getByText("All tests passed")).toBeInTheDocument();
       });
@@ -339,10 +461,12 @@ describe("MDXArtifact", () => {
     describe("CodeGroup Component", () => {
       it("should render code group container", () => {
         render(
-          <CodeGroup>
-            <pre>python code</pre>
-            <pre>javascript code</pre>
-          </CodeGroup>,
+          <TestProvider>
+            <CodeGroup>
+              <pre>python code</pre>
+              <pre>javascript code</pre>
+            </CodeGroup>
+          </TestProvider>,
         );
         expect(screen.getByText("Code Examples")).toBeInTheDocument();
         expect(screen.getByText("python code")).toBeInTheDocument();
@@ -353,18 +477,22 @@ describe("MDXArtifact", () => {
     describe("Frame Component", () => {
       it("should render frame without caption", () => {
         render(
-          <Frame>
-            <img src="test.png" alt="Test" />
-          </Frame>,
+          <TestProvider>
+            <Frame>
+              <img src="test.png" alt="Test" />
+            </Frame>
+          </TestProvider>,
         );
         expect(screen.getByRole("img")).toBeInTheDocument();
       });
 
       it("should render frame with caption", () => {
         render(
-          <Frame caption="Example image">
-            <img src="test.png" alt="Test" />
-          </Frame>,
+          <TestProvider>
+            <Frame caption="Example image">
+              <img src="test.png" alt="Test" />
+            </Frame>
+          </TestProvider>,
         );
         expect(screen.getByText("Example image")).toBeInTheDocument();
       });
@@ -373,9 +501,11 @@ describe("MDXArtifact", () => {
     describe("Expandable Component", () => {
       it("should render collapsed by default", () => {
         render(
-          <Expandable title="Show more">
-            <p>Hidden details</p>
-          </Expandable>,
+          <TestProvider>
+            <Expandable title="Show more">
+              <p>Hidden details</p>
+            </Expandable>
+          </TestProvider>,
         );
         expect(screen.getByText("Show more")).toBeInTheDocument();
         expect(screen.queryByText("Hidden details")).not.toBeInTheDocument();
@@ -383,9 +513,11 @@ describe("MDXArtifact", () => {
 
       it("should expand when clicked", () => {
         render(
-          <Expandable title="Show more">
-            <p>Hidden details</p>
-          </Expandable>,
+          <TestProvider>
+            <Expandable title="Show more">
+              <p>Hidden details</p>
+            </Expandable>
+          </TestProvider>,
         );
         fireEvent.click(screen.getByRole("button"));
         expect(screen.getByText("Hidden details")).toBeInTheDocument();
@@ -393,9 +525,11 @@ describe("MDXArtifact", () => {
 
       it("should collapse when clicked again", () => {
         render(
-          <Expandable title="Show more">
-            <p>Hidden details</p>
-          </Expandable>,
+          <TestProvider>
+            <Expandable title="Show more">
+              <p>Hidden details</p>
+            </Expandable>
+          </TestProvider>,
         );
         const button = screen.getByRole("button");
         fireEvent.click(button);
@@ -407,33 +541,57 @@ describe("MDXArtifact", () => {
 
     describe("Icon Component", () => {
       it("should render check icon", () => {
-        render(<Icon icon="check" />);
+        render(
+          <TestProvider>
+            <Icon icon="check" />
+          </TestProvider>,
+        );
         // Icon should be rendered with aria-label
         expect(screen.getByLabelText("check")).toBeInTheDocument();
       });
 
       it("should render info icon", () => {
-        render(<Icon icon="info" />);
+        render(
+          <TestProvider>
+            <Icon icon="info" />
+          </TestProvider>,
+        );
         expect(screen.getByLabelText("info")).toBeInTheDocument();
       });
 
       it("should render warning icon", () => {
-        render(<Icon icon="warning" />);
+        render(
+          <TestProvider>
+            <Icon icon="warning" />
+          </TestProvider>,
+        );
         expect(screen.getByLabelText("warning")).toBeInTheDocument();
       });
 
       it("should render lightbulb icon", () => {
-        render(<Icon icon="lightbulb" />);
+        render(
+          <TestProvider>
+            <Icon icon="lightbulb" />
+          </TestProvider>,
+        );
         expect(screen.getByLabelText("lightbulb")).toBeInTheDocument();
       });
 
       it("should render fallback for unknown icons", () => {
-        render(<Icon icon="unknown" />);
+        render(
+          <TestProvider>
+            <Icon icon="unknown" />
+          </TestProvider>,
+        );
         expect(screen.getByLabelText("unknown")).toBeInTheDocument();
       });
 
       it("should accept size prop", () => {
-        render(<Icon icon="check" size={24} />);
+        render(
+          <TestProvider>
+            <Icon icon="check" size={24} />
+          </TestProvider>,
+        );
         const iconElement = screen.getByLabelText("check");
         expect(iconElement).toHaveStyle({ width: "24px", height: "24px" });
       });
@@ -441,16 +599,22 @@ describe("MDXArtifact", () => {
 
     describe("ResponseField Component", () => {
       it("should render response field with name", () => {
-        render(<ResponseField name="id">The unique identifier</ResponseField>);
+        render(
+          <TestProvider>
+            <ResponseField name="id">The unique identifier</ResponseField>
+          </TestProvider>,
+        );
         expect(screen.getByText("id")).toBeInTheDocument();
         expect(screen.getByText("The unique identifier")).toBeInTheDocument();
       });
 
       it("should render with type", () => {
         render(
-          <ResponseField name="count" type="number">
-            The count value
-          </ResponseField>,
+          <TestProvider>
+            <ResponseField name="count" type="number">
+              The count value
+            </ResponseField>
+          </TestProvider>,
         );
         expect(screen.getByText("count")).toBeInTheDocument();
         expect(screen.getByText("number")).toBeInTheDocument();
@@ -458,15 +622,21 @@ describe("MDXArtifact", () => {
 
       it("should show required badge when required", () => {
         render(
-          <ResponseField name="email" required>
-            User email address
-          </ResponseField>,
+          <TestProvider>
+            <ResponseField name="email" required>
+              User email address
+            </ResponseField>
+          </TestProvider>,
         );
         expect(screen.getByText("required")).toBeInTheDocument();
       });
 
       it("should render without children", () => {
-        render(<ResponseField name="data" type="object" />);
+        render(
+          <TestProvider>
+            <ResponseField name="data" type="object" />
+          </TestProvider>,
+        );
         expect(screen.getByText("data")).toBeInTheDocument();
         expect(screen.getByText("object")).toBeInTheDocument();
       });
@@ -474,7 +644,11 @@ describe("MDXArtifact", () => {
 
     describe("ParamField Component", () => {
       it("should render param field with path parameter", () => {
-        render(<ParamField path="user_id">The user ID to fetch</ParamField>);
+        render(
+          <TestProvider>
+            <ParamField path="user_id">The user ID to fetch</ParamField>
+          </TestProvider>,
+        );
         expect(screen.getByText("user_id")).toBeInTheDocument();
         expect(screen.getByText("path")).toBeInTheDocument();
         expect(screen.getByText("The user ID to fetch")).toBeInTheDocument();
@@ -482,9 +656,11 @@ describe("MDXArtifact", () => {
 
       it("should render query parameter", () => {
         render(
-          <ParamField query="limit" type="integer">
-            Maximum results to return
-          </ParamField>,
+          <TestProvider>
+            <ParamField query="limit" type="integer">
+              Maximum results to return
+            </ParamField>
+          </TestProvider>,
         );
         expect(screen.getByText("limit")).toBeInTheDocument();
         expect(screen.getByText("query")).toBeInTheDocument();
@@ -493,9 +669,11 @@ describe("MDXArtifact", () => {
 
       it("should render body parameter", () => {
         render(
-          <ParamField body="payload" type="object">
-            Request body data
-          </ParamField>,
+          <TestProvider>
+            <ParamField body="payload" type="object">
+              Request body data
+            </ParamField>
+          </TestProvider>,
         );
         expect(screen.getByText("payload")).toBeInTheDocument();
         expect(screen.getByText("body")).toBeInTheDocument();
@@ -503,15 +681,21 @@ describe("MDXArtifact", () => {
 
       it("should show required badge when required", () => {
         render(
-          <ParamField path="id" required>
-            Required parameter
-          </ParamField>,
+          <TestProvider>
+            <ParamField path="id" required>
+              Required parameter
+            </ParamField>
+          </TestProvider>,
         );
         expect(screen.getByText("required")).toBeInTheDocument();
       });
 
       it("should render without children", () => {
-        render(<ParamField query="page" type="integer" />);
+        render(
+          <TestProvider>
+            <ParamField query="page" type="integer" />
+          </TestProvider>,
+        );
         expect(screen.getByText("page")).toBeInTheDocument();
         expect(screen.getByText("query")).toBeInTheDocument();
       });

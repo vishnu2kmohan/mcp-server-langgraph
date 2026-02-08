@@ -8,6 +8,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { FeatureFlagToggle } from "./FeatureFlagToggle";
 
+import { TestProvider } from "@/test-utils";
+
 // Storage key used by the component
 const STORAGE_KEY = "studio-studio-shell-override";
 
@@ -24,13 +26,21 @@ describe("FeatureFlagToggle", () => {
 
   describe("Visibility", () => {
     it("renders in development mode", () => {
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("feature-flag-toggle")).toBeInTheDocument();
     });
 
     it("does not render in production mode by default", () => {
-      render(<FeatureFlagToggle isDev={false} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={false} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("feature-flag-toggle"),
@@ -38,7 +48,11 @@ describe("FeatureFlagToggle", () => {
     });
 
     it("can be forced to show in production with forceShow prop", () => {
-      render(<FeatureFlagToggle isDev={false} forceShow={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={false} forceShow={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("feature-flag-toggle")).toBeInTheDocument();
     });
@@ -46,13 +60,21 @@ describe("FeatureFlagToggle", () => {
 
   describe("Toggle Functionality", () => {
     it("shows toggle button with shell mode label", () => {
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/shell mode/i)).toBeInTheDocument();
     });
 
     it("displays current mode (hybrid/legacy)", () => {
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       // Should show hybrid or legacy depending on current state
       expect(screen.getByTestId("current-mode")).toBeInTheDocument();
@@ -60,7 +82,11 @@ describe("FeatureFlagToggle", () => {
 
     it("calls onChange when toggle is clicked", () => {
       const onChange = vi.fn();
-      render(<FeatureFlagToggle isDev={true} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} onChange={onChange} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByRole("switch");
       fireEvent.click(toggle);
@@ -69,7 +95,11 @@ describe("FeatureFlagToggle", () => {
     });
 
     it("persists toggle state to localStorage", () => {
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByRole("switch");
       fireEvent.click(toggle);
@@ -80,7 +110,11 @@ describe("FeatureFlagToggle", () => {
     it("reads initial state from localStorage", () => {
       localStorage.setItem(STORAGE_KEY, "true");
 
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByRole("switch");
       expect(toggle).toBeChecked();
@@ -91,7 +125,11 @@ describe("FeatureFlagToggle", () => {
     it("shows Hybrid label when enabled", () => {
       localStorage.setItem(STORAGE_KEY, "true");
 
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("current-mode")).toHaveTextContent(/hybrid/i);
     });
@@ -99,7 +137,11 @@ describe("FeatureFlagToggle", () => {
     it("shows Legacy label when disabled", () => {
       localStorage.setItem(STORAGE_KEY, "false");
 
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("current-mode")).toHaveTextContent(/legacy/i);
     });
@@ -107,14 +149,22 @@ describe("FeatureFlagToggle", () => {
 
   describe("Accessibility", () => {
     it("has accessible toggle button", () => {
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveAttribute("aria-checked");
     });
 
     it("has descriptive label for screen readers", () => {
-      render(<FeatureFlagToggle isDev={true} />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} />
+        </TestProvider>,
+      );
 
       const toggle = screen.getByRole("switch");
       expect(toggle).toHaveAccessibleName();
@@ -123,7 +173,11 @@ describe("FeatureFlagToggle", () => {
 
   describe("Styling", () => {
     it("applies custom className when provided", () => {
-      render(<FeatureFlagToggle isDev={true} className="custom-class" />);
+      render(
+        <TestProvider>
+          <FeatureFlagToggle isDev={true} className="custom-class" />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("feature-flag-toggle");
       expect(container).toHaveClass("custom-class");

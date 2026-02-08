@@ -10,6 +10,8 @@ import userEvent from "@testing-library/user-event";
 import { JSONArtifact } from "./JSONArtifact";
 import type { JSONArtifact as JSONArtifactType } from "../../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 describe("JSONArtifact", () => {
   const mockSimpleArtifact: JSONArtifactType = {
     id: "json-1",
@@ -70,7 +72,11 @@ describe("JSONArtifact", () => {
 
   describe("Rendering", () => {
     it("should render simple JSON object", () => {
-      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockSimpleArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/name/i)).toBeInTheDocument();
       expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
     });
@@ -80,18 +86,30 @@ describe("JSONArtifact", () => {
         ...mockSimpleArtifact,
         title: "User Data",
       };
-      render(<JSONArtifact artifact={artifactWithTitle} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={artifactWithTitle} />
+        </TestProvider>,
+      );
       expect(screen.getByText("User Data")).toBeInTheDocument();
     });
 
     it("should render nested objects", () => {
-      render(<JSONArtifact artifact={mockNestedArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockNestedArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/user/i)).toBeInTheDocument();
       expect(screen.getByText(/profile/i)).toBeInTheDocument();
     });
 
     it("should render arrays", () => {
-      render(<JSONArtifact artifact={mockArrayArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockArrayArtifact} />
+        </TestProvider>,
+      );
       // Arrays should be rendered
       const container = screen.getByRole("region", { name: /json/i });
       expect(container).toBeInTheDocument();
@@ -101,7 +119,11 @@ describe("JSONArtifact", () => {
   describe("Collapsing", () => {
     it("should collapse nested objects", async () => {
       const user = userEvent.setup();
-      render(<JSONArtifact artifact={mockNestedArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockNestedArtifact} />
+        </TestProvider>,
+      );
 
       // Find collapse button for user object
       const collapseButtons = screen.getAllByRole("button", {
@@ -123,7 +145,11 @@ describe("JSONArtifact", () => {
           collapsed: true,
         },
       };
-      render(<JSONArtifact artifact={collapsedArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={collapsedArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region", { name: /json/i })).toBeInTheDocument();
     });
 
@@ -134,20 +160,32 @@ describe("JSONArtifact", () => {
           collapsed: 2, // Collapse at depth 2
         },
       };
-      render(<JSONArtifact artifact={depthCollapsedArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={depthCollapsedArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region", { name: /json/i })).toBeInTheDocument();
     });
   });
 
   describe("Copy Functionality", () => {
     it("should have copy button", () => {
-      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockSimpleArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     });
 
     it("should show feedback after copying", async () => {
       const user = userEvent.setup();
-      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockSimpleArtifact} />
+        </TestProvider>,
+      );
 
       const copyButton = screen.getByRole("button", { name: /copy/i });
       await user.click(copyButton);
@@ -159,12 +197,20 @@ describe("JSONArtifact", () => {
 
   describe("Primitive Types", () => {
     it("should render string values", () => {
-      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockSimpleArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
     });
 
     it("should render number values", () => {
-      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockSimpleArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText("30")).toBeInTheDocument();
     });
 
@@ -174,7 +220,11 @@ describe("JSONArtifact", () => {
         type: "json",
         data: { active: true, disabled: false },
       };
-      render(<JSONArtifact artifact={boolArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={boolArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText("true")).toBeInTheDocument();
       expect(screen.getByText("false")).toBeInTheDocument();
     });
@@ -185,7 +235,11 @@ describe("JSONArtifact", () => {
         type: "json",
         data: { value: null },
       };
-      render(<JSONArtifact artifact={nullArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={nullArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText("null")).toBeInTheDocument();
     });
   });
@@ -197,7 +251,11 @@ describe("JSONArtifact", () => {
         type: "json",
         data: {},
       };
-      render(<JSONArtifact artifact={emptyArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={emptyArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region", { name: /json/i })).toBeInTheDocument();
     });
 
@@ -207,7 +265,11 @@ describe("JSONArtifact", () => {
         type: "json",
         data: [],
       };
-      render(<JSONArtifact artifact={emptyArrayArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={emptyArrayArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region", { name: /json/i })).toBeInTheDocument();
     });
 
@@ -227,7 +289,11 @@ describe("JSONArtifact", () => {
           },
         },
       };
-      render(<JSONArtifact artifact={deepArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={deepArtifact} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region", { name: /json/i })).toBeInTheDocument();
     });
   });
@@ -240,7 +306,11 @@ describe("JSONArtifact", () => {
           theme: "light",
         },
       };
-      const { container } = render(<JSONArtifact artifact={lightArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <JSONArtifact artifact={lightArtifact} />
+        </TestProvider>,
+      );
       const jsonContainer = container.querySelector('[data-theme="light"]');
       expect(jsonContainer).toBeInTheDocument();
     });
@@ -252,7 +322,11 @@ describe("JSONArtifact", () => {
           theme: "dark",
         },
       };
-      const { container } = render(<JSONArtifact artifact={darkArtifact} />);
+      const { container } = render(
+        <TestProvider>
+          <JSONArtifact artifact={darkArtifact} />
+        </TestProvider>,
+      );
       const jsonContainer = container.querySelector('[data-theme="dark"]');
       expect(jsonContainer).toBeInTheDocument();
     });
@@ -260,7 +334,11 @@ describe("JSONArtifact", () => {
 
   describe("Download Functionality", () => {
     it("should have download button", () => {
-      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockSimpleArtifact} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /download/i }),
       ).toBeInTheDocument();
@@ -275,7 +353,11 @@ describe("JSONArtifact", () => {
       URL.createObjectURL = createObjectURLMock;
       URL.revokeObjectURL = revokeObjectURLMock;
 
-      render(<JSONArtifact artifact={mockSimpleArtifact} />);
+      render(
+        <TestProvider>
+          <JSONArtifact artifact={mockSimpleArtifact} />
+        </TestProvider>,
+      );
       const downloadButton = screen.getByRole("button", { name: /download/i });
       await user.click(downloadButton);
 

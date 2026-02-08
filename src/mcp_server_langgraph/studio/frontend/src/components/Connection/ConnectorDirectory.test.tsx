@@ -16,6 +16,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConnectorDirectory } from "./ConnectorDirectory";
 import type { ConnectionTemplateCamelCase } from "@/types/connectionTemplate";
 
+import { TestProvider } from "@/test-utils";
+
 // Motion mock is provided globally in src/test/setup.ts
 // with proper motion prop filtering to prevent React warnings
 
@@ -73,7 +75,9 @@ describe("ConnectorDirectory", () => {
   describe("Rendering", () => {
     it("should render all templates as cards", () => {
       render(
-        <ConnectorDirectory templates={mockTemplates} onConnect={vi.fn()} />,
+        <TestProvider>
+          <ConnectorDirectory templates={mockTemplates} onConnect={vi.fn()} />
+        </TestProvider>,
       );
       expect(screen.getByText("GitHub")).toBeInTheDocument();
       expect(screen.getByText("Slack")).toBeInTheDocument();
@@ -82,14 +86,20 @@ describe("ConnectorDirectory", () => {
 
     it("should render in a grid layout", () => {
       render(
-        <ConnectorDirectory templates={mockTemplates} onConnect={vi.fn()} />,
+        <TestProvider>
+          <ConnectorDirectory templates={mockTemplates} onConnect={vi.fn()} />
+        </TestProvider>,
       );
       const grid = screen.getByRole("list");
       expect(grid).toHaveClass("grid");
     });
 
     it("should show empty state when no templates", () => {
-      render(<ConnectorDirectory templates={[]} onConnect={vi.fn()} />);
+      render(
+        <TestProvider>
+          <ConnectorDirectory templates={[]} onConnect={vi.fn()} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no connectors available/i)).toBeInTheDocument();
     });
   });
@@ -101,11 +111,13 @@ describe("ConnectorDirectory", () => {
         { id: "communication", name: "Communication", description: "" },
       ];
       render(
-        <ConnectorDirectory
-          templates={mockTemplates}
-          categories={categories}
-          onConnect={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectorDirectory
+            templates={mockTemplates}
+            categories={categories}
+            onConnect={vi.fn()}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Development")).toBeInTheDocument();
       expect(screen.getByText("Communication")).toBeInTheDocument();
@@ -117,11 +129,13 @@ describe("ConnectorDirectory", () => {
         { id: "communication", name: "Communication", description: "" },
       ];
       render(
-        <ConnectorDirectory
-          templates={mockTemplates}
-          categories={categories}
-          onConnect={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectorDirectory
+            templates={mockTemplates}
+            categories={categories}
+            onConnect={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // Click on Development filter
@@ -143,11 +157,13 @@ describe("ConnectorDirectory", () => {
         { id: "development", name: "Development", description: "" },
       ];
       render(
-        <ConnectorDirectory
-          templates={mockTemplates}
-          categories={categories}
-          onConnect={vi.fn()}
-        />,
+        <TestProvider>
+          <ConnectorDirectory
+            templates={mockTemplates}
+            categories={categories}
+            onConnect={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // Click on All
@@ -162,7 +178,9 @@ describe("ConnectorDirectory", () => {
   describe("Sorting", () => {
     it("should sort templates by popularity by default", () => {
       render(
-        <ConnectorDirectory templates={mockTemplates} onConnect={vi.fn()} />,
+        <TestProvider>
+          <ConnectorDirectory templates={mockTemplates} onConnect={vi.fn()} />
+        </TestProvider>,
       );
 
       const cards = screen.getAllByRole("article");
@@ -177,7 +195,9 @@ describe("ConnectorDirectory", () => {
     it("should call onConnect with template when Connect is clicked", () => {
       const onConnect = vi.fn();
       render(
-        <ConnectorDirectory templates={mockTemplates} onConnect={onConnect} />,
+        <TestProvider>
+          <ConnectorDirectory templates={mockTemplates} onConnect={onConnect} />
+        </TestProvider>,
       );
 
       // Click first Connect button (GitHub)
@@ -193,11 +213,13 @@ describe("ConnectorDirectory", () => {
   describe("Connected State", () => {
     it("should show Connected badge for connected templates", () => {
       render(
-        <ConnectorDirectory
-          templates={mockTemplates}
-          onConnect={vi.fn()}
-          connectedTemplateIds={["github"]}
-        />,
+        <TestProvider>
+          <ConnectorDirectory
+            templates={mockTemplates}
+            onConnect={vi.fn()}
+            connectedTemplateIds={["github"]}
+          />
+        </TestProvider>,
       );
 
       // Both the badge and button show "Connected" for connected templates

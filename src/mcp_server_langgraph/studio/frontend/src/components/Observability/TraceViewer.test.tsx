@@ -14,6 +14,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { TraceViewer } from "./TraceViewer";
 import type { Trace, Span } from "./types";
 
+import { TestProvider } from "@/test-utils";
+
 const mockSpans: Span[] = [
   {
     spanId: "span-1",
@@ -64,13 +66,21 @@ describe("TraceViewer", () => {
 
   describe("Basic Rendering", () => {
     it("should render trace ID", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/trace-123/i)).toBeInTheDocument();
     });
 
     it("should render all spans", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("HTTP POST /api/chat")).toBeInTheDocument();
       expect(screen.getByText("LLM Inference")).toBeInTheDocument();
@@ -78,7 +88,11 @@ describe("TraceViewer", () => {
     });
 
     it("should render total duration", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/Total Duration: 150ms/)).toBeInTheDocument();
     });
@@ -86,14 +100,22 @@ describe("TraceViewer", () => {
 
   describe("Span Timeline", () => {
     it("should render spans in a timeline", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const spans = screen.getAllByTestId(/^span-row-/);
       expect(spans).toHaveLength(3);
     });
 
     it("should indent child spans based on depth", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const span1 = screen.getByTestId("span-row-span-1");
       const span2 = screen.getByTestId("span-row-span-2");
@@ -104,7 +126,11 @@ describe("TraceViewer", () => {
     });
 
     it("should show span duration visually", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const span2Bar = screen.getByTestId("span-bar-span-2");
       expect(span2Bar).toBeInTheDocument();
@@ -113,14 +139,22 @@ describe("TraceViewer", () => {
 
   describe("Span Status", () => {
     it("should show success status with green indicator", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const successSpan = screen.getByTestId("span-status-span-1");
       expect(successSpan).toHaveClass("bg-success-9");
     });
 
     it("should show error status with red indicator", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const errorSpan = screen.getByTestId("span-status-span-3");
       expect(errorSpan).toHaveClass("bg-error-9");
@@ -129,7 +163,11 @@ describe("TraceViewer", () => {
 
   describe("Span Selection", () => {
     it("should select span when clicked", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const spanRow = screen.getByTestId("span-row-span-2");
       fireEvent.click(spanRow);
@@ -138,7 +176,11 @@ describe("TraceViewer", () => {
     });
 
     it("should show span details panel when span is selected", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const spanRow = screen.getByTestId("span-row-span-2");
       fireEvent.click(spanRow);
@@ -149,7 +191,11 @@ describe("TraceViewer", () => {
     });
 
     it("should display span attributes in details panel", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const spanRow = screen.getByTestId("span-row-span-2");
       fireEvent.click(spanRow);
@@ -159,7 +205,11 @@ describe("TraceViewer", () => {
     });
 
     it("should display span events in details panel", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const spanRow = screen.getByTestId("span-row-span-2");
       fireEvent.click(spanRow);
@@ -170,7 +220,11 @@ describe("TraceViewer", () => {
 
   describe("Error Display", () => {
     it("should show error message for failed spans", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const spanRow = screen.getByTestId("span-row-span-3");
       fireEvent.click(spanRow);
@@ -179,7 +233,11 @@ describe("TraceViewer", () => {
     });
 
     it("should highlight error spans in timeline", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const errorBar = screen.getByTestId("span-bar-span-3");
       expect(errorBar).toHaveClass("bg-error-7");
@@ -188,7 +246,11 @@ describe("TraceViewer", () => {
 
   describe("Search and Filter", () => {
     it("should filter spans by name", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search spans/i);
       fireEvent.change(searchInput, { target: { value: "LLM" } });
@@ -198,7 +260,11 @@ describe("TraceViewer", () => {
     });
 
     it("should show no results message when no spans match", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search spans/i);
       fireEvent.change(searchInput, { target: { value: "nonexistent" } });
@@ -210,10 +276,12 @@ describe("TraceViewer", () => {
   describe("External Links", () => {
     it("should render link to Grafana when grafanaUrl is provided", () => {
       render(
-        <TraceViewer
-          trace={mockTrace}
-          grafanaUrl="https://grafana.example.com/explore?traceId=trace-123"
-        />,
+        <TestProvider>
+          <TraceViewer
+            trace={mockTrace}
+            grafanaUrl="https://grafana.example.com/explore?traceId=trace-123"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -227,13 +295,21 @@ describe("TraceViewer", () => {
 
   describe("Loading and Empty States", () => {
     it("should show loading state", () => {
-      render(<TraceViewer trace={null} isLoading={true} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={null} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("trace-loading")).toBeInTheDocument();
     });
 
     it("should show empty state when no trace", () => {
-      render(<TraceViewer trace={null} isLoading={false} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={null} isLoading={false} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/no trace data/i)).toBeInTheDocument();
     });
@@ -241,13 +317,21 @@ describe("TraceViewer", () => {
 
   describe("Accessibility", () => {
     it("should have accessible role for timeline", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("list")).toBeInTheDocument();
     });
 
     it("should have accessible labels for span rows", () => {
-      render(<TraceViewer trace={mockTrace} />);
+      render(
+        <TestProvider>
+          <TraceViewer trace={mockTrace} />
+        </TestProvider>,
+      );
 
       const spans = screen.getAllByRole("listitem");
       expect(spans.length).toBeGreaterThan(0);

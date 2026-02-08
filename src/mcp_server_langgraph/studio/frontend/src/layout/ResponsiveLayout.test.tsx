@@ -15,6 +15,8 @@ import {
   type Breakpoint,
 } from "./ResponsiveLayout";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock matchMedia
 function createMatchMedia(width: number) {
   return (query: string) => ({
@@ -55,9 +57,11 @@ describe("ResponsiveLayout", () => {
     it("should render with data-testid", () => {
       window.matchMedia = createMatchMedia(1440) as typeof window.matchMedia;
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toBeInTheDocument();
@@ -66,9 +70,11 @@ describe("ResponsiveLayout", () => {
     it("should render children", () => {
       window.matchMedia = createMatchMedia(1440) as typeof window.matchMedia;
       render(
-        <ResponsiveLayout>
-          <div data-testid="child">Child Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div data-testid="child">Child Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("child")).toBeInTheDocument();
@@ -84,9 +90,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
@@ -103,9 +111,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
@@ -122,9 +132,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
@@ -141,9 +153,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveAttribute(
@@ -162,9 +176,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -179,9 +195,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -196,9 +214,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -213,9 +233,11 @@ describe("ResponsiveLayout", () => {
       });
 
       render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       const layout = screen.getByTestId("responsive-layout");
@@ -233,9 +255,11 @@ describe("ResponsiveLayout", () => {
 
       const onBreakpointChange = vi.fn();
       render(
-        <ResponsiveLayout onBreakpointChange={onBreakpointChange}>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout onBreakpointChange={onBreakpointChange}>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       // Initial call
@@ -247,9 +271,11 @@ describe("ResponsiveLayout", () => {
     it("should apply custom className", () => {
       window.matchMedia = createMatchMedia(1440) as typeof window.matchMedia;
       render(
-        <ResponsiveLayout className="custom-class">
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout className="custom-class">
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("responsive-layout")).toHaveClass(
@@ -262,9 +288,11 @@ describe("ResponsiveLayout", () => {
     it("should have no accessibility violations", async () => {
       window.matchMedia = createMatchMedia(1440) as typeof window.matchMedia;
       const { container } = render(
-        <ResponsiveLayout>
-          <div>Content</div>
-        </ResponsiveLayout>,
+        <TestProvider>
+          <ResponsiveLayout>
+            <div>Content</div>
+          </ResponsiveLayout>
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -298,7 +326,11 @@ describe("useBreakpoint hook", () => {
     });
 
     const onBreakpoint = vi.fn();
-    render(<TestComponent onBreakpoint={onBreakpoint} />);
+    render(
+      <TestProvider>
+        <TestComponent onBreakpoint={onBreakpoint} />
+      </TestProvider>,
+    );
 
     expect(onBreakpoint).toHaveBeenCalledWith("xl");
   });
@@ -311,7 +343,11 @@ describe("useBreakpoint hook", () => {
     });
 
     const onBreakpoint = vi.fn();
-    render(<TestComponent onBreakpoint={onBreakpoint} />);
+    render(
+      <TestProvider>
+        <TestComponent onBreakpoint={onBreakpoint} />
+      </TestProvider>,
+    );
 
     expect(onBreakpoint).toHaveBeenCalledWith("sm");
   });

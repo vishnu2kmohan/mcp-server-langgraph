@@ -21,6 +21,8 @@ import {
   GenericCommandPaletteProps,
 } from "./GenericCommandPalette";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 const mockCommands = [
@@ -69,19 +71,31 @@ describe("GenericCommandPalette", () => {
 
   describe("rendering", () => {
     it("should render when open", () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("command-palette")).toBeInTheDocument();
     });
 
     it("should not render when closed", () => {
-      render(<GenericCommandPalette {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("command-palette")).not.toBeInTheDocument();
     });
 
     it("should render search input", () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByPlaceholderText(/type a command/i),
@@ -89,7 +103,11 @@ describe("GenericCommandPalette", () => {
     });
 
     it("should render command list", () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("New Session")).toBeInTheDocument();
       expect(screen.getByText("Open Settings")).toBeInTheDocument();
@@ -97,14 +115,22 @@ describe("GenericCommandPalette", () => {
     });
 
     it("should display shortcuts when available", () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Cmd+N")).toBeInTheDocument();
       expect(screen.getByText("Cmd+,")).toBeInTheDocument();
     });
 
     it("should group commands by category", () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Session")).toBeInTheDocument();
       expect(screen.getByText("Application")).toBeInTheDocument();
@@ -118,7 +144,11 @@ describe("GenericCommandPalette", () => {
   describe("search", () => {
     it("should filter commands when typing", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.type(screen.getByPlaceholderText(/type a command/i), "new");
 
@@ -128,7 +158,11 @@ describe("GenericCommandPalette", () => {
 
     it("should show no results message when no matches", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.type(
         screen.getByPlaceholderText(/type a command/i),
@@ -139,7 +173,11 @@ describe("GenericCommandPalette", () => {
     });
 
     it("should focus search input on open", async () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByPlaceholderText(/type a command/i)).toHaveFocus();
@@ -154,7 +192,11 @@ describe("GenericCommandPalette", () => {
   describe("keyboard navigation", () => {
     it("should navigate down with arrow down", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{ArrowDown}");
 
@@ -164,7 +206,11 @@ describe("GenericCommandPalette", () => {
 
     it("should navigate up with arrow up", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{ArrowDown}{ArrowDown}{ArrowUp}");
 
@@ -174,7 +220,11 @@ describe("GenericCommandPalette", () => {
 
     it("should execute command on Enter", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Enter}");
 
@@ -183,7 +233,11 @@ describe("GenericCommandPalette", () => {
 
     it("should close on Escape", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.keyboard("{Escape}");
 
@@ -198,7 +252,11 @@ describe("GenericCommandPalette", () => {
   describe("click interactions", () => {
     it("should execute command on click", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Open Settings"));
 
@@ -207,7 +265,11 @@ describe("GenericCommandPalette", () => {
 
     it("should close when clicking backdrop", async () => {
       const user = userEvent.setup();
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("command-palette-backdrop"));
 
@@ -222,10 +284,12 @@ describe("GenericCommandPalette", () => {
   describe("recent commands", () => {
     it("should display recent commands section", () => {
       render(
-        <GenericCommandPalette
-          {...defaultProps}
-          recentCommandIds={["new-session"]}
-        />,
+        <TestProvider>
+          <GenericCommandPalette
+            {...defaultProps}
+            recentCommandIds={["new-session"]}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/recent/i)).toBeInTheDocument();
@@ -238,14 +302,22 @@ describe("GenericCommandPalette", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<GenericCommandPalette {...defaultProps} />);
+      const { container } = render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have proper ARIA attributes", () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
       expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -253,13 +325,21 @@ describe("GenericCommandPalette", () => {
     });
 
     it("should have aria-label on search input", () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("combobox")).toHaveAttribute("aria-label");
     });
 
     it("should have focused search input", async () => {
-      render(<GenericCommandPalette {...defaultProps} />);
+      render(
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Search input should be focused on open
       await waitFor(() => {
@@ -275,7 +355,9 @@ describe("GenericCommandPalette", () => {
   describe("custom className", () => {
     it("should apply custom className", () => {
       render(
-        <GenericCommandPalette {...defaultProps} className="custom-class" />,
+        <TestProvider>
+          <GenericCommandPalette {...defaultProps} className="custom-class" />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("command-palette")).toHaveClass("custom-class");

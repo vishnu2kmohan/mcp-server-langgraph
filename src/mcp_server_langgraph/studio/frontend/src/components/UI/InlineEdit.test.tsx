@@ -24,6 +24,8 @@ import { afterEach, describe, it, expect, vi } from "vitest";
 
 import { InlineEdit } from "./InlineEdit";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -34,7 +36,11 @@ describe("InlineEdit", () => {
   describe("Display Mode", () => {
     it("renders the value as text when not editing", () => {
       const onSave = vi.fn();
-      render(<InlineEdit value="Test Value" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Test Value" onSave={onSave} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Test Value")).toBeInTheDocument();
     });
@@ -42,7 +48,9 @@ describe("InlineEdit", () => {
     it("shows placeholder when value is empty", () => {
       const onSave = vi.fn();
       render(
-        <InlineEdit value="" onSave={onSave} placeholder="Click to edit" />,
+        <TestProvider>
+          <InlineEdit value="" onSave={onSave} placeholder="Click to edit" />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Click to edit")).toBeInTheDocument();
@@ -51,12 +59,14 @@ describe("InlineEdit", () => {
     it("applies custom className", () => {
       const onSave = vi.fn();
       render(
-        <InlineEdit
-          value="Test"
-          onSave={onSave}
-          className="custom-class"
-          data-testid="inline-edit"
-        />,
+        <TestProvider>
+          <InlineEdit
+            value="Test"
+            onSave={onSave}
+            className="custom-class"
+            data-testid="inline-edit"
+          />
+        </TestProvider>,
       );
 
       const container = screen.getByTestId("inline-edit");
@@ -68,7 +78,11 @@ describe("InlineEdit", () => {
     it("switches to edit mode on click", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Test Value" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Test Value" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Test Value"));
 
@@ -80,7 +94,11 @@ describe("InlineEdit", () => {
     it("focuses the input when entering edit mode", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Test Value" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Test Value" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Test Value"));
 
@@ -91,7 +109,11 @@ describe("InlineEdit", () => {
     it("selects all text when entering edit mode", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Test Value" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Test Value" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Test Value"));
 
@@ -105,7 +127,11 @@ describe("InlineEdit", () => {
     it("calls onSave with new value on Enter key", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Original" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Original"));
       const input = screen.getByRole("textbox");
@@ -119,7 +145,11 @@ describe("InlineEdit", () => {
     it("exits edit mode after saving", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Original" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Original"));
       const input = screen.getByRole("textbox");
@@ -131,7 +161,11 @@ describe("InlineEdit", () => {
     it("saves on blur by default", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Original" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Original"));
       const input = screen.getByRole("textbox");
@@ -145,7 +179,11 @@ describe("InlineEdit", () => {
     it("does not call onSave if value unchanged", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Original" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Original"));
       const input = screen.getByRole("textbox");
@@ -161,7 +199,9 @@ describe("InlineEdit", () => {
       const onSave = vi.fn();
       const onCancel = vi.fn();
       render(
-        <InlineEdit value="Original" onSave={onSave} onCancel={onCancel} />,
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} onCancel={onCancel} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Original"));
@@ -177,7 +217,11 @@ describe("InlineEdit", () => {
     it("exits edit mode on cancel", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Original" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Original"));
       const input = screen.getByRole("textbox");
@@ -193,7 +237,9 @@ describe("InlineEdit", () => {
       const onSave = vi.fn();
       const validate = vi.fn().mockReturnValue(false);
       render(
-        <InlineEdit value="Original" onSave={onSave} validate={validate} />,
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} validate={validate} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Original"));
@@ -210,7 +256,9 @@ describe("InlineEdit", () => {
       const onSave = vi.fn();
       const validate = vi.fn().mockReturnValue(true);
       render(
-        <InlineEdit value="Original" onSave={onSave} validate={validate} />,
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} validate={validate} />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Original"));
@@ -227,12 +275,14 @@ describe("InlineEdit", () => {
       const onSave = vi.fn();
       const validate = vi.fn().mockReturnValue(false);
       render(
-        <InlineEdit
-          value="Original"
-          onSave={onSave}
-          validate={validate}
-          data-testid="inline-edit"
-        />,
+        <TestProvider>
+          <InlineEdit
+            value="Original"
+            onSave={onSave}
+            validate={validate}
+            data-testid="inline-edit"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByText("Original"));
@@ -250,7 +300,11 @@ describe("InlineEdit", () => {
     it("does not enter edit mode when disabled", async () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
-      render(<InlineEdit value="Test" onSave={onSave} disabled />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Test" onSave={onSave} disabled />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Test"));
 
@@ -260,12 +314,14 @@ describe("InlineEdit", () => {
     it("shows disabled styling", () => {
       const onSave = vi.fn();
       render(
-        <InlineEdit
-          value="Test"
-          onSave={onSave}
-          disabled
-          data-testid="inline-edit"
-        />,
+        <TestProvider>
+          <InlineEdit
+            value="Test"
+            onSave={onSave}
+            disabled
+            data-testid="inline-edit"
+          />
+        </TestProvider>,
       );
 
       const container = screen.getByTestId("inline-edit");
@@ -283,7 +339,11 @@ describe("InlineEdit", () => {
       });
       const onSave = vi.fn().mockImplementation(() => savePromise);
 
-      render(<InlineEdit value="Original" onSave={onSave} />);
+      render(
+        <TestProvider>
+          <InlineEdit value="Original" onSave={onSave} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByText("Original"));
       const input = screen.getByRole("textbox");
@@ -307,11 +367,13 @@ describe("InlineEdit", () => {
     it("has appropriate aria-label", () => {
       const onSave = vi.fn();
       render(
-        <InlineEdit
-          value="Test"
-          onSave={onSave}
-          aria-label="Edit session name"
-        />,
+        <TestProvider>
+          <InlineEdit
+            value="Test"
+            onSave={onSave}
+            aria-label="Edit session name"
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByRole("button", { name: /edit session name/i });
@@ -322,11 +384,13 @@ describe("InlineEdit", () => {
       const user = userEvent.setup();
       const onSave = vi.fn();
       render(
-        <InlineEdit
-          value="Test"
-          onSave={onSave}
-          aria-label="Edit session name"
-        />,
+        <TestProvider>
+          <InlineEdit
+            value="Test"
+            onSave={onSave}
+            aria-label="Edit session name"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByRole("button"));

@@ -9,6 +9,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { ChatMessages } from "./ChatMessages";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ChatMessages AI Suggestions", () => {
   const mockMessages = [
     {
@@ -47,11 +49,13 @@ describe("ChatMessages AI Suggestions", () => {
 
     it("should render follow-up suggestions when provided", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          suggestions={mockSuggestions}
-          onSuggestionSelect={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            suggestions={mockSuggestions}
+            onSuggestionSelect={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
@@ -63,11 +67,13 @@ describe("ChatMessages AI Suggestions", () => {
 
     it("should not render suggestions when array is empty", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          suggestions={[]}
-          onSuggestionSelect={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            suggestions={[]}
+            onSuggestionSelect={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -76,7 +82,11 @@ describe("ChatMessages AI Suggestions", () => {
     });
 
     it("should not render suggestions when not provided", () => {
-      render(<ChatMessages messages={mockMessages} />);
+      render(
+        <TestProvider>
+          <ChatMessages messages={mockMessages} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("follow-up-suggestions"),
@@ -86,11 +96,13 @@ describe("ChatMessages AI Suggestions", () => {
     it("should call onSuggestionSelect when a suggestion is clicked", () => {
       const mockOnSelect = vi.fn();
       render(
-        <ChatMessages
-          messages={mockMessages}
-          suggestions={mockSuggestions}
-          onSuggestionSelect={mockOnSelect}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            suggestions={mockSuggestions}
+            onSuggestionSelect={mockOnSelect}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Tell me more about this"));
@@ -99,12 +111,14 @@ describe("ChatMessages AI Suggestions", () => {
 
     it("should show loading state when suggestionsLoading is true", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          suggestions={[]}
-          onSuggestionSelect={vi.fn()}
-          suggestionsLoading={true}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            suggestions={[]}
+            onSuggestionSelect={vi.fn()}
+            suggestionsLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestions-loading")).toBeInTheDocument();
@@ -112,13 +126,15 @@ describe("ChatMessages AI Suggestions", () => {
 
     it("should not show suggestions while streaming", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          isStreaming={true}
-          streamingContent="Generating..."
-          suggestions={mockSuggestions}
-          onSuggestionSelect={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            isStreaming={true}
+            streamingContent="Generating..."
+            suggestions={mockSuggestions}
+            onSuggestionSelect={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -128,11 +144,13 @@ describe("ChatMessages AI Suggestions", () => {
 
     it("should render suggestions after the last assistant message", () => {
       render(
-        <ChatMessages
-          messages={mockMessages}
-          suggestions={mockSuggestions}
-          onSuggestionSelect={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatMessages
+            messages={mockMessages}
+            suggestions={mockSuggestions}
+            onSuggestionSelect={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const messagesEnd = screen.getByTestId("messages-end");

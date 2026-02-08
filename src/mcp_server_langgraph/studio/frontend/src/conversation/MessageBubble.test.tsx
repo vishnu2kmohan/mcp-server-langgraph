@@ -11,6 +11,8 @@ expect.extend(toHaveNoViolations);
 import { MessageBubble } from "./MessageBubble";
 import type { ChatMessage } from "../types";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -71,40 +73,68 @@ describe("MessageBubble", () => {
 
   describe("Rendering", () => {
     it("should render message container", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("message-bubble")).toBeInTheDocument();
     });
 
     it("should display message content", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Hello, can you help me?")).toBeInTheDocument();
     });
 
     it("should show timestamp when showTimestamp is true", () => {
-      render(<MessageBubble message={userMessage} showTimestamp />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} showTimestamp />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("message-timestamp")).toBeInTheDocument();
     });
 
     it("should hide timestamp by default", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("message-timestamp")).not.toBeInTheDocument();
     });
   });
 
   describe("User Messages", () => {
     it("should apply user styling for user messages", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       const bubble = screen.getByTestId("message-bubble");
       expect(bubble).toHaveClass("user");
     });
 
     it("should show user avatar for user messages", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
     });
 
     it("should align user messages to the right", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       const container = screen.getByTestId("message-container");
       expect(container).toHaveClass("justify-end");
     });
@@ -112,18 +142,30 @@ describe("MessageBubble", () => {
 
   describe("Assistant Messages", () => {
     it("should apply assistant styling for assistant messages", () => {
-      render(<MessageBubble message={assistantMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={assistantMessage} />
+        </TestProvider>,
+      );
       const bubble = screen.getByTestId("message-bubble");
       expect(bubble).toHaveClass("assistant");
     });
 
     it("should show AI avatar for assistant messages", () => {
-      render(<MessageBubble message={assistantMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={assistantMessage} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("ai-avatar")).toBeInTheDocument();
     });
 
     it("should align assistant messages to the left", () => {
-      render(<MessageBubble message={assistantMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={assistantMessage} />
+        </TestProvider>,
+      );
       const container = screen.getByTestId("message-container");
       expect(container).toHaveClass("justify-start");
     });
@@ -131,19 +173,31 @@ describe("MessageBubble", () => {
 
   describe("Code Blocks", () => {
     it("should render code blocks with syntax highlighting", () => {
-      render(<MessageBubble message={messageWithCode} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={messageWithCode} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("code-block")).toBeInTheDocument();
     });
 
     it("should show copy button for code blocks", () => {
-      render(<MessageBubble message={messageWithCode} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={messageWithCode} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("copy-code-button")).toBeInTheDocument();
     });
   });
 
   describe("Actions", () => {
     it("should show copy button on hover", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       const bubble = screen.getByTestId("message-bubble");
       fireEvent.mouseEnter(bubble);
       expect(screen.getByTestId("copy-message-button")).toBeInTheDocument();
@@ -151,7 +205,11 @@ describe("MessageBubble", () => {
 
     it("should call onCopy when copy button clicked", async () => {
       const onCopy = vi.fn();
-      render(<MessageBubble message={userMessage} onCopy={onCopy} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} onCopy={onCopy} />
+        </TestProvider>,
+      );
 
       const bubble = screen.getByTestId("message-bubble");
       fireEvent.mouseEnter(bubble);
@@ -163,33 +221,51 @@ describe("MessageBubble", () => {
 
   describe("Loading State", () => {
     it("should show typing indicator when isTyping is true", () => {
-      render(<MessageBubble message={assistantMessage} isTyping />);
+      render(
+        <TestProvider>
+          <MessageBubble message={assistantMessage} isTyping />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("typing-indicator")).toBeInTheDocument();
     });
   });
 
   describe("Accessibility", () => {
     it("should have accessible role for messages", () => {
-      render(<MessageBubble message={userMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("article")).toBeInTheDocument();
     });
 
     it("should have aria-label for message role", () => {
-      render(<MessageBubble message={assistantMessage} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={assistantMessage} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("article", { name: /assistant message/i }),
       ).toBeInTheDocument();
     });
 
     it("should have no accessibility violations for user message", async () => {
-      const { container } = render(<MessageBubble message={userMessage} />);
+      const { container } = render(
+        <TestProvider>
+          <MessageBubble message={userMessage} />
+        </TestProvider>,
+      );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have no accessibility violations for assistant message", async () => {
       const { container } = render(
-        <MessageBubble message={assistantMessage} />,
+        <TestProvider>
+          <MessageBubble message={assistantMessage} />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -198,32 +274,52 @@ describe("MessageBubble", () => {
 
   describe("Thinking Trace", () => {
     it("should render thinking trace when message has thinkingContent", () => {
-      render(<MessageBubble message={messageWithThinking} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={messageWithThinking} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
     });
 
     it("should not render thinking trace when message has no thinkingContent", () => {
-      render(<MessageBubble message={messageWithoutThinking} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={messageWithoutThinking} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByTestId("llm-thinking-trace"),
       ).not.toBeInTheDocument();
     });
 
     it("should render thinking trace collapsed by default for historical messages", () => {
-      render(<MessageBubble message={messageWithThinking} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={messageWithThinking} />
+        </TestProvider>,
+      );
       // The thinking content should not be visible (collapsed)
       expect(screen.queryByTestId("thinking-content")).not.toBeInTheDocument();
     });
 
     it("should expand thinking trace when toggle is clicked", () => {
-      render(<MessageBubble message={messageWithThinking} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={messageWithThinking} />
+        </TestProvider>,
+      );
       const toggleButton = screen.getByLabelText(/toggle thinking/i);
       fireEvent.click(toggleButton);
       expect(screen.getByTestId("thinking-content")).toBeInTheDocument();
     });
 
     it("should display thinking tokens when provided", () => {
-      render(<MessageBubble message={messageWithThinking} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={messageWithThinking} />
+        </TestProvider>,
+      );
       // Token count should be visible in header even when collapsed
       expect(screen.getByText(/150 tokens/i)).toBeInTheDocument();
     });
@@ -233,7 +329,11 @@ describe("MessageBubble", () => {
         ...userMessage,
         thinkingContent: "Some thinking",
       };
-      render(<MessageBubble message={userMsgWithThinking} />);
+      render(
+        <TestProvider>
+          <MessageBubble message={userMsgWithThinking} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByTestId("llm-thinking-trace"),
       ).not.toBeInTheDocument();

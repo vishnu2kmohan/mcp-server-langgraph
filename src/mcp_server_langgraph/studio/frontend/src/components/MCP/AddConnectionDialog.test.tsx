@@ -17,6 +17,8 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AddConnectionDialog } from "./AddConnectionDialog";
 
+import { TestProvider } from "@/test-utils";
+
 describe("AddConnectionDialog", () => {
   const mockOnClose = vi.fn();
   const mockOnSubmit = vi.fn();
@@ -39,20 +41,32 @@ describe("AddConnectionDialog", () => {
 
   describe("Dialog Behavior", () => {
     it("should render when isOpen is true", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
       expect(screen.getByText("Add MCP Connection")).toBeInTheDocument();
     });
 
     it("should not render when isOpen is false", () => {
-      render(<AddConnectionDialog {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
     it("should call onClose when close button is clicked", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const closeButton = screen.getByRole("button", { name: /close/i });
       await userEvent.click(closeButton);
@@ -61,7 +75,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should call onClose when Cancel button is clicked", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
       await userEvent.click(cancelButton);
@@ -72,31 +90,51 @@ describe("AddConnectionDialog", () => {
 
   describe("Form Fields", () => {
     it("should have name input field", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     });
 
     it("should have description textarea field", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
     });
 
     it("should have URL input field", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/url/i)).toBeInTheDocument();
     });
 
     it("should have transport protocol selector", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/transport/i)).toBeInTheDocument();
     });
 
     it("should have authentication type selector", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByLabelText(/authentication/i)).toBeInTheDocument();
     });
@@ -104,7 +142,11 @@ describe("AddConnectionDialog", () => {
 
   describe("Transport Protocol Selection", () => {
     it("should default to Streamable HTTP transport", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const transportSelect = screen.getByLabelText(
         /transport/i,
@@ -113,13 +155,21 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should have Streamable HTTP option", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/streamable http/i)).toBeInTheDocument();
     });
 
     it("should have stdio option", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("option", { name: /stdio/i }),
@@ -127,7 +177,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should show command field when stdio transport is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const transportSelect = screen.getByLabelText(/transport/i);
       await userEvent.selectOptions(transportSelect, "stdio");
@@ -136,7 +190,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should show args field when stdio transport is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const transportSelect = screen.getByLabelText(/transport/i);
       await userEvent.selectOptions(transportSelect, "stdio");
@@ -145,7 +203,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should hide stdio fields when streamable_http is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Initially should not show command field
       expect(screen.queryByLabelText(/command/i)).not.toBeInTheDocument();
@@ -154,7 +216,11 @@ describe("AddConnectionDialog", () => {
 
   describe("Authentication Type Selection", () => {
     it("should default to no authentication", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const authSelect = screen.getByLabelText(
         /authentication/i,
@@ -163,13 +229,21 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should have None option", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("option", { name: /none/i })).toBeInTheDocument();
     });
 
     it("should have API Key option", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("option", { name: /api key/i }),
@@ -177,7 +251,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should have OAuth2 option", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("option", { name: /oauth2/i }),
@@ -185,7 +263,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should show API key field when api_key auth is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const authSelect = screen.getByLabelText(/authentication/i);
       await userEvent.selectOptions(authSelect, "api_key");
@@ -194,7 +276,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should show OAuth2 client ID field when oauth2 auth is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const authSelect = screen.getByLabelText(/authentication/i);
       await userEvent.selectOptions(authSelect, "oauth2");
@@ -203,7 +289,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should show OAuth2 scopes field when oauth2 auth is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const authSelect = screen.getByLabelText(/authentication/i);
       await userEvent.selectOptions(authSelect, "oauth2");
@@ -214,7 +304,11 @@ describe("AddConnectionDialog", () => {
 
   describe("Form Validation", () => {
     it("should require name field", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const submitButton = screen.getByRole("button", { name: /add/i });
       await userEvent.click(submitButton);
@@ -224,7 +318,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should require URL field", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await userEvent.type(nameInput, "Test Server");
@@ -237,7 +335,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should require command field for stdio transport", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await userEvent.type(nameInput, "Test Server");
@@ -256,7 +358,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should validate URL format for streamable_http transport", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await userEvent.type(nameInput, "Test Server");
@@ -274,7 +380,11 @@ describe("AddConnectionDialog", () => {
 
   describe("Form Submission", () => {
     it("should call onSubmit with form data when valid", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await userEvent.type(nameInput, "Zapier MCP");
@@ -303,7 +413,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should include stdio fields when stdio transport is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await userEvent.type(nameInput, "Local Python Server");
@@ -336,7 +450,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should include apiKey when api_key auth is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await userEvent.type(nameInput, "API Server");
@@ -364,7 +482,11 @@ describe("AddConnectionDialog", () => {
     });
 
     it("should include oauth2 config when oauth2 auth is selected", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       await userEvent.type(nameInput, "OAuth Server");
@@ -398,14 +520,22 @@ describe("AddConnectionDialog", () => {
 
   describe("Loading State", () => {
     it("should disable submit button when loading", () => {
-      render(<AddConnectionDialog {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       const submitButton = screen.getByRole("button", { name: /add/i });
       expect(submitButton).toBeDisabled();
     });
 
     it("should show loading indicator when loading", () => {
-      render(<AddConnectionDialog {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /adding/i }),
@@ -415,20 +545,32 @@ describe("AddConnectionDialog", () => {
 
   describe("Accessibility", () => {
     it("should have accessible dialog role", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have labeled form fields", () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const nameInput = screen.getByLabelText(/name/i);
       expect(nameInput).toHaveAttribute("id");
     });
 
     it("should associate error messages with fields", async () => {
-      render(<AddConnectionDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AddConnectionDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const submitButton = screen.getByRole("button", { name: /add/i });
       await userEvent.click(submitButton);

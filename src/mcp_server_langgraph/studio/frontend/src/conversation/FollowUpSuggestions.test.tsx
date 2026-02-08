@@ -8,6 +8,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { FollowUpSuggestions, type Suggestion } from "./FollowUpSuggestions";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // =============================================================================
@@ -49,20 +51,24 @@ describe("FollowUpSuggestions", () => {
   describe("Rendering", () => {
     it("should render suggestions container", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("follow-up-suggestions")).toBeInTheDocument();
     });
 
     it("should render all suggestions", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByText("Tell me more about React hooks"),
@@ -72,7 +78,11 @@ describe("FollowUpSuggestions", () => {
     });
 
     it("should not render when no suggestions", () => {
-      render(<FollowUpSuggestions suggestions={[]} onSelect={() => {}} />);
+      render(
+        <TestProvider>
+          <FollowUpSuggestions suggestions={[]} onSelect={() => {}} />
+        </TestProvider>,
+      );
       expect(
         screen.queryByTestId("follow-up-suggestions"),
       ).not.toBeInTheDocument();
@@ -80,10 +90,12 @@ describe("FollowUpSuggestions", () => {
 
     it("should render as chips by default", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const chips = screen.getAllByTestId("suggestion-chip");
       expect(chips).toHaveLength(3);
@@ -94,10 +106,12 @@ describe("FollowUpSuggestions", () => {
     it("should call onSelect when suggestion clicked", () => {
       const onSelect = vi.fn();
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={onSelect}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={onSelect}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Show me an example"));
@@ -106,10 +120,12 @@ describe("FollowUpSuggestions", () => {
 
     it("should highlight suggestion on hover", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
 
       const chip = screen.getAllByTestId("suggestion-chip")[0];
@@ -122,10 +138,12 @@ describe("FollowUpSuggestions", () => {
     it("should select suggestion on Enter key", () => {
       const onSelect = vi.fn();
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={onSelect}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={onSelect}
+          />
+        </TestProvider>,
       );
 
       const chip = screen.getAllByTestId("suggestion-chip")[0];
@@ -136,10 +154,12 @@ describe("FollowUpSuggestions", () => {
 
     it("should focus next suggestion on ArrowRight", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
 
       const chips = screen.getAllByTestId("suggestion-chip");
@@ -152,7 +172,9 @@ describe("FollowUpSuggestions", () => {
   describe("Loading State", () => {
     it("should show loading skeleton when isLoading", () => {
       render(
-        <FollowUpSuggestions suggestions={[]} onSelect={() => {}} isLoading />,
+        <TestProvider>
+          <FollowUpSuggestions suggestions={[]} onSelect={() => {}} isLoading />
+        </TestProvider>,
       );
       expect(screen.getByTestId("suggestions-skeleton")).toBeInTheDocument();
     });
@@ -161,11 +183,13 @@ describe("FollowUpSuggestions", () => {
   describe("Animation", () => {
     it("should animate in when visible", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-          animate
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+            animate
+          />
+        </TestProvider>,
       );
       const container = screen.getByTestId("follow-up-suggestions");
       expect(container).toHaveClass("animate-in");
@@ -175,10 +199,12 @@ describe("FollowUpSuggestions", () => {
   describe("Styles", () => {
     it("should apply action type styling", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const actionChip = screen
         .getByText("Show me an example")
@@ -188,10 +214,12 @@ describe("FollowUpSuggestions", () => {
 
     it("should apply follow-up type styling", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const followUpChip = screen
         .getByText("Tell me more about React hooks")
@@ -203,11 +231,13 @@ describe("FollowUpSuggestions", () => {
   describe("Max Suggestions", () => {
     it("should limit displayed suggestions when maxSuggestions is set", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-          maxSuggestions={2}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+            maxSuggestions={2}
+          />
+        </TestProvider>,
       );
       const chips = screen.getAllByTestId("suggestion-chip");
       expect(chips).toHaveLength(2);
@@ -217,10 +247,12 @@ describe("FollowUpSuggestions", () => {
   describe("Accessibility", () => {
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -228,7 +260,9 @@ describe("FollowUpSuggestions", () => {
 
     it("should have no accessibility violations when loading", async () => {
       const { container } = render(
-        <FollowUpSuggestions suggestions={[]} onSelect={() => {}} isLoading />,
+        <TestProvider>
+          <FollowUpSuggestions suggestions={[]} onSelect={() => {}} isLoading />
+        </TestProvider>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -236,20 +270,24 @@ describe("FollowUpSuggestions", () => {
 
     it("should have navigation role", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("navigation")).toBeInTheDocument();
     });
 
     it("should have accessible labels for suggestions", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const chips = screen.getAllByTestId("suggestion-chip");
       chips.forEach((chip) => {
@@ -259,10 +297,12 @@ describe("FollowUpSuggestions", () => {
 
     it("should be focusable", () => {
       render(
-        <FollowUpSuggestions
-          suggestions={mockSuggestions}
-          onSelect={() => {}}
-        />,
+        <TestProvider>
+          <FollowUpSuggestions
+            suggestions={mockSuggestions}
+            onSelect={() => {}}
+          />
+        </TestProvider>,
       );
       const chips = screen.getAllByTestId("suggestion-chip");
       chips.forEach((chip) => {

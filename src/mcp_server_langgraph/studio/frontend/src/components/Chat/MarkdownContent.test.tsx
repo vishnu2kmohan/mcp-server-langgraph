@@ -9,6 +9,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { MarkdownContent } from "./MarkdownContent";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock heavy dependencies to speed up tests
 vi.mock("./InteractiveMermaidDiagram", () => ({
   default: ({ code }: { code: string }) => (
@@ -46,34 +48,58 @@ describe("MarkdownContent", () => {
 
   describe("basic markdown rendering", () => {
     it("should render plain text", () => {
-      render(<MarkdownContent content="Hello, world!" />);
+      render(
+        <TestProvider>
+          <MarkdownContent content="Hello, world!" />
+        </TestProvider>,
+      );
       expect(screen.getByText("Hello, world!")).toBeInTheDocument();
     });
 
     it("should render paragraphs", () => {
-      render(<MarkdownContent content="First paragraph" />);
+      render(
+        <TestProvider>
+          <MarkdownContent content="First paragraph" />
+        </TestProvider>,
+      );
       expect(screen.getByText("First paragraph")).toBeInTheDocument();
     });
 
     it("should render headings", () => {
-      render(<MarkdownContent content="# Heading 1" />);
+      render(
+        <TestProvider>
+          <MarkdownContent content="# Heading 1" />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("heading", { level: 1, name: "Heading 1" }),
       ).toBeInTheDocument();
     });
 
     it("should render unordered lists", () => {
-      const { container } = render(<MarkdownContent content="- Item 1" />);
+      const { container } = render(
+        <TestProvider>
+          <MarkdownContent content="- Item 1" />
+        </TestProvider>,
+      );
       expect(container.querySelector("ul")).toBeInTheDocument();
     });
 
     it("should render ordered lists", () => {
-      const { container } = render(<MarkdownContent content="1. First" />);
+      const { container } = render(
+        <TestProvider>
+          <MarkdownContent content="1. First" />
+        </TestProvider>,
+      );
       expect(container.querySelector("ol")).toBeInTheDocument();
     });
 
     it("should render blockquotes", () => {
-      render(<MarkdownContent content="> This is a quote" />);
+      render(
+        <TestProvider>
+          <MarkdownContent content="> This is a quote" />
+        </TestProvider>,
+      );
       const blockquote = screen
         .getByText("This is a quote")
         .closest("blockquote");
@@ -81,14 +107,22 @@ describe("MarkdownContent", () => {
     });
 
     it("should render horizontal rules", () => {
-      const { container } = render(<MarkdownContent content="---" />);
+      const { container } = render(
+        <TestProvider>
+          <MarkdownContent content="---" />
+        </TestProvider>,
+      );
       expect(container.querySelector("hr")).toBeInTheDocument();
     });
   });
 
   describe("links", () => {
     it("should render links with target=_blank", () => {
-      render(<MarkdownContent content="[Click here](https://example.com)" />);
+      render(
+        <TestProvider>
+          <MarkdownContent content="[Click here](https://example.com)" />
+        </TestProvider>,
+      );
       const link = screen.getByRole("link", { name: "Click here" });
       expect(link).toHaveAttribute("href", "https://example.com");
       expect(link).toHaveAttribute("target", "_blank");
@@ -98,7 +132,11 @@ describe("MarkdownContent", () => {
 
   describe("inline code", () => {
     it("should render inline code with styling", () => {
-      render(<MarkdownContent content="Use `const` for constants" />);
+      render(
+        <TestProvider>
+          <MarkdownContent content="Use `const` for constants" />
+        </TestProvider>,
+      );
       const code = screen.getByText("const");
       expect(code.tagName).toBe("CODE");
     });
@@ -108,7 +146,11 @@ describe("MarkdownContent", () => {
     it("should render code blocks with syntax highlighting", async () => {
       // Multi-line code triggers CodeBlock rendering
       const code = "```javascript\nconst x = 1;\nconst y = 2;\n```";
-      render(<MarkdownContent content={code} />);
+      render(
+        <TestProvider>
+          <MarkdownContent content={code} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         const codeBlock = screen.getByTestId("code-block");
@@ -119,7 +161,11 @@ describe("MarkdownContent", () => {
 
     it("should render multi-line code blocks", async () => {
       const code = "```python\ndef hello():\n    print('Hello')\n```";
-      render(<MarkdownContent content={code} />);
+      render(
+        <TestProvider>
+          <MarkdownContent content={code} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         const codeBlock = screen.getByTestId("code-block");
@@ -136,7 +182,11 @@ describe("MarkdownContent", () => {
 | Cell 1   | Cell 2   |
 | Cell 3   | Cell 4   |
 `;
-      render(<MarkdownContent content={tableMarkdown} />);
+      render(
+        <TestProvider>
+          <MarkdownContent content={tableMarkdown} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Column 1")).toBeInTheDocument();
       expect(screen.getByText("Cell 1")).toBeInTheDocument();
@@ -147,7 +197,9 @@ describe("MarkdownContent", () => {
     it("should render mermaid diagrams when enabled", async () => {
       const mermaidCode = "```mermaid\ngraph TD\nA-->B\n```";
       render(
-        <MarkdownContent content={mermaidCode} enableInteractiveArtifacts />,
+        <TestProvider>
+          <MarkdownContent content={mermaidCode} enableInteractiveArtifacts />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -158,10 +210,12 @@ describe("MarkdownContent", () => {
     it("should not render mermaid diagrams when disabled", async () => {
       const mermaidCode = "```mermaid\ngraph TD\nA-->B\n```";
       render(
-        <MarkdownContent
-          content={mermaidCode}
-          enableInteractiveArtifacts={false}
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={mermaidCode}
+            enableInteractiveArtifacts={false}
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -175,7 +229,11 @@ describe("MarkdownContent", () => {
       // Multi-line JSX to trigger Sandpack rendering
       const jsxCode =
         "```jsx\nconst App = () => {\n  return <div>Hello</div>;\n};\n```";
-      render(<MarkdownContent content={jsxCode} enableInteractiveArtifacts />);
+      render(
+        <TestProvider>
+          <MarkdownContent content={jsxCode} enableInteractiveArtifacts />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         const sandpack = screen.getByTestId("sandpack-executor");
@@ -188,7 +246,11 @@ describe("MarkdownContent", () => {
       // Multi-line TSX to trigger Sandpack rendering
       const tsxCode =
         "```tsx\nconst App: React.FC = () => {\n  return <div>Hello</div>;\n};\n```";
-      render(<MarkdownContent content={tsxCode} enableInteractiveArtifacts />);
+      render(
+        <TestProvider>
+          <MarkdownContent content={tsxCode} enableInteractiveArtifacts />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         const sandpack = screen.getByTestId("sandpack-executor");
@@ -200,7 +262,11 @@ describe("MarkdownContent", () => {
 
   describe("math rendering (KaTeX)", () => {
     it("should render inline math", () => {
-      render(<MarkdownContent content="The formula is $E = mc^2$" />);
+      render(
+        <TestProvider>
+          <MarkdownContent content="The formula is $E = mc^2$" />
+        </TestProvider>,
+      );
       // KaTeX renders the math, we just verify no error
       expect(screen.getByText(/The formula is/)).toBeInTheDocument();
     });
@@ -209,7 +275,11 @@ describe("MarkdownContent", () => {
   describe("enableInteractiveArtifacts prop", () => {
     it("should default to true", async () => {
       const mermaidCode = "```mermaid\ngraph TD\nA-->B\n```";
-      render(<MarkdownContent content={mermaidCode} />);
+      render(
+        <TestProvider>
+          <MarkdownContent content={mermaidCode} />
+        </TestProvider>,
+      );
 
       await waitFor(() => {
         expect(screen.getByTestId("mermaid-diagram")).toBeInTheDocument();
@@ -221,10 +291,12 @@ describe("MarkdownContent", () => {
       const jsxCode =
         "```jsx\nconst App = () => {\n  return <div>Hello</div>;\n};\n```";
       render(
-        <MarkdownContent
-          content={jsxCode}
-          enableInteractiveArtifacts={false}
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={jsxCode}
+            enableInteractiveArtifacts={false}
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -242,11 +314,13 @@ describe("MarkdownContent", () => {
       // Incomplete mermaid - no closing ```
       const incompleteMermaid = "```mermaid\ngraph TD\n  A --";
       render(
-        <MarkdownContent
-          content={incompleteMermaid}
-          isStreaming={true}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={incompleteMermaid}
+            isStreaming={true}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -261,11 +335,13 @@ describe("MarkdownContent", () => {
     it("should render mermaid diagram when streaming is false", async () => {
       const completeMermaid = "```mermaid\ngraph TD\n  A --> B\n```";
       render(
-        <MarkdownContent
-          content={completeMermaid}
-          isStreaming={false}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={completeMermaid}
+            isStreaming={false}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -282,11 +358,13 @@ describe("MarkdownContent", () => {
       // so we rely entirely on isStreaming flag rather than content heuristics
       const completeMermaid = "```mermaid\ngraph TD\n  A --> B\n```";
       render(
-        <MarkdownContent
-          content={completeMermaid}
-          isStreaming={true}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={completeMermaid}
+            isStreaming={true}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -303,11 +381,13 @@ describe("MarkdownContent", () => {
       // to avoid JSON parse errors from incomplete content
       const chartContent = '```chart\n{"type": "bar", "data": [1, 2, 3]}\n```';
       render(
-        <MarkdownContent
-          content={chartContent}
-          isStreaming={true}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={chartContent}
+            isStreaming={true}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -323,11 +403,13 @@ describe("MarkdownContent", () => {
       const svgContent =
         '```svg\n<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"/></svg>\n```';
       render(
-        <MarkdownContent
-          content={svgContent}
-          isStreaming={true}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={svgContent}
+            isStreaming={true}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -340,11 +422,13 @@ describe("MarkdownContent", () => {
     it("should transition from placeholder to rendered artifact when streaming completes", async () => {
       const incompleteMermaid = "```mermaid\ngraph TD\n  A --";
       const { rerender } = render(
-        <MarkdownContent
-          content={incompleteMermaid}
-          isStreaming={true}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={incompleteMermaid}
+            isStreaming={true}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       // Initially shows placeholder
@@ -377,11 +461,13 @@ describe("MarkdownContent", () => {
       // Audio URLs don't need parsing, should render immediately
       const audioCode = "```audio\nhttps://example.com/audio.mp3\n```";
       render(
-        <MarkdownContent
-          content={audioCode}
-          isStreaming={true}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={audioCode}
+            isStreaming={true}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       // Audio should render without placeholder (it's not parse-prone)
@@ -397,11 +483,13 @@ describe("MarkdownContent", () => {
       const mixedContent =
         "```javascript\nconst x = 1;\nconst y = 2;\n```\n\nSome text\n\n```mermaid\ngraph TD";
       render(
-        <MarkdownContent
-          content={mixedContent}
-          isStreaming={true}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={mixedContent}
+            isStreaming={true}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -417,10 +505,12 @@ describe("MarkdownContent", () => {
     it("should default isStreaming to false", async () => {
       const completeMermaid = "```mermaid\ngraph TD\n  A --> B\n```";
       render(
-        <MarkdownContent
-          content={completeMermaid}
-          enableInteractiveArtifacts
-        />,
+        <TestProvider>
+          <MarkdownContent
+            content={completeMermaid}
+            enableInteractiveArtifacts
+          />
+        </TestProvider>,
       );
 
       await waitFor(() => {

@@ -28,6 +28,7 @@ vi.mock("@/hooks", () => ({
 }));
 
 import { useNativeCapabilities } from "@/hooks";
+import { TestProvider } from "@/test-utils";
 const mockUseNativeCapabilities = useNativeCapabilities as ReturnType<
   typeof vi.fn
 >;
@@ -114,14 +115,22 @@ describe("HeaderModelSelector", () => {
 
   describe("Rendering", () => {
     it("renders the combined selector pill", () => {
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pill = screen.getByTestId("header-model-selector");
       expect(pill).toBeInTheDocument();
     });
 
     it("displays model name and thinking level in pill", () => {
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Should show combined format: "Claude Opus 4.5 (Medium)"
       expect(screen.getByText(/Claude Opus 4.5/)).toBeInTheDocument();
@@ -129,7 +138,11 @@ describe("HeaderModelSelector", () => {
     });
 
     it("hides thinking level for models that don't support it", () => {
-      render(<HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />
+        </TestProvider>,
+      );
 
       // Should show only model name, no thinking level
       expect(screen.getByText(/GPT-4o/)).toBeInTheDocument();
@@ -137,13 +150,21 @@ describe("HeaderModelSelector", () => {
     });
 
     it("shows loading state when models are loading", () => {
-      render(<HeaderModelSelector {...defaultProps} isLoading />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} isLoading />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("model-loading-spinner")).toBeInTheDocument();
     });
 
     it("can be disabled", () => {
-      render(<HeaderModelSelector {...defaultProps} disabled />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} disabled />
+        </TestProvider>,
+      );
 
       const pill = screen.getByTestId("header-model-selector");
       expect(pill).toHaveAttribute("disabled");
@@ -153,7 +174,11 @@ describe("HeaderModelSelector", () => {
   describe("Dropdown Behavior", () => {
     it("opens dropdown on click", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pill = screen.getByTestId("header-model-selector");
       await user.click(pill);
@@ -164,10 +189,12 @@ describe("HeaderModelSelector", () => {
     it("closes dropdown on outside click", async () => {
       const user = userEvent.setup();
       render(
-        <div>
-          <HeaderModelSelector {...defaultProps} />
-          <button data-testid="outside-button">Outside</button>
-        </div>,
+        <TestProvider>
+          <div>
+            <HeaderModelSelector {...defaultProps} />
+            <button data-testid="outside-button">Outside</button>
+          </div>
+        </TestProvider>,
       );
 
       // Open dropdown
@@ -183,7 +210,11 @@ describe("HeaderModelSelector", () => {
 
     it("closes dropdown on Escape key", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
       expect(screen.getByTestId("model-dropdown")).toBeInTheDocument();
@@ -198,7 +229,11 @@ describe("HeaderModelSelector", () => {
   describe("Model Selection", () => {
     it("displays all available models in dropdown", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
       const dropdown = screen.getByTestId("model-dropdown");
@@ -210,7 +245,11 @@ describe("HeaderModelSelector", () => {
 
     it("shows checkmark next to selected model", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -227,7 +266,12 @@ describe("HeaderModelSelector", () => {
       const user = userEvent.setup();
       const onModelChange = vi.fn();
       render(
-        <HeaderModelSelector {...defaultProps} onModelChange={onModelChange} />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -238,7 +282,11 @@ describe("HeaderModelSelector", () => {
 
     it("closes dropdown after model selection", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
       await user.click(screen.getByRole("option", { name: /GPT-4o/ }));
@@ -250,7 +298,11 @@ describe("HeaderModelSelector", () => {
 
     it("shows thinking badge for models that support thinking", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -273,7 +325,11 @@ describe("HeaderModelSelector", () => {
   describe("Thinking Level Selection", () => {
     it("shows thinking level section in dropdown for thinking-capable models", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -282,7 +338,11 @@ describe("HeaderModelSelector", () => {
 
     it("hides thinking level section for non-thinking models", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} selectedModel="gpt-4o" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -293,7 +353,11 @@ describe("HeaderModelSelector", () => {
 
     it("displays all thinking levels (Low, Medium, High)", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -306,7 +370,11 @@ describe("HeaderModelSelector", () => {
 
     it("highlights current thinking level", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} thinkingLevel="high" />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} thinkingLevel="high" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -318,10 +386,12 @@ describe("HeaderModelSelector", () => {
       const user = userEvent.setup();
       const onThinkingLevelChange = vi.fn();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          onThinkingLevelChange={onThinkingLevelChange}
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            onThinkingLevelChange={onThinkingLevelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -332,7 +402,11 @@ describe("HeaderModelSelector", () => {
 
     it("keeps dropdown open after changing thinking level", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
       await user.click(screen.getByRole("radio", { name: /High/i }));
@@ -345,7 +419,11 @@ describe("HeaderModelSelector", () => {
   describe("Keyboard Navigation", () => {
     it("supports arrow key navigation in model list", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
       await user.keyboard("{ArrowDown}");
@@ -359,7 +437,12 @@ describe("HeaderModelSelector", () => {
       const user = userEvent.setup();
       const onModelChange = vi.fn();
       render(
-        <HeaderModelSelector {...defaultProps} onModelChange={onModelChange} />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -373,7 +456,11 @@ describe("HeaderModelSelector", () => {
 
   describe("Accessibility", () => {
     it("has proper ARIA attributes", () => {
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pill = screen.getByTestId("header-model-selector");
       // The dropdown contains a dialog (settings + model list), not just a listbox
@@ -383,7 +470,11 @@ describe("HeaderModelSelector", () => {
 
     it("sets aria-expanded when dropdown opens", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pill = screen.getByTestId("header-model-selector");
       await user.click(pill);
@@ -392,7 +483,11 @@ describe("HeaderModelSelector", () => {
     });
 
     it("has accessible label", () => {
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pill = screen.getByTestId("header-model-selector");
       expect(pill).toHaveAttribute(
@@ -403,7 +498,11 @@ describe("HeaderModelSelector", () => {
 
     it("dropdown has proper role", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -416,7 +515,11 @@ describe("HeaderModelSelector", () => {
 
     it("model options have proper role", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -428,7 +531,11 @@ describe("HeaderModelSelector", () => {
   describe("Status Badges", () => {
     it("shows preview badge for preview models", async () => {
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -441,14 +548,22 @@ describe("HeaderModelSelector", () => {
 
   describe("Compact Mode", () => {
     it("renders compact version when compact prop is true", () => {
-      render(<HeaderModelSelector {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       const pill = screen.getByTestId("header-model-selector");
       expect(pill).toHaveClass("compact");
     });
 
     it("shows abbreviated model name in compact mode", () => {
-      render(<HeaderModelSelector {...defaultProps} compact />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} compact />
+        </TestProvider>,
+      );
 
       // Should show abbreviated like "Opus 4.5" instead of "Claude Opus 4.5"
       expect(screen.getByText(/Opus/)).toBeInTheDocument();
@@ -491,7 +606,11 @@ describe("HeaderModelSelector", () => {
       });
 
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -515,7 +634,11 @@ describe("HeaderModelSelector", () => {
       });
 
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -548,7 +671,11 @@ describe("HeaderModelSelector", () => {
       });
 
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -582,7 +709,11 @@ describe("HeaderModelSelector", () => {
       });
 
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -614,7 +745,11 @@ describe("HeaderModelSelector", () => {
       });
 
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -654,7 +789,11 @@ describe("HeaderModelSelector", () => {
       });
 
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -688,7 +827,11 @@ describe("HeaderModelSelector", () => {
       });
 
       const user = userEvent.setup();
-      render(<HeaderModelSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <HeaderModelSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("header-model-selector"));
 
@@ -722,10 +865,12 @@ describe("HeaderModelSelector", () => {
 
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          selectedModel="gemini-2.5-pro"
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            selectedModel="gemini-2.5-pro"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -766,10 +911,12 @@ describe("HeaderModelSelector", () => {
 
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          selectedModel="gemini-2.5-pro"
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            selectedModel="gemini-2.5-pro"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -831,11 +978,13 @@ describe("HeaderModelSelector", () => {
     it("shows search input when enableSearch prop is true and many models", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={manyModels}
-          enableSearch
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={manyModels}
+            enableSearch
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -847,11 +996,13 @@ describe("HeaderModelSelector", () => {
     it("filters models based on search query", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={manyModels}
-          enableSearch
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={manyModels}
+            enableSearch
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -875,11 +1026,13 @@ describe("HeaderModelSelector", () => {
     it("filters by provider name", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={manyModels}
-          enableSearch
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={manyModels}
+            enableSearch
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -902,11 +1055,13 @@ describe("HeaderModelSelector", () => {
     it("shows no results message when search has no matches", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={manyModels}
-          enableSearch
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={manyModels}
+            enableSearch
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -918,11 +1073,13 @@ describe("HeaderModelSelector", () => {
     it("clears search on dropdown close", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={manyModels}
-          enableSearch
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={manyModels}
+            enableSearch
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -941,11 +1098,13 @@ describe("HeaderModelSelector", () => {
     it("does not show search when enableSearch is false", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={manyModels}
-          enableSearch={false}
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={manyModels}
+            enableSearch={false}
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -958,11 +1117,13 @@ describe("HeaderModelSelector", () => {
     it("is case-insensitive", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={manyModels}
-          enableSearch
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={manyModels}
+            enableSearch
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -1006,11 +1167,13 @@ describe("HeaderModelSelector", () => {
     it("shows 'Google (Vertex AI)' for Vertex AI Google models", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={modelsWithVendor}
-          selectedModel="gemini-2.5-flash"
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={modelsWithVendor}
+            selectedModel="gemini-2.5-flash"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -1024,11 +1187,13 @@ describe("HeaderModelSelector", () => {
     it("shows 'Anthropic (Vertex AI)' for Anthropic via Vertex AI", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={modelsWithVendor}
-          selectedModel="claude-opus-vertex"
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={modelsWithVendor}
+            selectedModel="claude-opus-vertex"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -1042,11 +1207,13 @@ describe("HeaderModelSelector", () => {
     it("shows 'OpenAI (Azure)' for Azure OpenAI models", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={modelsWithVendor}
-          selectedModel="gpt-4o-azure"
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={modelsWithVendor}
+            selectedModel="gpt-4o-azure"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));
@@ -1058,11 +1225,13 @@ describe("HeaderModelSelector", () => {
     it("shows capitalized provider name when no vendor is specified", async () => {
       const user = userEvent.setup();
       render(
-        <HeaderModelSelector
-          {...defaultProps}
-          availableModels={modelsWithVendor}
-          selectedModel="claude-opus-native"
-        />,
+        <TestProvider>
+          <HeaderModelSelector
+            {...defaultProps}
+            availableModels={modelsWithVendor}
+            selectedModel="claude-opus-native"
+          />
+        </TestProvider>,
       );
 
       await user.click(screen.getByTestId("header-model-selector"));

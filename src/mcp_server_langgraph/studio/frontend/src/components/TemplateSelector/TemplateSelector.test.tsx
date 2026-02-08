@@ -13,6 +13,8 @@ import {
   type TemplateOption,
 } from "./TemplateSelector";
 
+import { TestProvider } from "@/test-utils";
+
 describe("TemplateSelector", () => {
   const sampleTemplates: TemplateOption[] = [
     {
@@ -67,26 +69,42 @@ describe("TemplateSelector", () => {
 
   describe("Rendering", () => {
     it("should render suggestion chips", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Code Review")).toBeInTheDocument();
       expect(screen.getByText("Data Analysis")).toBeInTheDocument();
       expect(screen.getByText("Quick Task")).toBeInTheDocument();
     });
 
     it("should display component header", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/suggested templates/i)).toBeInTheDocument();
     });
 
     it("should show template count", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/3 suggestions/i)).toBeInTheDocument();
     });
   });
 
   describe("Template Selection", () => {
     it("should highlight selected template chip", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button", { name: /code review/i });
       fireEvent.click(chip);
@@ -95,7 +113,11 @@ describe("TemplateSelector", () => {
     });
 
     it("should show template preview when chip is clicked", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /code review/i }));
 
@@ -108,7 +130,11 @@ describe("TemplateSelector", () => {
     });
 
     it("should show apply button when template is selected", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /code review/i }));
 
@@ -120,7 +146,11 @@ describe("TemplateSelector", () => {
 
   describe("Apply Template", () => {
     it("should call onApply with template config when apply is clicked", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Select template
       fireEvent.click(screen.getByRole("button", { name: /code review/i }));
@@ -137,7 +167,11 @@ describe("TemplateSelector", () => {
     });
 
     it("should disable apply button when no template is selected", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       // No template selected initially - apply button should not exist
       expect(
@@ -148,14 +182,22 @@ describe("TemplateSelector", () => {
 
   describe("Dismiss Functionality", () => {
     it("should show dismiss button", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", { name: /dismiss/i }),
       ).toBeInTheDocument();
     });
 
     it("should call onDismiss when dismiss button is clicked", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
 
@@ -165,7 +207,11 @@ describe("TemplateSelector", () => {
 
   describe("Template Preview", () => {
     it("should display orchestrator type in preview", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /data analysis/i }));
 
@@ -175,7 +221,11 @@ describe("TemplateSelector", () => {
     });
 
     it("should display thinking budget in preview", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /data analysis/i }));
 
@@ -183,7 +233,11 @@ describe("TemplateSelector", () => {
     });
 
     it("should display critique rounds in preview", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /data analysis/i }));
 
@@ -191,7 +245,11 @@ describe("TemplateSelector", () => {
     });
 
     it("should display success rate in preview", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /data analysis/i }));
 
@@ -201,19 +259,31 @@ describe("TemplateSelector", () => {
 
   describe("Empty State", () => {
     it("should show empty state when no suggestions", () => {
-      render(<TemplateSelector {...defaultProps} suggestions={[]} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} suggestions={[]} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no template suggestions/i)).toBeInTheDocument();
     });
   });
 
   describe("Loading State", () => {
     it("should show loading indicator when loading", () => {
-      render(<TemplateSelector {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("status")).toBeInTheDocument();
     });
 
     it("should not render template chips when loading", () => {
-      render(<TemplateSelector {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       // When loading, template chips should not be rendered (only dismiss button and loader)
       // Check that no template chip buttons are present
@@ -228,7 +298,11 @@ describe("TemplateSelector", () => {
 
   describe("Compact Mode", () => {
     it("should render in compact mode when compact prop is true", () => {
-      render(<TemplateSelector {...defaultProps} compact={true} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} compact={true} />
+        </TestProvider>,
+      );
 
       // In compact mode, template chips should be smaller
       const container = screen.getByTestId("template-selector");
@@ -236,7 +310,11 @@ describe("TemplateSelector", () => {
     });
 
     it("should hide description in compact mode", () => {
-      render(<TemplateSelector {...defaultProps} compact={true} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} compact={true} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /code review/i }));
 
@@ -249,14 +327,22 @@ describe("TemplateSelector", () => {
 
   describe("Accessibility", () => {
     it("should have proper ARIA labels on chips", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button", { name: /code review/i });
       expect(chip).toHaveAccessibleName();
     });
 
     it("should announce selected template to screen readers", () => {
-      render(<TemplateSelector {...defaultProps} />);
+      render(
+        <TestProvider>
+          <TemplateSelector {...defaultProps} />
+        </TestProvider>,
+      );
 
       const chip = screen.getByRole("button", { name: /code review/i });
       fireEvent.click(chip);

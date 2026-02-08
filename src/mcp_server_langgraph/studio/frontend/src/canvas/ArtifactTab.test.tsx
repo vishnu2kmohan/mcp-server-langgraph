@@ -9,6 +9,8 @@ import userEvent from "@testing-library/user-event";
 import { ArtifactTab } from "./ArtifactTab";
 import type { CanvasArtifact } from "../types/artifacts";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock @dnd-kit/sortable
 vi.mock("@dnd-kit/sortable", () => ({
   useSortable: vi.fn(() => ({
@@ -69,24 +71,40 @@ describe("ArtifactTab", () => {
 
   describe("rendering", () => {
     it("should render artifact title", () => {
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Test Artifact")).toBeInTheDocument();
     });
 
     it("should render 'Untitled' when title is not provided", () => {
       const artifact = { ...mockArtifact, title: undefined };
-      render(<ArtifactTab {...defaultProps} artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} artifact={artifact} />
+        </TestProvider>,
+      );
       expect(screen.getByText("Untitled")).toBeInTheDocument();
     });
 
     it("should have correct aria role and selected state", () => {
-      render(<ArtifactTab {...defaultProps} isSelected={true} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} isSelected={true} />
+        </TestProvider>,
+      );
       const tab = screen.getByRole("tab");
       expect(tab).toHaveAttribute("aria-selected", "true");
     });
 
     it("should show close button on hover", () => {
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
       // Close button should exist but be hidden initially (controlled via CSS)
       const closeButton = screen.getByLabelText(/close test artifact/i);
       expect(closeButton).toBeInTheDocument();
@@ -96,19 +114,31 @@ describe("ArtifactTab", () => {
   describe("selection", () => {
     it("should call onSelect when clicked", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByRole("tab"));
       expect(defaultProps.onSelect).toHaveBeenCalledTimes(1);
     });
 
     it("should have tabIndex 0 when selected", () => {
-      render(<ArtifactTab {...defaultProps} isSelected={true} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} isSelected={true} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("tab")).toHaveAttribute("tabIndex", "0");
     });
 
     it("should have tabIndex -1 when not selected", () => {
-      render(<ArtifactTab {...defaultProps} isSelected={false} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} isSelected={false} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("tab")).toHaveAttribute("tabIndex", "-1");
     });
   });
@@ -116,7 +146,11 @@ describe("ArtifactTab", () => {
   describe("close button", () => {
     it("should call onClose when close button is clicked", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
 
       const closeButton = screen.getByLabelText(/close test artifact/i);
       await user.click(closeButton);
@@ -127,7 +161,11 @@ describe("ArtifactTab", () => {
 
     it("should stop propagation when close button is clicked", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
 
       const closeButton = screen.getByLabelText(/close test artifact/i);
       await user.click(closeButton);
@@ -140,7 +178,11 @@ describe("ArtifactTab", () => {
   describe("inline rename", () => {
     it("should enter rename mode on double click", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
 
       const tab = screen.getByRole("tab");
       await user.dblClick(tab);
@@ -151,7 +193,11 @@ describe("ArtifactTab", () => {
 
     it("should call onRename when rename is confirmed", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
 
       const tab = screen.getByRole("tab");
       await user.dblClick(tab);
@@ -165,7 +211,11 @@ describe("ArtifactTab", () => {
 
     it("should exit rename mode on Escape without calling onRename", async () => {
       const user = userEvent.setup();
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
 
       const tab = screen.getByRole("tab");
       await user.dblClick(tab);
@@ -188,7 +238,11 @@ describe("ArtifactTab", () => {
           lastEditedBy: "ai",
         },
       };
-      render(<ArtifactTab {...defaultProps} artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} artifact={artifact} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("attribution-dot")).toHaveClass("bg-insight-9");
     });
 
@@ -201,7 +255,11 @@ describe("ArtifactTab", () => {
           lastEditedBy: "user",
         },
       };
-      render(<ArtifactTab {...defaultProps} artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} artifact={artifact} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("attribution-dot")).toHaveClass("bg-primary-9");
     });
 
@@ -214,21 +272,33 @@ describe("ArtifactTab", () => {
           lastEditedBy: "user",
         },
       };
-      render(<ArtifactTab {...defaultProps} artifact={artifact} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} artifact={artifact} />
+        </TestProvider>,
+      );
       expect(screen.queryByTestId("attribution-dot")).not.toBeInTheDocument();
     });
   });
 
   describe("styling", () => {
     it("should have selected styles when isSelected is true", () => {
-      render(<ArtifactTab {...defaultProps} isSelected={true} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} isSelected={true} />
+        </TestProvider>,
+      );
       const tab = screen.getByRole("tab");
       expect(tab).toHaveClass("bg-neutral-1");
       expect(tab).toHaveClass("text-neutral-12");
     });
 
     it("should have unselected styles when isSelected is false", () => {
-      render(<ArtifactTab {...defaultProps} isSelected={false} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} isSelected={false} />
+        </TestProvider>,
+      );
       const tab = screen.getByRole("tab");
       expect(tab).toHaveClass("bg-neutral-2");
       expect(tab).toHaveClass("text-neutral-11");
@@ -237,7 +307,11 @@ describe("ArtifactTab", () => {
 
   describe("drag handle", () => {
     it("should have a drag handle element", () => {
-      render(<ArtifactTab {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ArtifactTab {...defaultProps} />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/drag to reorder/i)).toBeInTheDocument();
     });
   });

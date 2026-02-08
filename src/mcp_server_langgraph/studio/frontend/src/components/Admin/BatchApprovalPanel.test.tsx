@@ -19,6 +19,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mock Data
 // =============================================================================
@@ -97,11 +99,13 @@ describe("BatchApprovalPanel", () => {
   describe("Rendering", () => {
     it("should display all pending approvals", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Research Assistant")).toBeInTheDocument();
@@ -111,11 +115,13 @@ describe("BatchApprovalPanel", () => {
 
     it("should display checkboxes for each approval", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -125,11 +131,13 @@ describe("BatchApprovalPanel", () => {
 
     it("should display select all checkbox", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -139,11 +147,13 @@ describe("BatchApprovalPanel", () => {
 
     it("should display batch approve and reject buttons", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -156,11 +166,13 @@ describe("BatchApprovalPanel", () => {
 
     it("should display confidence for each approval", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("65%")).toBeInTheDocument();
@@ -170,11 +182,13 @@ describe("BatchApprovalPanel", () => {
 
     it("should show empty state when no approvals pending", () => {
       render(
-        <BatchApprovalPanel
-          approvals={[]}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={[]}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/no pending approvals/i)).toBeInTheDocument();
@@ -186,11 +200,13 @@ describe("BatchApprovalPanel", () => {
       const user = userEvent.setup();
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -205,11 +221,13 @@ describe("BatchApprovalPanel", () => {
       const user = userEvent.setup();
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const selectAllCheckbox = screen.getByRole("checkbox", {
@@ -228,11 +246,13 @@ describe("BatchApprovalPanel", () => {
       const user = userEvent.setup();
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const selectAllCheckbox = screen.getByRole("checkbox", {
@@ -254,11 +274,13 @@ describe("BatchApprovalPanel", () => {
       const user = userEvent.setup();
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -272,11 +294,13 @@ describe("BatchApprovalPanel", () => {
   describe("Batch Actions", () => {
     it("should disable batch buttons when nothing is selected", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const approveButton = screen.getByRole("button", {
@@ -294,11 +318,13 @@ describe("BatchApprovalPanel", () => {
       const user = userEvent.setup();
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -320,11 +346,13 @@ describe("BatchApprovalPanel", () => {
       const onBatchApprove = vi.fn().mockResolvedValue(undefined);
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={onBatchApprove}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={onBatchApprove}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -347,11 +375,13 @@ describe("BatchApprovalPanel", () => {
       const onBatchReject = vi.fn().mockResolvedValue(undefined);
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={onBatchReject}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={onBatchReject}
+          />
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -369,11 +399,13 @@ describe("BatchApprovalPanel", () => {
   describe("Common Reason", () => {
     it("should display common reason input", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByPlaceholderText(/reason/i)).toBeInTheDocument();
@@ -384,11 +416,13 @@ describe("BatchApprovalPanel", () => {
       const onBatchApprove = vi.fn().mockResolvedValue(undefined);
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={onBatchApprove}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={onBatchApprove}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // Select an approval
@@ -415,12 +449,14 @@ describe("BatchApprovalPanel", () => {
   describe("Loading States", () => {
     it("should show loading spinner during approval", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-          isApproving={true}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+            isApproving={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("batch-approve-loading")).toBeInTheDocument();
@@ -428,12 +464,14 @@ describe("BatchApprovalPanel", () => {
 
     it("should show loading spinner during rejection", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-          isRejecting={true}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+            isRejecting={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("batch-reject-loading")).toBeInTheDocument();
@@ -441,12 +479,14 @@ describe("BatchApprovalPanel", () => {
 
     it("should disable all interactions during loading", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-          isApproving={true}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+            isApproving={true}
+          />
+        </TestProvider>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -459,11 +499,13 @@ describe("BatchApprovalPanel", () => {
   describe("Accessibility", () => {
     it("should have accessible labels for checkboxes", () => {
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // Each approval checkbox should have an accessible name
@@ -480,11 +522,13 @@ describe("BatchApprovalPanel", () => {
       const user = userEvent.setup();
 
       render(
-        <BatchApprovalPanel
-          approvals={mockApprovals}
-          onBatchApprove={vi.fn()}
-          onBatchReject={vi.fn()}
-        />,
+        <TestProvider>
+          <BatchApprovalPanel
+            approvals={mockApprovals}
+            onBatchApprove={vi.fn()}
+            onBatchReject={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const selectAllCheckbox = screen.getByRole("checkbox", {

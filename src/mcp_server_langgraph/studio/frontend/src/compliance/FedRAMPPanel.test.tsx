@@ -8,6 +8,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { FedRAMPPanel, type FedRAMPControl } from "./FedRAMPPanel";
 
+import { TestProvider } from "@/test-utils";
+
 describe("FedRAMPPanel", () => {
   afterEach(() => {
     cleanup();
@@ -50,21 +52,27 @@ describe("FedRAMPPanel", () => {
   describe("Rendering", () => {
     it("renders the panel container", () => {
       render(
-        <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />,
+        <TestProvider>
+          <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />
+        </TestProvider>,
       );
       expect(screen.getByTestId("fedramp-panel")).toBeInTheDocument();
     });
 
     it("renders panel header with FedRAMP title", () => {
       render(
-        <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />,
+        <TestProvider>
+          <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />
+        </TestProvider>,
       );
       expect(screen.getByText(/fedramp/i)).toBeInTheDocument();
     });
 
     it("renders all controls", () => {
       render(
-        <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />,
+        <TestProvider>
+          <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />
+        </TestProvider>,
       );
       expect(screen.getByText("Access Control Policy")).toBeInTheDocument();
       expect(screen.getByText("Audit Policy")).toBeInTheDocument();
@@ -72,7 +80,11 @@ describe("FedRAMPPanel", () => {
     });
 
     it("shows empty state when no controls", () => {
-      render(<FedRAMPPanel controls={[]} authStatus={mockAuthStatus} />);
+      render(
+        <TestProvider>
+          <FedRAMPPanel controls={[]} authStatus={mockAuthStatus} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no controls/i)).toBeInTheDocument();
     });
   });
@@ -80,24 +92,30 @@ describe("FedRAMPPanel", () => {
   describe("Authorization Status", () => {
     it("shows P-ATO authorization level", () => {
       render(
-        <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />,
+        <TestProvider>
+          <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />
+        </TestProvider>,
       );
       expect(screen.getByText(/p-ato/i)).toBeInTheDocument();
     });
 
     it("shows ATO authorization level", () => {
       render(
-        <FedRAMPPanel
-          controls={mockControls}
-          authStatus={{ ...mockAuthStatus, level: "ATO" }}
-        />,
+        <TestProvider>
+          <FedRAMPPanel
+            controls={mockControls}
+            authStatus={{ ...mockAuthStatus, level: "ATO" }}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/^ato$/i)).toBeInTheDocument();
     });
 
     it("shows authorization expiry date", () => {
       render(
-        <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />,
+        <TestProvider>
+          <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />
+        </TestProvider>,
       );
       expect(screen.getByText(/2028/)).toBeInTheDocument();
     });
@@ -106,20 +124,24 @@ describe("FedRAMPPanel", () => {
   describe("Impact Level Display", () => {
     it("shows high impact level", () => {
       render(
-        <FedRAMPPanel
-          controls={[mockControls[0]]}
-          authStatus={mockAuthStatus}
-        />,
+        <TestProvider>
+          <FedRAMPPanel
+            controls={[mockControls[0]]}
+            authStatus={mockAuthStatus}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/high/i)).toBeInTheDocument();
     });
 
     it("shows moderate impact level", () => {
       render(
-        <FedRAMPPanel
-          controls={[mockControls[2]]}
-          authStatus={mockAuthStatus}
-        />,
+        <TestProvider>
+          <FedRAMPPanel
+            controls={[mockControls[2]]}
+            authStatus={mockAuthStatus}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/moderate/i)).toBeInTheDocument();
     });
@@ -128,10 +150,12 @@ describe("FedRAMPPanel", () => {
   describe("POA&M Tracking", () => {
     it("shows POA&M ID when available", () => {
       render(
-        <FedRAMPPanel
-          controls={[mockControls[2]]}
-          authStatus={mockAuthStatus}
-        />,
+        <TestProvider>
+          <FedRAMPPanel
+            controls={[mockControls[2]]}
+            authStatus={mockAuthStatus}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/poam-123/i)).toBeInTheDocument();
     });
@@ -140,7 +164,9 @@ describe("FedRAMPPanel", () => {
   describe("Summary Statistics", () => {
     it("shows compliance percentage", () => {
       render(
-        <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />,
+        <TestProvider>
+          <FedRAMPPanel controls={mockControls} authStatus={mockAuthStatus} />
+        </TestProvider>,
       );
       // 2 compliant out of 3 = 67%
       expect(screen.getByText(/67%/)).toBeInTheDocument();
@@ -150,11 +176,13 @@ describe("FedRAMPPanel", () => {
   describe("Loading State", () => {
     it("shows loading spinner when isLoading is true", () => {
       render(
-        <FedRAMPPanel
-          controls={[]}
-          authStatus={mockAuthStatus}
-          isLoading={true}
-        />,
+        <TestProvider>
+          <FedRAMPPanel
+            controls={[]}
+            authStatus={mockAuthStatus}
+            isLoading={true}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });

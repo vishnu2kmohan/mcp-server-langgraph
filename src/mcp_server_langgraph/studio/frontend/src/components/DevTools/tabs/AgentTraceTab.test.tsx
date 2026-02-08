@@ -14,6 +14,8 @@ expect.extend(toHaveNoViolations);
 import { AgentTraceTab } from "./AgentTraceTab";
 import type { AgentExecutionTrace } from "../../../types/chat";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Mock Data
 // =============================================================================
@@ -111,13 +113,21 @@ describe("AgentTraceTab", () => {
 
   describe("rendering", () => {
     it("should render with data-testid", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("agent-trace-tab")).toBeInTheDocument();
     });
 
     it("should display session ID", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("session-123")).toBeInTheDocument();
     });
@@ -130,7 +140,11 @@ describe("AgentTraceTab", () => {
         refetch: vi.fn(),
       });
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("agent-trace-loading")).toBeInTheDocument();
     });
@@ -143,7 +157,11 @@ describe("AgentTraceTab", () => {
         refetch: vi.fn(),
       });
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("agent-trace-empty")).toBeInTheDocument();
       expect(screen.getByText(/no trace data/i)).toBeInTheDocument();
@@ -152,7 +170,11 @@ describe("AgentTraceTab", () => {
 
   describe("node visualization", () => {
     it("should display trace nodes", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Agent")).toBeInTheDocument();
       expect(screen.getByText("Tool Call")).toBeInTheDocument();
@@ -160,7 +182,11 @@ describe("AgentTraceTab", () => {
     });
 
     it("should show node status indicators", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // Should have status indicators for nodes
       expect(screen.getByTestId("node-status-node-1")).toBeInTheDocument();
@@ -169,7 +195,11 @@ describe("AgentTraceTab", () => {
     });
 
     it("should show node duration", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // Completed nodes should show duration
       expect(screen.getByText("150ms")).toBeInTheDocument();
@@ -182,10 +212,12 @@ describe("AgentTraceTab", () => {
       const handleNodeHighlight = vi.fn();
 
       render(
-        <AgentTraceTab
-          sessionId="session-123"
-          onNodeHighlight={handleNodeHighlight}
-        />,
+        <TestProvider>
+          <AgentTraceTab
+            sessionId="session-123"
+            onNodeHighlight={handleNodeHighlight}
+          />
+        </TestProvider>,
       );
 
       const node = screen.getByTestId("trace-node-node-1");
@@ -198,10 +230,12 @@ describe("AgentTraceTab", () => {
       const handleNodeHighlight = vi.fn();
 
       render(
-        <AgentTraceTab
-          sessionId="session-123"
-          onNodeHighlight={handleNodeHighlight}
-        />,
+        <TestProvider>
+          <AgentTraceTab
+            sessionId="session-123"
+            onNodeHighlight={handleNodeHighlight}
+          />
+        </TestProvider>,
       );
 
       const node = screen.getByTestId("trace-node-node-1");
@@ -216,7 +250,11 @@ describe("AgentTraceTab", () => {
 
   describe("token usage", () => {
     it("should display token counts", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("token-input")).toHaveTextContent("100");
       expect(screen.getByTestId("token-output")).toHaveTextContent("50");
@@ -226,7 +264,11 @@ describe("AgentTraceTab", () => {
 
   describe("timeline view", () => {
     it("should show timeline view toggle", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("view-toggle")).toBeInTheDocument();
     });
@@ -234,7 +276,11 @@ describe("AgentTraceTab", () => {
     it("should switch between list and timeline views", async () => {
       const user = userEvent.setup();
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // Default is list view
       expect(screen.getByTestId("trace-list-view")).toBeInTheDocument();
@@ -248,7 +294,11 @@ describe("AgentTraceTab", () => {
 
   describe("refresh", () => {
     it("should have refresh button", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("refresh-trace-button")).toBeInTheDocument();
     });
@@ -264,7 +314,11 @@ describe("AgentTraceTab", () => {
         refetch: mockRefetch,
       });
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("refresh-trace-button"));
 
@@ -281,7 +335,11 @@ describe("AgentTraceTab", () => {
         refetch: vi.fn(),
       });
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("agent-trace-error")).toBeInTheDocument();
       expect(screen.getByText(/failed to fetch/i)).toBeInTheDocument();
@@ -292,7 +350,11 @@ describe("AgentTraceTab", () => {
     it("should expand node details on click", async () => {
       const user = userEvent.setup();
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       const expandButton = screen.getByTestId("expand-node-node-1");
       await user.click(expandButton);
@@ -303,7 +365,11 @@ describe("AgentTraceTab", () => {
 
   describe("accessibility", () => {
     it("should have accessible structure", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // Should have proper heading
       expect(
@@ -312,7 +378,11 @@ describe("AgentTraceTab", () => {
     });
 
     it("should have no accessibility violations", async () => {
-      const { container } = render(<AgentTraceTab sessionId="session-123" />);
+      const { container } = render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
@@ -321,7 +391,11 @@ describe("AgentTraceTab", () => {
   describe("timeline filtering with startTime", () => {
     it("should show all nodes when timeWindow is null", () => {
       // timeWindow is null by default from beforeEach
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // All 3 nodes should be visible
       expect(screen.getByText("Agent")).toBeInTheDocument();
@@ -342,7 +416,11 @@ describe("AgentTraceTab", () => {
         bookmarks: [],
       });
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // Only nodes overlapping with timeWindow should be visible
       // node-1: starts at 1703000000000, ends at 1703000000150 - overlaps (endTime > window.start)
@@ -366,7 +444,11 @@ describe("AgentTraceTab", () => {
         bookmarks: [],
       });
 
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // node-1: ends at 1703000000150 - before window start (150 < 160), excluded
       // node-2: starts at 1703000000150, ends at 1703000000200 - overlaps (150 < 180 && 200 > 160)
@@ -377,7 +459,11 @@ describe("AgentTraceTab", () => {
     });
 
     it("should show nodes with startTime for time-travel debugging", () => {
-      render(<AgentTraceTab sessionId="session-123" />);
+      render(
+        <TestProvider>
+          <AgentTraceTab sessionId="session-123" />
+        </TestProvider>,
+      );
 
       // Nodes with startTime should be rendered and have data-testid
       expect(screen.getByTestId("trace-node-node-1")).toBeInTheDocument();

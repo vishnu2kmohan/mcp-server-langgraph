@@ -16,6 +16,8 @@ import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { RichTextInput } from "./RichTextInput";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 describe("RichTextInput - Advanced Features", () => {
@@ -32,14 +34,23 @@ describe("RichTextInput - Advanced Features", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<RichTextInput onSubmit={mockOnSubmit} />);
+      const { container } = render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have accessible labels for formatting buttons when toolbar expanded", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -56,7 +67,12 @@ describe("RichTextInput - Advanced Features", () => {
     it("should support keyboard navigation in toolbar when expanded", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       const boldButton = screen.getByRole("button", { name: /bold/i });
@@ -73,10 +89,12 @@ describe("RichTextInput - Advanced Features", () => {
     it("should announce mention suggestions to screen readers", async () => {
       const user = userEvent.setup();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          mentionOptions={[{ type: "model", value: "claude" }]}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            mentionOptions={[{ type: "model", value: "claude" }]}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -93,7 +111,11 @@ describe("RichTextInput - Advanced Features", () => {
   describe("maxLength", () => {
     it("should respect maxLength prop", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} maxLength={10} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} maxLength={10} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       await user.type(input, "This is a very long message");
@@ -102,13 +124,21 @@ describe("RichTextInput - Advanced Features", () => {
     });
 
     it("should show character count when maxLength is set", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} maxLength={100} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} maxLength={100} />
+        </TestProvider>,
+      );
       expect(screen.getByText("0 / 100")).toBeInTheDocument();
     });
 
     it("should update character count as user types", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} maxLength={100} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} maxLength={100} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       await user.type(input, "Hello");
@@ -119,7 +149,11 @@ describe("RichTextInput - Advanced Features", () => {
 
   describe("collapsible toolbar (Sprint 2.4)", () => {
     it("should render toolbar toggle button", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("button", {
           name: /toggle formatting toolbar/i,
@@ -128,7 +162,11 @@ describe("RichTextInput - Advanced Features", () => {
     });
 
     it("should hide formatting toolbar by default (collapsed)", () => {
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       // Toggle button should be visible
       expect(
@@ -145,7 +183,11 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should show formatting toolbar when toggle is clicked", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const toggleButton = screen.getByRole("button", {
         name: /toggle formatting toolbar/i,
@@ -165,7 +207,11 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should hide formatting toolbar when toggle is clicked again", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const toggleButton = screen.getByRole("button", {
         name: /toggle formatting toolbar/i,
@@ -184,7 +230,11 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should toggle toolbar with Ctrl+Shift+F keyboard shortcut", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       input.focus();
@@ -207,7 +257,11 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should show Plus icon when collapsed and Minus icon when expanded", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const toggleButton = screen.getByRole("button", {
         name: /toggle formatting toolbar/i,
@@ -228,7 +282,12 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should render toolbar visible when defaultExpanded prop is true", () => {
       render(
-        <RichTextInput onSubmit={mockOnSubmit} defaultToolbarExpanded={true} />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            defaultToolbarExpanded={true}
+          />
+        </TestProvider>,
       );
 
       // Formatting buttons should be visible
@@ -240,7 +299,11 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should still apply formatting when toolbar is expanded", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       // Expand toolbar
       const toggleButton = screen.getByRole("button", {
@@ -262,7 +325,11 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should have accessible toggle button with aria-expanded", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const toggleButton = screen.getByRole("button", {
         name: /toggle formatting toolbar/i,
@@ -279,7 +346,11 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should announce toolbar state change to screen readers", async () => {
       const user = userEvent.setup();
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const toggleButton = screen.getByRole("button", {
         name: /toggle formatting toolbar/i,
@@ -297,12 +368,14 @@ describe("RichTextInput - Advanced Features", () => {
   describe("inline suggestions", () => {
     it("should render inline suggestion overlay when provided", () => {
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -312,12 +385,14 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should not show inline suggestion when disabled", () => {
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello "
-          enableInlineSuggestions={false}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello "
+            enableInlineSuggestions={false}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -327,12 +402,14 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should not show inline suggestion when value is empty", () => {
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value=""
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value=""
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -344,13 +421,15 @@ describe("RichTextInput - Advanced Features", () => {
       const user = userEvent.setup();
       const mockAccept = vi.fn();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-          onAcceptSuggestion={mockAccept}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+            onAcceptSuggestion={mockAccept}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -364,13 +443,15 @@ describe("RichTextInput - Advanced Features", () => {
       const user = userEvent.setup();
       const mockDismiss = vi.fn();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-          onDismissSuggestion={mockDismiss}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+            onDismissSuggestion={mockDismiss}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -382,12 +463,14 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should show loading indicator when suggestion is loading", () => {
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello "
-          enableInlineSuggestions={true}
-          isSuggestionLoading={true}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello "
+            enableInlineSuggestions={true}
+            isSuggestionLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestion-loading")).toBeInTheDocument();
@@ -395,12 +478,14 @@ describe("RichTextInput - Advanced Features", () => {
 
     it("should show Tab hint when suggestion is visible", () => {
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestion-hint")).toBeInTheDocument();
@@ -413,11 +498,13 @@ describe("RichTextInput - Advanced Features", () => {
       const user = userEvent.setup();
       const mockCursorChange = vi.fn();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello world"
-          onCursorPositionChange={mockCursorChange}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello world"
+            onCursorPositionChange={mockCursorChange}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -431,10 +518,12 @@ describe("RichTextInput - Advanced Features", () => {
       const user = userEvent.setup();
       const mockCursorChange = vi.fn();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          onCursorPositionChange={mockCursorChange}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            onCursorPositionChange={mockCursorChange}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox");
@@ -448,11 +537,13 @@ describe("RichTextInput - Advanced Features", () => {
       const user = userEvent.setup();
       const mockCursorChange = vi.fn();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello world"
-          onCursorPositionChange={mockCursorChange}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello world"
+            onCursorPositionChange={mockCursorChange}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;
@@ -473,7 +564,11 @@ describe("RichTextInput - Advanced Features", () => {
       const user = userEvent.setup();
 
       // Should render without errors
-      render(<RichTextInput onSubmit={mockOnSubmit} />);
+      render(
+        <TestProvider>
+          <RichTextInput onSubmit={mockOnSubmit} />
+        </TestProvider>,
+      );
 
       const input = screen.getByRole("textbox");
       await user.type(input, "Test");
@@ -486,11 +581,13 @@ describe("RichTextInput - Advanced Features", () => {
       const user = userEvent.setup();
       const mockCursorChange = vi.fn();
       render(
-        <RichTextInput
-          onSubmit={mockOnSubmit}
-          value="Hello world"
-          onCursorPositionChange={mockCursorChange}
-        />,
+        <TestProvider>
+          <RichTextInput
+            onSubmit={mockOnSubmit}
+            value="Hello world"
+            onCursorPositionChange={mockCursorChange}
+          />
+        </TestProvider>,
       );
 
       const input = screen.getByRole("textbox") as HTMLTextAreaElement;

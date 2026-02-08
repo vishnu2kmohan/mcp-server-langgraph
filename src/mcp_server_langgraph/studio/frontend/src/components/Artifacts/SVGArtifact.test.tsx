@@ -8,6 +8,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { SVGArtifact } from "./SVGArtifact";
 
+import { TestProvider } from "@/test-utils";
+
 describe("SVGArtifact", () => {
   afterEach(() => {
     cleanup();
@@ -20,33 +22,53 @@ describe("SVGArtifact", () => {
 
   describe("rendering", () => {
     it("should render SVG content inline", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       // SVG should be rendered
       const svg = document.querySelector("svg");
       expect(svg).toBeInTheDocument();
     });
 
     it("should render circle element from SVG", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const circle = document.querySelector("circle");
       expect(circle).toBeInTheDocument();
       expect(circle).toHaveAttribute("fill", "red");
     });
 
     it("should apply custom width from config", () => {
-      render(<SVGArtifact data={simpleSvg} config={{ width: 200 }} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} config={{ width: 200 }} />
+        </TestProvider>,
+      );
       const container = screen.getByTestId("svg-container");
       expect(container).toHaveStyle({ width: "200px" });
     });
 
     it("should apply custom height from config", () => {
-      render(<SVGArtifact data={simpleSvg} config={{ height: 150 }} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} config={{ height: 150 }} />
+        </TestProvider>,
+      );
       const container = screen.getByTestId("svg-container");
       expect(container).toHaveStyle({ height: "150px" });
     });
 
     it("should render title if provided", () => {
-      render(<SVGArtifact data={simpleSvg} title="My SVG Diagram" />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} title="My SVG Diagram" />
+        </TestProvider>,
+      );
       expect(screen.getByText("My SVG Diagram")).toBeInTheDocument();
     });
   });
@@ -54,14 +76,22 @@ describe("SVGArtifact", () => {
   describe("data URL handling", () => {
     it("should handle base64 SVG data URL", () => {
       const base64Svg = `data:image/svg+xml;base64,${btoa(simpleSvg)}`;
-      render(<SVGArtifact data={base64Svg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={base64Svg} />
+        </TestProvider>,
+      );
       const svg = document.querySelector("svg");
       expect(svg).toBeInTheDocument();
     });
 
     it("should handle URL-encoded SVG data URL", () => {
       const encodedSvg = `data:image/svg+xml,${encodeURIComponent(simpleSvg)}`;
-      render(<SVGArtifact data={encodedSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={encodedSvg} />
+        </TestProvider>,
+      );
       const svg = document.querySelector("svg");
       expect(svg).toBeInTheDocument();
     });
@@ -69,12 +99,20 @@ describe("SVGArtifact", () => {
 
   describe("error handling", () => {
     it("should show error for invalid SVG", () => {
-      render(<SVGArtifact data="not valid svg" />);
+      render(
+        <TestProvider>
+          <SVGArtifact data="not valid svg" />
+        </TestProvider>,
+      );
       expect(screen.getByText(/invalid svg/i)).toBeInTheDocument();
     });
 
     it("should show error for empty data", () => {
-      render(<SVGArtifact data="" />);
+      render(
+        <TestProvider>
+          <SVGArtifact data="" />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no svg data/i)).toBeInTheDocument();
     });
   });
@@ -85,7 +123,11 @@ describe("SVGArtifact", () => {
         <script>alert('xss')</script>
         <circle cx="50" cy="50" r="40" fill="blue" />
       </svg>`;
-      render(<SVGArtifact data={maliciousSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={maliciousSvg} />
+        </TestProvider>,
+      );
       // Script should be removed
       const script = document.querySelector("script");
       expect(script).not.toBeInTheDocument();
@@ -98,7 +140,11 @@ describe("SVGArtifact", () => {
       const svgWithHandlers = `<svg xmlns="http://www.w3.org/2000/svg">
         <circle cx="50" cy="50" r="40" onclick="alert('clicked')" fill="green" />
       </svg>`;
-      render(<SVGArtifact data={svgWithHandlers} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={svgWithHandlers} />
+        </TestProvider>,
+      );
       const circle = document.querySelector("circle");
       expect(circle).not.toHaveAttribute("onclick");
     });
@@ -106,21 +152,33 @@ describe("SVGArtifact", () => {
 
   describe("export functionality", () => {
     it("should render copy button", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
     });
   });
 
   describe("ArtifactExporter Integration", () => {
     it("should show export menu when export button clicked", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(screen.getByTestId("export-menu")).toBeInTheDocument();
     });
 
     it("should show PNG option in export menu", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -129,7 +187,11 @@ describe("SVGArtifact", () => {
     });
 
     it("should show SVG option in export menu", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -138,7 +200,11 @@ describe("SVGArtifact", () => {
     });
 
     it("should show PDF option in export menu", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
       expect(
@@ -155,7 +221,11 @@ describe("SVGArtifact", () => {
       URL.createObjectURL = vi.fn().mockReturnValue(mockUrl);
       URL.revokeObjectURL = vi.fn();
 
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const exportButton = screen.getByRole("button", { name: /export/i });
       fireEvent.click(exportButton);
 
@@ -176,7 +246,11 @@ describe("SVGArtifact", () => {
 
   describe("Code/Preview toggle", () => {
     it("should render Code/Preview toggle buttons", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("button", { name: /code/i })).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /preview/i }),
@@ -184,27 +258,43 @@ describe("SVGArtifact", () => {
     });
 
     it("should default to preview mode", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const previewButton = screen.getByRole("button", { name: /preview/i });
       expect(previewButton).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should show rendered SVG in preview mode", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       // In preview mode, the SVG should be rendered
       const svg = document.querySelector("svg");
       expect(svg).toBeInTheDocument();
     });
 
     it("should switch to code mode when Code button clicked", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const codeButton = screen.getByRole("button", { name: /code/i });
       fireEvent.click(codeButton);
       expect(codeButton).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should show source code in code mode", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const codeButton = screen.getByRole("button", { name: /code/i });
       fireEvent.click(codeButton);
       // Source code should be visible in a code block
@@ -212,7 +302,11 @@ describe("SVGArtifact", () => {
     });
 
     it("should hide rendered SVG in code mode", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       const codeButton = screen.getByRole("button", { name: /code/i });
       fireEvent.click(codeButton);
       // The svg-container should not be visible in code mode
@@ -220,7 +314,11 @@ describe("SVGArtifact", () => {
     });
 
     it("should switch back to preview mode", () => {
-      render(<SVGArtifact data={simpleSvg} />);
+      render(
+        <TestProvider>
+          <SVGArtifact data={simpleSvg} />
+        </TestProvider>,
+      );
       // Switch to code mode
       const codeButton = screen.getByRole("button", { name: /code/i });
       fireEvent.click(codeButton);
@@ -232,7 +330,11 @@ describe("SVGArtifact", () => {
     });
 
     it("should not render toggle when SVG is invalid (shows error state)", () => {
-      render(<SVGArtifact data="invalid svg" />);
+      render(
+        <TestProvider>
+          <SVGArtifact data="invalid svg" />
+        </TestProvider>,
+      );
       // When error, component shows error state without toggle
       expect(screen.getByRole("alert")).toBeInTheDocument();
       expect(

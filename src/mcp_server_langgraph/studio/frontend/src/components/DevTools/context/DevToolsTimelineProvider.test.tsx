@@ -13,6 +13,8 @@ import {
   type TimelineContextValue,
 } from "./DevToolsTimelineProvider";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Consumer Component
 // =============================================================================
@@ -84,9 +86,11 @@ describe("DevToolsTimelineProvider", () => {
   describe("context provision", () => {
     it("should provide timeline context to children", () => {
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("event-count")).toHaveTextContent("0");
@@ -99,7 +103,13 @@ describe("DevToolsTimelineProvider", () => {
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
-      expect(() => render(<TestConsumer />)).toThrow(
+      expect(() =>
+        render(
+          <TestProvider>
+            <TestConsumer />
+          </TestProvider>,
+        ),
+      ).toThrow(
         "useTimelineContext must be used within a DevToolsTimelineProvider",
       );
 
@@ -110,9 +120,11 @@ describe("DevToolsTimelineProvider", () => {
       const sessionStart = Date.now();
 
       render(
-        <DevToolsTimelineProvider sessionStartTime={sessionStart}>
-          <TestConsumer />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider sessionStartTime={sessionStart}>
+            <TestConsumer />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("event-count")).toHaveTextContent("0");
@@ -125,18 +137,20 @@ describe("DevToolsTimelineProvider", () => {
       let context2: TimelineContextValue | undefined;
 
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer
-            onContext={(ctx) => {
-              context1 = ctx;
-            }}
-          />
-          <TestConsumer
-            onContext={(ctx) => {
-              context2 = ctx;
-            }}
-          />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer
+              onContext={(ctx) => {
+                context1 = ctx;
+              }}
+            />
+            <TestConsumer
+              onContext={(ctx) => {
+                context2 = ctx;
+              }}
+            />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       // Register an event via the first consumer
@@ -159,18 +173,20 @@ describe("DevToolsTimelineProvider", () => {
       let context2: TimelineContextValue | undefined;
 
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer
-            onContext={(ctx) => {
-              context1 = ctx;
-            }}
-          />
-          <TestConsumer
-            onContext={(ctx) => {
-              context2 = ctx;
-            }}
-          />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer
+              onContext={(ctx) => {
+                context1 = ctx;
+              }}
+            />
+            <TestConsumer
+              onContext={(ctx) => {
+                context2 = ctx;
+              }}
+            />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       // Register events and navigate
@@ -192,9 +208,11 @@ describe("DevToolsTimelineProvider", () => {
   describe("event registration", () => {
     it("should register events from any consumer", () => {
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       act(() => {
@@ -210,13 +228,15 @@ describe("DevToolsTimelineProvider", () => {
       let ctx: TimelineContextValue | undefined;
 
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer
-            onContext={(c) => {
-              ctx = c;
-            }}
-          />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer
+              onContext={(c) => {
+                ctx = c;
+              }}
+            />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       // Add events first
@@ -246,13 +266,15 @@ describe("DevToolsTimelineProvider", () => {
       let context: TimelineContextValue | undefined;
 
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer
-            onContext={(ctx) => {
-              context = ctx;
-            }}
-          />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer
+              onContext={(ctx) => {
+                context = ctx;
+              }}
+            />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       act(() => {
@@ -287,13 +309,15 @@ describe("DevToolsTimelineProvider", () => {
       const spanId = "test-span-123";
 
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer
-            onContext={(ctx) => {
-              context = ctx;
-            }}
-          />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer
+              onContext={(ctx) => {
+                context = ctx;
+              }}
+            />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       act(() => {
@@ -331,13 +355,15 @@ describe("DevToolsTimelineProvider", () => {
       let context: TimelineContextValue | undefined;
 
       render(
-        <DevToolsTimelineProvider onTimeChange={onTimeChange}>
-          <TestConsumer
-            onContext={(ctx) => {
-              context = ctx;
-            }}
-          />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider onTimeChange={onTimeChange}>
+            <TestConsumer
+              onContext={(ctx) => {
+                context = ctx;
+              }}
+            />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       act(() => {
@@ -352,9 +378,11 @@ describe("DevToolsTimelineProvider", () => {
       const onEventRegistered = vi.fn();
 
       render(
-        <DevToolsTimelineProvider onEventRegistered={onEventRegistered}>
-          <TestConsumer />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider onEventRegistered={onEventRegistered}>
+            <TestConsumer />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       act(() => {
@@ -374,13 +402,15 @@ describe("DevToolsTimelineProvider", () => {
       let context: TimelineContextValue | undefined;
 
       render(
-        <DevToolsTimelineProvider>
-          <TestConsumer
-            onContext={(ctx) => {
-              context = ctx;
-            }}
-          />
-        </DevToolsTimelineProvider>,
+        <TestProvider>
+          <DevToolsTimelineProvider>
+            <TestConsumer
+              onContext={(ctx) => {
+                context = ctx;
+              }}
+            />
+          </DevToolsTimelineProvider>
+        </TestProvider>,
       );
 
       act(() => {

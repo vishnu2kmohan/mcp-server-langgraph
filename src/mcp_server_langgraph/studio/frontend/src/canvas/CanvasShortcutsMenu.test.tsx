@@ -12,6 +12,8 @@ import {
   type CanvasShortcutAction,
 } from "./CanvasShortcutsMenu";
 
+import { TestProvider } from "@/test-utils";
+
 describe("CanvasShortcutsMenu", () => {
   let onAction: ReturnType<typeof vi.fn>;
 
@@ -27,7 +29,11 @@ describe("CanvasShortcutsMenu", () => {
 
   describe("Rendering", () => {
     it("renders the floating action button", () => {
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("canvas-shortcuts-trigger");
       expect(trigger).toBeInTheDocument();
@@ -36,7 +42,11 @@ describe("CanvasShortcutsMenu", () => {
     });
 
     it("menu panel is hidden by default", () => {
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("canvas-shortcuts-panel"),
@@ -45,7 +55,9 @@ describe("CanvasShortcutsMenu", () => {
 
     it("applies custom className", () => {
       render(
-        <CanvasShortcutsMenu onAction={onAction} className="custom-class" />,
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} className="custom-class" />
+        </TestProvider>,
       );
 
       const container = screen.getByTestId("canvas-shortcuts-menu");
@@ -56,7 +68,11 @@ describe("CanvasShortcutsMenu", () => {
   describe("Menu Toggle", () => {
     it("opens menu when trigger is clicked", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("canvas-shortcuts-trigger");
       await user.click(trigger);
@@ -69,7 +85,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("closes menu when trigger is clicked again", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("canvas-shortcuts-trigger");
       await user.click(trigger);
@@ -84,7 +104,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("rotates trigger button when menu is open", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("canvas-shortcuts-trigger");
       expect(trigger).not.toHaveClass("rotate-45");
@@ -107,7 +131,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it.each(actions)("displays %s action in menu", async (action) => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
@@ -120,7 +148,11 @@ describe("CanvasShortcutsMenu", () => {
       "calls onAction with '%s' when clicked",
       async (action) => {
         const user = userEvent.setup();
-        render(<CanvasShortcutsMenu onAction={onAction} />);
+        render(
+          <TestProvider>
+            <CanvasShortcutsMenu onAction={onAction} />
+          </TestProvider>,
+        );
 
         await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
         await user.click(screen.getByTestId(`shortcut-${action}`));
@@ -132,7 +164,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("closes menu after action is selected", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
       await user.click(screen.getByTestId("shortcut-review"));
@@ -144,7 +180,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("shows custom description for port action with language", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} language="TypeScript" />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} language="TypeScript" />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
@@ -155,7 +195,11 @@ describe("CanvasShortcutsMenu", () => {
 
   describe("Loading State", () => {
     it("disables trigger button when loading", () => {
-      render(<CanvasShortcutsMenu onAction={onAction} isLoading={true} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} isLoading={true} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("canvas-shortcuts-trigger");
       expect(trigger).toBeDisabled();
@@ -163,7 +207,11 @@ describe("CanvasShortcutsMenu", () => {
     });
 
     it("shows loading spinner when loading", () => {
-      render(<CanvasShortcutsMenu onAction={onAction} isLoading={true} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} isLoading={true} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("canvas-shortcuts-trigger");
       const spinner = trigger.querySelector(".animate-spin");
@@ -173,7 +221,9 @@ describe("CanvasShortcutsMenu", () => {
     it("disables action buttons when loading", async () => {
       const user = userEvent.setup();
       const { rerender } = render(
-        <CanvasShortcutsMenu onAction={onAction} isLoading={false} />,
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} isLoading={false} />
+        </TestProvider>,
       );
 
       // Open menu first
@@ -190,7 +240,9 @@ describe("CanvasShortcutsMenu", () => {
     it("does not call onAction when loading", async () => {
       const user = userEvent.setup();
       const { rerender } = render(
-        <CanvasShortcutsMenu onAction={onAction} isLoading={false} />,
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} isLoading={false} />
+        </TestProvider>,
       );
 
       // Open menu first
@@ -208,7 +260,11 @@ describe("CanvasShortcutsMenu", () => {
   describe("Keyboard Navigation", () => {
     it("closes menu on Escape key", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
       expect(screen.getByTestId("canvas-shortcuts-panel")).toBeInTheDocument();
@@ -221,7 +277,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("does not close menu on Escape when already closed", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       // Menu is closed
       expect(
@@ -241,10 +301,12 @@ describe("CanvasShortcutsMenu", () => {
   describe("Click Outside", () => {
     it("closes menu when clicking outside", async () => {
       render(
-        <div>
-          <div data-testid="outside-element">Outside</div>
-          <CanvasShortcutsMenu onAction={onAction} />
-        </div>,
+        <TestProvider>
+          <div>
+            <div data-testid="outside-element">Outside</div>
+            <CanvasShortcutsMenu onAction={onAction} />
+          </div>
+        </TestProvider>,
       );
 
       // Open menu
@@ -260,7 +322,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("does not close menu when clicking inside", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
       const panel = screen.getByTestId("canvas-shortcuts-panel");
@@ -273,7 +339,11 @@ describe("CanvasShortcutsMenu", () => {
 
   describe("Accessibility", () => {
     it("has proper ARIA attributes on trigger", () => {
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       const trigger = screen.getByTestId("canvas-shortcuts-trigger");
       expect(trigger).toHaveAttribute("aria-label");
@@ -282,7 +352,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("has proper role on menu panel", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
@@ -293,7 +367,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("has proper role on action buttons", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
@@ -305,7 +383,11 @@ describe("CanvasShortcutsMenu", () => {
   describe("Menu Content", () => {
     it("displays header with title", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
@@ -317,7 +399,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("displays footer tip", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
@@ -328,7 +414,11 @@ describe("CanvasShortcutsMenu", () => {
 
     it("displays keyboard shortcuts for some actions", async () => {
       const user = userEvent.setup();
-      render(<CanvasShortcutsMenu onAction={onAction} />);
+      render(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 

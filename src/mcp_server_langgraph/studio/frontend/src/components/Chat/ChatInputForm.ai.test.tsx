@@ -15,6 +15,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { ChatInputForm, UploadFile } from "./ChatInputForm";
 
+import { TestProvider } from "@/test-utils";
+
 describe("ChatInputForm AI Features", () => {
   const defaultProps = {
     input: "",
@@ -51,12 +53,14 @@ describe("ChatInputForm AI Features", () => {
   describe("Inline AI Suggestions (Sprint 6)", () => {
     it("should not show inline suggestion when feature is disabled", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello"
-          enableInlineSuggestions={false}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello"
+            enableInlineSuggestions={false}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
@@ -64,12 +68,14 @@ describe("ChatInputForm AI Features", () => {
 
     it("should show inline suggestion ghost text when enabled", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world, how are you?"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world, how are you?"
+          />
+        </TestProvider>,
       );
 
       const suggestion = screen.getByTestId("inline-suggestion");
@@ -79,12 +85,14 @@ describe("ChatInputForm AI Features", () => {
 
     it("should not show inline suggestion when input is empty", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input=""
-          enableInlineSuggestions={true}
-          inlineSuggestion="some suggestion"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input=""
+            enableInlineSuggestions={true}
+            inlineSuggestion="some suggestion"
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
@@ -92,12 +100,14 @@ describe("ChatInputForm AI Features", () => {
 
     it("should not show inline suggestion when suggestion is empty", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello"
-          enableInlineSuggestions={true}
-          inlineSuggestion=""
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello"
+            enableInlineSuggestions={true}
+            inlineSuggestion=""
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
@@ -106,13 +116,15 @@ describe("ChatInputForm AI Features", () => {
     it("should call onAcceptSuggestion when Tab is pressed", () => {
       const onAcceptSuggestion = vi.fn();
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-          onAcceptSuggestion={onAcceptSuggestion}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+            onAcceptSuggestion={onAcceptSuggestion}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText(/type your message/i);
@@ -124,13 +136,15 @@ describe("ChatInputForm AI Features", () => {
     it("should not call onAcceptSuggestion when Tab pressed without suggestion", () => {
       const onAcceptSuggestion = vi.fn();
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello"
-          enableInlineSuggestions={true}
-          inlineSuggestion=""
-          onAcceptSuggestion={onAcceptSuggestion}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello"
+            enableInlineSuggestions={true}
+            inlineSuggestion=""
+            onAcceptSuggestion={onAcceptSuggestion}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText(/type your message/i);
@@ -142,13 +156,15 @@ describe("ChatInputForm AI Features", () => {
     it("should call onDismissSuggestion when Escape is pressed", () => {
       const onDismissSuggestion = vi.fn();
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-          onDismissSuggestion={onDismissSuggestion}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+            onDismissSuggestion={onDismissSuggestion}
+          />
+        </TestProvider>,
       );
 
       const textarea = screen.getByPlaceholderText(/type your message/i);
@@ -159,12 +175,14 @@ describe("ChatInputForm AI Features", () => {
 
     it("should show suggestion loading indicator when fetching", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello"
-          enableInlineSuggestions={true}
-          isSuggestionLoading={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello"
+            enableInlineSuggestions={true}
+            isSuggestionLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestion-loading")).toBeInTheDocument();
@@ -172,13 +190,15 @@ describe("ChatInputForm AI Features", () => {
 
     it("should not show suggestion when processing message", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello"
-          isProcessing={true}
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello"
+            isProcessing={true}
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("inline-suggestion")).not.toBeInTheDocument();
@@ -186,12 +206,14 @@ describe("ChatInputForm AI Features", () => {
 
     it("should render ghost text with correct styling", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       const suggestion = screen.getByTestId("inline-suggestion");
@@ -200,12 +222,14 @@ describe("ChatInputForm AI Features", () => {
 
     it("should show hint text about Tab to accept", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("suggestion-hint")).toHaveTextContent(
@@ -215,12 +239,14 @@ describe("ChatInputForm AI Features", () => {
 
     it("should position suggestion after input text", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          input="Hello "
-          enableInlineSuggestions={true}
-          inlineSuggestion="world"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            input="Hello "
+            enableInlineSuggestions={true}
+            inlineSuggestion="world"
+          />
+        </TestProvider>,
       );
 
       // The suggestion overlay should contain both input text and suggestion
@@ -235,7 +261,11 @@ describe("ChatInputForm AI Features", () => {
   describe("RichText Mode", () => {
     describe("No Regressions - Default Behavior", () => {
       it("should render textarea when enableRichTextMode=false (backwards compat)", () => {
-        render(<ChatInputForm {...defaultProps} enableRichTextMode={false} />);
+        render(
+          <TestProvider>
+            <ChatInputForm {...defaultProps} enableRichTextMode={false} />
+          </TestProvider>,
+        );
 
         // Textarea should be present
         expect(
@@ -250,13 +280,15 @@ describe("ChatInputForm AI Features", () => {
 
         // Test submitOnEnter=true (ChatGPT style: Enter to submit)
         const { unmount } = render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            submitOnEnter={true}
-            input="Hello"
-            onSubmit={onSubmit}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              submitOnEnter={true}
+              input="Hello"
+              onSubmit={onSubmit}
+            />
+          </TestProvider>,
         );
 
         const textarea = screen.getByRole("textbox", {
@@ -270,13 +302,15 @@ describe("ChatInputForm AI Features", () => {
 
         // Test submitOnEnter=false (Legacy style: Ctrl+Enter to submit)
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            submitOnEnter={false}
-            input="Hello"
-            onSubmit={onSubmit}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              submitOnEnter={false}
+              input="Hello"
+              onSubmit={onSubmit}
+            />
+          </TestProvider>,
         );
 
         const textareaLegacy = screen.getByRole("textbox", {
@@ -298,12 +332,14 @@ describe("ChatInputForm AI Features", () => {
         ];
 
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            input="/"
-            slashCommands={slashCommands}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              input="/"
+              slashCommands={slashCommands}
+            />
+          </TestProvider>,
         );
 
         // Slash command menu should appear
@@ -312,11 +348,13 @@ describe("ChatInputForm AI Features", () => {
 
       it("should render voice button in RichText mode", () => {
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            isVoiceSupported={true}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              isVoiceSupported={true}
+            />
+          </TestProvider>,
         );
 
         // Voice button should be accessible
@@ -326,7 +364,11 @@ describe("ChatInputForm AI Features", () => {
       });
 
       it("should render file upload button in RichText mode", () => {
-        render(<ChatInputForm {...defaultProps} enableRichTextMode={true} />);
+        render(
+          <TestProvider>
+            <ChatInputForm {...defaultProps} enableRichTextMode={true} />
+          </TestProvider>,
+        );
 
         // File upload button should be accessible
         expect(
@@ -337,14 +379,22 @@ describe("ChatInputForm AI Features", () => {
 
     describe("New RichText Behavior", () => {
       it("should render RichTextInput when enableRichTextMode=true", () => {
-        render(<ChatInputForm {...defaultProps} enableRichTextMode={true} />);
+        render(
+          <TestProvider>
+            <ChatInputForm {...defaultProps} enableRichTextMode={true} />
+          </TestProvider>,
+        );
 
         // RichTextInput should be present (has data-testid="rich-text-input")
         expect(screen.getByTestId("rich-text-input")).toBeInTheDocument();
       });
 
       it("should apply pill container styling in RichText mode", () => {
-        render(<ChatInputForm {...defaultProps} enableRichTextMode={true} />);
+        render(
+          <TestProvider>
+            <ChatInputForm {...defaultProps} enableRichTextMode={true} />
+          </TestProvider>,
+        );
 
         // Pill container with rounded-2xl class should be present
         const pillContainer = screen.getByTestId("pill-container");
@@ -356,14 +406,16 @@ describe("ChatInputForm AI Features", () => {
         const onAcceptSuggestion = vi.fn();
 
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            input="Hello "
-            enableInlineSuggestions={true}
-            inlineSuggestion="world"
-            onAcceptSuggestion={onAcceptSuggestion}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              input="Hello "
+              enableInlineSuggestions={true}
+              inlineSuggestion="world"
+              onAcceptSuggestion={onAcceptSuggestion}
+            />
+          </TestProvider>,
         );
 
         const textarea = screen.getByRole("textbox", {
@@ -376,12 +428,14 @@ describe("ChatInputForm AI Features", () => {
 
       it("should hide thinking toggle in RichText mode (product approved)", () => {
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            modelSupportsThinking={true}
-            enableThinking={true}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              modelSupportsThinking={true}
+              enableThinking={true}
+            />
+          </TestProvider>,
         );
 
         // Thinking toggle should NOT be visible in RichText mode
@@ -392,14 +446,16 @@ describe("ChatInputForm AI Features", () => {
 
       it("should show ReasoningEffortSelector when model supports thinking in RichText mode", () => {
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            modelSupportsThinking={true}
-            enableThinking={true}
-            reasoningEffort="medium"
-            onReasoningEffortChange={vi.fn()}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              modelSupportsThinking={true}
+              enableThinking={true}
+              reasoningEffort="medium"
+              onReasoningEffortChange={vi.fn()}
+            />
+          </TestProvider>,
         );
 
         // ReasoningEffortSelector should be visible (uses data-testid in compact mode)
@@ -410,11 +466,13 @@ describe("ChatInputForm AI Features", () => {
 
       it("should not show ReasoningEffortSelector when model does not support thinking", () => {
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            modelSupportsThinking={false}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              modelSupportsThinking={false}
+            />
+          </TestProvider>,
         );
 
         // ReasoningEffortSelector should NOT be visible
@@ -427,7 +485,9 @@ describe("ChatInputForm AI Features", () => {
     describe("Accessibility in RichText Mode", () => {
       it("should have no accessibility violations in RichText mode", async () => {
         const { container } = render(
-          <ChatInputForm {...defaultProps} enableRichTextMode={true} />,
+          <TestProvider>
+            <ChatInputForm {...defaultProps} enableRichTextMode={true} />
+          </TestProvider>,
         );
 
         const results = await axe(container);
@@ -436,11 +496,13 @@ describe("ChatInputForm AI Features", () => {
 
       it("should support keyboard navigation in RichText mode", () => {
         render(
-          <ChatInputForm
-            {...defaultProps}
-            enableRichTextMode={true}
-            isVoiceSupported={true}
-          />,
+          <TestProvider>
+            <ChatInputForm
+              {...defaultProps}
+              enableRichTextMode={true}
+              isVoiceSupported={true}
+            />
+          </TestProvider>,
         );
 
         // Tab through focusable elements
@@ -466,13 +528,15 @@ describe("ChatInputForm AI Features", () => {
   describe("KnowledgeBaseFocus Integration", () => {
     it("should render KnowledgeBaseFocus when showKBFocus is true", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="all"
-          onKBFocusChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="all"
+            onKBFocusChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("kb-focus-button")).toBeInTheDocument();
@@ -480,31 +544,39 @@ describe("ChatInputForm AI Features", () => {
 
     it("should not render KnowledgeBaseFocus when showKBFocus is false", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={false}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={false}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByTestId("kb-focus-button")).not.toBeInTheDocument();
     });
 
     it("should not render KnowledgeBaseFocus by default", () => {
-      render(<ChatInputForm {...defaultProps} enableRichTextMode={true} />);
+      render(
+        <TestProvider>
+          <ChatInputForm {...defaultProps} enableRichTextMode={true} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByTestId("kb-focus-button")).not.toBeInTheDocument();
     });
 
     it("should display current KB focus mode", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="kb_only"
-          onKBFocusChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="kb_only"
+            onKBFocusChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Knowledge Base")).toBeInTheDocument();
@@ -513,13 +585,15 @@ describe("ChatInputForm AI Features", () => {
     it("should call onKBFocusChange when focus mode changes", async () => {
       const handleChange = vi.fn();
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="all"
-          onKBFocusChange={handleChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="all"
+            onKBFocusChange={handleChange}
+          />
+        </TestProvider>,
       );
 
       // Click the dropdown button
@@ -538,14 +612,16 @@ describe("ChatInputForm AI Features", () => {
 
     it("should disable KnowledgeBaseFocus when isProcessing is true", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="all"
-          onKBFocusChange={vi.fn()}
-          isProcessing={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="all"
+            onKBFocusChange={vi.fn()}
+            isProcessing={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("kb-focus-button")).toBeDisabled();
@@ -553,14 +629,16 @@ describe("ChatInputForm AI Features", () => {
 
     it("should show KB status indicator when kbStatus is provided", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="kb_only"
-          onKBFocusChange={vi.fn()}
-          kbStatus="ready"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="kb_only"
+            onKBFocusChange={vi.fn()}
+            kbStatus="ready"
+          />
+        </TestProvider>,
       );
 
       const indicator = screen.getByTestId("kb-status-indicator");
@@ -570,15 +648,17 @@ describe("ChatInputForm AI Features", () => {
 
     it("should show misconfigured status with yellow indicator", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="kb_only"
-          onKBFocusChange={vi.fn()}
-          kbStatus="misconfigured"
-          kbStatusMessage="Missing QDRANT_URL"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="kb_only"
+            onKBFocusChange={vi.fn()}
+            kbStatus="misconfigured"
+            kbStatusMessage="Missing QDRANT_URL"
+          />
+        </TestProvider>,
       );
 
       const indicator = screen.getByTestId("kb-status-indicator");
@@ -587,14 +667,16 @@ describe("ChatInputForm AI Features", () => {
 
     it("should render KnowledgeBaseFocus in compact mode", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="all"
-          onKBFocusChange={vi.fn()}
-          kbFocusCompact={true}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="all"
+            onKBFocusChange={vi.fn()}
+            kbFocusCompact={true}
+          />
+        </TestProvider>,
       );
 
       const button = screen.getByTestId("kb-focus-button");
@@ -603,13 +685,15 @@ describe("ChatInputForm AI Features", () => {
 
     it("should position KnowledgeBaseFocus in controls row", () => {
       render(
-        <ChatInputForm
-          {...defaultProps}
-          enableRichTextMode={true}
-          showKBFocus={true}
-          kbFocusValue="all"
-          onKBFocusChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            enableRichTextMode={true}
+            showKBFocus={true}
+            kbFocusValue="all"
+            onKBFocusChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // KB Focus should be in the controls row (flex container with gap-2)

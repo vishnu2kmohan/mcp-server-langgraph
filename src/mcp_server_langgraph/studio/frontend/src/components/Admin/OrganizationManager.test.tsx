@@ -14,6 +14,8 @@ import {
 } from "@testing-library/react";
 import { OrganizationManager } from "./OrganizationManager";
 
+import { TestProvider } from "@/test-utils";
+
 describe("OrganizationManager", () => {
   const mockOrganizations = [
     {
@@ -55,34 +57,54 @@ describe("OrganizationManager", () => {
 
   describe("Rendering", () => {
     it("should render organization manager title", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Organizations")).toBeInTheDocument();
     });
 
     it("should render list of organizations", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Acme Corp")).toBeInTheDocument();
       expect(screen.getByText("Startup Inc")).toBeInTheDocument();
     });
 
     it("should display member count for each organization", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("25 members")).toBeInTheDocument();
       expect(screen.getByText("5 members")).toBeInTheDocument();
     });
 
     it("should display organization tier", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Enterprise")).toBeInTheDocument();
       expect(screen.getByText("Team")).toBeInTheDocument();
     });
 
     it("should render create button", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /create organization/i }),
@@ -92,7 +114,11 @@ describe("OrganizationManager", () => {
 
   describe("Selection", () => {
     it("should call onSelect when organization is clicked", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const orgRow = screen
         .getByText("Acme Corp")
@@ -103,7 +129,11 @@ describe("OrganizationManager", () => {
     });
 
     it("should highlight selected organization", () => {
-      render(<OrganizationManager {...defaultProps} selectedOrgId="org-1" />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} selectedOrgId="org-1" />
+        </TestProvider>,
+      );
 
       const orgRow = screen
         .getByText("Acme Corp")
@@ -114,7 +144,11 @@ describe("OrganizationManager", () => {
 
   describe("Create Organization", () => {
     it("should open create modal when create button is clicked", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(
         screen.getByRole("button", { name: /create organization/i }),
@@ -128,7 +162,11 @@ describe("OrganizationManager", () => {
     });
 
     it("should call onCreate with form data", async () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(
         screen.getByRole("button", { name: /create organization/i }),
@@ -150,7 +188,11 @@ describe("OrganizationManager", () => {
 
   describe("Edit Organization", () => {
     it("should open edit modal when edit button is clicked", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const editButtons = screen.getAllByRole("button", { name: /edit/i });
       fireEvent.click(editButtons[0]);
@@ -160,7 +202,11 @@ describe("OrganizationManager", () => {
     });
 
     it("should pre-populate form with organization data", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const editButtons = screen.getAllByRole("button", { name: /edit/i });
       fireEvent.click(editButtons[0]);
@@ -170,7 +216,11 @@ describe("OrganizationManager", () => {
     });
 
     it("should call onUpdate with updated data", async () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const editButtons = screen.getAllByRole("button", { name: /edit/i });
       fireEvent.click(editButtons[0]);
@@ -192,7 +242,11 @@ describe("OrganizationManager", () => {
 
   describe("Delete Organization", () => {
     it("should show confirmation dialog when delete is clicked", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
       fireEvent.click(deleteButtons[0]);
@@ -201,7 +255,11 @@ describe("OrganizationManager", () => {
     });
 
     it("should call onDelete when confirmed", async () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
       fireEvent.click(deleteButtons[0]);
@@ -215,7 +273,11 @@ describe("OrganizationManager", () => {
     });
 
     it("should not call onDelete when cancelled", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
       fireEvent.click(deleteButtons[0]);
@@ -229,7 +291,11 @@ describe("OrganizationManager", () => {
 
   describe("Loading State", () => {
     it("should show loading indicator when isLoading is true", () => {
-      render(<OrganizationManager {...defaultProps} isLoading={true} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("org-loading")).toBeInTheDocument();
     });
@@ -237,7 +303,11 @@ describe("OrganizationManager", () => {
 
   describe("Empty State", () => {
     it("should show empty state when no organizations", () => {
-      render(<OrganizationManager {...defaultProps} organizations={[]} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} organizations={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/no organizations/i)).toBeInTheDocument();
     });
@@ -245,7 +315,11 @@ describe("OrganizationManager", () => {
 
   describe("Search and Filter", () => {
     it("should render search input", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByPlaceholderText(/search organizations/i),
@@ -253,7 +327,11 @@ describe("OrganizationManager", () => {
     });
 
     it("should filter organizations by name", () => {
-      render(<OrganizationManager {...defaultProps} />);
+      render(
+        <TestProvider>
+          <OrganizationManager {...defaultProps} />
+        </TestProvider>,
+      );
 
       const searchInput = screen.getByPlaceholderText(/search organizations/i);
       fireEvent.change(searchInput, { target: { value: "Acme" } });

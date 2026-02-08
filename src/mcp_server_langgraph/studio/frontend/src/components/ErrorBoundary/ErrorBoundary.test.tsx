@@ -12,6 +12,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { ErrorBoundary, type ErrorInfo } from "./ErrorBoundary";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // Component that throws an error
@@ -39,9 +41,11 @@ describe("ErrorBoundary", () => {
   describe("Normal Rendering", () => {
     it("should render children when no error occurs", () => {
       render(
-        <ErrorBoundary>
-          <div data-testid="test-child">Test Child</div>
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <div data-testid="test-child">Test Child</div>
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("test-child")).toBeInTheDocument();
@@ -49,10 +53,12 @@ describe("ErrorBoundary", () => {
 
     it("should render multiple children", () => {
       render(
-        <ErrorBoundary>
-          <div data-testid="child-1">Child 1</div>
-          <div data-testid="child-2">Child 2</div>
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <div data-testid="child-1">Child 1</div>
+            <div data-testid="child-2">Child 2</div>
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("child-1")).toBeInTheDocument();
@@ -65,9 +71,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Test error message");
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -78,9 +86,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Custom error message for testing");
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(
@@ -92,9 +102,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error();
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(
@@ -109,9 +121,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Test error");
 
       render(
-        <ErrorBoundary onError={onError}>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary onError={onError}>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(onError).toHaveBeenCalledTimes(1);
@@ -128,9 +142,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Stack trace test");
 
       render(
-        <ErrorBoundary onError={onError}>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary onError={onError}>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       const errorInfo = onError.mock.calls[0][1] as ErrorInfo;
@@ -147,9 +163,11 @@ describe("ErrorBoundary", () => {
       // Should not throw - error boundary should handle this gracefully
       expect(() =>
         render(
-          <ErrorBoundary onError={onError}>
-            <ThrowingComponent error={testError} />
-          </ErrorBoundary>,
+          <TestProvider>
+            <ErrorBoundary onError={onError}>
+              <ThrowingComponent error={testError} />
+            </ErrorBoundary>
+          </TestProvider>,
         ),
       ).not.toThrow();
 
@@ -162,9 +180,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Retry test");
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(
@@ -177,9 +197,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Reset test");
 
       render(
-        <ErrorBoundary onReset={onReset}>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary onReset={onReset}>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /try again/i }));
@@ -197,9 +219,11 @@ describe("ErrorBoundary", () => {
       };
 
       const { rerender } = render(
-        <ErrorBoundary>
-          <ToggleComponent />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ToggleComponent />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -230,9 +254,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Custom fallback test");
 
       render(
-        <ErrorBoundary fallback={<CustomFallback />}>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary fallback={<CustomFallback />}>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("custom-fallback")).toBeInTheDocument();
@@ -247,9 +273,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Render prop test");
 
       render(
-        <ErrorBoundary fallbackRender={fallbackRender}>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary fallbackRender={fallbackRender}>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(fallbackRender).toHaveBeenCalledWith({
@@ -266,9 +294,11 @@ describe("ErrorBoundary", () => {
       testError.stack = "Error: Detailed error\n    at test.js:1:1";
 
       render(
-        <ErrorBoundary showDetails>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary showDetails>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByText(/error:/i)).toBeInTheDocument();
@@ -279,9 +309,11 @@ describe("ErrorBoundary", () => {
       testError.stack = "Error stack trace";
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       // Stack trace should not be visible by default
@@ -295,9 +327,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Named boundary test");
 
       render(
-        <ErrorBoundary name="TestBoundary" onError={onError}>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary name="TestBoundary" onError={onError}>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       const errorInfo = onError.mock.calls[0][1] as ErrorInfo;
@@ -310,9 +344,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("A11y test error");
 
       const { container } = render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       const results = await axe(container);
@@ -323,9 +359,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("ARIA test");
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       const alert = screen.getByRole("alert");
@@ -336,9 +374,11 @@ describe("ErrorBoundary", () => {
       const testError = new Error("Focus test");
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       const retryButton = screen.getByRole("button", { name: /try again/i });
@@ -355,9 +395,11 @@ describe("ErrorBoundary", () => {
       testError.message = null as unknown as string;
 
       render(
-        <ErrorBoundary>
-          <ThrowingComponent error={testError} />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowingComponent error={testError} />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -369,9 +411,11 @@ describe("ErrorBoundary", () => {
       };
 
       render(
-        <ErrorBoundary>
-          <ThrowStringComponent />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ThrowStringComponent />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -390,9 +434,11 @@ describe("ErrorBoundary", () => {
       };
 
       const { rerender } = render(
-        <ErrorBoundary>
-          <ConditionalComponent />
-        </ErrorBoundary>,
+        <TestProvider>
+          <ErrorBoundary>
+            <ConditionalComponent />
+          </ErrorBoundary>
+        </TestProvider>,
       );
 
       // First render - should catch error

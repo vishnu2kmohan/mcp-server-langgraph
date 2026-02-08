@@ -10,6 +10,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScopeBadge } from "./ScopeBadge";
 import type { ConnectionScope } from "@/types/connection";
 
+import { TestProvider } from "@/test-utils";
+
 // Motion mock is provided globally in src/test/setup.ts
 
 afterEach(() => {
@@ -20,7 +22,11 @@ afterEach(() => {
 describe("ScopeBadge", () => {
   describe("Rendering", () => {
     it("should render user scope with User icon and 'Personal' label", () => {
-      render(<ScopeBadge scope="user" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="user" />
+        </TestProvider>,
+      );
       expect(screen.getByText("Personal")).toBeInTheDocument();
       expect(screen.getByTestId("scope-badge")).toHaveAttribute(
         "data-scope",
@@ -29,7 +35,11 @@ describe("ScopeBadge", () => {
     });
 
     it("should render project scope with Users icon and 'Shared' label", () => {
-      render(<ScopeBadge scope="project" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="project" />
+        </TestProvider>,
+      );
       expect(screen.getByText("Shared")).toBeInTheDocument();
       expect(screen.getByTestId("scope-badge")).toHaveAttribute(
         "data-scope",
@@ -38,7 +48,11 @@ describe("ScopeBadge", () => {
     });
 
     it("should render session scope with Clock icon and 'Session' label", () => {
-      render(<ScopeBadge scope="session" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="session" />
+        </TestProvider>,
+      );
       expect(screen.getByText("Session")).toBeInTheDocument();
       expect(screen.getByTestId("scope-badge")).toHaveAttribute(
         "data-scope",
@@ -49,20 +63,32 @@ describe("ScopeBadge", () => {
 
   describe("Variant Styles", () => {
     it("should use default variant for user scope", () => {
-      render(<ScopeBadge scope="user" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="user" />
+        </TestProvider>,
+      );
       const badge = screen.getByTestId("scope-badge");
       // Default variant uses neutral colors
       expect(badge).toBeInTheDocument();
     });
 
     it("should use primary variant for project scope", () => {
-      render(<ScopeBadge scope="project" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="project" />
+        </TestProvider>,
+      );
       const badge = screen.getByTestId("scope-badge");
       expect(badge).toBeInTheDocument();
     });
 
     it("should use warning variant for session scope", () => {
-      render(<ScopeBadge scope="session" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="session" />
+        </TestProvider>,
+      );
       const badge = screen.getByTestId("scope-badge");
       expect(badge).toBeInTheDocument();
     });
@@ -70,24 +96,40 @@ describe("ScopeBadge", () => {
 
   describe("Size Variants", () => {
     it("should apply small size when size='sm'", () => {
-      render(<ScopeBadge scope="user" size="sm" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="user" size="sm" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("scope-badge")).toBeInTheDocument();
     });
 
     it("should apply medium size by default", () => {
-      render(<ScopeBadge scope="user" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="user" />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("scope-badge")).toBeInTheDocument();
     });
   });
 
   describe("Accessibility", () => {
     it("should have accessible label describing the scope", () => {
-      render(<ScopeBadge scope="project" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="project" />
+        </TestProvider>,
+      );
       expect(screen.getByLabelText(/shared/i)).toBeInTheDocument();
     });
 
     it("should support custom className", () => {
-      render(<ScopeBadge scope="user" className="custom-class" />);
+      render(
+        <TestProvider>
+          <ScopeBadge scope="user" className="custom-class" />
+        </TestProvider>,
+      );
       const badge = screen.getByTestId("scope-badge");
       expect(badge).toHaveClass("custom-class");
     });
@@ -103,7 +145,11 @@ describe("ScopeBadge", () => {
 
     scopes.forEach((scope) => {
       it(`should render ${scope} scope correctly`, () => {
-        render(<ScopeBadge scope={scope} />);
+        render(
+          <TestProvider>
+            <ScopeBadge scope={scope} />
+          </TestProvider>,
+        );
         expect(screen.getByText(expectedLabels[scope])).toBeInTheDocument();
       });
     });

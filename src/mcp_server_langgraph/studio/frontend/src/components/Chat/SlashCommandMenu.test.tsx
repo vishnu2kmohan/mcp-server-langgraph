@@ -15,6 +15,8 @@ import {
   type SlashCommand,
 } from "./SlashCommandMenu";
 
+import { TestProvider } from "@/test-utils";
+
 describe("SlashCommandMenu", () => {
   const mockOnSelect = vi.fn();
   const mockOnClose = vi.fn();
@@ -52,13 +54,21 @@ describe("SlashCommandMenu", () => {
 
   describe("rendering", () => {
     it("should render the menu when isOpen is true", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("slash-command-menu")).toBeInTheDocument();
     });
 
     it("should not render when isOpen is false", () => {
-      render(<SlashCommandMenu {...defaultProps} isOpen={false} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} isOpen={false} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("slash-command-menu"),
@@ -66,7 +76,11 @@ describe("SlashCommandMenu", () => {
     });
 
     it("should render all commands", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("/help")).toBeInTheDocument();
       expect(screen.getByText("/clear")).toBeInTheDocument();
@@ -75,7 +89,11 @@ describe("SlashCommandMenu", () => {
     });
 
     it("should display command descriptions", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Show available commands")).toBeInTheDocument();
       expect(
@@ -86,21 +104,33 @@ describe("SlashCommandMenu", () => {
 
   describe("filtering", () => {
     it("should filter commands based on filter prop", () => {
-      render(<SlashCommandMenu {...defaultProps} filter="hel" />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} filter="hel" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("/help")).toBeInTheDocument();
       expect(screen.queryByText("/clear")).not.toBeInTheDocument();
     });
 
     it("should show all commands when filter is empty", () => {
-      render(<SlashCommandMenu {...defaultProps} filter="" />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} filter="" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("/help")).toBeInTheDocument();
       expect(screen.getByText("/clear")).toBeInTheDocument();
     });
 
     it("should show no results message when no commands match", () => {
-      render(<SlashCommandMenu {...defaultProps} filter="xyz" />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} filter="xyz" />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/no commands found/i)).toBeInTheDocument();
     });
@@ -108,7 +138,11 @@ describe("SlashCommandMenu", () => {
 
   describe("selection", () => {
     it("should call onSelect when a command is clicked", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByText("/help"));
 
@@ -116,7 +150,11 @@ describe("SlashCommandMenu", () => {
     });
 
     it("should call onClose after selection", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByText("/help"));
 
@@ -126,14 +164,22 @@ describe("SlashCommandMenu", () => {
 
   describe("keyboard navigation", () => {
     it("should highlight first item by default", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const firstItem = screen.getByTestId("command-item-help");
       expect(firstItem).toHaveAttribute("data-highlighted", "true");
     });
 
     it("should navigate down with ArrowDown", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.keyDown(screen.getByTestId("slash-command-menu"), {
         key: "ArrowDown",
@@ -146,11 +192,13 @@ describe("SlashCommandMenu", () => {
     it("should navigate up with ArrowUp", () => {
       const mockOnSelectedIndexChange = vi.fn();
       render(
-        <SlashCommandMenu
-          {...defaultProps}
-          selectedIndex={1}
-          onSelectedIndexChange={mockOnSelectedIndexChange}
-        />,
+        <TestProvider>
+          <SlashCommandMenu
+            {...defaultProps}
+            selectedIndex={1}
+            onSelectedIndexChange={mockOnSelectedIndexChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByTestId("slash-command-menu"), {
@@ -161,7 +209,11 @@ describe("SlashCommandMenu", () => {
     });
 
     it("should select with Enter key", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.keyDown(screen.getByTestId("slash-command-menu"), {
         key: "Enter",
@@ -171,7 +223,11 @@ describe("SlashCommandMenu", () => {
     });
 
     it("should close with Escape key", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       fireEvent.keyDown(screen.getByTestId("slash-command-menu"), {
         key: "Escape",
@@ -183,13 +239,21 @@ describe("SlashCommandMenu", () => {
 
   describe("accessibility", () => {
     it("should have role listbox", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
     it("should have aria-label", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("listbox")).toHaveAttribute(
         "aria-label",
@@ -198,7 +262,11 @@ describe("SlashCommandMenu", () => {
     });
 
     it("should have role option for each command", () => {
-      render(<SlashCommandMenu {...defaultProps} />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} />
+        </TestProvider>,
+      );
 
       const options = screen.getAllByRole("option");
       expect(options).toHaveLength(4);
@@ -207,7 +275,11 @@ describe("SlashCommandMenu", () => {
 
   describe("custom className", () => {
     it("should apply custom className", () => {
-      render(<SlashCommandMenu {...defaultProps} className="custom-class" />);
+      render(
+        <TestProvider>
+          <SlashCommandMenu {...defaultProps} className="custom-class" />
+        </TestProvider>,
+      );
 
       const menu = screen.getByTestId("slash-command-menu");
       expect(menu).toHaveClass("custom-class");

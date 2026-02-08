@@ -27,6 +27,8 @@ import {
 } from "./AttachmentPreviews";
 import type { UploadFile } from "../../hooks/useFileUpload";
 
+import { TestProvider } from "@/test-utils";
+
 describe("AttachmentPreviews", () => {
   const mockOnRemoveFile = vi.fn();
   const mockOnRemoveFetchedUrl = vi.fn();
@@ -91,7 +93,11 @@ describe("AttachmentPreviews", () => {
 
   describe("rendering", () => {
     it("should render file chips for uploaded files", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("document.pdf")).toBeInTheDocument();
       expect(screen.getByText("image.png")).toBeInTheDocument();
@@ -99,18 +105,24 @@ describe("AttachmentPreviews", () => {
     });
 
     it("should render with data-testid", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("attachment-previews")).toBeInTheDocument();
     });
 
     it("should not render when no files and no URLs", () => {
       render(
-        <AttachmentPreviews
-          {...defaultProps}
-          uploadFiles={[]}
-          fetchedUrls={[]}
-        />,
+        <TestProvider>
+          <AttachmentPreviews
+            {...defaultProps}
+            uploadFiles={[]}
+            fetchedUrls={[]}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -119,7 +131,11 @@ describe("AttachmentPreviews", () => {
     });
 
     it("should render URL chips for fetched URLs", () => {
-      render(<AttachmentPreviews {...defaultProps} uploadFiles={[]} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} uploadFiles={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Example Article")).toBeInTheDocument();
       expect(screen.getByText("Documentation")).toBeInTheDocument();
@@ -127,13 +143,15 @@ describe("AttachmentPreviews", () => {
 
     it("should show URL domain when no title", () => {
       render(
-        <AttachmentPreviews
-          {...defaultProps}
-          uploadFiles={[]}
-          fetchedUrls={[
-            { url: "https://example.com/page", content: "Content" },
-          ]}
-        />,
+        <TestProvider>
+          <AttachmentPreviews
+            {...defaultProps}
+            uploadFiles={[]}
+            fetchedUrls={[
+              { url: "https://example.com/page", content: "Content" },
+            ]}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/example\.com/)).toBeInTheDocument();
@@ -142,7 +160,11 @@ describe("AttachmentPreviews", () => {
 
   describe("file chips", () => {
     it("should show file icon for documents", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pdfChip = screen
         .getByText("document.pdf")
@@ -152,7 +174,11 @@ describe("AttachmentPreviews", () => {
     });
 
     it("should show image icon for images", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const imageChip = screen
         .getByText("image.png")
@@ -161,7 +187,11 @@ describe("AttachmentPreviews", () => {
     });
 
     it("should show loading state for uploading files", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const uploadingChip = screen
         .getByText("data.csv")
@@ -173,7 +203,11 @@ describe("AttachmentPreviews", () => {
 
     it("should call onRemoveFile when X is clicked", async () => {
       const user = userEvent.setup();
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pdfChip = screen
         .getByText("document.pdf")
@@ -199,11 +233,13 @@ describe("AttachmentPreviews", () => {
       };
 
       render(
-        <AttachmentPreviews
-          {...defaultProps}
-          uploadFiles={[longNameFile]}
-          fetchedUrls={[]}
-        />,
+        <TestProvider>
+          <AttachmentPreviews
+            {...defaultProps}
+            uploadFiles={[longNameFile]}
+            fetchedUrls={[]}
+          />
+        </TestProvider>,
       );
 
       const chip = screen.getByTestId("file-chip-long-file");
@@ -226,11 +262,13 @@ describe("AttachmentPreviews", () => {
       };
 
       render(
-        <AttachmentPreviews
-          {...defaultProps}
-          uploadFiles={[longNameFile]}
-          fetchedUrls={[]}
-        />,
+        <TestProvider>
+          <AttachmentPreviews
+            {...defaultProps}
+            uploadFiles={[longNameFile]}
+            fetchedUrls={[]}
+          />
+        </TestProvider>,
       );
 
       const filenameElement = screen.getByText(
@@ -246,7 +284,11 @@ describe("AttachmentPreviews", () => {
   describe("URL chips", () => {
     it("should call onRemoveFetchedUrl when X is clicked", async () => {
       const user = userEvent.setup();
-      render(<AttachmentPreviews {...defaultProps} uploadFiles={[]} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} uploadFiles={[]} />
+        </TestProvider>,
+      );
 
       const urlChip = screen
         .getByText("Example Article")
@@ -263,19 +305,25 @@ describe("AttachmentPreviews", () => {
 
     it("should show loading state for URLs being fetched", () => {
       render(
-        <AttachmentPreviews
-          {...defaultProps}
-          uploadFiles={[]}
-          fetchedUrls={[]}
-          urlFetchLoading={["https://loading.example.com"]}
-        />,
+        <TestProvider>
+          <AttachmentPreviews
+            {...defaultProps}
+            uploadFiles={[]}
+            fetchedUrls={[]}
+            urlFetchLoading={["https://loading.example.com"]}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("url-loading-chip")).toBeInTheDocument();
     });
 
     it("should show link icon for URLs", () => {
-      render(<AttachmentPreviews {...defaultProps} uploadFiles={[]} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} uploadFiles={[]} />
+        </TestProvider>,
+      );
 
       const urlChip = screen
         .getByText("Example Article")
@@ -286,14 +334,22 @@ describe("AttachmentPreviews", () => {
 
   describe("layout", () => {
     it("should have horizontal scroll container", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("attachment-previews");
       expect(container.className).toMatch(/overflow-x-auto/);
     });
 
     it("should render files before URLs", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("attachment-previews");
       const chips = container.querySelectorAll(
@@ -311,14 +367,22 @@ describe("AttachmentPreviews", () => {
 
   describe("styling", () => {
     it("should render chips with rounded-full styling", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const chip = screen.getByTestId("file-chip-file-1");
       expect(chip.className).toMatch(/rounded-full/);
     });
 
     it("should have gap between chips", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const container = screen.getByTestId("attachment-previews");
       expect(container.className).toMatch(/gap-2/);
@@ -327,7 +391,11 @@ describe("AttachmentPreviews", () => {
 
   describe("accessibility", () => {
     it("should have accessible remove buttons", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const removeButtons = screen.getAllByRole("button", { name: /remove/i });
       expect(removeButtons.length).toBe(
@@ -336,7 +404,11 @@ describe("AttachmentPreviews", () => {
     });
 
     it("should have aria-label on remove buttons", () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       const pdfChip = screen
         .getByText("document.pdf")
@@ -348,7 +420,11 @@ describe("AttachmentPreviews", () => {
 
   describe("Motion Animations", () => {
     it("should animate chips on mount", async () => {
-      render(<AttachmentPreviews {...defaultProps} />);
+      render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Container should exist with motion wrapper
       const container = screen.getByTestId("attachment-previews");
@@ -366,7 +442,11 @@ describe("AttachmentPreviews", () => {
     });
 
     it("should animate chip removal with AnimatePresence", async () => {
-      const { rerender } = render(<AttachmentPreviews {...defaultProps} />);
+      const { rerender } = render(
+        <TestProvider>
+          <AttachmentPreviews {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Verify chip exists
       expect(screen.getByText("document.pdf")).toBeInTheDocument();
@@ -386,11 +466,13 @@ describe("AttachmentPreviews", () => {
     it("should animate new chip addition", async () => {
       const initialFiles = [mockFiles[0]];
       const { rerender } = render(
-        <AttachmentPreviews
-          {...defaultProps}
-          uploadFiles={initialFiles}
-          fetchedUrls={[]}
-        />,
+        <TestProvider>
+          <AttachmentPreviews
+            {...defaultProps}
+            uploadFiles={initialFiles}
+            fetchedUrls={[]}
+          />
+        </TestProvider>,
       );
 
       // Verify initial state

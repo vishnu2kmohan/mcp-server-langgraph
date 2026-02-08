@@ -21,6 +21,8 @@ import {
   type AIIntelligenceConfig,
 } from "./AIIntelligenceContext";
 
+import { TestProvider } from "@/test-utils";
+
 // =============================================================================
 // Test Utilities
 // =============================================================================
@@ -48,9 +50,11 @@ describe("AIIntelligenceContext", () => {
   describe("Provider", () => {
     it("should render children", () => {
       render(
-        <AIIntelligenceProvider>
-          <div data-testid="child">Test Child</div>
-        </AIIntelligenceProvider>,
+        <TestProvider>
+          <AIIntelligenceProvider>
+            <div data-testid="child">Test Child</div>
+          </AIIntelligenceProvider>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("child")).toBeInTheDocument();
@@ -70,9 +74,11 @@ describe("AIIntelligenceContext", () => {
       };
 
       render(
-        <AIIntelligenceProvider config={config}>
-          <div>Test</div>
-        </AIIntelligenceProvider>,
+        <TestProvider>
+          <AIIntelligenceProvider config={config}>
+            <div>Test</div>
+          </AIIntelligenceProvider>
+        </TestProvider>,
       );
 
       // Should render without errors

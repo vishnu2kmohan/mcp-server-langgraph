@@ -22,6 +22,8 @@ import {
 import { ConnectionDialog } from "./ConnectionDialog";
 import type { MCPConnection } from "../../types/connection";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock RTK Query hooks - RTK Query mutations return an object with unwrap()
 const mockCreateConnection = vi.fn().mockReturnValue({
   unwrap: vi.fn().mockResolvedValue({ id: "conn-new", name: "New Connection" }),
@@ -82,11 +84,13 @@ describe("ConnectionDialog", () => {
   describe("Dialog Visibility", () => {
     it("should not render when open is false", () => {
       render(
-        <ConnectionDialog
-          open={false}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={false}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -94,11 +98,13 @@ describe("ConnectionDialog", () => {
 
     it("should render when open is true", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -106,11 +112,13 @@ describe("ConnectionDialog", () => {
 
     it('should display "Add Connection" title when creating', () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Add Connection")).toBeInTheDocument();
@@ -118,12 +126,14 @@ describe("ConnectionDialog", () => {
 
     it('should display "Edit Connection" title when editing', () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          connection={mockConnection}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            connection={mockConnection}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Edit Connection")).toBeInTheDocument();
@@ -131,11 +141,13 @@ describe("ConnectionDialog", () => {
 
     it("should call onClose when close button is clicked", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByLabelText("Close"));
@@ -145,11 +157,13 @@ describe("ConnectionDialog", () => {
 
     it("should call onClose when cancel button is clicked", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByText("Cancel"));
@@ -161,11 +175,13 @@ describe("ConnectionDialog", () => {
   describe("Form Fields", () => {
     it("should have name input field", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Name")).toBeInTheDocument();
@@ -173,11 +189,13 @@ describe("ConnectionDialog", () => {
 
     it("should have URL input field", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("URL")).toBeInTheDocument();
@@ -185,11 +203,13 @@ describe("ConnectionDialog", () => {
 
     it("should have description textarea", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Description")).toBeInTheDocument();
@@ -197,11 +217,13 @@ describe("ConnectionDialog", () => {
 
     it("should have auth type selector", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Authentication")).toBeInTheDocument();
@@ -209,12 +231,14 @@ describe("ConnectionDialog", () => {
 
     it("should populate fields when editing", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          connection={mockConnection}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            connection={mockConnection}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Name")).toHaveValue("Test Connection");
@@ -230,11 +254,13 @@ describe("ConnectionDialog", () => {
   describe("Validation", () => {
     it("should require name field", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("URL"), {
@@ -250,11 +276,13 @@ describe("ConnectionDialog", () => {
 
     it("should require URL field", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -270,11 +298,13 @@ describe("ConnectionDialog", () => {
 
     it("should validate URL format", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -297,11 +327,13 @@ describe("ConnectionDialog", () => {
   describe("Auth Type Selection", () => {
     it('should have "No Authentication" option', () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       const authSelect = screen.getByLabelText("Authentication");
@@ -315,11 +347,13 @@ describe("ConnectionDialog", () => {
 
     it('should have "API Key" option', () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       const authSelect = screen.getByLabelText("Authentication");
@@ -330,11 +364,13 @@ describe("ConnectionDialog", () => {
 
     it('should have "OAuth2" option', () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       const authSelect = screen.getByLabelText("Authentication");
@@ -345,11 +381,13 @@ describe("ConnectionDialog", () => {
 
     it('should default to "No Authentication"', () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByLabelText("Authentication")).toHaveValue("none");
@@ -359,11 +397,13 @@ describe("ConnectionDialog", () => {
   describe("API Key Configuration", () => {
     it("should show API Key input when API Key auth is selected", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Authentication"), {
@@ -377,11 +417,13 @@ describe("ConnectionDialog", () => {
 
     it("should hide API Key input when other auth is selected", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
@@ -389,11 +431,13 @@ describe("ConnectionDialog", () => {
 
     it("should require API Key when API Key auth is selected", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -417,11 +461,13 @@ describe("ConnectionDialog", () => {
   describe("OAuth2 Configuration", () => {
     it("should show OAuth2 fields when OAuth2 auth is selected", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Authentication"), {
@@ -435,11 +481,13 @@ describe("ConnectionDialog", () => {
 
     it("should show Client Secret field for OAuth2", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Authentication"), {
@@ -453,11 +501,13 @@ describe("ConnectionDialog", () => {
 
     it("should show Scopes field for OAuth2", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Authentication"), {
@@ -471,11 +521,13 @@ describe("ConnectionDialog", () => {
 
     it("should hide OAuth2 fields when other auth is selected", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
@@ -485,11 +537,13 @@ describe("ConnectionDialog", () => {
 
     it("should require Client ID when OAuth2 auth is selected", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -513,11 +567,13 @@ describe("ConnectionDialog", () => {
   describe("Create Operation", () => {
     it("should have Save button", () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Save")).toBeInTheDocument();
@@ -525,11 +581,13 @@ describe("ConnectionDialog", () => {
 
     it("should call onSuccess after successful create", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -548,11 +606,13 @@ describe("ConnectionDialog", () => {
 
     it("should call onClose after successful create", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -573,12 +633,14 @@ describe("ConnectionDialog", () => {
   describe("Update Operation", () => {
     it("should call onSuccess after successful update", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          connection={mockConnection}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            connection={mockConnection}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -596,11 +658,13 @@ describe("ConnectionDialog", () => {
   describe("Loading State", () => {
     it("should disable form during save", async () => {
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByLabelText("Name"), {
@@ -635,11 +699,13 @@ describe("ConnectionDialog", () => {
       // This test would need implementation to show error message
       // For now, verify dialog stays open on error
       render(
-        <ConnectionDialog
-          open={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-        />,
+        <TestProvider>
+          <ConnectionDialog
+            open={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();

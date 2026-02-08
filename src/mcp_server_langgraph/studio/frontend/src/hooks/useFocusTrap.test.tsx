@@ -10,6 +10,8 @@ import userEvent from "@testing-library/user-event";
 import { useRef, useState } from "react";
 import { useFocusTrap } from "./useFocusTrap";
 
+import { TestProvider } from "@/test-utils";
+
 // Test component that uses the hook
 function TestModal({
   isActive,
@@ -68,14 +70,22 @@ describe("useFocusTrap", () => {
 
   describe("focus initialization", () => {
     it("should focus first focusable element when activated", async () => {
-      render(<TestModal isActive={true} />);
+      render(
+        <TestProvider>
+          <TestModal isActive={true} />
+        </TestProvider>,
+      );
 
       // First focusable element inside the trap should be focused
       expect(screen.getByTestId("first-button")).toHaveFocus();
     });
 
     it("should not trap focus when isActive is false", async () => {
-      render(<TestModal isActive={false} />);
+      render(
+        <TestProvider>
+          <TestModal isActive={false} />
+        </TestProvider>,
+      );
 
       // Should not auto-focus first element
       expect(screen.getByTestId("first-button")).not.toHaveFocus();
@@ -85,7 +95,11 @@ describe("useFocusTrap", () => {
   describe("Tab key cycling", () => {
     it("should cycle focus from last element to first on Tab", async () => {
       const user = userEvent.setup();
-      render(<TestModal isActive={true} />);
+      render(
+        <TestProvider>
+          <TestModal isActive={true} />
+        </TestProvider>,
+      );
 
       // Focus is on first-button initially
       expect(screen.getByTestId("first-button")).toHaveFocus();
@@ -105,7 +119,11 @@ describe("useFocusTrap", () => {
 
     it("should cycle focus from first element to last on Shift+Tab", async () => {
       const user = userEvent.setup();
-      render(<TestModal isActive={true} />);
+      render(
+        <TestProvider>
+          <TestModal isActive={true} />
+        </TestProvider>,
+      );
 
       // Focus is on first-button initially
       expect(screen.getByTestId("first-button")).toHaveFocus();
@@ -119,7 +137,11 @@ describe("useFocusTrap", () => {
   describe("activation/deactivation", () => {
     it("should trap focus when activated and release when deactivated", async () => {
       const user = userEvent.setup();
-      render(<TestModalWithToggle />);
+      render(
+        <TestProvider>
+          <TestModalWithToggle />
+        </TestProvider>,
+      );
 
       // Initially not active, no focus trap
       const toggleButton = screen.getByTestId("toggle-button");
@@ -151,7 +173,13 @@ describe("useFocusTrap", () => {
       }
 
       // Should not throw when rendered with empty container
-      expect(() => render(<EmptyModal />)).not.toThrow();
+      expect(() =>
+        render(
+          <TestProvider>
+            <EmptyModal />
+          </TestProvider>,
+        ),
+      ).not.toThrow();
     });
 
     it("should handle null ref gracefully", async () => {
@@ -163,7 +191,13 @@ describe("useFocusTrap", () => {
       }
 
       // Should not throw when ref is not attached
-      expect(() => render(<NullRefModal />)).not.toThrow();
+      expect(() =>
+        render(
+          <TestProvider>
+            <NullRefModal />
+          </TestProvider>,
+        ),
+      ).not.toThrow();
     });
   });
 
@@ -188,7 +222,11 @@ describe("useFocusTrap", () => {
       }
 
       const user = userEvent.setup();
-      render(<ComprehensiveModal />);
+      render(
+        <TestProvider>
+          <ComprehensiveModal />
+        </TestProvider>,
+      );
 
       // Should focus first element (button)
       expect(screen.getByTestId("button")).toHaveFocus();
@@ -227,7 +265,11 @@ describe("useFocusTrap", () => {
       }
 
       const user = userEvent.setup();
-      render(<ModalWithHiddenElement />);
+      render(
+        <TestProvider>
+          <ModalWithHiddenElement />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("first")).toHaveFocus();
 

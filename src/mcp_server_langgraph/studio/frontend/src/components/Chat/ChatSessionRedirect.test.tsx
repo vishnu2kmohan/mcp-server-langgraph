@@ -7,9 +7,11 @@
 
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import { MemoryRouter, Routes, Route } from "react-router";
+import { Routes, Route } from "react-router";
 
 import { ChatSessionRedirect } from "./ChatSessionRedirect";
+
+import { TestProvider } from "@/test-utils";
 
 // =============================================================================
 // Tests
@@ -25,7 +27,7 @@ describe("ChatSessionRedirect", () => {
     it("should redirect to chat page with session query param", () => {
       // Render component in a route that captures the sessionId
       render(
-        <MemoryRouter initialEntries={["/studio/chat/abc123"]}>
+        <TestProvider initialEntries={["/studio/chat/abc123"]}>
           <Routes>
             <Route
               path="/studio/chat/:sessionId"
@@ -36,7 +38,7 @@ describe("ChatSessionRedirect", () => {
               element={<div data-testid="chat-page">Chat Page</div>}
             />
           </Routes>
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // Should redirect to the chat page (Navigate renders nothing visible)
@@ -54,7 +56,7 @@ describe("ChatSessionRedirect", () => {
       };
 
       render(
-        <MemoryRouter initialEntries={["/studio/chat/session-xyz-789"]}>
+        <TestProvider initialEntries={["/studio/chat/session-xyz-789"]}>
           <Routes>
             <Route
               path="/studio/chat/:sessionId"
@@ -62,7 +64,7 @@ describe("ChatSessionRedirect", () => {
             />
             <Route path="/studio/chat" element={<LocationCapture />} />
           </Routes>
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("destination")).toBeInTheDocument();
@@ -75,7 +77,7 @@ describe("ChatSessionRedirect", () => {
       // We simulate this by having a parent route that renders ChatSessionRedirect
       // without passing sessionId in the path
       render(
-        <MemoryRouter initialEntries={["/redirect-test"]}>
+        <TestProvider initialEntries={["/redirect-test"]}>
           <Routes>
             {/* Route without :sessionId - simulates missing param */}
             <Route path="/redirect-test" element={<ChatSessionRedirect />} />
@@ -88,7 +90,7 @@ describe("ChatSessionRedirect", () => {
               }
             />
           </Routes>
-        </MemoryRouter>,
+        </TestProvider>,
       );
 
       // Should redirect to /studio/chat (without session param)

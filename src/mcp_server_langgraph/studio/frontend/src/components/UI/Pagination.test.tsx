@@ -14,6 +14,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { CursorPagination, PagePagination } from "./Pagination";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -23,12 +25,14 @@ describe("CursorPagination", () => {
   describe("Rendering", () => {
     it("should render prev and next buttons", () => {
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={false}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={false}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(
@@ -39,12 +43,14 @@ describe("CursorPagination", () => {
 
     it("should disable prev button when hasPrev is false", () => {
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={false}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={false}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
@@ -52,12 +58,14 @@ describe("CursorPagination", () => {
 
     it("should disable next button when hasNext is false", () => {
       render(
-        <CursorPagination
-          hasNext={false}
-          hasPrev={true}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={false}
+            hasPrev={true}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /next/i })).toBeDisabled();
@@ -65,13 +73,15 @@ describe("CursorPagination", () => {
 
     it("should show loading state", () => {
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={true}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-          isLoading={true}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={true}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+            isLoading={true}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
@@ -80,13 +90,15 @@ describe("CursorPagination", () => {
 
     it("should display item count when provided", () => {
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={false}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-          itemCount={25}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={false}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+            itemCount={25}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/25 items/i)).toBeInTheDocument();
@@ -97,12 +109,14 @@ describe("CursorPagination", () => {
     it("should call onNext when next button is clicked", () => {
       const onNext = vi.fn();
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={false}
-          onNext={onNext}
-          onPrev={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={false}
+            onNext={onNext}
+            onPrev={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /next/i }));
@@ -112,12 +126,14 @@ describe("CursorPagination", () => {
     it("should call onPrev when prev button is clicked", () => {
       const onPrev = vi.fn();
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={true}
-          onNext={vi.fn()}
-          onPrev={onPrev}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={true}
+            onNext={vi.fn()}
+            onPrev={onPrev}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /previous/i }));
@@ -127,12 +143,14 @@ describe("CursorPagination", () => {
     it("should not call onNext when button is disabled", () => {
       const onNext = vi.fn();
       render(
-        <CursorPagination
-          hasNext={false}
-          hasPrev={false}
-          onNext={onNext}
-          onPrev={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={false}
+            hasPrev={false}
+            onNext={onNext}
+            onPrev={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /next/i }));
@@ -143,15 +161,17 @@ describe("CursorPagination", () => {
   describe("Limit Selector", () => {
     it("should render limit selector when showLimitSelector is true", () => {
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={false}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-          showLimitSelector={true}
-          limit={20}
-          onLimitChange={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={false}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+            showLimitSelector={true}
+            limit={20}
+            onLimitChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -160,15 +180,17 @@ describe("CursorPagination", () => {
     it("should call onLimitChange when limit is changed", () => {
       const onLimitChange = vi.fn();
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={false}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-          showLimitSelector={true}
-          limit={20}
-          onLimitChange={onLimitChange}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={false}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+            showLimitSelector={true}
+            limit={20}
+            onLimitChange={onLimitChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByRole("combobox"), {
@@ -179,15 +201,17 @@ describe("CursorPagination", () => {
 
     it("should display current limit value", () => {
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={false}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-          showLimitSelector={true}
-          limit={50}
-          onLimitChange={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={false}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+            showLimitSelector={true}
+            limit={50}
+            onLimitChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("combobox")).toHaveValue("50");
@@ -197,12 +221,14 @@ describe("CursorPagination", () => {
   describe("Accessibility", () => {
     it("should have proper aria-labels", () => {
       render(
-        <CursorPagination
-          hasNext={true}
-          hasPrev={true}
-          onNext={vi.fn()}
-          onPrev={vi.fn()}
-        />,
+        <TestProvider>
+          <CursorPagination
+            hasNext={true}
+            hasPrev={true}
+            onNext={vi.fn()}
+            onPrev={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("navigation")).toHaveAttribute(
@@ -217,11 +243,13 @@ describe("PagePagination", () => {
   describe("Rendering", () => {
     it("should render page numbers", () => {
       render(
-        <PagePagination
-          currentPage={1}
-          totalPages={5}
-          onPageChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={1}
+            totalPages={5}
+            onPageChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("1")).toBeInTheDocument();
@@ -230,11 +258,13 @@ describe("PagePagination", () => {
 
     it("should highlight current page", () => {
       render(
-        <PagePagination
-          currentPage={2}
-          totalPages={5}
-          onPageChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={2}
+            totalPages={5}
+            onPageChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       const currentPageButton = screen.getByRole("button", { name: /page 2/i });
@@ -243,11 +273,13 @@ describe("PagePagination", () => {
 
     it("should show ellipsis for many pages", () => {
       render(
-        <PagePagination
-          currentPage={5}
-          totalPages={10}
-          onPageChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={5}
+            totalPages={10}
+            onPageChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getAllByText("...").length).toBeGreaterThan(0);
@@ -255,13 +287,15 @@ describe("PagePagination", () => {
 
     it("should show total items when provided", () => {
       render(
-        <PagePagination
-          currentPage={1}
-          totalPages={5}
-          totalItems={100}
-          perPage={20}
-          onPageChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={1}
+            totalPages={5}
+            totalItems={100}
+            perPage={20}
+            onPageChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(/100 items/i)).toBeInTheDocument();
@@ -272,11 +306,13 @@ describe("PagePagination", () => {
     it("should call onPageChange when page is clicked", () => {
       const onPageChange = vi.fn();
       render(
-        <PagePagination
-          currentPage={1}
-          totalPages={5}
-          onPageChange={onPageChange}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={1}
+            totalPages={5}
+            onPageChange={onPageChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /page 3/i }));
@@ -286,11 +322,13 @@ describe("PagePagination", () => {
     it("should call onPageChange with previous page when prev clicked", () => {
       const onPageChange = vi.fn();
       render(
-        <PagePagination
-          currentPage={3}
-          totalPages={5}
-          onPageChange={onPageChange}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={3}
+            totalPages={5}
+            onPageChange={onPageChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /previous/i }));
@@ -300,11 +338,13 @@ describe("PagePagination", () => {
     it("should call onPageChange with next page when next clicked", () => {
       const onPageChange = vi.fn();
       render(
-        <PagePagination
-          currentPage={3}
-          totalPages={5}
-          onPageChange={onPageChange}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={3}
+            totalPages={5}
+            onPageChange={onPageChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /next/i }));
@@ -313,11 +353,13 @@ describe("PagePagination", () => {
 
     it("should disable prev on first page", () => {
       render(
-        <PagePagination
-          currentPage={1}
-          totalPages={5}
-          onPageChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={1}
+            totalPages={5}
+            onPageChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
@@ -325,11 +367,13 @@ describe("PagePagination", () => {
 
     it("should disable next on last page", () => {
       render(
-        <PagePagination
-          currentPage={5}
-          totalPages={5}
-          onPageChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={5}
+            totalPages={5}
+            onPageChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("button", { name: /next/i })).toBeDisabled();
@@ -339,13 +383,15 @@ describe("PagePagination", () => {
   describe("Per Page Selector", () => {
     it("should render per page selector when provided", () => {
       render(
-        <PagePagination
-          currentPage={1}
-          totalPages={5}
-          onPageChange={vi.fn()}
-          perPage={20}
-          onPerPageChange={vi.fn()}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={1}
+            totalPages={5}
+            onPageChange={vi.fn()}
+            perPage={20}
+            onPerPageChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -354,13 +400,15 @@ describe("PagePagination", () => {
     it("should call onPerPageChange when selection changes", () => {
       const onPerPageChange = vi.fn();
       render(
-        <PagePagination
-          currentPage={1}
-          totalPages={5}
-          onPageChange={vi.fn()}
-          perPage={20}
-          onPerPageChange={onPerPageChange}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={1}
+            totalPages={5}
+            onPageChange={vi.fn()}
+            perPage={20}
+            onPerPageChange={onPerPageChange}
+          />
+        </TestProvider>,
       );
 
       fireEvent.change(screen.getByRole("combobox"), {
@@ -373,12 +421,14 @@ describe("PagePagination", () => {
   describe("Loading State", () => {
     it("should disable all buttons when loading", () => {
       render(
-        <PagePagination
-          currentPage={2}
-          totalPages={5}
-          onPageChange={vi.fn()}
-          isLoading={true}
-        />,
+        <TestProvider>
+          <PagePagination
+            currentPage={2}
+            totalPages={5}
+            onPageChange={vi.fn()}
+            isLoading={true}
+          />
+        </TestProvider>,
       );
 
       const buttons = screen.getAllByRole("button");

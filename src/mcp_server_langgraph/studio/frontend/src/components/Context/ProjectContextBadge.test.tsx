@@ -17,6 +17,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 import { ProjectContextBadge } from "./ProjectContextBadge";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 describe("ProjectContextBadge", () => {
@@ -35,13 +37,21 @@ describe("ProjectContextBadge", () => {
 
   describe("rendering", () => {
     it("should render badge when context is active", () => {
-      render(<ProjectContextBadge hasContext={true} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("project-context-badge")).toBeInTheDocument();
     });
 
     it("should not render when context is inactive", () => {
-      render(<ProjectContextBadge hasContext={false} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={false} />
+        </TestProvider>,
+      );
 
       expect(
         screen.queryByTestId("project-context-badge"),
@@ -49,17 +59,23 @@ describe("ProjectContextBadge", () => {
     });
 
     it("should display context indicator icon", () => {
-      render(<ProjectContextBadge hasContext={true} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("context-icon")).toBeInTheDocument();
     });
 
     it("should display context path when provided", () => {
       render(
-        <ProjectContextBadge
-          hasContext={true}
-          contextPath=".studio/context.md"
-        />,
+        <TestProvider>
+          <ProjectContextBadge
+            hasContext={true}
+            contextPath=".studio/context.md"
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText(".studio/context.md")).toBeInTheDocument();
@@ -74,7 +90,11 @@ describe("ProjectContextBadge", () => {
     it("should call onClick when badge is clicked", async () => {
       const onClick = vi.fn();
       const user = userEvent.setup();
-      render(<ProjectContextBadge hasContext={true} onClick={onClick} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} onClick={onClick} />
+        </TestProvider>,
+      );
 
       await user.click(screen.getByTestId("project-context-badge"));
 
@@ -84,10 +104,12 @@ describe("ProjectContextBadge", () => {
     it("should show tooltip on hover", async () => {
       const user = userEvent.setup();
       render(
-        <ProjectContextBadge
-          hasContext={true}
-          contextPath=".studio/context.md"
-        />,
+        <TestProvider>
+          <ProjectContextBadge
+            hasContext={true}
+            contextPath=".studio/context.md"
+          />
+        </TestProvider>,
       );
 
       await user.hover(screen.getByTestId("project-context-badge"));
@@ -102,7 +124,11 @@ describe("ProjectContextBadge", () => {
 
   describe("size variants", () => {
     it("should render small size", () => {
-      render(<ProjectContextBadge hasContext={true} size="sm" />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} size="sm" />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("project-context-badge")).toHaveAttribute(
         "data-size",
@@ -111,7 +137,11 @@ describe("ProjectContextBadge", () => {
     });
 
     it("should render medium size by default", () => {
-      render(<ProjectContextBadge hasContext={true} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("project-context-badge")).toHaveAttribute(
         "data-size",
@@ -126,7 +156,11 @@ describe("ProjectContextBadge", () => {
 
   describe("loading state", () => {
     it("should show loading indicator when loading", () => {
-      render(<ProjectContextBadge hasContext={true} isLoading={true} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} isLoading={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
     });
@@ -138,14 +172,22 @@ describe("ProjectContextBadge", () => {
 
   describe("accessibility", () => {
     it("should have no accessibility violations", async () => {
-      const { container } = render(<ProjectContextBadge hasContext={true} />);
+      const { container } = render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} />
+        </TestProvider>,
+      );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it("should have accessible label", () => {
-      render(<ProjectContextBadge hasContext={true} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByTestId("project-context-badge")).toHaveAttribute(
         "aria-label",
@@ -156,7 +198,11 @@ describe("ProjectContextBadge", () => {
     it("should be keyboard accessible", async () => {
       const onClick = vi.fn();
       const user = userEvent.setup();
-      render(<ProjectContextBadge hasContext={true} onClick={onClick} />);
+      render(
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} onClick={onClick} />
+        </TestProvider>,
+      );
 
       const badge = screen.getByTestId("project-context-badge");
       badge.focus();
@@ -173,7 +219,9 @@ describe("ProjectContextBadge", () => {
   describe("custom className", () => {
     it("should apply custom className", () => {
       render(
-        <ProjectContextBadge hasContext={true} className="custom-class" />,
+        <TestProvider>
+          <ProjectContextBadge hasContext={true} className="custom-class" />
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("project-context-badge")).toHaveClass(

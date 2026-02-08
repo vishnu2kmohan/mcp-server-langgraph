@@ -9,6 +9,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { UpdatePrompt } from "./UpdatePrompt";
 
+import { TestProvider } from "@/test-utils";
+
 describe("UpdatePrompt", () => {
   const defaultProps = {
     needsUpdate: true,
@@ -28,19 +30,31 @@ describe("UpdatePrompt", () => {
 
   describe("Visibility", () => {
     it("should render when needsUpdate is true", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("should not render when needsUpdate is false", () => {
-      render(<UpdatePrompt {...defaultProps} needsUpdate={false} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} needsUpdate={false} />
+        </TestProvider>,
+      );
 
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
 
     it("should display update message", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/new version available/i)).toBeInTheDocument();
     });
@@ -48,7 +62,11 @@ describe("UpdatePrompt", () => {
 
   describe("Actions", () => {
     it("should have an update button", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /update/i }),
@@ -56,7 +74,11 @@ describe("UpdatePrompt", () => {
     });
 
     it("should have a dismiss button", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("button", { name: /later|dismiss/i }),
@@ -65,7 +87,11 @@ describe("UpdatePrompt", () => {
 
     it("should call onUpdate when update button is clicked", () => {
       const onUpdate = vi.fn();
-      render(<UpdatePrompt {...defaultProps} onUpdate={onUpdate} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} onUpdate={onUpdate} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /update/i }));
 
@@ -74,7 +100,11 @@ describe("UpdatePrompt", () => {
 
     it("should call onDismiss when dismiss button is clicked", () => {
       const onDismiss = vi.fn();
-      render(<UpdatePrompt {...defaultProps} onDismiss={onDismiss} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} onDismiss={onDismiss} />
+        </TestProvider>,
+      );
 
       fireEvent.click(screen.getByRole("button", { name: /later|dismiss/i }));
 
@@ -84,20 +114,32 @@ describe("UpdatePrompt", () => {
 
   describe("Loading State", () => {
     it("should show loading state when isUpdating is true", () => {
-      render(<UpdatePrompt {...defaultProps} isUpdating={true} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} isUpdating={true} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/updating/i)).toBeInTheDocument();
     });
 
     it("should disable update button when isUpdating is true", () => {
-      render(<UpdatePrompt {...defaultProps} isUpdating={true} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} isUpdating={true} />
+        </TestProvider>,
+      );
 
       const updateButton = screen.getByRole("button", { name: /update/i });
       expect(updateButton).toBeDisabled();
     });
 
     it("should disable dismiss button when isUpdating is true", () => {
-      render(<UpdatePrompt {...defaultProps} isUpdating={true} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} isUpdating={true} />
+        </TestProvider>,
+      );
 
       const dismissButton = screen.getByRole("button", {
         name: /later|dismiss/i,
@@ -108,20 +150,32 @@ describe("UpdatePrompt", () => {
 
   describe("Accessibility", () => {
     it("should have role alert for screen readers", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("should have aria-live for dynamic updates", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       const alert = screen.getByRole("alert");
       expect(alert).toHaveAttribute("aria-live", "polite");
     });
 
     it("should have proper button labels for screen readers", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       const updateButton = screen.getByRole("button", { name: /update/i });
       const dismissButton = screen.getByRole("button", {
@@ -135,14 +189,22 @@ describe("UpdatePrompt", () => {
 
   describe("Styling", () => {
     it("should have toast-like styling at bottom of screen", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       const alert = screen.getByRole("alert");
       expect(alert).toHaveClass("fixed");
     });
 
     it("should have appropriate color scheme", () => {
-      render(<UpdatePrompt {...defaultProps} />);
+      render(
+        <TestProvider>
+          <UpdatePrompt {...defaultProps} />
+        </TestProvider>,
+      );
 
       const alert = screen.getByRole("alert");
       // Should use info/primary colors

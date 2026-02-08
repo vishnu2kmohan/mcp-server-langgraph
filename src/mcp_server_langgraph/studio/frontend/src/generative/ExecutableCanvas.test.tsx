@@ -8,6 +8,8 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { ExecutableCanvas, type ExecutableConfig } from "./ExecutableCanvas";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // =============================================================================
@@ -53,46 +55,78 @@ describe("ExecutableCanvas", () => {
 
   describe("Rendering", () => {
     it("should render canvas container", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("executable-canvas")).toBeInTheDocument();
     });
 
     it("should display canvas title", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByText("React Component")).toBeInTheDocument();
     });
 
     it("should render code editor", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("code-editor")).toBeInTheDocument();
     });
 
     it("should render preview area", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("preview-area")).toBeInTheDocument();
     });
   });
 
   describe("Language Support", () => {
     it("should show JSX language indicator", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByText("jsx")).toBeInTheDocument();
     });
 
     it("should show HTML language indicator", () => {
-      render(<ExecutableCanvas config={mockHtmlConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockHtmlConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByText("html")).toBeInTheDocument();
     });
 
     it("should show JavaScript language indicator", () => {
-      render(<ExecutableCanvas config={mockJsConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockJsConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByText("javascript")).toBeInTheDocument();
     });
   });
 
   describe("Code Editing", () => {
     it("should display initial code", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("code-editor")).toHaveTextContent(
         "function App()",
       );
@@ -100,7 +134,11 @@ describe("ExecutableCanvas", () => {
 
     it("should call onChange when code is edited", () => {
       const onChange = vi.fn();
-      render(<ExecutableCanvas config={mockReactConfig} onChange={onChange} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} onChange={onChange} />
+        </TestProvider>,
+      );
       const editor = screen.getByTestId("code-input");
       fireEvent.change(editor, { target: { value: "new code" } });
       expect(onChange).toHaveBeenCalledWith("new code");
@@ -109,26 +147,44 @@ describe("ExecutableCanvas", () => {
 
   describe("Execution", () => {
     it("should show run button", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("run-button")).toBeInTheDocument();
     });
 
     it("should call onRun when run button clicked", () => {
       const onRun = vi.fn();
-      render(<ExecutableCanvas config={mockReactConfig} onRun={onRun} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} onRun={onRun} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByTestId("run-button"));
       expect(onRun).toHaveBeenCalledWith(mockReactConfig.code);
     });
 
     it("should show stop button when running", () => {
-      render(<ExecutableCanvas config={mockReactConfig} isRunning />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} isRunning />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("stop-button")).toBeInTheDocument();
     });
 
     it("should call onStop when stop button clicked", () => {
       const onStop = vi.fn();
       render(
-        <ExecutableCanvas config={mockReactConfig} isRunning onStop={onStop} />,
+        <TestProvider>
+          <ExecutableCanvas
+            config={mockReactConfig}
+            isRunning
+            onStop={onStop}
+          />
+        </TestProvider>,
       );
       fireEvent.click(screen.getByTestId("stop-button"));
       expect(onStop).toHaveBeenCalled();
@@ -138,20 +194,24 @@ describe("ExecutableCanvas", () => {
   describe("Console Output", () => {
     it("should show console panel when there is output", () => {
       render(
-        <ExecutableCanvas
-          config={mockJsConfig}
-          consoleOutput={["Hello JavaScript"]}
-        />,
+        <TestProvider>
+          <ExecutableCanvas
+            config={mockJsConfig}
+            consoleOutput={["Hello JavaScript"]}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("console-panel")).toBeInTheDocument();
     });
 
     it("should display console messages", () => {
       render(
-        <ExecutableCanvas
-          config={mockJsConfig}
-          consoleOutput={["Log 1", "Log 2"]}
-        />,
+        <TestProvider>
+          <ExecutableCanvas
+            config={mockJsConfig}
+            consoleOutput={["Log 1", "Log 2"]}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Log 1")).toBeInTheDocument();
       expect(screen.getByText("Log 2")).toBeInTheDocument();
@@ -159,10 +219,12 @@ describe("ExecutableCanvas", () => {
 
     it("should show clear console button", () => {
       render(
-        <ExecutableCanvas
-          config={mockJsConfig}
-          consoleOutput={["Some output"]}
-        />,
+        <TestProvider>
+          <ExecutableCanvas
+            config={mockJsConfig}
+            consoleOutput={["Some output"]}
+          />
+        </TestProvider>,
       );
       expect(screen.getByTestId("clear-console")).toBeInTheDocument();
     });
@@ -171,17 +233,21 @@ describe("ExecutableCanvas", () => {
   describe("Error Handling", () => {
     it("should display error message", () => {
       render(
-        <ExecutableCanvas
-          config={mockReactConfig}
-          error="Syntax error at line 1"
-        />,
+        <TestProvider>
+          <ExecutableCanvas
+            config={mockReactConfig}
+            error="Syntax error at line 1"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText("Syntax error at line 1")).toBeInTheDocument();
     });
 
     it("should show error panel with error styling", () => {
       render(
-        <ExecutableCanvas config={mockReactConfig} error="Syntax error" />,
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} error="Syntax error" />
+        </TestProvider>,
       );
       expect(screen.getByTestId("error-panel")).toHaveClass("error");
     });
@@ -189,32 +255,52 @@ describe("ExecutableCanvas", () => {
 
   describe("Preview", () => {
     it("should render preview in sandbox iframe", () => {
-      render(<ExecutableCanvas config={mockHtmlConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockHtmlConfig} />
+        </TestProvider>,
+      );
       const iframe = screen.getByTestId("sandbox-iframe");
       expect(iframe).toBeInTheDocument();
       expect(iframe).toHaveAttribute("sandbox");
     });
 
     it("should show preview loading state", () => {
-      render(<ExecutableCanvas config={mockHtmlConfig} isPreviewLoading />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockHtmlConfig} isPreviewLoading />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("preview-loading")).toBeInTheDocument();
     });
   });
 
   describe("Layout", () => {
     it("should show split view by default", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("split-view")).toBeInTheDocument();
     });
 
     it("should toggle to code-only view", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByTestId("view-code-only"));
       expect(screen.getByTestId("code-only-view")).toBeInTheDocument();
     });
 
     it("should toggle to preview-only view", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       fireEvent.click(screen.getByTestId("view-preview-only"));
       expect(screen.getByTestId("preview-only-view")).toBeInTheDocument();
     });
@@ -232,7 +318,9 @@ describe("ExecutableCanvas", () => {
 
     it("should have no accessibility violations", async () => {
       const { container } = render(
-        <ExecutableCanvas config={mockReactConfig} />,
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
       );
       // Remove iframe from container before axe analysis (JSDOM limitation)
       const iframe = container.querySelector("iframe");
@@ -243,7 +331,9 @@ describe("ExecutableCanvas", () => {
 
     it("should have no accessibility violations when running", async () => {
       const { container } = render(
-        <ExecutableCanvas config={mockReactConfig} isRunning />,
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} isRunning />
+        </TestProvider>,
       );
       // Remove iframe from container before axe analysis (JSDOM limitation)
       const iframe = container.querySelector("iframe");
@@ -254,7 +344,9 @@ describe("ExecutableCanvas", () => {
 
     it("should have no accessibility violations with error", async () => {
       const { container } = render(
-        <ExecutableCanvas config={mockReactConfig} error="Syntax error" />,
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} error="Syntax error" />
+        </TestProvider>,
       );
       // Remove iframe from container before axe analysis (JSDOM limitation)
       const iframe = container.querySelector("iframe");
@@ -264,19 +356,31 @@ describe("ExecutableCanvas", () => {
     });
 
     it("should have accessible region role", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(screen.getByRole("region")).toBeInTheDocument();
     });
 
     it("should have aria-label for canvas", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       expect(
         screen.getByRole("region", { name: /React Component/i }),
       ).toBeInTheDocument();
     });
 
     it("should have aria-label on code editor textarea", () => {
-      render(<ExecutableCanvas config={mockReactConfig} />);
+      render(
+        <TestProvider>
+          <ExecutableCanvas config={mockReactConfig} />
+        </TestProvider>,
+      );
       const codeInput = screen.getByTestId("code-input");
       expect(codeInput).toHaveAttribute(
         "aria-label",

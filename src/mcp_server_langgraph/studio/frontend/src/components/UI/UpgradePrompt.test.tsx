@@ -13,6 +13,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { UpgradePrompt } from "./UpgradePrompt";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -22,22 +24,26 @@ describe("UpgradePrompt", () => {
   describe("Visibility", () => {
     it("should be visible when show prop is true", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+          />
+        </TestProvider>,
       );
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("should not be visible when show prop is false", () => {
       render(
-        <UpgradePrompt
-          show={false}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={false}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+          />
+        </TestProvider>,
       );
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
@@ -46,33 +52,39 @@ describe("UpgradePrompt", () => {
   describe("Content", () => {
     it("should display upgrade message with feature name", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/unlimited sessions/i)).toBeInTheDocument();
     });
 
     it("should display target tier name", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/Hybrid/i)).toBeInTheDocument();
     });
 
     it("should display upgrade CTA button", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /upgrade/i }),
@@ -81,11 +93,13 @@ describe("UpgradePrompt", () => {
 
     it("should display dismiss button", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByRole("button", { name: /dismiss|later|close/i }),
@@ -97,12 +111,14 @@ describe("UpgradePrompt", () => {
     it("should call onUpgrade when upgrade button is clicked", () => {
       const onUpgrade = vi.fn();
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-          onUpgrade={onUpgrade}
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+            onUpgrade={onUpgrade}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /upgrade/i }));
@@ -113,12 +129,14 @@ describe("UpgradePrompt", () => {
     it("should call onDismiss when dismiss button is clicked", () => {
       const onDismiss = vi.fn();
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-          onDismiss={onDismiss}
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+            onDismiss={onDismiss}
+          />
+        </TestProvider>,
       );
 
       fireEvent.click(
@@ -132,24 +150,28 @@ describe("UpgradePrompt", () => {
   describe("Tier-Specific Messaging", () => {
     it("should show appropriate message for shared to hybrid upgrade", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="more sessions"
-          currentTier="shared"
-          targetTier="hybrid"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="more sessions"
+            currentTier="shared"
+            targetTier="hybrid"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/upgrade.*Hybrid/i)).toBeInTheDocument();
     });
 
     it("should show appropriate message for hybrid to dedicated upgrade", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited resources"
-          currentTier="hybrid"
-          targetTier="dedicated"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited resources"
+            currentTier="hybrid"
+            targetTier="dedicated"
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/upgrade.*Dedicated/i)).toBeInTheDocument();
     });
@@ -158,12 +180,14 @@ describe("UpgradePrompt", () => {
   describe("Custom Upgrade Link", () => {
     it("should use custom upgrade link when provided", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="unlimited sessions"
-          targetTier="hybrid"
-          upgradeLink="/studio/settings?tab=billing"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="unlimited sessions"
+            targetTier="hybrid"
+            upgradeLink="/studio/settings?tab=billing"
+          />
+        </TestProvider>,
       );
       const upgradeButton = screen.getByRole("button", { name: /upgrade/i });
       // The button should navigate to the upgrade link when clicked
@@ -174,31 +198,37 @@ describe("UpgradePrompt", () => {
   describe("Urgency Variants", () => {
     it("should display warning style for warning urgency", () => {
       const { container } = render(
-        <UpgradePrompt
-          show={true}
-          feature="sessions"
-          targetTier="hybrid"
-          urgency="warning"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="sessions"
+            targetTier="hybrid"
+            urgency="warning"
+          />
+        </TestProvider>,
       );
       expect(container.querySelector(".bg-warning-3")).toBeInTheDocument();
     });
 
     it("should display critical style for critical urgency", () => {
       const { container } = render(
-        <UpgradePrompt
-          show={true}
-          feature="sessions"
-          targetTier="hybrid"
-          urgency="critical"
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="sessions"
+            targetTier="hybrid"
+            urgency="critical"
+          />
+        </TestProvider>,
       );
       expect(container.querySelector(".bg-error-1")).toBeInTheDocument();
     });
 
     it("should display info style by default", () => {
       const { container } = render(
-        <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />,
+        <TestProvider>
+          <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />
+        </TestProvider>,
       );
       expect(container.querySelector(".bg-primary-1")).toBeInTheDocument();
     });
@@ -207,26 +237,30 @@ describe("UpgradePrompt", () => {
   describe("Limit Information", () => {
     it("should display current usage when provided", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="sessions"
-          targetTier="hybrid"
-          currentUsage={4}
-          maxUsage={5}
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="sessions"
+            targetTier="hybrid"
+            currentUsage={4}
+            maxUsage={5}
+          />
+        </TestProvider>,
       );
       expect(screen.getByText(/4.*5/)).toBeInTheDocument();
     });
 
     it("should display limit warning message", () => {
       render(
-        <UpgradePrompt
-          show={true}
-          feature="sessions"
-          targetTier="hybrid"
-          currentUsage={5}
-          maxUsage={5}
-        />,
+        <TestProvider>
+          <UpgradePrompt
+            show={true}
+            feature="sessions"
+            targetTier="hybrid"
+            currentUsage={5}
+            maxUsage={5}
+          />
+        </TestProvider>,
       );
       expect(
         screen.getByText(/limit reached|at capacity/i),
@@ -237,7 +271,9 @@ describe("UpgradePrompt", () => {
   describe("Icon Display", () => {
     it("should display upgrade icon", () => {
       render(
-        <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />,
+        <TestProvider>
+          <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />
+        </TestProvider>,
       );
       expect(screen.getByTestId("upgrade-icon")).toBeInTheDocument();
     });
@@ -246,14 +282,18 @@ describe("UpgradePrompt", () => {
   describe("Accessibility", () => {
     it("should have role alert for screen readers", () => {
       render(
-        <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />,
+        <TestProvider>
+          <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />
+        </TestProvider>,
       );
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
 
     it("should have aria-live for dynamic updates", () => {
       render(
-        <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />,
+        <TestProvider>
+          <UpgradePrompt show={true} feature="sessions" targetTier="hybrid" />
+        </TestProvider>,
       );
       const alert = screen.getByRole("alert");
       expect(alert).toHaveAttribute("aria-live", "polite");

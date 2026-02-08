@@ -13,6 +13,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ToolDisambiguationDialog } from "./ToolDisambiguationDialog";
 import type { AmbiguousConnection } from "./ToolDisambiguationDialog";
 
+import { TestProvider } from "@/test-utils";
+
 // Test fixtures
 const mockConnections: AmbiguousConnection[] = [
   {
@@ -60,20 +62,30 @@ describe("ToolDisambiguationDialog", () => {
   describe("rendering", () => {
     it("should render nothing when closed", () => {
       const { container } = render(
-        <ToolDisambiguationDialog {...defaultProps} isOpen={false} />,
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} isOpen={false} />
+        </TestProvider>,
       );
 
       expect(container.firstChild).toBeNull();
     });
 
     it("should render dialog when open", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should display the tool reference in the title", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/Multiple connections found/i),
@@ -82,7 +94,11 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should display explanation text", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByText(/Multiple connections provide this tool/i),
@@ -90,7 +106,11 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should display all connection options", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Local Filesystem")).toBeInTheDocument();
       expect(screen.getByText("Remote Filesystem")).toBeInTheDocument();
@@ -98,14 +118,22 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should display connection descriptions", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText("Access to local files")).toBeInTheDocument();
       expect(screen.getByText("Access to remote storage")).toBeInTheDocument();
     });
 
     it("should display connection status", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Should show connected status for first two
       const connectedBadges = screen.getAllByText("Connected");
@@ -116,14 +144,22 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should display owner information", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/user@example.com/)).toBeInTheDocument();
       expect(screen.getByText(/team@example.com/)).toBeInTheDocument();
     });
 
     it("should visually indicate disconnected connections", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const disconnectedOption = screen
         .getByText("Shared Drive")
@@ -134,14 +170,22 @@ describe("ToolDisambiguationDialog", () => {
 
   describe("selection", () => {
     it("should have first connected option selected by default", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const options = screen.getAllByRole("radio");
       expect(options[0]).toBeChecked();
     });
 
     it("should allow selecting a different connection", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const remoteOption = screen
         .getByText("Remote Filesystem")
@@ -154,7 +198,9 @@ describe("ToolDisambiguationDialog", () => {
     it("should call onSelect with selected connection when confirmed", () => {
       const onSelect = vi.fn();
       render(
-        <ToolDisambiguationDialog {...defaultProps} onSelect={onSelect} />,
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} onSelect={onSelect} />
+        </TestProvider>,
       );
 
       // Select second option
@@ -172,7 +218,9 @@ describe("ToolDisambiguationDialog", () => {
     it("should call onCancel when cancel button clicked", () => {
       const onCancel = vi.fn();
       render(
-        <ToolDisambiguationDialog {...defaultProps} onCancel={onCancel} />,
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} onCancel={onCancel} />
+        </TestProvider>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: /Cancel/i }));
@@ -183,7 +231,11 @@ describe("ToolDisambiguationDialog", () => {
 
   describe("keyboard navigation", () => {
     it("should support arrow key navigation between options", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const radioGroup = screen.getByRole("radiogroup");
 
@@ -199,7 +251,9 @@ describe("ToolDisambiguationDialog", () => {
     it("should close dialog on Escape", () => {
       const onCancel = vi.fn();
       render(
-        <ToolDisambiguationDialog {...defaultProps} onCancel={onCancel} />,
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} onCancel={onCancel} />
+        </TestProvider>,
       );
 
       fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
@@ -210,7 +264,9 @@ describe("ToolDisambiguationDialog", () => {
     it("should confirm selection on Enter when option focused", () => {
       const onSelect = vi.fn();
       render(
-        <ToolDisambiguationDialog {...defaultProps} onSelect={onSelect} />,
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} onSelect={onSelect} />
+        </TestProvider>,
       );
 
       // Press Enter on the confirm button
@@ -222,13 +278,21 @@ describe("ToolDisambiguationDialog", () => {
 
   describe("accessibility", () => {
     it("should have proper dialog role", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
     it("should have aria-labelledby for dialog title", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-labelledby");
@@ -238,20 +302,32 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should have aria-describedby for dialog description", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-describedby");
     });
 
     it("should use radiogroup for connection options", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("should have aria-label on radiogroup", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(screen.getByRole("radiogroup")).toHaveAttribute(
         "aria-label",
@@ -260,14 +336,22 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should have radio role on each option", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const radios = screen.getAllByRole("radio");
       expect(radios).toHaveLength(3);
     });
 
     it("should have proper aria-checked state", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const radios = screen.getAllByRole("radio");
       expect(radios[0]).toHaveAttribute("aria-checked", "true");
@@ -275,7 +359,11 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should trap focus within dialog", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-modal", "true");
@@ -286,10 +374,12 @@ describe("ToolDisambiguationDialog", () => {
     it("should handle single connection gracefully", () => {
       const singleConnection = [mockConnections[0]];
       render(
-        <ToolDisambiguationDialog
-          {...defaultProps}
-          connections={singleConnection}
-        />,
+        <TestProvider>
+          <ToolDisambiguationDialog
+            {...defaultProps}
+            connections={singleConnection}
+          />
+        </TestProvider>,
       );
 
       expect(screen.getByText("Local Filesystem")).toBeInTheDocument();
@@ -301,10 +391,12 @@ describe("ToolDisambiguationDialog", () => {
         status: "disconnected" as const,
       }));
       render(
-        <ToolDisambiguationDialog
-          {...defaultProps}
-          connections={allDisconnected}
-        />,
+        <TestProvider>
+          <ToolDisambiguationDialog
+            {...defaultProps}
+            connections={allDisconnected}
+          />
+        </TestProvider>,
       );
 
       // Should still allow selection
@@ -320,7 +412,9 @@ describe("ToolDisambiguationDialog", () => {
         mockConnections[1],
       ];
       render(
-        <ToolDisambiguationDialog {...defaultProps} connections={reordered} />,
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} connections={reordered} />
+        </TestProvider>,
       );
 
       // Second option (first connected) should be selected
@@ -329,13 +423,21 @@ describe("ToolDisambiguationDialog", () => {
     });
 
     it("should handle empty connections array", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} connections={[]} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} connections={[]} />
+        </TestProvider>,
+      );
 
       expect(screen.getByText(/No connections available/i)).toBeInTheDocument();
     });
 
     it("should show warning for disconnected selection", () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       // Select disconnected option
       const disconnectedOption = screen
@@ -351,7 +453,11 @@ describe("ToolDisambiguationDialog", () => {
 
   describe("remember selection", () => {
     it('should show "Remember my choice" checkbox', () => {
-      render(<ToolDisambiguationDialog {...defaultProps} />);
+      render(
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} />
+        </TestProvider>,
+      );
 
       expect(
         screen.getByRole("checkbox", { name: /Remember my choice/i }),
@@ -361,7 +467,9 @@ describe("ToolDisambiguationDialog", () => {
     it("should pass remember preference to onSelect", () => {
       const onSelect = vi.fn();
       render(
-        <ToolDisambiguationDialog {...defaultProps} onSelect={onSelect} />,
+        <TestProvider>
+          <ToolDisambiguationDialog {...defaultProps} onSelect={onSelect} />
+        </TestProvider>,
       );
 
       // Check "Remember" checkbox

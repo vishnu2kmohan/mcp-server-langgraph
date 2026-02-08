@@ -9,6 +9,8 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { NetworkTab } from "./NetworkTab";
 import type { NetworkEntry } from "../types";
 
+import { TestProvider } from "@/test-utils";
+
 expect.extend(toHaveNoViolations);
 
 // =============================================================================
@@ -110,7 +112,11 @@ describe("NetworkTab (react-table)", () => {
   });
 
   it("renders requests with human-friendly timestamps", () => {
-    render(<NetworkTab />);
+    render(
+      <TestProvider>
+        <NetworkTab />
+      </TestProvider>,
+    );
     expect(screen.getByTestId("network-tab")).toBeInTheDocument();
     expect(screen.getAllByTestId(/^network-entry-/)).toHaveLength(4);
     expect(screen.getAllByTestId("human-timestamp").length).toBeGreaterThan(0);
@@ -123,13 +129,21 @@ describe("NetworkTab (react-table)", () => {
       toggleRecording: vi.fn(),
       clearEntries: vi.fn(),
     });
-    render(<NetworkTab />);
+    render(
+      <TestProvider>
+        <NetworkTab />
+      </TestProvider>,
+    );
     expect(screen.getByTestId("network-empty")).toBeInTheDocument();
   });
 
   it("filters between API and MCP entries", async () => {
     const user = userEvent.setup();
-    render(<NetworkTab showMCPCalls />);
+    render(
+      <TestProvider>
+        <NetworkTab showMCPCalls />
+      </TestProvider>,
+    );
 
     await user.click(screen.getByTestId("filter-mcp"));
     expect(screen.getAllByTestId(/^network-entry-/)).toHaveLength(1);
@@ -138,7 +152,11 @@ describe("NetworkTab (react-table)", () => {
 
   it("opens request details when a row is selected", async () => {
     const user = userEvent.setup();
-    render(<NetworkTab />);
+    render(
+      <TestProvider>
+        <NetworkTab />
+      </TestProvider>,
+    );
 
     await user.click(screen.getByTestId("network-entry-req-1"));
     expect(screen.getByTestId("request-details-req-1")).toBeInTheDocument();
@@ -146,7 +164,11 @@ describe("NetworkTab (react-table)", () => {
 
   it("searches by URL with debounce", async () => {
     const user = userEvent.setup();
-    render(<NetworkTab />);
+    render(
+      <TestProvider>
+        <NetworkTab />
+      </TestProvider>,
+    );
 
     await user.type(screen.getByTestId("network-search"), "messages");
     await waitFor(() => {
@@ -159,7 +181,11 @@ describe("NetworkTab (react-table)", () => {
 
   it("toggles auto-tail via the down arrow control", async () => {
     const user = userEvent.setup();
-    render(<NetworkTab />);
+    render(
+      <TestProvider>
+        <NetworkTab />
+      </TestProvider>,
+    );
 
     const toggle = screen.getByTestId("network-auto-tail");
     expect(toggle).toHaveAttribute("aria-pressed", "true");
@@ -178,7 +204,11 @@ describe("NetworkTab (react-table)", () => {
       clearEntries: mockClear,
     });
 
-    render(<NetworkTab />);
+    render(
+      <TestProvider>
+        <NetworkTab />
+      </TestProvider>,
+    );
 
     await user.click(screen.getByTestId("recording-toggle"));
     await user.click(screen.getByTestId("clear-network-button"));
@@ -188,7 +218,11 @@ describe("NetworkTab (react-table)", () => {
   });
 
   it("has no obvious accessibility violations", async () => {
-    const { container } = render(<NetworkTab />);
+    const { container } = render(
+      <TestProvider>
+        <NetworkTab />
+      </TestProvider>,
+    );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

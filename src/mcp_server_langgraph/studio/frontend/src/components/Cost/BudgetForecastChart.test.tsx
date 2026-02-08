@@ -9,6 +9,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { BudgetForecastChart, type CostForecast } from "./BudgetForecastChart";
 
+import { TestProvider } from "@/test-utils";
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -28,62 +30,102 @@ describe("BudgetForecastChart", () => {
 
   describe("Core Rendering", () => {
     it("renders the component", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("budget-forecast-chart")).toBeInTheDocument();
     });
 
     it("displays projected total", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       // Projected total appears multiple times (in display and message)
       expect(screen.getAllByText(/\$300\.00/).length).toBeGreaterThan(0);
     });
 
     it("displays confidence range", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/\$250\.00/)).toBeInTheDocument();
       expect(screen.getByText(/\$350\.00/)).toBeInTheDocument();
     });
 
     it("displays days analyzed", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       // Days info appears in the component
       expect(screen.getAllByText(/10 days/i).length).toBeGreaterThan(0);
     });
 
     it("displays monthly limit", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/\$1,?000\.00/)).toBeInTheDocument();
     });
   });
 
   describe("Trend Indicators", () => {
     it("shows stable indicator for stable trend", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/stable/i)).toBeInTheDocument();
     });
 
     it("shows increasing indicator for increasing trend", () => {
       const forecast = { ...defaultForecast, trend: "increasing" as const };
-      render(<BudgetForecastChart forecast={forecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={forecast} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/increasing/i)).toBeInTheDocument();
     });
 
     it("shows decreasing indicator for decreasing trend", () => {
       const forecast = { ...defaultForecast, trend: "decreasing" as const };
-      render(<BudgetForecastChart forecast={forecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={forecast} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/decreasing/i)).toBeInTheDocument();
     });
   });
 
   describe("Progress Visualization", () => {
     it("shows progress towards limit", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByRole("progressbar");
       expect(progressBar).toBeInTheDocument();
     });
 
     it("progress bar reflects projected percentage", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       const progressBar = screen.getByRole("progressbar");
       // 300/1000 = 30%
       expect(progressBar.getAttribute("aria-valuenow")).toBe("30");
@@ -94,19 +136,31 @@ describe("BudgetForecastChart", () => {
         ...defaultForecast,
         projectedTotal: "1200.00",
       };
-      render(<BudgetForecastChart forecast={forecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={forecast} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("over-budget-warning")).toBeInTheDocument();
     });
   });
 
   describe("Confidence Range Visualization", () => {
     it("shows confidence range band", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       expect(screen.getByTestId("confidence-range")).toBeInTheDocument();
     });
 
     it("displays low and high bounds", () => {
-      render(<BudgetForecastChart forecast={defaultForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={defaultForecast} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/\$250\.00/)).toBeInTheDocument();
       expect(screen.getByText(/\$350\.00/)).toBeInTheDocument();
     });
@@ -114,7 +168,11 @@ describe("BudgetForecastChart", () => {
 
   describe("Loading State", () => {
     it("shows loading skeleton when loading", () => {
-      render(<BudgetForecastChart forecast={null} loading={true} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={null} loading={true} />
+        </TestProvider>,
+      );
       expect(
         screen.getByTestId("budget-forecast-skeleton"),
       ).toBeInTheDocument();
@@ -128,7 +186,11 @@ describe("BudgetForecastChart", () => {
         daysAnalyzed: 0,
         projectedTotal: "0.00",
       };
-      render(<BudgetForecastChart forecast={emptyForecast} />);
+      render(
+        <TestProvider>
+          <BudgetForecastChart forecast={emptyForecast} />
+        </TestProvider>,
+      );
       expect(screen.getByText(/no data/i)).toBeInTheDocument();
     });
   });

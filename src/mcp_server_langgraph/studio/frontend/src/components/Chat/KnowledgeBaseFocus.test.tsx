@@ -23,6 +23,8 @@ import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { KnowledgeBaseFocus, type KBFocusMode } from "./KnowledgeBaseFocus";
 
+import { TestProvider } from "@/test-utils";
+
 describe("KnowledgeBaseFocus", () => {
   const mockOnChange = vi.fn();
 
@@ -41,7 +43,11 @@ describe("KnowledgeBaseFocus", () => {
   // =========================================================================
 
   it("renders as a pill button in collapsed state", () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
 
     const button = screen.getByTestId("kb-focus-button");
     expect(button).toBeInTheDocument();
@@ -50,25 +56,41 @@ describe("KnowledgeBaseFocus", () => {
   });
 
   it("shows current selection as label", () => {
-    render(<KnowledgeBaseFocus value="kb_only" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="kb_only" onChange={mockOnChange} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Knowledge Base")).toBeInTheDocument();
   });
 
   it("displays All label when value is all", () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("All")).toBeInTheDocument();
   });
 
   it("displays Web label when value is web_only", () => {
-    render(<KnowledgeBaseFocus value="web_only" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="web_only" onChange={mockOnChange} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("Web")).toBeInTheDocument();
   });
 
   it("displays None label when value is none", () => {
-    render(<KnowledgeBaseFocus value="none" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="none" onChange={mockOnChange} />
+      </TestProvider>,
+    );
 
     expect(screen.getByText("None")).toBeInTheDocument();
   });
@@ -78,7 +100,11 @@ describe("KnowledgeBaseFocus", () => {
   // =========================================================================
 
   it("shows dropdown options when clicked", async () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
     const user = userEvent.setup();
 
     const button = screen.getByTestId("kb-focus-button");
@@ -101,7 +127,11 @@ describe("KnowledgeBaseFocus", () => {
   });
 
   it("fires onChange callback with selected value", async () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
     const user = userEvent.setup();
 
     const button = screen.getByTestId("kb-focus-button");
@@ -119,7 +149,11 @@ describe("KnowledgeBaseFocus", () => {
   });
 
   it("closes dropdown after selection", async () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
     const user = userEvent.setup();
 
     const button = screen.getByTestId("kb-focus-button");
@@ -139,10 +173,12 @@ describe("KnowledgeBaseFocus", () => {
 
   it("closes dropdown when clicking outside", async () => {
     render(
-      <div>
-        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
-        <button data-testid="outside-button">Outside</button>
-      </div>,
+      <TestProvider>
+        <div>
+          <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+          <button data-testid="outside-button">Outside</button>
+        </div>
+      </TestProvider>,
     );
     const user = userEvent.setup();
 
@@ -163,11 +199,13 @@ describe("KnowledgeBaseFocus", () => {
 
   it("is disabled when isProcessing is true", () => {
     render(
-      <KnowledgeBaseFocus
-        value="all"
-        onChange={mockOnChange}
-        disabled={true}
-      />,
+      <TestProvider>
+        <KnowledgeBaseFocus
+          value="all"
+          onChange={mockOnChange}
+          disabled={true}
+        />
+      </TestProvider>,
     );
 
     const button = screen.getByTestId("kb-focus-button");
@@ -176,11 +214,13 @@ describe("KnowledgeBaseFocus", () => {
 
   it("does not open dropdown when disabled", async () => {
     render(
-      <KnowledgeBaseFocus
-        value="all"
-        onChange={mockOnChange}
-        disabled={true}
-      />,
+      <TestProvider>
+        <KnowledgeBaseFocus
+          value="all"
+          onChange={mockOnChange}
+          disabled={true}
+        />
+      </TestProvider>,
     );
     const user = userEvent.setup();
 
@@ -196,7 +236,11 @@ describe("KnowledgeBaseFocus", () => {
   // =========================================================================
 
   it("supports keyboard navigation with arrow keys", async () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
     const user = userEvent.setup();
 
     const button = screen.getByTestId("kb-focus-button");
@@ -215,7 +259,11 @@ describe("KnowledgeBaseFocus", () => {
   });
 
   it("closes dropdown on Escape key", async () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
     const user = userEvent.setup();
 
     const button = screen.getByTestId("kb-focus-button");
@@ -230,7 +278,11 @@ describe("KnowledgeBaseFocus", () => {
   });
 
   it("has proper ARIA labels", () => {
-    render(<KnowledgeBaseFocus value="all" onChange={mockOnChange} />);
+    render(
+      <TestProvider>
+        <KnowledgeBaseFocus value="all" onChange={mockOnChange} />
+      </TestProvider>,
+    );
 
     const button = screen.getByTestId("kb-focus-button");
     expect(button).toHaveAttribute("aria-label");
@@ -243,11 +295,13 @@ describe("KnowledgeBaseFocus", () => {
 
   it("shows status indicator when kbStatus is provided", () => {
     render(
-      <KnowledgeBaseFocus
-        value="kb_only"
-        onChange={mockOnChange}
-        kbStatus="ready"
-      />,
+      <TestProvider>
+        <KnowledgeBaseFocus
+          value="kb_only"
+          onChange={mockOnChange}
+          kbStatus="ready"
+        />
+      </TestProvider>,
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
@@ -257,11 +311,13 @@ describe("KnowledgeBaseFocus", () => {
 
   it("shows yellow indicator when kbStatus is misconfigured", () => {
     render(
-      <KnowledgeBaseFocus
-        value="kb_only"
-        onChange={mockOnChange}
-        kbStatus="misconfigured"
-      />,
+      <TestProvider>
+        <KnowledgeBaseFocus
+          value="kb_only"
+          onChange={mockOnChange}
+          kbStatus="misconfigured"
+        />
+      </TestProvider>,
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
@@ -270,11 +326,13 @@ describe("KnowledgeBaseFocus", () => {
 
   it("shows gray indicator when kbStatus is unavailable", () => {
     render(
-      <KnowledgeBaseFocus
-        value="kb_only"
-        onChange={mockOnChange}
-        kbStatus="unavailable"
-      />,
+      <TestProvider>
+        <KnowledgeBaseFocus
+          value="kb_only"
+          onChange={mockOnChange}
+          kbStatus="unavailable"
+        />
+      </TestProvider>,
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
@@ -283,12 +341,14 @@ describe("KnowledgeBaseFocus", () => {
 
   it("shows tooltip with config guidance when misconfigured", async () => {
     render(
-      <KnowledgeBaseFocus
-        value="kb_only"
-        onChange={mockOnChange}
-        kbStatus="misconfigured"
-        kbStatusMessage="Missing QDRANT_URL configuration"
-      />,
+      <TestProvider>
+        <KnowledgeBaseFocus
+          value="kb_only"
+          onChange={mockOnChange}
+          kbStatus="misconfigured"
+          kbStatusMessage="Missing QDRANT_URL configuration"
+        />
+      </TestProvider>,
     );
 
     const indicator = screen.getByTestId("kb-status-indicator");
@@ -304,7 +364,13 @@ describe("KnowledgeBaseFocus", () => {
 
   it("renders in compact mode with icon only", () => {
     render(
-      <KnowledgeBaseFocus value="all" onChange={mockOnChange} compact={true} />,
+      <TestProvider>
+        <KnowledgeBaseFocus
+          value="all"
+          onChange={mockOnChange}
+          compact={true}
+        />
+      </TestProvider>,
     );
 
     const button = screen.getByTestId("kb-focus-button");

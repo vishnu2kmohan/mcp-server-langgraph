@@ -21,6 +21,8 @@ import sessionReducer from "../../store/slices/sessionSlice";
 import { api } from "../../api";
 import { clearSuggestionCache } from "../../hooks/useAIEmptyState";
 
+import { TestProvider } from "@/test-utils";
+
 // Mock feature flag - default to enabled for AI empty state
 vi.mock("../../contexts/FeatureFlagContext", () => ({
   useFeatureFlag: vi.fn((flagName: string) => {
@@ -109,9 +111,11 @@ describe("AIEmptyState", () => {
     it("should render empty state with context", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="workflows" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="workflows" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should render empty state
@@ -128,9 +132,11 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="sessions" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="sessions" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should show loading indicator
@@ -140,9 +146,11 @@ describe("AIEmptyState", () => {
     it("should show AI suggestion when loaded", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="workflows" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="workflows" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -161,9 +169,11 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="sessions" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="sessions" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -181,9 +191,11 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="workflows" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="workflows" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -197,9 +209,11 @@ describe("AIEmptyState", () => {
     it("should render primary AI suggestion as trigger", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="workflows" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="workflows" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -213,9 +227,11 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="workflows" onNavigate={mockNavigate} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="workflows" onNavigate={mockNavigate} />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -249,9 +265,11 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="workflows" showConfidence />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="workflows" showConfidence />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -267,9 +285,11 @@ describe("AIEmptyState", () => {
     it("should forward variant to EmptyState", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="projects" variant="compact" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="projects" variant="compact" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -283,9 +303,11 @@ describe("AIEmptyState", () => {
     it("should forward className to EmptyState", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="traces" className="custom-class" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="traces" className="custom-class" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -297,9 +319,11 @@ describe("AIEmptyState", () => {
     it("should accept custom testId", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="files" testId="my-custom-empty-state" />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="files" testId="my-custom-empty-state" />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -312,9 +336,11 @@ describe("AIEmptyState", () => {
     it("should use fallback when enableAI is false", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="workflows" enableAI={false} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="workflows" enableAI={false} />
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should immediately show fallback, not loading
@@ -333,9 +359,15 @@ describe("AIEmptyState", () => {
     it("should render default title when emptyType is 'empty'", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="sessions" emptyType="empty" enableAI={false} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState
+              context="sessions"
+              emptyType="empty"
+              enableAI={false}
+            />
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should show default title from registry
@@ -345,13 +377,15 @@ describe("AIEmptyState", () => {
     it("should render 'no matches' title when emptyType is 'no-matches'", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState
-            context="sessions"
-            emptyType="no-matches"
-            enableAI={false}
-          />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState
+              context="sessions"
+              emptyType="no-matches"
+              enableAI={false}
+            />
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should show no matches variant
@@ -361,14 +395,16 @@ describe("AIEmptyState", () => {
     it("should include search query in 'no-matches' title", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState
-            context="projects"
-            emptyType="no-matches"
-            searchQuery="test-query"
-            enableAI={false}
-          />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState
+              context="projects"
+              emptyType="no-matches"
+              searchQuery="test-query"
+              enableAI={false}
+            />
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should show search query in title
@@ -380,9 +416,11 @@ describe("AIEmptyState", () => {
     it("should default emptyType to 'empty'", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="files" enableAI={false} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="files" enableAI={false} />
+          </Wrapper>
+        </TestProvider>,
       );
 
       // Should show default title (not "no matches" variant)
@@ -397,14 +435,16 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState
-            context="projects"
-            onAction={mockOnAction}
-            actionLabel="Create Project"
-            enableAI={false}
-          />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState
+              context="projects"
+              onAction={mockOnAction}
+              actionLabel="Create Project"
+              enableAI={false}
+            />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -424,15 +464,17 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState
-            context="projects"
-            onAction={mockOnAction}
-            onNavigate={mockOnNavigate}
-            actionLabel="Create Project"
-            enableAI={false}
-          />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState
+              context="projects"
+              onAction={mockOnAction}
+              onNavigate={mockOnNavigate}
+              actionLabel="Create Project"
+              enableAI={false}
+            />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -454,14 +496,16 @@ describe("AIEmptyState", () => {
 
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState
-            context="workflows"
-            onAction={mockOnAction}
-            actionLabel="Custom Action Label"
-            enableAI={false}
-          />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState
+              context="workflows"
+              onAction={mockOnAction}
+              actionLabel="Custom Action Label"
+              enableAI={false}
+            />
+          </Wrapper>
+        </TestProvider>,
       );
 
       await waitFor(() => {
@@ -476,9 +520,11 @@ describe("AIEmptyState", () => {
     it("should render prompts context", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="prompts" enableAI={false} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="prompts" enableAI={false} />
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("empty-state-prompts")).toBeInTheDocument();
@@ -488,9 +534,11 @@ describe("AIEmptyState", () => {
     it("should render tools context", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="tools" enableAI={false} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="tools" enableAI={false} />
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("empty-state-tools")).toBeInTheDocument();
@@ -500,9 +548,11 @@ describe("AIEmptyState", () => {
     it("should render resources context", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="resources" enableAI={false} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="resources" enableAI={false} />
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("empty-state-resources")).toBeInTheDocument();
@@ -512,9 +562,11 @@ describe("AIEmptyState", () => {
     it("should render audit context", async () => {
       const Wrapper = createWrapper();
       render(
-        <Wrapper>
-          <AIEmptyState context="audit" enableAI={false} />
-        </Wrapper>,
+        <TestProvider>
+          <Wrapper>
+            <AIEmptyState context="audit" enableAI={false} />
+          </Wrapper>
+        </TestProvider>,
       );
 
       expect(screen.getByTestId("empty-state-audit")).toBeInTheDocument();
