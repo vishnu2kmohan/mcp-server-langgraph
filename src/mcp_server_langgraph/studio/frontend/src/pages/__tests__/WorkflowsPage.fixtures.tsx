@@ -9,7 +9,8 @@
 
 import React from "react";
 import { vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+export { waitFor };
 import { MemoryRouter } from "react-router";
 import { WorkflowsPage } from "../WorkflowsPage";
 

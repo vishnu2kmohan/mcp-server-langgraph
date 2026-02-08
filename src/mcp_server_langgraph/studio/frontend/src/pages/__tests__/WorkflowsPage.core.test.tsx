@@ -62,25 +62,32 @@ vi.mock("../../hooks/useWorkflowExecution", () => ({
   useWorkflowExecution: mockUseWorkflowExecution,
 }));
 
-// Mock heavy components
+// Mock heavy components - must export both named and default for lazy loading
 vi.mock("../../components/Workflow/WorkflowCanvas", () => ({
   WorkflowCanvas: () => <div data-testid="workflow-canvas">Canvas</div>,
+  default: () => <div data-testid="workflow-canvas">Canvas</div>,
 }));
 
 vi.mock("../../components/Workflow/NodePalette", () => ({
   NodePalette: () => <div data-testid="node-palette">NodePalette</div>,
+  default: () => <div data-testid="node-palette">NodePalette</div>,
 }));
 
 vi.mock("../../components/Workflow/NodeInspector", () => ({
   NodeInspector: () => <div data-testid="node-inspector">NodeInspector</div>,
+  default: () => <div data-testid="node-inspector">NodeInspector</div>,
 }));
 
 vi.mock("../../components/Workflow/ExecutionPanel", () => ({
   ExecutionPanel: () => <div data-testid="execution-panel">ExecutionPanel</div>,
+  default: () => <div data-testid="execution-panel">ExecutionPanel</div>,
 }));
 
 vi.mock("../../components/Workflow/ExecutionHistoryPanel", () => ({
   ExecutionHistoryPanel: () => (
+    <div data-testid="execution-history-panel">ExecutionHistoryPanel</div>
+  ),
+  default: () => (
     <div data-testid="execution-history-panel">ExecutionHistoryPanel</div>
   ),
 }));
@@ -89,6 +96,7 @@ vi.mock("../../components/Workflow/SuggestionChips", () => ({
   SuggestionChips: () => (
     <div data-testid="suggestion-chips">SuggestionChips</div>
   ),
+  default: () => <div data-testid="suggestion-chips">SuggestionChips</div>,
 }));
 
 // Mock store hooks
@@ -112,6 +120,7 @@ import {
   renderWorkflowsPage,
   findButtonByTitle,
   setupDefaultMocks,
+  waitFor,
 } from "./WorkflowsPage.fixtures.tsx";
 
 // =============================================================================
@@ -141,20 +150,24 @@ describe("WorkflowsPage - Core", () => {
       expect(screen.getByTestId("reactflow-provider")).toBeInTheDocument();
     });
 
-    it("should render the workflow canvas", () => {
+    it("should render the workflow canvas", async () => {
       renderWorkflowsPage();
 
-      expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
     });
 
-    it("should render the node palette when not read-only", () => {
+    it("should render the node palette when not read-only", async () => {
       setupMockSelectors(
         mockUseAppSelector,
         createDefaultWorkflowState({ isReadOnly: false }),
       );
       renderWorkflowsPage();
 
-      expect(screen.getByTestId("node-palette")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId("node-palette")).toBeInTheDocument();
+      });
     });
 
     it("should render toolbar buttons", () => {
@@ -352,7 +365,7 @@ describe("WorkflowsPage - Core", () => {
       expect(dispatchFn).toHaveBeenCalled();
     });
 
-    it("should show execution panel when run button clicked", () => {
+    it("should show execution panel when run button clicked", async () => {
       setupMockSelectors(
         mockUseAppSelector,
         createDefaultWorkflowState({
@@ -365,11 +378,13 @@ describe("WorkflowsPage - Core", () => {
       const runButton = findButtonByTitle("Run Workflow (Cmd+Enter)");
       fireEvent.click(runButton);
 
-      // Execution panel should appear
-      expect(screen.getByTestId("execution-panel")).toBeInTheDocument();
+      // Execution panel should appear (lazy loaded)
+      await waitFor(() => {
+        expect(screen.getByTestId("execution-panel")).toBeInTheDocument();
+      });
     });
 
-    it("should show history panel when history button clicked", () => {
+    it("should show history panel when history button clicked", async () => {
       setupMockSelectors(
         mockUseAppSelector,
         createDefaultWorkflowState({
@@ -382,8 +397,12 @@ describe("WorkflowsPage - Core", () => {
       const historyButton = findButtonByTitle("Execution History");
       fireEvent.click(historyButton);
 
-      // History panel should appear
-      expect(screen.getByTestId("execution-history-panel")).toBeInTheDocument();
+      // History panel should appear (lazy loaded)
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("execution-history-panel"),
+        ).toBeInTheDocument();
+      });
     });
   });
 
