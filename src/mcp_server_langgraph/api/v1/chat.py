@@ -30,7 +30,7 @@ import asyncio
 import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Callable, Final, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -53,6 +53,9 @@ if TYPE_CHECKING:
 # registered in llm/factory.py. No manual record_usage() calls needed here.
 # The callback uses LiteLLM's response_cost as the authoritative source.
 
+
+# Maximum number of client-supplied history messages accepted (Finding 4)
+MAX_CLIENT_HISTORY_MESSAGES: Final[int] = 50
 
 chat_router = APIRouter(tags=["chat"])
 
@@ -119,6 +122,7 @@ class ChatMessage(BaseModel):
 
     role: Literal["user", "assistant", "system"] = Field(description="Message role")
     content: str = Field(description="Message content")
+    id: str | None = Field(default=None, description="Optional message ID for dedup")
 
 
 class ChatCompletionRequest(BaseModel):
@@ -198,6 +202,13 @@ class ChatCompletionRequest(BaseModel):
         "Enabled by default when FF_ENABLE_AGENT_EXECUTION_TRACING is true. "
         "Set to false to explicitly disable for a specific request. "
         "DISTINCT from OTEL distributed tracing and Decision Traces.",
+    )
+    # RC4: Client-supplied history fallback flag
+    client_history_fallback: bool = Field(
+        default=False,
+        description="When true, indicates messages contain client-supplied conversation "
+        "history as a defense-in-depth fallback. Server should validate and prefer "
+        "stored history when available.",
     )
 
     @field_validator("request_id")
@@ -1087,6 +1098,8 @@ class ChatServiceImpl(ChatService):
         self,
         session_id: str,
         new_messages: list[dict[str, Any]],
+        *,
+        client_history_fallback: bool = False,
     ) -> list[dict[str, Any]]:
         """
         Load session history from storage and merge with new messages.
@@ -1098,6 +1111,11 @@ class ChatServiceImpl(ChatService):
         Args:
             session_id: Session ID to load history for
             new_messages: New message(s) from the current request
+            client_history_fallback: When True, new_messages may contain
+                client-supplied history. Server enforces:
+                1. Cap at MAX_CLIENT_HISTORY_MESSAGES (50)
+                2. When stored history exists, strip client history
+                   (keep only the last user message)
 
         Returns:
             Merged message list: history + new messages (token-aware, deduplicated)
@@ -1108,6 +1126,10 @@ class ChatServiceImpl(ChatService):
         )
         from mcp_server_langgraph.observability.telemetry import logger
 
+        # Server-side enforcement of client_history_fallback (RC4/Finding 2)
+        if client_history_fallback and len(new_messages) > MAX_CLIENT_HISTORY_MESSAGES:
+            new_messages = new_messages[-MAX_CLIENT_HISTORY_MESSAGES:]
+
         # If no storage configured, just return new messages
         if self._session_storage is None:
             return new_messages
@@ -1116,16 +1138,51 @@ class ChatServiceImpl(ChatService):
             # Load stored history
             stored_messages = await self._session_storage.get_messages(session_id)
             if not stored_messages:
+                # Finding 3: Log warning when falling back to client-supplied history
+                # without session ownership validation. Client history is untrusted.
+                if client_history_fallback and len(new_messages) > 1:
+                    logger.warning(
+                        "Using client-supplied history as fallback for session %s "
+                        "(stored history empty, %d client messages accepted)",
+                        session_id,
+                        len(new_messages),
+                    )
                 return new_messages
 
             # Convert to list if needed
             history = list(stored_messages)
 
-            # Deduplicate: don't add new messages that already exist in history
-            # Compare by role + content to identify duplicates
-            history_set = {(msg.get("role"), msg.get("content")) for msg in history}
+            # When client_history_fallback is set and stored history exists,
+            # ignore client-supplied history — keep only the last user message
+            if client_history_fallback and len(new_messages) > 1:
+                last_user_msg = next(
+                    (msg for msg in reversed(new_messages) if msg.get("role") == "user"),
+                    None,
+                )
+                if last_user_msg:
+                    new_messages = [last_user_msg]
 
-            unique_new = [msg for msg in new_messages if (msg.get("role"), msg.get("content")) not in history_set]
+            # Deduplicate: don't add new messages that already exist in history
+            # RC4 Fix: Use message ID when available, fall back to (role, content)
+            # ID-based dedup prevents false positives on repeated messages like "ok"
+            # Stored messages use "message_id", client messages use "id" — check both
+            history_ids = set()
+            for msg in history:
+                mid = msg.get("id") or msg.get("message_id")
+                if mid:
+                    history_ids.add(mid)
+            history_content_set = {(msg.get("role"), msg.get("content")) for msg in history}
+
+            unique_new = []
+            for msg in new_messages:
+                msg_id = msg.get("id") or msg.get("message_id")
+                if msg_id and msg_id in history_ids:
+                    # Deduplicated by ID (same message persisted twice)
+                    continue
+                if not msg_id and (msg.get("role"), msg.get("content")) in history_content_set:
+                    # Fallback: deduplicated by content (no ID available)
+                    continue
+                unique_new.append(msg)
 
             # Merge: history first, then unique new messages
             merged = history + unique_new
@@ -1160,8 +1217,14 @@ class ChatServiceImpl(ChatService):
             return result
 
         except Exception as e:
-            # Graceful fallback: log and continue with just new messages
-            logger.warning(f"Failed to load session history for {session_id}: {e}")
+            # Graceful fallback: log at ERROR (not warning) and continue with
+            # just new messages. exc_info=True preserves traceback for debugging.
+            logger.error(
+                "Failed to load session history for %s: %s",
+                session_id,
+                e,
+                exc_info=True,
+            )
             return new_messages
 
     async def _create_completion_via_litellm(
@@ -1287,7 +1350,8 @@ class ChatServiceImpl(ChatService):
 
         # Load session history from storage and merge with new messages
         # Ensures non-streaming calls receive full conversation context
-        messages = await self._load_and_merge_history(session_id, messages)
+        client_history_fallback = kwargs.pop("client_history_fallback", False)
+        messages = await self._load_and_merge_history(session_id, messages, client_history_fallback=client_history_fallback)
 
         # Try MCP agent first if configured
         if self.mcp_bridge and self.mcp_bridge.is_configured:
@@ -2308,7 +2372,8 @@ class ChatServiceImpl(ChatService):
 
         # Load session history from storage and merge with new messages
         # This ensures the LLM has full conversation context
-        messages = await self._load_and_merge_history(session_id, messages)
+        client_history_fallback = kwargs.pop("client_history_fallback", False)
+        messages = await self._load_and_merge_history(session_id, messages, client_history_fallback=client_history_fallback)
 
         # Check enable_routing: explicit param > feature flag > default False
         enable_routing = kwargs.pop("enable_routing", None)
@@ -3138,6 +3203,7 @@ async def create_stream(
                 execution_mode=request.execution_mode,
                 audit_service=audit_service,
                 current_user=current_user,
+                client_history_fallback=request.client_history_fallback,
                 # v7: Native tools integration parameters
                 tool_preference=request.tool_preference,
                 tool_selection_mode=request.tool_selection_mode,

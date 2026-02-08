@@ -419,6 +419,23 @@ class SessionService(ABC):
         """
         ...
 
+    async def get_session_messages_by_session(self, session_id: str) -> list[dict[str, Any]] | None:
+        """Get messages by session ID without user ownership check.
+
+        Fallback path for when user_id contextvar is empty (RC2 fix).
+        Session IDs are UUIDs created during authenticated session creation,
+        so the session_id itself serves as an authorization token.
+
+        Args:
+            session_id: Session ID to load messages from
+
+        Returns:
+            List of message dicts if session found, None otherwise
+        """
+        # Default implementation delegates to get_session_messages
+        # with a sentinel lookup. Subclasses may override for efficiency.
+        return None
+
     @abstractmethod
     async def clear_messages(self, session_id: str) -> bool:
         """Clear all messages in a session. Returns True if cleared, False if session not found."""
@@ -653,6 +670,14 @@ class InMemorySessionService(SessionService):
             return None
         # v8: Verify ownership (Finding 1)
         if session.get("user_id") != user_id:
+            return None
+        messages: list[dict[str, Any]] = session.get("messages", [])
+        return messages
+
+    async def get_session_messages_by_session(self, session_id: str) -> list[dict[str, Any]] | None:
+        """Get messages by session ID without user ownership check (RC2 fallback)."""
+        session = self._sessions.get(session_id)
+        if session is None:
             return None
         messages: list[dict[str, Any]] = session.get("messages", [])
         return messages
@@ -1107,6 +1132,23 @@ class RedisSessionService(SessionService):
             for m in session.messages
         ]
 
+    async def get_session_messages_by_session(self, session_id: str) -> list[dict[str, Any]] | None:
+        """Get messages by session ID without user ownership check (RC2 fallback)."""
+        session = await self._manager.get_session(session_id)
+        if session is None:
+            return None
+        return [
+            {
+                "message_id": m.message_id,
+                "role": m.role,
+                "content": m.content,
+                "user_id": m.user_id,
+                "timestamp": m.timestamp.isoformat(),
+                "sources": m.sources,
+            }
+            for m in session.messages
+        ]
+
     async def add_message(self, session_id: str, user_id: str, message_data: dict[str, Any]) -> dict[str, Any] | None:
         """Add a message to a session with ownership check (Redis impl)."""
         # v8: Verify ownership before adding (Finding 30)
@@ -1501,6 +1543,25 @@ class PostgresSessionService(SessionService):
                 "timestamp": m.timestamp.isoformat(),
                 "sources": m.sources,
                 # v8: Extract thinking from metadata (Q14, Finding 34)
+                "thinking": m.metadata.get("thinking") if m.metadata else None,
+                "model_name": m.metadata.get("model_name") if m.metadata else None,
+            }
+            for m in session.messages
+        ]
+
+    async def get_session_messages_by_session(self, session_id: str) -> list[dict[str, Any]] | None:
+        """Get messages by session ID without user ownership check (RC2 fallback)."""
+        session = await self._manager.get_session(session_id)
+        if session is None:
+            return None
+        return [
+            {
+                "message_id": m.message_id,
+                "role": m.role,
+                "content": m.content,
+                "user_id": m.user_id,
+                "timestamp": m.timestamp.isoformat(),
+                "sources": m.sources,
                 "thinking": m.metadata.get("thinking") if m.metadata else None,
                 "model_name": m.metadata.get("model_name") if m.metadata else None,
             }

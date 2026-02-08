@@ -625,6 +625,11 @@ class Settings(BaseSettings):
     session_sliding_window: bool = True
     session_max_concurrent: int = 5  # Max concurrent sessions per user
     session_encryption_key: str | None = None  # AES-256 encryption key for session data (64 hex chars)
+    # RC2 fallback: allow session-scoped message lookup when user_id contextvar is empty.
+    # When True, the adapter bypasses user ownership checks and retrieves messages by
+    # session_id alone. Session UUIDs serve as authorization tokens (infeasible to guess).
+    # Set to False in high-security environments that require strict user ownership.
+    enable_session_scoped_fallback: bool = True
 
     # Idempotency Configuration (for request deduplication)
     # Uses redis_url for distributed deployments, in-memory for single-worker

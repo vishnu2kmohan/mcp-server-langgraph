@@ -106,6 +106,7 @@ class TestCreateStreamLoadsHistory:
         service._mcp_bridge = None
         service._langgraph_agent = None
         service._router_agent = None
+        service._llm_factory = None  # __new__ bypasses __init__; set manually
 
         new_message = [{"role": "user", "content": "Second question"}]
 
@@ -144,6 +145,7 @@ class TestCreateStreamLoadsHistory:
         service._mcp_bridge = None
         service._langgraph_agent = None
         service._router_agent = None
+        service._llm_factory = None  # __new__ bypasses __init__; set manually
 
         new_message = [{"role": "user", "content": "First message ever"}]
 
@@ -177,6 +179,7 @@ class TestCreateStreamLoadsHistory:
         service._mcp_bridge = None
         service._langgraph_agent = None
         service._router_agent = None
+        service._llm_factory = None  # __new__ bypasses __init__; set manually
 
         new_message = [{"role": "user", "content": "Hello"}]
 
@@ -220,6 +223,7 @@ class TestCreateStreamLoadsHistory:
         service._mcp_bridge = None
         service._langgraph_agent = None
         service._router_agent = None
+        service._llm_factory = None  # __new__ bypasses __init__; set manually
 
         # Frontend sends the same message that's already in history
         new_message = [{"role": "user", "content": "Current question"}]
@@ -325,3 +329,392 @@ class TestCreateStreamLoadsHistory:
 
             # 200k * 0.5 = 100k
             assert limit == 100000
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="chat_history_loading")
+class TestLoadAndMergeHistoryErrorHandling:
+    """Tests for _load_and_merge_history exception handling (RC3 fix)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_load_and_merge_history_logs_error_on_exception(self) -> None:
+        """GIVEN storage raises an exception during history loading
+        WHEN _load_and_merge_history is called
+        THEN the exception is logged at ERROR level (not WARNING)
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_storage = AsyncMock()  # noqa: async-mock-config
+        mock_storage.get_messages = AsyncMock(side_effect=ConnectionError("Redis connection refused"))
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        new_messages = [{"role": "user", "content": "Hello"}]
+
+        with patch("mcp_server_langgraph.observability.telemetry.logger") as mock_logger:
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+            )
+
+        # Should fall back to just new messages
+        assert result == new_messages
+
+        # Should log at ERROR level, not WARNING
+        mock_logger.error.assert_called_once()
+        error_msg = str(mock_logger.error.call_args)
+        assert "test-session" in error_msg
+
+        # Should NOT use warning for storage failures
+        mock_logger.warning.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_load_and_merge_history_includes_traceback_on_exception(
+        self,
+    ) -> None:
+        """GIVEN storage raises an exception
+        WHEN _load_and_merge_history is called
+        THEN the error log includes exc_info for traceback
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_storage = AsyncMock()  # noqa: async-mock-config
+        mock_storage.get_messages = AsyncMock(side_effect=RuntimeError("Unexpected error"))
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        new_messages = [{"role": "user", "content": "Test"}]
+
+        with patch("mcp_server_langgraph.observability.telemetry.logger") as mock_logger:
+            await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+            )
+
+        # Verify exc_info=True is passed for traceback
+        call_kwargs = mock_logger.error.call_args
+        # exc_info can be passed as keyword arg or in the call
+        assert call_kwargs is not None
+        # Check if exc_info=True was passed
+        _, kwargs = call_kwargs
+        assert kwargs.get("exc_info") is True
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="chat_history_loading")
+class TestClientHistoryFallback:
+    """Tests for client-supplied history fallback and ID-based dedup (RC4 fix)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_client_history_only_used_when_stored_history_unavailable(
+        self,
+    ) -> None:
+        """GIVEN stored history IS available
+        WHEN _load_and_merge_history receives messages with client_history_fallback
+        THEN stored history is used, not client history
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        # Stored history exists
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(
+            return_value=[
+                {"role": "user", "content": "Stored msg 1"},
+                {"role": "assistant", "content": "Stored response 1"},
+            ]
+        )
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        # Client sends history (would only be used if stored fails)
+        new_messages = [{"role": "user", "content": "New question"}]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+            )
+
+        # Stored history should be used
+        assert len(result) == 3
+        assert result[0]["content"] == "Stored msg 1"
+
+    @pytest.mark.asyncio
+    async def test_dedup_uses_message_id_not_content(self) -> None:
+        """GIVEN history contains messages with IDs
+        WHEN a new message has the same content but different ID
+        THEN it is NOT deduplicated (legitimate repeated message like "ok")
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(
+            return_value=[
+                {"id": "msg-1", "role": "user", "content": "ok"},
+                {"id": "msg-2", "role": "assistant", "content": "Got it"},
+            ]
+        )
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        # New message has same content "ok" but different ID
+        new_messages = [{"id": "msg-3", "role": "user", "content": "ok"}]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+            )
+
+        # Should have all 3 messages (not deduped by content)
+        assert len(result) == 3
+
+    @pytest.mark.asyncio
+    async def test_dedup_removes_duplicate_by_id(self) -> None:
+        """GIVEN history contains a message with the same ID as a new message
+        WHEN _load_and_merge_history merges them
+        THEN the duplicate is removed (same message persisted twice)
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(
+            return_value=[
+                {"id": "msg-1", "role": "user", "content": "Hello"},
+                {"id": "msg-2", "role": "assistant", "content": "Hi"},
+                {"id": "msg-3", "role": "user", "content": "How are you?"},
+            ]
+        )
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        # Same ID as existing message (e.g., streaming endpoint already persisted it)
+        new_messages = [{"id": "msg-3", "role": "user", "content": "How are you?"}]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+            )
+
+        # Should have 3 messages, not 4 (deduped by ID)
+        assert len(result) == 3
+
+    @pytest.mark.asyncio
+    async def test_dedup_handles_message_id_key_from_stored_messages(self) -> None:
+        """GIVEN stored messages use 'message_id' key (not 'id')
+        WHEN a new message has the same message_id
+        THEN it is deduplicated correctly
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        # Stored messages use 'message_id' (the key used by SessionService)
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(
+            return_value=[
+                {"message_id": "msg-1", "role": "user", "content": "Hello"},
+                {"message_id": "msg-2", "role": "assistant", "content": "Hi"},
+            ]
+        )
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        # Client sends message with 'id' key matching stored 'message_id'
+        new_messages = [{"id": "msg-1", "role": "user", "content": "Hello"}]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+            )
+
+        # Should have 2 messages (deduped msg-1), not 3
+        assert len(result) == 2
+
+    @pytest.mark.asyncio
+    async def test_content_dedup_includes_messages_with_ids(self) -> None:
+        """GIVEN stored history has messages WITH IDs (persisted by streaming endpoint)
+        WHEN a new message without an ID has the same (role, content)
+        THEN it IS deduplicated by content fallback (Finding 1 fix)
+
+        Bug: The original code only built history_content_set from messages
+        WITHOUT IDs, so messages persisted by the streaming endpoint (which
+        assigns IDs) were excluded from the content fallback set.
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        # Streaming endpoint persisted the user message with an ID
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(
+            return_value=[
+                {"message_id": "msg-1", "role": "user", "content": "Hello world"},
+                {"message_id": "msg-2", "role": "assistant", "content": "Hi there"},
+            ]
+        )
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        # Frontend sends same message WITHOUT an ID (optimistic send)
+        new_messages = [{"role": "user", "content": "Hello world"}]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+            )
+
+        # Should have 2 messages (deduped by content), NOT 3
+        assert len(result) == 2, (
+            f"Expected 2 messages (content-deduped), got {len(result)}. "
+            "Messages with IDs must be included in the content fallback set."
+        )
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="chat_history_loading")
+class TestServerSideHistoryEnforcement:
+    """Tests for server-side client_history_fallback enforcement (Finding 2 & 6)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_client_history_stripped_when_stored_history_exists(self) -> None:
+        """GIVEN stored history exists and client_history_fallback=True
+        WHEN _load_and_merge_history is called with client history
+        THEN client history is stripped, keeping only the last user message
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        # Server has stored history
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(
+            return_value=[
+                {"role": "user", "content": "Stored msg 1"},
+                {"role": "assistant", "content": "Stored response 1"},
+            ]
+        )
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        # Client sends full history + new message (fallback mode)
+        new_messages = [
+            {"role": "user", "content": "Client history msg 1"},
+            {"role": "assistant", "content": "Client history resp 1"},
+            {"role": "user", "content": "New question"},
+        ]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+                client_history_fallback=True,
+            )
+
+        # Should have stored history + only the new user message (3 total)
+        assert len(result) == 3
+        assert result[0]["content"] == "Stored msg 1"
+        assert result[1]["content"] == "Stored response 1"
+        assert result[2]["content"] == "New question"
+
+    @pytest.mark.asyncio
+    async def test_client_history_used_when_no_stored_history(self) -> None:
+        """GIVEN no stored history and client_history_fallback=True
+        WHEN _load_and_merge_history is called with client history
+        THEN client history is used as fallback
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(return_value=[])
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        new_messages = [
+            {"role": "user", "content": "Previous msg"},
+            {"role": "assistant", "content": "Previous resp"},
+            {"role": "user", "content": "New question"},
+        ]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+                client_history_fallback=True,
+            )
+
+        # All client messages should be used (no stored history to prefer)
+        assert len(result) == 3
+
+    @pytest.mark.asyncio
+    async def test_server_caps_client_history_at_max(self) -> None:
+        """GIVEN client_history_fallback=True with >50 messages
+        WHEN _load_and_merge_history is called
+        THEN messages are capped to most recent MAX_CLIENT_HISTORY_MESSAGES
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(return_value=[])
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        # Client sends 60 messages (exceeds MAX_CLIENT_HISTORY_MESSAGES=50)
+        new_messages = [{"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"} for i in range(60)]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+                client_history_fallback=True,
+            )
+
+        # Should be capped at 50 (most recent)
+        assert len(result) <= 50
+        # Most recent message should be preserved
+        assert result[-1]["content"] == "Message 59"
+
+    @pytest.mark.asyncio
+    async def test_no_enforcement_when_flag_is_false(self) -> None:
+        """GIVEN client_history_fallback=False (default)
+        WHEN _load_and_merge_history is called
+        THEN all new_messages are treated normally (no stripping or capping)
+        """
+        from mcp_server_langgraph.api.v1.chat import ChatServiceImpl
+
+        mock_storage = AsyncMock(return_value=None)
+        mock_storage.get_messages = AsyncMock(return_value=[])
+
+        service = ChatServiceImpl.__new__(ChatServiceImpl)
+        service._session_storage = mock_storage
+
+        new_messages = [{"role": "user", "content": "Normal message"}]
+
+        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+            result = await service._load_and_merge_history(
+                session_id="test-session",
+                new_messages=new_messages,
+                client_history_fallback=False,
+            )
+
+        assert len(result) == 1
+        assert result[0]["content"] == "Normal message"
