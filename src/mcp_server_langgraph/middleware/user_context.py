@@ -24,6 +24,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.storage.session.adapter import _current_user_id
 
 if TYPE_CHECKING:
@@ -89,11 +90,14 @@ class UserContextMiddleware(BaseHTTPMiddleware):
         v8 FIX: AuthRequestMiddleware sets user as DICT (line 82),
         not an object. Use dict.get() instead of getattr (Finding 49, Q20).
 
+        Hardened: Returns None (not empty string) when extraction fails,
+        preventing downstream history loss from empty contextvar (RC2).
+
         Args:
             request: HTTP request with state.user potentially set
 
         Returns:
-            User ID string if found, None otherwise
+            User ID string if found, None otherwise (never empty string)
         """
         # Auth middleware sets request.state.user as dict
         user = getattr(request.state, "user", None)
@@ -102,7 +106,24 @@ class UserContextMiddleware(BaseHTTPMiddleware):
 
         # v8 FIX: user is dict, use .get() not getattr (Finding 49, Q20)
         if isinstance(user, dict):
-            return user.get("sub") or user.get("user_id") or user.get("id")
+            user_id = user.get("sub") or user.get("user_id") or user.get("id")
+            if not user_id:
+                logger.warning(
+                    "Failed to extract user_id from authenticated user dict — JWT may be missing sub/user_id/id claims",
+                    extra={
+                        "available_keys": list(user.keys()),
+                        "path": request.url.path,
+                    },
+                )
+                return None
+            return user_id
 
         # Fallback for object (shouldn't happen with current auth middleware)
-        return getattr(user, "sub", None) or getattr(user, "id", None)
+        user_id = getattr(user, "sub", None) or getattr(user, "id", None)
+        if not user_id:
+            logger.warning(
+                "Failed to extract user_id from user object",
+                extra={"user_type": type(user).__name__},
+            )
+            return None
+        return user_id

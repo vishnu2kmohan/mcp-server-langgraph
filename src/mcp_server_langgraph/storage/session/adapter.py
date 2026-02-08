@@ -21,6 +21,9 @@ from __future__ import annotations
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
+from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.observability.telemetry import logger
+
 if TYPE_CHECKING:
     from mcp_server_langgraph.api.v1.sessions import SessionService
 
@@ -84,6 +87,7 @@ class ContextvarSessionStorageAdapter:
         """Load messages with ownership check.
 
         Reads user_id from contextvar set by middleware.
+        Falls back to session-scoped lookup when user_id is empty.
 
         Args:
             session_id: Session ID to load messages from
@@ -93,7 +97,23 @@ class ContextvarSessionStorageAdapter:
         """
         user_id = get_current_user_id()
         if not user_id:
-            # No user context = unauthorized
+            logger.error(
+                "Empty user_id contextvar in get_messages — auth middleware may have failed to extract user identity",
+                extra={"session_id": session_id},
+            )
+            # Fallback: session-scoped lookup bypasses user ownership check.
+            # Gated behind settings.enable_session_scoped_fallback for security.
+            # Acceptable when enabled because session IDs are UUIDs created during
+            # authenticated session creation — guessing a valid UUID is
+            # computationally infeasible.
+            if settings.enable_session_scoped_fallback:
+                fallback = await self._service.get_session_messages_by_session(session_id)
+                if fallback is not None:
+                    logger.warning(
+                        "Using session-scoped fallback for message retrieval (user_id contextvar was empty)",
+                        extra={"session_id": session_id},
+                    )
+                    return fallback
             return None
         return await self._service.get_session_messages(session_id, user_id)
 
@@ -115,5 +135,9 @@ class ContextvarSessionStorageAdapter:
         """
         user_id = get_current_user_id()
         if not user_id:
+            logger.error(
+                "Empty user_id contextvar in add_message — cannot persist message without user context",
+                extra={"session_id": session_id},
+            )
             return None
         return await self._service.add_message(session_id, user_id, message_data)

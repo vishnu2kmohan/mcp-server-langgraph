@@ -30,11 +30,14 @@ Example:
     await manager.close()
 """
 
+import logging
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 import redis.asyncio as redis
+
+logger = logging.getLogger(__name__)
 
 from .models import Message, Session, SessionConfig
 
@@ -160,7 +163,10 @@ class RedisSessionManager:
 
     async def get_session(self, session_id: str) -> Session | None:
         """
-        Retrieve a session from Redis.
+        Retrieve a session from Redis, refreshing TTL on read.
+
+        Refreshes TTL to prevent active sessions from expiring during
+        long conversations with no writes (RC5 fix).
 
         Args:
             session_id: Session ID to retrieve
@@ -174,7 +180,27 @@ class RedisSessionManager:
         if data is None:
             return None
 
-        return Session.model_validate_json(data)
+        session = Session.model_validate_json(data)
+
+        # Refresh TTL on read to keep active sessions alive (RC5 fix)
+        # Use pipeline to batch expire calls in a single round trip
+        # Finding 5: Wrap in try/except — TTL refresh is best-effort and should
+        # not prevent returning a successfully retrieved session.
+        try:
+            if session.user_id:
+                # Pipeline batches both expire calls in a single round trip
+                pipe = self._redis.pipeline(transaction=False)
+                pipe.expire(key, self._ttl)
+                user_key = self._user_session_key(session.user_id, session_id)
+                pipe.expire(user_key, self._ttl)
+                await pipe.execute()
+            else:
+                # Single key — direct call avoids pipeline overhead
+                await self._redis.expire(key, self._ttl)
+        except Exception:
+            logger.warning("Failed to refresh TTL for session %s", session_id)
+
+        return session
 
     async def update_session(
         self,
