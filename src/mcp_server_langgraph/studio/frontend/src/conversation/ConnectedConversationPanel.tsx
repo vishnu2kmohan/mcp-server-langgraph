@@ -3,7 +3,7 @@
  *
  * Redux-connected wrapper for ConversationPanel that integrates with:
  * - React Router loaders (messages, session)
- * - Redux actions (sendMessage)
+ * - Redux actions (addUserMessage, setPendingMutation)
  * - Session telemetry (message tracking)
  * - Message revalidation (refresh after sending)
  * - Conversation Intelligence (Sprint 3)
@@ -38,11 +38,14 @@ import {
 } from "../store/slices/chatConnectionSlice";
 import { InlineConnectionCard } from "../components/Chat/InlineConnectionCard";
 import {
-  sendMessage,
   selectCurrentSession,
+  selectMessages,
   createSession,
   clearMessages,
-  // Note: saveAssistantMessage removed - backend already persists during streaming (Fix 1)
+  addUserMessage,
+  updateMessage,
+  sendMessage,
+  setPendingMutation,
 } from "../store/slices/sessionSlice";
 import {
   selectExecutionMode,
@@ -293,6 +296,24 @@ export const ConnectedConversationPanel = forwardRef<
     }
   }, [streamingError]);
 
+  // Finding 2: Mark optimistic message as failed when async stream errors occur.
+  // startStream is fire-and-forget, so errors from the fetch/SSE stream are
+  // surfaced asynchronously via the `streamingError` state rather than the
+  // catch block in handleSendMessage. Without this, the optimistic message
+  // would remain in a "sending" state indefinitely.
+  useEffect(() => {
+    if (streamingError && lastSentMessageIdRef.current) {
+      dispatch(
+        updateMessage({
+          messageId: lastSentMessageIdRef.current,
+          updates: { status: "failed" as const },
+        }),
+      );
+      dispatch(setPendingMutation(false));
+      lastSentMessageIdRef.current = "";
+    }
+  }, [streamingError, dispatch]);
+
   // Dispatch auth_required events to Redux (ADR-0102)
   // This allows InlineConnectionCard to display and handle authentication
   useEffect(() => {
@@ -307,6 +328,9 @@ export const ConnectedConversationPanel = forwardRef<
   const lastStreamedUsageRef = useRef<typeof streamingUsage>(null);
   const lastThinkingTokensRef = useRef<number | null>(null);
   const lastStreamedSourcesRef = useRef<typeof streamingSources>([]);
+
+  // Finding 2: Track the last sent messageId for async error handling
+  const lastSentMessageIdRef = useRef<string>("");
 
   // Fix 1: Seamless handoff state for UI flicker prevention
   // The backend streaming endpoint already persists the message, so we DON'T call saveAssistantMessage.
@@ -456,6 +480,13 @@ export const ConnectedConversationPanel = forwardRef<
   // Get current session from Redux (contains optimistic updates)
   const currentSession = useAppSelector(selectCurrentSession);
 
+  // RC4 Fix: Get current messages for defense-in-depth history fallback
+  const currentMessages = useAppSelector(selectMessages);
+
+  // S4: Use ref for currentMessages to avoid re-creating handleSendMessage on every message change
+  const currentMessagesRef = useRef(currentMessages);
+  currentMessagesRef.current = currentMessages;
+
   // Get execution mode from Redux (plan/default/auto_accept/bypass)
   const executionMode = useAppSelector(selectExecutionMode);
 
@@ -591,6 +622,18 @@ export const ConnectedConversationPanel = forwardRef<
   // Streaming Completion Effects
   // =============================================================================
 
+  // Finding 4 fix: Clear pendingMutation when streaming ends, not synchronously
+  // after startStream (which is fire-and-forget). This prevents stale loader
+  // data from overwriting optimistic updates while the stream is still active.
+  const prevIsStreamingRef = useRef(false);
+  useEffect(() => {
+    if (prevIsStreamingRef.current && !isStreaming) {
+      // Streaming just ended (transition from true -> false)
+      dispatch(setPendingMutation(false));
+    }
+    prevIsStreamingRef.current = isStreaming;
+  }, [isStreaming, dispatch]);
+
   // When streaming completes, revalidate to fetch the persisted message
   // Fix 1: DO NOT call saveAssistantMessage - backend already persists during streaming.
   // This eliminates the duplicate message issue.
@@ -603,6 +646,7 @@ export const ConnectedConversationPanel = forwardRef<
       const assistantContent = lastStreamedContentRef.current;
       streamingCompleteRef.current = false;
       lastStreamedContentRef.current = "";
+      lastSentMessageIdRef.current = ""; // Finding 2: Clear on successful completion
 
       // Only revalidate if we have content (backend already persisted)
       if (sessionId && assistantContent.trim()) {
@@ -707,6 +751,8 @@ export const ConnectedConversationPanel = forwardRef<
     async (content: string) => {
       // Get effective session ID (from URL params or current session)
       let effectiveSessionId = sessionId ?? currentSession?.id;
+      // Hoist messageId so it's accessible in the catch block for status updates
+      let messageId = "";
 
       try {
         // Auto-create session on first message if no session exists
@@ -722,12 +768,36 @@ export const ConnectedConversationPanel = forwardRef<
           navigate(`/studio/chat/${newSession.id}`, { replace: true });
         }
 
-        // 1. Store the user message in the session
-        await dispatch(sendMessage(content)).unwrap();
+        // 1. Optimistic update: add user message to Redux immediately
+        // RC1 Fix: Do NOT call sendMessage thunk (which POSTs to /api/v1/sessions/{id}/messages)
+        // The streaming endpoint already persists the user message with dedup logic.
+        // Dual persistence caused a race condition where _load_and_merge_history
+        // could read stale storage state.
+        messageId = `msg-${crypto.randomUUID()}`;
+        lastSentMessageIdRef.current = messageId; // Finding 2: Track for async error handling
+        dispatch(setPendingMutation(true));
+        dispatch(
+          addUserMessage({
+            id: messageId,
+            role: "user",
+            content,
+            timestamp: Date.now(),
+          }),
+        );
 
         // 2. Start streaming response from LLM
         // This calls POST /api/v1/chat/completions/stream
         // Pass model, reasoning options, KB focus mode, execution mode, and tool preference
+        // Note: startStream is fire-and-forget (returns void). Stream errors are
+        // handled internally by useStreamingChat via state updates (error field).
+        // The streaming endpoint handles user message persistence with dedup logic,
+        // so no fallback persistence is needed here.
+        const history = currentMessagesRef.current.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+        }));
+
         startStream(effectiveSessionId, content, {
           model: selectedModel,
           reasoningEffort: modelSupportsThinking ? reasoningEffort : undefined,
@@ -735,11 +805,33 @@ export const ConnectedConversationPanel = forwardRef<
           kbFocus: kbFocusMode,
           executionMode,
           toolPreference, // v7: Native vs builtin tool preference
+          history, // RC4: Bounded client history fallback
+          messageId, // Finding 1: Pass optimistic messageId for ID-based dedup
         });
+
+        // Note: setPendingMutation(false) is NOT called here.
+        // Finding 4 fix: startStream is fire-and-forget, so clearing the flag
+        // synchronously would defeat its purpose. Instead, a useEffect below
+        // watches isStreaming and clears pendingMutation when streaming ends.
 
         // 3. Trigger revalidation to sync loader data
         revalidateMessages();
       } catch (error) {
+        // Finding 3 fix: If startStream threw synchronously (before the
+        // streaming endpoint could persist the message), use sendMessage
+        // thunk as a fallback to ensure the message is not lost.
+        try {
+          await dispatch(sendMessage(content)).unwrap();
+        } catch {
+          // Both paths failed — mark the optimistic message as failed
+          dispatch(
+            updateMessage({
+              messageId,
+              updates: { status: "failed" as const },
+            }),
+          );
+        }
+        dispatch(setPendingMutation(false));
         logger.error("Failed to send message", { error });
       }
 

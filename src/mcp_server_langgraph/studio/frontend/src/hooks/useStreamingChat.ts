@@ -133,6 +133,9 @@ export type ToolPreference = "auto" | "native" | "builtin" | "mcp";
  */
 export type ExecutionModeType = "default" | "plan" | "auto_accept" | "bypass";
 
+/** Maximum number of client-side history messages to include in fallback */
+export const MAX_CLIENT_HISTORY_MESSAGES = 50;
+
 export interface StartStreamOptions {
   /** Model ID to use for this request (overrides server default) */
   model?: string;
@@ -150,6 +153,10 @@ export interface StartStreamOptions {
   executionMode?: ExecutionModeType;
   /** Tool preference for native vs builtin execution (v7) */
   toolPreference?: ToolPreference;
+  /** Recent conversation history for defense-in-depth fallback (RC4 fix) */
+  history?: Array<{ id: string; role: string; content: string }>;
+  /** Message ID for the current user message (Finding 1: enables ID-based dedup) */
+  messageId?: string;
 }
 
 /**
@@ -506,9 +513,40 @@ export function useStreamingChat(): UseStreamingChatReturn {
       });
 
       // Build request body matching ChatCompletionRequest
+      // RC4 Fix: Include bounded client history as defense-in-depth fallback
+      // Finding 1: Include messageId on current user message for ID-based dedup
+      const currentMessage: Record<string, unknown> = {
+        role: "user",
+        content: message,
+      };
+      if (options?.messageId) {
+        currentMessage.id = options.messageId;
+      }
+
+      let messages: Array<Record<string, unknown>>;
+      if (options?.history && options.history.length > 0) {
+        // Cap history to MAX_CLIENT_HISTORY_MESSAGES most recent
+        const cappedHistory = options.history.slice(
+          -MAX_CLIENT_HISTORY_MESSAGES,
+        );
+        messages = [
+          ...cappedHistory.map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+          })),
+          currentMessage,
+        ];
+      } else {
+        messages = [currentMessage];
+      }
+
       const requestBody: Record<string, unknown> = {
         session_id: sessionId,
-        messages: [{ role: "user", content: message }],
+        messages,
+        ...(options?.history && options.history.length > 0
+          ? { client_history_fallback: true }
+          : {}),
       };
 
       // Add model if provided (overrides server default)

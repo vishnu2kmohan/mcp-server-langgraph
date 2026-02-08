@@ -185,6 +185,9 @@ export interface SourceCitation {
   relevance_score?: number | null;
 }
 
+/** Message delivery status for optimistic updates */
+export type MessageStatus = "pending" | "sent" | "failed";
+
 /** Chat message */
 export interface ChatMessage {
   id: string;
@@ -205,6 +208,8 @@ export interface ChatMessage {
   sources?: SourceCitation[];
   /** Whether this message has been reported as hallucination */
   isReported?: boolean;
+  /** Delivery status for optimistic updates (Finding 3: stream failure fallback) */
+  status?: MessageStatus;
 }
 
 // ==============================================================================
