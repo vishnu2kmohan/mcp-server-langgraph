@@ -95,9 +95,9 @@ export function SharedWorkflowsList({
   const getPermissionBadgeStyle = (permission: string) => {
     switch (permission) {
       case "editor":
-        return "bg-success-3 text-success-11 bg-success-4 dark:text-success-7";
+        return "bg-success-2 text-success-11 dark:text-success-7";
       case "executor":
-        return "bg-primary-3 text-primary-11 bg-primary-4 dark:text-primary-7";
+        return "bg-primary-2 text-primary-11 dark:text-primary-7";
       case "viewer":
       default:
         return "bg-neutral-2 text-neutral-11";
@@ -351,7 +351,7 @@ export function SharedWorkflowsList({
                     </h3>
                     {/* Show "View Only" badge for viewer permission, otherwise show permission level */}
                     {isViewOnly(workflow.permission) ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-warning-3 text-warning-10 dark:bg-warning-a4 dark:text-warning-9 flex items-center gap-1">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-warning-2 text-warning-10 dark:bg-warning-a4 dark:text-warning-9 flex items-center gap-1">
                         View Only
                       </span>
                     ) : (
