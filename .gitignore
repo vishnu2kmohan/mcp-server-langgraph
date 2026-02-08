@@ -233,24 +233,31 @@ _site/
 .openai/
 .cursor/
 .mcp.json
-# Claude Code - track important directories, ignore session-specific data
+# Claude Code - track shared project config, ignore session-specific data
+# Reference: https://docs.anthropic.com/en/docs/claude-code/memory
 .claude/*
-!.claude/commands/
-!.claude/memory/
-!.claude/templates/
-!.claude/settings.json
-!.claude/README.md
+# Shared project config (track in git)
 !.claude/CLAUDE.md
 !.claude/CLAUDE.local.md.example
+!.claude/settings.json
+!.claude/README.md
 !.claude/SETTINGS.md
 !.claude/QUICK_REFERENCE.md
-# Session-specific context should not be tracked
+# Shared project directories (track in git)
+!.claude/commands/
+!.claude/rules/
+!.claude/skills/
+!.claude/lib/
+!.claude/memory/
+!.claude/templates/
+# Session-specific (do NOT track)
 .claude/context/
 .claude/handoff/
+.claude/.claude-plans/
 .claude-worktree-session
-# CRITICAL: Never commit local settings (per Claude Code documentation)
+# CRITICAL: Never commit local/personal settings (auto-gitignored by Claude Code)
 .claude/settings.local.json
-**/. claude/settings.local.json
+**/.claude/settings.local.json
 *.local.json
 **/*.local.json
 .vscode/.ropeproject/
