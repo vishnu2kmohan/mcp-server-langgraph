@@ -27,6 +27,16 @@ vi.mock("../../store/hooks", () => ({
   useAppDispatch: () => mockUseAppDispatch(),
 }));
 
+// Mock the MCPConnectionContext
+vi.mock("../../contexts/MCPConnectionContext", () => ({
+  useMCPConnection: () => ({
+    status: "connected",
+    connectionId: "test-connection-id",
+    reconnect: vi.fn(),
+    disconnect: vi.fn(),
+  }),
+}));
+
 // Mock the MCP slice selectors
 vi.mock("../../store/slices/mcpSlice", () => ({
   selectAllTools: vi.fn(),

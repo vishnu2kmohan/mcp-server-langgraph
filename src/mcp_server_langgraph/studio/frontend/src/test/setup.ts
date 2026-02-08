@@ -262,6 +262,34 @@ beforeAll(() => {
     MockResizeObserver as unknown as typeof ResizeObserver;
 });
 
+// =============================================================================
+// Mock getBoundingClientRect for Chart Components
+// =============================================================================
+// recharts ResponsiveContainer uses getBoundingClientRect to measure container
+// dimensions. jsdom returns 0 for all dimensions by default, causing -1 width/height
+// errors. We mock getBoundingClientRect to return sensible defaults.
+beforeAll(() => {
+  const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function () {
+    const rect = originalGetBoundingClientRect.call(this);
+    // If jsdom returned 0 dimensions (no layout), provide sensible defaults
+    if (rect.width === 0 && rect.height === 0) {
+      return {
+        ...rect,
+        width: 800,
+        height: 400,
+        top: 0,
+        left: 0,
+        right: 800,
+        bottom: 400,
+        x: 0,
+        y: 0,
+      };
+    }
+    return rect;
+  };
+});
+
 // Mock window.matchMedia
 beforeAll(() => {
   Object.defineProperty(window, "matchMedia", {
