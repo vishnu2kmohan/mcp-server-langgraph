@@ -840,6 +840,16 @@ export function DevToolsPanel({ className }: DevToolsPanelProps) {
     <DevToolsTimelineProvider>
       {/* WebSocket observer bridges real-time events to the timeline */}
       <DevToolsWebSocketObserver />
+      {/* Resize Handle - hidden when maximized */}
+      {!maximized && (
+        <div
+          data-testid="devtools-resize-handle"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize DevTools panel"
+          className="h-1 cursor-ns-resize bg-neutral-4 hover:bg-primary-6 transition-colors"
+        />
+      )}
       <div
         data-testid="devtools-panel"
         className={cn(
