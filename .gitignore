@@ -169,6 +169,9 @@ performance-report.md
 benchmark-results.json
 release_notes.md
 
+# Gemini sandbox plan copies (temp files from triple-AI skills)
+.plan-review-temp*.md
+
 # Session/temporary documentation (should be moved to docs/reports/)
 *_SESSION_*.md
 *_STATUS*.md
