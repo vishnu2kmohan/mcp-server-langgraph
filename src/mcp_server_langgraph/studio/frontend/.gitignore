@@ -12,3 +12,6 @@ coverage/
 
 *storybook.log
 storybook-static
+
+# Heap snapshots (security-sensitive, may contain in-memory secrets)
+*.heapsnapshot

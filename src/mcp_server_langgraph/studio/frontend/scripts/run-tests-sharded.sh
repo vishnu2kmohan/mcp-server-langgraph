@@ -107,6 +107,26 @@ run_shard() {
             [[ $heap_size -gt $max_heap ]] && heap_size=$max_heap
         fi
 
+        # Opt-in heap snapshots for near-OOM debugging
+        # WARNING: Heap snapshots can contain in-memory secrets (API keys, tokens).
+        # Only enable via VITEST_HEAP_SNAPSHOT=true — never automatically on retries.
+        # Snapshots are written to /tmp (outside workspace), not collected by CI artifacts.
+        local heap_snapshot_opts=""
+        local snapshot_dir=""
+        local snapshot_dir_created="false"
+        if [[ "${VITEST_HEAP_SNAPSHOT:-}" == "true" ]]; then
+            if [[ -n "${VITEST_HEAP_SNAPSHOT_DIR:-}" ]]; then
+                snapshot_dir="$VITEST_HEAP_SNAPSHOT_DIR"
+            else
+                snapshot_dir="$(mktemp -d /tmp/heap-snapshots-XXXXXX)"
+                snapshot_dir_created="true"
+            fi
+            mkdir -p "$snapshot_dir"
+            heap_snapshot_opts="--heapsnapshot-near-heap-limit=1 --heapsnapshot-signal=SIGUSR2"
+            echo -e "${BLUE}[HEAP SNAPSHOT] Enabled — snapshots will be written to $snapshot_dir${NC}"
+            echo -e "${YELLOW}[HEAP SNAPSHOT] WARNING: Snapshots may contain sensitive data. Do not upload to CI artifacts.${NC}"
+        fi
+
         # Run with single fork, adaptive heap, and per-shard timeout to prevent OOM/GC spirals
         # Use vitest binary directly (not npm run test:single) so NODE_OPTIONS
         # from this script takes effect instead of the 8GB default in package.json
@@ -118,7 +138,7 @@ run_shard() {
         if [[ -n "$TIMEOUT_CMD" ]]; then
             # Use --signal=TERM first, then SIGKILL after 10s grace period
             VITEST_HEAP_SIZE=$heap_size VITEST_MAX_FORKS=1 VITEST_SHARDED=1 \
-                NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc" \
+                NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc $heap_snapshot_opts${snapshot_dir:+ --diagnostic-dir=$snapshot_dir}" \
                 "$TIMEOUT_CMD" --signal=TERM --kill-after=10 "$shard_timeout" \
                 ./node_modules/.bin/vitest run --shard="$shard_num/$total_shards" 2>&1
             exit_code=$?
@@ -126,11 +146,18 @@ run_shard() {
             echo -e "${YELLOW}WARNING: timeout/gtimeout not found — shard timeout disabled${NC}"
             echo -e "${YELLOW}  Install: brew install coreutils (macOS) or apt install coreutils (Linux)${NC}"
             VITEST_HEAP_SIZE=$heap_size VITEST_MAX_FORKS=1 VITEST_SHARDED=1 \
-                NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc" \
+                NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc $heap_snapshot_opts${snapshot_dir:+ --diagnostic-dir=$snapshot_dir}" \
                 ./node_modules/.bin/vitest run --shard="$shard_num/$total_shards" 2>&1
             exit_code=$?
         fi
         set -e
+
+        # Clean up heap snapshots (defense-in-depth against accidental collection)
+        # Only auto-delete directories created by this script (mktemp).
+        # User-provided VITEST_HEAP_SNAPSHOT_DIR is left for manual inspection.
+        if [[ "$snapshot_dir_created" == "true" && -n "$snapshot_dir" && -d "$snapshot_dir" ]]; then
+            rm -rf "$snapshot_dir"
+        fi
 
         if [[ $exit_code -eq 0 ]]; then
             echo -e "${GREEN}Shard $shard_num/$total_shards completed${NC}"
@@ -437,6 +464,7 @@ if [[ "${SHARDED_TEST_DRY_RUN:-}" == "1" ]]; then
     echo "DRY_RUN: CI_MODE=${CI_MODE:-}"
     echo "DRY_RUN: SHARD_TIMEOUT=${VITEST_SHARD_TIMEOUT:-300}"
     echo "DRY_RUN: HEAP_SIZE=3072"
+    echo "DRY_RUN: HEAP_SNAPSHOT=${VITEST_HEAP_SNAPSHOT:-false}"
     echo "DRY_RUN: TIMEOUT_CMD=${TIMEOUT_CMD:-none}"
     if [[ -n "${PARALLEL_MODE:-}" ]]; then
         if [[ -z "${PARALLEL_CONCURRENCY:-}" ]]; then

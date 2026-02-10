@@ -41,6 +41,7 @@ import {
   logIsolationWarningIfDirty,
 } from "./testIsolation";
 import { MemoryTrendReporter } from "./memoryTrendReporter";
+import { createHeapWatchdog, type HeapWatchdog } from "./heapWatchdog";
 
 // Memory trend reporter for CI integration
 const memoryTrendReporter = new MemoryTrendReporter({
@@ -48,6 +49,9 @@ const memoryTrendReporter = new MemoryTrendReporter({
   branch: process.env.GITHUB_REF_NAME,
   testSuite: "frontend",
 });
+
+// Heap watchdog for OOM detection (worker-side, polls v8 heap)
+let activeWatchdog: HeapWatchdog | null = null;
 
 // Extend Vitest's expect with jest-axe matchers
 expect.extend(toHaveNoViolations);
@@ -63,6 +67,10 @@ beforeAll(() => {
   if (testPath) {
     const relative = testPath.replace(process.cwd() + "/", "");
     console.log(`[TEST START] ${relative}`);
+
+    // Start heap watchdog (only active in sharded/opt-in mode)
+    activeWatchdog = createHeapWatchdog(relative);
+    activeWatchdog?.start();
   }
 
   memoryMonitor.snapshot("suite-start");
@@ -75,6 +83,10 @@ beforeAll(() => {
 
 // Report memory usage at end if there's significant growth
 afterAll(() => {
+  // Stop heap watchdog before memory snapshot
+  activeWatchdog?.stop();
+  activeWatchdog = null;
+
   memoryMonitor.snapshot("suite-end");
   const result = memoryMonitor.checkThresholds();
 

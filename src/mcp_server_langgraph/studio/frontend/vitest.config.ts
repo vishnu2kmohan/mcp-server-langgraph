@@ -222,6 +222,28 @@ export default defineConfig({
     // Retrying in a memory-pressured worker makes GC death spirals worse.
     retry: process.env.VITEST_SHARDED === "1" ? 0 : 1,
 
+    // =========================================================================
+    // Heap Usage Logging & OOM Reporter
+    // =========================================================================
+    // Enable heap usage logging for OOM reporter (sharded/CI/explicit opt-in only).
+    // Vitest calls process.memoryUsage().heapUsed in the worker after each file
+    // completes and sends it to the main process via testModule.diagnostic().heap.
+    // Gated behind env vars to keep `npm test` fast for local development.
+    //
+    // Environment variables:
+    //   VITEST_SHARDED=1           - Automatically set by run-tests-sharded.sh
+    //   VITEST_MEMORY_MONITOR=true - Explicit opt-in for memory monitoring
+    //   CI=true                    - Enabled in CI environments
+    logHeapUsage:
+      process.env.VITEST_SHARDED === "1" ||
+      process.env.VITEST_MEMORY_MONITOR === "true" ||
+      process.env.CI === "true",
+
+    // Custom reporters: default output + OOM detection reporter
+    // OomReporter tracks module lifecycle to detect OOM suspects and
+    // high-memory test files. See src/test/oomReporter.ts for details.
+    reporters: ["default", "./src/test/oomReporter.ts"],
+
     // Don't silence output
     silent: false,
     coverage: {
