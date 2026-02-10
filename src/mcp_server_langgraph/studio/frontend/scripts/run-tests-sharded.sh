@@ -18,7 +18,11 @@
 # Parallel Mode:
 #   --parallel [N]    Run N shards concurrently (default: auto-detect based on memory)
 #                     Auto-detect formula: min(free_memory_gb * 0.8 / 4, cpu_count / 2, 8)
-#                     This ensures each shard has 4GB+ memory headroom
+#                     This ensures each shard has 3GB+ memory headroom
+#
+# Shard Timeout:
+#   --shard-timeout N  Per-shard timeout in seconds (default: 300 / env: VITEST_SHARD_TIMEOUT)
+#                      Kills stuck shards to prevent V8 GC death spirals
 #
 # Why sharding?
 # - jsdom + React Testing Library consumes ~300-500MB per test file
@@ -38,17 +42,28 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # =============================================================================
+# Cross-Platform Timeout Detection
+# =============================================================================
+# GNU coreutils `timeout` on Linux, `gtimeout` from `brew install coreutils` on macOS
+TIMEOUT_CMD=""
+if command -v timeout &>/dev/null; then
+    TIMEOUT_CMD="timeout"
+elif command -v gtimeout &>/dev/null; then
+    TIMEOUT_CMD="gtimeout"
+fi
+
+# =============================================================================
 # Shard Count Calculation
 # =============================================================================
-# Memory budget: 4GB heap per shard (safe for most systems)
+# Memory budget: 3GB heap per shard (fast OOM crash instead of GC spiral)
 # Memory per test file: ~300-500MB (jsdom + React Testing Library + MSW)
-# Safe files per shard: 4GB / 400MB = ~10 files
+# Safe files per shard: 3GB / 400MB = ~7 files
 # With 787 test files (as of 2026-02), need ~79 shards minimum
 #
 # Using 150 shards as default (increased from 100 due to OOM issues):
 # - 787 files / 150 shards = ~5 files per shard
-# - 5 files × 400MB = 2GB per shard (safe for 4GB limit)
-# - Provides more headroom for heavy tests that use 800MB+ each
+# - 5 files × 400MB = 2GB per shard (safe for 3GB limit)
+# - With restartWorkersAfter=1, each file gets a fresh worker
 #
 # Presets:
 #   --count 150  - Default: balanced speed/safety (~30min sequential)
@@ -73,15 +88,17 @@ run_shard() {
     local total_shards=$2
     local max_retries=2
     local retry=0
+    local shard_timeout=${VITEST_SHARD_TIMEOUT:-300}  # 5 minutes default
 
     while [ $retry -le $max_retries ]; do
         if [ $retry -gt 0 ]; then
             echo -e "${YELLOW}=== Retrying Shard $shard_num/$total_shards (attempt $((retry + 1))/$((max_retries + 1))) ===${NC}"
             # Increase heap for retry attempts (OOM mitigation)
-            local heap_size=$((4096 + retry * 2048))
+            # Heap escalation: 3GB -> 5GB -> 7GB
+            local heap_size=$((3072 + retry * 2048))
         else
             echo -e "${YELLOW}=== Running Shard $shard_num/$total_shards ===${NC}"
-            local heap_size=4096
+            local heap_size=3072  # 3GB - fast OOM crash instead of GC spiral
         fi
 
         # Cap heap at 6GB in CI mode (runner has 16GB total, need headroom for OS + Node overhead)
@@ -90,20 +107,47 @@ run_shard() {
             [[ $heap_size -gt $max_heap ]] && heap_size=$max_heap
         fi
 
-        # Run with single fork and adaptive heap to prevent OOM
+        # Run with single fork, adaptive heap, and per-shard timeout to prevent OOM/GC spirals
         # Use vitest binary directly (not npm run test:single) so NODE_OPTIONS
         # from this script takes effect instead of the 8GB default in package.json
-        VITEST_HEAP_SIZE=$heap_size VITEST_MAX_FORKS=1 \
-            NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc" \
-            ./node_modules/.bin/vitest run --shard="$shard_num/$total_shards" 2>&1 && {
+        # VITEST_SHARDED=1 disables vitest-level retry (shard-level retry handles it)
+        # Disable set -e around vitest invocation so non-zero exits don't abort
+        # the script before exit_code is captured (needed for retry/timeout logic)
+        local exit_code=0
+        set +e
+        if [[ -n "$TIMEOUT_CMD" ]]; then
+            # Use --signal=TERM first, then SIGKILL after 10s grace period
+            VITEST_HEAP_SIZE=$heap_size VITEST_MAX_FORKS=1 VITEST_SHARDED=1 \
+                NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc" \
+                "$TIMEOUT_CMD" --signal=TERM --kill-after=10 "$shard_timeout" \
+                ./node_modules/.bin/vitest run --shard="$shard_num/$total_shards" 2>&1
+            exit_code=$?
+        else
+            echo -e "${YELLOW}WARNING: timeout/gtimeout not found — shard timeout disabled${NC}"
+            echo -e "${YELLOW}  Install: brew install coreutils (macOS) or apt install coreutils (Linux)${NC}"
+            VITEST_HEAP_SIZE=$heap_size VITEST_MAX_FORKS=1 VITEST_SHARDED=1 \
+                NODE_OPTIONS="--max-old-space-size=$heap_size --expose-gc" \
+                ./node_modules/.bin/vitest run --shard="$shard_num/$total_shards" 2>&1
+            exit_code=$?
+        fi
+        set -e
+
+        if [[ $exit_code -eq 0 ]]; then
             echo -e "${GREEN}Shard $shard_num/$total_shards completed${NC}"
             echo ""
             return 0
-        }
+        fi
+
+        # Log timeout/OOM-specific exit codes
+        if [[ $exit_code -eq 124 ]]; then
+            echo -e "${RED}Shard $shard_num timed out after ${shard_timeout}s (possible GC death spiral)${NC}"
+        elif [[ $exit_code -eq 137 ]]; then
+            echo -e "${RED}Shard $shard_num killed (OOM or timeout escalation to SIGKILL)${NC}"
+        fi
 
         retry=$((retry + 1))
         if [ $retry -le $max_retries ]; then
-            echo -e "${YELLOW}Shard failed, will retry with more heap...${NC}"
+            echo -e "${YELLOW}Shard failed (exit=$exit_code), will retry with more heap...${NC}"
             sleep 2
         fi
     done
@@ -306,6 +350,14 @@ while [[ $# -gt 0 ]]; do
             SPECIFIC_SHARD="$2"
             shift 2
             ;;
+        --shard-timeout)
+            if [[ ! "${2:-}" =~ ^[0-9]+$ ]] || [[ "${2:-}" -eq 0 ]]; then
+                echo "ERROR: --shard-timeout must be a positive integer (seconds)"
+                exit 1
+            fi
+            export VITEST_SHARD_TIMEOUT="$2"
+            shift 2
+            ;;
         --count)
             SHARD_COUNT="$2"
             shift 2
@@ -350,6 +402,9 @@ while [[ $# -gt 0 ]]; do
             echo "                   Can combine with --parallel for parallel CI runs"
             echo "                   Heap escalation capped at 6GB in CI mode"
             echo "  --shard N        Run only shard N"
+            echo "  --shard-timeout N  Per-shard timeout in seconds (default: 300)"
+            echo "                   Kills stuck shards (e.g., V8 GC death spirals)"
+            echo "                   Also configurable via VITEST_SHARD_TIMEOUT env var"
             echo "  --count N        Use N total shards (default: $SHARD_COUNT)"
             echo "  -j [N]           Alias for --parallel"
             echo "  --help, -h       Show this help"
@@ -380,6 +435,9 @@ if [[ "${SHARDED_TEST_DRY_RUN:-}" == "1" ]]; then
     echo "DRY_RUN: SHARD_COUNT=$SHARD_COUNT"
     echo "DRY_RUN: PARALLEL_MODE=${PARALLEL_MODE:-}"
     echo "DRY_RUN: CI_MODE=${CI_MODE:-}"
+    echo "DRY_RUN: SHARD_TIMEOUT=${VITEST_SHARD_TIMEOUT:-300}"
+    echo "DRY_RUN: HEAP_SIZE=3072"
+    echo "DRY_RUN: TIMEOUT_CMD=${TIMEOUT_CMD:-none}"
     if [[ -n "${PARALLEL_MODE:-}" ]]; then
         if [[ -z "${PARALLEL_CONCURRENCY:-}" ]]; then
             PARALLEL_CONCURRENCY=$(get_optimal_concurrency)

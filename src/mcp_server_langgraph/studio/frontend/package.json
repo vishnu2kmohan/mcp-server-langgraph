@@ -56,9 +56,9 @@
     "migrate:colors": "python3 scripts/migrate-raw-colors.py",
     "migrate:colors:dry": "python3 scripts/migrate-raw-colors.py --dry-run -v",
     "test:sharded": "bash scripts/run-tests-sharded.sh",
-    "test:shard": "VITEST_MAX_FORKS=1 NODE_OPTIONS='--max-old-space-size=4096 --expose-gc' vitest run",
+    "test:shard": "VITEST_MAX_FORKS=1 NODE_OPTIONS='--max-old-space-size=3072 --expose-gc' vitest run",
     "test:single": "NODE_OPTIONS='--max-old-space-size=8192 --expose-gc' vitest run",
-    "test:ci": "VITEST_HEAP_SIZE=4096 VITEST_MAX_FORKS=1 NODE_OPTIONS='--max-old-space-size=4096 --expose-gc' vitest run",
+    "test:ci": "VITEST_HEAP_SIZE=3072 VITEST_MAX_FORKS=1 NODE_OPTIONS='--max-old-space-size=3072 --expose-gc' vitest run",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

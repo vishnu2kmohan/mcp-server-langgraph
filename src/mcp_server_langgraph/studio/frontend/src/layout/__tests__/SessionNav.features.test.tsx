@@ -1,32 +1,27 @@
 /**
- * SessionNav Tests
+ * SessionNav Features Tests
  *
- * TDD tests for the extracted SessionNav component.
- * Tests session grouping, search, and navigation.
+ * Tests for AI Intelligence, Similar Sessions Integration,
+ * Archive/Restore, and Hover Details.
+ *
+ * Split from SessionNav.test.tsx for memory optimization.
+ * See SessionNav.fixtures.tsx for shared mocks and utilities.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { axe, toHaveNoViolations } from "jest-axe";
 
-expect.extend(toHaveNoViolations);
-import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
-import { MemoryRouter } from "react-router";
-import { SessionNav, groupSessionsByDate } from "./SessionNav";
-import canvasReducer from "../store/slices/canvasSlice";
-import personaReducer from "../store/slices/personaSlice";
-import sessionReducer from "../store/slices/sessionSlice";
-import type { ReactNode } from "react";
-import type { Session } from "../types";
-
+import {
+  mockNavigate,
+  mockSetSearchParams,
+  mockRevalidate,
+  mockSessions,
+  createTestStore,
+  createWrapper,
+} from "./SessionNav.fixtures";
 import { TestProvider } from "@/test-utils";
 
 // Mock navigate and other react-router hooks
-const mockNavigate = vi.fn();
-const mockSetSearchParams = vi.fn();
-const mockRevalidate = vi.fn();
-
 vi.mock("react-router", async () => {
   const actual = await vi.importActual("react-router");
   return {
@@ -49,7 +44,7 @@ vi.mock("react-router", async () => {
 });
 
 // Mock useNewChat hook
-vi.mock("../hooks/useNewChat", () => ({
+vi.mock("../../hooks/useNewChat", () => ({
   useNewChat: () => ({
     createNewChat: vi.fn(),
     isCreating: false,
@@ -57,7 +52,7 @@ vi.mock("../hooks/useNewChat", () => ({
 }));
 
 // Mock useSessionIntelligence hooks (for AISessionCard and SimilarSessionsPanel)
-vi.mock("../hooks/useSessionIntelligence", () => ({
+vi.mock("../../hooks/useSessionIntelligence", () => ({
   useSessionSummary: vi.fn(() => ({
     summary: "Test AI summary for session",
     keyTopics: ["React", "testing"],
@@ -85,189 +80,7 @@ vi.mock("../hooks/useSessionIntelligence", () => ({
   })),
 }));
 
-// Mock sessions
-const mockSessions: Session[] = [
-  {
-    id: "session-1",
-    name: "Today's Chat",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    projectId: "project-1",
-    status: "active",
-  },
-  {
-    id: "session-2",
-    name: "Yesterday's Chat",
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    projectId: "project-1",
-    status: "active",
-  },
-  {
-    id: "session-3",
-    name: "Older Chat",
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    projectId: "project-1",
-    status: "active",
-  },
-];
-
-// Create test store
-function createTestStore() {
-  return configureStore({
-    reducer: {
-      canvas: canvasReducer,
-      persona: personaReducer,
-      session: sessionReducer,
-    },
-  });
-}
-
-// Wrapper component
-function createWrapper(store: ReturnType<typeof createTestStore>) {
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <Provider store={store}>
-        <MemoryRouter>{children}</MemoryRouter>
-      </Provider>
-    );
-  };
-}
-
-describe("SessionNav", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-  });
-
-  describe("rendering", () => {
-    it("should render with data-testid", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      expect(screen.getByTestId("session-nav")).toBeInTheDocument();
-    });
-
-    it("should render new chat button", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      expect(screen.getByTestId("new-chat-button")).toBeInTheDocument();
-    });
-
-    it("should render search input", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      expect(screen.getByTestId("session-search")).toBeInTheDocument();
-    });
-  });
-
-  describe("session grouping", () => {
-    it("should display Today section for today's sessions", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      expect(screen.getByText("Today")).toBeInTheDocument();
-    });
-
-    it("should display Yesterday section for yesterday's sessions", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      expect(screen.getByText("Yesterday")).toBeInTheDocument();
-    });
-
-    it("should display Older section for older sessions", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      expect(screen.getByText("Older")).toBeInTheDocument();
-    });
-  });
-
-  describe("search functionality", () => {
-    it("should filter sessions based on search query", async () => {
-      const user = userEvent.setup();
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      const searchInput = screen.getByTestId("session-search");
-      await user.type(searchInput, "Today");
-
-      // Should show Today's Chat but not others
-      expect(screen.getByText("Today's Chat")).toBeInTheDocument();
-      expect(screen.queryByText("Yesterday's Chat")).not.toBeInTheDocument();
-    });
-
-    it("should show 'No matching sessions' when search has no results", async () => {
-      const user = userEvent.setup();
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      const searchInput = screen.getByTestId("session-search");
-      await user.type(searchInput, "NonexistentSession");
-
-      expect(screen.getByText("No matching sessions")).toBeInTheDocument();
-    });
-  });
-
-  describe("navigation", () => {
-    it("should navigate to session when clicked", async () => {
-      const user = userEvent.setup();
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      const sessionButton = screen.getByText("Today's Chat");
-      await user.click(sessionButton);
-
-      expect(mockNavigate).toHaveBeenCalledWith("/studio/chat/session-1");
-    });
-
-    it("should highlight current session", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      // The session button has the highlight class directly (bg-primary-4 for active sessions)
-      const sessionButton = screen.getByRole("button", {
-        name: "Today's Chat",
-      });
-      expect(sessionButton).toHaveClass("bg-primary-4");
-    });
-  });
-
-  describe("accessibility", () => {
-    it("should have proper ARIA labels", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      const nav = screen.getByTestId("session-nav");
-      expect(nav).toHaveAttribute("aria-label");
-    });
-
-    it("should have placeholder text on search input", () => {
-      const store = createTestStore();
-      render(<SessionNav />, { wrapper: createWrapper(store) });
-
-      const searchInput = screen.getByTestId("session-search");
-      expect(searchInput).toHaveAttribute("placeholder", "Search sessions...");
-    });
-
-    it("should have no accessibility violations", async () => {
-      const store = createTestStore();
-      const { container } = render(<SessionNav />, {
-        wrapper: createWrapper(store),
-      });
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
-    });
-  });
-});
+import { SessionNav } from "../SessionNav";
 
 // =============================================================================
 // AI Session Intelligence Tests (Sprint 2)
@@ -345,250 +158,6 @@ describe("SessionNav AI Intelligence", () => {
     expect(activeCard).toHaveClass("active");
   });
 });
-
-describe("groupSessionsByDate", () => {
-  it("should group today's sessions correctly", () => {
-    const today = new Date();
-    const sessions: Session[] = [
-      {
-        id: "1",
-        name: "Today",
-        createdAt: today.toISOString(),
-        updatedAt: today.toISOString(),
-        projectId: "p1",
-        status: "active",
-      },
-    ];
-
-    const groups = groupSessionsByDate(sessions);
-    expect(groups.today).toHaveLength(1);
-    expect(groups.yesterday).toHaveLength(0);
-    expect(groups.older).toHaveLength(0);
-  });
-
-  it("should group yesterday's sessions correctly", () => {
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const sessions: Session[] = [
-      {
-        id: "1",
-        name: "Yesterday",
-        createdAt: yesterday.toISOString(),
-        updatedAt: yesterday.toISOString(),
-        projectId: "p1",
-        status: "active",
-      },
-    ];
-
-    const groups = groupSessionsByDate(sessions);
-    expect(groups.today).toHaveLength(0);
-    expect(groups.yesterday).toHaveLength(1);
-    expect(groups.older).toHaveLength(0);
-  });
-
-  it("should group older sessions correctly", () => {
-    const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const sessions: Session[] = [
-      {
-        id: "1",
-        name: "Last Week",
-        createdAt: lastWeek.toISOString(),
-        updatedAt: lastWeek.toISOString(),
-        projectId: "p1",
-        status: "active",
-      },
-    ];
-
-    const groups = groupSessionsByDate(sessions);
-    expect(groups.today).toHaveLength(0);
-    expect(groups.yesterday).toHaveLength(0);
-    expect(groups.older).toHaveLength(1);
-  });
-});
-
-describe("SessionNav Inline Editing", () => {
-  let store: ReturnType<typeof createTestStore>;
-
-  beforeEach(() => {
-    store = createTestStore();
-    mockNavigate.mockClear();
-  });
-
-  afterEach(() => {
-    cleanup();
-  });
-
-  it("should enable inline editing when enableEdit prop is true", () => {
-    const Wrapper = createWrapper(store);
-    render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit />
-        </Wrapper>
-      </TestProvider>,
-    );
-
-    // Should show session names that can be edited
-    expect(screen.getByText("Today's Chat")).toBeInTheDocument();
-  });
-
-  it("should navigate to session on single click even with enableEdit=true", async () => {
-    // GIVEN: SessionNav with enableEdit=true
-    const user = userEvent.setup();
-    const Wrapper = createWrapper(store);
-    render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={vi.fn()} />
-        </Wrapper>
-      </TestProvider>,
-    );
-
-    // WHEN: User single-clicks on a session (not the current one)
-    const sessionItem = screen.getByText("Yesterday's Chat");
-    await user.click(sessionItem);
-
-    // THEN: Should navigate to that session (after debounce delay)
-    await waitFor(
-      () => {
-        expect(mockNavigate).toHaveBeenCalledWith("/studio/chat/session-2");
-      },
-      { timeout: 500 },
-    );
-  });
-
-  it("should enter edit mode on double-click when enableEdit=true", async () => {
-    // GIVEN: SessionNav with enableEdit=true
-    const user = userEvent.setup();
-    const mockRename = vi.fn();
-    const Wrapper = createWrapper(store);
-    render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={mockRename} />
-        </Wrapper>
-      </TestProvider>,
-    );
-
-    // WHEN: User double-clicks on a session
-    const sessionItem = screen.getByText("Yesterday's Chat");
-    await user.dblClick(sessionItem);
-
-    // THEN: Should enter edit mode (input field should appear)
-    const editInput = await screen.findByRole("textbox", {
-      name: /rename session/i,
-    });
-    expect(editInput).toBeInTheDocument();
-    expect(editInput).toHaveValue("Yesterday's Chat");
-  });
-
-  it("should NOT navigate on double-click when entering edit mode", async () => {
-    // GIVEN: SessionNav with enableEdit=true
-    const user = userEvent.setup();
-    const Wrapper = createWrapper(store);
-    render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={vi.fn()} />
-        </Wrapper>
-      </TestProvider>,
-    );
-
-    // WHEN: User double-clicks on a session
-    const sessionItem = screen.getByText("Yesterday's Chat");
-    await user.dblClick(sessionItem);
-
-    // Wait for any pending debounce to complete
-    await waitFor(
-      () => {
-        // Should be in edit mode
-        expect(
-          screen.getByRole("textbox", { name: /rename session/i }),
-        ).toBeInTheDocument();
-      },
-      { timeout: 500 },
-    );
-
-    // THEN: Should NOT have navigated (double-click cancels the pending navigation)
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it("should save edited name and exit edit mode on Enter", async () => {
-    // GIVEN: SessionNav in edit mode
-    const user = userEvent.setup();
-    const mockRename = vi.fn();
-    const Wrapper = createWrapper(store);
-    render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={mockRename} />
-        </Wrapper>
-      </TestProvider>,
-    );
-
-    // Enter edit mode via double-click
-    const sessionItem = screen.getByText("Yesterday's Chat");
-    await user.dblClick(sessionItem);
-
-    // WHEN: User types new name and presses Enter
-    const editInput = await screen.findByRole("textbox", {
-      name: /rename session/i,
-    });
-    await user.clear(editInput);
-    await user.type(editInput, "Renamed Session{Enter}");
-
-    // THEN: Should call onRenameSession with new name
-    expect(mockRename).toHaveBeenCalledWith("session-2", "Renamed Session");
-  });
-
-  it("should cancel edit mode on Escape without saving", async () => {
-    // GIVEN: SessionNav in edit mode
-    const user = userEvent.setup();
-    const mockRename = vi.fn();
-    const Wrapper = createWrapper(store);
-    render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={mockRename} />
-        </Wrapper>
-      </TestProvider>,
-    );
-
-    // Enter edit mode via double-click
-    const sessionItem = screen.getByText("Yesterday's Chat");
-    await user.dblClick(sessionItem);
-
-    // WHEN: User presses Escape
-    const editInput = await screen.findByRole("textbox", {
-      name: /rename session/i,
-    });
-    await user.type(editInput, "New Name{Escape}");
-
-    // THEN: Should exit edit mode without calling onRenameSession
-    expect(mockRename).not.toHaveBeenCalled();
-    // Should revert to displaying the original name
-    expect(screen.getByText("Yesterday's Chat")).toBeInTheDocument();
-  });
-
-  it("should show context menu on right-click when enableContextMenu is true", async () => {
-    const _user = userEvent.setup();
-    const Wrapper = createWrapper(store);
-    render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableContextMenu />
-        </Wrapper>
-      </TestProvider>,
-    );
-
-    const sessionButton = screen.getByText("Today's Chat");
-    expect(sessionButton).toBeInTheDocument();
-    // Context menu integration will be tested once wired up
-  });
-});
-
-// =============================================================================
-// Session Hover Details Tests (Sprint Block 4)
-// =============================================================================
 
 // =============================================================================
 // Similar Sessions Panel Integration Tests (Sprint 2)
@@ -866,6 +435,10 @@ describe("SessionNav Archive/Restore", () => {
     });
   });
 });
+
+// =============================================================================
+// Session Hover Details Tests (Sprint Block 4)
+// =============================================================================
 
 describe("SessionNav Hover Details", () => {
   let store: ReturnType<typeof createTestStore>;

@@ -57,6 +57,14 @@ expect.extend(toHaveNoViolations);
 // =============================================================================
 // Take a snapshot at test suite start for overall memory tracking
 beforeAll(() => {
+  // Log the current test file path so that when a worker OOMs or times out,
+  // the last [TEST START] line in the shard log identifies the culprit file.
+  const testPath = expect.getState().testPath;
+  if (testPath) {
+    const relative = testPath.replace(process.cwd() + "/", "");
+    console.log(`[TEST START] ${relative}`);
+  }
+
   memoryMonitor.snapshot("suite-start");
 
   // Also record for CI trend tracking

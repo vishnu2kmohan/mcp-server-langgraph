@@ -98,8 +98,8 @@ const maxWorkers = getOptimalWorkerCount();
 // Heap Size Configuration
 // =============================================================================
 // Get heap size from environment or use adaptive defaults:
-// - CI (7GB runner): 4096MB per worker with 1-2 workers = ~8GB max
-// - Local development: 8192MB per worker
+// - CI (7GB runner): 3072MB per worker with 1-2 workers = ~6GB max
+// - Local development: 3072MB per worker
 //
 // Environment variables:
 //   VITEST_HEAP_SIZE=<MB>  - Explicit heap size in MB
@@ -122,14 +122,14 @@ function getHeapSizeMB(): string {
   const isCI =
     process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
   if (isCI) {
-    return "4096"; // 4GB per worker - safe for 7GB runner with 1 worker
+    return "3072"; // 3GB per worker - fast OOM crash instead of GC spiral in the 3-4GB range
   }
 
   // Priority 4: Local development uses moderate heap
-  // Reduced from 8GB to 4GB to prevent zombie GC-spin processes
-  // when multiple concurrent vitest instances run (e.g., parallel tool calls).
-  // 4GB matches CI and is sufficient for jsdom test files with mocks.
-  return "4096"; // 4GB per worker for local development
+  // Reduced from 4GB to 3GB: with restartWorkersAfter=1, each file rarely
+  // exceeds 1GB. A quick OOM crash (caught by shard-level retry with heap
+  // escalation) is far better than a 3-hour V8 GC death spiral.
+  return "3072"; // 3GB per worker - fast OOM crash instead of GC spiral
 }
 
 const heapSizeMB = getHeapSizeMB();
@@ -206,18 +206,21 @@ export default defineConfig({
     // Limit concurrent tests within a single file to reduce memory pressure
     maxConcurrency: 5,
 
-    // Restart workers after running this many tests to prevent memory accumulation
-    // This helps prevent OOM by recycling workers with fresh heap
-    // Optimized from 1 to 3: Still safe with 4GB heap, but 3x less overhead
-    // Memory calculation: 3 files × 400MB avg = 1.2GB max, well within 4GB limit
+    // Restart after every test file to prevent heap accumulation.
+    // Reduced from 3 to 1: with 3GB heap, even 2 heavy tests (800MB+ each)
+    // can trigger V8 GC death spirals in the 2.5-3GB range.
+    // Override with VITEST_RESTART_AFTER=N for local experimentation.
     restartWorkers: true,
-    restartWorkersAfter: 3, // Restart after 3 test files (balance of safety + speed)
+    restartWorkersAfter: parseInt(process.env.VITEST_RESTART_AFTER ?? "1", 10),
 
     // Teardown timeout - give workers time to clean up gracefully
     teardownTimeout: 10000, // Increased from 5s to 10s for GC time
 
-    // Retry flaky tests once
-    retry: 1,
+    // Retry flaky tests once in interactive/non-sharded mode.
+    // In sharded mode (VITEST_SHARDED=1), disable vitest-level retry because
+    // the sharding script already retries at the shard level with heap escalation.
+    // Retrying in a memory-pressured worker makes GC death spirals worse.
+    retry: process.env.VITEST_SHARDED === "1" ? 0 : 1,
 
     // Don't silence output
     silent: false,

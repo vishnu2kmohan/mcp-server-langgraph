@@ -1,43 +1,41 @@
 /**
- * UnifiedMessageList Tests (Enhanced v3)
+ * UnifiedMessageList Features Tests
  *
- * Tests for the consolidated message rendering component (ADR-0104).
- * Uses Vitest for mocking and includes scrollIntoView stubs.
+ * Tests for: Source Citations, LLM Thinking Traces, ResponseRating,
+ *            Token Usage, Confidence Indicator, Hallucination Reporting,
+ *            Per-Message Agent Traces, Avatars, Follow-up Suggestions,
+ *            Accessibility (axe-core)
  */
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { UnifiedMessageList } from "./UnifiedMessageList";
-import type { ChatMessage } from "../types/session";
 
 import { TestProvider } from "@/test-utils";
+import {
+  createMockMessage,
+  mockClipboard,
+} from "./UnifiedMessageList.fixtures";
 
 expect.extend(toHaveNoViolations);
 
 // =============================================================================
-// Mocks
+// Global mocks
 // =============================================================================
-
-// Mock clipboard
-const mockClipboard = {
-  writeText: vi.fn().mockResolvedValue(undefined),
-};
 Object.assign(navigator, { clipboard: mockClipboard });
-
-// Mock scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();
-
-// Mock requestAnimationFrame
 global.requestAnimationFrame = vi.fn((cb) => {
   cb(0);
   return 0;
 });
 global.cancelAnimationFrame = vi.fn();
 
-// Mock the TelemetryContext
-vi.mock("../contexts/TelemetryContext", () => ({
+// =============================================================================
+// vi.mock() calls - paths adjusted for __tests__/ depth
+// =============================================================================
+
+vi.mock("../../contexts/TelemetryContext", () => ({
   TelemetryProvider: ({ children }: { children: React.ReactNode }) => children,
   useSessionTelemetry: () => ({
     trackSessionCreation: vi.fn(),
@@ -48,7 +46,6 @@ vi.mock("../contexts/TelemetryContext", () => ({
   }),
 }));
 
-// Mock heavy components
 vi.mock("@/components/Chat/MarkdownContent", () => ({
   MarkdownContent: ({ content }: { content: string }) => (
     <div data-testid="markdown-content">{content}</div>
@@ -203,19 +200,7 @@ vi.mock("@/components/EmptyState/AIEmptyState", () => ({
   AIEmptyState: () => <div data-testid="ai-empty-state">No messages yet</div>,
 }));
 
-// =============================================================================
-// Test Data
-// =============================================================================
-
-const createMockMessage = (
-  overrides: Partial<ChatMessage> = {},
-): ChatMessage => ({
-  id: `msg-${Math.random().toString(36).slice(2, 11)}`,
-  role: "user",
-  content: "Hello, world!",
-  timestamp: Date.now(),
-  ...overrides,
-});
+import { UnifiedMessageList } from "../UnifiedMessageList";
 
 // =============================================================================
 // Tests
@@ -229,262 +214,6 @@ describe("UnifiedMessageList", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
-  });
-
-  describe("Basic Rendering", () => {
-    it("should render without crashing", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={[]} showEmptyState={false} />
-        </TestProvider>,
-      );
-      expect(screen.getByTestId("unified-message-list")).toBeInTheDocument();
-    });
-
-    it("should render user messages", () => {
-      const messages = [createMockMessage({ role: "user", content: "Hello" })];
-
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={messages} />
-        </TestProvider>,
-      );
-      expect(screen.getByText("Hello")).toBeInTheDocument();
-    });
-
-    it("should render assistant messages", () => {
-      const messages = [
-        createMockMessage({ role: "assistant", content: "Hi there!" }),
-      ];
-
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={messages} />
-        </TestProvider>,
-      );
-      expect(screen.getByText("Hi there!")).toBeInTheDocument();
-    });
-
-    it("should render multiple messages in order", () => {
-      const messages = [
-        createMockMessage({ role: "user", content: "First message" }),
-        createMockMessage({ role: "assistant", content: "Second message" }),
-        createMockMessage({ role: "user", content: "Third message" }),
-      ];
-
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={messages} />
-        </TestProvider>,
-      );
-
-      expect(screen.getByText("First message")).toBeInTheDocument();
-      expect(screen.getByText("Second message")).toBeInTheDocument();
-      expect(screen.getByText("Third message")).toBeInTheDocument();
-    });
-  });
-
-  describe("Auto-Scroll", () => {
-    it("should scroll when new message arrives", async () => {
-      const { rerender } = render(
-        <TestProvider>
-          <UnifiedMessageList messages={[]} showEmptyState={false} />
-        </TestProvider>,
-      );
-
-      rerender(
-        <UnifiedMessageList
-          messages={[createMockMessage({ content: "Hello" })]}
-        />,
-      );
-
-      await waitFor(() => {
-        expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
-      });
-    });
-
-    it("should not scroll when isScrolledUp=true", () => {
-      vi.clearAllMocks();
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[createMockMessage({ content: "Hello" })]}
-            isScrolledUp={true}
-          />
-        </TestProvider>,
-      );
-
-      expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
-    });
-
-    it("should use content length as dependency during streaming", async () => {
-      const { rerender } = render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[
-              createMockMessage({
-                id: "streaming-message",
-                role: "assistant",
-                content: "Hello",
-                isStreaming: true,
-              }),
-            ]}
-            isStreaming={true}
-          />
-        </TestProvider>,
-      );
-
-      vi.clearAllMocks();
-
-      rerender(
-        <UnifiedMessageList
-          messages={[
-            createMockMessage({
-              id: "streaming-message",
-              role: "assistant",
-              content: "Hello, world!", // Content grew
-              isStreaming: true,
-            }),
-          ]}
-          isStreaming={true}
-        />,
-      );
-
-      await waitFor(() => {
-        expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe("Streaming", () => {
-    it("should show streaming cursor for streaming messages", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[
-              createMockMessage({
-                id: "streaming-message",
-                role: "assistant",
-                content: "Thinking...",
-                isStreaming: true,
-              }),
-            ]}
-            isStreaming={true}
-          />
-        </TestProvider>,
-      );
-
-      expect(screen.getByLabelText("Generating response")).toBeInTheDocument();
-    });
-
-    it("should show typing indicator when streaming with no content", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[]}
-            isStreaming={true}
-            showEmptyState={false}
-          />
-        </TestProvider>,
-      );
-
-      expect(screen.getByTestId("typing-indicator")).toBeInTheDocument();
-    });
-
-    it("should not show typing indicator when streaming message has content", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[
-              createMockMessage({
-                role: "assistant",
-                content: "Some content",
-                isStreaming: true,
-              }),
-            ]}
-            isStreaming={true}
-          />
-        </TestProvider>,
-      );
-
-      expect(screen.queryByTestId("typing-indicator")).not.toBeInTheDocument();
-    });
-
-    it("should show processing indicator for empty streaming message", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[
-              createMockMessage({
-                role: "assistant",
-                content: "",
-                isStreaming: true,
-              }),
-            ]}
-            isStreaming={true}
-          />
-        </TestProvider>,
-      );
-
-      expect(screen.getByText("Processing...")).toBeInTheDocument();
-    });
-  });
-
-  describe("Loading State", () => {
-    it("should show loading indicator when isLoading is true and not streaming", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[createMockMessage()]}
-            isLoading={true}
-            isStreaming={false}
-          />
-        </TestProvider>,
-      );
-      expect(screen.getByText("Processing...")).toBeInTheDocument();
-    });
-  });
-
-  describe("Empty State", () => {
-    it("should show empty state when no messages", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={[]} showEmptyState />
-        </TestProvider>,
-      );
-      expect(screen.getByTestId("ai-empty-state")).toBeInTheDocument();
-    });
-
-    it("should not show empty state when there are messages", () => {
-      const messages = [createMockMessage()];
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={messages} showEmptyState />
-        </TestProvider>,
-      );
-      expect(screen.queryByTestId("ai-empty-state")).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Accessibility", () => {
-    it("should have a role of log for screen readers", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={[]} showEmptyState={false} />
-        </TestProvider>,
-      );
-      expect(screen.getByRole("log")).toBeInTheDocument();
-    });
-
-    it("should have aria-live polite for new messages", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={[]} showEmptyState={false} />
-        </TestProvider>,
-      );
-      const list = screen.getByTestId("unified-message-list");
-      expect(list).toHaveAttribute("aria-live", "polite");
-    });
   });
 
   describe("Source Citations", () => {
@@ -797,40 +526,6 @@ describe("UnifiedMessageList", () => {
     });
   });
 
-  describe("Scroll-to-Bottom Button", () => {
-    it("should show scroll button when isScrolledUp", () => {
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[createMockMessage()]}
-            isScrolledUp
-            onScrollToBottom={() => {}}
-          />
-        </TestProvider>,
-      );
-
-      expect(screen.getByLabelText("Scroll to bottom")).toBeInTheDocument();
-    });
-
-    it("should call onScrollToBottom when clicked", async () => {
-      const user = userEvent.setup();
-      const onScrollToBottom = vi.fn();
-
-      render(
-        <TestProvider>
-          <UnifiedMessageList
-            messages={[createMockMessage()]}
-            isScrolledUp
-            onScrollToBottom={onScrollToBottom}
-          />
-        </TestProvider>,
-      );
-
-      await user.click(screen.getByLabelText("Scroll to bottom"));
-      expect(onScrollToBottom).toHaveBeenCalled();
-    });
-  });
-
   describe("Follow-up Suggestions", () => {
     it("should render follow-up suggestions when provided", () => {
       const suggestions = [
@@ -892,42 +587,8 @@ describe("UnifiedMessageList", () => {
     });
   });
 
-  describe("CVA Variants", () => {
-    it("should apply user message styles", () => {
-      const messages = [
-        createMockMessage({ id: "user-msg", role: "user", content: "Hello" }),
-      ];
-
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={messages} />
-        </TestProvider>,
-      );
-      const messageRow = screen.getByTestId("message-user-msg");
-      expect(messageRow).toHaveClass("justify-end");
-    });
-
-    it("should apply assistant message styles", () => {
-      const messages = [
-        createMockMessage({
-          id: "assistant-msg",
-          role: "assistant",
-          content: "Hi",
-        }),
-      ];
-
-      render(
-        <TestProvider>
-          <UnifiedMessageList messages={messages} />
-        </TestProvider>,
-      );
-      const messageRow = screen.getByTestId("message-assistant-msg");
-      expect(messageRow).toHaveClass("justify-start");
-    });
-  });
-
   // ===========================================================================
-  // Accessibility Tests
+  // Accessibility Tests (axe-core)
   // ===========================================================================
 
   describe("Accessibility", () => {
