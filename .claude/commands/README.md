@@ -1,9 +1,10 @@
 ---
-purpose: Index and guide for project-specific slash commands
+purpose: Index and guide for project-specific slash commands and skills
 priority: high
 category: commands
 command-count: 24
-last-updated: 2026-02-12
+skill-count: 15
+last-updated: 2026-02-13
 ---
 
 # Claude Code Slash Commands
@@ -13,6 +14,12 @@ This directory contains 24 project-specific slash commands. Generic commands (be
 > **Note**: Some commands have been migrated to user-level skills (`~/.claude/skills/`).
 > Skills include: `/explore-codebase`, `/code-review`, `/plan-review`, `/plan-status`,
 > `/ci-status`, `/coverage-gaps`, `/docs-audit`, `/knowledge-search`, `/troubleshoot`, `/test-status`.
+
+> **Progressive Disclosure**: 15 commands have been converted to project-level skills
+> at `.claude/skills/*/SKILL.md` with `references/` subdirectories for detailed content.
+> The original command files remain as thin stubs that carry `allowed-tools` and safety
+> controls (e.g., `disable-model-invocation`). Commands still work via `/command-name` —
+> the stub delegates to the skill. Migrated commands are marked with ⇒ below.
 
 ---
 
@@ -24,7 +31,7 @@ Essential commands for daily development tasks:
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/fix-mypy` | Systematic MyPy error fixing | When you have type checking errors |
+| `/fix-mypy` ⇒ | Systematic MyPy error fixing | When you have type checking errors |
 | `/plan-feature` | Feature planning with deep thinking | Before implementing new features |
 | `/tdd` | TDD workflow (Red-Green-Refactor) | When implementing with test-first approach |
 | `/create-test` | Generate test file from template | When creating tests for new modules |
@@ -42,14 +49,14 @@ Comprehensive testing and quality assurance tools:
 |---------|---------|-------|-------------|
 | `/test-summary [scope]` | Comprehensive test analysis | ~2 min | Before committing, daily standup |
 | `/test-all` | Run complete test suite | ~10 min | Pre-commit, pre-deploy |
-| `/test-fast [mode]` | Fast test iteration (40-70% faster) | ~15s | Active development, TDD cycles |
+| `/test-fast [mode]` ⇒ | Fast test iteration (40-70% faster) | ~15s | Active development, TDD cycles |
 | `/verify-tests` | Pre-commit test verification | ~9 min | Before committing/pushing |
-| `/test-failure-analysis` | Deep failure analysis | ~3 min | When tests fail unexpectedly |
+| `/test-failure-analysis` ⇒ | Deep failure analysis | ~3 min | When tests fail unexpectedly |
 | `/benchmark` | Performance benchmarks + trends | ~5 min | After performance changes |
-| `/security-scan-report` | Security scanning | ~10 min | Pre-release, weekly |
-| `/coverage-trend` | Coverage trend analysis | ~2 min | Sprint retrospectives |
-| `/improve-coverage [%]` | Generate coverage improvement plan | ~3 min | Working toward 80% coverage |
-| `/type-safety-status` | MyPy strict rollout tracker | ~2 min | Type safety migration sprints |
+| `/security-scan-report` ⇒ | Security scanning | ~10 min | Pre-release, weekly |
+| `/coverage-trend` ⇒ | Coverage trend analysis | ~2 min | Sprint retrospectives |
+| `/improve-coverage [%]` ⇒ | Generate coverage improvement plan | ~3 min | Working toward 80% coverage |
+| `/type-safety-status` ⇒ | MyPy strict rollout tracker | ~2 min | Type safety migration sprints |
 
 **Most Used**: `/test-summary`, `/test-fast`, `/coverage-gaps` (skill)
 
@@ -63,7 +70,7 @@ AI-assisted debugging and problem-solving:
 
 | Command | Purpose | AI Systems | When to Use |
 |---------|---------|------------|-------------|
-| `/quick-debug [error]` | Fast AI-assisted debugging | Claude | **First response** to simple errors |
+| `/quick-debug [error]` ⇒ | Fast AI-assisted debugging | Claude | **First response** to simple errors |
 | `/debug-auth` | Authentication debugging | Claude | Login/permission issues |
 | `/validate` | Run all validations | Claude | Comprehensive health check |
 
@@ -80,7 +87,7 @@ Continuous integration and deployment workflows:
 | `/pr-checks [number]` | PR validation summary | Before requesting reviews |
 | `/review-pr` | PR review checklist | When reviewing PRs |
 | `/deploy-dev` | Development deployment | Deploying to dev environment |
-| `/deploy` | Production deployment | Production releases |
+| `/deploy` ⇒ | Production deployment | Production releases |
 
 **Best Practice**: Check `/plan-status` (skill) before `/code-review` (skill), check `/ci-status` (skill) before pushing
 
@@ -96,13 +103,13 @@ Sprint planning, tracking, and documentation:
 
 | Command | Purpose | Time Saved | When to Use |
 |---------|---------|------------|-------------|
-| `/start-sprint <type>` | Sprint initialization | 20 min | Start of sprint |
-| `/progress-update` | Progress tracking | 15 min | End of day, standups |
-| `/todo-status` | TODO burndown with velocity | 5 min | Checking sprint progress |
-| `/release-prep <version>` | Release preparation checklist | 30 min | Pre-release |
+| `/start-sprint <type>` ⇒ | Sprint initialization | 20 min | Start of sprint |
+| `/progress-update` ⇒ | Progress tracking | 15 min | End of day, standups |
+| `/todo-status` ⇒ | TODO burndown with velocity | 5 min | Checking sprint progress |
+| `/release-prep <version>` ⇒ | Release preparation checklist | 30 min | Pre-release |
 | `/fix-issue <number>` | GitHub issue fixing workflow | 10 min | Working on specific issues |
 | `/create-adr` | Create Architecture Decision Record | 40 min | Documenting technical decisions |
-| `/analytics` | Usage + ROI dashboard | 5 min | Measuring workflow efficiency |
+| `/analytics` ⇒ | Usage + ROI dashboard | 5 min | Measuring workflow efficiency |
 
 **Most Used**: `/start-sprint`, `/progress-update`, `/create-adr`
 
@@ -131,7 +138,7 @@ Environment setup and infrastructure:
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
 | `/setup-env` | Environment setup checklist | First-time setup, onboarding |
-| `/db-operations` | Database operations guide | Database migrations, debugging |
+| `/db-operations` ⇒ | Database operations guide | Database migrations, debugging |
 | `/cleanup-worktrees` | Manage and cleanup git worktrees | After sessions, weekly cleanup |
 
 ---
@@ -329,23 +336,51 @@ ls .claude/commands/ | grep <command-name>
 When adding new slash commands:
 
 1. **Use the naming convention**: `verb-noun` (e.g., `create-test`, `fix-issue`)
-2. **Include usage examples**: Show command syntax with parameters
-3. **Document prerequisites**: List required services, files, or setup
-4. **Specify time/performance**: Indicate expected execution time
-5. **Add to this README**: Update relevant category section
-6. **Test thoroughly**: Verify command works in different scenarios
+2. **Include `allowed-tools`**: Scope to minimum required tools (e.g., `Bash(uv:*)`, `Read`, `Glob`)
+3. **Add `disable-model-invocation: true`** for commands with side effects (deploy, db ops, cleanup)
+4. **Include usage examples**: Show command syntax with parameters
+5. **Document prerequisites**: List required services, files, or setup
+6. **Add to this README**: Update relevant category section
+7. **Test thoroughly**: Verify command works in different scenarios
+
+### Skill Migration Pattern
+
+Commands over ~300 lines should use the progressive disclosure pattern:
+
+```
+.claude/skills/<command-name>/
+├── SKILL.md            # Core workflow (~100-200 lines)
+└── references/
+    ├── detail-1.md     # Extracted reference material
+    └── detail-2.md     # Loaded on-demand, not upfront
+```
+
+The original `.claude/commands/<command-name>.md` becomes a thin stub with full frontmatter:
+```yaml
+---
+description: ...
+allowed-tools: [...]
+disable-model-invocation: true  # if applicable
+---
+See skill: `.claude/skills/<command-name>/SKILL.md`
+```
+
+Commands marked with ⇒ in the tables above follow this pattern.
 
 ---
 
 ## Additional Resources
 
 - **Global Commands**: `~/.claude/commands/` - Generic commands available in all projects
+- **Project Skills**: `.claude/skills/` - 15 migrated commands with progressive disclosure
+- **Root Skills**: `skills/` - 9 agentskills.io-compliant skills (code-review, security-scan, etc.)
 - **Context Files**: `.claude/context/` - Living documentation (auto-updated)
 - **Memory Files**: `.claude/memory/` - Persistent guidance and error prevention
 - **Global Reference**: `~/.claude/CLAUDE.md` - Global docs index
 
 ---
 
-**Last Updated**: 2026-02-12
-**Command Count**: 24 project-specific commands
+**Last Updated**: 2026-02-13
+**Command Count**: 24 project-specific commands (15 migrated to skills with stubs ⇒)
+**Skill Count**: 15 project skills (`.claude/skills/`) + 9 root skills (`skills/`)
 **Maintained By**: Automated via Claude Code optimization framework
