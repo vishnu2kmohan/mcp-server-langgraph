@@ -1,21 +1,24 @@
 ---
 name: gdpr-audit
-version: 1.0.0
-description: GDPR compliance audit and data protection assessment
-category: compliance
-author: Emergence AI
-dependencies:
+description: GDPR compliance audit and data protection assessment. Use when auditing code or systems for GDPR/EU-AI-Act compliance.
+allowed-tools:
+- Read
+- Glob
+- Grep
+compatibility: Requires pydantic>=2.0.0. No network access needed.
+metadata:
+  version: 1.0.0
+  category: compliance
+  author: Emergence AI
+  dependencies:
   - pydantic>=2.0.0
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
-optional_secrets: []
-compliance_frameworks:
+  sandbox_config:
+    network: none
+    filesystem: readonly
+  compliance_frameworks:
   - GDPR
   - EU-AI-Act
 ---
-
 # GDPR Audit Skill
 
 Comprehensive GDPR (General Data Protection Regulation) compliance audit skill for assessing data protection practices and identifying compliance gaps.

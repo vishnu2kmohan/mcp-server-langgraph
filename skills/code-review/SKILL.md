@@ -1,20 +1,24 @@
 ---
 name: code-review
-version: 1.0.0
-description: Automated code review with best practices and security analysis
-category: devops
-author: Emergence AI
-dependencies:
+description: Automated code review with best practices and security analysis. Use when reviewing code for security, quality, and performance issues.
+allowed-tools:
+- Read
+- Glob
+- Grep
+compatibility: Requires pygments>=2.17.0, tree-sitter>=0.20.0. No network access needed.
+metadata:
+  version: 1.0.0
+  category: devops
+  author: Emergence AI
+  dependencies:
   - pygments>=2.17.0
   - tree-sitter>=0.20.0
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
-optional_secrets:
+  sandbox_config:
+    network: none
+    filesystem: readonly
+  optional_secrets:
   - GITHUB_TOKEN
 ---
-
 # Code Review Skill
 
 Automated code review skill that analyzes code for best practices, potential bugs, security vulnerabilities, and maintainability issues.

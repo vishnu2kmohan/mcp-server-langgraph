@@ -1,20 +1,23 @@
 ---
 name: deployment
-version: 1.0.0
-description: CI/CD automation and deployment workflow management
-category: devops
-author: Emergence AI
-dependencies: []
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
-optional_secrets:
+description: CI/CD automation and deployment workflow management. Use when automating deployment pipelines or managing release processes.
+allowed-tools:
+- Read
+- Glob
+- Grep
+compatibility: No specific dependencies required.
+metadata:
+  version: 1.0.0
+  category: devops
+  author: Emergence AI
+  sandbox_config:
+    network: none
+    filesystem: readonly
+  optional_secrets:
   - GITHUB_TOKEN
   - AWS_ACCESS_KEY_ID
   - GCP_SERVICE_ACCOUNT
 ---
-
 # Deployment Skill
 
 Automate CI/CD workflows and deployment processes.

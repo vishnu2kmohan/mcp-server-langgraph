@@ -1,18 +1,22 @@
 ---
 name: document-analysis
-version: 1.0.0
-description: Analyze and summarize documents with key insights extraction
-category: research
-author: Emergence AI
-dependencies:
+description: Analyze and summarize documents with key insights extraction. Use when processing PDFs, DOCX, or other document formats for structured data extraction.
+allowed-tools:
+- Read
+- Glob
+- Grep
+compatibility: Requires pypdf>=4.0.0, python-docx>=1.0.0. No network access needed.
+metadata:
+  version: 1.0.0
+  category: research
+  author: Emergence AI
+  dependencies:
   - pypdf>=4.0.0
   - python-docx>=1.0.0
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
+  sandbox_config:
+    network: none
+    filesystem: readonly
 ---
-
 # Document Analysis Skill
 
 Extract key insights, summaries, and structured data from various document formats.

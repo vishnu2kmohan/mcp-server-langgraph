@@ -1,17 +1,22 @@
 ---
 name: test-generation
-version: 1.0.0
-description: Generate comprehensive test suites using TDD principles
-category: devops
-author: Emergence AI
-dependencies:
+description: Generate comprehensive test suites using TDD principles. Use when creating test scaffolding, test stubs, or full test implementations.
+allowed-tools:
+- Read
+- Glob
+- Grep
+- Write
+compatibility: Requires pytest>=8.0.0. No network access needed.
+metadata:
+  version: 1.0.0
+  category: devops
+  author: Emergence AI
+  dependencies:
   - pytest>=8.0.0
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
+  sandbox_config:
+    network: none
+    filesystem: readonly
 ---
-
 # Test Generation Skill
 
 Generate comprehensive test suites following Test-Driven Development (TDD) principles.

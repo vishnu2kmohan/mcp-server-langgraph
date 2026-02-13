@@ -1,19 +1,22 @@
 ---
 name: hipaa-audit
-version: 1.0.0
-description: HIPAA compliance audit for healthcare data protection
-category: compliance
-author: Emergence AI
-dependencies: []
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
-compliance_frameworks:
+description: HIPAA compliance audit for healthcare data protection. Use when assessing PHI handling and HIPAA/HITECH compliance.
+allowed-tools:
+- Read
+- Glob
+- Grep
+compatibility: No specific dependencies required.
+metadata:
+  version: 1.0.0
+  category: compliance
+  author: Emergence AI
+  sandbox_config:
+    network: none
+    filesystem: readonly
+  compliance_frameworks:
   - HIPAA
   - HITECH
 ---
-
 # HIPAA Audit Skill
 
 Comprehensive HIPAA compliance audit for assessing Protected Health Information (PHI) handling.

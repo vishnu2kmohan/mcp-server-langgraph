@@ -1,18 +1,22 @@
 ---
 name: security-scan
-version: 1.0.0
-description: Automated security vulnerability scanning and assessment
-category: compliance
-author: Emergence AI
-dependencies:
+description: Automated security vulnerability scanning and assessment. Use when scanning code for vulnerabilities, dependency issues, or security misconfigurations.
+allowed-tools:
+- Read
+- Glob
+- Grep
+compatibility: Requires bandit>=1.7.0, safety>=2.0.0. No network access needed.
+metadata:
+  version: 1.0.0
+  category: compliance
+  author: Emergence AI
+  dependencies:
   - bandit>=1.7.0
   - safety>=2.0.0
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
+  sandbox_config:
+    network: none
+    filesystem: readonly
 ---
-
 # Security Scan Skill
 
 Automated security vulnerability scanning for codebases and dependencies.

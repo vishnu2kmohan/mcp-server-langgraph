@@ -1,17 +1,21 @@
 ---
 name: data-synthesis
-version: 1.0.0
-description: Synthesize information from multiple sources into coherent reports
-category: research
-author: Emergence AI
-dependencies:
+description: Synthesize information from multiple sources into coherent reports. Use when combining data from various inputs into structured summaries.
+allowed-tools:
+- Read
+- Glob
+- Grep
+compatibility: Requires pandas>=2.0.0. No network access needed.
+metadata:
+  version: 1.0.0
+  category: research
+  author: Emergence AI
+  dependencies:
   - pandas>=2.0.0
-sandbox_config:
-  network: none
-  filesystem: readonly
-required_secrets: []
+  sandbox_config:
+    network: none
+    filesystem: readonly
 ---
-
 # Data Synthesis Skill
 
 Combine and synthesize information from multiple sources into coherent, well-structured reports.

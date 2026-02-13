@@ -1,27 +1,33 @@
 ---
 name: web-research
-version: 1.0.0
-description: Research topics using web search and summarization
-category: research
-author: Emergence AI
-dependencies:
+description: Research topics using web search and summarization. Use when gathering information from web sources, academic papers, or documentation.
+allowed-tools:
+- Read
+- Glob
+- Grep
+- WebSearch
+- WebFetch
+compatibility: 'Requires beautifulsoup4>=4.12.0, httpx>=0.25.0, readability-lxml>=0.8.0. Network access: allowlist (google, wikipedia, arxiv, github, stackoverflow).'
+metadata:
+  version: 1.0.0
+  category: research
+  author: Emergence AI
+  dependencies:
   - beautifulsoup4>=4.12.0
   - httpx>=0.25.0
   - readability-lxml>=0.8.0
-sandbox_config:
-  network: allowlist
-  allowed_domains:
-    - "*.google.com"
-    - "*.wikipedia.org"
-    - "*.arxiv.org"
-    - "*.github.com"
-    - "*.stackoverflow.com"
-required_secrets: []
-optional_secrets:
+  sandbox_config:
+    network: allowlist
+    allowed_domains:
+    - '*.google.com'
+    - '*.wikipedia.org'
+    - '*.arxiv.org'
+    - '*.github.com'
+    - '*.stackoverflow.com'
+  optional_secrets:
   - SERPAPI_KEY
   - GOOGLE_SEARCH_API_KEY
 ---
-
 # Web Research Skill
 
 A comprehensive web research skill for gathering information, synthesizing findings, and producing research summaries.
