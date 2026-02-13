@@ -127,4 +127,17 @@ Production LangGraph agent with:
 
 ---
 
+## Task Management
+
+Use beads for structured task tracking:
+- `bd ready` -- find next task
+- `bd show <id>` -- task details
+- `bd compact` -- summarize closed tasks
+
+Use gastown for multi-agent coordination:
+- `gt convoy list` -- check agent progress
+- Reference `.ai/CORE.md` for project conventions
+
+---
+
 **See `.ai/CORE.md` for complete instructions.**

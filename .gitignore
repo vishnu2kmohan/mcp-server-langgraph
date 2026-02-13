@@ -233,6 +233,10 @@ _site/
 .ai/*
 !.ai/CORE.md
 !.ai/README.md
+!.ai/build-agents.sh
+!.ai/check-sync.sh
+!.ai/test_build_agents.sh
+!.ai/test_check_sync.sh
 .openai/
 .cursor/
 .mcp.json
