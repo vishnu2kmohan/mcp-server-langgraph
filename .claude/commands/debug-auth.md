@@ -1,5 +1,14 @@
 ---
-description: Comprehensive authentication and authorization debugging workflow.
+description: Debug authentication and authorization issues across Keycloak, OpenFGA, and DPoP. Use when encountering login failures, permission errors, or token issues.
+allowed-tools:
+  - Bash(uv:*)
+  - Bash(docker logs:*)
+  - Bash(docker ps:*)
+  - Bash(docker exec:*)
+  - Bash(curl:*)
+  - Read
+  - Glob
+  - Grep
 ---
 # Debug Authentication Issues
 

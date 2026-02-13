@@ -1,5 +1,12 @@
 ---
-description: Manually refresh Claude Code context files from current repository state
+description: Refresh Claude Code context files from current repository state. Use when context feels stale or after significant repository changes.
+allowed-tools:
+  - Bash(git:*)
+  - Bash(uv:*)
+  - Read
+  - Glob
+  - Grep
+  - Write
 ---
 # Refresh Context Files
 

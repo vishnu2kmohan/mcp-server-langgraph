@@ -1,5 +1,12 @@
 ---
-description: Manage and cleanup git worktrees created for Claude Code sessions.
+description: Manage and cleanup git worktrees created for Claude Code sessions. Use after sessions complete or for weekly maintenance.
+allowed-tools:
+  - Bash(git worktree list:*)
+  - Bash(git branch --list:*)
+  - Bash(git branch -a:*)
+  - Read
+  - Glob
+disable-model-invocation: true
 ---
 # Cleanup Git Worktrees
 

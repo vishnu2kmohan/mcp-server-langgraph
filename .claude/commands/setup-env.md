@@ -1,5 +1,15 @@
 ---
-description: Execute the complete development environment setup from scratch.
+description: Set up the complete development environment from scratch. Use for first-time setup or onboarding new developers.
+allowed-tools:
+  - Bash(uv:*)
+  - Bash(npm:*)
+  - Bash(docker build:*)
+  - Bash(docker pull:*)
+  - Bash(make:*)
+  - Read
+  - Glob
+  - Grep
+disable-model-invocation: true
 ---
 # Complete Environment Setup
 

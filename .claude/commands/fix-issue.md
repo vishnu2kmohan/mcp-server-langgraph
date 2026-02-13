@@ -1,6 +1,14 @@
 ---
-description: Automated workflow for debugging and fixing GitHub issues.
+description: Automated workflow for debugging and fixing GitHub issues. Use when working on a specific GitHub issue by number.
 argument-hint: <issue-number>
+allowed-tools:
+  - Bash(gh:*)
+  - Bash(uv:*)
+  - Bash(git:*)
+  - Read
+  - Glob
+  - Grep
+  - Edit
 ---
 # Fix Issue Workflow
 

@@ -1,5 +1,10 @@
 ---
-description: Execute comprehensive code quality checks to ensure code passes all lint validations before commit/p
+description: Run comprehensive code quality checks (ruff, mypy, eslint). Use before committing or pushing to ensure code passes all lint validations.
+allowed-tools:
+  - Bash(uv:*)
+  - Read
+  - Glob
+  - Grep
 ---
 # Run Comprehensive Lint Checks
 

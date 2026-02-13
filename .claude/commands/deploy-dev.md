@@ -1,5 +1,17 @@
 ---
-description: Execute the complete development deployment workflow.
+description: Deploy to the development environment with Docker build and kubectl. Use when testing changes in a dev Kubernetes cluster.
+allowed-tools:
+  - Bash(docker build:*)
+  - Bash(docker push:*)
+  - Bash(kubectl get:*)
+  - Bash(kubectl describe:*)
+  - Bash(kubectl logs:*)
+  - Bash(make:*)
+  - Read
+  - Glob
+  - Grep
+disable-model-invocation: true
+context: fork
 ---
 # Deploy to Development Environment
 

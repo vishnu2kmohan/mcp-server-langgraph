@@ -1,5 +1,13 @@
 ---
-description: Execute comprehensive validation of all deployment configurations and schemas.
+description: Validate all deployment configurations, schemas, and infrastructure health. Use before deploying or as a comprehensive health check.
+allowed-tools:
+  - Bash(uv:*)
+  - Bash(docker ps:*)
+  - Bash(docker inspect:*)
+  - Bash(make:*)
+  - Read
+  - Glob
+  - Grep
 ---
 # Run All Validations
 

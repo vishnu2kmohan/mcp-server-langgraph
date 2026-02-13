@@ -1,5 +1,10 @@
 ---
-description: Execute the comprehensive test suite for the MCP Server LangGraph project.
+description: Run the complete test suite including unit, integration, and frontend tests. Use before deploying or as pre-push validation.
+allowed-tools:
+  - Bash(uv:*)
+  - Bash(npm:*)
+  - Bash(make:*)
+  - Read
 ---
 # Run Complete Test Suite
 
