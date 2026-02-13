@@ -142,36 +142,6 @@
             "timeout": 30
           }
         ]
-      },
-      {
-        "matcher": "Bash(**git pull**)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "git status | grep -q 'both modified' && echo '⚠️  Merge conflicts detected! Run: git status' || true",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Bash(**git checkout**)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '📍 Branch: '$(git branch --show-current) && git status --short",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Bash(**git merge**)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "git diff --name-only --diff-filter=U 2>/dev/null | sed 's/^/⚠️  Conflict: /' || echo '✅ Clean merge'",
-            "timeout": 5
-          }
-        ]
       }
     ],
     "SessionStart": [
@@ -179,29 +149,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git status --short",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && [ -f .claude-worktree-session ]; then echo '\n🌳 Git Worktree Session Active' && echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' && cat .claude-worktree-session | grep -E '^(SESSION_ID|BASE_BRANCH|CREATED_AT)=' | sed 's/^/  /' && echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'; fi",
-            "timeout": 5
-          },
-          {
-            "type": "command",
             "command": "echo '🧪 TDD Mode Active: Write tests FIRST, then implementation'",
             "timeout": 1
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '📊 Session complete. Remember: /clear before switching to unrelated tasks.'",
-            "timeout": 2
           }
         ]
       }

@@ -545,9 +545,9 @@ pytest tests/test_file.py::test_name --pdb
 
 ### Tip 5: Use Memory Files
 
-Check `.claude/memory/` for known issues:
-- `python-environment-usage.md` - Python env problems
-- `task-spawn-error-prevention-strategy.md` - Async/subprocess issues
+Check memory files for known issues:
+- `.claude/memory/python-environment-usage.md` - Python env problems
+- `~/.claude/memory/task-spawn-error-prevention-strategy.md` - Async/subprocess issues (global)
 
 ---
 

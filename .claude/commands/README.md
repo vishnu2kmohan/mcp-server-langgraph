@@ -1,20 +1,18 @@
 ---
-purpose: Index and guide for 47 specialized slash commands
+purpose: Index and guide for project-specific slash commands
 priority: high
 category: commands
-command-count: 47
-last-updated: 2026-02-05
+command-count: 24
+last-updated: 2026-02-12
 ---
 
 # Claude Code Slash Commands
 
-This directory contains 47 specialized slash commands for streamlined development workflows.
+This directory contains 24 project-specific slash commands. Generic commands (benchmark, checkpoint, compact-check, create-adr, create-test, plan-feature, pr-checks, research, resume, review-pr, tdd, test-summary, verify-tests) have been promoted to global `~/.claude/commands/`.
 
 > **Note**: Some commands have been migrated to user-level skills (`~/.claude/skills/`).
 > Skills include: `/explore-codebase`, `/code-review`, `/plan-review`, `/plan-status`,
 > `/ci-status`, `/coverage-gaps`, `/docs-audit`, `/knowledge-search`, `/troubleshoot`, `/test-status`.
-
-**Quick Access**: See `.claude/QUICK_REFERENCE.md` for the most-used commands.
 
 ---
 
@@ -335,21 +333,19 @@ When adding new slash commands:
 3. **Document prerequisites**: List required services, files, or setup
 4. **Specify time/performance**: Indicate expected execution time
 5. **Add to this README**: Update relevant category section
-6. **Update QUICK_REFERENCE.md**: If it's a frequently-used command
-7. **Test thoroughly**: Verify command works in different scenarios
+6. **Test thoroughly**: Verify command works in different scenarios
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
-- **Quick Reference**: `.claude/QUICK_REFERENCE.md` - 1-page cheat sheet (recommended to print)
-- **Main Guide**: `.claude/README.md` - Complete workflow documentation
-- **Templates**: `.claude/templates/README.md` - When to use each template
+- **Global Commands**: `~/.claude/commands/` - Generic commands available in all projects
 - **Context Files**: `.claude/context/` - Living documentation (auto-updated)
 - **Memory Files**: `.claude/memory/` - Persistent guidance and error prevention
+- **Global Reference**: `~/.claude/CLAUDE.md` - Global docs index
 
 ---
 
-**Last Updated**: 2026-01-31
-**Command Count**: 47 commands across 8 categories
+**Last Updated**: 2026-02-12
+**Command Count**: 24 project-specific commands
 **Maintained By**: Automated via Claude Code optimization framework

@@ -28,23 +28,10 @@ rules/
 └── context-efficiency.md  # Parallel tests, bulk ops (paths: **/*)
 ```
 
-### Lib (Zero-Cost Runtime Utilities)
-```
-lib/
-├── test_utils.sh          # run_pytest_parallel, run_npm_test_parallel
-└── bulk_edit_utils.sh     # rename_symbol, update_imports, bulk_replace
-```
-Usage: `source .claude/lib/test_utils.sh`
-
 ### Memory (Reference Docs)
 make-targets: memory/make-targets.md (161 targets)
-error-prevention: memory/task-spawn-error-prevention-strategy.md
-tool-patterns: memory/tool-patterns.md
-anti-patterns: memory/anti-patterns.md
-progressive-disclosure: memory/progressive-disclosure.md
 scripts-reference: memory/scripts-reference.md
 style-reference: memory/style-reference.md
-frontmatter: memory/frontmatter-conventions.md
 frontend-patterns: memory/frontend-component-patterns.md
 
 ### Context (Project Reference)
@@ -55,14 +42,12 @@ code-patterns: context/code-patterns.md (backend)
 code-patterns-frontend: context/code-patterns-frontend.md
 studio-patterns: context/studio-patterns.md
 
-### Commands & Skills
-commands: commands/README.md (47 commands)
-skills: skills/ (coverage-gaps, test-status)
+### Commands
+commands: commands/README.md
 
-### Templates
-adr: templates/adr-template.md
-api-design: templates/api-design-template.md
-bug-investigation: templates/bug-investigation-template.md
+### Task Management
+beads: `bd ready` (next tasks), `bd show <id>` (details), `bd compact` (summarize)
+gastown: `gt convoy list` (agent progress), `gt sling` (assign work)
 
 ---
 
