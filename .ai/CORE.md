@@ -3,6 +3,9 @@
 **Purpose**: Single source of truth for all AI coding assistants
 **Tools**: OpenAI Codex, GitHub Copilot, Cursor, Gemini Code Assist, Claude Code
 
+<!-- NOTE: Section headings are parsed by .ai/build-agents.sh to generate AGENTS.md.
+     Renaming sections may require updating the awk patterns in that script. -->
+
 ---
 
 ## Documentation-First Approach
@@ -175,6 +178,15 @@ async def test_with_mock(mock_dep):
 | Type errors | `uv run --frozen mypy src/` |
 | Lint errors | `uv run --frozen ruff check --fix src/` |
 | Import errors | Use `uv run --frozen python -c "import ..."` |
+
+---
+
+## Task Management
+
+- Structured tracking: `bd ready`, `bd create`, `bd show <id> --json`
+- Status overview: `bd status`, `bd blocked`
+- Multi-agent coordination: `gt convoy create`, `gt sling --agent`
+- Context efficiency: `bd compact` to summarize closed tasks
 
 ---
 

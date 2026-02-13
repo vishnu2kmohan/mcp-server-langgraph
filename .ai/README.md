@@ -8,11 +8,11 @@
 
 | Tool | Primary Config | Status |
 |------|---------------|--------|
-| OpenAI Codex | `CORE.md` | Supported |
-| GitHub Copilot | `.github/copilot-instructions.md` | Supported |
+| Claude Code | `.claude/CLAUDE.md` | Primary |
 | Cursor | `.cursorrules` | Supported |
-| Claude Code | `.claude/CLAUDE.md` | Supported |
-| Gemini Code Assist | `CORE.md` | Supported |
+| GitHub Copilot | `.github/copilot-instructions.md` | Supported |
+| Gemini Code Assist | `.gemini/GEMINI.md` | Supported |
+| OpenAI Codex | `.codex/instructions.md` + `AGENTS.md` | Supported |
 
 ---
 
@@ -21,11 +21,13 @@
 | File | Purpose |
 |------|---------|
 | `CORE.md` | **Shared core** - Python env, commands, TDD, style |
-| `.github/copilot-instructions.md` | Copilot-specific patterns |
-| `.cursorrules` | Cursor-specific rules + MCP config |
 | `.claude/CLAUDE.md` | Claude Code quick start |
 | `.github/CLAUDE.md` | Claude Code full guide |
-| `AGENTS.md` | Cross-tool overview |
+| `.cursorrules` | Cursor-specific rules + MCP config |
+| `.github/copilot-instructions.md` | Copilot-specific patterns |
+| `.gemini/GEMINI.md` | Gemini Code Assist instructions |
+| `.codex/instructions.md` | OpenAI Codex instructions |
+| `AGENTS.md` | Cross-tool overview (auto-generated) |
 
 ---
 
@@ -42,22 +44,31 @@
 
 ```
 .ai/
-├── CORE.md      # Shared instructions (all tools)
-└── README.md    # This file
+├── CORE.md          # Shared instructions (all tools)
+├── build-agents.sh  # Auto-generate AGENTS.md
+├── check-sync.sh    # Drift detection across configs
+├── prompts.md       # Common AI prompt templates
+└── README.md        # This file
 
 .claude/
 ├── CLAUDE.md    # Claude Code quick start
-├── commands/    # 46 slash commands
+├── commands/    # 24 project-specific commands (generic promoted to ~/.claude/)
 ├── context/     # Living context files
-├── memory/      # Persistent guidance
-└── templates/   # 8 professional templates
+└── memory/      # Persistent guidance
+
+.gemini/
+├── GEMINI.md    # Gemini Code Assist instructions
+└── sandbox.venv/# Gemini sandbox environment
+
+.codex/
+└── instructions.md # Codex instructions
 
 .github/
 ├── CLAUDE.md              # Claude Code full guide
 └── copilot-instructions.md # Copilot patterns
 
 Root/
-├── AGENTS.md    # Cross-tool overview
+├── AGENTS.md    # Cross-tool overview (auto-generated)
 └── .cursorrules # Cursor AI rules
 ```
 
