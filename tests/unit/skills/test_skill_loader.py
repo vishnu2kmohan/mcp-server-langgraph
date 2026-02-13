@@ -481,3 +481,225 @@ class TestSkillLoaderDiscovery:
         skills = loader.discover_skills(tmp_path)
 
         assert skills == []
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_skill_loader_metadata_nesting")
+class TestSkillLoaderMetadataNesting:
+    """Test suite for loading skills with runtime fields nested under metadata.
+
+    Per agentskills.io spec, non-standard fields (dependencies, sandbox_config,
+    required_secrets, optional_secrets) should be nested under metadata.
+    The loader extracts them for backward compatibility with the Skill model.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_load_dependencies_from_metadata(self):
+        """GIVEN a SKILL.md with dependencies nested under metadata
+        WHEN loading from string
+        THEN dependencies should be extracted and available on the skill
+        """
+        from mcp_server_langgraph.skills.loader import SkillLoader
+
+        loader = SkillLoader()
+        content = textwrap.dedent("""
+        ---
+        name: nested-deps
+        description: Skill with nested dependencies
+        metadata:
+          version: "1.0.0"
+          category: devops
+          author: Test
+          dependencies:
+            - httpx>=0.25.0
+            - pydantic>=2.0
+        ---
+
+        # Nested Deps Skill
+        """)
+
+        skill = loader.load_from_string(content)
+
+        assert skill.dependencies == ["httpx>=0.25.0", "pydantic>=2.0"]
+        assert skill.version == "1.0.0"
+        assert skill.category == "devops"
+
+    def test_load_sandbox_config_from_metadata(self):
+        """GIVEN a SKILL.md with sandbox_config nested under metadata
+        WHEN loading from string
+        THEN sandbox_config should be extracted and converted to SandboxConfig
+        """
+        from mcp_server_langgraph.skills.loader import SkillLoader
+
+        loader = SkillLoader()
+        content = textwrap.dedent("""
+        ---
+        name: nested-sandbox
+        description: Skill with nested sandbox config
+        metadata:
+          sandbox_config:
+            network: allowlist
+            allowed_domains:
+              - "*.example.com"
+        ---
+
+        # Nested Sandbox Skill
+        """)
+
+        skill = loader.load_from_string(content)
+
+        assert skill.sandbox_config is not None
+        assert skill.sandbox_config.network == "allowlist"
+        assert "*.example.com" in skill.sandbox_config.allowed_domains
+
+    def test_load_secrets_from_metadata(self):
+        """GIVEN a SKILL.md with secrets nested under metadata
+        WHEN loading from string
+        THEN secrets should be extracted and available on the skill
+        """
+        from mcp_server_langgraph.skills.loader import SkillLoader
+
+        loader = SkillLoader()
+        content = textwrap.dedent("""
+        ---
+        name: nested-secrets
+        description: Skill with nested secrets
+        metadata:
+          required_secrets:
+            - DB_URL
+          optional_secrets:
+            - REDIS_URL
+            - CACHE_KEY
+        ---
+
+        # Nested Secrets Skill
+        """)
+
+        skill = loader.load_from_string(content)
+
+        assert skill.required_secrets == ["DB_URL"]
+        assert skill.optional_secrets == ["REDIS_URL", "CACHE_KEY"]
+
+    def test_top_level_fields_override_metadata(self):
+        """GIVEN a SKILL.md with dependencies at both top-level and metadata
+        WHEN loading from string
+        THEN top-level should take precedence
+        """
+        from mcp_server_langgraph.skills.loader import SkillLoader
+
+        loader = SkillLoader()
+        content = textwrap.dedent("""
+        ---
+        name: override-test
+        description: Test precedence
+        dependencies:
+          - top-level-dep
+        metadata:
+          dependencies:
+            - metadata-dep
+        ---
+
+        # Override Test
+        """)
+
+        skill = loader.load_from_string(content)
+
+        assert skill.dependencies == ["top-level-dep"]
+
+    def test_load_agentskills_io_compliant_skill(self):
+        """GIVEN a fully spec-compliant SKILL.md with all fields under metadata
+        WHEN loading from string
+        THEN all fields should be correctly extracted
+        """
+        from mcp_server_langgraph.skills.loader import SkillLoader
+
+        loader = SkillLoader()
+        content = textwrap.dedent("""
+        ---
+        name: compliant-skill
+        description: Fully spec-compliant skill
+        allowed-tools:
+          - Read
+          - Glob
+          - Grep
+        compatibility: Requires pygments>=2.17.0. No network access needed.
+        metadata:
+          version: "1.0.0"
+          category: devops
+          author: Emergence AI
+          dependencies:
+            - pygments>=2.17.0
+          sandbox_config:
+            network: none
+            filesystem: readonly
+          optional_secrets:
+            - GITHUB_TOKEN
+        ---
+
+        # Compliant Skill
+        """)
+
+        skill = loader.load_from_string(content)
+
+        assert skill.name == "compliant-skill"
+        assert skill.version == "1.0.0"
+        assert skill.category == "devops"
+        assert skill.author == "Emergence AI"
+        assert skill.dependencies == ["pygments>=2.17.0"]
+        assert skill.sandbox_config is not None
+        assert skill.sandbox_config.network == "none"
+        assert skill.optional_secrets == ["GITHUB_TOKEN"]
+        assert skill.compatibility == "Requires pygments>=2.17.0. No network access needed."
+        assert skill.allowed_tools == ["Read", "Glob", "Grep"]
+
+    def test_load_allowed_tools_with_hyphen_key(self):
+        """GIVEN a SKILL.md using allowed-tools (hyphenated, per Claude Code convention)
+        WHEN loading from string
+        THEN allowed_tools should be populated on the Skill model
+        """
+        from mcp_server_langgraph.skills.loader import SkillLoader
+
+        loader = SkillLoader()
+        content = textwrap.dedent("""
+        ---
+        name: tools-test
+        description: Test allowed-tools normalization
+        allowed-tools:
+          - Bash(uv:*)
+          - Read
+          - Glob
+        ---
+
+        # Tools Test
+        """)
+
+        skill = loader.load_from_string(content)
+
+        assert skill.allowed_tools == ["Bash(uv:*)", "Read", "Glob"]
+
+    def test_load_allowed_tools_underscore_key_also_works(self):
+        """GIVEN a SKILL.md using allowed_tools (underscored, Python convention)
+        WHEN loading from string
+        THEN allowed_tools should be populated
+        """
+        from mcp_server_langgraph.skills.loader import SkillLoader
+
+        loader = SkillLoader()
+        content = textwrap.dedent("""
+        ---
+        name: tools-test-underscore
+        description: Test allowed_tools with underscore
+        allowed_tools:
+          - Read
+          - Write
+        ---
+
+        # Tools Test Underscore
+        """)
+
+        skill = loader.load_from_string(content)
+
+        assert skill.allowed_tools == ["Read", "Write"]

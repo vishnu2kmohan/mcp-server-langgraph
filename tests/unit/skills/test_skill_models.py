@@ -385,3 +385,143 @@ class TestSkillComplianceFields:
         assert skill.license == "Apache-2.0"
         assert skill.allowed_tools == ["http:get", "http:post"]
         assert skill.category == "api-integration"
+
+
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="test_skill_metadata_extraction")
+class TestSkillMetadataExtraction:
+    """Test suite for extracting runtime fields from nested metadata.
+
+    Per agentskills.io spec, non-standard fields should be nested under
+    metadata. The model_validator extracts them for backward compatibility.
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_extract_version_category_author_from_metadata(self):
+        """GIVEN metadata containing version, category, author
+        WHEN creating a Skill
+        THEN those fields should be promoted to top-level
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="test",
+            description="Test skill",
+            metadata={"version": "2.0.0", "category": "compliance", "author": "Acme"},
+        )
+        assert skill.version == "2.0.0"
+        assert skill.category == "compliance"
+        assert skill.author == "Acme"
+
+    def test_top_level_fields_take_precedence_over_metadata(self):
+        """GIVEN both top-level and metadata versions of the same field
+        WHEN creating a Skill
+        THEN top-level value should win
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="test",
+            description="Test",
+            version="1.0.0",
+            metadata={"version": "2.0.0"},
+        )
+        assert skill.version == "1.0.0"
+
+    def test_extract_dependencies_from_metadata(self):
+        """GIVEN metadata containing dependencies
+        WHEN creating a Skill
+        THEN dependencies should be promoted to top-level
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="test",
+            description="Test",
+            metadata={"dependencies": ["httpx>=0.25.0", "pydantic>=2.0"]},
+        )
+        assert skill.dependencies == ["httpx>=0.25.0", "pydantic>=2.0"]
+
+    def test_extract_sandbox_config_from_metadata(self):
+        """GIVEN metadata containing sandbox_config dict
+        WHEN creating a Skill
+        THEN sandbox_config should be promoted to top-level
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="test",
+            description="Test",
+            metadata={
+                "sandbox_config": {"network": "none", "filesystem": "readonly"},
+            },
+        )
+        # sandbox_config is promoted but not yet converted to SandboxConfig
+        # (that's the loader's job). Model should accept dict or SandboxConfig.
+        assert skill.sandbox_config is not None
+
+    def test_extract_required_secrets_from_metadata(self):
+        """GIVEN metadata containing required_secrets
+        WHEN creating a Skill
+        THEN required_secrets should be promoted to top-level
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="test",
+            description="Test",
+            metadata={"required_secrets": ["DB_URL", "API_KEY"]},
+        )
+        assert skill.required_secrets == ["DB_URL", "API_KEY"]
+
+    def test_extract_optional_secrets_from_metadata(self):
+        """GIVEN metadata containing optional_secrets
+        WHEN creating a Skill
+        THEN optional_secrets should be promoted to top-level
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="test",
+            description="Test",
+            metadata={"optional_secrets": ["REDIS_URL"]},
+        )
+        assert skill.optional_secrets == ["REDIS_URL"]
+
+    def test_extract_compliance_frameworks_from_metadata(self):
+        """GIVEN metadata containing compliance_frameworks
+        WHEN creating a Skill with extra='ignore'
+        THEN it should not error (compliance_frameworks is not a model field)
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        # compliance_frameworks is not a Skill field, so it should be ignored
+        skill = Skill(
+            name="test",
+            description="Test",
+            metadata={"compliance_frameworks": ["GDPR", "HIPAA"]},
+        )
+        assert skill.name == "test"
+
+    def test_metadata_preserved_after_extraction(self):
+        """GIVEN metadata with extractable fields
+        WHEN creating a Skill
+        THEN the metadata dict should still contain the original keys
+        """
+        from mcp_server_langgraph.skills.models import Skill
+
+        skill = Skill(
+            name="test",
+            description="Test",
+            metadata={
+                "version": "1.0.0",
+                "category": "devops",
+                "author": "Test Author",
+                "custom_key": "custom_value",
+            },
+        )
+        assert skill.metadata["custom_key"] == "custom_value"
+        assert skill.metadata["version"] == "1.0.0"

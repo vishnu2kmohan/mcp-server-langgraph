@@ -105,6 +105,23 @@ class SkillLoader:
         # Add markdown as instructions
         data["instructions"] = markdown_content
 
+        # Normalize allowed-tools (YAML/Claude Code convention) to allowed_tools (Python field)
+        if "allowed-tools" in data and "allowed_tools" not in data:
+            data["allowed_tools"] = data.pop("allowed-tools")
+
+        # Extract runtime fields from nested metadata (agentskills.io spec compliance)
+        metadata = data.get("metadata", {})
+        if isinstance(metadata, dict):
+            for key in (
+                "dependencies",
+                "sandbox_config",
+                "required_secrets",
+                "optional_secrets",
+                "secret_volumes",
+            ):
+                if key not in data and key in metadata:
+                    data[key] = metadata[key]
+
         # Convert sandbox_config dict to SandboxConfig object
         if "sandbox_config" in data and isinstance(data["sandbox_config"], dict):
             data["sandbox_config"] = SandboxConfig(**data["sandbox_config"])

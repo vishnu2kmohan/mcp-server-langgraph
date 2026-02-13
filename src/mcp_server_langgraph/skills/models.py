@@ -17,9 +17,9 @@ Usage:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class SecretVolume(BaseModel):
@@ -150,6 +150,18 @@ class Skill(BaseModel):
         description="Bundled Python scripts for deterministic operations",
     )
 
+    # AgentSkills.io spec: metadata (arbitrary key-value pairs)
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Arbitrary metadata key-value pairs per agentskills.io spec",
+    )
+
+    # AgentSkills.io spec: compatibility (human-readable requirements)
+    compatibility: str = Field(
+        default="",
+        description="Human-readable compatibility requirements string",
+    )
+
     # Filesystem path (set by loader)
     path: Path | None = Field(
         default=None,
@@ -160,3 +172,31 @@ class Skill(BaseModel):
         extra="ignore",  # Ignore unknown fields in YAML
         arbitrary_types_allowed=True,  # Allow Path type
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def extract_from_metadata(cls, data: Any) -> Any:
+        """Extract recognized fields from metadata for backward compatibility.
+
+        Supports both flat YAML (legacy) and nested metadata (agentskills.io spec).
+        Top-level fields take precedence over metadata values.
+        """
+        if not isinstance(data, dict):
+            return data
+        metadata = data.get("metadata", {})
+        if not isinstance(metadata, dict):
+            return data
+        extractable = (
+            "version",
+            "category",
+            "author",
+            "dependencies",
+            "sandbox_config",
+            "required_secrets",
+            "optional_secrets",
+            "secret_volumes",
+        )
+        for key in extractable:
+            if key not in data and key in metadata:
+                data[key] = metadata[key]
+        return data
