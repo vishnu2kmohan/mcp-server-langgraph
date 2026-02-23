@@ -231,7 +231,7 @@ jobs:
           echo "✅ Image verification passed"
 
       - name: Security scan with Trivy
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: 'ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak:${{ env.KEYCLOAK_VERSION }}'
           format: 'sarif'

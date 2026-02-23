@@ -126,7 +126,7 @@ jobs:
 
       - name: Scan for vulnerabilities
         if: steps.check.outputs.needs_update == 'true' && github.event.inputs.skip_scan != 'true'
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: ${{ matrix.source }}
           format: 'sarif'
