@@ -151,7 +151,7 @@ class TestExternalSecretsValidation:
         GREEN: Should PASS - after variable substitution
         """
         gcp_overlay_dirs = [
-            DEPLOYMENTS_DIR / "overlays" / "production-gke",
+            DEPLOYMENTS_DIR / "overlays" / "prod-gke",
             DEPLOYMENTS_DIR / "kubernetes" / "overlays" / "gcp",
         ]
 
@@ -239,7 +239,7 @@ class TestExternalSecretsServiceAccounts:
         # Find external-secrets ServiceAccounts in overlays
         overlay_dirs = [
             DEPLOYMENTS_DIR / "kubernetes" / "overlays" / "aws",
-            DEPLOYMENTS_DIR / "overlays" / "production-gke",
+            DEPLOYMENTS_DIR / "overlays" / "prod-gke",
             DEPLOYMENTS_DIR / "kubernetes" / "overlays" / "azure",
         ]
 

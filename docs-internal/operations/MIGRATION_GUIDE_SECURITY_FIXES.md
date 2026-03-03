@@ -122,7 +122,7 @@ BUILDER_OUTPUT_DIR=/var/lib/mcp-server/workflows
 
 # Keycloak Settings
 KEYCLOAK_SERVER_URL=https://keycloak.example.com
-KEYCLOAK_REALM=mcp-production
+KEYCLOAK_REALM=mcp-prod
 KEYCLOAK_CLIENT_ID=mcp-server
 KEYCLOAK_CLIENT_SECRET=your-keycloak-secret
 KEYCLOAK_ADMIN_USERNAME=admin
@@ -236,7 +236,7 @@ CLIENT_SECRET=$(jq -r '.client_secret' scim_credentials.json)
 
 # Option B: Via API
 curl -X POST \
-  "https://keycloak.example.com/admin/realms/mcp-production/users/$USER_ID/role-mappings/realm" \
+  "https://keycloak.example.com/admin/realms/mcp-prod/users/$USER_ID/role-mappings/realm" \
   -H "Authorization: Bearer $KEYCLOAK_ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '[{"name":"scim-provisioner"}]'
@@ -247,7 +247,7 @@ curl -X POST \
 #   - Authentication: OAuth 2.0 Client Credentials
 #   - Client ID: scim-provisioner-okta
 #   - Client Secret: <from step 2>
-#   - Token URL: https://keycloak.example.com/realms/mcp-production/protocol/openid-connect/token
+#   - Token URL: https://keycloak.example.com/realms/mcp-prod/protocol/openid-connect/token
 ```
 
 #### 4.2 For Manual SCIM Operations
@@ -260,7 +260,7 @@ Users performing manual SCIM operations must have admin role:
 
 # 2. Via API:
 curl -X POST \
-  "https://keycloak.example.com/admin/realms/mcp-production/users/$USER_ID/role-mappings/realm" \
+  "https://keycloak.example.com/admin/realms/mcp-prod/users/$USER_ID/role-mappings/realm" \
   -H "Authorization: Bearer $KEYCLOAK_ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '[{"name":"admin"}]'

@@ -46,7 +46,7 @@ Optimize infrastructure costs while maintaining performance, security, and relia
     | Environment | Baseline | Optimized | Savings |
     |-------------|----------|-----------|---------|
     | Production | $1,290 | $970 | $320 |
-    | Staging | $480 | $310 | $170 |
+    | STG | $480 | $310 | $170 |
     | Development | $200 | $100 | $100 |
     | **Total** | **$1,970** | **$1,380** | **$590** |
 
@@ -95,11 +95,11 @@ resources:
 **Action**:
 ```sql
 ## Profile actual usage
-kubectl top pods -n mcp-production --containers
+kubectl top pods -n mcp-prod --containers
 
 ## Update deployment
-kubectl patch deployment production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl patch deployment prod-mcp-server-langgraph \
+  -n mcp-prod \
   --type='json' \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
 ```
@@ -224,7 +224,7 @@ Already configured in Terraform:
 
 ```hcl
 labels = {
-  environment = "production"
+  environment = "prod"
   team        = "platform"
   cost_center = "engineering"
   application = "mcp-server"
@@ -256,7 +256,7 @@ ORDER BY total_cost DESC
 
   <Step title="Right-size Pod Resources">
     ```bash
-    kubectl top pods -n mcp-production --containers
+    kubectl top pods -n mcp-prod --containers
     # Adjust requests based on actual usage
     ```
     **Savings**: $50-150/month
@@ -268,7 +268,7 @@ ORDER BY total_cost DESC
     **Savings**: $242/month (25%)
   </Step>
 
-  <Step title="Optimize Dev/Staging">
+  <Step title="Optimize Dev/STG">
     - Use zonal clusters (not regional)
     - Smaller instances
     - Auto-shutdown after hours
@@ -283,11 +283,11 @@ ORDER BY total_cost DESC
     apiVersion: autoscaling.k8s.io/v1
     kind: VerticalPodAutoscaler
     metadata:
-      name: production-mcp-server-vpa
+      name: prod-mcp-server-vpa
     spec:
       targetRef:
         kind: Deployment
-        name: production-mcp-server-langgraph
+        name: prod-mcp-server-langgraph
       updatePolicy:
         updateMode: Auto
     ```
@@ -304,7 +304,7 @@ ORDER BY total_cost DESC
 
 - [x] GKE Autopilot (vs. Standard): $200 saved
 - [ ] Right-size pod resources: $96 saved
-- [ ] Reduce dev/staging usage: $50 saved
+- [ ] Reduce dev/stg usage: $50 saved
 - [ ] Optimize log retention: $15 saved
 
 **Total**: $361/month savings
@@ -349,7 +349,7 @@ ORDER BY total_cost DESC
     | Environment | Baseline | Optimized | Savings |
     |-------------|----------|-----------|---------|
     | Production | $1,980 | $803 | $1,177 |
-    | Staging | $890 | $385 | $505 |
+    | STG | $890 | $385 | $505 |
     | Development | $450 | $180 | $270 |
     | **Total** | **$3,320** | **$1,368** | **$1,952** |
 
@@ -387,7 +387,7 @@ spot_node_group_instance_types = [
 ]
 ```
 **Use Cases**:
-- Development/staging environments
+- Development/stg environments
 - Batch processing workloads
 - Stateless applications with proper graceful shutdown
 - CI/CD build agents
@@ -531,7 +531,7 @@ spec:
 
 #### Strategy 6: Development Environment Controls
 
-**Stop dev/staging environments after hours**:
+**Stop dev/stg environments after hours**:
 
 ```bash
 # Lambda function to stop EKS node groups
@@ -570,7 +570,7 @@ single_nat_gateway = true  # vs. Multi-AZ ($97.20 → $32.40 = $65 saved)
     <Check>Deploy Cluster Autoscaler to remove idle nodes</Check>
     <Check>Right-size instance types based on actual utilization</Check>
     <Check>Use HPA to scale pods, not nodes</Check>
-    <Check>Stop dev/staging environments after hours</Check>
+    <Check>Stop dev/stg environments after hours</Check>
   </Accordion>
 
   <Accordion title="Storage">
@@ -582,7 +582,7 @@ single_nat_gateway = true  # vs. Multi-AZ ($97.20 → $32.40 = $65 saved)
 
   <Accordion title="Network">
     <Check>Enable VPC endpoints (70% data transfer savings)</Check>
-    <Check>Use single NAT gateway in dev/staging</Check>
+    <Check>Use single NAT gateway in dev/stg</Check>
     <Check>Optimize CloudFront caching to reduce origin requests</Check>
     <Check>Use AWS PrivateLink instead of NAT for AWS services</Check>
   </Accordion>
@@ -638,7 +638,7 @@ aws budgets create-budget \
 **Enable Cost Allocation Tags**:
 ```hcl
 tags = {
-  Environment = "production"
+  Environment = "prod"
   Project     = "mcp-langgraph"
   ManagedBy   = "terraform"
   CostCenter  = "engineering"
@@ -663,7 +663,7 @@ tags = {
     AWS production deployment with cost estimates
   </Card>
   <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
-    Dev/staging cost optimization strategies
+    Dev/stg cost optimization strategies
   </Card>
   <Card title="Complete Guide" icon="book" href="/deployment/cost-optimization">
     Detailed GCP cost optimization strategies

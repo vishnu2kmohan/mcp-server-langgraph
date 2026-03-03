@@ -164,7 +164,7 @@ Automated validation script that checks:
 **6 Parallel Jobs**:
 
 1. **validate-helm**: Lint + template rendering
-2. **validate-kustomize**: Matrix build across 5 overlays (dev, staging, production, preview-gke, production-gke)
+2. **validate-kustomize**: Matrix build across 5 overlays (dev, stg, production, stg-gke, prod-gke)
 3. **validate-yaml-syntax**: yamllint on all YAML files
 4. **validate-security**: Gitleaks + placeholder checks + CORS validation
 5. **pytest-deployment-tests**: Run all 11 deployment tests
@@ -334,7 +334,7 @@ tests/deployment/
 ### Short Term (Sprint 1-2)
 
 1. **Add Kustomize-Specific Tests**: Validate overlay patches apply correctly
-2. **ExternalSecrets Integration Tests**: Test secret sync in staging
+2. **ExternalSecrets Integration Tests**: Test secret sync in stg
 3. **SAST Integration**: Add Checkov or Kubesec for Kubernetes security
 4. **Helm Chart Unit Tests**: Use `helm unittest` plugin
 

@@ -42,7 +42,7 @@ class TestNetworkPolicyPorts:
     @requires_tool("kustomize")
     def staging_network_policies(self):
         """Load NetworkPolicies from staging overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/preview-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/stg-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -56,7 +56,7 @@ class TestNetworkPolicyPorts:
     @requires_tool("kustomize")
     def production_network_policies(self):
         """Load NetworkPolicies from production overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/prod-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -206,7 +206,7 @@ class TestNetworkPolicySelectors:
     @pytest.fixture
     def production_network_policies(self):
         """Load NetworkPolicies from production overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/prod-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -271,7 +271,7 @@ class TestNetworkPolicyComments:
         This helps prevent confusion about which port is for which database.
         """
         # Read the staging network policy file directly
-        staging_netpol = REPO_ROOT / "deployments/overlays/preview-gke/network-policy.yaml"
+        staging_netpol = REPO_ROOT / "deployments/overlays/stg-gke/network-policy.yaml"
 
         if not staging_netpol.exists():
             pytest.skip("Staging network policy file not found")

@@ -34,7 +34,7 @@ This document outlines best practices for managing ConfigMaps and Secrets in Kub
 
 ## Overview
 
-On 2025-11-12, we experienced pod crashes in the staging environment due to:
+On 2025-11-12, we experienced pod crashes in the stg environment due to:
 1. **Missing ConfigMap keys**: References to keys that didn't exist
 2. **Secret name mismatches**: Kustomize `namePrefix` not applied correctly in JSON patches
 
@@ -124,7 +124,7 @@ When using ExternalSecrets with Kustomize `namePrefix`, **always use the prefixe
 
 **❌ WRONG:**
 ```yaml
-# In deployments/overlays/preview-gke/deployment-patch.yaml
+# In deployments/overlays/stg-gke/deployment-patch.yaml
 env:
   - name: API_KEY
     valueFrom:
@@ -135,12 +135,12 @@ env:
 
 **✅ CORRECT:**
 ```yaml
-# In deployments/overlays/preview-gke/deployment-patch.yaml
+# In deployments/overlays/stg-gke/deployment-patch.yaml
 env:
   - name: API_KEY
     valueFrom:
       secretKeyRef:
-        name: staging-mcp-server-langgraph-secrets  # Includes prefix
+        name: stg-mcp-server-langgraph-secrets  # Includes prefix
         key: api-key
 ```
 
@@ -158,12 +158,12 @@ env:
    data:
      - secretKey: myNewSecret  # camelCase
        remoteRef:
-         key: staging-my-new-secret  # GCP Secret Manager key with prefix
+         key: stg-my-new-secret  # GCP Secret Manager key with prefix
    ```
 
 3. **Create in GCP Secret Manager**:
    ```bash
-   echo "secret-value" | gcloud secrets create staging-my-new-secret \
+   echo "secret-value" | gcloud secrets create stg-my-new-secret \
      --data-file=- \
      --project=vishnu-sandbox-20250310 \
      --replication-policy=automatic
@@ -178,7 +178,7 @@ env:
 
 - **Template keys**: kebab-case (e.g., `keycloak-client-id`)
 - **Data mapping keys**: camelCase (e.g., `keycloakClientId`)
-- **GCP Secret Manager**: `{prefix}-{kebab-case}` (e.g., `staging-keycloak-client-id`)
+- **GCP Secret Manager**: `{prefix}-{kebab-case}` (e.g., `stg-keycloak-client-id`)
 
 ## Testing and Validation
 
@@ -208,14 +208,14 @@ Before applying changes:
 
 ```bash
 # Build and inspect manifests
-kustomize build deployments/overlays/preview-gke > /tmp/staging.yaml
+kustomize build deployments/overlays/stg-gke > /tmp/stg.yaml
 
 # Search for your new keys
-grep -A5 "configMapKeyRef" /tmp/staging.yaml
-grep -A5 "secretKeyRef" /tmp/staging.yaml
+grep -A5 "configMapKeyRef" /tmp/stg.yaml
+grep -A5 "secretKeyRef" /tmp/stg.yaml
 
 # Check for placeholder values
-grep "REPLACE_WITH" /tmp/staging.yaml
+grep "REPLACE_WITH" /tmp/stg.yaml
 ```
 
 ## Common Pitfalls
@@ -255,33 +255,33 @@ grep "REPLACE_WITH" /tmp/staging.yaml
 
 **Symptom**: `kubectl describe pod` shows:
 ```text
-Error: couldn't find key session_cookie_secure in ConfigMap staging-mcp-server-langgraph/staging-mcp-server-langgraph-config
+Error: couldn't find key session_cookie_secure in ConfigMap stg-mcp-server-langgraph/stg-mcp-server-langgraph-config
 ```
 
 **Solution**:
 1. Check ConfigMap exists:
    ```bash
-   kubectl get configmap -n staging-mcp-server-langgraph
+   kubectl get configmap -n stg-mcp-server-langgraph
    ```
 
 2. Verify key exists:
    ```bash
-   kubectl get configmap staging-mcp-server-langgraph-config -n staging-mcp-server-langgraph -o yaml | grep session_cookie_secure
+   kubectl get configmap stg-mcp-server-langgraph-config -n stg-mcp-server-langgraph -o yaml | grep session_cookie_secure
    ```
 
 3. If missing, add to `configmap-patch.yaml` and reapply:
    ```bash
-   kubectl apply -k deployments/overlays/preview-gke
+   kubectl apply -k deployments/overlays/stg-gke
    ```
 
 ### Secret Name Mismatch
 
-**Symptom**: Pod can't find secret `mcp-server-langgraph-secrets` but only `staging-mcp-server-langgraph-secrets` exists.
+**Symptom**: Pod can't find secret `mcp-server-langgraph-secrets` but only `stg-mcp-server-langgraph-secrets` exists.
 
 **Solution**:
 1. Check ExternalSecret target name:
    ```bash
-   kubectl get externalsecret -n staging-mcp-server-langgraph -o yaml
+   kubectl get externalsecret -n stg-mcp-server-langgraph -o yaml
    ```
 
 2. Update all references to use prefixed name in patch files.
@@ -298,7 +298,7 @@ Error: couldn't find key session_cookie_secure in ConfigMap staging-mcp-server-l
 **Solution**:
 1. Check ExternalSecret status:
    ```bash
-   kubectl describe externalsecret staging-mcp-server-langgraph-secrets -n staging-mcp-server-langgraph
+   kubectl describe externalsecret stg-mcp-server-langgraph-secrets -n stg-mcp-server-langgraph
    ```
 
 2. Check External Secrets Operator logs:
@@ -308,7 +308,7 @@ Error: couldn't find key session_cookie_secure in ConfigMap staging-mcp-server-l
 
 3. Verify GCP Secret exists:
    ```bash
-   gcloud secrets list --filter="name~staging-" --project=vishnu-sandbox-20250310
+   gcloud secrets list --filter="name~stg-" --project=vishnu-sandbox-20250310
    ```
 
 ## Prevention Measures
@@ -317,7 +317,7 @@ Error: couldn't find key session_cookie_secure in ConfigMap staging-mcp-server-l
 2. **Use the validation script** in CI/CD pipelines
 3. **Document all new secrets** in team docs
 4. **Review diffs carefully** for JSON 6902 patches
-5. **Test in staging** before production deployment
+5. **Test in stg** before production deployment
 
 ## References
 
@@ -329,5 +329,5 @@ Error: couldn't find key session_cookie_secure in ConfigMap staging-mcp-server-l
 ---
 
 **Last Updated**: 2025-11-12
-**Related Issues**: Staging pod crashes (2025-11-12)
+**Related Issues**: STG pod crashes (2025-11-12)
 **Related Tests**: `tests/deployment/test_configmap_secret_validation.py`

@@ -22,9 +22,9 @@ This guide covers setting up **Vertex AI** with **Workload Identity Federation**
 %% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart TB
     subgraph Pod["GKE Pod (mcp-server-langgraph)"]
-        K8sSA[Kubernetes Service Account<br/>mcp-staging/mcp-server-langgraph<br/>• Annotated with GCP SA]
+        K8sSA[Kubernetes Service Account<br/>mcp-stg/mcp-server-langgraph<br/>• Annotated with GCP SA]
 
-        K8sSA -->|Workload Identity Binding| GCPSA[GCP Service Account<br/>vertex-ai-staging<br/>• roles/aiplatform.user<br/>• roles/aiplatform.developer<br/>• No keys required!]
+        K8sSA -->|Workload Identity Binding| GCPSA[GCP Service Account<br/>vertex-ai-stg<br/>• roles/aiplatform.user<br/>• roles/aiplatform.developer<br/>• No keys required!]
 
         GCPSA --> VertexAI[Vertex AI API<br/>• gemini-2.5-flash<br/>• gemini-2.5-pro<br/>• Automatic authentication]
     end
@@ -46,9 +46,9 @@ This diagram shows the complete authentication flow from a GKE pod to GCP servic
 flowchart TB
     %% ColorBrewer2 Set3 palette - each component type uniquely colored
 
-    subgraph GKE["GKE Cluster (staging-mcp-server-langgraph-gke)"]
+    subgraph GKE["GKE Cluster (stg-mcp-server-langgraph-gke)"]
         Pod[GKE Pod<br/>mcp-server-langgraph<br/>• No credential files<br/>• Uses SA token projection]
-        K8sSA[Kubernetes Service Account<br/>mcp-staging/mcp-server-langgraph<br/>• Annotated with GCP SA<br/>• Token mounted as volume]
+        K8sSA[Kubernetes Service Account<br/>mcp-stg/mcp-server-langgraph<br/>• Annotated with GCP SA<br/>• Token mounted as volume]
 
         Pod -->|Uses| K8sSA
     end
@@ -58,7 +58,7 @@ flowchart TB
     end
 
     subgraph IAM["GCP IAM"]
-        GCPSA[GCP Service Account<br/>vertex-ai-staging@project.iam<br/>• roles/aiplatform.user<br/>• roles/aiplatform.developer<br/>• roles/logging.logWriter<br/>• roles/monitoring.metricWriter]
+        GCPSA[GCP Service Account<br/>vertex-ai-stg@project.iam<br/>• roles/aiplatform.user<br/>• roles/aiplatform.developer<br/>• roles/logging.logWriter<br/>• roles/monitoring.metricWriter]
     end
 
     subgraph GCP["GCP Services"]
@@ -106,7 +106,7 @@ flowchart TB
 Before starting, ensure you have:
 
 - ✅ **GKE cluster** with Workload Identity enabled
-- ✅ **Staging infrastructure** deployed (run `setup-staging-infrastructure.sh` first)
+- ✅ **STG infrastructure** deployed (run `setup-stg-infrastructure.sh` first)
 - ✅ **gcloud CLI** installed and authenticated
 - ✅ **kubectl** installed and configured
 - ✅ **Billing enabled** on your GCP project
@@ -119,12 +119,12 @@ The easiest way to set up Vertex AI with Workload Identity:
 
 ```bash
 ## Run the automated setup script
-./scripts/gcp/setup-vertex-ai-staging.sh
+./scripts/gcp/setup-vertex-ai-stg.sh
 ```
 
 This script will:
 1. ✅ Enable Vertex AI API
-2. ✅ Create `vertex-ai-staging` service account
+2. ✅ Create `vertex-ai-stg` service account
 3. ✅ Grant necessary IAM permissions
 4. ✅ Bind Kubernetes SA to GCP SA
 5. ✅ Annotate Kubernetes service account
@@ -144,9 +144,9 @@ gcloud services enable aiplatform.googleapis.com \
 
 ```bash
 ## Create service account
-gcloud iam service-accounts create vertex-ai-staging \
-  --display-name="Vertex AI Staging" \
-  --description="Service account for Vertex AI access in staging" \
+gcloud iam service-accounts create vertex-ai-stg \
+  --display-name="Vertex AI STG" \
+  --description="Service account for Vertex AI access in stg" \
   --project=vishnu-sandbox-20250310
 ```
 
@@ -154,7 +154,7 @@ gcloud iam service-accounts create vertex-ai-staging \
 
 ```bash
 PROJECT_ID="vishnu-sandbox-20250310"
-SA_EMAIL="vertex-ai-staging@${PROJECT_ID}.iam.gserviceaccount.com"
+SA_EMAIL="vertex-ai-stg@${PROJECT_ID}.iam.gserviceaccount.com"
 
 ## Vertex AI User (API access)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -181,16 +181,16 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 ```bash
 ## Allow Kubernetes SA to impersonate GCP SA
 gcloud iam service-accounts add-iam-policy-binding \
-  vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com \
+  vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com \
   --role="roles/iam.workloadIdentityUser" \
-  --member="serviceAccount:vishnu-sandbox-20250310.svc.id.goog[mcp-staging/mcp-server-langgraph]"
+  --member="serviceAccount:vishnu-sandbox-20250310.svc.id.goog[mcp-stg/mcp-server-langgraph]"
 ```
 #### Step 5: Annotate Kubernetes Service Account
 
 ```bash
 kubectl annotate serviceaccount mcp-server-langgraph \
-  -n staging-mcp-server-langgraph \
-  iam.gke.io/gcp-service-account=vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com \
+  -n stg-mcp-server-langgraph \
+  iam.gke.io/gcp-service-account=vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com \
   --overwrite
 ```
 </Accordion>
@@ -199,7 +199,7 @@ kubectl annotate serviceaccount mcp-server-langgraph \
 
 #### Environment Variables
 
-The deployment is configured with the following environment variables in `deployments/overlays/preview-gke/deployment-patch.yaml`:
+The deployment is configured with the following environment variables in `deployments/overlays/stg-gke/deployment-patch.yaml`:
 
 ```yaml
 env:
@@ -223,29 +223,29 @@ env:
 The Kubernetes service account is annotated to use Workload Identity:
 
 ```yaml
-## deployments/overlays/preview-gke/serviceaccount-patch.yaml
+## deployments/overlays/stg-gke/serviceaccount-patch.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mcp-server-langgraph
   annotations:
-    iam.gke.io/gcp-service-account: vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com
 ```
 ### Deployment
 
-#### Deploy to Staging
+#### Deploy to STG
 
 After running the setup script, deploy the updated configuration:
 
 ```bash
 ## Apply the updated manifests
-kubectl apply -k deployments/overlays/preview-gke
+kubectl apply -k deployments/overlays/stg-gke
 
 ## Wait for rollout
-kubectl rollout status deployment/mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout status deployment/mcp-server-langgraph -n stg-mcp-server-langgraph
 
 ## Verify pods are running
-kubectl get pods -n staging-mcp-server-langgraph
+kubectl get pods -n stg-mcp-server-langgraph
 ```
 
 ### Verification
@@ -255,40 +255,40 @@ kubectl get pods -n staging-mcp-server-langgraph
 ```bash
 ## Check GCP service account IAM policy
 gcloud iam service-accounts get-iam-policy \
-  vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
+  vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com
 
 ## Should include binding for:
-## serviceAccount:vishnu-sandbox-20250310.svc.id.goog[mcp-staging/mcp-server-langgraph]
+## serviceAccount:vishnu-sandbox-20250310.svc.id.goog[mcp-stg/mcp-server-langgraph]
 ```
 #### 2. Verify Kubernetes Annotation
 
 ```bash
 ## Check service account annotation
-kubectl get serviceaccount mcp-server-langgraph -n staging-mcp-server-langgraph \
+kubectl get serviceaccount mcp-server-langgraph -n stg-mcp-server-langgraph \
   -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
 
 ## Expected output:
-## vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
+## vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com
 ```
 
 #### 3. Test Authentication from Pod
 
 ```bash
 ## Get a shell in the pod
-POD_NAME=$(kubectl get pods -n staging-mcp-server-langgraph -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}')
+POD_NAME=$(kubectl get pods -n stg-mcp-server-langgraph -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}')
 
 ## Check active service account
-kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- gcloud auth list
+kubectl exec -it $POD_NAME -n stg-mcp-server-langgraph -- gcloud auth list
 
 ## Expected output:
 ## ACTIVE  ACCOUNT
-## *       vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
+## *       vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com
 ```
 #### 4. Test Vertex AI Access
 
 ```python
 ## Test Vertex AI API access
-kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- python3 << 'EOF'
+kubectl exec -it $POD_NAME -n stg-mcp-server-langgraph -- python3 << 'EOF'
 from google.cloud import aiplatform
 
 aiplatform.init(
@@ -306,7 +306,7 @@ EOF
 
 ```python
 ## Test LLM integration
-kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- python3 << 'EOF'
+kubectl exec -it $POD_NAME -n stg-mcp-server-langgraph -- python3 << 'EOF'
 from litellm import completion
 
 response = completion(
@@ -329,22 +329,22 @@ EOF
     **Solutions**:
     1. Verify Workload Identity is enabled on cluster:
        ```bash
-       gcloud container clusters describe staging-mcp-server-langgraph-gke \
+       gcloud container clusters describe stg-mcp-server-langgraph-gke \
          --region=us-central1 \
          --format="value(workloadIdentityConfig.workloadPool)"
        ```
     2. Check service account annotation:
        ```bash
-       kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep Annotations
+       kubectl describe sa mcp-server-langgraph -n stg-mcp-server-langgraph | grep Annotations
        ```
     3. Verify IAM binding:
        ```bash
        gcloud iam service-accounts get-iam-policy \
-         vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
+         vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com
        ```
     4. Restart pods to pick up new annotation:
        ```bash
-       kubectl rollout restart deployment/mcp-server-langgraph -n staging-mcp-server-langgraph
+       kubectl rollout restart deployment/mcp-server-langgraph -n stg-mcp-server-langgraph
        ```
   </Accordion>
 
@@ -356,18 +356,18 @@ EOF
        ```bash
        gcloud projects get-iam-policy vishnu-sandbox-20250310 \
          --flatten="bindings[].members" \
-         --filter="bindings.members:serviceAccount:vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com"
+         --filter="bindings.members:serviceAccount:vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com"
        ```
     2. Grant missing permissions:
        ```bash
        # Vertex AI User
        gcloud projects add-iam-policy-binding vishnu-sandbox-20250310 \
-         --member="serviceAccount:vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com" \
+         --member="serviceAccount:vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com" \
          --role="roles/aiplatform.user"
 
        # Vertex AI Developer
        gcloud projects add-iam-policy-binding vishnu-sandbox-20250310 \
-         --member="serviceAccount:vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com" \
+         --member="serviceAccount:vertex-ai-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com" \
          --role="roles/aiplatform.developer"
        ```
   </Accordion>
@@ -394,7 +394,7 @@ EOF
   </Accordion>
 
   <Accordion title="Workload Identity not working" icon="link-slash">
-    **Error**: Pod uses default compute service account instead of vertex-ai-staging
+    **Error**: Pod uses default compute service account instead of vertex-ai-stg
 
     **Solutions**:
     1. Ensure pod spec uses correct service account:
@@ -405,12 +405,12 @@ EOF
     2. Check if annotation was applied before pod creation:
        ```bash
        # Delete and recreate pod
-       kubectl delete pod $POD_NAME -n staging-mcp-server-langgraph
+       kubectl delete pod $POD_NAME -n stg-mcp-server-langgraph
        # Pod will be recreated by deployment
        ```
     3. Verify namespace has Workload Identity enabled:
        ```bash
-       kubectl get namespace staging-mcp-server-langgraph -o yaml | grep workload-identity
+       kubectl get namespace stg-mcp-server-langgraph -o yaml | grep workload-identity
        ```
   </Accordion>
 </AccordionGroup>
@@ -439,7 +439,7 @@ EOF
 
 #### IAM Permissions
 
-The `vertex-ai-staging` service account has been granted these roles:
+The `vertex-ai-stg` service account has been granted these roles:
 
 | Role | Purpose | Permissions |
 |------|---------|-------------|
@@ -537,23 +537,23 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
 
   <Step title="Run Setup Script">
     ```bash
-    ./scripts/gcp/setup-vertex-ai-staging.sh
+    ./scripts/gcp/setup-vertex-ai-stg.sh
     ```
   </Step>
 
   <Step title="Deploy Updated Configuration">
     ```bash
-    kubectl apply -k deployments/overlays/preview-gke
+    kubectl apply -k deployments/overlays/stg-gke
     ```
   </Step>
 
   <Step title="Verify Migration">
     ```bash
     # Check authentication
-    kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- gcloud auth list
+    kubectl exec -it $POD_NAME -n stg-mcp-server-langgraph -- gcloud auth list
 
     # Test Vertex AI
-    kubectl logs -n staging-mcp-server-langgraph $POD_NAME | grep "Vertex AI"
+    kubectl logs -n stg-mcp-server-langgraph $POD_NAME | grep "Vertex AI"
     ```
   </Step>
 </Steps>
@@ -565,8 +565,8 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
     Learn about Gemini model features and capabilities
   </Card>
 
-  <Card title="GKE Preview Deployment" icon="kubernetes" href="/deployment/kubernetes/gke-preview">
-    Complete GKE preview deployment guide
+  <Card title="GKE Preview Deployment" icon="kubernetes" href="/deployment/kubernetes/gke-stg">
+    Complete GKE stg deployment guide
   </Card>
 
   <Card title="Observability" icon="chart-line" href="/guides/observability">
@@ -581,5 +581,5 @@ If you're currently using Google AI Studio API keys, here's how to migrate:
 ---
 
 <Check>
-**Vertex AI with Workload Identity Configured!** Your staging environment now uses keyless authentication for secure, scalable AI access.
+**Vertex AI with Workload Identity Configured!** Your stg environment now uses keyless authentication for secure, scalable AI access.
 </Check>

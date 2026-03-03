@@ -137,7 +137,7 @@ plugins:
 ```
 
 **When to Use Each Layer**:
-- **Application-Level**: Development, staging, single-instance deployments
+- **Application-Level**: Development, stg, single-instance deployments
 - **Kong Gateway**: Production, multi-region, high-scale deployments
 
 ## Architecture
@@ -442,11 +442,11 @@ FF_RATE_LIMIT_ENFORCEMENT_MODE=enforce  # enforce, log_only, disabled
 - [ ] Load test: Verify limits are enforced
 - [ ] Chaos test: Kill Redis, verify fail-open
 - [ ] User acceptance test: Verify error messages
-- [ ] Deploy to staging (log-only mode)
+- [ ] Deploy to stg (log-only mode)
 - [ ] Monitor for 1 week, tune limits
 
 ### Week 5: Production
-- [ ] Deploy to production (10% traffic)
+- [ ] Deploy to prod (10% traffic)
 - [ ] Monitor metrics, watch for issues
 - [ ] Gradually increase to 100% over 2 weeks
 - [ ] Document troubleshooting guide

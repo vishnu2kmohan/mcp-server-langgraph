@@ -285,7 +285,7 @@ terraform/
 ```
 deployments/
 ├── overlays/
-│   └── production-gke/             (8 files, 600 lines)
+│   └── prod-gke/             (8 files, 600 lines)
 │       ├── kustomization.yaml
 │       ├── namespace.yaml
 │       ├── deployment-patch.yaml (200 lines)
@@ -312,7 +312,7 @@ deployments/
 
 ```
 .github/workflows/
-└── deploy-production-gke.yaml      (400 lines)
+└── deploy-prod-gke.yaml      (400 lines)
 ```
 
 ### Documentation (6 files, ~6,000 lines)
@@ -618,10 +618,10 @@ cd terraform/backend-setup-gcp && terraform apply
 cd terraform/environments/gcp-prod && terraform apply
 
 # 3. Application
-kubectl apply -k deployments/overlays/production-gke
+kubectl apply -k deployments/overlays/prod-gke
 
 # 4. Verify
-kubectl get pods -n mcp-production
+kubectl get pods -n mcp-prod
 ```
 
 **Key Documents**:

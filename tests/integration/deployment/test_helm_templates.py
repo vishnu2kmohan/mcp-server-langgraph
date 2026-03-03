@@ -370,16 +370,16 @@ replicaCount: 2
     @requires_tool("helm")
     def test_helm_template_with_staging_values(self, helm_dependencies_built):
         """Test rendering with staging values if available."""
-        staging_values = CHART_PATH.parent / "values-staging.yaml"
+        staging_values = CHART_PATH.parent / "values-stg.yaml"
 
         if not staging_values.exists():
-            pytest.skip("Staging values file not found")
+            pytest.skip("STG values file not found")
 
         result = subprocess.run(
             [
                 "helm",
                 "template",
-                "preview-release",
+                "stg-release",
                 str(CHART_PATH),
                 "-f",
                 str(staging_values),
@@ -396,10 +396,10 @@ replicaCount: 2
     @requires_tool("helm")
     def test_helm_template_with_production_values(self, helm_dependencies_built):
         """Test rendering with production values if available."""
-        production_values = CHART_PATH.parent / "values-production.yaml"
+        production_values = CHART_PATH.parent / "values-prod.yaml"
 
         if not production_values.exists():
-            pytest.skip("Production values file not found")
+            pytest.skip("Prod values file not found")
 
         result = subprocess.run(
             [

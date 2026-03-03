@@ -17,7 +17,7 @@ set -euo pipefail
 
 # Configuration
 PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
-SERVICE_ACCOUNT="${GCP_SERVICE_ACCOUNT:-mcp-staging-sa@${PROJECT_ID}.iam.gserviceaccount.com}"
+SERVICE_ACCOUNT="${GCP_SERVICE_ACCOUNT:-mcp-stg-sa@${PROJECT_ID}.iam.gserviceaccount.com}"
 
 # Colors
 GREEN='\033[0;32m'
@@ -53,8 +53,8 @@ if ! gcloud iam service-accounts describe "$SERVICE_ACCOUNT" --project="$PROJECT
   echo -e "${RED}✗ Service account does not exist${NC}"
   echo ""
   echo "Create it with:"
-  echo "  gcloud iam service-accounts create mcp-staging-sa \\"
-  echo "    --display-name='MCP Staging Service Account' \\"
+  echo "  gcloud iam service-accounts create mcp-stg-sa \\"
+  echo "    --display-name='MCP stg Service Account' \\"
   echo "    --project=$PROJECT_ID"
   exit 1
 fi

@@ -1,4 +1,4 @@
-# ArgoCD Multi-Cluster Setup for GCP (Dev, Staging, Production)
+# ArgoCD Multi-Cluster Setup for GCP (Dev, STG, Prod)
 #
 # TEMPLATE FILE: Replace the following before deploying:
 # - ${GCP_PROJECT_ID} → your GCP project ID
@@ -26,18 +26,18 @@ spec:
             project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
-          - cluster: gcp-preview
-            url: https://GCP_PREVIEW_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
-            overlay: preview-gke
-            namespace: mcp-preview
+          - cluster: gcp-stg
+            url: https://GCP_STG_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
+            overlay: stg-gke
+            namespace: mcp-stg
             replicas: "2"
             project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
-          - cluster: gcp-production
+          - cluster: gcp-prod
             url: https://GCP_PROD_CLUSTER_ENDPOINT  # TEMPLATE: Replace with actual cluster endpoint
-            overlay: production-gke
-            namespace: mcp-production
+            overlay: prod-gke
+            namespace: mcp-prod
             replicas: "3"
             project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
@@ -109,14 +109,14 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: gcp-preview-cluster
+  name: gcp-stg-cluster
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: cluster
 type: Opaque
 stringData:
-  name: gcp-preview
-  server: https://GCP_PREVIEW_CLUSTER_ENDPOINT
+  name: gcp-stg
+  server: https://GCP_STG_CLUSTER_ENDPOINT
   config: |
     {
       "execProviderConfig": {
@@ -134,13 +134,13 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: gcp-production-cluster
+  name: gcp-prod-cluster
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: cluster
 type: Opaque
 stringData:
-  name: gcp-production
+  name: gcp-prod
   server: https://GCP_PROD_CLUSTER_ENDPOINT
   config: |
     {
@@ -179,17 +179,17 @@ data:
 
 ---
 # ==============================================================================
-# Image Update Policy (production)
+# Image Update Policy (prod)
 # ==============================================================================
 
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mcp-server-production-gke
+  name: mcp-server-prod-gke
   namespace: argocd
   annotations:
     # Image updater annotations
-    argocd-image-updater.argoproj.io/image-list: mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph  # TEMPLATE: Replace PROJECT_ID
+    argocd-image-updater.argoproj.io/image-list: mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph  # TEMPLATE: Replace PROJECT_ID
     argocd-image-updater.argoproj.io/mcp-server.update-strategy: semver
     argocd-image-updater.argoproj.io/mcp-server.allow-tags: regexp:^v?[0-9]+\.[0-9]+\.[0-9]+$
     argocd-image-updater.argoproj.io/write-back-method: git

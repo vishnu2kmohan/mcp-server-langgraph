@@ -53,7 +53,7 @@ Automated deployment scripts for all cloud providers implementing 11 Kubernetes 
 ```bash
 # Set environment variables
 export GCP_PROJECT_ID="your-project-id"
-export GKE_CLUSTER_NAME="mcp-production"  # Optional, defaults to mcp-production
+export GKE_CLUSTER_NAME="mcp-prod"  # Optional, defaults to mcp-prod
 export GCP_REGION="us-central1"           # Optional, defaults to us-central1
 
 # Run deployment
@@ -65,7 +65,7 @@ export GCP_REGION="us-central1"           # Optional, defaults to us-central1
 ```bash
 # Set environment variables
 export AWS_REGION="us-east-1"             # Optional, defaults to us-east-1
-export EKS_CLUSTER_NAME="mcp-production"  # Optional, defaults to mcp-production
+export EKS_CLUSTER_NAME="mcp-prod"  # Optional, defaults to mcp-prod
 export AWS_ACCOUNT_ID="123456789012"      # Optional, auto-detected if not set
 
 # Run deployment
@@ -76,8 +76,8 @@ export AWS_ACCOUNT_ID="123456789012"      # Optional, auto-detected if not set
 
 ```bash
 # Set environment variables
-export AZURE_RESOURCE_GROUP="mcp-production-rg"  # Optional
-export AKS_CLUSTER_NAME="mcp-production"         # Optional
+export AZURE_RESOURCE_GROUP="mcp-prod-rg"  # Optional
+export AKS_CLUSTER_NAME="mcp-prod"         # Optional
 export AZURE_LOCATION="eastus"                   # Optional, defaults to eastus
 
 # Run deployment
@@ -88,8 +88,8 @@ export AZURE_LOCATION="eastus"                   # Optional, defaults to eastus
 
 | Script | Status | Notes |
 |--------|--------|-------|
-| `deploy-gcp-gke.sh` | ✅ **Production Ready** | Full automation with dev/staging/prod environments |
-| `deploy-aws-eks.sh` | ✅ **Production Ready** | Full automation with dev/staging/prod environments |
+| `deploy-gcp-gke.sh` | ✅ **Production Ready** | Full automation with dev/stg/prod environments |
+| `deploy-aws-eks.sh` | ✅ **Production Ready** | Full automation with dev/stg/prod environments |
 | `deploy-azure-aks.sh` | ❌ **Manual Only** | Terraform automation not yet available, see [aks.mdx](../docs/deployment/kubernetes/aks.mdx) |
 
 **Note**: AKS deployment currently requires manual setup using Azure CLI. The script will display instructions pointing to the manual runbook.
@@ -117,14 +117,14 @@ The GKE and EKS scripts now support environment selection:
 **GKE Environments**:
 ```bash
 export GCP_ENVIRONMENT=gcp-dev      # Development environment
-export GCP_ENVIRONMENT=gcp-preview  # Preview environment
+export GCP_ENVIRONMENT=gcp-stg  # STG environment
 export GCP_ENVIRONMENT=gcp-prod     # Production environment (default)
 ```
 
 **EKS Environments**:
 ```bash
 export AWS_ENVIRONMENT=aws-dev      # Development (minimal cost)
-export AWS_ENVIRONMENT=aws-staging  # Staging (cost-optimized)
+export AWS_ENVIRONMENT=aws-stg  # STG (cost-optimized)
 export AWS_ENVIRONMENT=prod         # Production (default)
 ```
 

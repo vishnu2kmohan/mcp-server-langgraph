@@ -44,8 +44,8 @@ flowchart TD
 
     subgraph Deploy["Deployment (5)"]
         DV["deployment-validation.yml"]
-        DS["deploy-preview-gke.yaml"]
-        DP["deploy-production-gke.yaml"]
+        DS["deploy-stg-gke.yaml"]
+        DP["deploy-prod-gke.yaml"]
         VD["validate-deployments.yaml"]
         VK["validate-kubernetes.yaml"]
     end
@@ -344,11 +344,11 @@ This document provides a comprehensive reference for all GitHub Actions workflow
 
 ---
 
-### deploy-preview-gke.yaml - Staging Deployment
+### deploy-stg-gke.yaml - STG Deployment
 
-**Location**: `.github/workflows/deploy-preview-gke.yaml`
+**Location**: `.github/workflows/deploy-stg-gke.yaml`
 
-**Purpose**: Deploy to GKE staging environment
+**Purpose**: Deploy to GKE stg environment
 
 **Triggers**:
 - `push` to develop branch
@@ -356,14 +356,14 @@ This document provides a comprehensive reference for all GitHub Actions workflow
 
 **Steps**:
 1. GKE authentication with Workload Identity
-2. Helm deployment with staging values
+2. Helm deployment with stg values
 3. Smoke tests post-deployment
 
 ---
 
-### deploy-production-gke.yaml - Production Deployment
+### deploy-prod-gke.yaml - Production Deployment
 
-**Location**: `.github/workflows/deploy-production-gke.yaml`
+**Location**: `.github/workflows/deploy-prod-gke.yaml`
 
 **Purpose**: Deploy to GKE production environment
 
@@ -609,7 +609,7 @@ This document provides a comprehensive reference for all GitHub Actions workflow
 1. Generate changelog
 2. Create GitHub release
 3. Build and publish Docker images
-4. Deploy to production (if configured)
+4. Deploy to prod (if configured)
 
 ---
 
@@ -814,7 +814,7 @@ See [WORKFLOW_DIAGRAM.mdx](./workflow-diagram) for a visual Mermaid diagram show
 
 **For Releases**:
 - release.yaml creates GitHub release
-- deploy-production-gke.yaml deploys to production
+- deploy-prod-gke.yaml deploys to production
 - Manual approval required for production
 
 ### Workflow Debugging

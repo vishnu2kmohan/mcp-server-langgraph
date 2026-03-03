@@ -28,7 +28,7 @@ You are tasked with deploying the mcp-server-langgraph application to various ta
 
 **Available Targets**:
 - **Kubernetes** (kubectl + Kustomize): GCP, Azure, AWS overlays
-- **GKE Staging**: Google Kubernetes Engine (preview-gke overlay)
+- **GKE Staging**: Google Kubernetes Engine (stg-gke overlay)
 - **Cloud Run**: Google Cloud Run serverless
 - **Helm**: Kubernetes package manager with dependencies
 - **Kustomize Overlays**: dev, staging, production

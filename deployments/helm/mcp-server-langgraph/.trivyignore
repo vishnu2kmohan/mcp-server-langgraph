@@ -121,7 +121,7 @@ AVD-KSV-01010
 #
 # Compensating Controls:
 # - Production overlays pin specific image versions
-# - values-production.yaml and values-production-gke.yaml pin versions
+# - values-prod.yaml and values-prod-gke.yaml pin versions
 # - Container registry policies prevent :latest in production
 #
 # Note: This is typically only triggered in default/dev configurations.

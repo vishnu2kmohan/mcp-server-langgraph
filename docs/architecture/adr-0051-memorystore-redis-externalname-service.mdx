@@ -32,7 +32,7 @@ Infrastructure & Deployment
 
 ## Context
 
-In GKE staging and production environments, we use Google Cloud Memorystore for Redis instead of self-hosted Redis deployments. This architectural decision creates a challenge: **how do we reference external managed services from within Kubernetes in a way that supports operational requirements like failover and environment portability?**
+In GKE stg and production environments, we use Google Cloud Memorystore for Redis instead of self-hosted Redis deployments. This architectural decision creates a challenge: **how do we reference external managed services from within Kubernetes in a way that supports operational requirements like failover and environment portability?**
 
 ### Problem Statement
 
@@ -40,7 +40,7 @@ Memorystore Redis instances are external to the GKE cluster and have static IP a
 
 1. **Reference external Redis from pods** - Apps must connect to Memorystore Redis seamlessly
 2. **Support failover scenarios** - Ability to switch between Redis instances without redeploying manifests
-3. **Maintain environment portability** - Same manifests work across staging/production with different Redis instances
+3. **Maintain environment portability** - Same manifests work across stg/production with different Redis instances
 4. **Centralize IP management** - Avoid hardcoding IPs in multiple ConfigMaps/Secrets
 
 ### Constraints
@@ -58,7 +58,7 @@ We use **Kubernetes ExternalName Service + Google Cloud DNS** to reference Memor
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│ GKE Cluster (staging-mcp-server-langgraph)                      │
+│ GKE Cluster (stg-mcp-server-langgraph)                      │
 │                                                                  │
 │  ┌──────────────┐                                               │
 │  │   Pod: App   │                                               │
@@ -73,16 +73,16 @@ We use **Kubernetes ExternalName Service + Google Cloud DNS** to reference Memor
 │  │ Service: redis-session               │                       │
 │  │ Type: ExternalName                   │                       │
 │  │ externalName:                        │                       │
-│  │   redis-session-staging.internal     │                       │
+│  │   redis-session-stg.internal     │                       │
 │  └──────┬───────────────────────────────┘                       │
 │         │                                                        │
 └─────────┼────────────────────────────────────────────────────────┘
           │
           ↓ DNS Resolution (Cloud DNS)
 ┌─────────────────────────────────────────────┐
-│ Cloud DNS (Private Zone: staging.internal)  │
+│ Cloud DNS (Private Zone: stg.internal)  │
 │                                              │
-│ redis-session-staging.staging.internal       │
+│ redis-session-stg.stg.internal       │
 │         ↓                                    │
 │    10.x.x.x (Memorystore Redis IP)          │
 └─────────┬───────────────────────────────────┘
@@ -96,7 +96,7 @@ We use **Kubernetes ExternalName Service + Google Cloud DNS** to reference Memor
 ```
 ### Implementation
 
-**File:** `deployments/overlays/preview-gke/redis-session-service-patch.yaml`
+**File:** `deployments/overlays/stg-gke/redis-session-service-patch.yaml`
 
 ```yaml
 apiVersion: v1
@@ -105,11 +105,11 @@ metadata:
   name: redis-session
 spec:
   type: ExternalName
-  externalName: redis-session-staging.staging.internal
+  externalName: redis-session-stg.stg.internal
 ```
 **Cloud DNS Configuration:**
-- Private DNS zone: `staging.internal`
-- A record: `redis-session-staging.staging.internal` → Memorystore Redis IP
+- Private DNS zone: `stg.internal`
+- A record: `redis-session-stg.stg.internal` → Memorystore Redis IP
 - Zone visibility: Limited to GKE VPC
 
 ## Rationale
@@ -126,12 +126,12 @@ spec:
 ### Key Benefits
 
 1. **Zero-Downtime Failover**
-   - Update Cloud DNS A record: `redis-session-staging.staging.internal` → new IP
+   - Update Cloud DNS A record: `redis-session-stg.stg.internal` → new IP
    - No manifest changes required
    - No pod restarts needed (DNS TTL-based)
 
 2. **Environment Portability**
-   - Same Kustomize manifests work in staging and production
+   - Same Kustomize manifests work in stg and production
    - Only DNS records differ between environments
    - Simplifies multi-environment deployments
 
@@ -155,7 +155,7 @@ spec:
 **Why This Is a False Positive for Our Use Case:**
 
 1. **Controlled DNS Zone**
-   - `staging.internal` is a **private Cloud DNS zone**
+   - `stg.internal` is a **private Cloud DNS zone**
    - Zone visibility limited to GKE VPC only
    - External attackers cannot modify DNS records
 
@@ -170,7 +170,7 @@ spec:
    - Audit logs track all DNS changes
 
 4. **No User-Controlled Input**
-   - DNS name is **hardcoded in manifests** (`redis-session-staging.staging.internal`)
+   - DNS name is **hardcoded in manifests** (`redis-session-stg.stg.internal`)
    - Not constructed from user input
    - No dynamic ExternalName generation
 
@@ -180,14 +180,14 @@ spec:
 - **Likelihood:** Very Low (requires compromised GCP IAM + VPC access)
 - **Impact:** High (Redis access)
 - **Mitigation:** IAM controls + VPC isolation + audit logging
-- **Residual Risk:** Acceptable for staging and production use
+- **Residual Risk:** Acceptable for stg and production use
 
 ## Consequences
 
 ### Positive
 
 - ✅ **Operational Excellence:** Failover without manifest changes or pod restarts
-- ✅ **Environment Consistency:** Same manifests across staging/production
+- ✅ **Environment Consistency:** Same manifests across stg/production
 - ✅ **Simplified Operations:** Infrastructure team manages IPs centrally
 - ✅ **Standard Pattern:** Uses native Kubernetes Service abstraction
 - ✅ **Clear Separation:** Infrastructure (DNS) vs. Application (manifests)
@@ -260,17 +260,17 @@ Deploy a controller that automatically creates/updates Endpoints for external se
 
 1. **Create Cloud DNS Private Zone** (once per environment)
    ```bash
-   gcloud dns managed-zones create staging-internal \
-     --dns-name=staging.internal \
-     --description="Private DNS for staging GKE services" \
+   gcloud dns managed-zones create stg-internal \
+     --dns-name=stg.internal \
+     --description="Private DNS for stg GKE services" \
      --visibility=private \
      --networks=gke-vpc
    ```
 
 2. **Create DNS A Record** (once per Redis instance)
    ```bash
-   gcloud dns record-sets create redis-session-staging.staging.internal \
-     --zone=staging-internal \
+   gcloud dns record-sets create redis-session-stg.stg.internal \
+     --zone=stg-internal \
      --type=A \
      --ttl=300 \
      --rrdatas=10.x.x.x
@@ -278,21 +278,21 @@ Deploy a controller that automatically creates/updates Endpoints for external se
 
 3. **Deploy ExternalName Service** (via Kustomize)
    ```bash
-   kubectl apply -k deployments/overlays/preview-gke
+   kubectl apply -k deployments/overlays/stg-gke
    ```
 
 4. **Verify DNS Resolution** (from within a pod)
    ```bash
    kubectl run -it --rm debug --image=busybox --restart=Never -- \
-     nslookup redis-session-staging.staging.internal
+     nslookup redis-session-stg.stg.internal
    ```
 
 ### Failover Procedure
 
 1. **Update Cloud DNS A record** to point to new Memorystore Redis instance:
    ```bash
-   gcloud dns record-sets update redis-session-staging.staging.internal \
-     --zone=staging-internal \
+   gcloud dns record-sets update redis-session-stg.stg.internal \
+     --zone=stg-internal \
      --type=A \
      --ttl=60 \
      --rrdatas=10.y.y.y  # New IP
@@ -311,13 +311,13 @@ Add to `.trivyignore`:
 ```bash
 # AVD-KSV-0108: ExternalName service for Memorystore Redis
 # Justification: See ADR-0051
-# - Private Cloud DNS zone (staging.internal) with VPC-only visibility
+# - Private Cloud DNS zone (stg.internal) with VPC-only visibility
 # - IAM-protected DNS management
 # - Internal network only (GCP VPC)
 # - Operational requirement for zero-manifest failover
 # Risk: Acceptable (Low likelihood, mitigated by IAM + VPC isolation)
-deployments/overlays/preview-gke/redis-session-service-patch.yaml
-deployments/overlays/production-gke/redis-session-service-patch.yaml
+deployments/overlays/stg-gke/redis-session-service-patch.yaml
+deployments/overlays/prod-gke/redis-session-service-patch.yaml
 ```
 
 ## References
@@ -326,7 +326,7 @@ deployments/overlays/production-gke/redis-session-service-patch.yaml
 - **Cloud DNS Private Zones:** https://cloud.google.com/dns/docs/zones/zones-overview#private-zones
 - **Memorystore Redis:** https://cloud.google.com/memorystore/docs/redis
 - **kube-score AVD-KSV-0108:** ExternalName service DNS rebinding risk
-- **Implementation:** `deployments/overlays/preview-gke/redis-session-service-patch.yaml`
+- **Implementation:** `deployments/overlays/stg-gke/redis-session-service-patch.yaml`
 - **Related ADR:** ADR-0013 (Multi-Deployment Target Strategy)
 
 ## Revision History

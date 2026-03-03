@@ -97,7 +97,7 @@ jobs:
               buffers=$(grep -oP 'shared_buffers=\K[0-9]+' "$script" || echo "0")
 
               if [ "$buffers" -gt 0 ]; then
-                # Validate for 4GB RAM instance (common staging size)
+                # Validate for 4GB RAM instance (common stg size)
                 # Min: 52428 (409MB), Max: 314572 (2.4GB), Recommended: 65536 (512MB)
                 if [ "$buffers" -lt 52428 ]; then
                   echo "❌ ERROR: shared_buffers=$buffers too low in $script"
@@ -124,7 +124,7 @@ jobs:
           echo "🔍 Checking for GDPR database configuration..."
 
           # Check GCP infrastructure script
-          if ! grep -q 'create gdpr' scripts/gcp/setup-preview-infrastructure.sh; then
+          if ! grep -q 'create gdpr' scripts/gcp/setup-stg-infrastructure.sh; then
             echo "❌ ERROR: GDPR database not found in GCP infrastructure script"
             exit 1
           fi

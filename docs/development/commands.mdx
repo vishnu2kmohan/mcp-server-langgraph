@@ -252,15 +252,15 @@ make setup-infisical         # Initialize Infisical (secrets management)
 
 ```bash
 make deploy-dev              # Deploy to development (Kustomize)
-make deploy-staging          # Deploy to staging (Kustomize)
-make deploy-production       # Deploy to production (Helm)
+make deploy-stg          # Deploy to stg (Kustomize)
+make deploy-prod       # Deploy to prod (Helm)
 ```
 
 ### Rollback Deployments
 
 ```bash
 make deploy-rollback-dev     # Rollback development deployment
-make deploy-rollback-staging # Rollback staging deployment
+make deploy-rollback-stg # Rollback stg deployment
 make deploy-rollback-production  # Rollback production deployment
 ```
 
@@ -394,7 +394,7 @@ Commands follow consistent naming patterns for easy discovery:
 | `validate-*` | Validation commands | `validate-helm`, `validate-openapi` |
 | `docs-*` | Documentation commands | `docs-serve`, `docs-validate` |
 | `setup-*` | Infrastructure setup | `setup-openfga`, `setup-keycloak` |
-| `deploy-*` | Deployment commands | `deploy-dev`, `deploy-production` |
+| `deploy-*` | Deployment commands | `deploy-dev`, `deploy-prod` |
 | `deploy-rollback-*` | Rollback commands | `deploy-rollback-dev` |
 | `lint-*` | Linting & formatting | `lint-check`, `lint-fix` |
 | `logs-*` | Log viewing | `logs-agent`, `logs-follow` |

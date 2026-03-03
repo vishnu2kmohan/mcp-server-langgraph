@@ -463,7 +463,7 @@ helm repo add mcp-server https://vishnu2kmohan.github.io/mcp-server-langgraph
 helm install mcp-server mcp-server/mcp-server-langgraph --version 2.7.0
 
 # Using Kustomize
-kubectl apply -k deployments/kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/prod
 ```
 
 ---

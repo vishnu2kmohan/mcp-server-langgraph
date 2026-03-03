@@ -10,7 +10,7 @@ contentType: "how-to"
 
 ### Overview
 
-Proper environment configuration is critical for maintaining consistency across development, staging, and production environments while keeping sensitive data secure. This guide covers configuration strategies, environment management, and the 12-factor app methodology.
+Proper environment configuration is critical for maintaining consistency across development, stg, and production environments while keeping sensitive data secure. This guide covers configuration strategies, environment management, and the 12-factor app methodology.
 
 <Info>
 Environment-based configuration enables seamless deployment across multiple environments while maintaining security and flexibility.
@@ -84,34 +84,34 @@ ENABLE_METRICS=false
 - Mock external dependencies
 - Hot reload enabled
 
-#### Staging Environment
+#### STG Environment
 
 **Purpose**: Pre-production testing and validation
 
 **Configuration**:
 ```properties
-## .env.staging
-ENV=staging
+## .env.stg
+ENV=stg
 DEBUG=false
 LOG_LEVEL=info
 
 ## Authentication
 AUTH_PROVIDER=keycloak
-KEYCLOAK_URL=https://staging-keycloak.example.com
+KEYCLOAK_URL=https://stg-keycloak.example.com
 SESSION_PROVIDER=redis
-REDIS_URL=redis://staging-redis:6379
+REDIS_URL=redis://stg-redis:6379
 
 ## Authorization
 OPENFGA_ENABLED=true
-OPENFGA_URL=http://staging-openfga:8080
+OPENFGA_URL=http://stg-openfga:8080
 
 ## LLM
 LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=${STAGING_ANTHROPIC_KEY}
+ANTHROPIC_API_KEY=${STG_ANTHROPIC_KEY}
 
 ## Observability
 ENABLE_TRACING=true
-JAEGER_URL=http://staging-jaeger:4318
+JAEGER_URL=http://stg-jaeger:4318
 ENABLE_METRICS=true
 PROMETHEUS_PORT=9090
 ```
@@ -179,7 +179,7 @@ LANGSMITH_PROJECT=production-agent
 #### Required Variables
 
 <ParamField path="ENV" type="string" required>
-  Environment name: `development`, `staging`, or `production`
+  Environment name: `development`, `stg`, or `production`
 </ParamField>
 
 <ParamField path="AUTH_PROVIDER" type="string" required>
@@ -276,10 +276,10 @@ VAPID keys are required for push notifications. Without them, the push notificat
 
 **Database URL for Production Stores**:
 
-In production/staging environments, push subscriptions and AI feedback are stored in PostgreSQL. Configure the database URL:
+In production/stg environments, push subscriptions and AI feedback are stored in PostgreSQL. Configure the database URL:
 
 ```properties
-## Database for persistent stores (production/staging)
+## Database for persistent stores (production/stg)
 DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/mcp_server
 
 ## Compliance storage backend
@@ -290,7 +290,7 @@ COMPLIANCE_POSTGRES_URL=postgresql+asyncpg://user:password@localhost:5432/mcp_se
 <Info>
 **Environment-Aware Store Selection**: The application automatically selects the appropriate storage backend based on environment:
 - **Development/Test**: In-memory stores (no persistence)
-- **Production/Staging**: PostgreSQL stores (requires `DATABASE_URL`)
+- **Production/STG**: PostgreSQL stores (requires `DATABASE_URL`)
 
 This enables fast local development while ensuring data durability in production.
 </Info>
@@ -673,7 +673,7 @@ class Settings(BaseSettings):
     )
 
     # Environment
-    env: Literal["development", "staging", "production"] = "development"
+    env: Literal["development", "stg", "production"] = "development"
     debug: bool = False
     log_level: Literal["debug", "info", "warning", "error"] = "info"
 
@@ -936,7 +936,7 @@ class FeatureFlags:
     @property
     def enable_caching(self) -> bool:
         """Enable LLM response caching"""
-        return self.env in ["staging", "production"]
+        return self.env in ["stg", "production"]
 
     @property
     def enable_rate_limiting(self) -> bool:
@@ -946,7 +946,7 @@ class FeatureFlags:
     @property
     def enable_tracing(self) -> bool:
         """Enable distributed tracing"""
-        return self.env in ["staging", "production"]
+        return self.env in ["stg", "production"]
 
     @property
     def enable_load_shedding(self) -> bool:
@@ -994,11 +994,11 @@ if features.enable_caching:
   </Accordion>
 
   <Accordion title="Environment Parity" icon="equals">
-    Keep dev, staging, and production as similar as possible:
+    Keep dev, stg, and production as similar as possible:
 
     **Same backing services**:
     - Development: Docker Compose
-    - Staging: Kubernetes (minikube/kind)
+    - STG: Kubernetes (minikube/kind)
     - Production: Kubernetes (GKE/EKS/AKS)
 
     **Same configuration structure**:

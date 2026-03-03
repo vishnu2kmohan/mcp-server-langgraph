@@ -195,8 +195,8 @@ langgraph deployment delete my-agent-prod
 Create separate deployments for each environment:
 
 ```
-## Staging
-langgraph deploy my-agent-staging --tag staging
+## STG
+langgraph deploy my-agent-stg --tag stg
 
 ## Production
 langgraph deploy my-agent-prod --tag production
@@ -207,8 +207,8 @@ langgraph deploy my-agent-prod --tag production
 Set environment-specific variables:
 
 ```
-## Staging uses different LangSmith project
-LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
+## STG uses different LangSmith project
+LANGSMITH_PROJECT=my-agent-stg langgraph deploy my-agent-stg
 
 ## Production
 LANGSMITH_PROJECT=my-agent-prod langgraph deploy my-agent-prod
@@ -314,17 +314,17 @@ deploy:
     ```
   </Accordion>
 
-  <Accordion title="Use Staging Environment">
-    Deploy to staging before production:
+  <Accordion title="Use STG Environment">
+    Deploy to stg before production:
 
     ```bash
-    # Deploy to staging
-    langgraph deploy my-agent-staging
+    # Deploy to stg
+    langgraph deploy my-agent-stg
 
-    # Test staging thoroughly
-    langgraph deployment invoke my-agent-staging --input '...'
+    # Test stg thoroughly
+    langgraph deployment invoke my-agent-stg --input '...'
 
-    # If good, deploy to production
+    # If good, deploy to prod
     langgraph deploy my-agent-prod
     ```
   </Accordion>

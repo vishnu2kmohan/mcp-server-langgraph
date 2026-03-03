@@ -1,6 +1,6 @@
-# Production Deployment Guide
+# Prod Deployment Guide
 
-This guide explains how to deploy mcp-server-langgraph to production using Helm and Kustomize with proper secret management.
+This guide explains how to deploy mcp-server-langgraph to prod using Helm and Kustomize with proper secret management.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ This guide explains how to deploy mcp-server-langgraph to production using Helm 
 
 ## Deployment Options
 
-### Option 1: Helm with External Secrets (Recommended for Production)
+### Option 1: Helm with External Secrets (Recommended for Prod)
 
 This approach uses External Secrets Operator to inject secrets from cloud secret managers.
 
@@ -48,37 +48,37 @@ aws secretsmanager create-secret \
 # Attach IAM policy to service account role
 ```
 
-#### Step 2: Deploy with Production Values
+#### Step 2: Deploy with Prod Values
 
 ```bash
-# Deploy to production namespace
+# Deploy to prod namespace
 helm upgrade --install mcp-server-langgraph \
   ./deployments/helm/mcp-server-langgraph \
-  --namespace production \
+  --namespace prod \
   --create-namespace \
-  --values ./deployments/helm/values-production.yaml \
+  --values ./deployments/helm/values-prod.yaml \
   --set externalSecrets.secretStore.projectID=YOUR_GCP_PROJECT_ID \
   --wait
 
 # Verify deployment
-kubectl get pods -n production
-kubectl logs -n production -l app=mcp-server-langgraph
+kubectl get pods -n prod
+kubectl logs -n prod -l app=mcp-server-langgraph
 ```
 
-#### Step 3: Deploy with Staging Values
+#### Step 3: Deploy with STG Values
 
 ```bash
-# Deploy to staging namespace
+# Deploy to stg namespace
 helm upgrade --install mcp-server-langgraph \
   ./deployments/helm/mcp-server-langgraph \
-  --namespace staging \
+  --namespace stg \
   --create-namespace \
-  --values ./deployments/helm/values-staging.yaml \
-  --set externalSecrets.secretStore.projectID=YOUR_STAGING_PROJECT_ID \
+  --values ./deployments/helm/values-stg.yaml \
+  --set externalSecrets.secretStore.projectID=YOUR_STG_PROJECT_ID \
   --wait
 ```
 
-### Option 2: Kustomize for GKE Production
+### Option 2: Kustomize for GKE Prod
 
 This approach uses Kustomize with environment variable substitution for GCP-specific deployments.
 
@@ -96,14 +96,14 @@ echo $GCP_PROJECT_ID
 
 ```bash
 # Build the Kustomize configuration
-cd deployments/overlays/production-gke
-kustomize build . > /tmp/production-manifest.yaml
+cd deployments/overlays/prod-gke
+kustomize build . > /tmp/prod-manifest.yaml
 
 # Review the generated manifest
-less /tmp/production-manifest.yaml
+less /tmp/prod-manifest.yaml
 
 # Apply to cluster
-kubectl apply -f /tmp/production-manifest.yaml
+kubectl apply -f /tmp/prod-manifest.yaml
 
 # Or apply directly
 kustomize build . | kubectl apply -f -
@@ -113,20 +113,20 @@ kustomize build . | kubectl apply -f -
 
 ```bash
 # Check deployment status
-kubectl get all -n production-mcp-server-langgraph
+kubectl get all -n prod-mcp-server-langgraph
 
 # Check if GCP_PROJECT_ID was substituted correctly
-kubectl get configmap -n production-mcp-server-langgraph otel-collector-config -o yaml | grep project:
+kubectl get configmap -n prod-mcp-server-langgraph otel-collector-config -o yaml | grep project:
 
 # Verify pods are running
-kubectl get pods -n production-mcp-server-langgraph
+kubectl get pods -n prod-mcp-server-langgraph
 ```
 
 ## Secret Management Best Practices
 
-### DO NOT Use Inline Secrets in Production
+### DO NOT Use Inline Secrets in Prod
 
-❌ **Never do this in production:**
+❌ **Never do this in prod:**
 ```yaml
 secrets:
   anthropicApiKey: "sk-ant-api03-..."  # NEVER commit real secrets!
@@ -166,7 +166,7 @@ apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
   name: gcpsm-secret-store
-  namespace: production
+  namespace: prod
 spec:
   provider:
     gcpsm:
@@ -174,7 +174,7 @@ spec:
       auth:
         workloadIdentity:
           clusterLocation: us-central1
-          clusterName: production-cluster
+          clusterName: prod-cluster
           serviceAccountRef:
             name: mcp-server-langgraph
 EOF
@@ -184,13 +184,13 @@ EOF
 
 ### Pre-Deployment Validation
 
-Run validation tests before deploying to production:
+Run validation tests before deploying to prod:
 
 ```bash
 # Validate Helm chart
 helm template mcp-server-langgraph \
   ./deployments/helm/mcp-server-langgraph \
-  --values ./deployments/helm/values-production.yaml \
+  --values ./deployments/helm/values-prod.yaml \
   --debug > /tmp/helm-output.yaml
 
 # Check for REPLACE_ME placeholders (should be none)
@@ -201,7 +201,7 @@ pytest tests/deployment/test_helm_configuration.py -v
 pytest tests/deployment/test_kustomize_build.py -v
 
 # Validate Kustomize build
-cd deployments/overlays/production-gke
+cd deployments/overlays/prod-gke
 export GCP_PROJECT_ID=test-project
 kustomize build . > /tmp/kustomize-output.yaml
 grep "YOUR_PROJECT_ID" /tmp/kustomize-output.yaml && echo "FAIL: Found placeholders!" || echo "PASS: No placeholders"
@@ -209,18 +209,18 @@ grep "YOUR_PROJECT_ID" /tmp/kustomize-output.yaml && echo "FAIL: Found placehold
 
 ### Post-Deployment Validation
 
-After deploying to staging/production:
+After deploying to stg/prod:
 
 ```bash
-# Run smoke tests against staging
-export STAGING_URL=https://staging-api.mcp-server-langgraph.com
-curl -f $STAGING_URL/health || echo "Health check failed!"
+# Run smoke tests against stg
+export STG_URL=https://stg-api.mcp-server-langgraph.com
+curl -f $STG_URL/health || echo "Health check failed!"
 
 # Run integration tests
-pytest tests/e2e/ --base-url=$STAGING_URL -v
+pytest tests/e2e/ --base-url=$STG_URL -v
 
 # Check logs for errors
-kubectl logs -n staging -l app=mcp-server-langgraph --tail=100 | grep -i error
+kubectl logs -n stg -l app=mcp-server-langgraph --tail=100 | grep -i error
 ```
 
 ## Troubleshooting
@@ -229,14 +229,14 @@ kubectl logs -n staging -l app=mcp-server-langgraph --tail=100 | grep -i error
 
 **Symptoms:**
 ```bash
-kubectl get externalsecret -n production
+kubectl get externalsecret -n prod
 # STATUS: SecretSyncedError
 ```
 
 **Solution:**
 ```bash
 # Check ExternalSecret events
-kubectl describe externalsecret mcp-server-langgraph-secrets -n production
+kubectl describe externalsecret mcp-server-langgraph-secrets -n prod
 
 # Verify service account has secretmanager.secretAccessor role
 gcloud projects get-iam-policy PROJECT_ID \
@@ -244,7 +244,7 @@ gcloud projects get-iam-policy PROJECT_ID \
   --filter="bindings.members:mcp-server-langgraph@*"
 
 # Check SecretStore is configured correctly
-kubectl get secretstore -n production -o yaml
+kubectl get secretstore -n prod -o yaml
 ```
 
 ### Issue: GCP_PROJECT_ID not substituted
@@ -256,10 +256,10 @@ Kubernetes resources still contain `$(GCP_PROJECT_ID)` or `YOUR_PROJECT_ID`
 ```bash
 # Ensure environment variable is set BEFORE running kustomize
 export GCP_PROJECT_ID=your-actual-project-id
-kustomize build deployments/overlays/production-gke
+kustomize build deployments/overlays/prod-gke
 
 # Or use sed replacement as fallback
-kustomize build deployments/overlays/production-gke | \
+kustomize build deployments/overlays/prod-gke | \
   sed "s/\$(GCP_PROJECT_ID)/your-actual-project-id/g" | \
   kubectl apply -f -
 ```
@@ -268,17 +268,17 @@ kustomize build deployments/overlays/production-gke | \
 
 **Symptoms:**
 ```bash
-kubectl get pods -n production
+kubectl get pods -n prod
 # STATUS: CrashLoopBackOff or ImagePullBackOff
 ```
 
 **Solution:**
 ```bash
 # Check pod events
-kubectl describe pod -n production -l app=mcp-server-langgraph
+kubectl describe pod -n prod -l app=mcp-server-langgraph
 
 # Check logs
-kubectl logs -n production -l app=mcp-server-langgraph --previous
+kubectl logs -n prod -l app=mcp-server-langgraph --previous
 
 # Common issues:
 # 1. Missing secrets - verify ExternalSecret is synced
@@ -291,7 +291,7 @@ kubectl logs -n production -l app=mcp-server-langgraph --previous
 ### GitHub Actions Example
 
 ```yaml
-name: Deploy to Production
+name: Deploy to Prod
 
 on:
   push:
@@ -311,7 +311,7 @@ jobs:
 
       - name: Get GKE credentials
         run: |
-          gcloud container clusters get-credentials production-cluster \
+          gcloud container clusters get-credentials prod-cluster \
             --region us-central1 \
             --project ${{ secrets.GCP_PROJECT_ID }}
 
@@ -319,8 +319,8 @@ jobs:
         run: |
           helm upgrade --install mcp-server-langgraph \
             ./deployments/helm/mcp-server-langgraph \
-            --namespace production \
-            --values ./deployments/helm/values-production.yaml \
+            --namespace prod \
+            --values ./deployments/helm/values-prod.yaml \
             --set image.tag=${{ github.ref_name }} \
             --set externalSecrets.secretStore.projectID=${{ secrets.GCP_PROJECT_ID }} \
             --wait
@@ -329,15 +329,15 @@ jobs:
         run: |
           kubectl wait --for=condition=ready pod \
             -l app=mcp-server-langgraph \
-            -n production \
+            -n prod \
             --timeout=300s
 
-          ./scripts/gcp/preview-smoke-tests.sh
+          ./scripts/gcp/stg-smoke-tests.sh
 ```
 
 ## Security Checklist
 
-Before deploying to production:
+Before deploying to prod:
 
 - [ ] All secrets stored in cloud secret manager (not in git)
 - [ ] External Secrets Operator installed and configured
@@ -353,9 +353,9 @@ Before deploying to production:
 ## Support
 
 For deployment issues:
-1. Check logs: `kubectl logs -n production -l app=mcp-server-langgraph`
-2. Review events: `kubectl events -n production --for deployment/mcp-server-langgraph`
-3. Run diagnostics: `kubectl describe pod -n production -l app=mcp-server-langgraph`
+1. Check logs: `kubectl logs -n prod -l app=mcp-server-langgraph`
+2. Review events: `kubectl events -n prod --for deployment/mcp-server-langgraph`
+3. Run diagnostics: `kubectl describe pod -n prod -l app=mcp-server-langgraph`
 4. Consult troubleshooting guide above
 
 For security issues, contact: security@example.com

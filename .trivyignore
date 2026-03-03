@@ -6,8 +6,8 @@
 # DOCUMENTATION: See subdirectory files for detailed justifications:
 # - deployments/base/.trivyignore (comprehensive base documentation)
 # - deployments/helm/mcp-server-langgraph/.trivyignore (Helm chart suppressions)
-# - deployments/overlays/preview-gke/.trivyignore (staging-specific)
-# - deployments/overlays/production-gke/.trivyignore (production-specific)
+# - deployments/overlays/stg-gke/.trivyignore (staging-specific)
+# - deployments/overlays/prod-gke/.trivyignore (production-specific)
 #
 # Review frequency: Quarterly
 # Last reviewed: 2025-11-28
@@ -32,7 +32,7 @@ KSV118 exp:2026-02-28
 AVD-KSV-0118 exp:2026-02-28
 
 # AVD-KSV-0108: ExternalName Service for Redis (Cloud DNS integration)
-# See: deployments/overlays/preview-gke/.trivyignore, ADR-0051
+# See: deployments/overlays/stg-gke/.trivyignore, ADR-0051
 AVD-KSV-0108
 
 # AVD-KSV-0109: ConfigMaps should not store secrets

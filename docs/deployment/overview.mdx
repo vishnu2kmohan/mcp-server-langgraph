@@ -273,7 +273,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 ## 3. Deploy with Helm
 helm upgrade --install mcp-server-langgraph ./helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
-  --values values-production.yaml \
+  --values values-prod.yaml \
   --wait
 
 ## 4. Verify deployment
@@ -295,9 +295,9 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
     ```
   </Tab>
 
-  <Tab title="Staging">
+  <Tab title="STG">
     ```yaml
-    environment: staging
+    environment: stg
     replicaCount: 2
     autoscaling:
       enabled: true
@@ -312,7 +312,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
   <Tab title="Production">
     ```yaml
-    environment: production
+    environment: prod
     replicaCount: 3
     autoscaling:
       enabled: true
@@ -441,7 +441,7 @@ See [Security Best Practices](/security/best-practices)
   <Tab title="GKE">
     - Use Autopilot for hands-off management
     - Enable cluster autoscaling
-    - Use preemptible nodes for dev/staging
+    - Use preemptible nodes for dev/stg
     - Configure resource requests accurately
     - Use committed use discounts
   </Tab>

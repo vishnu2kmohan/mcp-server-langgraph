@@ -164,7 +164,7 @@ class WorkflowAuditor:
 
         report.append("3. **Consider Workflow Templates** for similar workflows:")
         report.append("   - Test workflows (unit, integration, E2E)")
-        report.append("   - Deployment workflows (dev, staging, production)")
+        report.append("   - Deployment workflows (dev, stg, prod)")
         report.append("   - Validation workflows (docs, configs, security)")
         report.append("")
 

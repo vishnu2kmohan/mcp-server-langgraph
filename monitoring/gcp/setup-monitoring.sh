@@ -64,7 +64,7 @@ displayName: "High Error Rate - Production"
 conditions:
   - displayName: "Error rate above 5%"
     conditionThreshold:
-      filter: 'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production" AND severity>=ERROR'
+      filter: 'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-prod" AND severity>=ERROR'
       comparison: COMPARISON_GT
       thresholdValue: 5
       duration: 300s
@@ -90,7 +90,7 @@ displayName: "Pod Crash Loop - Production"
 conditions:
   - displayName: "Pod restart count > 5"
     conditionThreshold:
-      filter: 'resource.type="k8s_pod" AND resource.labels.namespace_name="mcp-production" AND metric.type="kubernetes.io/pod/restart_count"'
+      filter: 'resource.type="k8s_pod" AND resource.labels.namespace_name="mcp-prod" AND metric.type="kubernetes.io/pod/restart_count"'
       comparison: COMPARISON_GT
       thresholdValue: 5
       duration: 300s
@@ -115,7 +115,7 @@ displayName: "High Latency - Production"
 conditions:
   - displayName: "P95 latency > 2 seconds"
     conditionThreshold:
-      filter: 'metric.type="custom.googleapis.com/application/request_duration" AND resource.type="k8s_pod" AND resource.labels.namespace_name="mcp-production"'
+      filter: 'metric.type="custom.googleapis.com/application/request_duration" AND resource.type="k8s_pod" AND resource.labels.namespace_name="mcp-prod"'
       comparison: COMPARISON_GT
       thresholdValue: 2.0
       duration: 300s
@@ -142,8 +142,8 @@ echo "✅ Latency alert created"
 echo "Creating uptime checks..."
 
 # Get service external IP (if LoadBalancer)
-SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph \
-    -n mcp-production \
+SERVICE_IP=$(kubectl get svc prod-mcp-server-langgraph \
+    -n mcp-prod \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
 
 if [ -n "$SERVICE_IP" ]; then

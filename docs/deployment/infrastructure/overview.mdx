@@ -17,7 +17,7 @@ MCP Server LangGraph uses **Terraform** as the Infrastructure as Code (IaC) tool
     6 production-ready Terraform modules for GKE
   </Card>
   <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
-    Dev, staging, and production configurations
+    Dev, stg, and production configurations
   </Card>
   <Card title="State Management" icon="database" href="/deployment/infrastructure/backend-setup">
     GCS and S3 backends with locking
@@ -40,7 +40,7 @@ MCP Server LangGraph uses **Terraform** as the Infrastructure as Code (IaC) tool
   </Step>
 
   <Step title="Environment Parity">
-    **Consistent configs** across dev/staging/prod
+    **Consistent configs** across dev/stg/prod
     - Same module versions
     - Parameter-driven differences (size, HA)
     - Promote confidence through consistency
@@ -49,7 +49,7 @@ MCP Server LangGraph uses **Terraform** as the Infrastructure as Code (IaC) tool
   <Step title="State Isolation">
     **Separate state** per environment
     - Development: `dev-tfstate` bucket/prefix
-    - Staging: `staging-tfstate` bucket/prefix
+    - STG: `stg-tfstate` bucket/prefix
     - Production: `prod-tfstate` bucket/prefix
   </Step>
 
@@ -195,7 +195,7 @@ terraform/
     │   ├── terraform.tfvars    # Dev-specific values
     │   └── backend.tf          # State backend config
     │
-    ├── gcp-staging/            # Staging (production-like)
+    ├── gcp-stg/            # STG (production-like)
     └── gcp-prod/               # Production (HA, multi-region)
 ```
 
@@ -263,7 +263,7 @@ terraform/
     **Cost**: ~$100/month
   </Card>
 
-  <Card title="Staging" icon="vial">
+  <Card title="STG" icon="vial">
     **Purpose**: Pre-production validation
 
     **Configuration**:
@@ -534,10 +534,10 @@ terraform/
     Initialize Terraform state backends
   </Card>
   <Card title="Multi-Environment" icon="layer-group" href="/deployment/infrastructure/multi-environment">
-    Dev, staging, prod configurations
+    Dev, stg, prod configurations
   </Card>
   <Card title="GKE Production" icon="kubernetes" href="/deployment/kubernetes/gke-production">
-    Deploy to production with Terraform + Kustomize
+    Deploy to prod with Terraform + Kustomize
   </Card>
 </CardGroup>
 

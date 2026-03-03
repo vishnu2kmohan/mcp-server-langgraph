@@ -25,7 +25,7 @@ Run this every morning to ensure system health:
 <Steps>
   <Step title="Check Cluster Status">
     ```bash
-    gcloud container clusters describe production-mcp-server-langgraph-gke \
+    gcloud container clusters describe prod-mcp-server-langgraph-gke \
       --region=us-central1 \
       --format="value(status)"
     ```
@@ -34,10 +34,10 @@ Run this every morning to ensure system health:
 
   <Step title="Check Pod Health">
     ```bash
-    kubectl get pods -n production-mcp-server-langgraph
+    kubectl get pods -n prod-mcp-server-langgraph
 
     # Check for failed pods
-    kubectl get pods -n production-mcp-server-langgraph \
+    kubectl get pods -n prod-mcp-server-langgraph \
       --field-selector=status.phase!=Running,status.phase!=Succeeded
     ```
     <Check>All pods should show `Running` status with 0-1 restarts</Check>
@@ -45,7 +45,7 @@ Run this every morning to ensure system health:
 
   <Step title="Review Recent Events">
     ```bash
-    kubectl get events -n production-mcp-server-langgraph \
+    kubectl get events -n prod-mcp-server-langgraph \
       --sort-by='.lastTimestamp' \
       --field-selector=type!=Normal \
       | tail -10
@@ -64,7 +64,7 @@ Run this every morning to ensure system health:
   <Step title="View Recent Errors">
     ```bash
     gcloud logging read \
-      'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production" AND severity>=ERROR' \
+      'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-prod" AND severity>=ERROR' \
       --limit=10 \
       --format="table(timestamp,jsonPayload.message)"
     ```
@@ -88,13 +88,13 @@ Run this every morning to ensure system health:
   <Step title="Immediate Assessment">
     ```bash
     # Check pod status
-    kubectl get pods -n production-mcp-server-langgraph
+    kubectl get pods -n prod-mcp-server-langgraph
 
     # Get pod logs
-    kubectl logs -n production-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
+    kubectl logs -n prod-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
 
     # Describe failing pods
-    kubectl describe pod POD_NAME -n production-mcp-server-langgraph
+    kubectl describe pod POD_NAME -n prod-mcp-server-langgraph
     ```
   </Step>
 
@@ -102,25 +102,25 @@ Run this every morning to ensure system health:
     <Tabs>
       <Tab title="Restart Deployment">
         ```bash
-        kubectl rollout restart deployment/production-mcp-server-langgraph \
-          -n production-mcp-server-langgraph
+        kubectl rollout restart deployment/prod-mcp-server-langgraph \
+          -n prod-mcp-server-langgraph
         ```
       </Tab>
 
       <Tab title="Rollback">
         ```bash
-        kubectl rollout undo deployment/production-mcp-server-langgraph \
-          -n production-mcp-server-langgraph
+        kubectl rollout undo deployment/prod-mcp-server-langgraph \
+          -n prod-mcp-server-langgraph
 
-        kubectl rollout status deployment/production-mcp-server-langgraph \
-          -n production-mcp-server-langgraph
+        kubectl rollout status deployment/prod-mcp-server-langgraph \
+          -n prod-mcp-server-langgraph
         ```
       </Tab>
 
       <Tab title="Scale Up">
         ```bash
-        kubectl scale deployment production-mcp-server-langgraph \
-          -n production-mcp-server-langgraph \
+        kubectl scale deployment prod-mcp-server-langgraph \
+          -n prod-mcp-server-langgraph \
           --replicas=6
         ```
       </Tab>
@@ -129,8 +129,8 @@ Run this every morning to ensure system health:
 
   <Step title="Verify Recovery">
     ```bash
-    kubectl get pods -n production-mcp-server-langgraph
-    kubectl exec -it -n production-mcp-server-langgraph POD_NAME -- curl http://localhost:8000/health/live
+    kubectl get pods -n prod-mcp-server-langgraph
+    kubectl exec -it -n prod-mcp-server-langgraph POD_NAME -- curl http://localhost:8000/health/live
     ```
   </Step>
 
@@ -159,14 +159,14 @@ Run this every morning to ensure system health:
 <Steps>
   <Step title="Check Resource Usage">
     ```bash
-    kubectl top pods -n production-mcp-server-langgraph
+    kubectl top pods -n prod-mcp-server-langgraph
     kubectl top nodes
     ```
   </Step>
 
   <Step title="Check HPA Status">
     ```bash
-    kubectl get hpa -n production-mcp-server-langgraph -o yaml
+    kubectl get hpa -n prod-mcp-server-langgraph -o yaml
     ```
   </Step>
 
@@ -180,12 +180,12 @@ Run this every morning to ensure system health:
 
   <Step title="Temporary Scale Up">
     ```bash
-    kubectl scale deployment production-mcp-server-langgraph \
-      -n production-mcp-server-langgraph \
+    kubectl scale deployment prod-mcp-server-langgraph \
+      -n prod-mcp-server-langgraph \
       --replicas=10
 
     # Monitor improvement
-    watch -n 5 'kubectl top pods -n production-mcp-server-langgraph'
+    watch -n 5 'kubectl top pods -n prod-mcp-server-langgraph'
     ```
   </Step>
 </Steps>
@@ -200,7 +200,7 @@ Run this every morning to ensure system health:
   <Accordion title="Connection Refused">
     **Check Cloud SQL Proxy**:
     ```bash
-    kubectl logs -n production-mcp-server-langgraph POD_NAME -c cloud-sql-proxy --tail=50
+    kubectl logs -n prod-mcp-server-langgraph POD_NAME -c cloud-sql-proxy --tail=50
     ```
     **Verify Instance Running**:
     ```bash
@@ -208,14 +208,14 @@ Run this every morning to ensure system health:
     ```
     **Restart Proxy**:
     ```bash
-    kubectl rollout restart deployment/production-mcp-server-langgraph -n production-mcp-server-langgraph
+    kubectl rollout restart deployment/prod-mcp-server-langgraph -n prod-mcp-server-langgraph
     ```
   </Accordion>
 
   <Accordion title="Too Many Connections">
     **Check Connection Count**:
     ```bash
-    kubectl port-forward -n production-mcp-server-langgraph svc/production-mcp-server-langgraph 5432:5432 &
+    kubectl port-forward -n prod-mcp-server-langgraph svc/prod-mcp-server-langgraph 5432:5432 &
     psql "host=localhost user=postgres" -c "SELECT count(*) FROM pg_stat_activity;"
     ```
     **Kill Idle Connections**:
@@ -263,8 +263,8 @@ Run this every morning to ensure system health:
 
   <Step title="Verify Deployment">
     ```bash
-    kubectl rollout status deployment/production-mcp-server-langgraph -n production-mcp-server-langgraph
-    kubectl get pods -n production-mcp-server-langgraph
+    kubectl rollout status deployment/prod-mcp-server-langgraph -n prod-mcp-server-langgraph
+    kubectl get pods -n prod-mcp-server-langgraph
     ```
   </Step>
 </Steps>
@@ -276,7 +276,7 @@ Run this every morning to ensure system health:
 </Warning>
 
 ```bash
-cd deployments/overlays/production-gke
+cd deployments/overlays/prod-gke
 
 ## Update image tag
 kustomize edit set image mcp-server-langgraph=REGISTRY/IMAGE:NEW_TAG
@@ -288,7 +288,7 @@ kubectl apply -k . --dry-run=server
 kubectl apply -k .
 
 ## Monitor
-kubectl rollout status deployment/production-mcp-server-langgraph -n production-mcp-server-langgraph
+kubectl rollout status deployment/prod-mcp-server-langgraph -n prod-mcp-server-langgraph
 ```
 #### Rollback Deployment
 
@@ -296,24 +296,24 @@ kubectl rollout status deployment/production-mcp-server-langgraph -n production-
   <Tab title="Quick Rollback">
     ```bash
     # Rollback to previous revision
-    kubectl rollout undo deployment/production-mcp-server-langgraph \
-      -n production-mcp-server-langgraph
+    kubectl rollout undo deployment/prod-mcp-server-langgraph \
+      -n prod-mcp-server-langgraph
 
     # Monitor
-    kubectl rollout status deployment/production-mcp-server-langgraph \
-      -n production-mcp-server-langgraph
+    kubectl rollout status deployment/prod-mcp-server-langgraph \
+      -n prod-mcp-server-langgraph
     ```
   </Tab>
 
   <Tab title="Specific Revision">
     ```bash
     # List revisions
-    kubectl rollout history deployment/production-mcp-server-langgraph \
-      -n production-mcp-server-langgraph
+    kubectl rollout history deployment/prod-mcp-server-langgraph \
+      -n prod-mcp-server-langgraph
 
     # Rollback to specific revision
-    kubectl rollout undo deployment/production-mcp-server-langgraph \
-      -n production-mcp-server-langgraph \
+    kubectl rollout undo deployment/prod-mcp-server-langgraph \
+      -n prod-mcp-server-langgraph \
       --to-revision=5
     ```
   </Tab>
@@ -385,13 +385,13 @@ gcloud sql instances patch mcp-prod-postgres \
 
 <CodeGroup>
 ```bash Scale Deployment
-kubectl scale deployment production-mcp-server-langgraph \
-  -n production-mcp-server-langgraph \
+kubectl scale deployment prod-mcp-server-langgraph \
+  -n prod-mcp-server-langgraph \
   --replicas=10
 ```bash
 ```bash Update HPA
-kubectl patch hpa production-mcp-server-langgraph \
-  -n production-mcp-server-langgraph \
+kubectl patch hpa prod-mcp-server-langgraph \
+  -n prod-mcp-server-langgraph \
   --patch '{"spec":{"minReplicas":5,"maxReplicas":30}}'
 ```
 
@@ -411,7 +411,7 @@ terraform apply
 
 ```bash
 ## View resource usage
-kubectl top pods -n production-mcp-server-langgraph
+kubectl top pods -n prod-mcp-server-langgraph
 kubectl top nodes
 
 ## Cloud Monitoring query
@@ -438,7 +438,7 @@ gcloud monitoring time-series list \
   <Step title="Update Secret Manager">
     ```bash
     # Update secret version
-    gcloud secrets versions add mcp-production-secrets \
+    gcloud secrets versions add mcp-prod-secrets \
       --data-file=<(jq --arg jwt "$NEW_JWT_SECRET" '.jwt_secret = $jwt' secrets.json) \
       --project=PROJECT_ID
     ```
@@ -449,7 +449,7 @@ gcloud monitoring time-series list \
 
     Monitor:
     ```bash
-    kubectl get pods -n production-mcp-server-langgraph -w
+    kubectl get pods -n prod-mcp-server-langgraph -w
     ```
   </Step>
 </Steps>
@@ -483,21 +483,21 @@ gcloud logging read \
     <CodeGroup>
 
     ```bash Real-time
-    kubectl logs -f -n production-mcp-server-langgraph \
+    kubectl logs -f -n prod-mcp-server-langgraph \
       -l app=mcp-server-langgraph \
       --max-log-requests=10
     ```
 
     ```bash Cloud Logging
     gcloud logging read \
-      'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production"' \
+      'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-prod"' \
       --limit=100 \
       --format=json
     ```
 
     ```bash Specific Container
-    kubectl logs POD_NAME -n production-mcp-server-langgraph -c mcp-server-langgraph
-    kubectl logs POD_NAME -n production-mcp-server-langgraph -c cloud-sql-proxy
+    kubectl logs POD_NAME -n prod-mcp-server-langgraph -c mcp-server-langgraph
+    kubectl logs POD_NAME -n prod-mcp-server-langgraph -c cloud-sql-proxy
     ```
 
     </CodeGroup>
@@ -506,12 +506,12 @@ gcloud logging read \
   <Accordion title="Update Configuration">
     ```bash
     # Edit ConfigMap
-    kubectl edit configmap production-mcp-server-langgraph-config \
-      -n production-mcp-server-langgraph
+    kubectl edit configmap prod-mcp-server-langgraph-config \
+      -n prod-mcp-server-langgraph
 
     # Restart to pick up changes (Reloader does this automatically)
-    kubectl rollout restart deployment/production-mcp-server-langgraph \
-      -n production-mcp-server-langgraph
+    kubectl rollout restart deployment/prod-mcp-server-langgraph \
+      -n prod-mcp-server-langgraph
     ```
   </Accordion>
 
@@ -526,8 +526,8 @@ gcloud logging read \
 
       <Tab title="kubectl Port Forward">
         ```bash
-        kubectl port-forward -n production-mcp-server-langgraph \
-          svc/production-mcp-server-langgraph 5432:5432 &
+        kubectl port-forward -n prod-mcp-server-langgraph \
+          svc/prod-mcp-server-langgraph 5432:5432 &
 
         psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph"
         ```
@@ -563,7 +563,7 @@ GKE Autopilot upgrades automatically based on release channel (STABLE for produc
 
 **Check upgrade status**:
 ```bash
-gcloud container clusters describe production-mcp-server-langgraph-gke \
+gcloud container clusters describe prod-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format="yaml(currentMasterVersion,releaseChannel)"
 ```
@@ -573,7 +573,7 @@ gcloud container clusters describe production-mcp-server-langgraph-gke \
 gcloud container get-server-config --region=us-central1
 
 ## Upgrade
-gcloud container clusters upgrade production-mcp-server-langgraph-gke \
+gcloud container clusters upgrade prod-mcp-server-langgraph-gke \
   --region=us-central1 \
   --cluster-version=VERSION
 ```
@@ -669,13 +669,13 @@ For complete disaster recovery automation:
 
 ```bash
 ## Scale to zero
-kubectl scale deployment production-mcp-server-langgraph \
-  -n production-mcp-server-langgraph \
+kubectl scale deployment prod-mcp-server-langgraph \
+  -n prod-mcp-server-langgraph \
   --replicas=0
 
 ## Resume
-kubectl scale deployment production-mcp-server-langgraph \
-  -n production-mcp-server-langgraph \
+kubectl scale deployment prod-mcp-server-langgraph \
+  -n prod-mcp-server-langgraph \
   --replicas=3
 ```
 #### Emergency Maintenance Mode

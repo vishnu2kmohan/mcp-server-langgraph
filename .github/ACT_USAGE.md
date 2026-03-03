@@ -204,8 +204,8 @@ act -s GITHUB_TOKEN="$(gh auth token)" push --workflows .github/workflows/e2e-te
 
 ### GCP Workflows (Cannot Run Locally)
 These workflows require GCP credentials and Workload Identity:
-- `deploy-preview-gke.yaml`
-- `deploy-production-gke.yaml`
+- `deploy-stg-gke.yaml`
+- `deploy-prod-gke.yaml`
 - `gcp-compliance-scan.yaml`
 - `gcp-drift-detection.yaml`
 

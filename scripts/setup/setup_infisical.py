@@ -137,7 +137,7 @@ def setup_infisical():  # noqa: C901
     print("1. Never commit secrets to version control")
     print("2. Use Infisical for production secrets")
     print("3. Rotate secrets regularly")
-    print("4. Use different secrets per environment (dev/staging/prod)")
+    print("4. Use different secrets per environment (dev/stg/prod)")
     print("5. Enable secret versioning in Infisical")
     print()
 

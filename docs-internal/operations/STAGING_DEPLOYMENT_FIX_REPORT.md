@@ -36,7 +36,7 @@ Network policy allowed **ingress** on ports 7800/9000 but blocked **egress** to 
 
 **Solution**:
 ```yaml
-# File: deployments/overlays/preview-gke/network-policy.yaml
+# File: deployments/overlays/stg-gke/network-policy.yaml
 egress:
   - to:
     - podSelector:
@@ -147,7 +147,7 @@ Liveness/readiness probes configured for port 9801, but proxy not running health
 
 **Solution**:
 ```yaml
-# deployments/overlays/preview-gke/deployment-patch.yaml
+# deployments/overlays/stg-gke/deployment-patch.yaml
 args:
   - "--health-check"           # Enable health check server
   - "--http-port=9801"         # Listen on probe port
@@ -169,7 +169,7 @@ args:
 **Fix**: Changed to `tools = [...]` then `return tools`
 
 #### Redis Service Duplicate Port ✅ FIXED
-**File**: `deployments/overlays/preview-gke/redis-session-service-patch.yaml`
+**File**: `deployments/overlays/stg-gke/redis-session-service-patch.yaml`
 **Issue**: Kustomize merge created duplicate port name "redis"
 **Fix**: Renamed staging port to `memorystore-redis`
 
@@ -206,13 +206,13 @@ $ pytest tests/unit/test_server_streamable_init.py -v
 ## Files Modified
 
 ### Infrastructure (Deployments)
-1. `deployments/overlays/preview-gke/network-policy.yaml`
+1. `deployments/overlays/stg-gke/network-policy.yaml`
    - Added Keycloak egress rules for JGroups clustering
 
-2. `deployments/overlays/preview-gke/deployment-patch.yaml`
+2. `deployments/overlays/stg-gke/deployment-patch.yaml`
    - Added Cloud SQL Proxy health check flags
 
-3. `deployments/overlays/preview-gke/redis-session-service-patch.yaml`
+3. `deployments/overlays/stg-gke/redis-session-service-patch.yaml`
    - Fixed duplicate port name
 
 4. `deployments/base/deployment.yaml`

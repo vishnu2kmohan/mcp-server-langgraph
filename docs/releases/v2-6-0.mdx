@@ -33,8 +33,8 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
     **Before**:
     - Kustomize security constraint violation (cannot reference files outside kustomization directory)
     - Deprecated Kustomize fields causing validation errors
-    - ConfigMap merge conflicts in dev/staging overlays
-    - CI/CD Pipeline failed at "Deploy to Staging" step
+    - ConfigMap merge conflicts in dev/stg overlays
+    - CI/CD Pipeline failed at "Deploy to STG" step
 
     **After**:
     - All Kustomize builds complete successfully
@@ -62,12 +62,12 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
        - Fixed: `patchesStrategicMerge` → `patches` with target selectors
        - Removed: `configMapGenerator` with `behavior: merge` (merge conflicts)
 
-    3. **deployments/kustomize/overlays/staging/kustomization.yaml**
+    3. **deployments/kustomize/overlays/stg/kustomization.yaml**
        - Same fixes as dev overlay
        - Updated replica count: 2
-       - Updated image tag: staging-2.5.0
+       - Updated image tag: stg-2.5.0
 
-    4. **deployments/kustomize/overlays/production/kustomization.yaml**
+    4. **deployments/kustomize/overlays/prod/kustomization.yaml**
        - Same fixes as dev overlay
        - Updated replica count: 5
        - Updated image tag: v2.5.0
@@ -81,17 +81,17 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
     kubectl kustomize deployments/kustomize/overlays/dev
     ✅ Build successful with no errors or warnings
 
-    # Staging overlay
-    kubectl kustomize deployments/kustomize/overlays/staging
+    # STG overlay
+    kubectl kustomize deployments/kustomize/overlays/stg
     ✅ Build successful with no errors or warnings
 
     # Production overlay
-    kubectl kustomize deployments/kustomize/overlays/production
+    kubectl kustomize deployments/kustomize/overlays/prod
     ✅ Build successful with no errors or warnings
     ```
 
     **Impact**:
-    - **Before**: CI/CD Pipeline failed at "Deploy to Staging" step
+    - **Before**: CI/CD Pipeline failed at "Deploy to STG" step
     - **After**: Kustomize builds complete successfully
     - **Workflow Status**: Ready for validation in GitHub Actions
     - **Breaking Changes**: NONE - All existing functionality preserved
@@ -240,7 +240,7 @@ Version 2.6.0 delivers **critical CI/CD fixes** and **comprehensive documentatio
    - Version alignment (2.5.0)
 
 2. **deployments/kustomize/overlays/*/kustomization.yaml** (3 files)
-   - Dev, Staging, Production overlays
+   - Dev, STG, Production overlays
    - Deprecated fields removed
    - ConfigMap merge conflicts resolved
 
@@ -306,8 +306,8 @@ uv sync
 ```bash
 ## Validate Kustomize overlays
 kubectl kustomize deployments/kustomize/overlays/dev
-kubectl kustomize deployments/kustomize/overlays/staging
-kubectl kustomize deployments/kustomize/overlays/production
+kubectl kustomize deployments/kustomize/overlays/stg
+kubectl kustomize deployments/kustomize/overlays/prod
 ```
 **Step 4: Run tests**
 ```bash

@@ -4,7 +4,7 @@ description: Reproducible and idempotent infrastructure deployment guide with st
 icon: 'list-check'
 contentType: how-to
 seoTitle: Infrastructure Deployment Checklist - Production-Ready Guide
-seoDescription: Complete infrastructure deployment checklist for staging, production, and development environments. Ensure reproducible and idempotent deployments with validation steps.
+seoDescription: Complete infrastructure deployment checklist for stg, production, and development environments. Ensure reproducible and idempotent deployments with validation steps.
 keywords:
   - deployment checklist
   - infrastructure deployment
@@ -12,7 +12,7 @@ keywords:
   - terraform
   - kubernetes
   - production deployment
-  - staging deployment
+  - stg deployment
 ---
 
 # Infrastructure Deployment Checklist
@@ -56,7 +56,7 @@ flowchart TD
 This checklist ensures reproducible and idempotent infrastructure deployments following the standardized naming convention: `{environment}-mcp-server-langgraph-{resource-type}`.
 
 **Last Updated:** 2025-11-05
-**Status:** ✅ Validated with staging rebuild
+**Status:** ✅ Validated with stg rebuild
 
 ---
 
@@ -68,12 +68,12 @@ Run this validation before any infrastructure changes:
 
 ```bash
 # Check for legacy naming patterns
-! grep -r "mcp-staging-cluster\|mcp-prod-gke\|mcp-dev-cluster" \
+! grep -r "mcp-stg-cluster\|mcp-prod-gke\|mcp-dev-cluster" \
   terraform/environments/ .github/workflows/deploy-*.yaml deployments/overlays/ || \
   echo "❌ FAIL: Legacy naming found"
 
 # Verify new naming in active configs
-grep -r "staging-mcp-server-langgraph-gke\|production-mcp-server-langgraph-gke" \
+grep -r "stg-mcp-server-langgraph-gke\|prod-mcp-server-langgraph-gke" \
   .github/workflows/deploy-*.yaml terraform/environments/gcp-*/main.tf && \
   echo "✅ PASS: New naming present"
 ```
@@ -83,10 +83,10 @@ grep -r "staging-mcp-server-langgraph-gke\|production-mcp-server-langgraph-gke" 
 ```bash
 gh variable list | grep -E "GKE_.*_CLUSTER|NAMESPACE"
 # Should show:
-# - GKE_STAGING_CLUSTER: staging-mcp-server-langgraph-gke
-# - GKE_PROD_CLUSTER: production-mcp-server-langgraph-gke
-# - STAGING_NAMESPACE: staging-mcp-server-langgraph
-# - PRODUCTION_NAMESPACE: production-mcp-server-langgraph
+# - GKE_STG_CLUSTER: stg-mcp-server-langgraph-gke
+# - GKE_PROD_CLUSTER: prod-mcp-server-langgraph-gke
+# - STG_NAMESPACE: stg-mcp-server-langgraph
+# - PRODUCTION_NAMESPACE: prod-mcp-server-langgraph
 ```
 
 ---
@@ -302,7 +302,7 @@ gh variable list | grep -E "GKE_.*_CLUSTER|NAMESPACE"
 - [ ] **Image pull secrets configured (if private registry)**
 
 - [ ] **imagePullPolicy set appropriately**
-  - `Always` for staging/production
+  - `Always` for stg/production
   - `IfNotPresent` for development
 
 ---
@@ -425,7 +425,7 @@ kubectl apply -k deployments/overlays/&lt;overlay&gt; --namespace=&lt;namespace&
 ### Usage Examples:
 ```bash
 # Validate before deploying
-python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/production-gke
+python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/prod-gke
 
 # Run all regression tests
 pytest tests/regression/ -v
@@ -488,4 +488,4 @@ git config core.hooksPath .githooks
 
 ---
 
-**Last Validated:** 2025-11-12 (Staging rebuild from scratch succeeded)
+**Last Validated:** 2025-11-12 (STG rebuild from scratch succeeded)

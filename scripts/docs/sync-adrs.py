@@ -10,7 +10,7 @@ Usage:
     python scripts/sync-adrs.py                    # Sync all ADRs
     python scripts/sync-adrs.py --check            # Check for differences
     python scripts/sync-adrs.py --adr 0001         # Sync specific ADR
-    python scripts/sync-adrs.py --dry-run          # Preview changes
+    python scripts/sync-adrs.py --dry-run          # stg changes
 """
 
 import argparse
@@ -147,7 +147,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
 
     Args:
         adr_number: ADR number (e.g., "0001")
-        dry_run: If True, only preview changes
+        dry_run: If True, only stg changes
 
     Returns:
         True if sync was needed, False otherwise
@@ -198,7 +198,7 @@ def sync_all_adrs(dry_run: bool = False) -> dict[str, int]:
     Sync all ADRs from adr/ to docs/architecture/
 
     Args:
-        dry_run: If True, only preview changes
+        dry_run: If True, only stg changes
 
     Returns:
         Dict with counts of synced, skipped, and failed ADRs
@@ -299,12 +299,12 @@ Examples:
   %(prog)s                    Sync all ADRs
   %(prog)s --check            Check sync status
   %(prog)s --adr 0001         Sync specific ADR
-  %(prog)s --dry-run          Preview changes
+  %(prog)s --dry-run          stg changes
         """,
     )
     parser.add_argument("--adr", metavar="NUMBER", help="Sync specific ADR by number (e.g., 0001)")
     parser.add_argument("--check", action="store_true", help="Check sync status without making changes")
-    parser.add_argument("--dry-run", action="store_true", help="Preview changes without writing files")
+    parser.add_argument("--dry-run", action="store_true", help="stg changes without writing files")
 
     args = parser.parse_args()
 

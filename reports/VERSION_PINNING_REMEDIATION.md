@@ -70,7 +70,7 @@ Conducted comprehensive audit of all deployment configurations to ensure product
 - **Impact**: Staging environment reproducibility
 
 #### 7. Production Overlay Version Outdated ✅ FIXED
-- **File**: `deployments/kustomize/overlays/production/kustomization.yaml:25`
+- **File**: `deployments/kustomize/overlays/prod/kustomization.yaml:25`
 - **Before**: `newTag: v1.0.0`
 - **After**: `newTag: v2.4.0`
 - **Impact**: Production version inconsistency
@@ -141,7 +141,7 @@ Conducted comprehensive audit of all deployment configurations to ensure product
 6. **deployments/kustomize/overlays/staging/kustomization.yaml**
    - Changed: `newTag: staging-latest` → `newTag: staging-2.4.0`
 
-7. **deployments/kustomize/overlays/production/kustomization.yaml**
+7. **deployments/kustomize/overlays/prod/kustomization.yaml**
    - Changed: `newTag: v1.0.0` → `newTag: v2.4.0`
 
 ### Documentation Created (1 file)
@@ -192,7 +192,7 @@ grep "newTag:" deployments/kustomize/base/kustomization.yaml
 # Output: newTag: 2.4.0 ✅
 
 # Production overlay
-grep "newTag:" deployments/kustomize/overlays/production/kustomization.yaml
+grep "newTag:" deployments/kustomize/overlays/prod/kustomization.yaml
 # Output: newTag: v2.4.0 ✅
 ```
 
@@ -214,7 +214,7 @@ docker images langgraph-agent:2.4.0
 
 ```bash
 # Validate production overlay
-kubectl kustomize deployments/kustomize/overlays/production > /tmp/prod-manifest.yaml
+kubectl kustomize deployments/kustomize/overlays/prod > /tmp/prod-manifest.yaml
 
 # Check image tags in generated manifest
 grep "image:" /tmp/prod-manifest.yaml
@@ -328,7 +328,7 @@ kubectl rollout undo deployment/langgraph-agent -n production
 helm rollback langgraph-agent -n production
 
 # Option 3: Kustomize with previous version
-cd deployments/kustomize/overlays/production
+cd deployments/kustomize/overlays/prod
 # Edit kustomization.yaml: newTag: v2.4.0 → v2.3.0
 kubectl apply -k .
 ```
@@ -340,7 +340,7 @@ kubectl apply -k .
 git revert HEAD
 
 # Redeploy with reverted configs
-kubectl apply -k deployments/kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/prod
 ```
 
 ---

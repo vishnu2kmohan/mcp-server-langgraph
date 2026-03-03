@@ -155,7 +155,7 @@ output "kubernetes_service_account_annotations" {
 output "deployment_summary" {
   description = "Summary of deployed infrastructure"
   value = {
-    environment = "production"
+    environment = "prod"
     region      = var.region
     cluster = {
       name     = module.gke.cluster_name

@@ -163,7 +163,7 @@ volumes:
      emptyDir: {}
    ```
 
-2. **Set size limits for production** (optional but recommended):
+2. **Set size limits for prod** (optional but recommended):
    ```yaml
    volumes:
    - name: tmp
@@ -236,9 +236,9 @@ Automated tests validate:
 uv run --frozen pytest tests/deployment/test_security_hardening.py -v
 ```
 
-**Pre-deployment Validation** (`tests/deployment/test_staging_deployment_requirements.py`):
+**Pre-deployment Validation** (`tests/deployment/test_stg_deployment_requirements.py`):
 
-Validates staging-specific requirements:
+Validates stg-specific requirements:
 1. ✅ Cloud SQL Proxy sidecar configured
 2. ✅ Database connection via localhost
 3. ✅ Health probes properly configured
@@ -324,7 +324,7 @@ initContainers:
 
 ### Issue 4: Different Security Settings Between Overlays
 
-**Symptom**: Staging passes security scan but production fails
+**Symptom**: STG passes security scan but prod fails
 
 **Root Cause**: Inconsistent security contexts between base deployment and overlays
 
@@ -343,7 +343,7 @@ securityContext:
       - ALL
 ```
 
-**Staging/Production Overlays** (patch files):
+**STG/Prod Overlays** (patch files):
 ```yaml
 # Additional security hardening for specific environments
 # Keep base requirements, add environment-specific enhancements
@@ -425,7 +425,7 @@ spec:
           emptyDir: {}
 ```
 
-### Staging Overlay with Cloud SQL Proxy (Secure)
+### STG Overlay with Cloud SQL Proxy (Secure)
 
 ```yaml
 apiVersion: apps/v1
@@ -520,7 +520,7 @@ Use this checklist before committing deployment changes:
 - **Kubernetes Security Context**: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - **CIS Kubernetes Benchmark**: https://www.cisecurity.org/benchmark/kubernetes
 - **Security Hardening Tests**: `tests/deployment/test_security_hardening.py`
-- **Staging Validation**: `tests/deployment/test_staging_deployment_requirements.py`
+- **STG Validation**: `tests/deployment/test_stg_deployment_requirements.py`
 - **Pre-commit Hooks**: `.pre-commit-config.yaml`
 
 ---
@@ -529,12 +529,12 @@ Use this checklist before committing deployment changes:
 
 ### 2025-11-12: Keycloak readOnlyRootFilesystem Violation
 
-**Incident**: Deploy to GKE Staging workflow failed (Run #19309378657)
+**Incident**: Deploy to GKE STG workflow failed (Run #19309378657)
 
 **Finding**: Trivy scan detected AVD-KSV-0014 (HIGH severity)
 - Keycloak container had `readOnlyRootFilesystem: false`
 - Security risk: allows container to tamper with filesystem
-- Blocked staging deployment
+- Blocked stg deployment
 
 **Resolution**:
 1. Set `readOnlyRootFilesystem: true`
@@ -556,7 +556,7 @@ Use this checklist before committing deployment changes:
 - Documented readOnlyRootFilesystem requirement (AVD-KSV-0014)
 - Added volume mount patterns for common applications
 - Included automated validation setup
-- Documented incident from staging deployment failure
+- Documented incident from stg deployment failure
 - Added examples and troubleshooting guide
 
-**Context**: Created following remediation of Deploy to GKE Staging failure (Run #19309378657)
+**Context**: Created following remediation of Deploy to GKE STG failure (Run #19309378657)

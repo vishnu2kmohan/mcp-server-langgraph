@@ -160,7 +160,7 @@ conditional_mappings:
 
 **Kustomize Overlays**:
 - Dev: InMemory auth, memory sessions
-- Staging: Keycloak, Redis (12-hour TTL)
+- STG: Keycloak, Redis (12-hour TTL)
 - Production: Keycloak + SSL, Redis + SSL (24-hour TTL)
 
 **Monitoring**:
@@ -200,8 +200,8 @@ conditional_mappings:
 ```bash
 ## Deployment
 make deploy-dev
-make deploy-staging
-make deploy-production
+make deploy-stg
+make deploy-prod
 
 ## Validation
 make validate-deployments
@@ -239,7 +239,7 @@ make setup-infra  # Starts Keycloak, Redis, etc.
 ## 5. Deploy to Kubernetes (optional)
 make deploy-dev  # Dev environment
 ## Or
-make deploy-production  # Production with Helm
+make deploy-prod  # Production with Helm
 ```
 #### Testing
 

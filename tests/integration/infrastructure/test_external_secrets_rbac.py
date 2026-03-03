@@ -257,7 +257,7 @@ class TestGCPServiceAccountIAM:
         result = run_kubectl(["get", "namespace", "external-secrets-system", "-o", "json"], check=False)
 
         assert result["success"], (
-            "Namespace external-secrets-system not found. Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
+            "Namespace external-secrets-system not found. Please run: ./scripts/gcp/setup-stg-infrastructure.sh"
         )
 
         namespace = json.loads(result["output"])
@@ -270,9 +270,7 @@ class TestGCPServiceAccountIAM:
             ["get", "deployment", "external-secrets", "-o", "json"], namespace="external-secrets-system", check=False
         )
 
-        assert result["success"], (
-            "ESO controller deployment not found. Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
-        )
+        assert result["success"], "ESO controller deployment not found. Please run: ./scripts/gcp/setup-stg-infrastructure.sh"
 
         deployment = json.loads(result["output"])
         assert deployment["metadata"]["name"] == "external-secrets"

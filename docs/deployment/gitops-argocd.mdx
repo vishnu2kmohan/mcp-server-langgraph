@@ -1,9 +1,9 @@
 ---
 title: GitOps with ArgoCD
-description: 'Implement declarative, Git-driven deployments for MCP Server across dev, staging, and production GKE clusters'
+description: 'Implement declarative, Git-driven deployments for MCP Server across dev, stg, and production GKE clusters'
 icon: 'code-branch'
 seoTitle: "GitOps with ArgoCD - Deployment Guide"
-seoDescription: "Deploy MCP Server: Implement declarative, Git-driven deployments for MCP Server across dev, staging, and production GKE clusters"
+seoDescription: "Deploy MCP Server: Implement declarative, Git-driven deployments for MCP Server across dev, stg, and production GKE clusters"
 keywords: ["deployment", "cloud deployment", "MCP Server", "production deployment"]
 contentType: "how-to"
 ---
@@ -14,7 +14,7 @@ contentType: "how-to"
 
 <CardGroup cols={2}>
   <Card title="Multi-Cluster" icon="layer-group">
-    Manage dev, staging, prod from one ArgoCD instance
+    Manage dev, stg, prod from one ArgoCD instance
   </Card>
   <Card title="Auto-Sync" icon="arrows-rotate">
     Git commits trigger automated deployments
@@ -51,7 +51,7 @@ contentType: "how-to"
   <Accordion title="Multi-Cluster Management">
     **One ArgoCD instance** manages all clusters.
 
-    - Dev, staging, prod from single UI
+    - Dev, stg, prod from single UI
     - ApplicationSets for environment parity
     - Centralized observability
   </Accordion>
@@ -73,8 +73,8 @@ contentType: "how-to"
 flowchart TB
     subgraph "Git Repository"
         A[GitHub: main branch]
-        B[deployments/overlays/production-gke/]
-        C[deployments/overlays/preview-gke/]
+        B[deployments/overlays/prod-gke/]
+        C[deployments/overlays/stg-gke/]
         D[deployments/overlays/dev-gke/]
     end
 
@@ -86,7 +86,7 @@ flowchart TB
 
     subgraph "GKE Clusters"
         H[Dev Cluster]
-        I[Staging Cluster]
+        I[STG Cluster]
         J[Production Cluster]
     end
 
@@ -209,9 +209,9 @@ flowchart TB
         # Get cluster contexts
         gcloud container clusters get-credentials mcp-dev-gke \
           --region us-central1 --project YOUR_PROJECT_ID
-        gcloud container clusters get-credentials mcp-preview-gke \
+        gcloud container clusters get-credentials mcp-stg-gke \
           --region us-central1 --project YOUR_PROJECT_ID
-        gcloud container clusters get-credentials production-mcp-server-langgraph-gke \
+        gcloud container clusters get-credentials prod-mcp-server-langgraph-gke \
           --region us-central1 --project YOUR_PROJECT_ID
 
         # Install argocd CLI
@@ -223,8 +223,8 @@ flowchart TB
 
         # Add clusters
         argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-dev-gke --name gcp-dev
-        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-preview-gke --name gcp-staging
-        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_production-mcp-server-langgraph-gke --name gcp-production
+        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_mcp-stg-gke --name gcp-stg
+        argocd cluster add gke_YOUR_PROJECT_ID_us-central1_prod-mcp-server-langgraph-gke --name gcp-production
         ```
       </Tab>
 
@@ -232,7 +232,7 @@ flowchart TB
         ```bash
         # Generate cluster secret YAML
         kubectl config view --minify --flatten \
-          --context=gke_YOUR_PROJECT_ID_us-central1_production-mcp-server-langgraph-gke > prod-cluster.yaml
+          --context=gke_YOUR_PROJECT_ID_us-central1_prod-mcp-server-langgraph-gke > prod-cluster.yaml
 
         # Apply to ArgoCD namespace
         kubectl apply -f deployments/argocd/gcp-multi-cluster-setup.yaml
@@ -252,7 +252,7 @@ flowchart TB
     kubectl apply -f deployments/argocd/gcp-multi-cluster-setup.yaml
     ```
 
-    Creates 3 Applications (dev, staging, prod) from one definition.
+    Creates 3 Applications (dev, stg, prod) from one definition.
   </Step>
 
   <Step title="Verify Sync">
@@ -294,16 +294,16 @@ spec:
             overlay: dev-gke
             replicas: "1"
 
-          - cluster: gcp-staging
+          - cluster: gcp-stg
             url: https://GCP_STAGING_ENDPOINT
-            namespace: staging-mcp-server-langgraph
-            overlay: preview-gke
+            namespace: stg-mcp-server-langgraph
+            overlay: stg-gke
             replicas: "2"
 
           - cluster: gcp-production
             url: https://GCP_PROD_ENDPOINT
-            namespace: production-mcp-server-langgraph
-            overlay: production-gke
+            namespace: prod-mcp-server-langgraph
+            overlay: prod-gke
             replicas: "3"
 
   template:
@@ -339,15 +339,15 @@ spec:
    - Path: deployments/overlays/dev-gke
    - Namespace: mcp-dev
 
-2. mcp-server-gcp-staging
-   - Cluster: gcp-staging
-   - Path: deployments/overlays/preview-gke
-   - Namespace: mcp-staging
+2. mcp-server-gcp-stg
+   - Cluster: gcp-stg
+   - Path: deployments/overlays/stg-gke
+   - Namespace: mcp-stg
 
 3. mcp-server-gcp-production
    - Cluster: gcp-production
-   - Path: deployments/overlays/production-gke
-   - Namespace: mcp-production
+   - Path: deployments/overlays/prod-gke
+   - Namespace: mcp-prod
 ```
 </CodeGroup>
 
@@ -367,7 +367,7 @@ spec:
     - Manual changes reverted within 3 minutes
     - Resources removed from Git are deleted
 
-    **Best for**: Staging, production (strict GitOps)
+    **Best for**: STG, production (strict GitOps)
   </Tab>
 
   <Tab title="Manual">
@@ -437,12 +437,12 @@ Automatically update container image tags when new versions are pushed to Artifa
     apiVersion: argoproj.io/v1alpha1
     kind: Application
     metadata:
-      name: mcp-server-production-gke
+      name: mcp-server-prod-gke
       namespace: argocd
       annotations:
         # Image to watch
         argocd-image-updater.argoproj.io/image-list: |
-          mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
+          mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph
 
         # Update strategy: semver (respect semantic versioning)
         argocd-image-updater.argoproj.io/mcp-server.update-strategy: semver
@@ -539,13 +539,13 @@ sequenceDiagram
     ArgoCD auto-syncs to dev cluster within 3 minutes.
   </Step>
 
-  <Step title="2. Promote to Staging (Manual Sync)">
+  <Step title="2. Promote to STG (Manual Sync)">
     ```bash
     # Option 1: argocd CLI
-    argocd app sync mcp-server-gcp-staging
+    argocd app sync mcp-server-gcp-stg
 
     # Option 2: UI
-    # Click "Sync" in ArgoCD UI for staging app
+    # Click "Sync" in ArgoCD UI for stg app
     ```
 
     Validates in production-like environment.
@@ -566,15 +566,15 @@ sequenceDiagram
         jobs:
           promote:
             runs-on: ubuntu-latest
-            environment: production  # Requires approval
+            environment: prod  # Requires approval
             steps:
               - uses: actions/checkout@v4
 
               - name: Update production overlay
                 run: |
-                  cd deployments/overlays/production-gke
+                  cd deployments/overlays/prod-gke
                   kustomize edit set image \
-                    mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:${{ github.event.inputs.version }}
+                    mcp-server=us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:${{ github.event.inputs.version }}
 
               - name: Commit and push
                 run: |
@@ -611,12 +611,12 @@ apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
   name: mcp-server-canary
-  namespace: production-mcp-server-langgraph
+  namespace: prod-mcp-server-langgraph
 spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: production-mcp-server-langgraph
+    name: prod-mcp-server-langgraph
   progressDeadlineSeconds: 600
   service:
     port: 8000
@@ -694,10 +694,10 @@ spec:
     **Solution**:
     ```bash
     # Check pod status
-    kubectl get pods -n production-mcp-server-langgraph
+    kubectl get pods -n prod-mcp-server-langgraph
 
     # View pod events
-    kubectl describe pod POD_NAME -n production-mcp-server-langgraph
+    kubectl describe pod POD_NAME -n prod-mcp-server-langgraph
 
     # Check ArgoCD sync logs
     argocd app logs mcp-server-gcp-production
@@ -779,7 +779,7 @@ data:
     p, role:developers, applications, sync, dev/*, allow
     g, engineering@example.com, role:developers
 
-    # DevOps: full access to staging/prod
+    # DevOps: full access to stg/prod
     p, role:devops, applications, *, */*, allow
     p, role:devops, clusters, *, *, allow
     g, devops@example.com, role:devops
@@ -828,7 +828,7 @@ data:
   <Card title="Binary Authorization" icon="file-signature" href="/deployment/binary-authorization">
     Image signing for secure deployments
   </Card>
-  <Card title="CI/CD Pipeline" icon="code-branch" href="https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/.github/workflows/deploy-production-gke.yaml">
+  <Card title="CI/CD Pipeline" icon="code-branch" href="https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/.github/workflows/deploy-prod-gke.yaml">
     GitHub Actions workflow with ArgoCD
   </Card>
   <Card title="Operations Runbooks" icon="book-medical" href="/deployment/operations/gke-runbooks">

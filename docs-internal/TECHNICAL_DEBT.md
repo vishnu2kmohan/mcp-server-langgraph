@@ -236,10 +236,10 @@ Unimplemented observability backend integrations.
 **Files Affected:**
 - `deployments/monitoring/slo-alerts.yaml`
 - `deployments/helm/mcp-server-langgraph/values.yaml`
-- `deployments/helm/values-production-gke.yaml`
+- `deployments/helm/values-prod-gke.yaml`
 - `config/alerts.yaml`
 - `monitoring/prometheus/alerts/*.yaml`
-- `deployments/overlays/production-gke/kustomization.yaml`
+- `deployments/overlays/prod-gke/kustomization.yaml`
 
 **Patterns to Fix:**
 - `YOUR_STAGING_PROJECT_ID`
@@ -254,7 +254,7 @@ Unimplemented observability backend integrations.
 
 **References:**
 - `.pre-commit-config.yaml` hook: `check-helm-placeholders`
-- Codex findings: `values-staging.yaml:108`, `values-production.yaml:139`
+- Codex findings: `values-stg.yaml:108`, `values-prod.yaml:139`
 
 #### 5. ADR Synchronization
 

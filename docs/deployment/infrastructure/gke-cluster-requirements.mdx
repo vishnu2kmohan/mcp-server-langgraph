@@ -3,7 +3,7 @@ title: GKE Cluster Requirements for CI/CD
 description: 'Prerequisites and setup guide for GKE clusters required by CI/CD deployment workflows'
 icon: 'google'
 seoTitle: "GKE Cluster Requirements - CI/CD Infrastructure Setup"
-seoDescription: "Learn how to create and configure GKE Autopilot clusters for staging and production CI/CD deployments"
+seoDescription: "Learn how to create and configure GKE Autopilot clusters for stg and production CI/CD deployments"
 keywords: ["GKE", "Google Kubernetes Engine", "CI/CD", "infrastructure", "Terraform", "cluster setup", "Autopilot"]
 contentType: "how-to"
 ---
@@ -18,21 +18,21 @@ The CI/CD pipeline requires GKE clusters to exist before deployment workflows ca
 
 ### Preview Cluster
 
-**Name:** `preview-mcp-server-langgraph-gke`
+**Name:** `stg-mcp-server-langgraph-gke`
 **Location:** `us-central1`
 **Project:** `vishnu-sandbox-20250310`
 **Type:** GKE Autopilot (recommended) or Standard
 
 **Creation via Terraform:**
 ```bash
-cd terraform/environments/gcp-preview
+cd terraform/environments/gcp-stg
 terraform init
 terraform plan
 terraform apply
 ```
 **Manual Creation:**
 ```bash
-gcloud container clusters create-auto preview-mcp-server-langgraph-gke \
+gcloud container clusters create-auto stg-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310 \
   --release-channel=regular \
@@ -43,7 +43,7 @@ gcloud container clusters create-auto preview-mcp-server-langgraph-gke \
 
 ### Production Cluster
 
-**Name:** `production-mcp-server-langgraph-gke`
+**Name:** `prod-mcp-server-langgraph-gke`
 **Location:** `us-central1`
 **Project:** `vishnu-sandbox-20250310`
 **Type:** GKE Autopilot
@@ -57,12 +57,12 @@ terraform apply
 ```
 ## CI/CD Workflow Dependencies
 
-### deploy-preview-gke.yaml
+### deploy-stg-gke.yaml
 
 This workflow requires:
-- ✅ GKE cluster: `preview-mcp-server-langgraph-gke` in `us-central1`
-- ✅ Service account: `github-actions-preview@vishnu-sandbox-20250310.iam.gserviceaccount.com`
-- ✅ Artifact Registry: `mcp-preview` repository
+- ✅ GKE cluster: `stg-mcp-server-langgraph-gke` in `us-central1`
+- ✅ Service account: `github-actions-stg@vishnu-sandbox-20250310.iam.gserviceaccount.com`
+- ✅ Artifact Registry: `mcp-stg` repository
 - ✅ GitHub variable: `ENABLE_PREVIEW_AUTODEPLOY=true`
 
 **Workflow Trigger:**
@@ -75,12 +75,12 @@ This workflow requires:
 **Resolution:**
 Create the cluster using one of the methods above, then re-run the workflow.
 
-### deploy-production-gke.yaml
+### deploy-prod-gke.yaml
 
 This workflow requires:
-- ⚠️  GKE cluster: `production-mcp-server-langgraph-gke` in `us-central1`
+- ⚠️  GKE cluster: `prod-mcp-server-langgraph-gke` in `us-central1`
 - ✅ Service account: `github-actions-production@vishnu-sandbox-20250310.iam.gserviceaccount.com`
-- ✅ Artifact Registry: `mcp-production` repository
+- ✅ Artifact Registry: `mcp-prod` repository
 
 **Workflow Trigger:**
 - Manual dispatch (requires approval)
@@ -91,18 +91,18 @@ This workflow requires:
 After creating clusters, verify they're accessible:
 
 ```bash
-# Verify preview cluster
-gcloud container clusters describe preview-mcp-server-langgraph-gke \
+# Verify stg cluster
+gcloud container clusters describe stg-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
 # Verify production cluster
-gcloud container clusters describe production-mcp-server-langgraph-gke \
+gcloud container clusters describe prod-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
 # Test GitHub Actions service account access
-gcloud container clusters get-credentials preview-mcp-server-langgraph-gke \
+gcloud container clusters get-credentials stg-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310
 
@@ -134,7 +134,7 @@ The GKE Autopilot module is located at:
 
 **Symptom:**
 ```yaml
-Error: NOT_FOUND: projects/vishnu-sandbox-20250310/locations/us-central1/clusters/preview-mcp-server-langgraph-gke not found
+Error: NOT_FOUND: projects/vishnu-sandbox-20250310/locations/us-central1/clusters/stg-mcp-server-langgraph-gke not found
 ```
 
 **Solution:**
@@ -144,7 +144,7 @@ The cluster doesn't exist. Create it using the methods above.
 
 **Symptom:**
 ```yaml
-Error: github-actions-preview does not have permission to access cluster
+Error: github-actions-stg does not have permission to access cluster
 ```
 
 **Solution:**
@@ -152,7 +152,7 @@ Verify the service account has the `container.developer` role:
 ```bash
 gcloud projects get-iam-policy vishnu-sandbox-20250310 \
   --flatten="bindings[].members" \
-  --filter="bindings.members:github-actions-preview*"
+  --filter="bindings.members:github-actions-stg*"
 ```
 ### Error: Artifact Registry repository not found
 
@@ -160,13 +160,13 @@ gcloud projects get-iam-policy vishnu-sandbox-20250310 \
 Create the Artifact Registry repositories:
 ```bash
 # Preview
-gcloud artifacts repositories create mcp-preview \
+gcloud artifacts repositories create mcp-stg \
   --repository-format=docker \
   --location=us-central1 \
   --project=vishnu-sandbox-20250310
 
 # Production
-gcloud artifacts repositories create mcp-production \
+gcloud artifacts repositories create mcp-prod \
   --repository-format=docker \
   --location=us-central1 \
   --project=vishnu-sandbox-20250310
@@ -177,7 +177,7 @@ gcloud artifacts repositories create mcp-production \
 The deployment workflows check repository variables to determine if auto-deploy is enabled:
 
 ```bash
-# Enable preview auto-deploy
+# Enable stg auto-deploy
 gh variable set ENABLE_PREVIEW_AUTODEPLOY --body "true"
 
 # Enable dev auto-deploy
@@ -202,4 +202,4 @@ gh variable list
 - Terraform module: ✅ Fixed and validated
 - Service accounts: ✅ Created and configured
 - Auto-deploy variables: ✅ Set
-- GKE clusters: ✅ Created (preview-mcp-server-langgraph-gke)
+- GKE clusters: ✅ Created (stg-mcp-server-langgraph-gke)

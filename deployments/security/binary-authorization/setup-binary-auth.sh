@@ -51,8 +51,8 @@ PROJECT_ID="$1"
 ENVIRONMENT="$2"
 
 # Validate environment
-if [[ ! "$ENVIRONMENT" =~ ^(development|staging|production)$ ]]; then
-    log_error "Environment must be: development, staging, or production"
+if [[ ! "$ENVIRONMENT" =~ ^(dev|stg|prod|development|staging|production)$ ]]; then
+    log_error "Environment must be: dev, stg, prod (or legacy: development, staging, production)"
     exit 1
 fi
 
@@ -187,7 +187,7 @@ defaultAdmissionRule:
   - projects/$PROJECT_ID/attestors/$ATTESTOR_ID
 
 clusterAdmissionRules:
-  us-central1.production-mcp-server-langgraph-gke:
+  us-central1.prod-mcp-server-langgraph-gke:
     evaluationMode: REQUIRE_ATTESTATION
     enforcementMode: ENFORCED_BLOCK_AND_AUDIT_LOG
     requireAttestationsBy:

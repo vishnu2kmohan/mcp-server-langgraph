@@ -215,7 +215,7 @@ jobs:
         run: helm lint deployments/helm/langgraph-agent
 
       - name: Validate Kustomize overlays
-        run: kustomize build deployments/kustomize/overlays/production
+        run: kustomize build deployments/kustomize/overlays/prod
 ```
 
 **Duration**: ~15 minutes
@@ -419,7 +419,7 @@ kubectl apply --dry-run=client -f deployments/kubernetes/
 helm lint deployments/helm/langgraph-agent/
 
 # Validate Kustomize builds
-for env in dev staging production; do
+for env in dev stg production; do
   kustomize build deployments/kustomize/overlays/$env
 done
 
@@ -603,7 +603,7 @@ env:
 ## Future Enhancements
 
 - **Automated Dependency Updates**: Dependabot or Renovate for dependency PRs
-- **Preview Deployments**: Automatic deployment of PRs to staging environments
+- **STG Deployments**: Automatic deployment of PRs to stg environments
 - **Slack Notifications**: Pipeline status notifications to team Slack channel
 - **Deployment Rollback**: Automated rollback on production health check failures
 - **Blue-Green Deployments**: Zero-downtime deployments with traffic shifting

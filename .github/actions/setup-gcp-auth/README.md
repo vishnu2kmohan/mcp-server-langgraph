@@ -29,7 +29,7 @@ Composite action for authenticating to Google Cloud Platform using Workload Iden
   uses: ./.github/actions/setup-gcp-auth
   with:
     workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
-    service-account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
+    service-account: ${{ secrets.GCP_PROD_SA_EMAIL }}
     token-format: access_token
 
 - name: Configure Docker for Artifact Registry
@@ -88,7 +88,7 @@ jobs:
         uses: ./.github/actions/setup-gcp-auth
         with:
           workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service-account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
+          service-account: ${{ secrets.GCP_PROD_SA_EMAIL }}
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -98,7 +98,7 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          kubectl apply -k deployments/overlays/production
+          kubectl apply -k deployments/overlays/prod
 ```
 
 ### Terraform Workflow
@@ -217,8 +217,8 @@ projects/123456789/locations/global/workloadIdentityPools/github-actions-pool/pr
 ## Related Workflows
 
 This composite action is used in:
-- `.github/workflows/deploy-production-gke.yaml` - Production GKE deployments (4 jobs)
-- `.github/workflows/deploy-preview-gke.yaml` - Staging GKE deployments (4 jobs)
+- `.github/workflows/deploy-prod-gke.yaml` - Production GKE deployments (4 jobs)
+- `.github/workflows/deploy-stg-gke.yaml` - Staging GKE deployments (4 jobs)
 - `.github/workflows/gcp-drift-detection.yaml` - Terraform drift detection (3 jobs)
 - `.github/workflows/gcp-compliance-scan.yaml` - Compliance scanning (1 job)
 - `.github/workflows/ci.yaml` - CI/CD pipeline (1 job)

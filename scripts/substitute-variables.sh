@@ -139,12 +139,12 @@ if [ -f "${PROJECT_ROOT}/deployments/kubernetes/overlays/aws/external-secrets.ya
 fi
 
 # GCP overlay
-if [ -f "${PROJECT_ROOT}/deployments/overlays/production-gke/serviceaccount-patch.yaml" ]; then
-    substitute_in_file "${PROJECT_ROOT}/deployments/overlays/production-gke/serviceaccount-patch.yaml"
+if [ -f "${PROJECT_ROOT}/deployments/overlays/prod-gke/serviceaccount-patch.yaml" ]; then
+    substitute_in_file "${PROJECT_ROOT}/deployments/overlays/prod-gke/serviceaccount-patch.yaml"
 fi
 
-if [ -f "${PROJECT_ROOT}/deployments/overlays/production-gke/external-secrets.yaml" ]; then
-    substitute_in_file "${PROJECT_ROOT}/deployments/overlays/production-gke/external-secrets.yaml"
+if [ -f "${PROJECT_ROOT}/deployments/overlays/prod-gke/external-secrets.yaml" ]; then
+    substitute_in_file "${PROJECT_ROOT}/deployments/overlays/prod-gke/external-secrets.yaml"
 fi
 
 # Base serviceaccount (remove placeholders - overlays will provide real values)

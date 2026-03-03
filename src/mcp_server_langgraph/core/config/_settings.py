@@ -1000,7 +1000,7 @@ class Settings(BaseSettings):
         origins = self.get_cors_origins()
 
         # Check for wildcard CORS in production
-        if self.environment == "production" and "*" in origins:
+        if self.environment in ("production", "prod") and "*" in origins:
             msg = (
                 "CRITICAL: Wildcard CORS (allow_origins=['*']) is not allowed in production. "
                 "This is a security risk and browsers will reject it when allow_credentials=True. "
@@ -1009,7 +1009,7 @@ class Settings(BaseSettings):
             raise ValueError(msg)
 
         # Warn about wildcard in non-production environments
-        if self.environment != "production" and "*" in origins:
+        if self.environment not in ("production", "prod") and "*" in origins:
             import logging
 
             logger = logging.getLogger(__name__)

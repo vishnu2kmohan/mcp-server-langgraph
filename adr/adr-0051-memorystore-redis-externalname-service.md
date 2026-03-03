@@ -76,7 +76,7 @@ We use **Kubernetes ExternalName Service + Google Cloud DNS** to reference Memor
 ```
 ### Implementation
 
-**File:** `deployments/overlays/preview-gke/redis-session-service-patch.yaml`
+**File:** `deployments/overlays/stg-gke/redis-session-service-patch.yaml`
 
 ```
 apiVersion: v1
@@ -258,7 +258,7 @@ Deploy a controller that automatically creates/updates Endpoints for external se
 
 3. **Deploy ExternalName Service** (via Kustomize)
    ```bash
-   kubectl apply -k deployments/overlays/preview-gke
+   kubectl apply -k deployments/overlays/stg-gke
    ```
 
 4. **Verify DNS Resolution** (from within a pod)
@@ -296,8 +296,8 @@ Add to `.trivyignore`:
 # - Internal network only (GCP VPC)
 # - Operational requirement for zero-manifest failover
 # Risk: Acceptable (Low likelihood, mitigated by IAM + VPC isolation)
-deployments/overlays/preview-gke/redis-session-service-patch.yaml
-deployments/overlays/production-gke/redis-session-service-patch.yaml
+deployments/overlays/stg-gke/redis-session-service-patch.yaml
+deployments/overlays/prod-gke/redis-session-service-patch.yaml
 ```
 
 ## References
@@ -306,7 +306,7 @@ deployments/overlays/production-gke/redis-session-service-patch.yaml
 - **Cloud DNS Private Zones:** https://cloud.google.com/dns/docs/zones/zones-overview#private-zones
 - **Memorystore Redis:** https://cloud.google.com/memorystore/docs/redis
 - **kube-score AVD-KSV-0108:** ExternalName service DNS rebinding risk
-- **Implementation:** `deployments/overlays/preview-gke/redis-session-service-patch.yaml`
+- **Implementation:** `deployments/overlays/stg-gke/redis-session-service-patch.yaml`
 - **Related ADR:** ADR-0013 (Multi-Deployment Target Strategy)
 
 ## Revision History

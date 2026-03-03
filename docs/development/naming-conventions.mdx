@@ -44,19 +44,19 @@ Due to GCP character limits on certain resources, we use a **dual-prefix approac
 | Environment | Abbreviation | Use Case |
 |-------------|-------------|----------|
 | Development | `dev` | Local development, testing, CI/CD validation |
-| Preview | `preview` | Pre-production testing, integration validation |
+| STG | `stg` | Pre-production testing, integration validation |
 | Production | `production` | Live production workloads |
 
 ### Resource Types
 
 | Resource | Suffix | Example |
 |----------|--------|---------|
-| GKE Cluster | `-gke` | `preview-mcp-server-langgraph-gke` |
-| EKS Cluster | `-eks` | `preview-mcp-server-langgraph-eks` |
-| AKS Cluster | `-aks` | `preview-mcp-server-langgraph-aks` |
-| Namespace | *(none)* | `preview-mcp-server-langgraph` |
-| Deployment | *(none)* | `preview-mcp-server-langgraph` |
-| Service | *(none)* | `preview-mcp-server-langgraph` |
+| GKE Cluster | `-gke` | `stg-mcp-server-langgraph-gke` |
+| EKS Cluster | `-eks` | `stg-mcp-server-langgraph-eks` |
+| AKS Cluster | `-aks` | `stg-mcp-server-langgraph-aks` |
+| Namespace | *(none)* | `stg-mcp-server-langgraph` |
+| Deployment | *(none)* | `stg-mcp-server-langgraph` |
+| Service | *(none)* | `stg-mcp-server-langgraph` |
 
 ---
 
@@ -67,22 +67,22 @@ Due to GCP character limits on certain resources, we use a **dual-prefix approac
 #### Cluster Names
 ```yaml
 Development:  dev-mcp-server-langgraph-gke
-Preview:      preview-mcp-server-langgraph-gke
-Production:   production-mcp-server-langgraph-gke
+STG:          stg-mcp-server-langgraph-gke
+Production:   prod-mcp-server-langgraph-gke
 ```
 
 #### Namespaces
 ```yaml
 Development:  dev-mcp-server-langgraph
-Preview:      preview-mcp-server-langgraph
-Production:   production-mcp-server-langgraph
+STG:          stg-mcp-server-langgraph
+Production:   prod-mcp-server-langgraph
 ```
 
 #### Deployments (with Kustomize namePrefix)
 ```yaml
 Development:  dev-mcp-server-langgraph
-Preview:      preview-mcp-server-langgraph
-Production:   production-mcp-server-langgraph
+STG:          stg-mcp-server-langgraph
+Production:   prod-mcp-server-langgraph
 ```
 
 #### Services
@@ -96,14 +96,14 @@ Headless:     {env}-mcp-server-langgraph-headless
 
 | Resource | Pattern | Example |
 |----------|---------|---------|
-| VPC | `{short_prefix}-vpc` | `preview-mcp-slg-vpc` |
-| Subnet | `{short_prefix}-{purpose}-subnet` | `preview-mcp-slg-nodes-us-central1` |
-| Cloud SQL | `{short_prefix}-postgres` | `preview-mcp-slg-postgres` |
-| Memorystore | `{short_prefix}-redis` | `preview-mcp-slg-redis` |
-| Service Account | `{short_prefix}-{role}-sa` | `preview-mcp-slg-app-sa` |
-| Artifact Registry | `mcp-{env}` | `mcp-preview`, `mcp-production` |
+| VPC | `{short_prefix}-vpc` | `stg-mcp-slg-vpc` |
+| Subnet | `{short_prefix}-{purpose}-subnet` | `stg-mcp-slg-nodes-us-central1` |
+| Cloud SQL | `{short_prefix}-postgres` | `stg-mcp-slg-postgres` |
+| Memorystore | `{short_prefix}-redis` | `stg-mcp-slg-redis` |
+| Service Account | `{short_prefix}-{role}-sa` | `stg-mcp-slg-app-sa` |
+| Artifact Registry | `mcp-{env}` | `mcp-stg`, `mcp-prod` |
 
-**Note**: Short prefix = `{env}-mcp-slg` (e.g., `preview-mcp-slg`, `production-mcp-slg`, `dev-mcp-slg`)
+**Note**: Short prefix = `{env}-mcp-slg` (e.g., `stg-mcp-slg`, `prod-mcp-slg`, `dev-mcp-slg`)
 
 ---
 
@@ -112,27 +112,27 @@ Headless:     {env}-mcp-server-langgraph-headless
 #### Cluster Names
 ```yaml
 Development:  dev-mcp-server-langgraph-eks
-Preview:      preview-mcp-server-langgraph-eks
-Production:   production-mcp-server-langgraph-eks
+STG:          stg-mcp-server-langgraph-eks
+Production:   prod-mcp-server-langgraph-eks
 ```
 
 #### Namespaces
 ```yaml
 (Same as GKE - platform-agnostic)
 Development:  dev-mcp-server-langgraph
-Preview:      preview-mcp-server-langgraph
-Production:   production-mcp-server-langgraph
+STG:          stg-mcp-server-langgraph
+Production:   prod-mcp-server-langgraph
 ```
 
 #### Other AWS Resources
 
 | Resource | Pattern | Example |
 |----------|---------|---------|
-| VPC | `{name_prefix}-vpc` | `preview-mcp-server-langgraph-vpc` |
-| Subnet | `{name_prefix}-{az}-{type}` | `preview-mcp-server-langgraph-us-east-1a-private` |
-| RDS Instance | `{name_prefix}-db` | `preview-mcp-server-langgraph-db` |
-| ElastiCache | `{name_prefix}-redis` | `preview-mcp-server-langgraph-redis` |
-| IAM Role | `{cluster_name}-{purpose}` | `preview-mcp-server-langgraph-eks-cluster-role` |
+| VPC | `{name_prefix}-vpc` | `stg-mcp-server-langgraph-vpc` |
+| Subnet | `{name_prefix}-{az}-{type}` | `stg-mcp-server-langgraph-us-east-1a-private` |
+| RDS Instance | `{name_prefix}-db` | `stg-mcp-server-langgraph-db` |
+| ElastiCache | `{name_prefix}-redis` | `stg-mcp-server-langgraph-redis` |
+| IAM Role | `{cluster_name}-{purpose}` | `stg-mcp-server-langgraph-eks-cluster-role` |
 | ECR Repository | `mcp-server-langgraph` | *(environment in tags)* |
 
 ---
@@ -142,26 +142,26 @@ Production:   production-mcp-server-langgraph
 #### Cluster Names
 ```yaml
 Development:  dev-mcp-server-langgraph-aks
-Preview:      preview-mcp-server-langgraph-aks
-Production:   production-mcp-server-langgraph-aks
+STG:          stg-mcp-server-langgraph-aks
+Production:   prod-mcp-server-langgraph-aks
 ```
 
 #### Namespaces
 ```yaml
 (Same as GKE/EKS - platform-agnostic)
 Development:  dev-mcp-server-langgraph
-Preview:      preview-mcp-server-langgraph
-Production:   production-mcp-server-langgraph
+STG:          stg-mcp-server-langgraph
+Production:   prod-mcp-server-langgraph
 ```
 
 #### Other Azure Resources
 
 | Resource | Pattern | Example |
 |----------|---------|---------|
-| Resource Group | `{name_prefix}-rg` | `preview-mcp-server-langgraph-rg` |
-| Virtual Network | `{name_prefix}-vnet` | `preview-mcp-server-langgraph-vnet` |
-| PostgreSQL | `{name_prefix}-db` | `preview-mcp-server-langgraph-db` |
-| Redis Cache | `{name_prefix}-redis` | `preview-mcp-server-langgraph-redis` |
+| Resource Group | `{name_prefix}-rg` | `stg-mcp-server-langgraph-rg` |
+| Virtual Network | `{name_prefix}-vnet` | `stg-mcp-server-langgraph-vnet` |
+| PostgreSQL | `{name_prefix}-db` | `stg-mcp-server-langgraph-db` |
+| Redis Cache | `{name_prefix}-redis` | `stg-mcp-server-langgraph-redis` |
 
 ---
 
@@ -181,11 +181,11 @@ Development:
   namePrefix: dev-
 
 Preview (GKE):
-  namespace: preview-mcp-server-langgraph
-  namePrefix: preview-
+  namespace: stg-mcp-server-langgraph
+  namePrefix: stg-
 
 Production (GKE):
-  namespace: production-mcp-server-langgraph
+  namespace: prod-mcp-server-langgraph
   namePrefix: production-
 ```
 
@@ -195,10 +195,10 @@ With `namePrefix` applied:
 
 | Base Name | Environment | Generated Name |
 |-----------|-------------|----------------|
-| `mcp-server-langgraph` (Deployment) | preview | `preview-mcp-server-langgraph` |
-| `mcp-server-langgraph` (Service) | preview | `preview-mcp-server-langgraph` |
-| `mcp-server-langgraph-config` (ConfigMap) | preview | `preview-mcp-server-langgraph-config` |
-| `mcp-server-langgraph-secrets` (Secret) | preview | `preview-mcp-server-langgraph-secrets` |
+| `mcp-server-langgraph` (Deployment) | stg | `stg-mcp-server-langgraph` |
+| `mcp-server-langgraph` (Service) | stg | `stg-mcp-server-langgraph` |
+| `mcp-server-langgraph-config` (ConfigMap) | stg | `stg-mcp-server-langgraph-config` |
+| `mcp-server-langgraph-secrets` (Secret) | stg | `stg-mcp-server-langgraph-secrets` |
 
 ---
 
@@ -216,8 +216,8 @@ ghcr.io/vishnu2kmohan/mcp-server-langgraph
 Pattern: {region}-docker.pkg.dev/{project-id}/mcp-{env}/{image-name}
 
 Development:  ghcr.io/vishnu2kmohan/mcp-server-langgraph
-Preview:      us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-preview/mcp-server-langgraph
-Production:   us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph
+Preview:      us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-stg/mcp-server-langgraph
+Production:   us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph
 ```
 
 #### AWS ECR
@@ -231,7 +231,7 @@ All Environments: mcp-server-langgraph (environment in tags)
 
 ```yaml
 Development:  2.8.0-dev, dev-latest, dev-{sha}
-Preview:      2.8.0-preview, preview-latest, preview-{sha}
+STG:          2.8.0-stg, stg-latest, stg-{sha}
 Production:   2.8.0, latest, {sha}
 ```
 
@@ -244,22 +244,22 @@ Production:   2.8.0, latest, {sha}
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GKE_CLUSTER` | `dev-mcp-server-langgraph-gke` | Development GKE cluster |
-| `GKE_PREVIEW_CLUSTER` | `preview-mcp-server-langgraph-gke` | Preview GKE cluster |
-| `GKE_PROD_CLUSTER` | `production-mcp-server-langgraph-gke` | Production GKE cluster |
+| `GKE_PREVIEW_CLUSTER` | `stg-mcp-server-langgraph-gke` | STG GKE cluster |
+| `GKE_PROD_CLUSTER` | `prod-mcp-server-langgraph-gke` | Production GKE cluster |
 
 ### Namespace Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PREVIEW_NAMESPACE` | `preview-mcp-server-langgraph` | Preview namespace |
-| `PRODUCTION_NAMESPACE` | `production-mcp-server-langgraph` | Production namespace |
+| `PREVIEW_NAMESPACE` | `stg-mcp-server-langgraph` | Preview namespace |
+| `PRODUCTION_NAMESPACE` | `prod-mcp-server-langgraph` | Production namespace |
 
 ### Deployment Names
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `DEPLOYMENT_NAME` (preview) | `preview-mcp-server-langgraph` | Preview deployment |
-| `DEPLOYMENT_NAME` (production) | `production-mcp-server-langgraph` | Production deployment |
+| `DEPLOYMENT_NAME (stg) | `stg-mcp-server-langgraph` | STG deployment |
+| `DEPLOYMENT_NAME` (production) | `prod-mcp-server-langgraph` | Production deployment |
 
 ---
 
@@ -270,11 +270,11 @@ Production:   2.8.0, latest, {sha}
 ```hcl
 locals {
   # GCP Preview
-  name_prefix  = "preview-mcp-server-langgraph"
+  name_prefix  = "stg-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-gke"
 
   # GCP Production
-  name_prefix  = "production-mcp-server-langgraph"
+  name_prefix  = "prod-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-gke"
 
   # GCP Development
@@ -286,7 +286,7 @@ locals {
   cluster_name = "${local.name_prefix}-eks"
 
   # AWS Preview
-  name_prefix  = "preview-mcp-server-langgraph"
+  name_prefix  = "stg-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-eks"
 }
 ```
@@ -299,14 +299,14 @@ locals {
 
 ```bash
 # GCP Preview
-CLUSTER_NAME="preview-mcp-server-langgraph-gke"
-NAMESPACE="preview-mcp-server-langgraph"
-SERVICE_NAME="preview-mcp-server-langgraph"
+CLUSTER_NAME="stg-mcp-server-langgraph-gke"
+NAMESPACE="stg-mcp-server-langgraph"
+SERVICE_NAME="stg-mcp-server-langgraph"
 
 # GCP Production
-CLUSTER_NAME="production-mcp-server-langgraph-gke"
-NAMESPACE="production-mcp-server-langgraph"
-SERVICE_NAME="production-mcp-server-langgraph"
+CLUSTER_NAME="prod-mcp-server-langgraph-gke"
+NAMESPACE="prod-mcp-server-langgraph"
+SERVICE_NAME="prod-mcp-server-langgraph"
 
 # Development
 CLUSTER_NAME="dev-mcp-server-langgraph-gke"
@@ -322,21 +322,21 @@ SERVICE_NAME="dev-mcp-server-langgraph"
 
 | Old Pattern | New Pattern | Status |
 |-------------|-------------|--------|
-| `mcp-staging-cluster` | `preview-mcp-server-langgraph-gke` | ❌ Deprecated |
-| `mcp-prod-gke` | `production-mcp-server-langgraph-gke` | ❌ Deprecated |
-| `mcp-staging` | `preview-mcp-server-langgraph` | ❌ Deprecated |
-| `mcp-production` | `production-mcp-server-langgraph` | ❌ Deprecated |
-| `mcp-server-langgraph-staging` | `preview-mcp-server-langgraph` | ❌ Deprecated |
+| `mcp-stg-cluster` | `stg-mcp-server-langgraph-gke` | ❌ Deprecated |
+| `mcp-prod-gke` | `prod-mcp-server-langgraph-gke` | ❌ Deprecated |
+| `mcp-stg` | `stg-mcp-server-langgraph` | ❌ Deprecated |
+| `mcp-prod` | `prod-mcp-server-langgraph` | ❌ Deprecated |
+| `mcp-server-langgraph-stg` | `stg-mcp-server-langgraph` | ❌ Deprecated |
 | `mcp-dev-cluster` | `dev-mcp-server-langgraph-gke` | ❌ Deprecated |
-| `staging-*` | `preview-*` | ❌ Deprecated (use preview-) |
+| `stg-*` | `preview-*` | ❌ Deprecated (use preview-) |
 
 ### Migration Status
 
 | Component | Migration Status | Updated Date |
 |-----------|-----------------|--------------|
-| GCP Terraform (staging, prod) | ✅ Complete | 2025-11-04 |
+| GCP Terraform (stg, prod) | ✅ Complete | 2025-11-04 |
 | GCP Terraform (dev) | ✅ Complete | 2025-11-04 |
-| AWS Terraform (dev, staging) | ✅ Complete | 2025-11-04 |
+| AWS Terraform (dev, stg) | ✅ Complete | 2025-11-04 |
 | Kustomization Overlays | ✅ Complete | 2025-11-04 |
 | GitHub Workflows | ✅ Complete | 2025-11-04 |
 | GCP Scripts | ✅ Complete | 2025-11-04 |
@@ -349,7 +349,7 @@ SERVICE_NAME="dev-mcp-server-langgraph"
 
 ### Rules
 
-1. **Environment-First**: Always start with the environment name (`dev`, `staging`, `production`)
+1. **Environment-First**: Always start with the environment name (`dev`, `stg`, `production`)
 2. **Consistent Separators**: Use hyphens (`-`) for all multi-word names
 3. **Lowercase Only**: All infrastructure names must be lowercase
 4. **No Underscores**: Use hyphens instead of underscores (except in variable names)
@@ -374,7 +374,7 @@ Add to `.github/workflows/validate.yaml`:
 - name: Validate Naming Conventions
   run: |
     # Check for deprecated naming patterns
-    if grep -r "mcp-staging-cluster\|mcp-prod-gke" terraform/ deployments/ scripts/; then
+    if grep -r "mcp-stg-cluster\|mcp-prod-gke" terraform/ deployments/ scripts/; then
       echo "❌ Found deprecated naming patterns"
       exit 1
     fi

@@ -122,8 +122,8 @@ GitHub Actions Workflow Duplication Audit
     • uses:docker/setup-buildx-action
     • uses:docker/build-push-action
   Found in:
-    - deploy-production-gke.yaml → build-and-push
-    - deploy-preview-gke.yaml → build-and-push
+    - deploy-prod-gke.yaml → build-and-push
+    - deploy-stg-gke.yaml → build-and-push
 
   Sequence #10 (4 steps, found in 3 locations):
     • uses:actions/checkout
@@ -131,9 +131,9 @@ GitHub Actions Workflow Duplication Audit
     • uses:google-github-actions/setup-gcloud
     • run:gcloud container clusters get-credentials ${{ env.
   Found in:
-    - deploy-production-gke.yaml → deploy-production
-    - deploy-production-gke.yaml → post-deployment-validation
-    - deploy-production-gke.yaml → rollback-on-failure
+    - deploy-prod-gke.yaml → deploy-prod
+    - deploy-prod-gke.yaml → post-deployment-validation
+    - deploy-prod-gke.yaml → rollback-on-failure
 
   Sequence #11 (4 steps, found in 2 locations):
     • uses:actions/checkout

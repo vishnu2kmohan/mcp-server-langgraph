@@ -112,7 +112,7 @@ jobs:
         if: steps.plan.outputs.drift_detected == 'true'
         uses: actions/upload-artifact@v5
         with:
-          name: drift-plan-production-txt
+          name: drift-plan-prod-txt
           path: /tmp/drift-plan.txt
           retention-days: 90
 
@@ -120,7 +120,7 @@ jobs:
         if: steps.plan.outputs.drift_detected == 'true'
         uses: actions/upload-artifact@v5
         with:
-          name: drift-plan-production-binary
+          name: drift-plan-prod-binary
           path: terraform/environments/gcp-prod/tfplan
           retention-days: 90
 
@@ -259,11 +259,11 @@ jobs:
             }
 
   # ============================================================================
-  # Detect Drift in Preview
+  # Detect Drift in STG
   # ============================================================================
 
-  detect-drift-preview:
-    name: Detect Drift - Preview
+  detect-drift-stg:
+    name: Detect Drift - STG
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Only run in main repository (not forks) to avoid secret availability issues
@@ -284,14 +284,14 @@ jobs:
           workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service-account: ${{ secrets.GCP_TERRAFORM_SA_EMAIL }}
 
-      - name: Check preview drift
+      - name: Check stg drift
         run: |
-          cd terraform/environments/gcp-preview
+          cd terraform/environments/gcp-stg
           terraform init
           terraform plan -detailed-exitcode || EXIT_CODE=$?
 
           if [ "$EXIT_CODE" = "2" ]; then
-            echo "⚠️ Drift detected in preview"
+            echo "⚠️ Drift detected in stg"
           else
-            echo "✅ No drift in preview"
+            echo "✅ No drift in stg"
           fi

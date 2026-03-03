@@ -370,7 +370,7 @@ make health-check      # Check system health
 **Purpose**: Validate Kustomize overlays
 **Duration**: 5 seconds
 **Command**: `kustomize build` for each overlay
-**Checks**: dev, staging, production overlays
+**Checks**: dev, stg, prod overlays
 
 #### `make validate-all`
 **Purpose**: Run all validations
@@ -462,17 +462,17 @@ make health-check      # Check system health
 
 ---
 
-### Staging Deployment
+### STG Deployment
 
-#### `make deploy-staging`
-**Purpose**: Deploy to staging environment
+#### `make deploy-stg`
+**Purpose**: Deploy to stg environment
 **Duration**: 1-2 minutes
-**Command**: `kustomize build deployments/kustomize/overlays/staging | kubectl apply -f -`
-**Target**: Staging Kubernetes cluster
+**Command**: `kustomize build deployments/kustomize/overlays/stg | kubectl apply -f -`
+**Target**: STG Kubernetes cluster
 
-#### `make deploy-rollback-staging`
-**Purpose**: Rollback staging deployment
-**Command**: `kubectl rollout undo deployment/mcp-server-langgraph -n staging`
+#### `make deploy-rollback-stg`
+**Purpose**: Rollback stg deployment
+**Command**: `kubectl rollout undo deployment/mcp-server-langgraph -n stg`
 
 ---
 

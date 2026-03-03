@@ -53,7 +53,7 @@ POSTGRES_DB: gdpr  # Single database, no multi-db support
 POSTGRES_DB: postgres  # Default DB
 POSTGRES_MULTIPLE_DATABASES: openfga,keycloak,gdpr  # Multi-db creation
 
-# Production/Staging (Helm values)
+# Production/STG (Helm values)
 # Uses external Cloud SQL - no explicit database naming standard
 ```
 
@@ -104,7 +104,7 @@ We will implement a **consistent multi-database architecture** with a clear nami
 
 ### Database Naming Convention
 
-| Service | Development | Test | Staging | Production |
+| Service | Development | Test | STG | Production |
 |---------|-------------|------|---------|------------|
 | **GDPR Compliance** | `gdpr` | `gdpr_test` | `gdpr` | `gdpr` |
 | **OpenFGA Authorization** | `openfga` | `openfga_test` | `openfga` | `openfga` |
@@ -114,7 +114,7 @@ We will implement a **consistent multi-database architecture** with a clear nami
 
 **Rationale**:
 - Test suffix prevents accidental connection to dev/prod databases
-- No suffix in prod/staging keeps database names simple
+- No suffix in prod/stg keeps database names simple
 - Consistent across environments reduces cognitive load
 
 ### Database Responsibilities
@@ -193,7 +193,7 @@ postgres:
     - ./migrations:/docker-entrypoint-initdb.d/migrations
 ```
 
-#### Staging / Production
+#### STG / Production
 **Strategy**: External managed PostgreSQL (Cloud SQL, RDS, etc.) with multiple databases
 
 **Rationale**:
@@ -205,7 +205,7 @@ postgres:
 
 **Configuration**:
 ```yaml
-# Helm values-production.yaml
+# Helm values-prod.yaml
 database:
   host: "postgres-prod.c.project-id.internal"  # Cloud SQL
   port: 5432
@@ -356,7 +356,7 @@ gdpr_db = get_database_name("gdpr")  # Returns "gdpr_test" in tests, "gdpr" othe
 
 ### Positive Consequences
 
-**✅ Consistency**: Same database structure across dev/test/staging/prod
+**✅ Consistency**: Same database structure across dev/test/stg/prod
 **✅ Clarity**: Clear naming convention removes ambiguity
 **✅ Security**: Data separation aligns with GDPR data protection by design
 **✅ Testability**: Test databases clearly isolated from development
@@ -453,7 +453,7 @@ gdpr_db = get_database_name("gdpr")  # Returns "gdpr_test" in tests, "gdpr" othe
 - [ ] Write unit tests for `get_database_name()` helper
 
 **Phase 4: Helm / Production (Week 2)**
-- [ ] Update Helm values for production/staging with database configuration
+- [ ] Update Helm values for production/stg with database configuration
 - [ ] Document Cloud SQL setup requirements
 - [ ] Update production deployment playbooks
 - [ ] Add Terraform/Pulumi scripts for managed PostgreSQL setup
@@ -500,7 +500,7 @@ ALTER DATABASE gdpr RENAME TO gdpr_new;
 
 **No action required** - Test environment already uses correct naming (`gdpr_test`, `openfga_test`, `keycloak_test`)
 
-### For Production / Staging
+### For Production / STG
 
 **Cloud SQL Setup**:
 1. Create Cloud SQL PostgreSQL instance (if not exists)

@@ -13,10 +13,10 @@ contentType: "how-to"
 #### Environment Strategy
 
 ```bash
-Development → Staging → Production
+Development → STG → Production
     ↓           ↓          ↓
  Kustomize   Kustomize   Helm
-   (dev)     (staging)  (release)
+   (dev)     (stg)  (release)
 ```
 
 #### Development Deployment
@@ -35,18 +35,18 @@ make deploy-dev
 - Replicas: 1
 - Resources: Low limits
 
-#### Staging Deployment
+#### STG Deployment
 
 **Trigger**: Manual deployment after dev validation
 
-**Method**: Kustomize with staging overlay
+**Method**: Kustomize with stg overlay
 
 ```bash
-make deploy-staging
+make deploy-stg
 ```
 
 **Configuration**:
-- Namespace: `staging-mcp-server-langgraph`
+- Namespace: `stg-mcp-server-langgraph`
 - Auth: `keycloak`
 - Sessions: `redis` (12-hour TTL)
 - Replicas: 2
@@ -60,7 +60,7 @@ make deploy-staging
 **Method**: Helm chart
 
 ```bash
-make deploy-production
+make deploy-prod
 ```
 **Configuration**:
 - Namespace: `mcp-server-langgraph`
@@ -85,9 +85,9 @@ make deploy-production
 make deploy-rollback-dev
 ```
 
-**Staging**:
+**STG**:
 ```bash
-make deploy-rollback-staging
+make deploy-rollback-stg
 ```
 **Production**:
 ```bash

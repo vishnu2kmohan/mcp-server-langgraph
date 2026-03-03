@@ -430,7 +430,7 @@ spec:
 ```yaml
 # deployments/monitoring/kubecost-values.yaml
 kubecostProductConfigs:
-  clusterName: mcp-production
+  clusterName: mcp-prod
   productKey: ""  # Free tier or enterprise key
 
 prometheus:
@@ -627,7 +627,7 @@ Before deploying to production:
 
 ### Topology Spread Constraints
 
-1. Test in dev/staging first
+1. Test in dev/stg first
 2. Ensure cluster has 3+ zones
 3. Monitor pod scheduling (watch for Pending pods)
 4. Rollback: Remove `topologySpreadConstraints`, revert to `preferred` anti-affinity

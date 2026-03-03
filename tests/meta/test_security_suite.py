@@ -27,7 +27,7 @@ class TestSecuritySuiteChangeDetection:
         [
             # Single scope triggers
             (["deployments/kubernetes/base/deployment.yaml"], {"k8s-manifests"}),
-            (["deployments/kubernetes/overlays/production/kustomization.yaml"], {"k8s-manifests"}),
+            (["deployments/kubernetes/overlays/prod/kustomization.yaml"], {"k8s-manifests"}),
             (["deployments/helm/values.yaml"], {"helm-full"}),
             (["deployments/helm/mcp-server-langgraph/Chart.yaml"], {"helm-full"}),
             (["deployments/helm/mcp-server-langgraph/templates/deployment.yaml"], {"helm-full"}),

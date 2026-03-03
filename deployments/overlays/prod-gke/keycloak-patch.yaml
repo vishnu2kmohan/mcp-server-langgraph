@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10000
+        fsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: wait-for-postgres
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m  # GKE Autopilot minimum
+            memory: 128Mi  # GKE Autopilot LimitRange minimum
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+            ephemeral-storage: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 10000
+          runAsGroup: 10000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      containers:
+      - name: keycloak
+        imagePullPolicy: Always
+        # Use optimized start command - skips runtime Quarkus augmentation
+        # The custom image (docker/Dockerfile.keycloak) pre-builds Quarkus artifacts
+        # This eliminates the ReadOnlyFileSystemException issue (GitHub #10150)
+        # Build-time options (--health-enabled, --metrics-enabled) are baked
+        # into the image via ENV variables in docker/Dockerfile.keycloak
+        # They CANNOT be passed at runtime with --optimized
+        env:
+        # JVM memory settings for prod (2Gi limit)
+        # Scaled proportionally: -Xmx ≈ 75% of container limit
+        - name: JAVA_OPTS_APPEND
+          value: "-Xms1g -Xmx1536m -XX:MaxMetaspaceSize=256m"
+        args:
+        - start
+        - --optimized
+        - --http-enabled=true
+        - --http-port=8080
+        - --hostname-strict=false
+        - --log-level=INFO
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+            ephemeral-storage: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+            ephemeral-storage: 2Gi
+        # With --optimized flag, Keycloak no longer needs to modify JAR files
+        # We can now use readOnlyRootFilesystem: true for better security
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true  # Now possible with optimized image!
+          runAsNonRoot: true
+          runAsUser: 10000
+          capabilities:
+            drop:
+            - ALL
+          runAsGroup: 10000
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: keycloak-data
+          mountPath: /opt/keycloak/data
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 500Mi
+      - name: keycloak-data
+        emptyDir:
+          sizeLimit: 1Gi

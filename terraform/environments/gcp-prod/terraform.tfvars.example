@@ -97,7 +97,7 @@ redis_read_replica_regions        = []
 # Application Configuration
 #######################
 
-app_namespace = "mcp-production"
+app_namespace = "mcp-prod"
 
 # Secret Manager secrets for application
 app_secret_ids = [

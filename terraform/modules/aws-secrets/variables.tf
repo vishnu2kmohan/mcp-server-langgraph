@@ -1,5 +1,5 @@
 variable "environment" {
-  description = "Environment name (dev, staging, production)"
+  description = "Environment name (dev, stg, prod)"
   type        = string
 }
 
@@ -21,7 +21,7 @@ variable "oidc_provider_arn" {
 }
 
 variable "kms_key_id" {
-  description = "KMS key ID for Customer Managed Key (CMK) encryption. Use in production for compliance. Set to null for AWS-managed keys in dev/staging."
+  description = "KMS key ID for Customer Managed Key (CMK) encryption. Use in production for compliance. Set to null for AWS-managed keys in dev/stg."
   type        = string
   default     = null
 }

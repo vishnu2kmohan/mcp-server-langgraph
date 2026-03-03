@@ -15,7 +15,7 @@ terraform/
 │   └── gke-workload-identity/ # Workload Identity (GCP's IRSA equivalent)
 └── environments/              # Environment-specific configurations
     ├── gcp-dev/              # Development environment (cost-optimized)
-    ├── gcp-preview/          # Preview environment (matches production)
+    ├── gcp-stg/          # STG environment (matches prod)
     └── gcp-prod/             # Production environment (full HA)
 ```
 
@@ -76,7 +76,7 @@ gsutil uniformbucketlevelaccess set on gs://mcp-langgraph-tfstate
 Create a `terraform.tfvars` file in your environment directory:
 
 ```bash
-cd terraform/environments/gcp-preview
+cd terraform/environments/gcp-stg
 
 cat > terraform.tfvars <<EOF
 project_id = "your-gcp-project-id"
@@ -124,7 +124,7 @@ terraform apply tfplan
 
 ```bash
 # Update kubeconfig for the new cluster
-gcloud container clusters get-credentials mcp-preview-gke \
+gcloud container clusters get-credentials mcp-stg-gke \
   --region=us-central1 \
   --project=your-gcp-project-id
 
@@ -134,7 +134,7 @@ kubectl get nodes
 
 ## Environment Configuration
 
-Each environment (gcp-dev/gcp-preview/gcp-prod) has its own:
+Each environment (gcp-dev/gcp-stg/gcp-prod) has its own:
 - `main.tf` - Main infrastructure configuration
 - `variables.tf` - Environment-specific variable definitions
 - `outputs.tf` - Output values (cluster info, connection strings, etc.)
@@ -236,7 +236,7 @@ Terraform state is stored in Google Cloud Storage:
 
 **State file organization**:
 - `env/dev/` - Development state
-- `env/preview/` - Preview state
+- `env/stg/` - Preview state
 - `env/prod/` - Production state
 
 ## Security Best Practices
@@ -339,7 +339,7 @@ gsutil cat gs://mcp-langgraph-tfstate/env/prod/default.tflock
 
 ```bash
 # Update kubeconfig
-gcloud container clusters get-credentials mcp-preview-gke \
+gcloud container clusters get-credentials mcp-stg-gke \
   --region=us-central1 \
   --project=your-gcp-project-id
 

@@ -954,10 +954,10 @@ make validate-all             # Run all deployment validations
 
 ```bash
 make deploy-dev               # Deploy to development (Kustomize)
-make deploy-staging           # Deploy to staging (Kustomize)
+make deploy-stg           # Deploy to stg (Kustomize)
 make deploy-production        # Deploy to production (Helm)
 make deploy-rollback-dev      # Rollback development deployment
-make deploy-rollback-staging  # Rollback staging deployment
+make deploy-rollback-stg  # Rollback stg deployment
 make deploy-rollback-production  # Rollback production deployment
 ```bash
 ### Code Quality Commands

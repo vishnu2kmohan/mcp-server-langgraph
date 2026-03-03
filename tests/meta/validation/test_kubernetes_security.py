@@ -35,7 +35,7 @@ class TestSecurityContexts:
         Uses the shared deployments_dir fixture from conftest.py to prevent
         path resolution bugs (DRY pattern).
         """
-        overlays_dir = deployments_dir / "overlays" / "preview-gke"
+        overlays_dir = deployments_dir / "overlays" / "stg-gke"
         return [
             overlays_dir / "deployment-patch.yaml",
             overlays_dir / "openfga-patch.yaml",
@@ -49,13 +49,13 @@ class TestSecurityContexts:
         This test will initially FAIL because security contexts are missing.
         After fix, all containers should have this critical security setting.
 
-        **EXCEPTION: Keycloak (preview-gke overlay only)**
+        **EXCEPTION: Keycloak (stg-gke overlay only)**
         Keycloak requires readOnlyRootFilesystem: false due to Quarkus JIT compilation.
 
         Current Status:
-        - preview-gke: readOnlyRootFilesystem: false ✅ (deployed and working)
+        - stg-gke: readOnlyRootFilesystem: false ✅ (deployed and working)
         - base: readOnlyRootFilesystem: true ❌ (not deployed, needs fix)
-        - production-gke: readOnlyRootFilesystem: true ❌ (not deployed, needs fix)
+        - prod-gke: readOnlyRootFilesystem: true ❌ (not deployed, needs fix)
 
         With the custom optimized Keycloak image (docker/Dockerfile.keycloak), we can now
         use readOnlyRootFilesystem: true because Quarkus is pre-compiled at build time.
@@ -215,7 +215,7 @@ class TestImagePullPolicy:
     @pytest.fixture
     def staging_overlay_dir(self, deployments_dir):
         """Get staging overlay directory using shared fixture."""
-        return deployments_dir / "overlays" / "preview-gke"
+        return deployments_dir / "overlays" / "stg-gke"
 
     @requires_tool("kubectl")
     def test_staging_overlay_has_imagepullpolicy_always(self, staging_overlay_dir):
@@ -300,7 +300,7 @@ class TestRedisExternalNameService:
         Per user preference: Investigate before deciding on approach.
         This test documents the current state and expected fixes.
         """
-        redis_service_file = deployments_dir / "overlays" / "preview-gke" / "redis-session-service-patch.yaml"
+        redis_service_file = deployments_dir / "overlays" / "stg-gke" / "redis-session-service-patch.yaml"
 
         if not redis_service_file.exists():
             pytest.skip("Redis service patch not found")
@@ -341,7 +341,7 @@ class TestKubernetesValidation:
     @requires_tool("kubectl")
     def test_kubeconform_validates_manifests(self, deployments_dir):
         """Test that manifests pass kubeconform validation."""
-        overlays_dir = deployments_dir / "overlays" / "preview-gke"
+        overlays_dir = deployments_dir / "overlays" / "stg-gke"
 
         if not overlays_dir.exists():
             pytest.skip("Overlays directory not found")
@@ -371,7 +371,7 @@ class TestKubernetesValidation:
     @requires_tool("kubectl")
     def test_kustomize_builds_successfully(self, deployments_dir):
         """Test that Kustomize overlays build without errors."""
-        overlays_dir = deployments_dir / "overlays" / "preview-gke"
+        overlays_dir = deployments_dir / "overlays" / "stg-gke"
 
         if not overlays_dir.exists():
             pytest.skip("Overlays directory not found")

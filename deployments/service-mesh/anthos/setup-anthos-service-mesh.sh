@@ -6,7 +6,7 @@
 set -euo pipefail
 
 PROJECT_ID="${1:-}"
-CLUSTER_NAME="${2:-production-mcp-server-langgraph-gke}"
+CLUSTER_NAME="${2:-prod-mcp-server-langgraph-gke}"
 REGION="${3:-us-central1}"
 
 if [ -z "$PROJECT_ID" ]; then
@@ -101,9 +101,9 @@ done
 # 5. Enable Sidecar Injection
 # ==============================================================================
 
-echo "Enabling automatic sidecar injection for mcp-production namespace..."
+echo "Enabling automatic sidecar injection for mcp-prod namespace..."
 
-kubectl label namespace mcp-production istio-injection=enabled --overwrite
+kubectl label namespace mcp-prod istio-injection=enabled --overwrite
 
 echo "✅ Sidecar injection enabled"
 
@@ -149,7 +149,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: mcp-server-gateway
-  namespace: mcp-production
+  namespace: mcp-prod
 spec:
   selector:
     istio: ingressgateway
@@ -174,7 +174,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: mcp-server
-  namespace: mcp-production
+  namespace: mcp-prod
 spec:
   hosts:
   - "*"
@@ -186,7 +186,7 @@ spec:
         prefix: /
     route:
     - destination:
-        host: production-mcp-server-langgraph
+        host: prod-mcp-server-langgraph
         port:
           number: 8000
 EOF
@@ -204,7 +204,7 @@ apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
   name: default
-  namespace: mcp-production
+  namespace: mcp-prod
 spec:
   mtls:
     mode: STRICT
@@ -245,7 +245,7 @@ gcloud container fleet mesh describe \
     --project="$PROJECT_ID"
 
 # Check sidecars
-PODS_WITH_SIDECARS=$(kubectl get pods -n mcp-production \
+PODS_WITH_SIDECARS=$(kubectl get pods -n mcp-prod \
     -o jsonpath='{.items[*].spec.containers[*].name}' \
     | grep -o istio-proxy | wc -l)
 

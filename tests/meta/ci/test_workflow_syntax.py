@@ -42,7 +42,7 @@ def test_workflow_syntax_valid(workflow_file):
     - Context usage is valid (no secrets.* in job-level if conditions)
 
     Expected to FAIL initially (RED phase) due to known issues:
-    - deploy-production-gke.yaml:545 - missing build-and-push dependency
+    - deploy-prod-gke.yaml:545 - missing build-and-push dependency
     - dora-metrics.yaml:242 - invalid secrets.* in job if
     - observability-alerts.yaml:119,206,253 - invalid secrets.* in job if
     """

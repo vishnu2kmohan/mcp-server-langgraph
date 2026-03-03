@@ -2,7 +2,7 @@
 
 **Created**: 2025-12-06
 **Last Updated**: 2025-12-07
-**Purpose**: Document all issues encountered during gke-preview-up/down testing for permanent resolution
+**Purpose**: Document all issues encountered during gke-stg-up/down testing for permanent resolution
 
 ---
 
@@ -21,7 +21,7 @@ When running `terraform apply` to create a WIF pool, Terraform fails because GCP
 GCP Workload Identity Pools are not immediately deleted - they enter a "DELETED" state for 30 days before permanent removal. Terraform cannot create a new pool with the same ID during this period.
 
 ### Solution (Automated in scripts/gcp/lib/common.sh)
-The `gke-preview-up.sh` script now includes **fully automatic** WIF pool recovery via the `recover_soft_deleted_wif()` function. When a soft-deleted pool is detected, the script will:
+The `gke-stg-up.sh` script now includes **fully automatic** WIF pool recovery via the `recover_soft_deleted_wif()` function. When a soft-deleted pool is detected, the script will:
 
 1. Display a transparent warning banner explaining that a previously deleted pool was found
 2. Automatically undelete the pool and provider
@@ -45,7 +45,7 @@ fi
 ```
 
 ### Prevention
-- Always use `gke-preview-down.sh` for teardown (handles state properly)
+- Always use `gke-stg-down.sh` for teardown (handles state properly)
 - If WIF pool is in DELETED state, script will auto-recover
 
 ---
@@ -88,8 +88,8 @@ Error code 9: Failed to delete connection; Producer services (e.g. CloudSQL, Clo
 ### Root Cause
 GCP Service Networking Connections have eventual consistency. After deleting CloudSQL or Memorystore instances, the connection metadata can take 2-5 minutes to fully release.
 
-### Solution (Automated in gke-preview-down.sh)
-The `gke-preview-down.sh` script now includes **automatic retry logic** with a multi-stage fallback:
+### Solution (Automated in gke-stg-down.sh)
+The `gke-stg-down.sh` script now includes **automatic retry logic** with a multi-stage fallback:
 
 1. **Initial terraform destroy** - Attempts full destruction
 2. **Error detection** - Checks for "Error code 9" / "Producer services still using"
@@ -100,7 +100,7 @@ The `gke-preview-down.sh` script now includes **automatic retry logic** with a m
    - Runs final terraform destroy for remaining resources
 
 ```bash
-# Configuration in gke-preview-down.sh
+# Configuration in gke-stg-down.sh
 SERVICE_NETWORKING_MAX_RETRIES=3
 SERVICE_NETWORKING_RETRY_DELAY=120  # 2 minutes
 
@@ -115,7 +115,7 @@ SERVICE_NETWORKING_RETRY_DELAY=120  # 2 minutes
 #### Option A: gcloud Direct Delete
 ```bash
 gcloud services vpc-peerings delete \
-    --network=preview-mcp-slg-vpc \
+    --network=stg-mcp-slg-vpc \
     --service=servicenetworking.googleapis.com \
     --project="$PROJECT_ID" \
     --quiet
@@ -124,13 +124,13 @@ gcloud services vpc-peerings delete \
 #### Option B: Force VPC Peering Delete
 ```bash
 gcloud compute networks peerings delete servicenetworking-googleapis-com \
-    --network=preview-mcp-slg-vpc \
+    --network=stg-mcp-slg-vpc \
     --project="$PROJECT_ID" \
     --quiet
 ```
 
 ### Prevention
-- Always use `gke-preview-down.sh` for teardown (handles retries automatically)
+- Always use `gke-stg-down.sh` for teardown (handles retries automatically)
 - The script now waits for GCP eventual consistency before VPC cleanup
 
 ---
@@ -198,7 +198,7 @@ terraform apply
 - Never run parallel terraform operations
 - Implement proper locking in scripts:
 ```bash
-LOCKFILE="/tmp/gke-preview-terraform.lock"
+LOCKFILE="/tmp/gke-stg-terraform.lock"
 exec 9>"$LOCKFILE"
 if ! flock -n 9; then
     log_error "Another Terraform operation is in progress"
@@ -217,7 +217,7 @@ Resources exist in GCP but not in Terraform state, causing drift.
 Terraform operation interrupted mid-apply, leaving some resources created but not tracked.
 
 ### Solution
-The `gke-preview-down.sh` script includes orphan cleanup:
+The `gke-stg-down.sh` script includes orphan cleanup:
 
 ```bash
 cleanup_orphaned_resources() {
@@ -247,8 +247,8 @@ cleanup_orphaned_resources() {
 ```
 
 ### Prevention
-- Use `gke-preview-down.sh --orphans-only` to clean orphans without full destroy
-- Check resource status before running `gke-preview-up.sh`
+- Use `gke-stg-down.sh --orphans-only` to clean orphans without full destroy
+- Check resource status before running `gke-stg-up.sh`
 
 ---
 
@@ -280,25 +280,25 @@ export PROJECT=vishnu-sandbox-20250310
 export REGION=us-central1
 
 # Delete GKE
-gcloud container clusters delete preview-mcp-server-langgraph-gke \
+gcloud container clusters delete stg-mcp-server-langgraph-gke \
     --region=$REGION --project=$PROJECT --quiet
 
 # Delete CloudSQL
-gcloud sql instances delete preview-mcp-slg-postgres \
+gcloud sql instances delete stg-mcp-slg-postgres \
     --project=$PROJECT --quiet
 
 # Delete Redis
-gcloud redis instances delete preview-mcp-slg-redis \
+gcloud redis instances delete stg-mcp-slg-redis \
     --region=$REGION --project=$PROJECT --quiet --async
 
 # Delete VPC peering (after waiting for CloudSQL/Redis)
 gcloud services vpc-peerings delete \
-    --network=preview-mcp-slg-vpc \
+    --network=stg-mcp-slg-vpc \
     --service=servicenetworking.googleapis.com \
     --project=$PROJECT --quiet
 
 # Delete VPC (after peering deleted)
-gcloud compute networks delete preview-mcp-slg-vpc \
+gcloud compute networks delete stg-mcp-slg-vpc \
     --project=$PROJECT --quiet
 
 # Undelete WIF pool (if in DELETED state)
@@ -402,7 +402,7 @@ Error 400: Identity Pool does not exist (projects/.../workloadIdentityPools/gith
 ```
 
 ### Root Cause
-When a WIF pool exists in GCP in an **active** state (not soft-deleted), but Terraform state is empty (e.g., after `gke-preview-down.sh --terraform-only` or manual state deletion), Terraform tries to create the pool and fails with Error 409.
+When a WIF pool exists in GCP in an **active** state (not soft-deleted), but Terraform state is empty (e.g., after `gke-stg-down.sh --terraform-only` or manual state deletion), Terraform tries to create the pool and fails with Error 409.
 
 Additionally, subsequent IAM bindings that reference the pool fail with Error 400 because Terraform's state shows the pool as non-existent (the create failed), while GCP shows it exists.
 
@@ -425,8 +425,8 @@ The `recover_soft_deleted_wif()` function now handles **both** soft-deleted and 
 The `import_wif_to_terraform()` function checks if the resource is already in Terraform state before importing, preventing duplicate import errors.
 
 ### Prevention
-- Always use `gke-preview-down.sh` for teardown (handles state properly)
-- Script now auto-imports active WIF pools into Terraform state during `gke-preview-up.sh`
+- Always use `gke-stg-down.sh` for teardown (handles state properly)
+- Script now auto-imports active WIF pools into Terraform state during `gke-stg-up.sh`
 
 ---
 
@@ -462,13 +462,13 @@ When a scheduled backup is created (e.g., via the weekly cron schedule), it inhe
 ```bash
 # List backups under the backup plan
 gcloud beta container backup-restore backups list \
-    --backup-plan=preview-mcp-server-langgraph-gke-backup-plan \
+    --backup-plan=stg-mcp-server-langgraph-gke-backup-plan \
     --location=us-central1 \
     --project=PROJECT_ID
 
 # Check a specific backup's delete lock time
 gcloud beta container backup-restore backups describe BACKUP_NAME \
-    --backup-plan=preview-mcp-server-langgraph-gke-backup-plan \
+    --backup-plan=stg-mcp-server-langgraph-gke-backup-plan \
     --location=us-central1 \
     --project=PROJECT_ID \
     --format="yaml(deleteLockExpireTime)"
@@ -490,14 +490,14 @@ The orphaned BackupPlan will remain in GCP until the backup locks expire, then c
 ```bash
 # After lock expires (check deleteLockExpireTime), delete backups
 gcloud beta container backup-restore backups delete BACKUP_NAME \
-    --backup-plan=preview-mcp-server-langgraph-gke-backup-plan \
+    --backup-plan=stg-mcp-server-langgraph-gke-backup-plan \
     --location=us-central1 \
     --project=PROJECT_ID \
     --quiet
 
 # Then delete the backup plan
 gcloud beta container backup-restore backup-plans delete \
-    preview-mcp-server-langgraph-gke-backup-plan \
+    stg-mcp-server-langgraph-gke-backup-plan \
     --location=us-central1 \
     --project=PROJECT_ID \
     --quiet
@@ -622,7 +622,7 @@ gcloud iam workload-identity-pools providers undelete github-actions-provider \
     --project=PROJECT_ID
 
 # 3. Import into Terraform state
-cd terraform/environments/gcp-preview
+cd terraform/environments/gcp-stg
 terraform import -var="project_id=PROJECT_ID" -var="region=us-central1" \
     'module.github_actions_wif.google_iam_workload_identity_pool.github_actions' \
     'projects/PROJECT_ID/locations/global/workloadIdentityPools/github-actions-pool'
@@ -634,7 +634,7 @@ terraform import -var="project_id=PROJECT_ID" -var="region=us-central1" \
 
 ### Prevention
 - Always use the fixed version of `check_wif_pool_state()` that explicitly checks the `state` field
-- The automated recovery in `gke-preview-up.sh` now properly handles this case
+- The automated recovery in `gke-stg-up.sh` now properly handles this case
 
 ---
 
@@ -647,10 +647,10 @@ terraform import -var="project_id=PROJECT_ID" -var="region=us-central1" \
 Error creating BackupPlan: googleapi: Error 409: Resource 'projects/PROJECT/locations/REGION/backupPlans/BACKUP_PLAN_NAME' already exists
 ```
 
-During `gke-preview-up.sh`, Terraform fails to create the BackupPlan because one already exists in GCP but is not in Terraform state.
+During `gke-stg-up.sh`, Terraform fails to create the BackupPlan because one already exists in GCP but is not in Terraform state.
 
 ### Root Cause
-When Issue #9 (BackupPlan with locked backups) occurs, the workaround removes the BackupPlan from Terraform state but leaves it orphaned in GCP. On the next `gke-preview-up.sh` run, Terraform tries to create a new BackupPlan with the same name and fails with Error 409.
+When Issue #9 (BackupPlan with locked backups) occurs, the workaround removes the BackupPlan from Terraform state but leaves it orphaned in GCP. On the next `gke-stg-up.sh` run, Terraform tries to create a new BackupPlan with the same name and fails with Error 409.
 
 This creates a circular problem:
 1. **Issue #9**: Can't delete BackupPlan due to locked backups → remove from state
@@ -660,32 +660,32 @@ This creates a circular problem:
 
 **Option A: Import orphaned BackupPlan into Terraform state**
 ```bash
-cd terraform/environments/gcp-preview
+cd terraform/environments/gcp-stg
 
 # Import the existing BackupPlan
 terraform import \
   'module.gke.google_gke_backup_backup_plan.cluster[0]' \
-  'projects/PROJECT_ID/locations/us-central1/backupPlans/preview-mcp-server-langgraph-gke-backup-plan'
+  'projects/PROJECT_ID/locations/us-central1/backupPlans/stg-mcp-server-langgraph-gke-backup-plan'
 ```
 
 **Option B: Delete orphaned BackupPlan (if no locked backups)**
 ```bash
 # Check for backups under the plan
 gcloud beta container backup-restore backups list \
-    --backup-plan=preview-mcp-server-langgraph-gke-backup-plan \
+    --backup-plan=stg-mcp-server-langgraph-gke-backup-plan \
     --location=us-central1 \
     --project=PROJECT_ID
 
 # If no locked backups, delete the plan
 gcloud beta container backup-restore backup-plans delete \
-    preview-mcp-server-langgraph-gke-backup-plan \
+    stg-mcp-server-langgraph-gke-backup-plan \
     --location=us-central1 \
     --project=PROJECT_ID \
     --quiet
 ```
 
 ### Long-term Solution
-Enhance `gke-preview-up.sh` to detect orphaned BackupPlans and either:
+Enhance `gke-stg-up.sh` to detect orphaned BackupPlans and either:
 1. Import them into Terraform state before `terraform apply`
 2. Delete them if they have no locked backups
 3. Disable backup plans for preview environments entirely
@@ -709,7 +709,7 @@ This might either be because the pool or provider is disabled or deleted or beca
 ```
 
 ### Root Cause
-During local testing with `gke-preview-up.sh` and `gke-preview-down.sh`, the WIF pool can enter one of several states that break CI:
+During local testing with `gke-stg-up.sh` and `gke-stg-down.sh`, the WIF pool can enter one of several states that break CI:
 
 1. **Soft-deleted state**: Pool exists but in `DELETED` state (30-day retention)
 2. **Disabled state**: Pool exists but `disabled = true`
@@ -759,7 +759,7 @@ gcloud iam workload-identity-pools providers undelete github-actions-provider \
 
 1. **Separate WIF pool for preview**: Create dedicated WIF pools for preview environment testing that are never destroyed during teardown
 
-2. **Skip WIF destroy in preview**: Modify `gke-preview-down.sh` to preserve WIF resources:
+2. **Skip WIF destroy in preview**: Modify `gke-stg-down.sh` to preserve WIF resources:
    ```bash
    # In terraform destroy target list, exclude WIF module
    terraform destroy -target=module.gke -target=module.cloudsql ...
@@ -769,7 +769,7 @@ gcloud iam workload-identity-pools providers undelete github-actions-provider \
 3. **CI robustness**: Add retry logic to CI for WIF authentication failures with automatic recovery attempt
 
 ### Prevention
-- Always run `gke-preview-up.sh` after `gke-preview-down.sh` to ensure WIF is restored
+- Always run `gke-stg-up.sh` after `gke-stg-down.sh` to ensure WIF is restored
 - Consider marking WIF resources with `prevent_destroy = true` in Terraform
 - Add CI status check before pushing changes that affect infrastructure
 
@@ -808,7 +808,7 @@ gcloud iam workload-identity-pools providers undelete github-actions-provider \
 6. **BackupPlan cleanup**: Check for orphaned BackupPlans before apply
 7. **CI validation**: Re-run CI after infrastructure changes to catch WIF issues
 
-These are implemented in the `gke-preview-up.sh` and `gke-preview-down.sh` scripts.
+These are implemented in the `gke-stg-up.sh` and `gke-stg-down.sh` scripts.
 
 ---
 
@@ -830,7 +830,7 @@ These are implemented in the `gke-preview-up.sh` and `gke-preview-down.sh` scrip
 - **GKE BackupPlan**: 409 on create, orphaned from previous cycle
 
 ### Lessons Learned
-1. **BackupPlan idempotency**: Need to handle orphaned BackupPlans in gke-preview-up.sh
+1. **BackupPlan idempotency**: Need to handle orphaned BackupPlans in gke-stg-up.sh
 2. **Service Networking eventual consistency**: 2-3 minute wait is insufficient, need longer retry
 3. **WIF state detection**: gcloud returns success for soft-deleted resources
 4. **CI/WIF coupling**: Local testing cannot validate WIF-dependent CI jobs

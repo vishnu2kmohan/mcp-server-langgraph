@@ -22,7 +22,7 @@ The MCP Server uses a **multi-database architecture** with dedicated databases f
 | **keycloak** / **keycloak_test** | Authentication (users, realms, clients) | 3 tables | Auto-managed by Keycloak |
 
 **Automatic Initialization**: All databases are created automatically via `migrations/000_init_databases.sh` when PostgreSQL starts. The script detects the environment from `POSTGRES_DB`:
-- **Development/Production**: `POSTGRES_DB=postgres` → creates `gdpr`, `openfga`, `keycloak`
+- **Development/Prod**: `POSTGRES_DB=postgres` → creates `gdpr`, `openfga`, `keycloak`
 - **Test**: `POSTGRES_DB=gdpr_test` → creates `gdpr_test`, `openfga_test`, `keycloak_test`
 
 **Validation**: After deployment, you can validate the database architecture:
@@ -84,9 +84,9 @@ docker compose logs -f agent
 - Prometheus: http://localhost:9090
 - Keycloak: http://localhost:8080/admin (admin/admin)
 
-### 2. Kubernetes with kubectl (Production-Ready)
+### 2. Kubernetes with kubectl (Prod-Ready)
 
-**Best for**: Production deployments with full control
+**Best for**: Prod deployments with full control
 
 ```bash
 # 1. Set up prerequisites
@@ -146,11 +146,11 @@ kubectl logs -f deployment/langgraph-agent -n $NAMESPACE
 # Development environment
 kubectl apply -k deployments/kustomize/overlays/dev
 
-# Staging environment
-kubectl apply -k deployments/kustomize/overlays/staging
+# STG environment
+kubectl apply -k deployments/kustomize/overlays/stg
 
-# Production environment
-kubectl apply -k deployments/kustomize/overlays/production
+# Prod environment
+kubectl apply -k deployments/kustomize/overlays/prod
 ```
 
 ### 4. Helm Chart (Advanced)
@@ -290,7 +290,7 @@ curl -X POST http://localhost:8000/auth/token \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin"}'
 
-# With Keycloak provider (production)
+# With Keycloak provider (prod)
 # Use Keycloak's OAuth2 token endpoint
 ```
 
@@ -314,7 +314,7 @@ curl http://localhost:8000/metrics/prometheus
 - **Metrics**: Disabled (reduce noise)
 - **TLS**: Disabled
 
-### Staging
+### STG
 - **Authentication**: `keycloak` provider
 - **Sessions**: `redis` backend (12-hour TTL)
 - **Replicas**: 2
@@ -322,7 +322,7 @@ curl http://localhost:8000/metrics/prometheus
 - **Metrics**: Enabled
 - **TLS**: Optional
 
-### Production
+### Prod
 - **Authentication**: `keycloak` provider (required)
 - **Sessions**: `redis` backend (24-hour TTL)
 - **Replicas**: 3+ with autoscaling
@@ -407,7 +407,7 @@ resources:
 - 🔐 Set up [authentication with Keycloak](../docs/getting-started/authentication.mdx)
 - 📊 Configure [observability and monitoring](../docs/guides/observability.mdx)
 - 🔒 Review [security best practices](../docs/security/overview.mdx)
-- 🚀 Explore [production deployment guide](../docs/deployment/production-checklist.mdx)
+- 🚀 Explore [prod deployment guide](../docs/deployment/prod-checklist.mdx)
 
 ## Getting Help
 

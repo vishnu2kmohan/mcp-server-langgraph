@@ -8,7 +8,7 @@ This directory contains ArgoCD configurations for declarative, GitOps-based depl
 
 - **Automated Sync**: Changes in Git automatically deploy to cluster
 - **Self-Healing**: Manual kubectl changes are automatically reverted
-- **Multi-Environment**: Separate applications for dev/staging/prod
+- **Multi-Environment**: Separate applications for dev/stg/prod
 - **RBAC**: Role-based access control for team members
 - **Notifications**: Slack notifications for deployment events
 
@@ -62,7 +62,7 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 # Password: (from step 1)
 ```
 
-**Option B: Ingress (Production)**
+**Option B: Ingress (Prod)**
 ```bash
 # Update ingress.yaml with your domain
 # Then access at https://argocd.example.com
@@ -212,22 +212,22 @@ spec:
       selfHeal: true  # Auto-sync for dev
 ```
 
-### Staging Environment
+### STG Environment
 
 ```yaml
-# applications/mcp-server-staging.yaml
+# applications/mcp-server-stg.yaml
 spec:
   source:
     targetRevision: release  # release branch
   destination:
-    namespace: staging-mcp-server-langgraph
+    namespace: stg-mcp-server-langgraph
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false  # Manual sync for staging
+      selfHeal: false  # Manual sync for stg
 ```
 
-### Production Environment
+### Prod Environment
 
 ```yaml
 # applications/mcp-server-prod.yaml
@@ -239,7 +239,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false  # Manual sync for production
+      selfHeal: false  # Manual sync for prod
     syncOptions:
       - CreateNamespace=false  # Pre-created by Terraform
 ```
@@ -382,7 +382,7 @@ metadata:
 
 ### 3. Use Sync Windows
 
-Restrict production syncs:
+Restrict prod syncs:
 
 ```yaml
 syncWindows:

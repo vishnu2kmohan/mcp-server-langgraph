@@ -4,7 +4,7 @@
 # ==============================================================================
 #
 # Validates that NetworkPolicies follow best practices and prevent
-# the classes of errors discovered in staging deployment failures.
+# the classes of errors discovered in stg deployment failures.
 #
 # USAGE:
 #   ./scripts/validate-network-policies.sh [namespace]
@@ -30,7 +30,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-NAMESPACE="${1:-staging-mcp-server-langgraph}"
+NAMESPACE="${1:-stg-mcp-server-langgraph}"
 VALIDATION_ERRORS=0
 
 # ==============================================================================
@@ -143,9 +143,9 @@ validate_health_endpoints() {
     local readiness_path
     local liveness_path
 
-    startup_path=$(kubectl get deployment -n "$NAMESPACE" staging-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].startupProbe.httpGet.path}' 2>/dev/null || echo "")
-    readiness_path=$(kubectl get deployment -n "$NAMESPACE" staging-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].readinessProbe.httpGet.path}' 2>/dev/null || echo "")
-    liveness_path=$(kubectl get deployment -n "$NAMESPACE" staging-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].livenessProbe.httpGet.path}' 2>/dev/null || echo "")
+    startup_path=$(kubectl get deployment -n "$NAMESPACE" stg-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].startupProbe.httpGet.path}' 2>/dev/null || echo "")
+    readiness_path=$(kubectl get deployment -n "$NAMESPACE" stg-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].readinessProbe.httpGet.path}' 2>/dev/null || echo "")
+    liveness_path=$(kubectl get deployment -n "$NAMESPACE" stg-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].livenessProbe.httpGet.path}' 2>/dev/null || echo "")
 
     if [ -z "$startup_path" ]; then
         log_warning "Could not extract probe paths from deployment"
@@ -181,7 +181,7 @@ validate_cloud_sql_proxy_health_checks() {
 
     # Get Cloud SQL Proxy container args using JSONPath
     local proxy_args
-    proxy_args=$(kubectl get deployment -n "$NAMESPACE" staging-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[1].args}' 2>/dev/null || echo "")
+    proxy_args=$(kubectl get deployment -n "$NAMESPACE" stg-mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[1].args}' 2>/dev/null || echo "")
 
     if [ -z "$proxy_args" ]; then
         log_warning "Could not extract Cloud SQL Proxy args from deployment"

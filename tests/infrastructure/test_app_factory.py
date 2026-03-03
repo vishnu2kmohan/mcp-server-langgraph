@@ -287,7 +287,7 @@ class TestAppFactoryDocumentation:
         assert "container" in create_app.__doc__.lower() or "settings" in create_app.__doc__.lower()
 
 
-@pytest.mark.xdist_group(name="testproductionstorewiring")
+@pytest.mark.xdist_group(name="testprodstorewiring")
 class TestProductionStoreWiring:
     """Test environment-aware store wiring for production vs development.
 

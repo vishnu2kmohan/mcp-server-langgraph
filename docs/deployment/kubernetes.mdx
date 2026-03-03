@@ -198,7 +198,7 @@ kubectl logs -l app=mcp-server-langgraph -n mcp-server-langgraph --tail=50
 
 ```bash Using Kustomize
 ## Deploy with kustomize overlays
-kubectl apply -k deployments/kubernetes/overlays/production
+kubectl apply -k deployments/kubernetes/overlays/prod
 
 ## Or specific cloud provider
 kubectl apply -k deployments/kubernetes/overlays/gke

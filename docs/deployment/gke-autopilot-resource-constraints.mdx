@@ -269,7 +269,7 @@ kubectl kustomize deployments/overlays/{environment} | grep -A 10 "resources:"
 python3 scripts/validate_gke_autopilot_compliance.py
 
 # Validate specific overlay
-python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/production
+python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/prod
 ```
 
 ### Pre-commit Hook
@@ -423,7 +423,7 @@ Error: no matches for kind "Deployment" for redis-session
 
 ```text
 ❌ ERRORS:
-  - staging-redis-session/redis: CPU limit/request ratio 5.00 exceeds max 4.0
+  - stg-redis-session/redis: CPU limit/request ratio 5.00 exceeds max 4.0
 ```
 
 **Solution**: Fix the violation before committing. The hook prevents bad configs from reaching CI/CD.

@@ -50,7 +50,7 @@ flowchart TD
     end
 
     subgraph CD["CD Pipeline"]
-        Staging["Deploy Staging"]
+        STG["Deploy STG"]
         Approval["Manual Approval"]
         Canary["Canary (10%)"]
         Prod["Production (100%)"]
@@ -61,8 +61,8 @@ flowchart TD
     Test --> Lint --> Docker
     Docker --> Coverage --> Security --> E2E
 
-    Tag --> Staging
-    Staging --> Approval --> Canary --> Prod
+    Tag --> STG
+    STG --> Approval --> Canary --> Prod
 
     Schedule --> Security
 
@@ -75,7 +75,7 @@ flowchart TD
     class PR,Push,Tag,Schedule triggerStyle
     class Test,Lint,Docker ciStyle
     class Coverage,Security,E2E qualityStyle
-    class Staging,Approval,Canary,Prod cdStyle
+    class STG,Approval,Canary,Prod cdStyle
 ```
 
 ## Quick Links
@@ -121,8 +121,8 @@ flowchart TD
 
 | Workflow | Trigger | Purpose | Key Features |
 |----------|---------|---------|--------------|
-| **deploy-production-gke.yaml** | Release, manual | Production deploy | **Canary deployment**, manual approval, ESO verification |
-| **deploy-preview-gke.yaml** | Push to main | Staging deploy | Automated with smoke tests |
+| **deploy-prod-gke.yaml** | Release, manual | Production deploy | **Canary deployment**, manual approval, ESO verification |
+| **deploy-stg-gke.yaml** | Push to main | STG deploy | Automated with smoke tests |
 | **validate-deployments.yaml** | PR (deployment files) | Deploy validation | Prevents 8 critical deployment issues |
 
 ### Infrastructure (2 workflows)
@@ -163,8 +163,8 @@ flowchart TD
 1. **Repository Secrets** (required for deployments):
    ```bash
    gh secret set GCP_WIF_PROVIDER --body "projects/.../workloadIdentityPools/..."
-   gh secret set GCP_PRODUCTION_SA_EMAIL --body "service-account@project.iam.gserviceaccount.com"
-   gh secret set GCP_STAGING_SA_EMAIL --body "staging-sa@project.iam.gserviceaccount.com"
+   gh secret set GCP_PROD_SA_EMAIL --body "service-account@project.iam.gserviceaccount.com"
+   gh secret set GCP_STG_SA_EMAIL --body "stg-sa@project.iam.gserviceaccount.com"
    gh secret set GCP_TERRAFORM_SA_EMAIL --body "terraform@project.iam.gserviceaccount.com"
    ```
 
@@ -172,8 +172,8 @@ flowchart TD
    ```bash
    gh variable set GCP_PROJECT_ID --body "your-project-id"
    gh variable set GCP_REGION --body "us-central1"
-   gh variable set GKE_PROD_CLUSTER --body "production-mcp-server-langgraph-gke"
-   gh variable set GKE_STAGING_CLUSTER --body "staging-mcp-server-langgraph-gke"
+   gh variable set GKE_PROD_CLUSTER --body "prod-mcp-server-langgraph-gke"
+   gh variable set GKE_STG_CLUSTER --body "stg-mcp-server-langgraph-gke"
    ```
 
 3. **Observability Secrets** (optional but recommended):
@@ -266,7 +266,7 @@ pre-deployment-checks ──> build-and-push ──> approve (manual) ──>
 - ✅ Automatic rollback on failure
 - ✅ External Secrets Operator verification
 - ✅ Comprehensive smoke tests
-- ✅ Multi-environment (dev, staging, production)
+- ✅ Multi-environment (dev, stg, production)
 
 ### Observability
 
@@ -307,7 +307,7 @@ pre-deployment-checks ──> build-and-push ──> approve (manual) ──>
 
 3. **Monitor**:
    ```bash
-   gh run list --workflow=deploy-production-gke.yaml --limit 1
+   gh run list --workflow=deploy-prod-gke.yaml --limit 1
    gh run watch
    ```
 
@@ -353,10 +353,10 @@ python scripts/ci/performance_regression.py \
 gh run view --log
 
 # Check pod status
-kubectl get pods -n production-mcp-server-langgraph -l app=mcp-server-langgraph
+kubectl get pods -n prod-mcp-server-langgraph -l app=mcp-server-langgraph
 
 # View deployment events
-kubectl describe deployment production-mcp-server-langgraph -n production-mcp-server-langgraph
+kubectl describe deployment prod-mcp-server-langgraph -n prod-mcp-server-langgraph
 ```
 **Tests Failed**:
 ```bash
@@ -404,8 +404,8 @@ gh api repos/:owner/:repo/deployments | jq 'length'
 | Secret | Purpose | Example |
 |--------|---------|---------|
 | `GCP_WIF_PROVIDER` | GCP authentication | `projects/123/locations/global/...` |
-| `GCP_PRODUCTION_SA_EMAIL` | Production service account | `prod-sa@project.iam.gserviceaccount.com` |
-| `GCP_STAGING_SA_EMAIL` | Staging service account | `staging-sa@project.iam.gserviceaccount.com` |
+| `GCP_PROD_SA_EMAIL` | Production service account | `prod-sa@project.iam.gserviceaccount.com` |
+| `GCP_STG_SA_EMAIL` | STG service account | `stg-sa@project.iam.gserviceaccount.com` |
 | `GCP_TERRAFORM_SA_EMAIL` | Terraform service account | `terraform@project.iam.gserviceaccount.com` |
 
 ### Optional Secrets (Enables Enhanced Features)
@@ -424,7 +424,7 @@ gh api repos/:owner/:repo/deployments | jq 'length'
 | `GCP_PROJECT_ID` | GCP project | (none - will fail if not set) |
 | `GCP_REGION` | GCP region | (none - will fail if not set) |
 | `GKE_PROD_CLUSTER` | Production cluster | (none - will fail if not set) |
-| `GKE_STAGING_CLUSTER` | Staging cluster | (none - will fail if not set) |
+| `GKE_STG_CLUSTER` | STG cluster | (none - will fail if not set) |
 
 ---
 

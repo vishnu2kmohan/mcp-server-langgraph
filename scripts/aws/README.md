@@ -4,9 +4,9 @@ AWS-specific automation scripts for EKS infrastructure and application deploymen
 
 ## Scripts
 
-### setup-preview-infrastructure.sh
+### setup-stg-infrastructure.sh
 
-One-time setup script for AWS EKS staging environment.
+One-time setup script for AWS EKS stg environment.
 
 **Features**:
 - Creates S3 backend for Terraform state
@@ -18,10 +18,10 @@ One-time setup script for AWS EKS staging environment.
 **Usage**:
 ```bash
 export AWS_REGION=us-east-1
-./scripts/aws/setup-preview-infrastructure.sh
+./scripts/aws/setup-stg-infrastructure.sh
 ```
 
-**Cost**: ~$324/month for staging environment
+**Cost**: ~$324/month for stg environment
 
 ## Prerequisites
 
@@ -41,7 +41,7 @@ export AWS_REGION=us-east-1
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `AWS_REGION` | AWS region | `us-east-1` |
-| `AWS_ENVIRONMENT` | Environment (aws-dev, aws-staging, prod) | `prod` |
+| `AWS_ENVIRONMENT` | Environment (aws-dev, aws-stg, prod) | `prod` |
 | `EKS_CLUSTER_NAME` | EKS cluster name | `mcp-{env}-eks` |
 
 ## Teardown
@@ -49,12 +49,12 @@ export AWS_REGION=us-east-1
 To delete all resources and stop incurring costs:
 
 ```bash
-# Destroy staging infrastructure
-cd terraform/environments/aws-staging
+# Destroy stg infrastructure
+cd terraform/environments/aws-stg
 terraform destroy
 
 # Or use the main deployment script
-export AWS_ENVIRONMENT=aws-staging
+export AWS_ENVIRONMENT=aws-stg
 ./scripts/deploy-aws-eks.sh  # Then manually run terraform destroy
 ```
 

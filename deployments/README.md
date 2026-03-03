@@ -13,14 +13,14 @@ deployments/
 │   ├── serviceaccount-roles.yaml  # RBAC configuration
 │   └── ...
 ├── overlays/                    # Environment-specific Kustomize overlays
-│   ├── production/             # Production environment (non-GKE)
-│   ├── production-gke/         # Production on GKE (Helm recommended)
-│   ├── preview-gke/            # Staging on GKE
+│   ├── prod/             # Prod environment (non-GKE)
+│   ├── prod-gke/         # Prod on GKE (Helm recommended)
+│   ├── stg-gke/            # STG on GKE
 │   └── ...
-├── helm/                        # Helm charts (recommended for production)
+├── helm/                        # Helm charts (recommended for prod)
 │   ├── mcp-server-langgraph/   # Main Helm chart
-│   ├── values-production-gke.yaml  # Production GKE values
-│   └── values-staging.yaml     # Staging values
+│   ├── values-prod-gke.yaml  # Prod GKE values
+│   └── values-stg.yaml     # STG values
 ├── argocd/                      # ArgoCD application definitions
 │   ├── base/                   # Base ArgoCD configs
 │   └── applications/           # Application manifests
@@ -32,7 +32,7 @@ deployments/
 
 ### 1. Kubernetes with Helm (Recommended)
 
-**Best for**: Production Kubernetes deployments with customization needs
+**Best for**: Prod Kubernetes deployments with customization needs
 
 ```bash
 # Install with default values
@@ -44,7 +44,7 @@ helm install langgraph-agent ./deployments/helm/mcp-server-langgraph \
 helm install langgraph-agent ./deployments/helm/mcp-server-langgraph \
   --namespace langgraph-agent \
   --create-namespace \
-  --values values-production.yaml
+  --values values-prod.yaml
 
 # Upgrade deployment
 helm upgrade langgraph-agent ./deployments/helm/mcp-server-langgraph \
@@ -58,11 +58,11 @@ helm upgrade langgraph-agent ./deployments/helm/mcp-server-langgraph \
 **Best for**: GitOps workflows, multiple environments
 
 ```bash
-# Production deployment
-kubectl apply -k deployments/overlays/production
+# Prod deployment
+kubectl apply -k deployments/overlays/prod
 
-# Staging deployment
-kubectl apply -k deployments/overlays/staging
+# STG deployment
+kubectl apply -k deployments/overlays/stg
 
 # Development deployment
 kubectl apply -k deployments/overlays/dev
@@ -235,9 +235,9 @@ All ServiceAccounts follow a strict naming convention to ensure consistency and 
 
 **Overlay ServiceAccounts** (in `deployments/overlays/*/`):
 - Pattern: `<component>-sa` (same as base, without environment prefix)
-- Kustomization patches automatically add environment prefix: `staging-`, `production-`
+- Kustomization patches automatically add environment prefix: `stg-`, `prod-`
 - Final resource name after patch: `<environment>-<component>-sa`
-- Examples: `staging-openfga-sa`, `production-keycloak-sa`
+- Examples: `stg-openfga-sa`, `prod-keycloak-sa`
 
 ### Workload Identity (GKE)
 
@@ -248,9 +248,9 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: openfga-sa  # Base name without env prefix
-  namespace: staging-mcp-server-langgraph
+  namespace: stg-mcp-server-langgraph
   annotations:
-    iam.gke.io/gcp-service-account: staging-openfga@<PROJECT_ID>.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: stg-openfga@<PROJECT_ID>.iam.gserviceaccount.com
 ```
 
 **Components requiring Workload Identity**:
@@ -436,7 +436,7 @@ kubectl apply -f https://github.com/kubernetes/autoscaler/releases/download/vert
 
 - **Project Documentation**: `../docs/README.md`
 - **Development Guide**: `../docs/development/development.md`
-- **Production Guide**: `../docs/deployment/production-checklist.mdx`
+- **Prod Guide**: `../docs/deployment/prod-checklist.mdx`
 - **Docker Deployment**: `../docs/deployment/docker.mdx`
 - **Architecture Overview**: `../README.md#architecture`
 

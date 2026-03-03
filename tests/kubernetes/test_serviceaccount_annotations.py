@@ -206,7 +206,7 @@ class TestServiceAccountAnnotations:
         GREEN: Should PASS - after variable substitution
         """
         gcp_overlays = [
-            DEPLOYMENTS_DIR / "overlays" / "production-gke" / "serviceaccount-patch.yaml",
+            DEPLOYMENTS_DIR / "overlays" / "prod-gke" / "serviceaccount-patch.yaml",
         ]
 
         all_violations = []

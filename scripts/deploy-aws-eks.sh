@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 AWS_REGION="${AWS_REGION:-us-east-1}"
-CLUSTER_NAME="${EKS_CLUSTER_NAME:-mcp-production}"
+CLUSTER_NAME="${EKS_CLUSTER_NAME:-mcp-prod}"
 AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-}"
 ENVIRONMENT="${AWS_ENVIRONMENT:-prod}"  # Currently only 'prod' is available (AWS production)
 NAMESPACE="mcp-server-langgraph"
@@ -65,9 +65,9 @@ check_prerequisites() {
     fi
 
     # Validate environment
-    if [[ ! "$ENVIRONMENT" =~ ^(prod|aws-dev|aws-staging|aws-prod)$ ]]; then
+    if [[ ! "$ENVIRONMENT" =~ ^(prod|aws-dev|aws-stg|aws-prod)$ ]]; then
         log_error "Invalid AWS_ENVIRONMENT: $ENVIRONMENT"
-        log_error "Supported environments: prod, aws-dev, aws-staging"
+        log_error "Supported environments: prod, aws-dev, aws-stg"
         log_error "Note: 'prod' is an alias for production environment"
         exit 1
     fi

@@ -1,23 +1,23 @@
 ---
 title: GKE Preview Implementation Summary
-description: 'Complete summary of the GKE preview environment implementation for the MCP Server LangGraph project'
+description: 'Complete summary of the GKE stg environment implementation for the MCP Server LangGraph project'
 icon: 'dharmachakra'
 seoTitle: "GKE Preview Implementation Summary - Deployment Guide"
-seoDescription: "Deploy MCP Server: Complete summary of the GKE preview environment implementation for the MCP Server LangGraph project"
+seoDescription: "Deploy MCP Server: Complete summary of the GKE stg environment implementation for the MCP Server LangGraph project"
 keywords: ["deployment", "cloud deployment", "MCP Server", "production deployment"]
 contentType: "how-to"
 ---
 
 ### Overview
 
-This document summarizes the complete GKE preview environment implementation for the MCP Server LangGraph project.
+This document summarizes the complete GKE stg environment implementation for the MCP Server LangGraph project.
 
 **Project ID**: `vishnu-sandbox-20250310`
 
 ### What Was Implemented
 
 #### 1. Infrastructure Setup Script
-**File**: `scripts/gcp/setup-preview-infrastructure.sh`
+**File**: `scripts/gcp/setup-stg-infrastructure.sh`
 
 **Creates**:
 - ✅ Preview VPC network (10.1.0.0/20) with flow logs
@@ -28,7 +28,7 @@ This document summarizes the complete GKE preview environment implementation for
   - Workload Identity enabled
 - ✅ Cloud SQL PostgreSQL (db-custom-1-4096, private IP)
 - ✅ Memorystore Redis (2GB standard tier, private IP)
-- ✅ GCP Service Account for preview (`mcp-preview-sa`)
+- ✅ GCP Service Account for stg (`mcp-stg-sa`)
 - ✅ Workload Identity Federation for GitHub Actions (keyless)
 - ✅ Artifact Registry repository for Docker images
 - ✅ Secret Manager secrets (with placeholders for API keys)
@@ -41,18 +41,18 @@ This document summarizes the complete GKE preview environment implementation for
 - Least privilege IAM roles
 
 #### 2. Kubernetes Manifests
-**Directory**: `deployments/overlays/preview-gke/`
+**Directory**: `deployments/overlays/stg-gke/`
 
 **Files Created**:
 1. **kustomization.yaml** - Main overlay configuration
-2. **namespace.yaml** - mcp-preview namespace
+2. **namespace.yaml** - mcp-stg namespace
 3. **deployment-patch.yaml** - Application deployment with:
    - Cloud SQL Proxy sidecar
    - Security contexts (non-root, drop capabilities)
    - Health probes (readiness, liveness)
    - Resource limits
    - Workload Identity annotation
-4. **configmap-patch.yaml** - Staging-specific configuration
+4. **configmap-patch.yaml** - STG-specific configuration
 5. **serviceaccount-patch.yaml** - Workload Identity binding
 6. **network-policy.yaml** - Network security policies:
    - Default deny ingress
@@ -63,7 +63,7 @@ This document summarizes the complete GKE preview environment implementation for
 8. **otel-collector-config.yaml** - GCP Cloud Logging/Monitoring
 
 #### 3. GitHub Actions Workflow
-**File**: `.github/workflows/deploy-preview-gke.yaml`
+**File**: `.github/workflows/deploy-stg-gke.yaml`
 
 **Features**:
 - ✅ Workload Identity Federation (no keys!)
@@ -78,7 +78,7 @@ This document summarizes the complete GKE preview environment implementation for
 **Deployment Flow**:
 1. Build Docker image
 2. Push to Artifact Registry
-3. Deploy to GKE staging
+3. Deploy to GKE stg
 4. Wait for rollout
 5. Run smoke tests
 6. Validate security
@@ -86,7 +86,7 @@ This document summarizes the complete GKE preview environment implementation for
 8. Rollback on any failure
 
 #### 4. Smoke Tests
-**File**: `scripts/gcp/staging-smoke-tests.sh`
+**File**: `scripts/gcp/stg-smoke-tests.sh`
 
 **Tests** (11 total):
 1. Health endpoint responds
@@ -104,20 +104,20 @@ This document summarizes the complete GKE preview environment implementation for
 #### 5. Documentation
 
 **Created**:
-1. **docs/deployment/kubernetes/gke-preview.mdx** - Complete deployment guide
+1. **docs/deployment/kubernetes/gke-stg.mdx** - Complete deployment guide
    - Architecture diagram
    - Step-by-step setup
    - Security features
    - Monitoring & troubleshooting
    - Cost optimization tips
 
-2. **docs/security/gke-preview-checklist.md** - Security verification checklist
+2. **docs/security/gke-stg-checklist.md** - Security verification checklist
    - ~80 security checks
    - Verification commands
    - Compliance tracking
    - Scoring system
 
-3. **README.md** - Updated with GKE staging section
+3. **README.md** - Updated with GKE stg section
 
 ### Security Best Practices Implemented
 
@@ -180,13 +180,13 @@ This document summarizes the complete GKE preview environment implementation for
 1. **Run infrastructure setup**:
    ```bash
    export GCP_PROJECT_ID=vishnu-sandbox-20250310
-   ./scripts/gcp/setup-preview-infrastructure.sh
+   ./scripts/gcp/setup-stg-infrastructure.sh
    ```
 
 2. **Update API keys**:
    ```bash
-   echo -n "sk-ant-YOUR_KEY" | gcloud secrets versions add staging-anthropic-api-key --data-file=-
-   echo -n "YOUR_KEY" | gcloud secrets versions add staging-google-api-key --data-file=-
+   echo -n "sk-ant-YOUR_KEY" | gcloud secrets versions add stg-anthropic-api-key --data-file=-
+   echo -n "YOUR_KEY" | gcloud secrets versions add stg-google-api-key --data-file=-
    ```
 3. **Install External Secrets Operator**:
    ```bash
@@ -197,26 +197,26 @@ This document summarizes the complete GKE preview environment implementation for
    ```
 4. **Deploy application**:
    ```bash
-   gcloud container clusters get-credentials staging-mcp-server-langgraph-gke --region=us-central1
-   kubectl apply -k deployments/overlays/preview-gke
+   gcloud container clusters get-credentials stg-mcp-server-langgraph-gke --region=us-central1
+   kubectl apply -k deployments/overlays/stg-gke
    ```
 5. **Run smoke tests**:
    ```bash
-   ./scripts/gcp/staging-smoke-tests.sh
+   ./scripts/gcp/stg-smoke-tests.sh
    ```
 
 #### GitHub Actions Setup
 
 1. **Create GitHub Environment**:
    - Go to Settings → Environments → New environment
-   - Name: `staging`
+   - Name: `stg`
    - Protection rules:
      - Required reviewers: 1
      - Wait timer: 5 minutes
 
 2. **Update workflow**:
    - Get project number: `gcloud projects describe vishnu-sandbox-20250310 --format="value(projectNumber)"`
-   - Replace `PROJECT_NUMBER` in `.github/workflows/deploy-preview-gke.yaml`
+   - Replace `PROJECT_NUMBER` in `.github/workflows/deploy-stg-gke.yaml`
 
 3. **Trigger deployment**:
    - Push to `main` branch
@@ -255,12 +255,12 @@ Once GitHub Actions is configured, deployments are fully automated:
 ## Cloud Logging
 gcloud logging read \
   "resource.type=k8s_container
-   resource.labels.cluster_name=staging-mcp-server-langgraph-gke
-   resource.labels.namespace_name=mcp-staging" \
+   resource.labels.cluster_name=stg-mcp-server-langgraph-gke
+   resource.labels.namespace_name=mcp-stg" \
   --limit=50
 
 ## Kubectl
-kubectl logs -n staging-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
+kubectl logs -n stg-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
 ```
 #### Metrics
 
@@ -268,19 +268,19 @@ Key metrics in Cloud Monitoring:
 - `kubernetes.io/container/cpu/core_usage_time`
 - `kubernetes.io/container/memory/used_bytes`
 - `kubernetes.io/pod/network/received_bytes_count`
-- `custom.googleapis.com/mcp-staging/*` (application metrics)
+- `custom.googleapis.com/mcp-stg/*` (application metrics)
 
 ### Security Validation
 
 Run the security checklist:
 
 ```bash
-## Review docs/security/gke-staging-checklist.md
+## Review docs/security/gke-stg-checklist.md
 ## Execute verification commands
 ## Track completion (~80 checks total)
 ```
 
-**Target**: 90%+ completion for production-ready staging
+**Target**: 90%+ completion for production-ready stg
 
 ### Troubleshooting
 
@@ -288,20 +288,20 @@ Run the security checklist:
 
 1. **Pods not starting**:
    ```bash
-   kubectl describe pod <pod-name> -n staging-mcp-server-langgraph
-   kubectl logs <pod-name> -n staging-mcp-server-langgraph
+   kubectl describe pod <pod-name> -n stg-mcp-server-langgraph
+   kubectl logs <pod-name> -n stg-mcp-server-langgraph
    ```
 2. **External Secrets not syncing**:
    ```bash
-   kubectl describe externalsecret mcp-staging-secrets -n staging-mcp-server-langgraph
+   kubectl describe externalsecret mcp-stg-secrets -n stg-mcp-server-langgraph
    ```
 3. **Cloud SQL connection fails**:
    ```bash
-   kubectl logs <pod-name> -n staging-mcp-server-langgraph -c cloud-sql-proxy
+   kubectl logs <pod-name> -n stg-mcp-server-langgraph -c cloud-sql-proxy
    ```
 4. **Network policies blocking traffic**:
    ```bash
-   kubectl get networkpolicies -n staging-mcp-server-langgraph
+   kubectl get networkpolicies -n stg-mcp-server-langgraph
    # Temporarily delete to test
    ```
 ### Rollback Procedures
@@ -309,8 +309,8 @@ Run the security checklist:
 #### Manual Rollback
 
 ```bash
-kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
-kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout undo deployment/stg-mcp-server-langgraph -n stg-mcp-server-langgraph
+kubectl rollout status deployment/stg-mcp-server-langgraph -n stg-mcp-server-langgraph
 ```
 
 #### Automatic Rollback
@@ -343,29 +343,29 @@ GitHub Actions automatically rolls back on:
 ### Files Created
 
 #### Scripts
-- `scripts/gcp/setup-preview-infrastructure.sh` (infrastructure automation)
-- `scripts/gcp/staging-smoke-tests.sh` (deployment validation)
+- `scripts/gcp/setup-stg-infrastructure.sh` (infrastructure automation)
+- `scripts/gcp/stg-smoke-tests.sh` (deployment validation)
 
 #### Kubernetes Manifests
-- `deployments/overlays/preview-gke/kustomization.yaml`
-- `deployments/overlays/preview-gke/namespace.yaml`
-- `deployments/overlays/preview-gke/deployment-patch.yaml`
-- `deployments/overlays/preview-gke/configmap-patch.yaml`
-- `deployments/overlays/preview-gke/serviceaccount-patch.yaml`
-- `deployments/overlays/preview-gke/network-policy.yaml`
-- `deployments/overlays/preview-gke/external-secrets.yaml`
-- `deployments/overlays/preview-gke/otel-collector-config.yaml`
+- `deployments/overlays/stg-gke/kustomization.yaml`
+- `deployments/overlays/stg-gke/namespace.yaml`
+- `deployments/overlays/stg-gke/deployment-patch.yaml`
+- `deployments/overlays/stg-gke/configmap-patch.yaml`
+- `deployments/overlays/stg-gke/serviceaccount-patch.yaml`
+- `deployments/overlays/stg-gke/network-policy.yaml`
+- `deployments/overlays/stg-gke/external-secrets.yaml`
+- `deployments/overlays/stg-gke/otel-collector-config.yaml`
 
 #### CI/CD
-- `.github/workflows/deploy-preview-gke.yaml` (deployment workflow)
+- `.github/workflows/deploy-stg-gke.yaml` (deployment workflow)
 
 #### Documentation
-- `docs/deployment/kubernetes/gke-preview.mdx` (deployment guide)
-- `docs/security/gke-preview-checklist.md` (security checklist)
-- `docs/deployment/gke-preview-implementation-summary.mdx` (this file)
+- `docs/deployment/kubernetes/gke-stg.mdx` (deployment guide)
+- `docs/security/gke-stg-checklist.md` (security checklist)
+- `docs/deployment/gke-stg-implementation-summary.mdx` (this file)
 
 #### Updates
-- `README.md` (added GKE staging section)
+- `README.md` (added GKE stg section)
 
 ### Estimated Implementation Time
 
@@ -389,4 +389,4 @@ GitHub Actions automatically rolls back on:
 
 **Status**: ✅ **COMPLETE - Ready for deployment**
 
-**Next Action**: Run `./scripts/gcp/setup-preview-infrastructure.sh` to begin infrastructure setup.
+**Next Action**: Run `./scripts/gcp/setup-stg-infrastructure.sh` to begin infrastructure setup.

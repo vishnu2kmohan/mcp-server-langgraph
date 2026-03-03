@@ -454,7 +454,7 @@ For any trace, you can see:
 
 Create separate projects for:
 - **Development**: `my-agent-dev`
-- **Staging**: `my-agent-staging`
+- **STG**: `my-agent-stg`
 - **Production**: `my-agent-prod`
 
 ```bash
@@ -465,7 +465,7 @@ LANGSMITH_PROJECT=my-agent-prod python -m mcp_server_langgraph.mcp.server_stdio
 ### 2. Tagging Strategy
 
 Use consistent tags:
-- **Environment**: `production`, `staging`, `development`
+- **Environment**: `production`, `stg`, `development`
 - **User tier**: `free`, `pro`, `enterprise`
 - **Feature**: `chat`, `analysis`, `search`
 - **Priority**: `high`, `medium`, `low`

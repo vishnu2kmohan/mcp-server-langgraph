@@ -13,22 +13,22 @@ deploy-dev:
 	@echo "  kubectl get pods -n langgraph-agent-dev"
 	@echo "  kubectl logs -f deployment/dev-langgraph-agent -n langgraph-agent-dev"
 
-deploy-staging:
-	@echo "Deploying to staging environment..."
-	kubectl apply -k deployments/overlays/staging
+deploy-stg:
+	@echo "Deploying to stg environment..."
+	kubectl apply -k deployments/overlays/stg
 	@echo "Waiting for rollout..."
-	kubectl rollout status deployment/staging-langgraph-agent -n langgraph-agent-staging --timeout=5m
-	@echo "Staging deployment complete"
+	kubectl rollout status deployment/stg-langgraph-agent -n langgraph-agent-stg --timeout=5m
+	@echo "STG deployment complete"
 	@echo ""
 	@echo "Check status:"
-	@echo "  kubectl get pods -n langgraph-agent-staging"
-	@echo "  kubectl logs -f deployment/staging-langgraph-agent -n langgraph-agent-staging"
+	@echo "  kubectl get pods -n langgraph-agent-stg"
+	@echo "  kubectl logs -f deployment/stg-langgraph-agent -n langgraph-agent-stg"
 
-deploy-production:
+deploy-prod:
 	@echo "WARNING: Deploying to PRODUCTION environment"
 	@echo "Press Ctrl+C within 10 seconds to cancel..."
 	@sleep 10
-	@echo "Deploying to production with Helm..."
+	@echo "Deploying to prod with Helm..."
 	helm upgrade --install langgraph-agent deployments/helm/mcp-server-langgraph \
 		--namespace langgraph-agent \
 		--create-namespace \
@@ -46,13 +46,13 @@ deploy-rollback-dev:
 	kubectl rollout status deployment/dev-langgraph-agent -n langgraph-agent-dev
 	@echo "Development rollback complete"
 
-deploy-rollback-staging:
-	@echo "Rolling back staging deployment..."
-	kubectl rollout undo deployment/staging-langgraph-agent -n langgraph-agent-staging
-	kubectl rollout status deployment/staging-langgraph-agent -n langgraph-agent-staging
-	@echo "Staging rollback complete"
+deploy-rollback-stg:
+	@echo "Rolling back stg deployment..."
+	kubectl rollout undo deployment/stg-langgraph-agent -n langgraph-agent-stg
+	kubectl rollout status deployment/stg-langgraph-agent -n langgraph-agent-stg
+	@echo "STG rollback complete"
 
-deploy-rollback-production:
+deploy-rollback-prod:
 	@echo "WARNING: Rolling back PRODUCTION deployment"
 	@echo "Press Ctrl+C within 10 seconds to cancel..."
 	@sleep 10
@@ -69,67 +69,67 @@ test-helm-deployment:
 	bash scripts/deployment/test_helm_deployment.sh
 
 # ==============================================================================
-# GKE Preview Deployment
+# GKE stg Deployment
 # ==============================================================================
 
-preflight-preview-gke:
-	@echo "Preview GKE Pre-Flight Checks"
+preflight-stg-gke:
+	@echo "STG GKE Pre-Flight Checks"
 	@echo ""
 	@echo "Validating Kustomize overlay..."
-	@kubectl kustomize deployments/overlays/preview-gke > /dev/null && echo "  Kustomize overlay valid" || (echo "  Kustomize overlay invalid" && exit 1)
+	@kubectl kustomize deployments/overlays/stg-gke > /dev/null && echo "  Kustomize overlay valid" || (echo "  Kustomize overlay invalid" && exit 1)
 	@echo ""
 	@echo "Checking GKE cluster access..."
 	@kubectl cluster-info > /dev/null 2>&1 && echo "  kubectl connected to cluster" || (echo "  kubectl not connected" && exit 1)
 	@echo ""
 	@echo "Pre-flight checks passed"
 
-deploy-preview-gke:
-	@echo "Deploying to Preview GKE"
-	@$(MAKE) preflight-preview-gke
+deploy-stg-gke:
+	@echo "Deploying to STG GKE"
+	@$(MAKE) preflight-stg-gke
 	@echo ""
 	@echo "Applying Kustomize manifests..."
-	kubectl apply -k deployments/overlays/preview-gke
+	kubectl apply -k deployments/overlays/stg-gke
 	@echo ""
 	@echo "Waiting for rollouts..."
-	@kubectl rollout status deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph --timeout=10m || true
-	@kubectl rollout status deployment/preview-keycloak -n preview-mcp-server-langgraph --timeout=10m || true
-	@kubectl rollout status deployment/preview-openfga -n preview-mcp-server-langgraph --timeout=10m || true
+	@kubectl rollout status deployment/stg-mcp-server-langgraph -n stg-mcp-server-langgraph --timeout=10m || true
+	@kubectl rollout status deployment/stg-keycloak -n stg-mcp-server-langgraph --timeout=10m || true
+	@kubectl rollout status deployment/stg-openfga -n stg-mcp-server-langgraph --timeout=10m || true
 	@echo ""
-	@echo "Preview GKE deployment complete"
+	@echo "STG GKE deployment complete"
 	@echo ""
-	@echo "Next: Run 'make postflight-preview-gke' to validate"
+	@echo "Next: Run 'make postflight-stg-gke' to validate"
 
-postflight-preview-gke:
-	@echo "Preview GKE Post-Flight Validation"
-	./scripts/gcp/validate-preview-deployment.sh
+postflight-stg-gke:
+	@echo "STG GKE Post-Flight Validation"
+	./scripts/gcp/validate-stg-deployment.sh
 
-smoke-test-preview-gke:
-	@echo "Preview GKE Smoke Tests"
-	./scripts/gcp/preview-smoke-tests.sh
+smoke-test-stg-gke:
+	@echo "STG GKE Smoke Tests"
+	./scripts/gcp/stg-smoke-tests.sh
 
-teardown-preview-gke:
-	@echo "Preview GKE Teardown (Kubernetes Resources)"
-	kubectl delete -k deployments/overlays/preview-gke --ignore-not-found=true || true
+teardown-stg-gke:
+	@echo "STG GKE Teardown (Kubernetes Resources)"
+	kubectl delete -k deployments/overlays/stg-gke --ignore-not-found=true || true
 	@echo ""
 	@echo "Kubernetes resources deleted"
 	@echo ""
 	@echo "Note: To teardown infrastructure, run:"
-	@echo "  ./scripts/gcp/teardown-preview-infrastructure.sh"
+	@echo "  ./scripts/gcp/teardown-stg-infrastructure.sh"
 
-teardown-preview-infra:
-	@echo "WARNING: Full Preview Infrastructure Teardown"
+teardown-stg-infra:
+	@echo "WARNING: Full STG Infrastructure Teardown"
 	@echo "This will DELETE GKE cluster, Cloud SQL, Redis, VPC, etc."
-	./scripts/gcp/teardown-preview-infrastructure.sh
+	./scripts/gcp/teardown-stg-infrastructure.sh
 
-deploy-rollback-preview-gke:
-	@echo "Rolling back Preview GKE deployment..."
-	kubectl rollout undo deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
-	kubectl rollout status deployment/preview-mcp-server-langgraph -n preview-mcp-server-langgraph
-	@echo "Preview GKE rollback complete"
+deploy-rollback-stg-gke:
+	@echo "Rolling back STG GKE deployment..."
+	kubectl rollout undo deployment/stg-mcp-server-langgraph -n stg-mcp-server-langgraph
+	kubectl rollout status deployment/stg-mcp-server-langgraph -n stg-mcp-server-langgraph
+	@echo "STG GKE rollback complete"
 
-# Single-command GKE Preview
-gke-preview-up:
-	@echo "GKE Preview Environment - Full Setup"
+# Single-command GKE stg
+gke-stg-up:
+	@echo "GKE stg Environment - Full Setup"
 	@echo ""
 	@echo "This will create:"
 	@echo "  - GKE Autopilot cluster (~15 min)"
@@ -141,37 +141,37 @@ gke-preview-up:
 	@echo "Estimated time: 25-30 minutes"
 	@echo "Estimated cost: ~$$325/month"
 	@echo ""
-	./scripts/gcp/gke-preview-up.sh
+	./scripts/gcp/gke-stg-up.sh
 
-gke-preview-down:
-	@echo "GKE Preview Environment - Full Teardown"
-	./scripts/gcp/gke-preview-down.sh
+gke-stg-down:
+	@echo "GKE stg Environment - Full Teardown"
+	./scripts/gcp/gke-stg-down.sh
 
-gke-preview-status:
-	@echo "GKE Preview Environment Status"
+gke-stg-status:
+	@echo "GKE stg Environment Status"
 	@echo ""
 	@echo "GCP Project: $${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 	@echo "Region: $${GCP_REGION:-us-central1}"
 	@echo ""
 	@echo "GKE Cluster:"
-	@gcloud container clusters describe preview-mcp-server-langgraph-gke \
+	@gcloud container clusters describe stg-mcp-server-langgraph-gke \
 		--region=$${GCP_REGION:-us-central1} \
 		--project=$${GCP_PROJECT_ID:-vishnu-sandbox-20250310} \
 		--format="value(status)" 2>/dev/null && echo "  Status: RUNNING" || echo "  Status: NOT FOUND"
 	@echo ""
 	@echo "Cloud SQL:"
-	@gcloud sql instances describe preview-mcp-slg-postgres \
+	@gcloud sql instances describe stg-mcp-slg-postgres \
 		--project=$${GCP_PROJECT_ID:-vishnu-sandbox-20250310} \
 		--format="value(state)" 2>/dev/null && echo "  Status: RUNNABLE" || echo "  Status: NOT FOUND"
 	@echo ""
 	@echo "Memorystore Redis:"
-	@gcloud redis instances describe preview-mcp-slg-redis \
+	@gcloud redis instances describe stg-mcp-slg-redis \
 		--region=$${GCP_REGION:-us-central1} \
 		--project=$${GCP_PROJECT_ID:-vishnu-sandbox-20250310} \
 		--format="value(state)" 2>/dev/null && echo "  Status: READY" || echo "  Status: NOT FOUND"
 	@echo ""
 	@echo "Kubernetes Pods:"
-	@kubectl get pods -n preview-mcp-server-langgraph --no-headers 2>/dev/null | wc -l | xargs -I{} echo "  Count: {} pods" || echo "  Status: No kubectl access"
+	@kubectl get pods -n stg-mcp-server-langgraph --no-headers 2>/dev/null | wc -l | xargs -I{} echo "  Count: {} pods" || echo "  Status: No kubectl access"
 
 # Kong targets
 setup-kong:

@@ -12,7 +12,7 @@
 #   ./scripts/check-deployment-health.sh [namespace] [release-name]
 #
 # Examples:
-#   ./scripts/check-deployment-health.sh production-mcp-server-langgraph mcp
+#   ./scripts/check-deployment-health.sh prod-mcp-server-langgraph mcp
 #   ./scripts/check-deployment-health.sh dev-mcp-server-langgraph dev-mcp
 
 set -euo pipefail

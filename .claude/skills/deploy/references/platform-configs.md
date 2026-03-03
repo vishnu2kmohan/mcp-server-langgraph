@@ -62,7 +62,7 @@ gcloud config set project <project-id>
 gcloud container clusters get-credentials <cluster-name> --region=us-central1
 
 # 3. Apply staging overlay
-kubectl apply -k deployments/overlays/preview-gke/
+kubectl apply -k deployments/overlays/stg-gke/
 
 # 4. Wait for rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
@@ -135,7 +135,7 @@ helm install mcp-server-langgraph . \
 helm install mcp-server-langgraph . \
   --namespace mcp-server-langgraph \
   --create-namespace \
-  --values values-staging.yaml  # or values-production.yaml
+  --values values-stg.yaml  # or values-prod.yaml
 
 # 6. Verify release
 helm status mcp-server-langgraph -n mcp-server-langgraph
@@ -166,9 +166,9 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 ```bash
 # Production requires extra confirmation
-kubectl apply -k deployments/overlays/production/ --dry-run=client
+kubectl apply -k deployments/overlays/prod/ --dry-run=client
 # Review output, then:
-kubectl apply -k deployments/overlays/production/
+kubectl apply -k deployments/overlays/prod/
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 

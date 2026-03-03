@@ -354,7 +354,7 @@ def test_rendered_preview_manifest_has_otel_security_context(repo_root: Path):
     """
     # Render the preview overlay
     result = subprocess.run(
-        ["kubectl", "kustomize", "deployments/overlays/preview-gke"],
+        ["kubectl", "kustomize", "deployments/overlays/stg-gke"],
         capture_output=True,
         text=True,
         cwd=str(repo_root),
@@ -371,13 +371,13 @@ def test_rendered_preview_manifest_has_otel_security_context(repo_root: Path):
     for doc in rendered_docs:
         if doc is None:
             continue
-        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "preview-otel-collector":
+        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "stg-otel-collector":
             otel_deployment = doc
             break
 
     assert otel_deployment is not None, (
         "OTel collector deployment not found in rendered preview manifests.\n"
-        "Expected 'preview-otel-collector' (with namePrefix from kustomization.yaml)"
+        "Expected 'stg-otel-collector' (with namePrefix from kustomization.yaml)"
     )
 
     # Validate pod-level security context

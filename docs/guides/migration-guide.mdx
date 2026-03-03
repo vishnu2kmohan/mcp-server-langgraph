@@ -178,11 +178,11 @@ pytest tests/integration/test_service_principals.py -v
 # For development
 make deploy-dev
 
-# For staging
-make deploy-staging
+# For stg
+make deploy-stg
 
 # For production (with caution)
-make deploy-production
+make deploy-prod
 ```
 
 #### Step 6: Verify Deployment
@@ -379,14 +379,14 @@ pytest tests/ -v
 #### Step 4: Deploy and Verify
 
 ```bash
-# Deploy to staging first
-make deploy-staging
+# Deploy to stg first
+make deploy-stg
 
 # Run integration tests
 make test-integration
 
-# If successful, deploy to production
-make deploy-production
+# If successful, deploy to prod
+make deploy-prod
 ```
 
 ---
@@ -537,7 +537,7 @@ python scripts/verify_openfga_migration.py
 
 ### During Migration
 
-1. **Test First**: Always test in dev/staging before production
+1. **Test First**: Always test in dev/stg before production
 2. **Incremental Rollout**: Deploy to subset of users first
 3. **Monitor Closely**: Watch metrics and logs during deployment
 4. **Have Rollback Ready**: Keep previous version deployments ready

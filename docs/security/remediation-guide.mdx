@@ -105,7 +105,7 @@ validation {
 **Files Fixed**:
 - `deployments/base/serviceaccount.yaml` - Removed placeholder annotations (overlays provide real values)
 - `deployments/kubernetes/overlays/aws/serviceaccount-patch.yaml` - Substituted with real AWS account ID
-- `deployments/overlays/production-gke/serviceaccount-patch.yaml` - Substituted with real GCP project ID
+- `deployments/overlays/prod-gke/serviceaccount-patch.yaml` - Substituted with real GCP project ID
 - `deployments/kubernetes/overlays/azure/kustomization.yaml` - Substituted with real Azure client ID
 
 **Changes**:
@@ -134,7 +134,7 @@ iam.gke.io/gcp-service-account: app@my-gcp-project.iam.gserviceaccount.com
 
 **Files Fixed**:
 - `deployments/kubernetes/overlays/aws/external-secrets.yaml` - Substituted ACCOUNT_ID and ENVIRONMENT
-- `deployments/overlays/production-gke/external-secrets.yaml` - Substituted YOUR_PROJECT_ID with actual project ID
+- `deployments/overlays/prod-gke/external-secrets.yaml` - Substituted YOUR_PROJECT_ID with actual project ID
 
 **Changes**:
 ```yaml
@@ -257,7 +257,7 @@ value: 12345678-1234-1234-1234-123456789012
 - `AWS_ACCOUNT_ID` - AWS account ID for IAM role ARNs
 - `GCP_PROJECT_ID` - GCP project ID for Workload Identity
 - `AZURE_CLIENT_ID` - Azure AD application client ID
-- `ENVIRONMENT` - Deployment environment (dev/staging/prod)
+- `ENVIRONMENT` - Deployment environment (dev/stg/prod)
 
 ### 3. GitHub Actions Workflow
 

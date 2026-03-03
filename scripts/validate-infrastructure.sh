@@ -101,7 +101,7 @@ check_version_consistency() {
     local helm_values_tag=""
     local kustomize_base=""
     local kustomize_prod=""
-    local kustomize_staging=""
+    local kustomize_stg=""
 
     # Extract versions
     if [[ -f "$PROJECT_ROOT/pyproject.toml" ]]; then
@@ -121,12 +121,12 @@ check_version_consistency() {
         kustomize_base=$(grep 'newTag:' "$PROJECT_ROOT/deployments/kustomize/base/kustomization.yaml" | awk '{print $2}')
     fi
 
-    if [[ -f "$PROJECT_ROOT/deployments/kustomize/overlays/production/kustomization.yaml" ]]; then
-        kustomize_prod=$(grep 'newTag:' "$PROJECT_ROOT/deployments/kustomize/overlays/production/kustomization.yaml" | awk '{print $2}')
+    if [[ -f "$PROJECT_ROOT/deployments/kustomize/overlays/prod/kustomization.yaml" ]]; then
+        kustomize_prod=$(grep 'newTag:' "$PROJECT_ROOT/deployments/kustomize/overlays/prod/kustomization.yaml" | awk '{print $2}')
     fi
 
-    if [[ -f "$PROJECT_ROOT/deployments/kustomize/overlays/staging/kustomization.yaml" ]]; then
-        kustomize_staging=$(grep 'newTag:' "$PROJECT_ROOT/deployments/kustomize/overlays/staging/kustomization.yaml" | awk '{print $2}')
+    if [[ -f "$PROJECT_ROOT/deployments/kustomize/overlays/stg/kustomization.yaml" ]]; then
+        kustomize_stg=$(grep 'newTag:' "$PROJECT_ROOT/deployments/kustomize/overlays/stg/kustomization.yaml" | awk '{print $2}')
     fi
 
     print_info "pyproject.toml: $pyproject_version"
@@ -135,7 +135,7 @@ check_version_consistency() {
     print_info "Helm values tag: $helm_values_tag"
     print_info "Kustomize base: $kustomize_base"
     print_info "Kustomize prod: $kustomize_prod"
-    print_info "Kustomize staging: $kustomize_staging"
+    print_info "Kustomize stg: $kustomize_stg"
 
     ((TOTAL_CHECKS++))
     if [[ "$pyproject_version" == "$helm_version" ]] && \
@@ -161,10 +161,10 @@ check_version_consistency() {
     fi
 
     ((TOTAL_CHECKS++))
-    if [[ "$kustomize_staging" == "staging-$pyproject_version" ]]; then
-        print_success "Staging overlay version correct: $kustomize_staging"
+    if [[ "$kustomize_stg" == "stg-$pyproject_version" ]]; then
+        print_success "STG overlay version correct: $kustomize_stg"
     else
-        print_error "Staging overlay version mismatch: expected staging-$pyproject_version, got $kustomize_staging"
+        print_error "STG overlay version mismatch: expected stg-$pyproject_version, got $kustomize_stg"
     fi
 }
 
@@ -189,8 +189,8 @@ check_required_files() {
         "deployments/helm/mcp-server-langgraph/values.yaml"
         "deployments/kustomize/base/kustomization.yaml"
         "deployments/kustomize/overlays/dev/kustomization.yaml"
-        "deployments/kustomize/overlays/staging/kustomization.yaml"
-        "deployments/kustomize/overlays/production/kustomization.yaml"
+        "deployments/kustomize/overlays/stg/kustomization.yaml"
+        "deployments/kustomize/overlays/prod/kustomization.yaml"
     )
 
     for file in "${required_files[@]}"; do
@@ -304,7 +304,7 @@ check_kustomize() {
         return 0
     fi
 
-    local overlays=("dev" "staging" "production")
+    local overlays=("dev" "stg" "prod")
 
     for overlay in "${overlays[@]}"; do
         ((TOTAL_CHECKS++))

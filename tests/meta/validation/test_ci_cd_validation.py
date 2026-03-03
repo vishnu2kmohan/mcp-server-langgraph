@@ -71,7 +71,7 @@ class TestKustomizeConfigurations:
         """
         Test that all Kustomize overlays build successfully.
 
-        FINDING #1: Kustomize ConfigMap collision in preview-gke overlay
+        FINDING #1: Kustomize ConfigMap collision in stg-gke overlay
         Root Cause: configMapGenerator with behavior:create conflicted with base ConfigMap
         Fix: Changed to strategic merge patch approach
         Prevention: This test validates all overlays build successfully
@@ -144,7 +144,7 @@ class TestKustomizeConfigurations:
                             f"2. Use 'behavior: merge' to merge with base ConfigMap\n"
                             f"3. Use a different ConfigMap name\n"
                             f"4. Use a strategic merge patch instead of configMapGenerator\n"
-                            f"\nSee: deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml"
+                            f"\nSee: deployments/overlays/stg-gke/otel-collector-configmap-patch.yaml"
                         )
 
     @requires_tool("kustomize", skip_reason="kustomize CLI not installed - required for patch validation")
@@ -654,8 +654,8 @@ def test_ci_cd_validation_suite_info():
         recur. Future CI/CD changes must pass these tests before deployment.
 
     Related Files:
-        - deployments/overlays/preview-gke/kustomization.yaml
-        - deployments/overlays/preview-gke/otel-collector-configmap-patch.yaml
+        - deployments/overlays/stg-gke/kustomization.yaml
+        - deployments/overlays/stg-gke/otel-collector-configmap-patch.yaml
         - .github/workflows/e2e-tests.yaml
         - .github/actions/setup-python-deps/action.yml
         - .github/workflows/quality-tests.yaml

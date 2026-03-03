@@ -53,7 +53,7 @@ Keycloak integration provides **production-grade authentication** for your MCP s
 | Environment | Provider | Use Case |
 |------------|----------|----------|
 | **Development** | InMemory | Local testing, no external dependencies |
-| **Staging** | Keycloak | Pre-production validation |
+| **STG** | Keycloak | Pre-production validation |
 | **Production** | Keycloak | Enterprise authentication, SSO, compliance |
 
 ---
@@ -321,9 +321,9 @@ provider = create_user_provider(
 # Step 1: Development with InMemory (no external dependencies)
 AUTH_PROVIDER=inmemory
 
-# Step 2: Staging with Keycloak (pre-production testing)
+# Step 2: STG with Keycloak (pre-production testing)
 AUTH_PROVIDER=keycloak
-KEYCLOAK_SERVER_URL=https://staging-keycloak.example.com
+KEYCLOAK_SERVER_URL=https://stg-keycloak.example.com
 
 # Step 3: Production with Keycloak (full SSO, compliance)
 AUTH_PROVIDER=keycloak

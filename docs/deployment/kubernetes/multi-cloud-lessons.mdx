@@ -245,14 +245,14 @@ metadata:
 ```yaml
 - name: Deploy
   run: |
-    kubectl create namespace staging-mcp-server-langgraph
-    kubectl apply -k deployments/overlays/staging
+    kubectl create namespace stg-mcp-server-langgraph
+    kubectl apply -k deployments/overlays/stg
 ```
 - ✅ **CORRECT** (Namespace created before validation):
 ```yaml
 - name: Create namespace
   run: |
-    kubectl create namespace staging-mcp-server-langgraph --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace stg-mcp-server-langgraph --dry-run=client -o yaml | kubectl apply -f -
 
 - name: Validate manifests
   run: |
@@ -260,7 +260,7 @@ metadata:
 
 - name: Deploy
   run: |
-    kubectl apply -k deployments/overlays/staging
+    kubectl apply -k deployments/overlays/stg
 ```
 
 **Why**:
@@ -330,8 +330,8 @@ resources:
    # Create IAM role for application pods
    eksctl create iamserviceaccount \
      --name=mcp-server-langgraph \
-     --namespace=mcp-staging \
-     --cluster=staging-mcp-server-langgraph-gke \
+     --namespace=mcp-stg \
+     --cluster=stg-mcp-server-langgraph-gke \
      --attach-policy-arn=arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess \
      --approve
    ```
@@ -347,10 +347,10 @@ resources:
      --set installCRDs=true
    ```
 
-### Workflow Template (`.github/workflows/deploy-staging-eks.yaml`)
+### Workflow Template (`.github/workflows/deploy-stg-eks.yaml`)
 
 ```yaml
-name: Deploy to EKS Staging
+name: Deploy to EKS STG
 
 on:
   push:
@@ -363,13 +363,13 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER: staging-mcp-server-langgraph-gke
-  NAMESPACE: mcp-staging
-  DEPLOYMENT_NAME: staging-mcp-server-langgraph
+  EKS_CLUSTER: stg-mcp-server-langgraph-gke
+  NAMESPACE: mcp-stg
+  DEPLOYMENT_NAME: stg-mcp-server-langgraph
 
 jobs:
-  deploy-staging:
-    name: Deploy to EKS Staging
+  deploy-stg:
+    name: Deploy to EKS STG
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -425,22 +425,22 @@ jobs:
 
       # Update image tag
       - name: Update image tag
-        working-directory: deployments/overlays/staging-eks
+        working-directory: deployments/overlays/stg-eks
         run: |
           kustomize edit set image \
-            mcp-server-langgraph=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/mcp-staging:${{ github.sha }}
+            mcp-server-langgraph=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/mcp-stg:${{ github.sha }}
 
       # CRITICAL: Use server-side validation
       - name: Validate manifests
         run: |
           echo "Validating manifests..."
-          kubectl kustomize deployments/overlays/staging-eks > /tmp/staging-manifests.yaml
-          kubectl apply --dry-run=server -f /tmp/staging-manifests.yaml
+          kubectl kustomize deployments/overlays/stg-eks > /tmp/stg-manifests.yaml
+          kubectl apply --dry-run=server -f /tmp/stg-manifests.yaml
 
       # Deploy
-      - name: Deploy to staging
+      - name: Deploy to stg
         run: |
-          kubectl apply -k deployments/overlays/staging-eks
+          kubectl apply -k deployments/overlays/stg-eks
 
       # Wait for rollout
       - name: Wait for rollout
@@ -473,13 +473,13 @@ jobs:
    # Create managed identity
    az identity create \
      --name mcp-server-langgraph \
-     --resource-group mcp-staging-rg
+     --resource-group mcp-stg-rg
 
    # Create federated credential for GitHub Actions
    az identity federated-credential create \
      --name github-actions-federated \
      --identity-name mcp-server-langgraph \
-     --resource-group mcp-staging-rg \
+     --resource-group mcp-stg-rg \
      --issuer https://token.actions.githubusercontent.com \
      --subject repo:OWNER/REPO:ref:refs/heads/main \
      --audience api://AzureADTokenExchange
@@ -505,10 +505,10 @@ jobs:
      --set installCRDs=true
    ```
 
-### Workflow Template (`.github/workflows/deploy-staging-aks.yaml`)
+### Workflow Template (`.github/workflows/deploy-stg-aks.yaml`)
 
 ```yaml
-name: Deploy to AKS Staging
+name: Deploy to AKS STG
 
 on:
   push:
@@ -521,14 +521,14 @@ permissions:
 
 env:
   AZURE_SUBSCRIPTION_ID: SUB_ID
-  RESOURCE_GROUP: mcp-staging-rg
-  AKS_CLUSTER: staging-mcp-server-langgraph-gke
-  NAMESPACE: mcp-staging
-  DEPLOYMENT_NAME: staging-mcp-server-langgraph
+  RESOURCE_GROUP: mcp-stg-rg
+  AKS_CLUSTER: stg-mcp-server-langgraph-gke
+  NAMESPACE: mcp-stg
+  DEPLOYMENT_NAME: stg-mcp-server-langgraph
 
 jobs:
-  deploy-staging:
-    name: Deploy to AKS Staging
+  deploy-stg:
+    name: Deploy to AKS STG
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -586,22 +586,22 @@ jobs:
 
       # Update image tag
       - name: Update image tag
-        working-directory: deployments/overlays/staging-aks
+        working-directory: deployments/overlays/stg-aks
         run: |
           kustomize edit set image \
-            mcp-server-langgraph=REGISTRY.azurecr.io/mcp-staging:${{ github.sha }}
+            mcp-server-langgraph=REGISTRY.azurecr.io/mcp-stg:${{ github.sha }}
 
       # CRITICAL: Use server-side validation
       - name: Validate manifests
         run: |
           echo "Validating manifests..."
-          kubectl kustomize deployments/overlays/staging-aks > /tmp/staging-manifests.yaml
-          kubectl apply --dry-run=server -f /tmp/staging-manifests.yaml
+          kubectl kustomize deployments/overlays/stg-aks > /tmp/stg-manifests.yaml
+          kubectl apply --dry-run=server -f /tmp/stg-manifests.yaml
 
       # Deploy
-      - name: Deploy to staging
+      - name: Deploy to stg
         run: |
-          kubectl apply -k deployments/overlays/staging-aks
+          kubectl apply -k deployments/overlays/stg-aks
 
       # Wait for rollout
       - name: Wait for rollout
@@ -781,7 +781,7 @@ Use this checklist when creating EKS/AKS deployment workflows:
 
 ```bash
 # 1. Build manifests
-kubectl kustomize deployments/overlays/staging-eks > /tmp/eks-manifests.yaml
+kubectl kustomize deployments/overlays/stg-eks > /tmp/eks-manifests.yaml
 
 # 2. Validate against actual cluster (CRITICAL - not client-side!)
 kubectl apply --dry-run=server -f /tmp/eks-manifests.yaml
@@ -800,18 +800,18 @@ kubectl apply --dry-run=server -f /tmp/eks-manifests.yaml
 kubectl cluster-info
 
 # 2. Check namespace exists
-kubectl get namespace staging-mcp-server-langgraph || kubectl create namespace staging-mcp-server-langgraph
+kubectl get namespace stg-mcp-server-langgraph || kubectl create namespace stg-mcp-server-langgraph
 
 # 3. Verify External Secrets Operator
 kubectl get deployment -n external-secrets-system external-secrets
 kubectl api-resources | grep externalsecret
 
 # 4. Check RBAC permissions
-kubectl auth can-i create roles --namespace staging-mcp-server-langgraph
-kubectl auth can-i create rolebindings --namespace staging-mcp-server-langgraph
+kubectl auth can-i create roles --namespace stg-mcp-server-langgraph
+kubectl auth can-i create rolebindings --namespace stg-mcp-server-langgraph
 
 # 5. Validate resource quotas
-kubectl describe resourcequota -n staging-mcp-server-langgraph
+kubectl describe resourcequota -n stg-mcp-server-langgraph
 ```
 
 ---
@@ -859,8 +859,8 @@ All 11 critical lessons from GKE troubleshooting have been documented and templa
 7. Set **explicit resource requests** meeting platform constraints
 
 **Next Steps** (when ready to deploy):
-1. Create EKS overlay directory: `deployments/overlays/staging-eks/`
-2. Create AKS overlay directory: `deployments/overlays/staging-aks/`
+1. Create EKS overlay directory: `deployments/overlays/stg-eks/`
+2. Create AKS overlay directory: `deployments/overlays/stg-aks/`
 3. Copy templates from this guide
 4. Adapt ServiceAccount annotations for IRSA/Managed Identity
 5. Test with `kubectl apply --dry-run=server` before committing

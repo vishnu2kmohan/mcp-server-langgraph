@@ -43,11 +43,11 @@ Successfully validated and remediated **16 of 17 findings** from OpenAI Codex de
 **Status**: ✅ FIXED
 **Impact**: CRITICAL - External secrets would never sync
 
-**File Modified**: `deployments/overlays/production-gke/external-secrets.yaml`
+**File Modified**: `deployments/overlays/prod-gke/external-secrets.yaml`
 
 **Changes**:
 - Fixed secretStoreRef name: `production-gcp-secret-manager` → `gcp-secret-manager`
-- Updated namespace: `mcp-server-langgraph` → `production-mcp-server-langgraph`
+- Updated namespace: `mcp-server-langgraph` → `prod-mcp-server-langgraph`
 - Aligned all secret key names to match Helm template expectations (kebab-case)
 - Changed placeholder: `YOUR_my-gcp-project` → `${GCP_PROJECT_ID}` (Kustomize-compatible)
 - Added missing keys: `langsmith-api-key`, `infisical-*` secrets
@@ -209,12 +209,12 @@ Successfully validated and remediated **16 of 17 findings** from OpenAI Codex de
 **Files Created**:
 - `deployments/overlays/dev/namespace.yaml`
 - `deployments/overlays/staging/namespace.yaml`
-- `deployments/overlays/production/namespace.yaml`
+- `deployments/overlays/prod/namespace.yaml`
 
 **Files Modified**:
 - `deployments/overlays/dev/kustomization.yaml`
 - `deployments/overlays/staging/kustomization.yaml`
-- `deployments/overlays/production/kustomization.yaml`
+- `deployments/overlays/prod/kustomization.yaml`
 
 **Changes**:
 - Created environment-specific namespace resources with proper labels
@@ -423,7 +423,7 @@ helm lint deployments/helm/mcp-server-langgraph/
    - helm lint deployments/helm/mcp-server-langgraph/
    - kustomize build deployments/overlays/dev/
    - kustomize build deployments/overlays/staging/
-   - kustomize build deployments/overlays/production/
+   - kustomize build deployments/overlays/prod/
    ```
 
 2. **Add Pre-commit Hook**:

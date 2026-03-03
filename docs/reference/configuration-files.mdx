@@ -59,7 +59,7 @@ python -m mcp_server_langgraph
     ```bash
     SERVICE_NAME=mcp-server-langgraph
     SERVICE_VERSION=2.8.0
-    ENVIRONMENT=development  # development, staging, production
+    ENVIRONMENT=development  # development, stg, production
     ```
   </Accordion>
 
@@ -198,7 +198,7 @@ python -m mcp_server_langgraph
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-client-secret
     INFISICAL_PROJECT_ID=your-project-id
-    INFISICAL_ENVIRONMENT=dev  # dev, staging, prod
+    INFISICAL_ENVIRONMENT=dev  # dev, stg, prod
     INFISICAL_API_URL=https://app.infisical.com/api
     ```
   </Accordion>
@@ -273,7 +273,7 @@ python -m mcp_server_langgraph
   <Step title="Environment-Specific Files">
     ```bash
     .env.development
-    .env.staging
+    .env.stg
     .env.production
 
     # Load based on environment
@@ -927,7 +927,7 @@ Rules are applied in this order:
   <Card title="Environment Separation" icon="layer-group">
     - Separate configs per environment
     - Different secrets per environment
-    - Test config changes in staging
+    - Test config changes in stg
     - Use CI/CD for config deployment
   </Card>
 

@@ -1518,7 +1518,7 @@ repos:
 
       Prevents runtime errors like undefined functions, integer comparison issues,
 
-      and improper variable handling. See preview-smoke-tests.sh fixes as examples.
+      and improper variable handling. See stg-smoke-tests.sh fixes as examples.
 
       '
   - id: validate-pytest-markers
@@ -1693,7 +1693,7 @@ repos:
 
       Prevents accidental deployment failures and security issues.
 
-      Regression prevention for Codex findings: values-staging.yaml:108, values-production.yaml:139
+      Regression prevention for Codex findings: values-stg.yaml:108, values-prod.yaml:139
 
       '
   # NOTE: validate-docker-compose-health-checks hook REMOVED (2025-11-25)
@@ -1887,11 +1887,11 @@ repos:
     name: Check for Placeholders in Production Overlays
     entry: >
       bash -c 'if command -v kubectl >/dev/null 2>&1; then
-      kubectl kustomize deployments/overlays/production-gke | grep -E "PLACEHOLDER_|PRODUCTION_DOMAIN" && exit 1 || exit 0;
+      kubectl kustomize deployments/overlays/prod-gke | grep -E "PLACEHOLDER_|PRODUCTION_DOMAIN" && exit 1 || exit 0;
       else echo "Skipping: kubectl not installed (install from https://kubernetes.io/docs/tasks/tools/)";
       exit 0; fi'
     language: system
-    files: ^deployments/overlays/production-gke/.*\.(yaml|yml)$
+    files: ^deployments/overlays/prod-gke/.*\.(yaml|yml)$
     pass_filenames: false
     stages:
     - pre-push

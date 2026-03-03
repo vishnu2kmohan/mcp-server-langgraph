@@ -136,19 +136,19 @@ Create separate deployments for each environment:
     ```
   </Tab>
 
-  <Tab title="Staging">
+  <Tab title="STG">
     ```bash
-    # Deploy to staging
-    langgraph deploy my-agent-staging --tag staging
+    # Deploy to stg
+    langgraph deploy my-agent-stg --tag stg
 
-    # Use staging-specific LangSmith project
-    LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
+    # Use stg-specific LangSmith project
+    LANGSMITH_PROJECT=my-agent-stg langgraph deploy my-agent-stg
     ```
   </Tab>
 
   <Tab title="Production">
     ```bash
-    # Deploy to production
+    # Deploy to prod
     langgraph deploy my-agent-prod --tag production
 
     # Use production secrets

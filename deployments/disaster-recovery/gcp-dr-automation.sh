@@ -34,7 +34,7 @@ if [ -z "$PRIMARY_PROJECT" ]; then
 fi
 
 # Cluster names
-DR_CLUSTER="production-mcp-server-langgraph-gke-dr"
+DR_CLUSTER="prod-mcp-server-langgraph-gke-dr"
 
 # Database names
 PRIMARY_DB="mcp-prod-postgres"
@@ -176,15 +176,15 @@ deploy_to_dr() {
     kubectl create secret generic dr-database-config \
         --from-literal=cloudsql-connection-name="${PRIMARY_PROJECT}:${DR_REGION}:${DR_DB}" \
         --from-literal=redis-host="REDIS_DR_IP" \
-        --namespace=mcp-production \
+        --namespace=mcp-prod \
         --dry-run=client -o yaml | kubectl apply -f -
 
     # Deploy application
-    kubectl apply -k deployments/overlays/production-gke
+    kubectl apply -k deployments/overlays/prod-gke
 
     # Wait for rollout
-    kubectl rollout status deployment/production-mcp-server-langgraph \
-        -n mcp-production \
+    kubectl rollout status deployment/prod-mcp-server-langgraph \
+        -n mcp-prod \
         --timeout=10m
 
     log_info "✅ Application deployed to DR cluster"
@@ -198,8 +198,8 @@ update_dns() {
     log_info "Updating DNS to point to DR cluster..."
 
     # Get DR cluster ingress IP
-    DR_INGRESS_IP=$(kubectl get svc production-mcp-server-langgraph \
-        -n mcp-production \
+    DR_INGRESS_IP=$(kubectl get svc prod-mcp-server-langgraph \
+        -n mcp-prod \
         -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
     log_info "DR Ingress IP: $DR_INGRESS_IP"
@@ -224,12 +224,12 @@ verify_dr() {
     # Health checks
     kubectl wait --for=condition=ready pods \
         -l app=mcp-server-langgraph \
-        -n mcp-production \
+        -n mcp-prod \
         --timeout=5m
 
     # Test endpoint
-    kubectl port-forward -n mcp-production \
-        svc/production-mcp-server-langgraph 8000:8000 &
+    kubectl port-forward -n mcp-prod \
+        svc/prod-mcp-server-langgraph 8000:8000 &
     PF_PID=$!
 
     sleep 5

@@ -12,7 +12,7 @@ last-updated: 2026-02-05
 
 ## Critical: namePrefix Does NOT Update Secret References
 
-When using `namePrefix: preview-` in `kustomization.yaml`, Kustomize **DOES NOT** automatically update `secretKeyRef.name` references in environment variables.
+When using `namePrefix: stg-` in `kustomization.yaml`, Kustomize **DOES NOT** automatically update `secretKeyRef.name` references in environment variables.
 
 ### The Problem
 
@@ -25,12 +25,12 @@ env:
         name: mcp-server-langgraph-secrets  # Original name
         key: database-password
 
-# Overlay kustomization (deployments/overlays/preview-gke/kustomization.yaml)
-namePrefix: preview-
+# Overlay kustomization (deployments/overlays/stg-gke/kustomization.yaml)
+namePrefix: stg-
 ```
 
 **What Happens:**
-1. Secret gets renamed to: `preview-mcp-server-langgraph-secrets`
+1. Secret gets renamed to: `stg-mcp-server-langgraph-secrets`
 2. **BUT** env vars still reference: `mcp-server-langgraph-secrets` (unchanged!)
 3. Pod fails with: `CreateContainerConfigError` - secret not found
 
@@ -48,7 +48,7 @@ Always create a patch to explicitly update secret references when using `namePre
     - name: DATABASE_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: preview-mcp-server-langgraph-secrets  # Explicit prefix
+          name: stg-mcp-server-langgraph-secrets  # Explicit prefix
           key: database-password
 ```
 
@@ -69,7 +69,7 @@ spec:
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: preview-mcp-server-langgraph-secrets
+                  name: stg-mcp-server-langgraph-secrets
                   key: database-password
 ```
 
@@ -79,10 +79,10 @@ This project has TDD tests that catch this issue:
 
 ```bash
 # Run the secret reference validation test
-uv run --frozen pytest tests/kubernetes/test_kustomize_preview_gke.py::TestKustomizePreviewGKE::test_secret_references_use_preview_prefix -v
+uv run --frozen pytest tests/kubernetes/test_kustomize_stg_gke.py::TestKustomizeStgGKE::test_secret_references_use_stg_prefix -v
 ```
 
-The test at `tests/kubernetes/test_kustomize_preview_gke.py:98` validates that all `secretKeyRef.name` values use the `preview-` prefix.
+The test at `tests/kubernetes/test_kustomize_stg_gke.py:98` validates that all `secretKeyRef.name` values use the `stg-` prefix.
 
 ---
 
@@ -120,7 +120,7 @@ If you reference services by name in env vars, they need manual updating too:
 ```yaml
 env:
   - name: REDIS_HOST
-    value: redis-session  # May need to be preview-redis-session
+    value: redis-session  # May need to be stg-redis-session
 ```
 
 ---
@@ -144,12 +144,12 @@ When pods fail after adding `namePrefix`:
 2. **Check pod events**: `kubectl describe pod <pod> -n <namespace>`
 3. **Look for**: `CreateContainerConfigError`, `secret "xxx" not found`
 4. **Render manifests**: `kubectl kustomize deployments/overlays/<overlay>/ | grep secretKeyRef -A2`
-5. **Run TDD tests**: `uv run --frozen pytest tests/kubernetes/test_kustomize_preview_gke.py -v`
+5. **Run TDD tests**: `uv run --frozen pytest tests/kubernetes/test_kustomize_stg_gke.py -v`
 
 ---
 
 ## Related Files
 
-- `tests/kubernetes/test_kustomize_preview_gke.py` - TDD tests for preview-gke overlay
-- `deployments/overlays/preview-gke/deployment-redis-url-json-patch.yaml` - Example JSON 6902 patch
-- `deployments/overlays/preview-gke/kustomization.yaml` - Preview overlay configuration
+- `tests/kubernetes/test_kustomize_stg_gke.py` - TDD tests for stg-gke overlay
+- `deployments/overlays/stg-gke/deployment-redis-url-json-patch.yaml` - Example JSON 6902 patch
+- `deployments/overlays/stg-gke/kustomization.yaml` - STG overlay configuration

@@ -22,7 +22,7 @@ output "backend_config" {
   description = "Backend configuration for environment modules - use this in terraform backend block"
   value = {
     bucket  = google_storage_bucket.terraform_state.name
-    prefix  = "env" # This will be overridden per environment (e.g., "env/dev", "env/preview", "env/prod")
+    prefix  = "env" # This will be overridden per environment (e.g., "env/dev", "env/stg", "env/prod")
     project = var.project_id
     region  = var.region
   }
@@ -34,7 +34,7 @@ output "backend_config_hcl" {
     terraform {
       backend "gcs" {
         bucket  = "${google_storage_bucket.terraform_state.name}"
-        prefix  = "env/ENVIRONMENT_NAME"  # Replace ENVIRONMENT_NAME with dev/staging/prod
+        prefix  = "env/ENVIRONMENT_NAME"  # Replace ENVIRONMENT_NAME with dev/stg/prod
       }
     }
   EOT
@@ -59,7 +59,7 @@ output "setup_instructions" {
 
     2. Initialize your Terraform configuration:
 
-       cd terraform/environments/gcp-prod  # or gcp-preview, gcp-dev
+       cd terraform/environments/gcp-prod  # or gcp-stg, gcp-dev
        terraform init
 
     3. The state file will be stored at:

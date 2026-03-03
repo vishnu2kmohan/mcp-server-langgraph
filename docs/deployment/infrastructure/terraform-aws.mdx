@@ -155,7 +155,7 @@ terraform/
 │       └── README.md
 └── environments/
     ├── dev/                    # Development environment
-    ├── staging/                # Staging environment
+    ├── stg/                # STG environment
     └── prod/                   # Production environment
         ├── main.tf
         ├── terraform.tfvars
@@ -207,7 +207,7 @@ Production-ready multi-AZ networking with VPC endpoints for cost savings.
 module "vpc" {
   source = "../../modules/vpc"
 
-  vpc_name = "mcp-production-vpc"
+  vpc_name = "mcp-prod-vpc"
   vpc_cidr = "10.0.0.0/16"
   region   = "us-east-1"
 
@@ -230,7 +230,7 @@ module "vpc" {
   flow_logs_kms_key_id       = aws_kms_key.logs.arn  # Optional encryption
 
   tags = {
-    Environment = "production"
+    Environment = "prod"
     ManagedBy   = "terraform"
   }
 }
@@ -263,10 +263,10 @@ output "public_subnet_ids" {
 | **VPC Endpoints** | $21.60 | 6 endpoints × $0.01/hour × 720 hours |
 | **VPC Flow Logs** | ~$5.00 | Based on log volume |
 | **Total (Multi-AZ)** | **$123.80** | Production recommended |
-| **Total (Single NAT)** | **$59.00** | Development/staging |
+| **Total (Single NAT)** | **$59.00** | Development/stg |
 
 <Tip>
-**Cost Savings**: Use single NAT gateway in dev/staging to save ~$65/month. VPC endpoints save ~70% on data transfer costs, paying for themselves with moderate traffic.
+**Cost Savings**: Use single NAT gateway in dev/stg to save ~$65/month. VPC endpoints save ~70% on data transfer costs, paying for themselves with moderate traffic.
 </Tip>
 
 ---
@@ -403,7 +403,7 @@ module "eks" {
   ]
 
   tags = {
-    Environment = "production"
+    Environment = "prod"
     ManagedBy   = "terraform"
   }
 }
@@ -511,7 +511,7 @@ module "rds" {
   ]
 
   tags = {
-    Environment = "production"
+    Environment = "prod"
     ManagedBy   = "terraform"
   }
 }
@@ -549,7 +549,7 @@ output "db_secret_yaml" {
 | **Total** | **$157.56** | |
 
 <Tip>
-**Cost Optimization**: Use `db.t3.small` for dev/staging ($60.28/month). For production, `db.t3.medium` provides good balance of performance and cost.
+**Cost Optimization**: Use `db.t3.small` for dev/stg ($60.28/month). For production, `db.t3.medium` provides good balance of performance and cost.
 </Tip>
 
 ---
@@ -578,7 +578,7 @@ Redis cluster with high availability and automatic failover.
     **Use case**: Production, high-throughput workloads
   </Tab>
 
-  <Tab title="Standard Mode (Dev/Staging)">
+  <Tab title="Standard Mode (Dev/STG)">
     **Configuration**:
     - Primary-replica topology
     - 1-6 nodes
@@ -589,7 +589,7 @@ Redis cluster with high availability and automatic failover.
     - Simpler client configuration
     - Easier to debug
 
-    **Use case**: Development, staging, low-traffic production
+    **Use case**: Development, stg, low-traffic production
   </Tab>
 </Tabs>
 
@@ -640,7 +640,7 @@ module "elasticache" {
   ]
 
   tags = {
-    Environment = "production"
+    Environment = "prod"
     ManagedBy   = "terraform"
   }
 }
@@ -677,7 +677,7 @@ output "redis_secret_yaml" {
 | **cache.r6g.large (Standard)** | **$109.50** | 2 nodes (primary + replica) |
 
 <Tip>
-**Cost Optimization**: Use Standard mode with `cache.t4g.micro` for dev/staging ($24.82/month for 2 nodes).
+**Cost Optimization**: Use Standard mode with `cache.t4g.micro` for dev/stg ($24.82/month for 2 nodes).
 </Tip>
 
 ---
@@ -855,7 +855,7 @@ Total production cost: **~$803/month** (60% savings vs. default configuration)
 
   <Accordion title="Single NAT Gateway (non-production)">
     ```hcl
-    single_nat_gateway = true  # Dev/staging only
+    single_nat_gateway = true  # Dev/stg only
     ```
 
     **Savings**: $64.80/month (reduces from 3 NAT gateways to 1)
@@ -863,10 +863,10 @@ Total production cost: **~$803/month** (60% savings vs. default configuration)
 
   <Accordion title="Right-size RDS instances">
     - **Dev**: db.t3.small ($30.14/month)
-    - **Staging**: db.t3.medium ($60.28/month, Single-AZ)
+    - **STG**: db.t3.medium ($60.28/month, Single-AZ)
     - **Prod**: db.t3.medium Multi-AZ ($120.56/month)
 
-    **Savings**: $90.42/month using Single-AZ in staging
+    **Savings**: $90.42/month using Single-AZ in stg
   </Accordion>
 
   <Accordion title="ElastiCache Standard vs. Cluster Mode">

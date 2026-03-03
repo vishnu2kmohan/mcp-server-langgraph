@@ -198,7 +198,7 @@ class TestWorkloadIdentityBindings:
     @requires_tool("kustomize")
     def staging_service_accounts(self):
         """Load ServiceAccounts from staging overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/preview-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/stg-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -212,7 +212,7 @@ class TestWorkloadIdentityBindings:
     @requires_tool("kustomize")
     def production_service_accounts(self):
         """Load ServiceAccounts from production overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/prod-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )

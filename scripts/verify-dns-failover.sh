@@ -6,15 +6,15 @@
 #   ./scripts/verify-dns-failover.sh
 #
 # Prerequisites:
-#   - kubectl configured for staging cluster
+#   - kubectl configured for stg cluster
 #   - gcloud CLI authenticated
 #   - Cloud DNS already configured
 
 set -euo pipefail
 
 PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
-NAMESPACE="staging-mcp-server-langgraph"
-DNS_ZONE="staging-internal"
+NAMESPACE="stg-mcp-server-langgraph"
+DNS_ZONE="stg-internal"
 
 # Colors
 GREEN='\033[0;32m'
@@ -33,7 +33,7 @@ verify_dns_zone() {
 
     if ! gcloud dns managed-zones describe "$DNS_ZONE" --project="$PROJECT_ID" &>/dev/null; then
         log_error "DNS zone '$DNS_ZONE' not found"
-        echo "Run: ./scripts/setup-cloud-dns-staging.sh"
+        echo "Run: ./scripts/setup-cloud-dns-stg.sh"
         exit 1
     fi
 
@@ -50,10 +50,10 @@ verify_dns_zone() {
 verify_dns_records() {
     log_section "Verifying DNS Records"
 
-    records=("cloudsql-staging" "redis-staging" "redis-session-staging")
+    records=("cloudsql-stg" "redis-stg" "redis-session-stg")
 
     for record in "${records[@]}"; do
-        full_name="${record}.staging.internal."
+        full_name="${record}.stg.internal."
 
         ip=$(gcloud dns record-sets describe "$full_name" \
             --zone="$DNS_ZONE" \
@@ -94,9 +94,9 @@ spec:
     args:
       - |
         echo "=== Testing DNS Resolution ==="
-        for dns in cloudsql-staging redis-staging redis-session-staging; do
-          echo "\nTesting: \${dns}.staging.internal"
-          if nslookup "\${dns}.staging.internal"; then
+        for dns in cloudsql-stg redis-stg redis-session-stg; do
+          echo "\nTesting: \${dns}.stg.internal"
+          if nslookup "\${dns}.stg.internal"; then
             echo "✓ SUCCESS"
           else
             echo "✗ FAILED"
@@ -131,11 +131,11 @@ check_deployment_health() {
     log_section "Checking Deployment Health"
 
     # Check deployment status
-    available=$(kubectl get deployment staging-mcp-server-langgraph \
+    available=$(kubectl get deployment stg-mcp-server-langgraph \
         -n "$NAMESPACE" \
         -o jsonpath='{.status.availableReplicas}' 2>/dev/null || echo "0")
 
-    desired=$(kubectl get deployment staging-mcp-server-langgraph \
+    desired=$(kubectl get deployment stg-mcp-server-langgraph \
         -n "$NAMESPACE" \
         -o jsonpath='{.status.replicas}' 2>/dev/null || echo "0")
 
@@ -147,7 +147,7 @@ check_deployment_health() {
 
     # Check pod status
     echo ""
-    kubectl get pods -n "$NAMESPACE" -l app=staging-mcp-server-langgraph
+    kubectl get pods -n "$NAMESPACE" -l app=stg-mcp-server-langgraph
 }
 
 simulate_failover_scenario() {
@@ -156,27 +156,27 @@ simulate_failover_scenario() {
     echo "To simulate a failover:"
     echo ""
     echo "1. Update DNS record with new IP:"
-    echo "   gcloud dns record-sets update cloudsql-staging.staging.internal. \\"
-    echo "     --zone=staging-internal \\"
+    echo "   gcloud dns record-sets update cloudsql-stg.stg.internal. \\"
+    echo "     --zone=stg-internal \\"
     echo "     --type=A \\"
     echo "     --ttl=300 \\"
     echo "     --rrdatas=NEW_IP \\"
     echo "     --project=$PROJECT_ID"
     echo ""
     echo "2. Wait for TTL (5 minutes) or restart pods:"
-    echo "   kubectl rollout restart deployment/staging-mcp-server-langgraph \\"
+    echo "   kubectl rollout restart deployment/stg-mcp-server-langgraph \\"
     echo "     -n $NAMESPACE"
     echo ""
     echo "3. Verify new pods connect to new IP:"
     echo "   kubectl logs -n $NAMESPACE \\"
-    echo "     -l app=staging-mcp-server-langgraph \\"
+    echo "     -l app=stg-mcp-server-langgraph \\"
     echo "     --tail=50 | grep -i 'connect\\|postgres\\|redis'"
 }
 
 main() {
     echo -e "${BLUE}"
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║   DNS Failover Verification - Staging GKE Environment     ║"
+    echo "║   DNS Failover Verification - STG GKE Environment     ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 

@@ -156,7 +156,7 @@ All critical components complete. You can deploy to production NOW.
 ```bash
 cd terraform/backend-setup-gcp && terraform apply
 cd ../environments/gcp-prod && terraform apply
-kubectl apply -k ../../deployments/overlays/production-gke
+kubectl apply -k ../../deployments/overlays/prod-gke
 ```
 
 **Full Guide**: See `deployments/GKE_DEPLOYMENT_GUIDE.md` or `docs/deployment/kubernetes/gke-production.mdx`

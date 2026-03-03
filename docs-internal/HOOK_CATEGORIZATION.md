@@ -118,7 +118,7 @@
 | `trivy-scan-k8s-manifests` | `trivy config deployments --severity CRITICAL,HIGH` | 60-90s |
 | `helm-lint` | `helm lint deployments/helm/mcp-server-langgraph` | 20-30s |
 | `validate-cloud-overlays` | `kubectl kustomize deployments/kubernetes/overlays/{aws,gcp,azure}` | 30-60s |
-| `validate-no-placeholders` | `kubectl kustomize deployments/overlays/production-gke \| grep ...` | 10-20s |
+| `validate-no-placeholders` | `kubectl kustomize deployments/overlays/prod-gke \| grep ...` | 10-20s |
 | `check-helm-placeholders` | `grep -r "YOUR_.*_PROJECT_ID" ...` | 10-20s |
 
 **Count:** 5 hooks

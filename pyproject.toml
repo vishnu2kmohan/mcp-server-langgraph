@@ -906,7 +906,7 @@ markers = [
     "health: Health check and startup validation tests (readiness, liveness, dependency checks)",
     "audit: Audit logging and compliance tests (repository, service, retention, integrity)",
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
-    "preview: Preview environment deployment tests",
+    "stg: Staging environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",
     "skip_observability_init: Opt-out of autouse observability initialization fixture (for OTEL component unit tests)",
     "resilience: Resilience pattern tests (circuit breaker, retry, timeout, fallback)",

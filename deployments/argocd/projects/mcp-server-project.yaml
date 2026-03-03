@@ -12,7 +12,7 @@ spec:
   # Source repositories
   sourceRepos:
     - 'https://github.com/vishnu2kmohan/mcp-server-langgraph'
-    - '*'  # Allow all sources (restrict in production)
+    - '*'  # Allow all sources (restrict in prod)
 
   # Destination clusters and namespaces
   destinations:
@@ -57,7 +57,7 @@ spec:
 
   # Sync windows (maintenance windows)
   syncWindows:
-    # Production sync window
+    # Prod sync window
     - kind: allow
       schedule: '0 2 * * *'  # 2 AM UTC daily
       duration: 2h
@@ -71,5 +71,5 @@ spec:
       duration: 24h
       applications:
         - '*-dev'
-        - '*-staging'
+        - '*-stg'
       manualSync: true

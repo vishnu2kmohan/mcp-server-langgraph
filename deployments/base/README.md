@@ -45,7 +45,7 @@ kubectl apply -k deployments/overlays/dev
 kubectl apply -k deployments/overlays/staging
 
 # Production
-kubectl apply -k deployments/overlays/production
+kubectl apply -k deployments/overlays/prod
 ```
 
 ### With Helm

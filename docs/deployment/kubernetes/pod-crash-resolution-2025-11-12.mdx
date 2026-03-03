@@ -1,11 +1,11 @@
 ---
 title: Pod Crash Resolution - 2025-11-12
-description: Resolution of critical pod crashes in staging environment affecting Keycloak
+description: Resolution of critical pod crashes in stg environment affecting Keycloak
   and MCP Server deployments
 icon: 'dharmachakra'
 contentType: explanation
 seoTitle: Pod Crash Resolution - 2025-11-12 - MCP Server LangGraph
-seoDescription: Resolution of critical pod crashes in staging environment affecting
+seoDescription: Resolution of critical pod crashes in stg environment affecting
   Keycloak and MCP Server deployments Learn more about MCP Server LangGraph.
 keywords:
 - pod
@@ -13,7 +13,7 @@ keywords:
 - resolution
 - critical
 - crashes
-- staging
+- stg
 - environment
 - affecting
 - keycloak
@@ -26,9 +26,9 @@ keywords:
 **Date**: 2025-11-12
 **Severity**: Critical
 **Status**: ✅ RESOLVED
-**Environment**: staging-mcp-server-langgraph (GKE)
+**Environment**: stg-mcp-server-langgraph (GKE)
 
-Successfully resolved pod crashes in staging environment affecting Keycloak and MCP Server deployments. Implemented comprehensive TDD-based prevention measures to ensure these issues can never recur.
+Successfully resolved pod crashes in stg environment affecting Keycloak and MCP Server deployments. Implemented comprehensive TDD-based prevention measures to ensure these issues can never recur.
 
 ## Issues Resolved
 
@@ -39,7 +39,7 @@ Successfully resolved pod crashes in staging environment affecting Keycloak and 
 **Root Cause**: Keycloak Quarkus runtime requires writable filesystem for build artifacts at startup, incompatible with `readOnlyRootFilesystem: true`
 
 **Solution**:
-- Temporarily disabled `readOnlyRootFilesystem` for Keycloak (deployments/overlays/preview-gke/keycloak-patch.yaml:30)
+- Temporarily disabled `readOnlyRootFilesystem` for Keycloak (deployments/overlays/stg-gke/keycloak-patch.yaml:30)
 - Created comprehensive implementation plan for permanent fix with pre-built image
 - Documented in: `docs/kubernetes/KEYCLOAK_READONLY_FILESYSTEM.md`
 
@@ -59,7 +59,7 @@ Successfully resolved pod crashes in staging environment affecting Keycloak and 
 **Solutions Implemented**:
 
 #### ConfigMap Keys Added
-**File**: `deployments/overlays/preview-gke/configmap-patch.yaml`
+**File**: `deployments/overlays/stg-gke/configmap-patch.yaml`
 
 Added 23 lines of configuration:
 - Session management: `session_cookie_secure`, `session_cookie_samesite`, `session_max_age_seconds`
@@ -70,7 +70,7 @@ Added 23 lines of configuration:
 - GDPR: `gdpr_storage_backend`, `gdpr_retention_days`
 
 #### Secret Keys Added
-**File**: `deployments/overlays/preview-gke/external-secrets.yaml`
+**File**: `deployments/overlays/stg-gke/external-secrets.yaml`
 
 Added to ExternalSecret template:
 - `keycloak-client-id`
@@ -88,17 +88,17 @@ Added to ExternalSecret template:
 #### GCP Secret Manager
 Created 11 placeholder secrets:
 ```bash
-staging-keycloak-client-id
-staging-keycloak-client-secret
-staging-keycloak-admin-username
-staging-keycloak-admin-password
-staging-openfga-store-id
-staging-openfga-model-id
-staging-gdpr-postgres-url
-staging-qdrant-api-key
-staging-infisical-project-id
-staging-infisical-client-id
-staging-infisical-client-secret
+stg-keycloak-client-id
+stg-keycloak-client-secret
+stg-keycloak-admin-username
+stg-keycloak-admin-password
+stg-openfga-store-id
+stg-openfga-model-id
+stg-gdpr-postgres-url
+stg-qdrant-api-key
+stg-infisical-project-id
+stg-infisical-client-id
+stg-infisical-client-secret
 ```
 **Current Status**:
 - ✅ All ConfigMap keys exist
@@ -122,7 +122,7 @@ staging-infisical-client-secret
 
 1. **TestConfigMapValidation**
    - Validates all referenced ConfigMap keys exist
-   - Validates required keys whitelist for staging
+   - Validates required keys whitelist for stg
    - Skips optional references (e.g., cluster-config)
 
 2. **TestSecretValidation**
@@ -158,15 +158,15 @@ staging-infisical-client-secret
 python scripts/validators/k8s_config_validator.py
 
 # Validate specific overlay
-python scripts/validators/k8s_config_validator.py --overlay deployments/overlays/preview-gke
+python scripts/validators/k8s_config_validator.py --overlay deployments/overlays/stg-gke
 ```
 
 **Output Example**:
 ```text
 === Kubernetes Configuration Validation ===
 
-Validating ConfigMap keys for deployments/overlays/preview-gke...
-✓ All ConfigMap keys exist for deployments/overlays/preview-gke
+Validating ConfigMap keys for deployments/overlays/stg-gke...
+✓ All ConfigMap keys exist for deployments/overlays/stg-gke
 
 === Validation Summary ===
 ✓ All validations passed!
@@ -214,8 +214,8 @@ $ python scripts/validators/k8s_config_validator.py
 ```
 
 === Kubernetes Configuration Validation ===
-✓ All ConfigMap keys exist for deployments/overlays/preview-gke
-✓ All ConfigMap keys exist for deployments/overlays/production-gke
+✓ All ConfigMap keys exist for deployments/overlays/stg-gke
+✓ All ConfigMap keys exist for deployments/overlays/prod-gke
 === Validation Summary ===
 ✓ All validations passed!
 ```markdown
@@ -269,10 +269,10 @@ Qdrant:            1/1 Running ✅
 ## Files Modified
 
 ### Configuration Files
-1. `deployments/overlays/preview-gke/configmap-patch.yaml` (+23 lines)
-2. `deployments/overlays/preview-gke/external-secrets.yaml` (+40 lines)
-3. `deployments/overlays/preview-gke/keycloak-patch.yaml` (modified security context)
-4. `deployments/overlays/preview-gke/kustomization.yaml` (+18 lines - ServiceAccount delete patches)
+1. `deployments/overlays/stg-gke/configmap-patch.yaml` (+23 lines)
+2. `deployments/overlays/stg-gke/external-secrets.yaml` (+40 lines)
+3. `deployments/overlays/stg-gke/keycloak-patch.yaml` (modified security context)
+4. `deployments/overlays/stg-gke/kustomization.yaml` (+18 lines - ServiceAccount delete patches)
 
 ### Test Files (NEW)
 5. `tests/deployment/test_configmap_secret_validation.py` (495 lines)
@@ -287,7 +287,7 @@ Qdrant:            1/1 Running ✅
 
 ## Git Commits
 
-1. **a9922e9**: "fix(staging): resolve pod crashes - add missing ConfigMap keys and fix Keycloak readOnlyRootFilesystem"
+1. **a9922e9**: "fix(stg): resolve pod crashes - add missing ConfigMap keys and fix Keycloak readOnlyRootFilesystem"
 2. **5181197**: "feat(docs): add image & code block validators + auto-fix 297 code blocks"
 3. **735f53f**: "docs(kubernetes): add comprehensive Keycloak readOnlyRootFilesystem implementation plan"
 
@@ -296,22 +296,22 @@ Qdrant:            1/1 Running ✅
 ### Immediate (Required)
 1. **Replace placeholder secrets in GCP Secret Manager**
    - Contact security team for production values
-   - Update: `staging-keycloak-client-id`, `staging-keycloak-client-secret`
-   - Update: `staging-openfga-store-id`, `staging-openfga-model-id`
-   - Update: `staging-gdpr-postgres-url`
-   - Update: `staging-qdrant-api-key`
-   - Update: `staging-infisical-*` credentials
+   - Update: `stg-keycloak-client-id`, `stg-keycloak-client-secret`
+   - Update: `stg-openfga-store-id`, `stg-openfga-model-id`
+   - Update: `stg-gdpr-postgres-url`
+   - Update: `stg-qdrant-api-key`
+   - Update: `stg-infisical-*` credentials
 
 2. **Verify new pods start successfully**
    ```
-   kubectl get pods -n staging-mcp-server-langgraph -w
-   kubectl logs staging-mcp-server-langgraph-796b46bbf4-xxx
+   kubectl get pods -n stg-mcp-server-langgraph -w
+   kubectl logs stg-mcp-server-langgraph-796b46bbf4-xxx
    ```
 
 3. **Scale down old replicasets**
    ```
-   kubectl scale deployment staging-mcp-server-langgraph --replicas=3 -n staging-mcp-server-langgraph
-   kubectl scale replicaset staging-mcp-server-langgraph-97c744bbd --replicas=0 -n staging-mcp-server-langgraph
+   kubectl scale deployment stg-mcp-server-langgraph --replicas=3 -n stg-mcp-server-langgraph
+   kubectl scale replicaset stg-mcp-server-langgraph-97c744bbd --replicas=0 -n stg-mcp-server-langgraph
    ```diff
 
 ### Short-term (This Sprint)
@@ -319,7 +319,7 @@ Qdrant:            1/1 Running ✅
    - Follow plan in `KEYCLOAK_READONLY_FILESYSTEM.md`
    - Create Dockerfile with multi-stage build
    - Build and push to Artifact Registry
-   - Test in staging
+   - Test in stg
    - Re-enable `readOnlyRootFilesystem: true`
 
 5. **Add validation to CI/CD**

@@ -1,0 +1,120 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mcp-server-langgraph-network-policy
+  namespace: prod-mcp-server-langgraph
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-server-langgraph
+
+  policyTypes:
+  - Ingress
+  - Egress
+
+  ingress:
+  # Allow ingress from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8000
+
+  # Allow ingress from within same namespace (for internal services)
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000
+
+  # Allow health check probes from GKE control plane
+  # GKE health checks originate from kube-system namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: TCP
+      port: 8000
+
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # Allow Cloud SQL Proxy to reach Cloud SQL (Google-managed service, external to cluster)
+  # No namespace selector needed - external egress via Cloud SQL Proxy sidecar
+  # Port 3307: Cloud SQL Proxy Admin API for private IP connections
+  # Port 5432: PostgreSQL database port (after tunnel is established)
+  - ports:
+    - protocol: TCP
+      port: 3307  # Cloud SQL Proxy Admin API (private IP mode)
+    - protocol: TCP
+      port: 5432  # Cloud SQL database (PostgreSQL)
+    - protocol: TCP
+      port: 9801  # Cloud SQL Proxy health check and metrics
+
+  # Allow egress to PostgreSQL via Cloud SQL Proxy (localhost)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: mcp-server-langgraph
+    ports:
+    - protocol: TCP
+      port: 5432
+
+  # Allow egress to Redis (Memorystore)
+  - ports:
+    - protocol: TCP
+      port: 6379
+
+  # Allow egress to Vertex AI and Google APIs (external to cluster)
+  # No namespace selector needed - external egress to *.googleapis.com
+  - ports:
+    - protocol: TCP
+      port: 443
+
+  # Allow egress to Keycloak (if in cluster)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow egress to OpenFGA (if in cluster)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: openfga
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow egress to Qdrant (if in cluster)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: qdrant
+    ports:
+    - protocol: TCP
+      port: 6333
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress-default
+  namespace: prod-mcp-server-langgraph
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  # This denies all ingress by default (pods must have explicit allow policies)

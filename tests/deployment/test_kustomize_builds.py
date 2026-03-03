@@ -28,8 +28,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.validation, pytest.mark.usefixtures(
 REPO_ROOT = get_repo_root()
 OVERLAYS = [
     "deployments/base",
-    "deployments/overlays/preview-gke",
-    "deployments/overlays/production-gke",
+    "deployments/overlays/stg-gke",
+    "deployments/overlays/prod-gke",
     "deployments/argocd/base",
 ]
 
@@ -127,9 +127,9 @@ class TestKustomizeBuilds:
             pytest.fail(f"Invalid YAML in {overlay_path}: {e}")
 
 
-@pytest.mark.xdist_group(name="testpreviewgkeoverlay")
+@pytest.mark.xdist_group(name="teststggkeoverlay")
 class TestPreviewGKEOverlay:
-    """Specific tests for preview-gke overlay configuration."""
+    """Specific tests for stg-gke overlay configuration."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -137,8 +137,8 @@ class TestPreviewGKEOverlay:
 
     @requires_tool("kustomize")
     def _build_overlay(self):
-        """Helper to build preview-gke overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/preview-gke"
+        """Helper to build stg-gke overlay."""
+        overlay_path = REPO_ROOT / "deployments/overlays/stg-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -146,17 +146,17 @@ class TestPreviewGKEOverlay:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
 
-    def test_namespace_consistency_for_preview_gke_matches_expected_namespace(self):
+    def test_namespace_stg_gke_matches_expected_namespace(self):
         """
         Test that all resources use the correct namespace.
 
-        Expected: preview-mcp-server-langgraph
-        Common mistake: mcp-preview (hardcoded)
+        Expected: stg-mcp-server-langgraph
+        Common mistake: mcp-stg (hardcoded)
 
         Validates Finding #4: Service Account namespace mismatches
         """
         documents = self._build_overlay()
-        expected_namespace = "preview-mcp-server-langgraph"
+        expected_namespace = "stg-mcp-server-langgraph"
 
         for doc in documents:
             if doc is None or not isinstance(doc, dict):
@@ -181,7 +181,7 @@ class TestPreviewGKEOverlay:
 
         Validates Finding #3: Preview GKE Redis deletion using wrong kind
 
-        After fix: Redis StatefulSet should NOT appear in preview-gke overlay
+        After fix: Redis StatefulSet should NOT appear in stg-gke overlay
         (because it's deleted and replaced with cloud-managed Redis)
         """
         documents = self._build_overlay()
@@ -194,7 +194,7 @@ class TestPreviewGKEOverlay:
             if doc.get("kind") == "StatefulSet":
                 name = doc.get("metadata", {}).get("name", "")
                 assert "redis" not in name.lower(), (
-                    f"Redis StatefulSet '{name}' still exists in preview-gke overlay. "
+                    f"Redis StatefulSet '{name}' still exists in stg-gke overlay. "
                     f"It should be deleted (using cloud-managed Redis)."
                 )
 
@@ -233,9 +233,9 @@ class TestPreviewGKEOverlay:
                             )
 
 
-@pytest.mark.xdist_group(name="testproductiongkeoverlay")
+@pytest.mark.xdist_group(name="testprodgkeoverlay")
 class TestProductionGKEOverlay:
-    """Specific tests for production-gke overlay configuration."""
+    """Specific tests for prod-gke overlay configuration."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -244,7 +244,7 @@ class TestProductionGKEOverlay:
     @requires_tool("kustomize")
     def _build_overlay(self):
         """Helper to build production overlay."""
-        overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/prod-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -256,13 +256,13 @@ class TestProductionGKEOverlay:
         """
         Test that all resources use the correct namespace.
 
-        Expected: production-mcp-server-langgraph
-        Common mistake: mcp-production (hardcoded)
+        Expected: prod-mcp-server-langgraph
+        Common mistake: mcp-prod (hardcoded)
 
         Validates Finding #10: PDB namespace mismatch
         """
         documents = self._build_overlay()
-        expected_namespace = "production-mcp-server-langgraph"
+        expected_namespace = "prod-mcp-server-langgraph"
 
         for doc in documents:
             if doc is None or not isinstance(doc, dict):

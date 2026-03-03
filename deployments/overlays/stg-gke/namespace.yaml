@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stg-mcp-server-langgraph
+  labels:
+    environment: stg
+    platform: gke
+    istio-injection: disabled
+  annotations:
+    description: "MCP Server LangGraph - STG Environment on GKE"

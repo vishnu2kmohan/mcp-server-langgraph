@@ -342,7 +342,7 @@ class TestContainerTestHelpers:
         assert container.settings.log_level == "DEBUG"
 
 
-@pytest.mark.xdist_group(name="testproductionauthvalidation")
+@pytest.mark.xdist_group(name="testprodauthvalidation")
 class TestProductionAuthValidation:
     """Test that production environments require proper external auth"""
 

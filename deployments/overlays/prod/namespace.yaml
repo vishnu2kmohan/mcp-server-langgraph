@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcp-server-langgraph
+  labels:
+    environment: prod
+    app: mcp-server-langgraph
+    tier: prod

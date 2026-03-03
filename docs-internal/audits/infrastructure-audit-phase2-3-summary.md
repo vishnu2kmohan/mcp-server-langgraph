@@ -38,7 +38,7 @@ All services are now running and accessible with stable versions.
 - `deployments/helm/mcp-server-langgraph/Chart.yaml` - version and appVersion
 - `deployments/helm/mcp-server-langgraph/values.yaml` - image tag
 - `deployments/kustomize/base/kustomization.yaml` - base image tag
-- `deployments/kustomize/overlays/production/kustomization.yaml` - v{VERSION}
+- `deployments/kustomize/overlays/prod/kustomization.yaml` - v{VERSION}
 - `deployments/kustomize/overlays/staging/kustomization.yaml` - staging-{VERSION}
 
 **Usage:**

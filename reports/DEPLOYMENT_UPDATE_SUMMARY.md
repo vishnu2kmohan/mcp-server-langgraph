@@ -256,7 +256,7 @@ kubectl rollout undo deployment/keycloak -n langgraph-agent
 git checkout HEAD~1 deployments/
 
 # Reapply
-kubectl apply -k deployments/kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/prod
 ```
 
 ## Next Steps

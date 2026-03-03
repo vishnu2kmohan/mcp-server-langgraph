@@ -61,7 +61,7 @@ resources:
 **Action**:
 ```bash
 # 1. Profile actual usage
-kubectl top pods -n mcp-production --containers
+kubectl top pods -n mcp-prod --containers
 
 # 2. Analyze over 7 days
 gcloud monitoring time-series list \
@@ -71,7 +71,7 @@ gcloud monitoring time-series list \
   | jq -s 'group_by(.pod) | .[] | {pod: .[0].pod, avg_cpu: ([.[].cpu] | add / length)}'
 
 # 3. Update deployment with optimized values
-kubectl patch deployment production-mcp-server-langgraph -n mcp-production \
+kubectl patch deployment prod-mcp-server-langgraph -n mcp-prod \
   --type='json' \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
 ```
@@ -84,13 +84,13 @@ kubectl patch deployment production-mcp-server-langgraph -n mcp-production \
 apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
-  name: production-mcp-server-vpa
-  namespace: mcp-production
+  name: prod-mcp-server-vpa
+  namespace: mcp-prod
 spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: production-mcp-server-langgraph
+    name: prod-mcp-server-langgraph
   updatePolicy:
     updateMode: Auto  # Or "Recommend" for manual review
 ```

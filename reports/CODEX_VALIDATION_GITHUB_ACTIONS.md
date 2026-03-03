@@ -160,7 +160,7 @@ OpenAI Codex provided completely inaccurate information about GitHub Actions ver
 ```
 ✓ ci.yaml
 ✓ bump-deployment-versions.yaml
-✓ deploy-preview-gke.yaml
+✓ deploy-stg-gke.yaml
 ✓ observability-alerts.yaml
 ✓ security-scan.yaml
 ✓ validate-deployments.yaml
@@ -174,7 +174,7 @@ OpenAI Codex provided completely inaccurate information about GitHub Actions ver
 ✓ performance-regression.yaml
 ✓ gcp-drift-detection.yaml
 ✓ link-checker.yaml
-✓ deploy-production-gke.yaml
+✓ deploy-prod-gke.yaml
 ✓ release.yaml
 ✓ security-validation.yml
 ✓ track-skipped-tests.yaml

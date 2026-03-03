@@ -361,7 +361,7 @@ kubectl apply -k deployments/overlays/<overlay> --namespace=<namespace>
 ### Usage Examples:
 ```bash
 # Validate before deploying
-python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/production-gke
+python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/prod-gke
 
 # Run all regression tests
 pytest tests/regression/ -v

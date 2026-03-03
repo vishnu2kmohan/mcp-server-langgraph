@@ -137,7 +137,7 @@ main() {
     # Validate Kustomize overlays
     log_info "=== Kustomize Overlay Validation ==="
 
-    local overlays=(dev staging production)
+    local overlays=(dev stg prod)
     for overlay in "${overlays[@]}"; do
         local overlay_dir="$PROJECT_ROOT/deployments/overlays/$overlay"
         if [[ -d "$overlay_dir" ]]; then

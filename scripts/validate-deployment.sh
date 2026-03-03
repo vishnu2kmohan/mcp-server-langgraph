@@ -4,7 +4,7 @@
 # Runs comprehensive validation before deploying to GKE
 #
 # Usage: ./scripts/validate-deployment.sh [overlay]
-# Example: ./scripts/validate-deployment.sh preview-gke
+# Example: ./scripts/validate-deployment.sh stg-gke
 
 set -euo pipefail
 
@@ -15,7 +15,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-OVERLAY="${1:-preview-gke}"
+OVERLAY="${1:-stg-gke}"
 OVERLAY_DIR="deployments/overlays/${OVERLAY}"
 TEST_DIR="tests/deployment"
 
@@ -342,7 +342,7 @@ validate_network_policies() {
 
     if [ $validation_failed -ne 0 ]; then
         log_error "Network policy validation FAILED"
-        log_warn "See fixes in: deployments/overlays/preview-gke/network-policy.yaml"
+        log_warn "See fixes in: deployments/overlays/stg-gke/network-policy.yaml"
         exit 1
     fi
 }

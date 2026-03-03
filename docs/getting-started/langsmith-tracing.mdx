@@ -112,7 +112,7 @@ Every trace includes:
   <Accordion title="Metadata">
     - User ID and session ID
     - Request source
-    - Environment (dev/staging/prod)
+    - Environment (dev/stg/prod)
     - Custom tags
   </Accordion>
 
@@ -267,7 +267,7 @@ Compare successful vs. failed traces side-by-side:
   <Accordion title="Project Organization">
     Create separate projects for each environment:
     - `my-agent-dev` - Development
-    - `my-agent-staging` - Staging
+    - `my-agent-stg` - STG
     - `my-agent-prod` - Production
 
     ```bash
@@ -278,7 +278,7 @@ Compare successful vs. failed traces side-by-side:
 
   <Accordion title="Tagging Strategy">
     Use consistent, searchable tags:
-    - **Environment**: `production`, `staging`, `development`
+    - **Environment**: `production`, `stg`, `development`
     - **User tier**: `free`, `pro`, `enterprise`
     - **Feature**: `chat`, `analysis`, `search`
     - **Priority**: `high`, `medium`, `low`

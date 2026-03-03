@@ -78,7 +78,7 @@ terraform/
 ```
 deployments/
 ├── overlays/
-│   └── production-gke/             # Production K8s (10 files)
+│   └── prod-gke/             # Production K8s (10 files)
 ├── argocd/                         # GitOps (3 files)
 ├── security/
 │   └── binary-authorization/       # Image signing (3 files)
@@ -93,7 +93,7 @@ deployments/
 
 ```
 .github/workflows/
-├── deploy-production-gke.yaml      # Production deployment
+├── deploy-prod-gke.yaml      # Production deployment
 ├── gcp-compliance-scan.yaml        # Compliance scanning
 └── gcp-drift-detection.yaml        # Infrastructure drift
 
@@ -234,7 +234,7 @@ terraform init && terraform apply
 
 # 4. Deploy application (15 min)
 eval $(terraform output -raw kubectl_config_command)
-kubectl apply -k ../../deployments/overlays/production-gke
+kubectl apply -k ../../deployments/overlays/prod-gke
 
 # 5. Enable security (30 min)
 ../../deployments/security/binary-authorization/setup-binary-auth.sh PROJECT_ID production
@@ -246,7 +246,7 @@ kubectl apply -k ../../deployments/overlays/production-gke
 ../../deployments/service-mesh/anthos/setup-anthos-service-mesh.sh PROJECT_ID
 
 # 8. Verify (10 min)
-kubectl get all -n mcp-production
+kubectl get all -n mcp-prod
 ```
 
 ### Access Points

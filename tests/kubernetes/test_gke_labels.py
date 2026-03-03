@@ -41,7 +41,7 @@ class TestGKEAutopilotLabels:
         """Find kustomization.yaml files in GKE overlay directories."""
         gke_dirs = [
             DEPLOYMENTS_DIR / "kubernetes" / "overlays" / "gcp",
-            DEPLOYMENTS_DIR / "overlays" / "production-gke",
+            DEPLOYMENTS_DIR / "overlays" / "prod-gke",
         ]
 
         kustomization_files = []

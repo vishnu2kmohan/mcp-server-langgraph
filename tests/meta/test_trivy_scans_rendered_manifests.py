@@ -26,19 +26,19 @@ pytestmark = pytest.mark.unit
 
 def test_deploy_preview_gke_workflow_renders_manifests_before_trivy_scan():
     """
-    Verify that the deploy-preview-gke workflow renders Kustomize manifests
+    Verify that the deploy-stg-gke workflow renders Kustomize manifests
     before running Trivy security scans.
 
     This prevents false positives from scanning incomplete patch files.
 
     Expected workflow structure:
     1. Step: Render Kustomize manifests
-       - Run: kubectl kustomize deployments/overlays/preview-gke > /tmp/preview-manifests.yaml
+       - Run: kubectl kustomize deployments/overlays/stg-gke > /tmp/stg-manifests.yaml
     2. Step: Security scan rendered manifests
-       - scan-ref: /tmp/preview-manifests.yaml (NOT the overlay directory)
+       - scan-ref: /tmp/stg-manifests.yaml (NOT the overlay directory)
     """
     repo_root = Path(__file__).parent.parent.parent
-    workflow_path = repo_root / ".github/workflows/deploy-preview-gke.yaml"
+    workflow_path = repo_root / ".github/workflows/deploy-stg-gke.yaml"
 
     assert workflow_path.exists(), f"Workflow file not found: {workflow_path}"
 
@@ -70,7 +70,7 @@ def test_deploy_preview_gke_workflow_renders_manifests_before_trivy_scan():
 
     # Validate that we found both steps
     assert kustomize_render_step is not None, (
-        "Missing step to render Kustomize manifests. Expected a step with 'kubectl kustomize deployments/overlays/preview-gke'"
+        "Missing step to render Kustomize manifests. Expected a step with 'kubectl kustomize deployments/overlays/stg-gke'"
     )
 
     assert trivy_step is not None, "Missing Trivy security scan step. Expected step using aquasecurity/trivy-action"
@@ -78,17 +78,17 @@ def test_deploy_preview_gke_workflow_renders_manifests_before_trivy_scan():
     # Validate kustomize render step creates temp file
     kustomize_run_cmd = kustomize_render_step.get("run", "")
     assert "kubectl kustomize" in kustomize_run_cmd, "Kustomize render step must use 'kubectl kustomize'"
-    assert "deployments/overlays/preview-gke" in kustomize_run_cmd, "Kustomize render step must target preview-gke overlay"
+    assert "deployments/overlays/stg-gke" in kustomize_run_cmd, "Kustomize render step must target stg-gke overlay"
     # Intentionally checking for /tmp/ path in CI workflow validation
     assert (
-        "/tmp/preview-manifests" in kustomize_run_cmd or "/tmp/preview.yaml" in kustomize_run_cmd  # nosec B108
+        "/tmp/stg-manifests" in kustomize_run_cmd  # nosec B108
     ), "Kustomize render step must output to /tmp/ file for Trivy scanning"  # nosec B108
 
     # Validate Trivy scans the rendered manifest file, NOT the overlay directory
     trivy_with = trivy_step.get("with", {})
     scan_ref = trivy_with.get("scan-ref", "")
 
-    assert scan_ref != "deployments/overlays/preview-gke", (
+    assert scan_ref != "deployments/overlays/stg-gke", (
         "Trivy must NOT scan raw overlay directory. "
         "This produces false positives because patches are incomplete without base manifests."
     )
@@ -113,7 +113,7 @@ def test_trivy_scan_allows_documented_suppressions():
 
     Policy:
     - Root-level .trivyignore IS allowed (required for CI pre-commit hooks running from repo root)
-    - Environment-specific .trivyignore files ARE allowed (preview-gke, production-gke, etc.)
+    - Environment-specific .trivyignore files ARE allowed (stg-gke, prod-gke, etc.)
     - Intermediate global .trivyignore files (deployments/.trivyignore) are NOT allowed
     - All suppressions must be documented (validated by test_trivy_suppressions.py)
     """
@@ -141,7 +141,7 @@ def test_trivy_scan_allows_documented_suppressions():
             f"Found global .trivyignore file at {ignore_file}. "
             "Intermediate global suppressions are not allowed - they could hide real security issues. "
             "Use environment-specific .trivyignore files in overlay directories instead "
-            "(e.g., deployments/overlays/preview-gke/.trivyignore)."
+            "(e.g., deployments/overlays/stg-gke/.trivyignore)."
         )
 
     # Environment-specific .trivyignore files ARE allowed
@@ -167,7 +167,7 @@ def test_rendered_manifests_include_security_contexts():
 
     # Render the preview overlay
     result = subprocess.run(
-        ["kubectl", "kustomize", "deployments/overlays/preview-gke"],
+        ["kubectl", "kustomize", "deployments/overlays/stg-gke"],
         capture_output=True,
         text=True,
         cwd=str(repo_root),
@@ -180,18 +180,17 @@ def test_rendered_manifests_include_security_contexts():
     rendered_docs = list(yaml.safe_load_all(result.stdout))
 
     # Find Qdrant deployment (the one with security context patches)
-    # Note: preview overlay adds "preview-" prefix to all resource names
+    # Note: preview overlay adds "stg-" prefix to all resource names
     qdrant_deployment = None
     for doc in rendered_docs:
         if doc is None:
             continue
-        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "preview-qdrant":
+        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "stg-qdrant":
             qdrant_deployment = doc
             break
 
     assert qdrant_deployment is not None, (
-        "Qdrant deployment not found in rendered manifests. "
-        "Expected 'preview-qdrant' (with namePrefix from kustomization.yaml)"
+        "Qdrant deployment not found in rendered manifests. Expected 'stg-qdrant' (with namePrefix from kustomization.yaml)"
     )
 
     # Extract security context from container spec
@@ -220,7 +219,7 @@ def test_workflow_step_order_is_correct():
     This ensures the manifest is rendered before it's scanned.
     """
     repo_root = Path(__file__).parent.parent.parent
-    workflow_path = repo_root / ".github/workflows/deploy-preview-gke.yaml"
+    workflow_path = repo_root / ".github/workflows/deploy-stg-gke.yaml"
 
     with open(workflow_path) as f:
         workflow_yaml = yaml.safe_load(f)

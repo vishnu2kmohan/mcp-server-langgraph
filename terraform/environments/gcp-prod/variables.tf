@@ -200,7 +200,7 @@ variable "redis_read_replica_regions" {
 variable "app_namespace" {
   description = "Kubernetes namespace for the application"
   type        = string
-  default     = "production-mcp-server-langgraph"
+  default     = "prod-mcp-server-langgraph"
 }
 
 variable "app_secret_ids" {

@@ -28,10 +28,10 @@ Secrets are configured at: `Settings → Secrets and variables → Actions`
 | Secret Name | Description | Setup Instructions |
 |-------------|-------------|-------------------|
 | `GCP_WIF_PROVIDER` | Workload Identity Pool Provider | `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider` |
-| `GCP_PRODUCTION_SA_EMAIL` | Production service account | `production-deployer@PROJECT_ID.iam.gserviceaccount.com` |
+| `GCP_PROD_SA_EMAIL` | Production service account | `production-deployer@PROJECT_ID.iam.gserviceaccount.com` |
 
 **Used By**:
-- `.github/workflows/deploy-production-gke.yaml` (4 jobs)
+- `.github/workflows/deploy-prod-gke.yaml` (4 jobs)
 - All jobs have repository check: `if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'`
 
 **Setup Steps**:
@@ -65,15 +65,15 @@ gcloud iam service-accounts add-iam-policy-binding \
   --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/attribute.repository/vishnu2kmohan/mcp-server-langgraph"
 ```
 
-#### Preview Deployment
+#### STG Deployment
 
 | Secret Name | Description | Setup Instructions |
 |-------------|-------------|-------------------|
 | `GCP_WIF_PROVIDER` | Workload Identity Pool Provider (same as production) | See above |
-| `GCP_PREVIEW_SA_EMAIL` | Preview service account | `preview-deployer@PROJECT_ID.iam.gserviceaccount.com` |
+| `GCP_STG_SA_EMAIL` | STG service account | `stg-deployer@PROJECT_ID.iam.gserviceaccount.com` |
 
 **Used By**:
-- `.github/workflows/deploy-preview-gke.yaml` (4 jobs)
+- `.github/workflows/deploy-stg-gke.yaml` (4 jobs)
 - All jobs have repository check: `if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'`
 
 #### Compliance & Drift Detection
@@ -106,7 +106,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 
 **Setup Steps**:
 ```bash
-# Service account is created by Terraform (terraform/environments/gcp-preview-wif-only)
+# Service account is created by Terraform (terraform/environments/gcp-stg-wif-only)
 # After terraform apply, add the secret:
 gh secret set GCP_VERTEX_AI_SA_EMAIL --body "github-actions-vertex-ai@PROJECT_ID.iam.gserviceaccount.com"
 ```
@@ -168,7 +168,7 @@ gh secret set GCP_VERTEX_AI_SA_EMAIL --body "github-actions-vertex-ai@PROJECT_ID
 |---------------|-------------|---------------|---------|
 | `GCP_PROJECT_ID` | Google Cloud project ID | `vishnu-sandbox-20250310` | GCP workflows |
 | `GCP_REGION` | Primary GCP region | `us-central1` | GCP workflows |
-| `ENABLE_STAGING_AUTODEPLOY` | Enable automatic staging deployments | `true` | `deploy-preview-gke.yaml` |
+| `ENABLE_STG_AUTODEPLOY` | Enable automatic stg deployments | `true` | `deploy-stg-gke.yaml` |
 
 **Setup**:
 ```bash
@@ -176,7 +176,7 @@ gh secret set GCP_VERTEX_AI_SA_EMAIL --body "github-actions-vertex-ai@PROJECT_ID
 # Or via GitHub CLI:
 gh variable set GCP_PROJECT_ID --body "your-project-id"
 gh variable set GCP_REGION --body "us-central1"
-gh variable set ENABLE_STAGING_AUTODEPLOY --body "true"
+gh variable set ENABLE_STG_AUTODEPLOY --body "true"
 ```
 
 ---
@@ -206,8 +206,8 @@ if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 
 **Affected Workflows**:
 - GCP Deployments (4 workflows, 12 jobs)
-  - `deploy-preview-gke.yaml` - Gracefully skips
-  - `deploy-production-gke.yaml` - Gracefully skips
+  - `deploy-stg-gke.yaml` - Gracefully skips
+  - `deploy-prod-gke.yaml` - Gracefully skips
   - `gcp-compliance-scan.yaml` - Gracefully skips
   - `gcp-drift-detection.yaml` - Gracefully skips
 

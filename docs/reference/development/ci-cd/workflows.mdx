@@ -161,7 +161,7 @@ validate-deployments:
 
     - name: Validate Kustomize overlays
       run: |
-        for env in dev staging production; do
+        for env in dev stg production; do
           echo "Validating $env overlay..."
           kubectl kustomize deployments/kustomize/overlays/$env > /dev/null
         done
@@ -172,7 +172,7 @@ validate-deployments:
 1. **Python Validation Script**: Comprehensive YAML and configuration checks
 2. **Docker Compose**: Syntax and structure validation
 3. **Helm Chart**: Linting and template rendering
-4. **Kustomize Overlays**: Validation for dev, staging, and production
+4. **Kustomize Overlays**: Validation for dev, stg, and production
 
 #### Validation Script
 

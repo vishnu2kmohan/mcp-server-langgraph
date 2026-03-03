@@ -339,7 +339,7 @@ kube-system       Active   5m
 PROJECT_ID="YOUR_PROJECT_ID"
 
 ## Create secret
-gcloud secrets create mcp-production-secrets \
+gcloud secrets create mcp-prod-secrets \
   --replication-policy="automatic" \
   --project="$PROJECT_ID"
 
@@ -358,7 +358,7 @@ cat > /tmp/secrets.json <<EOF
 EOF
 
 ## Upload secrets
-gcloud secrets versions add mcp-production-secrets \
+gcloud secrets versions add mcp-prod-secrets \
   --data-file=/tmp/secrets.json \
   --project="$PROJECT_ID"
 
@@ -386,7 +386,7 @@ kubectl wait --for=condition=ready pod \
 #### Step 3: Deploy Application
 
 ```bash
-cd deployments/overlays/production-gke
+cd deployments/overlays/prod-gke
 
 ## Update with your project ID
 sed -i "s/PROJECT_ID/$PROJECT_ID/g" *.yaml
@@ -395,15 +395,15 @@ sed -i "s/PROJECT_ID/$PROJECT_ID/g" *.yaml
 kubectl apply -k .
 
 ## Watch rollout
-kubectl rollout status deployment/production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl rollout status deployment/prod-mcp-server-langgraph \
+  -n mcp-prod \
   --timeout=10m
 ```
 <Check>
 Verify deployment:
 ```bash
-kubectl get pods -n mcp-production
-kubectl logs -n mcp-production -l app=mcp-server-langgraph --tail=50
+kubectl get pods -n mcp-prod
+kubectl logs -n mcp-prod -l app=mcp-server-langgraph --tail=50
 ```
 
 </Check>
@@ -431,7 +431,7 @@ Enable image signing to ensure only trusted container images run in your cluster
 
   <Step title="Sign Images">
     ```bash
-    IMAGE="us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:2.8.0"
+    IMAGE="us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:2.8.0"
 
     ./deployments/security/binary-authorization/sign-image.sh \
       PROJECT_ID \
@@ -500,8 +500,8 @@ Test all health endpoints:
 
 <CodeGroup>
 ```bash Port Forward
-kubectl port-forward -n mcp-production \
-  svc/production-mcp-server-langgraph 8000:8000 &
+kubectl port-forward -n mcp-prod \
+  svc/prod-mcp-server-langgraph 8000:8000 &
 
 curl http://localhost:8000/health/live
 curl http://localhost:8000/health/ready
@@ -509,8 +509,8 @@ curl http://localhost:8000/health/startup
 ```
 
 ```bash Load Balancer
-SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph \
-  -n mcp-production \
+SERVICE_IP=$(kubectl get svc prod-mcp-server-langgraph \
+  -n mcp-prod \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
 curl http://$SERVICE_IP:8000/health/live
@@ -522,8 +522,8 @@ curl http://$SERVICE_IP:8000/health/live
 #### Database Connectivity
 
 ```bash
-kubectl exec -it -n mcp-production \
-  $(kubectl get pod -n mcp-production -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n mcp-prod \
+  $(kubectl get pod -n mcp-prod -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
   -c cloud-sql-proxy \
   -- wget -qO- http://localhost:9801/readiness
 ```
@@ -535,8 +535,8 @@ kubectl exec -it -n mcp-production \
 Verify service account annotation:
 
 ```bash
-kubectl get sa production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl get sa prod-mcp-server-langgraph \
+  -n mcp-prod \
   -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
 ```
 <Check>Should show: `mcp-prod-app-sa@PROJECT_ID.iam.gserviceaccount.com`</Check>
@@ -549,7 +549,7 @@ kubectl get sa production-mcp-server-langgraph \
   <Accordion title="Pods Stuck in Pending">
     **Diagnosis**:
     ```bash
-    kubectl describe pod POD_NAME -n mcp-production
+    kubectl describe pod POD_NAME -n mcp-prod
     ```
     **Common causes**:
     1. Resource requests too high (Autopilot provisions automatically but has limits)
@@ -565,7 +565,7 @@ kubectl get sa production-mcp-server-langgraph \
   <Accordion title="Can't Access Cloud SQL">
     **Diagnosis**:
     ```bash
-    kubectl logs -n mcp-production POD_NAME -c cloud-sql-proxy
+    kubectl logs -n mcp-prod POD_NAME -c cloud-sql-proxy
     ```
     **Solution**:
     1. Verify private service connection exists
@@ -577,7 +577,7 @@ kubectl get sa production-mcp-server-langgraph \
   <Accordion title="Workload Identity Not Working">
     **Diagnosis**:
     ```bash
-    kubectl get sa -n mcp-production production-mcp-server-langgraph -o yaml
+    kubectl get sa -n mcp-prod prod-mcp-server-langgraph -o yaml
 
     gcloud iam service-accounts get-iam-policy \
       mcp-prod-app-sa@PROJECT_ID.iam.gserviceaccount.com
@@ -653,7 +653,7 @@ For complete troubleshooting, see [GKE Operational Runbooks](/deployment/operati
     Terraform modules for VPC, GKE, Cloud SQL, Redis
   </Card>
   <Card title="Multi-Environment Setup" icon="layer-group" href="/deployment/infrastructure/multi-environment">
-    Dev, staging, production configurations
+    Dev, stg, production configurations
   </Card>
   <Card title="Disaster Recovery" icon="life-ring" href="/deployment/disaster-recovery">
     Multi-region failover and backup automation
@@ -664,8 +664,8 @@ For complete troubleshooting, see [GKE Operational Runbooks](/deployment/operati
   <Card title="Binary Authorization" icon="file-signature" href="/deployment/binary-authorization">
     Image signing and policy enforcement
   </Card>
-  <Card title="GKE Preview" icon="flask" href="/deployment/kubernetes/gke-preview">
-    Preview environment setup
+  <Card title="GKE Preview" icon="flask" href="/deployment/kubernetes/gke-stg">
+    STG environment setup
   </Card>
 </CardGroup>
 

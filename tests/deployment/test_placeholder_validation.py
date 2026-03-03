@@ -5,7 +5,7 @@ TDD Tests for Placeholder Validation in Deployment Overlays
 Ensures that production-ready overlays don't contain unresolved placeholders
 that would cause runtime failures.
 
-Codex Finding #3 (P0 Blocker): production-gke overlay emits placeholders after build
+Codex Finding #3 (P0 Blocker): prod-gke overlay emits placeholders after build
 """
 
 import re
@@ -22,7 +22,7 @@ from tests.helpers.path_helpers import get_repo_root
 pytestmark = [pytest.mark.unit, pytest.mark.validation]
 REPO_ROOT = get_repo_root()
 PRODUCTION_OVERLAYS = [
-    REPO_ROOT / "deployments" / "overlays" / "production-gke",
+    REPO_ROOT / "deployments" / "overlays" / "prod-gke",
     REPO_ROOT / "deployments" / "overlays" / "production",
 ]
 
@@ -88,7 +88,7 @@ def test_production_overlay_no_placeholders(overlay_path: Path):
     """
     Test that production overlays don't contain unresolved placeholders.
 
-    Codex Finding #3 (P0): production-gke emits PLACEHOLDER_GCP_PROJECT_ID,
+    Codex Finding #3 (P0): prod-gke emits PLACEHOLDER_GCP_PROJECT_ID,
     PLACEHOLDER_SET_VIA_ENV, and PRODUCTION_DOMAIN after kustomize build.
 
     Red phase: This test will fail until placeholders are replaced with

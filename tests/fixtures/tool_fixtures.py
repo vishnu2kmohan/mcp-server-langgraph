@@ -41,13 +41,13 @@ def kubectl_connected():
 @pytest.fixture(scope="session")
 def gke_preview_cluster():
     """
-    Check if kubectl is connected to the GKE Preview cluster.
+    Check if kubectl is connected to the GKE STG cluster.
 
-    Returns the cluster name if connected to a GKE preview cluster,
+    Returns the cluster name if connected to a GKE stg cluster,
     None otherwise. This prevents GKE-specific tests from running
     on local Kubernetes clusters (Docker Desktop, Minikube, etc.).
 
-    GKE Preview cluster context pattern: gke_*_preview-mcp-server-langgraph-gke
+    GKE STG cluster context pattern: gke_*_stg-mcp-server-langgraph-gke
     """
     if not shutil.which("kubectl"):
         return None
@@ -61,8 +61,8 @@ def gke_preview_cluster():
         if result.returncode != 0:
             return None
         context = result.stdout.strip()
-        # Check for GKE preview cluster context pattern
-        if "preview-mcp-server-langgraph-gke" in context:
+        # Check for GKE stg cluster context pattern
+        if "stg-mcp-server-langgraph-gke" in context:
             return context
         return None
     except (FileNotFoundError, subprocess.TimeoutExpired):

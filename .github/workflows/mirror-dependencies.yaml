@@ -387,7 +387,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "To use mirrored images in Kustomize, update \`deployments/overlays/preview-gke/kustomization.yaml\`:" >> $GITHUB_STEP_SUMMARY
+          echo "To use mirrored images in Kustomize, update \`deployments/overlays/stg-gke/kustomization.yaml\`:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`yaml" >> $GITHUB_STEP_SUMMARY
           echo "images:" >> $GITHUB_STEP_SUMMARY
           echo "  - name: openfga/openfga" >> $GITHUB_STEP_SUMMARY

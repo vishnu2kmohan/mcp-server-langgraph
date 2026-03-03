@@ -149,7 +149,7 @@ gcloud services vpc-peerings connect \
 ```bash
 # Create DB subnet group (equivalent to VPC peering)
 aws rds create-db-subnet-group \
-  --db-subnet-group-name staging-db-subnet \
+  --db-subnet-group-name stg-db-subnet \
   --db-subnet-group-description "Private subnets for RDS" \
   --subnet-ids subnet-xxx subnet-yyy
 ```
@@ -177,7 +177,7 @@ az network vnet subnet update \
         ;;
       aws)
         aws rds describe-db-subnet-groups \
-          --db-subnet-group-name staging-db-subnet
+          --db-subnet-group-name stg-db-subnet
         ;;
       azure)
         az network vnet subnet show \
@@ -240,7 +240,7 @@ spec:
 # Pre-deployment manifest validation
 - name: Validate security contexts
   run: |
-    kubectl kustomize deployments/overlays/staging | \
+    kubectl kustomize deployments/overlays/stg | \
     yq eval '
       select(.kind == "Deployment" or .kind == "StatefulSet") |
       (.spec.template.spec.containers[], .spec.template.spec.initContainers[]?) |
@@ -303,7 +303,7 @@ metadata:
     # Check if app uses Kubernetes API
     if ! grep -rq "kubernetes" src/; then
       # Check for unused RBAC
-      if kubectl kustomize deployments/overlays/staging | grep -q "kind: Role"; then
+      if kubectl kustomize deployments/overlays/stg | grep -q "kind: Role"; then
         echo "ERROR: Found Role/RoleBinding but app doesn't use K8s API"
         exit 1
       fi
@@ -372,8 +372,8 @@ kubectl api-resources | grep externalsecret
 ```yaml
 # WRONG - namespace created during deployment
 - run: |
-    kubectl create namespace staging
-    kubectl apply -k deployments/overlays/staging
+    kubectl create namespace stg
+    kubectl apply -k deployments/overlays/stg
 ```
 
 **Root Cause**: If deployment fails, namespace doesn't exist for rollback. Validation also fails without namespace.
@@ -669,12 +669,12 @@ docker build --target final-base -t app:test .
 docker run --rm app:test python -c "import mcp_server_langgraph; print('✓ Import OK')"
 
 # 2. Kubernetes manifest validation (local)
-kubectl kustomize deployments/overlays/staging > /tmp/staging.yaml
-kubectl apply --dry-run=client -f /tmp/staging.yaml  # Quick syntax check
+kubectl kustomize deployments/overlays/stg > /tmp/stg.yaml
+kubectl apply --dry-run=client -f /tmp/stg.yaml  # Quick syntax check
 # Note: Server-side validation requires cluster
 
 # 3. Security validation
-kubectl kustomize deployments/overlays/staging | \
+kubectl kustomize deployments/overlays/stg | \
   grep -A20 "kind: Deployment" | \
   grep -q "securityContext" && echo "✓ Security contexts present"
 

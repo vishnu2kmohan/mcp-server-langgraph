@@ -186,7 +186,7 @@ postgres:
 
 **Configuration**:
 ```yaml
-# Helm values-production.yaml
+# Helm values-prod.yaml
 database:
   host: "postgres-prod.c.project-id.internal"  # Cloud SQL
   port: 5432

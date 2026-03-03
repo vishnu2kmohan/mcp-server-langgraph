@@ -15,7 +15,7 @@ name: Build OpenFGA Seed Image
 # - Weekly schedule (to get security updates)
 #
 # The image is pushed to:
-# - Preview/Dev: ghcr.io/vishnu2kmohan/agent-studio-openfga-seed (GHCR)
+# - STG/Dev: ghcr.io/vishnu2kmohan/agent-studio-openfga-seed (GHCR)
 # - Production: Promoted from GHCR to cloud-specific registries
 #
 # Note: This is a run-once container (no health endpoint).

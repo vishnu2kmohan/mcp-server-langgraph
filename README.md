@@ -296,7 +296,7 @@ uv sync  # Installs all dependencies from pyproject.toml + uv.lock
 Databases use environment-aware naming for clear separation:
 
 ```bash
-# Development/Staging/Production
+# Development/STG/Prod
 gdpr, openfga, keycloak
 
 # Test Environment
@@ -481,10 +481,10 @@ Production-grade pipeline with **19 GitHub Actions workflows** organized into fo
 
 - **🔄 CI/CD**: Main pipeline (Python 3.10-3.12, multi-arch Docker), E2E tests, quality tests (property/contract/mutation), coverage tracking
 - **🔒 Security**: Trivy/CodeQL/secrets scanning, GCP compliance validation, drift detection (6-hour intervals)
-- **🚀 Deployment**: Automated staging deploys, manual production approval, version management
+- **🚀 Deployment**: Automated stg deploys, manual prod approval, version management
 - **🤖 Automation**: Dependabot auto-merge, link checking, stale issue management
 
-**Key Metrics**: 12 min avg build (66% faster), 80%+ coverage enforced, ~$40/month cost, automated staging + manual prod approval
+**Key Metrics**: 12 min avg build (66% faster), 80%+ coverage enforced, ~$40/month cost, automated stg + manual prod approval
 
 **See**: [Complete CI/CD Documentation](docs/reference/development/ci-cd/overview.mdx) | [Workflow Details](docs/reference/development/ci-cd/workflows.mdx) | [CI/CD Status](docs/ci-cd/badges.mdx)
 
@@ -836,8 +836,8 @@ Choose your deployment platform based on operational needs:
 | **Helm Charts** | 10 min | K8s with customization | Flexible values, multi-environment support | [Guide](docs/deployment/helm.mdx) |
 
 **Kubernetes Platform Maturity**:
-- **GKE**: Full automation (dev/staging/prod), 32 Kustomize overlays, Cloud SQL, Workload Identity
-- **EKS**: Full automation (dev/staging/prod), Karpenter autoscaling, IRSA, RDS/ElastiCache
+- **GKE**: Full automation (dev/stg/prod), 32 Kustomize overlays, Cloud SQL, Workload Identity
+- **EKS**: Full automation (dev/stg/prod), Karpenter autoscaling, IRSA, RDS/ElastiCache
 - **AKS**: Manual deployment only, Terraform automation under development
 - **Rancher/Tanzu**: Generic manifests, community-supported
 
@@ -847,10 +847,10 @@ Choose your deployment platform based on operational needs:
 helm install langgraph-agent ./deployments/helm/langgraph-agent --set image.tag=v1.0.0
 
 # Or Kustomize
-kubectl apply -k deployments/kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/prod
 ```
 
-**See**: [Complete Deployment Guide](docs/deployment/overview.mdx) | [Production Checklist](docs/deployment/production-checklist.mdx) | [GKE Staging Setup](docs/deployment/kubernetes/gke-staging.mdx)
+**See**: [Complete Deployment Guide](docs/deployment/overview.mdx) | [Production Checklist](docs/deployment/production-checklist.mdx) | [GKE STG Setup](docs/deployment/kubernetes/gke-stg.mdx)
 
 ## API Gateway & Rate Limiting
 

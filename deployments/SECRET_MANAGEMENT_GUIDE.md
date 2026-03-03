@@ -10,8 +10,8 @@ This project uses different secret management strategies depending on the deploy
 |-------------|----------|-----------------|----------------|
 | Local Development | Static Secrets | `.env` file | N/A |
 | Base (Kustomize) | Static Secrets (Git-excluded) | Kubernetes Secrets | Manual creation |
-| Staging GKE | External Secrets Operator | Google Secret Manager | Workload Identity |
-| Production GKE | External Secrets Operator | Google Secret Manager | Workload Identity |
+| STG GKE | External Secrets Operator | Google Secret Manager | Workload Identity |
+| Prod GKE | External Secrets Operator | Google Secret Manager | Workload Identity |
 | AWS EKS | External Secrets (planned) | AWS Secrets Manager | IRSA |
 | Azure AKS | External Secrets (planned) | Azure Key Vault | Workload Identity |
 | Helm Chart | Values or External Secret | Configurable | Varies by environment |
@@ -81,14 +81,14 @@ kubectl apply -f deployments/base/secret.yaml
 
 **Recommended Approach**:
 1. **Don't commit secret.yaml** - Keep it local only
-2. **Use External Secrets** - Migrate to External Secrets Operator for prod/staging
+2. **Use External Secrets** - Migrate to External Secrets Operator for prod/stg
 3. **Document requirements** - List required secret keys in README
 
 ---
 
-### 3. Staging/Production GKE (External Secrets Operator)
+### 3. STG/Prod GKE (External Secrets Operator)
 
-**Location**: `deployments/overlays/{staging,production}-gke/external-secrets.yaml`
+**Location**: `deployments/overlays/{stg,prod}-gke/external-secrets.yaml`
 
 **Strategy**: External Secrets Operator + Google Secret Manager
 
@@ -115,7 +115,7 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
 gcloud iam service-accounts add-iam-policy-binding \
   external-secrets-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com \
   --role=roles/iam.workloadIdentityUser \
-  --member="serviceAccount:YOUR_PROJECT_ID.svc.id.goog[staging-mcp-server-langgraph/external-secrets-sa]"
+  --member="serviceAccount:YOUR_PROJECT_ID.svc.id.goog[stg-mcp-server-langgraph/external-secrets-sa]"
 ```
 
 #### Create Secrets in Google Secret Manager
@@ -126,22 +126,22 @@ export GCP_PROJECT_ID=your-project-id
 
 # Create secrets
 echo -n "your-anthropic-api-key" | \
-  gcloud secrets create staging-anthropic-api-key \
+  gcloud secrets create stg-anthropic-api-key \
   --data-file=- \
   --project=$GCP_PROJECT_ID
 
 echo -n "$(openssl rand -base64 32)" | \
-  gcloud secrets create staging-jwt-secret \
+  gcloud secrets create stg-jwt-secret \
   --data-file=- \
   --project=$GCP_PROJECT_ID
 
 echo -n "$(openssl rand -base64 16)" | \
-  gcloud secrets create staging-redis-password \
+  gcloud secrets create stg-redis-password \
   --data-file=- \
   --project=$GCP_PROJECT_ID
 
 echo -n "$(openssl rand -base64 16)" | \
-  gcloud secrets create staging-postgres-password \
+  gcloud secrets create stg-postgres-password \
   --data-file=- \
   --project=$GCP_PROJECT_ID
 
@@ -152,12 +152,12 @@ gcloud secrets list --project=$GCP_PROJECT_ID
 #### External Secrets Configuration
 
 ```yaml
-# deployments/overlays/preview-gke/external-secrets.yaml
+# deployments/overlays/stg-gke/external-secrets.yaml
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: mcp-server-external-secrets
-  namespace: staging-mcp-server-langgraph
+  namespace: stg-mcp-server-langgraph
 spec:
   # Refresh interval
   refreshInterval: 1h
@@ -169,7 +169,7 @@ spec:
 
   # Target Kubernetes secret
   target:
-    name: staging-mcp-server-langgraph-secrets
+    name: stg-mcp-server-langgraph-secrets
     creationPolicy: Owner
     deletionPolicy: Retain
 
@@ -177,19 +177,19 @@ spec:
   data:
     - secretKey: anthropic-api-key
       remoteRef:
-        key: staging-anthropic-api-key
+        key: stg-anthropic-api-key
 
     - secretKey: jwt-secret-key
       remoteRef:
-        key: staging-jwt-secret
+        key: stg-jwt-secret
 
     - secretKey: redis-password
       remoteRef:
-        key: staging-redis-password
+        key: stg-redis-password
 
     - secretKey: postgres-password
       remoteRef:
-        key: staging-postgres-password
+        key: stg-postgres-password
 ```
 
 ---
@@ -226,17 +226,17 @@ kubectl annotate serviceaccount external-secrets-sa \
 ```bash
 # Create secrets
 aws secretsmanager create-secret \
-  --name mcp-server/staging/anthropic-api-key \
+  --name mcp-server/stg/anthropic-api-key \
   --secret-string "your-anthropic-api-key"
 
 aws secretsmanager create-secret \
-  --name mcp-server/staging/jwt-secret \
+  --name mcp-server/stg/jwt-secret \
   --secret-string "$(openssl rand -base64 32)"
 
 # Tag secrets for organization
 aws secretsmanager tag-resource \
-  --secret-id mcp-server/staging/anthropic-api-key \
-  --tags Key=Environment,Value=staging Key=Application,Value=mcp-server
+  --secret-id mcp-server/stg/anthropic-api-key \
+  --tags Key=Environment,Value=stg Key=Application,Value=mcp-server
 ```
 
 ---
@@ -291,13 +291,13 @@ NEW_PASSWORD=$(openssl rand -base64 24)
 
 # 2. Update in Google Secret Manager
 echo -n "$NEW_PASSWORD" | \
-  gcloud secrets versions add staging-postgres-password \
+  gcloud secrets versions add stg-postgres-password \
   --data-file=- \
   --project=$GCP_PROJECT_ID
 
 # 3. Update Cloud SQL user password
 gcloud sql users set-password postgres \
-  --instance=staging-cloudsql-instance \
+  --instance=stg-cloudsql-instance \
   --password="$NEW_PASSWORD" \
   --project=$GCP_PROJECT_ID
 
@@ -305,12 +305,12 @@ gcloud sql users set-password postgres \
 # Or force sync:
 kubectl annotate externalsecret mcp-server-external-secrets \
   force-sync=$(date +%s) \
-  --namespace=staging-mcp-server-langgraph \
+  --namespace=stg-mcp-server-langgraph \
   --overwrite
 
 # 5. Restart pods to pick up new secret
-kubectl rollout restart deployment/staging-mcp-server-langgraph \
-  --namespace=staging-mcp-server-langgraph
+kubectl rollout restart deployment/stg-mcp-server-langgraph \
+  --namespace=stg-mcp-server-langgraph
 ```
 
 ---
@@ -341,25 +341,25 @@ gcloud projects add-iam-policy-binding PROJECT_ID \
 gcloud iam service-accounts add-iam-policy-binding \
   mcp-prod-app-sa@PROJECT_ID.iam.gserviceaccount.com \
   --role=roles/iam.workloadIdentityUser \
-  --member="serviceAccount:PROJECT_ID.svc.id.goog[production-mcp-server-langgraph/production-mcp-server-langgraph]"
+  --member="serviceAccount:PROJECT_ID.svc.id.goog[prod-mcp-server-langgraph/prod-mcp-server-langgraph]"
 
 # 5. Annotate Kubernetes ServiceAccount
-kubectl annotate serviceaccount production-mcp-server-langgraph \
+kubectl annotate serviceaccount prod-mcp-server-langgraph \
   iam.gke.io/gcp-service-account=mcp-prod-app-sa@PROJECT_ID.iam.gserviceaccount.com \
-  --namespace=production-mcp-server-langgraph
+  --namespace=prod-mcp-server-langgraph
 ```
 
 **Configuration in Overlay**:
 
 ```yaml
-# deployments/overlays/production-gke/serviceaccount-patch.yaml
+# deployments/overlays/prod-gke/serviceaccount-patch.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mcp-server-langgraph
   annotations:
     # Codex Finding #3: Use actual project ID (not PLACEHOLDER)
-    iam.gke.io/gcp-service-account: mcp-prod-app-sa@vishnu-production-project.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: mcp-prod-app-sa@vishnu-prod-project.iam.gserviceaccount.com
 ```
 
 ---
@@ -418,7 +418,7 @@ kubectl logs -n external-secrets-system deployment/external-secrets
 3. **Secret doesn't exist in GSM**: Create secret in Google Secret Manager
 4. **Wrong secret name**: Check `remoteRef.key` matches GSM secret name
 
-### Issue: Placeholder values in production
+### Issue: Placeholder values in prod
 
 **Symptom**:
 ```
@@ -428,12 +428,12 @@ Error: invalid GCP service account: mcp-prod-app-sa@PLACEHOLDER_GCP_PROJECT_ID.i
 **Diagnosis**:
 ```bash
 # Check for placeholders
-kustomize build deployments/overlays/production-gke | grep PLACEHOLDER
+kustomize build deployments/overlays/prod-gke | grep PLACEHOLDER
 ```
 
 **Solution**:
 - **Codex Finding #3 (P0)**: Fixed in commit d43d7d5
-- Update `deployments/overlays/production-gke/config-vars.yaml` with actual project ID
+- Update `deployments/overlays/prod-gke/config-vars.yaml` with actual project ID
 - Use Kustomize replacements for dynamic substitution
 - Or use Helm chart with values override
 
@@ -453,7 +453,7 @@ kubectl get secret mcp-server-langgraph-secrets -o json | \
 # Create each secret in GSM
 kubectl get secret mcp-server-langgraph-secrets -o json | \
   jq -r '.data["anthropic-api-key"]' | base64 -d | \
-  gcloud secrets create staging-anthropic-api-key --data-file=-
+  gcloud secrets create stg-anthropic-api-key --data-file=-
 ```
 
 #### Step 2: Deploy External Secrets Operator
@@ -474,7 +474,7 @@ apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
   name: gcpsm-secret-store
-  namespace: staging-mcp-server-langgraph
+  namespace: stg-mcp-server-langgraph
 spec:
   provider:
     gcpsm:
@@ -482,7 +482,7 @@ spec:
       auth:
         workloadIdentity:
           clusterLocation: us-central1
-          clusterName: preview-gke-cluster
+          clusterName: stg-gke-cluster
           serviceAccountRef:
             name: external-secrets-sa
 EOF
@@ -491,24 +491,24 @@ EOF
 #### Step 4: Create ExternalSecret
 
 ```bash
-kubectl apply -f deployments/overlays/preview-gke/external-secrets.yaml
+kubectl apply -f deployments/overlays/stg-gke/external-secrets.yaml
 ```
 
 #### Step 5: Verify and Delete Static Secret
 
 ```bash
 # Verify External Secret created target
-kubectl get secret staging-mcp-server-langgraph-secrets -n staging-mcp-server-langgraph
+kubectl get secret stg-mcp-server-langgraph-secrets -n stg-mcp-server-langgraph
 
 # Verify keys match
-kubectl get secret staging-mcp-server-langgraph-secrets -o json | jq -r '.data | keys[]'
+kubectl get secret stg-mcp-server-langgraph-secrets -o json | jq -r '.data | keys[]'
 
 # Test pod with new secret
-kubectl rollout restart deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
-kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
+kubectl rollout restart deployment/stg-mcp-server-langgraph -n stg-mcp-server-langgraph
+kubectl rollout status deployment/stg-mcp-server-langgraph -n stg-mcp-server-langgraph
 
 # If successful, delete static secret
-kubectl delete secret mcp-server-langgraph-secrets -n staging-mcp-server-langgraph
+kubectl delete secret mcp-server-langgraph-secrets -n stg-mcp-server-langgraph
 ```
 
 ---
@@ -575,7 +575,7 @@ JWT_SECRET="my-secret-key"  # Weak, predictable
 # GCP: View secret access logs
 gcloud logging read \
   "resource.type=secretmanager.googleapis.com/Secret AND \
-   protoPayload.resourceName:projects/PROJECT_ID/secrets/staging-" \
+   protoPayload.resourceName:projects/PROJECT_ID/secrets/stg-" \
   --limit=50 \
   --project=PROJECT_ID
 
@@ -596,26 +596,26 @@ kubectl get events --field-selector involvedObject.name=SECRET_NAME -n NAMESPACE
 | `REDIS_PASSWORD` | Redis password | Random 16-byte base64 |
 | `POSTGRES_PASSWORD` | PostgreSQL password | Random 16-byte base64 |
 
-### Staging GKE
+### STG GKE
 
 | Secret Key | GSM Secret Name | Description |
 |------------|-----------------|-------------|
-| `anthropic-api-key` | `staging-anthropic-api-key` | LLM API key |
-| `jwt-secret-key` | `staging-jwt-secret` | Token signing |
-| `redis-url` | `staging-redis-url` | Memorystore Redis URL |
-| `redis-password` | `staging-redis-password` | Redis auth |
-| `postgres-password` | `staging-postgres-password` | Cloud SQL password |
-| `keycloak-admin-password` | `staging-keycloak-admin` | Keycloak admin |
+| `anthropic-api-key` | `stg-anthropic-api-key` | LLM API key |
+| `jwt-secret-key` | `stg-jwt-secret` | Token signing |
+| `redis-url` | `stg-redis-url` | Memorystore Redis URL |
+| `redis-password` | `stg-redis-password` | Redis auth |
+| `postgres-password` | `stg-postgres-password` | Cloud SQL password |
+| `keycloak-admin-password` | `stg-keycloak-admin` | Keycloak admin |
 
-### Production GKE
+### Prod GKE
 
 | Secret Key | GSM Secret Name | Description |
 |------------|-----------------|-------------|
-| `anthropic-api-key` | `production-anthropic-api-key` | LLM API key (higher quota) |
-| `jwt-secret-key` | `production-jwt-secret` | Token signing (rotated monthly) |
-| `redis-url` | `production-redis-url` | Memorystore Redis HA URL |
-| `redis-password` | `production-redis-password` | Redis auth (rotated) |
-| `postgres-password` | `production-postgres-password` | Cloud SQL password (rotated) |
+| `anthropic-api-key` | `prod-anthropic-api-key` | LLM API key (higher quota) |
+| `jwt-secret-key` | `prod-jwt-secret` | Token signing (rotated monthly) |
+| `redis-url` | `prod-redis-url` | Memorystore Redis HA URL |
+| `redis-password` | `prod-redis-password` | Redis auth (rotated) |
+| `postgres-password` | `prod-postgres-password` | Cloud SQL password (rotated) |
 
 ---
 

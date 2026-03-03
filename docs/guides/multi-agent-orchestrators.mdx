@@ -649,7 +649,7 @@ Actual speedup depends on task independence and LLM response times.
 
 ### Optimization Tips
 
-1. **Enable feature flags in staging first** - Test with real traffic patterns
+1. **Enable feature flags in stg first** - Test with real traffic patterns
 2. **Monitor parallel_speedup metric** - Verify expected gains
 3. **Set appropriate cost limits** - Prevent runaway costs
 4. **Use pattern detection** - Rule-based, no LLM cost
@@ -664,9 +664,9 @@ featureFlags:
   enable_orchestrated_ai_ux: false      # Start disabled
   enable_orchestrated_alert_analysis: false
 
-# Staging
+# STG
 featureFlags:
-  enable_orchestrated_ai_ux: true       # Enable in staging
+  enable_orchestrated_ai_ux: true       # Enable in stg
   enable_orchestrated_alert_analysis: true
 
 # Production (gradual)

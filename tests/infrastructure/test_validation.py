@@ -234,7 +234,7 @@ class TestPhase3Validation:
             values = yaml.safe_load(f)
 
         assert "kubecostProductConfigs" in values
-        assert values["kubecostProductConfigs"]["clusterName"] == "production-mcp-server-langgraph"
+        assert values["kubecostProductConfigs"]["clusterName"] == "prod-mcp-server-langgraph"
 
     def test_kubecost_cloud_cost_enabled(self):
         """Test Kubecost has cloud cost monitoring enabled."""

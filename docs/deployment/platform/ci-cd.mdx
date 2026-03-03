@@ -13,7 +13,7 @@ contentType: "how-to"
 Automate your LangGraph Platform deployments with continuous integration and deployment pipelines. Deploy on every commit, with automated testing and rollback capabilities.
 
 <Info>
-  **Automated Deployments**: Push to main → CI/CD tests → Auto-deploy to production
+  **Automated Deployments**: Push to main → CI/CD tests → Auto-deploy to prod
 </Info>
 
 ### GitHub Actions
@@ -74,11 +74,11 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v
 
-  deploy-staging:
+  deploy-stg:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: staging
+    environment: stg
     steps:
       - uses: actions/checkout@v4
 
@@ -90,22 +90,22 @@ jobs:
       - name: Install LangGraph CLI
         run: uv tool install langgraph-cli
 
-      - name: Deploy to Staging
+      - name: Deploy to STG
         env:
           LANGCHAIN_API_KEY: $&#123;&#123; secrets.LANGCHAIN_API_KEY &#125;&#125;
         run: |
-          langgraph deploy staging-mcp-server-langgraph --tag staging
+          langgraph deploy stg-mcp-server-langgraph --tag stg
 
-      - name: Smoke Test Staging
+      - name: Smoke Test STG
         run: |
-          langgraph deployment invoke staging-mcp-server-langgraph \
+          langgraph deployment invoke stg-mcp-server-langgraph \
             --input '{"messages": [{"role": "user", "content": "test"}]}'
 
-  deploy-production:
-    needs: deploy-staging
+  deploy-prod:
+    needs: deploy-stg
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production
+    environment: prod
     steps:
       - uses: actions/checkout@v4
 
@@ -150,8 +150,8 @@ Set up deployment approvals in GitHub:
     - Set deployment branch: `main` only
   </Step>
 
-  <Step title="Create 'staging' Environment">
-    - Name: `staging`
+  <Step title="Create 'stg' Environment">
+    - Name: `stg`
     - No approvals needed
     - Auto-deploy on push to main
   </Step>
@@ -162,8 +162,8 @@ Set up deployment approvals in GitHub:
 ```yaml .gitlab-ci.yml
 stages:
   - test
-  - deploy-staging
-  - deploy-production
+  - deploy-stg
+  - deploy-prod
 
 variables:
   PYTHON_VERSION: "3.11"
@@ -176,24 +176,24 @@ test:
     - uv sync
     - uv run pytest tests/ -v
 
-deploy-staging:
-  stage: deploy-staging
+deploy-stg:
+  stage: deploy-stg
   image: python:${PYTHON_VERSION}
   environment:
-    name: staging
-    url: https://staging-mcp-server-langgraph.langchain.com
+    name: stg
+    url: https://stg-mcp-server-langgraph.langchain.com
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - uv tool install langgraph-cli
-    - langgraph deploy staging-mcp-server-langgraph --tag staging
+    - langgraph deploy stg-mcp-server-langgraph --tag stg
     - |
-      langgraph deployment invoke staging-mcp-server-langgraph \
+      langgraph deployment invoke stg-mcp-server-langgraph \
         --input '{"messages": [{"role": "user", "content": "test"}]}'
   only:
     - main
 
-deploy-production:
-  stage: deploy-production
+deploy-prod:
+  stage: deploy-prod
   image: python:${PYTHON_VERSION}
   environment:
     name: production
@@ -228,7 +228,7 @@ jobs:
           name: Run tests
           command: pytest tests/ -v
 
-  deploy-staging:
+  deploy-stg:
     docker:
       - image: cimg/python:3.12
     steps:
@@ -237,16 +237,16 @@ jobs:
           name: Install LangGraph CLI
           command: uv tool install langgraph-cli
       - run:
-          name: Deploy to Staging
+          name: Deploy to STG
           command: |
-            langgraph deploy staging-mcp-server-langgraph --tag staging
+            langgraph deploy stg-mcp-server-langgraph --tag stg
       - run:
           name: Smoke Test
           command: |
-            langgraph deployment invoke staging-mcp-server-langgraph \
+            langgraph deployment invoke stg-mcp-server-langgraph \
               --input '{"messages": [{"role": "user", "content": "test"}]}'
 
-  deploy-production:
+  deploy-prod:
     docker:
       - image: cimg/python:3.12
     steps:
@@ -265,7 +265,7 @@ workflows:
   test-and-deploy:
     jobs:
       - test
-      - deploy-staging:
+      - deploy-stg:
           requires:
             - test
           filters:
@@ -274,8 +274,8 @@ workflows:
       - hold-production:
           type: approval
           requires:
-            - deploy-staging
-      - deploy-production:
+            - deploy-stg
+      - deploy-prod:
           requires:
             - hold-production
 ```
@@ -294,14 +294,14 @@ workflows:
     ```
   </Accordion>
 
-  <Accordion title="Use Staging Environment">
+  <Accordion title="Use STG Environment">
     ```yaml
-    deploy-staging:
-      # Deploy to staging first
+    deploy-stg:
+      # Deploy to stg first
       # Run smoke tests
 
-    deploy-production:
-      needs: deploy-staging  # Only deploy to prod if staging succeeds
+    deploy-prod:
+      needs: deploy-stg  # Only deploy to prod if stg succeeds
     ```
   </Accordion>
 
@@ -322,8 +322,8 @@ workflows:
     Use GitHub Environments or GitLab's manual approval:
 
     ```yaml
-    deploy-production:
-      environment: production  # Requires approval
+    deploy-prod:
+      environment: prod  # Requires approval
       when: manual
     ```
   </Accordion>
@@ -404,15 +404,15 @@ langgraph deployment rollback my-agent-prod
     ```
   </Tab>
 
-  <Tab title="Staging">
+  <Tab title="STG">
     **Trigger**: Every push to `main` branch
 
-    > NOTE: Set the repository variable `ENABLE_STAGING_AUTODEPLOY` to `true` to enable automated staging deploys. Leaving it unset keeps CI from stalling on staging approvals.
+    > NOTE: Set the repository variable `ENABLE_STG_AUTODEPLOY` to `true` to enable automated stg deploys. Leaving it unset keeps CI from stalling on stg approvals.
 
     ```yaml
-    deploy-staging:
+    deploy-stg:
       if: github.ref == 'refs/heads/main'
-      run: langgraph deploy my-agent-staging --tag staging
+      run: langgraph deploy my-agent-stg --tag stg
     ```
   </Tab>
 
@@ -420,9 +420,9 @@ langgraph deployment rollback my-agent-prod
     **Trigger**: Manual approval or git tag
 
     ```yaml
-    deploy-production:
+    deploy-prod:
       if: startsWith(github.ref, 'refs/tags/v')
-      environment: production
+      environment: prod
       run: langgraph deploy my-agent-prod --tag $&#123;&#123; github.ref_name &#125;&#125;
     ```
   </Tab>
@@ -491,5 +491,5 @@ langgraph deployment logs my-agent-prod --follow
 ---
 
 <Check>
-  **CI/CD Ready!** Your LangGraph Platform deployments are now automated with testing, staging, and production workflows.
+  **CI/CD Ready!** Your LangGraph Platform deployments are now automated with testing, stg, and production workflows.
 </Check>

@@ -24,19 +24,19 @@ flowchart LR
         TestNet["mcp-test-network"]
     end
 
-    subgraph Staging["Staging"]
+    subgraph STG["STG"]
         StageDC["docker-compose.yml"]
-        StageK8s["values-staging.yaml"]
+        StageK8s["values-stg.yaml"]
     end
 
     subgraph Prod["Production"]
-        ProdK8s["values-production-gke.yaml"]
+        ProdK8s["values-prod-gke.yaml"]
         ProdNet["mcp-network"]
     end
 
     Dev -->|"CI Tests"| Test
-    Test -->|"Merge to main"| Staging
-    Staging -->|"Release tag"| Prod
+    Test -->|"Merge to main"| STG
+    STG -->|"Release tag"| Prod
 
     %% ColorBrewer2 Set3 palette - each component type uniquely colored
     classDef devStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
@@ -59,7 +59,7 @@ flowchart LR
 
 | Environment | Purpose | Docker Compose File | Kubernetes Config | Network Name |
 |-------------|---------|-------------------|-------------------|--------------|
-| **Production** | Live production workloads | `docker-compose.yml` | `deployments/helm/values-production-gke.yaml` | `mcp-network` |
+| **Production** | Live production workloads | `docker-compose.yml` | `deployments/helm/values-prod-gke.yaml` | `mcp-network` |
 | **Test** | Automated testing | `docker-compose.test.yml` | N/A | `mcp-test-network` |
 | **Development** | Local development | `docker-compose.dev.yml` | N/A | `mcp-dev-network` |
 | **Minimal** | Lightweight stack | `docker-compose.minimal.yml` | N/A | `mcp-network-minimal` |

@@ -58,7 +58,7 @@ Successfully completed Phase 1 of the comprehensive infrastructure audit, resolv
 
 **Files Updated:**
 1. `deployments/helm/mcp-server-langgraph/Chart.yaml` - version: 2.7.0, appVersion: 2.7.0
-2. `deployments/kustomize/overlays/production/kustomization.yaml` - newTag: v2.7.0
+2. `deployments/kustomize/overlays/prod/kustomization.yaml` - newTag: v2.7.0
 3. `deployments/kustomize/overlays/staging/kustomization.yaml` - newTag: staging-2.7.0
 
 **Version Synchronization Results:**
@@ -341,7 +341,7 @@ Developers now get a production-like environment with:
 
 ### Updated (3 files)
 1. `deployments/helm/mcp-server-langgraph/Chart.yaml` - Version sync to 2.7.0
-2. `deployments/kustomize/overlays/production/kustomization.yaml` - Version update to v2.7.0
+2. `deployments/kustomize/overlays/prod/kustomization.yaml` - Version update to v2.7.0
 3. `deployments/kustomize/overlays/staging/kustomization.yaml` - Version update to staging-2.7.0
 
 ---

@@ -179,7 +179,7 @@ services:
 
   postgres-test:
     # TimescaleDB 2.17 on PostgreSQL 16 for time-series metrics and cost tracking
-    # Matches CloudSQL version (terraform/environments/gcp-preview/main.tf: postgres_major_version = 16)
+    # Matches CloudSQL version (terraform/environments/gcp-stg/main.tf: postgres_major_version = 16)
     # TimescaleDB extension provides hypertables for efficient time-series storage
     image: timescale/timescaledb:2.17.2-pg16
     # Increase max_connections for pytest-xdist parallel workers (8 workers x ~10 connections each)
@@ -969,7 +969,7 @@ services:
   # ==============================================================================
 
   redis-test:
-    # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
+    # Redis 7.2 to match Memorystore (terraform/environments/gcp-stg/main.tf: redis_version = "REDIS_7_2")
     image: redis:7.2-alpine
     # RESILIENCE: Auto-restart on failure for session/cache infrastructure
     restart: unless-stopped

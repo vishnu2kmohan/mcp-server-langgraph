@@ -25,7 +25,7 @@
 .PHONY: help help-common help-advanced
 
 # Sequential-only targets (cannot be parallelized)
-.NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
+.NOTPARALLEL: deploy-prod deploy-stg deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
 
 # Default target
 .DEFAULT_GOAL := help-common

@@ -345,7 +345,7 @@ def test_external_secrets_keys_match_helm_template():
         Path(__file__).parent.parent.parent / "deployments" / "helm" / "mcp-server-langgraph" / "templates" / "secret.yaml"
     )
     external_secrets_path = (
-        Path(__file__).parent.parent.parent / "deployments" / "overlays" / "production-gke" / "external-secrets.yaml"
+        Path(__file__).parent.parent.parent / "deployments" / "overlays" / "prod-gke" / "external-secrets.yaml"
     )
 
     if not external_secrets_path.exists():

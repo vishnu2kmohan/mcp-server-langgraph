@@ -116,15 +116,15 @@ postgres_url: "postgresql://user@10.110.0.3:5432/database?sslmode=require"
 
 ## Current Configuration
 
-### Production (production-gke)
+### Production (prod-gke)
 
 **Method:** Cloud SQL Proxy (sidecar)
 
 **Reason:** Production requires highest security, IAM authentication, and encryption guarantees.
 
 **Configuration files:**
-- `deployments/overlays/production-gke/deployment-patch.yaml` - Proxy sidecar configuration
-- `deployments/overlays/production-gke/network-policy.yaml` - Network rules for proxy
+- `deployments/overlays/prod-gke/deployment-patch.yaml` - Proxy sidecar configuration
+- `deployments/overlays/prod-gke/network-policy.yaml` - Network rules for proxy
 
 **Health checks:**
 ```yaml
@@ -146,16 +146,16 @@ readinessProbe:
 
 ---
 
-### Staging (preview-gke)
+### Staging (stg-gke)
 
 **Method:** Hybrid (both methods configured)
 
 **Current state:** Both Cloud SQL Proxy and direct IP connection are configured, allowing flexibility for testing.
 
 **Configuration files:**
-- `deployments/overlays/preview-gke/deployment-patch.yaml` - Proxy sidecar (commented/optional)
-- `deployments/overlays/preview-gke/configmap-patch.yaml` - Direct IP connection strings
-- `deployments/overlays/preview-gke/network-policy.yaml` - Network rules for both methods
+- `deployments/overlays/stg-gke/deployment-patch.yaml` - Proxy sidecar (commented/optional)
+- `deployments/overlays/stg-gke/configmap-patch.yaml` - Direct IP connection strings
+- `deployments/overlays/stg-gke/network-policy.yaml` - Network rules for both methods
 
 **Recommendation:** Choose one method for staging to avoid confusion:
 
@@ -281,8 +281,8 @@ port: 5432  # PostgreSQL port
 ```
 
 **Files to check:**
-- `deployments/overlays/preview-gke/network-policy.yaml`
-- `deployments/overlays/production-gke/network-policy.yaml`
+- `deployments/overlays/stg-gke/network-policy.yaml`
+- `deployments/overlays/prod-gke/network-policy.yaml`
 
 ### Issue: Proxy health checks failing
 

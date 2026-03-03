@@ -1,0 +1,719 @@
+name: Deploy to GKE Production
+
+# ==============================================================================
+# GKE Production Deployment Workflow
+# ==============================================================================
+#
+# This workflow deploys to prod GKE cluster with:
+# - Manual approval gates
+# - Workload Identity Federation (keyless authentication)
+# - Binary Authorization (if enabled)
+# - Comprehensive validation and smoke tests
+# - Automated rollback on failure
+# - Canary deployment strategy (optional)
+#
+# ==============================================================================
+
+"on":  # Quoted to prevent YAML 1.1 boolean interpretation
+  release:
+    types: [published]  # GitHub releases fire with 'published' action
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: true
+      skip_tests:
+        description: 'Skip pre-deployment tests (use with caution)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false  # Never cancel prod deployments
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+  GKE_CLUSTER: ${{ vars.GKE_PROD_CLUSTER || 'prod-mcp-server-langgraph-gke' }}
+  NAMESPACE: ${{ vars.PRODUCTION_NAMESPACE || 'prod-mcp-server-langgraph' }}
+  DEPLOYMENT_NAME: prod-mcp-server-langgraph
+  ARTIFACT_REGISTRY: ${{ vars.GCP_REGION || 'us-central1' }}-docker.pkg.dev
+
+permissions:
+  contents: read
+  id-token: write  # Required for Workload Identity Federation
+  pull-requests: write
+  deployments: write
+
+jobs:
+  # ============================================================================
+  # PRE-DEPLOYMENT VALIDATION
+  # ============================================================================
+
+  pre-deployment-checks:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: prod-validation
+    outputs:
+      validation_passed: ${{ steps.validate.outputs.passed }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate image tag format
+        id: validate_tag
+        run: |
+          TAG="${{ github.event.inputs.image_tag || github.event.release.tag_name }}"
+          if [[ ! "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "❌ Invalid tag format: $TAG"
+            echo "Expected: vX.Y.Z or X.Y.Z"
+            exit 1
+          fi
+          echo "✅ Valid tag: $TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Validate Kustomize configuration
+        run: |
+          kubectl kustomize deployments/overlays/prod-gke > /tmp/manifests.yaml
+          echo "✅ Kustomize validation passed"
+
+      - name: Validate manifests with kubeconform
+        run: |
+          # Use gh CLI for authenticated download (avoids GitHub rate limiting)
+          gh release download --repo yannh/kubeconform \
+            --pattern "kubeconform-linux-amd64.tar.gz"
+          tar xf kubeconform-linux-amd64.tar.gz
+          kubectl kustomize deployments/overlays/prod-gke | ./kubeconform -strict -summary -ignore-missing-schemas
+          echo "✅ Manifest validation passed"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Validate service version consistency
+        run: |
+          echo "🔍 Validating service versions across deployment configs..."
+
+          # Check for 'latest' tags in docker-compose files (should not exist in prod/test)
+          echo "Checking for 'latest' tags in docker-compose files..."
+          if grep -r "image:.*:latest" docker-compose.yml docker-compose.test.yml docker/docker-compose.yml 2>/dev/null; then
+            echo "❌ ERROR: Found 'latest' tags in prod/test docker-compose files"
+            echo "Please use specific version tags for prod and test environments"
+            exit 1
+          fi
+          echo "✅ No 'latest' tags in prod/test configs"
+
+          # Check that service versions match between docker-compose files
+          echo "Checking version consistency across docker-compose files..."
+          declare -A versions=(
+            ["postgres"]="16.8-alpine"
+            ["keycloak"]="26.4.2"
+            ["openfga"]="v1.10.2"
+            ["qdrant"]="v1.15.5"
+            ["jaeger"]="1.62.0"
+          )
+
+          for service in "${!versions[@]}"; do
+            expected="${versions[$service]}"
+            echo "Validating $service version: $expected"
+
+            # Check prod docker-compose.yml
+            if ! grep -q "$service.*:$expected" docker-compose.yml 2>/dev/null; then
+              echo "❌ ERROR: $service version mismatch in docker-compose.yml"
+              echo "Expected: $expected"
+              exit 1
+            fi
+          done
+          echo "✅ Service versions are consistent across deployment configs"
+
+      - name: Security scan manifests
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: 'config'
+          scan-ref: 'deployments/overlays/prod-gke'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'  # Fail on critical/high vulnerabilities
+          # Reference .trivyignore for documented exceptions (e.g., Keycloak AVD-KSV-0014)
+          trivyignores: 'deployments/overlays/prod-gke/.trivyignore'
+
+      - name: Set validation status
+        id: validate
+        run: echo "passed=true" >> $GITHUB_OUTPUT
+
+  # ============================================================================
+  # BUILD AND PUSH IMAGE
+  # ============================================================================
+
+  build-and-push:
+    name: Build and Push to Artifact Registry
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: pre-deployment-checks
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    outputs:
+      image_tag: ${{ steps.image.outputs.tag }}
+      image_digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate required environment variables
+        run: |
+          MISSING=""
+          [ -z "${{ env.GCP_PROJECT_ID }}" ] && MISSING="$MISSING GCP_PROJECT_ID"
+          [ -z "${{ env.GCP_REGION }}" ] && MISSING="$MISSING GCP_REGION"
+          [ -z "${{ env.GKE_CLUSTER }}" ] && MISSING="$MISSING GKE_CLUSTER"
+          [ -z "${{ env.NAMESPACE }}" ] && MISSING="$MISSING NAMESPACE"
+
+          if [ -n "$MISSING" ]; then
+            echo "❌ Missing required environment variables:$MISSING"
+            echo "Please configure these in Settings → Secrets and variables → Actions → Variables"
+            exit 1
+          fi
+
+          echo "✅ All required environment variables configured"
+          echo "- GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}"
+          echo "- GCP_REGION: ${{ env.GCP_REGION }}"
+          echo "- GKE_CLUSTER: ${{ env.GKE_CLUSTER }}"
+          echo "- NAMESPACE: ${{ env.NAMESPACE }}"
+
+      - name: Set image tag
+        id: image
+        run: |
+          TAG="${{ github.event.inputs.image_tag || github.event.release.tag_name }}"
+          # Remove 'v' prefix if present
+          TAG="${TAG#v}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Using image tag: $TAG"
+
+      # Authenticate to Google Cloud using Workload Identity Federation
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: ./.github/actions/setup-gcp-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_PROD_SA_EMAIL }}
+          token-format: access_token
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://${{ env.ARTIFACT_REGISTRY }}
+
+      - name: Set up Docker Buildx
+        uses: ./.github/actions/setup-docker-buildx
+
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          target: final-base
+          push: true
+          tags: |
+            ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-prod/mcp-server-langgraph:${{ steps.image.outputs.tag }}
+            ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-prod/mcp-server-langgraph:latest
+          cache-from: |
+            type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-prod/mcp-server-langgraph:latest
+          cache-to: |
+            type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-prod/mcp-server-langgraph:cache,mode=max
+          provenance: true  # Generate SLSA provenance
+          sbom: true        # Generate SBOM
+
+      # Scan image for vulnerabilities
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: '${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-prod/mcp-server-langgraph:${{ steps.image.outputs.tag }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'  # Fail on critical/high vulnerabilities
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # MANUAL APPROVAL GATE
+  # ============================================================================
+
+  approve-deployment:
+    name: Manual Approval Required
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    # Only run in main repository (not forks) to avoid environment protection issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    environment:
+      name: prod-approval
+      url: https://console.cloud.google.com/kubernetes/clusters/details/${{ env.GCP_REGION }}/${{ env.GKE_CLUSTER }}/details?project=${{ env.GCP_PROJECT_ID }}
+    steps:
+      - name: Approval granted
+        run: |
+          echo "✅ Production deployment approved"
+          echo "Deploying image: ${{ needs.build-and-push.outputs.image_tag }}"
+
+  # ============================================================================
+  # DEPLOY TO PRODUCTION
+  # ============================================================================
+
+  deploy-prod:
+    name: Deploy to Production GKE
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build-and-push, approve-deployment]
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    environment:
+      name: prod
+      url: https://console.cloud.google.com/kubernetes/workload/overview?project=${{ env.GCP_PROJECT_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: ./.github/actions/setup-gcp-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_PROD_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: Verify cluster access
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Verify External Secrets Operator
+        run: |
+          echo "Verifying External Secrets Operator is installed..."
+
+          # Check if ESO is running
+          if ! kubectl get deployment -n external-secrets-system external-secrets 2>/dev/null; then
+            echo "❌ External Secrets Operator not found!"
+            echo "Please install ESO before deploying to prod"
+            exit 1
+          fi
+
+          # Verify CRDs exist
+          kubectl get crd secretstores.external-secrets.io
+          kubectl get crd externalsecrets.external-secrets.io
+          kubectl get crd clustersecretstores.external-secrets.io
+
+          # Verify ESO deployment is healthy
+          ESO_READY=$(kubectl get deployment -n external-secrets-system external-secrets -o jsonpath='{.status.readyReplicas}')
+          ESO_DESIRED=$(kubectl get deployment -n external-secrets-system external-secrets -o jsonpath='{.spec.replicas}')
+
+          if [ "$ESO_READY" != "$ESO_DESIRED" ]; then
+            echo "❌ External Secrets Operator not ready: $ESO_READY/$ESO_DESIRED replicas"
+            exit 1
+          fi
+
+          echo "✓ External Secrets Operator verified ($ESO_READY/$ESO_DESIRED replicas ready)"
+
+      # Install kustomize
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: "5.0.0"
+
+      - name: Verify kustomize
+        run: kustomize version
+
+      - name: Update Kustomization with new image tag
+        run: |
+          cd deployments/overlays/prod-gke
+          kustomize edit set image mcp-server-langgraph=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/mcp-prod/mcp-server-langgraph:${{ needs.build-and-push.outputs.image_tag }}
+
+      - name: Dry-run deployment
+        run: |
+          kubectl apply -k deployments/overlays/prod-gke --dry-run=server
+          echo "✅ Dry-run successful"
+
+      - name: Create deployment backup
+        run: |
+          kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} -o yaml > /tmp/deployment-backup.yaml
+          echo "✅ Backup created"
+
+      # ========================================================================
+      # CANARY DEPLOYMENT (Progressive Rollout)
+      # ========================================================================
+
+      - name: Deploy canary (10% traffic)
+        run: |
+          echo "🐤 Starting canary deployment..."
+
+          # Get current replica count
+          CURRENT_REPLICAS=$(kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.spec.replicas}')
+          echo "Current replicas: $CURRENT_REPLICAS"
+
+          # Calculate canary replicas (10% of current, minimum 1)
+          CANARY_REPLICAS=$(( CURRENT_REPLICAS / 10 ))
+          [ "$CANARY_REPLICAS" -lt 1 ] && CANARY_REPLICAS=1
+          echo "Canary replicas: $CANARY_REPLICAS"
+
+          # Apply deployment with new image but limited replicas
+          kubectl apply -k deployments/overlays/prod-gke
+          kubectl scale deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --replicas=$CANARY_REPLICAS
+
+          echo "✅ Canary deployed with $CANARY_REPLICAS replica(s)"
+
+      - name: Wait for canary rollout
+        run: |
+          echo "⏳ Waiting for canary pods to be ready..."
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --timeout=5m
+          echo "✅ Canary rollout completed"
+
+      - name: Monitor canary health
+        run: |
+          echo "🔍 Monitoring canary for 5 minutes..."
+
+          # Get canary pod
+          CANARY_POD=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
+          echo "Canary pod: $CANARY_POD"
+
+          # Monitor for 5 minutes (check every 30 seconds)
+          for i in {1..10}; do
+            echo "Health check $i/10..."
+
+            # Check pod status
+            POD_STATUS=$(kubectl get pod $CANARY_POD -n ${{ env.NAMESPACE }} -o jsonpath='{.status.phase}')
+            if [ "$POD_STATUS" != "Running" ]; then
+              echo "❌ Canary pod not running: $POD_STATUS"
+              exit 1
+            fi
+
+            # Check container ready status
+            READY=$(kubectl get pod $CANARY_POD -n ${{ env.NAMESPACE }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}')
+            if [ "$READY" != "True" ]; then
+              echo "❌ Canary pod not ready"
+              exit 1
+            fi
+
+            # Check for restarts (indicates crashes)
+            RESTARTS=$(kubectl get pod $CANARY_POD -n ${{ env.NAMESPACE }} -o jsonpath='{.status.containerStatuses[0].restartCount}')
+            if [ "$RESTARTS" -gt 0 ]; then
+              echo "⚠️ Warning: Canary pod has restarted $RESTARTS time(s)"
+            fi
+
+            echo "✓ Canary healthy (check $i/10)"
+            sleep 30
+          done
+
+          echo "✅ Canary monitoring completed successfully"
+
+      - name: Run canary smoke tests
+        run: |
+          echo "🧪 Running smoke tests on canary..."
+
+          # Get service endpoint
+          SERVICE_IP=$(kubectl get svc prod-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Health checks with timeout and retry logic (canary is behind same service)
+          echo "Running health checks against http://${SERVICE_IP}:8000..."
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            if curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/live" && \
+               curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/ready"; then
+              echo "✅ Health checks passed"
+              break
+            elif [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ Health checks failed after $MAX_RETRIES attempts"
+              exit 1
+            else
+              echo "⚠️  Health check failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+
+          echo "✅ Canary smoke tests passed"
+
+      # ========================================================================
+      # FULL ROLLOUT (after canary validation)
+      # ========================================================================
+
+      - name: Proceed with full rollout
+        run: |
+          echo "🚀 Canary validated - proceeding with full rollout..."
+
+          # Get original replica count from backup
+          ORIGINAL_REPLICAS=$(grep 'replicas:' /tmp/deployment-backup.yaml | head -1 | awk '{print $2}')
+          echo "Scaling to original replica count: $ORIGINAL_REPLICAS"
+
+          # Scale to full replica count
+          kubectl scale deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --replicas=$ORIGINAL_REPLICAS
+
+          echo "✅ Full deployment initiated"
+
+      - name: Wait for full rollout to complete
+        run: |
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --timeout=10m
+          echo "✅ Full rollout completed"
+
+      - name: Verify deployment
+        run: |
+          # Check pod status
+          RUNNING_PODS=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph -o json | jq '.items | map(select(.status.phase=="Running")) | length')
+          TOTAL_PODS=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph -o json | jq '.items | length')
+
+          echo "Running pods: $RUNNING_PODS / $TOTAL_PODS"
+
+          if [ "$RUNNING_PODS" -lt 2 ]; then
+            echo "❌ Not enough running pods (minimum: 2)"
+            exit 1
+          fi
+
+          # Verify pod health
+          kubectl wait --for=condition=Ready pods -l app=mcp-server-langgraph -n ${{ env.NAMESPACE }} --timeout=5m
+          echo "✅ All pods are healthy"
+
+      - name: Run prod smoke tests
+        run: |
+          # Get service endpoint
+          SERVICE_IP=$(kubectl get svc prod-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Health checks with timeout and retry logic
+          echo "Running health checks against http://${SERVICE_IP}:8000..."
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            if curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/live" && \
+               curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/ready"; then
+              echo "✅ Health checks passed"
+              break
+            elif [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ Health checks failed after $MAX_RETRIES attempts"
+              exit 1
+            else
+              echo "⚠️  Health check failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+
+          echo "✅ Smoke tests passed"
+
+  # ============================================================================
+  # POST-DEPLOYMENT VALIDATION
+  # ============================================================================
+
+  post-deployment-validation:
+    name: Post-Deployment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: deploy-prod
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: ./.github/actions/setup-gcp-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_PROD_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: Verify security configuration
+        run: |
+          # Check for privileged containers
+          PRIVILEGED=$(kubectl get pods -n ${{ env.NAMESPACE }} -o json | jq '[.items[].spec.containers[] | select(.securityContext.privileged==true)] | length')
+          if [ "$PRIVILEGED" -gt 0 ]; then
+            echo "❌ Found privileged containers"
+            exit 1
+          fi
+
+          # Check network policies exist
+          NP_COUNT=$(kubectl get networkpolicies -n ${{ env.NAMESPACE }} -o json | jq '.items | length')
+          if [ "$NP_COUNT" -lt 1 ]; then
+            echo "❌ No network policies found"
+            exit 1
+          fi
+
+          echo "✅ Security validation passed"
+
+      - name: Verify workload identity configuration
+        run: |
+          # Check service account annotations
+          SA_ANNOTATION=$(kubectl get sa prod-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}')
+          if [ -z "$SA_ANNOTATION" ]; then
+            echo "❌ Workload Identity annotation missing"
+            exit 1
+          fi
+          echo "✅ Workload Identity configured: $SA_ANNOTATION"
+
+      - name: Performance baseline check
+        run: |
+          # Get service endpoint
+          SERVICE_IP=$(kubectl get svc prod-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Response time check (should be < 2 seconds)
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' "http://${SERVICE_IP}:8000/health/live")
+          echo "Response time: ${RESPONSE_TIME}s"
+
+          if (( $(echo "$RESPONSE_TIME > 2.0" | bc -l) )); then
+            echo "⚠️ Warning: Response time above baseline (${RESPONSE_TIME}s > 2.0s)"
+          else
+            echo "✅ Performance baseline met"
+          fi
+
+      - name: Verify Cloud Logging integration
+        run: |
+          # Check if logs are being sent to Cloud Logging
+          LOGS=$(gcloud logging read "resource.type=k8s_container AND resource.labels.namespace_name=${{ env.NAMESPACE }}" \
+            --limit=10 \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }})
+
+          LOG_COUNT=$(echo "$LOGS" | jq '. | length')
+          if [ "$LOG_COUNT" -lt 1 ]; then
+            echo "⚠️ Warning: No recent logs found in Cloud Logging"
+          else
+            echo "✅ Cloud Logging integration verified ($LOG_COUNT recent logs)"
+          fi
+
+      - name: Check Cloud Monitoring metrics
+        run: |
+          # Verify metrics are being collected
+          gcloud monitoring time-series list \
+            --filter='resource.type="k8s_container" AND resource.labels.namespace_name="${{ env.NAMESPACE }}"' \
+            --format=json \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --limit=1
+
+          echo "✅ Cloud Monitoring integration verified"
+
+  # ============================================================================
+  # ROLLBACK ON FAILURE
+  # ============================================================================
+
+  rollback-on-failure:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build-and-push, deploy-prod, post-deployment-validation]
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: failure() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: ./.github/actions/setup-gcp-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_PROD_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: Rollback to previous revision
+        run: |
+          kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          echo "🔄 Rollback initiated"
+
+      - name: Wait for rollback to complete
+        run: |
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }} --timeout=10m
+          echo "✅ Rollback completed"
+
+      - name: Verify rollback
+        run: |
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph
+          echo "✅ Rollback verification complete"
+
+      - name: Send failure notification
+        if: always()
+        run: |
+          echo "❌ Production deployment failed and was rolled back"
+          echo "Image tag: ${{ needs.build-and-push.outputs.image_tag }}"
+          # Add Slack/email notification here
+
+  # ============================================================================
+  # DEPLOYMENT SUMMARY
+  # ============================================================================
+
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build-and-push, deploy-prod, post-deployment-validation]
+    if: success()
+    steps:
+      - name: Create deployment summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          # ✅ Production Deployment Successful
+
+          ## Deployment Details
+          - **Environment**: Production (GKE Autopilot)
+          - **Cluster**: ${{ env.GKE_CLUSTER }}
+          - **Region**: ${{ env.GCP_REGION }}
+          - **Namespace**: ${{ env.NAMESPACE }}
+          - **Image Tag**: ${{ needs.build-and-push.outputs.image_tag }}
+          - **Image Digest**: ${{ needs.build-and-push.outputs.image_digest }}
+
+          ## Validation Results
+          - ✅ Pre-deployment checks passed
+          - ✅ Image security scan passed
+          - ✅ Manifest validation passed
+          - ✅ Deployment rollout completed
+          - ✅ Health checks passed
+          - ✅ Security configuration verified
+          - ✅ Workload Identity configured
+          - ✅ Performance baseline met
+          - ✅ Cloud Logging verified
+          - ✅ Cloud Monitoring verified
+
+          ## Quick Links
+          - [GKE Console](https://console.cloud.google.com/kubernetes/workload/overview?project=${{ env.GCP_PROJECT_ID }})
+          - [Cloud Logging](https://console.cloud.google.com/logs/query?project=${{ env.GCP_PROJECT_ID }})
+          - [Cloud Monitoring](https://console.cloud.google.com/monitoring?project=${{ env.GCP_PROJECT_ID }})
+
+          ## Rollback Command
+          If issues arise, rollback with:
+          \`\`\`bash
+          kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          \`\`\`
+          EOF
+
+      - name: Send success notification
+        run: |
+          echo "✅ Production deployment completed successfully"
+          # Add Slack/email notification here

@@ -131,8 +131,8 @@ uv run --frozen pytest tests/integration/test_app_startup_validation.py -v
 ### 8. Deployment Workflow kubeval Limitations ✅
 
 **Files Changed:**
-- `.github/workflows/deploy-preview-gke.yaml:64-69`
-- `.github/workflows/deploy-production-gke.yaml:86-91`
+- `.github/workflows/deploy-stg-gke.yaml:64-69`
+- `.github/workflows/deploy-prod-gke.yaml:86-91`
 
 **Issues Identified:**
 - kubeval is archived and no longer maintained
@@ -153,7 +153,7 @@ Replaced kubeval with kubeconform (actively maintained fork that supports modern
   run: |
     wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
     tar xf kubeval-linux-amd64.tar.gz
-    kubectl kustomize deployments/overlays/preview-gke | ./kubeval --strict
+    kubectl kustomize deployments/overlays/stg-gke | ./kubeval --strict
     echo "✅ Manifest validation passed"
 
 # After (FIXED):
@@ -161,7 +161,7 @@ Replaced kubeval with kubeconform (actively maintained fork that supports modern
   run: |
     wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
     tar xf kubeconform-linux-amd64.tar.gz
-    kubectl kustomize deployments/overlays/preview-gke | ./kubeconform -strict -summary -ignore-missing-schemas
+    kubectl kustomize deployments/overlays/stg-gke | ./kubeconform -strict -summary -ignore-missing-schemas
     echo "✅ Manifest validation passed"
 ```
 
@@ -174,7 +174,7 @@ Replaced kubeval with kubeconform (actively maintained fork that supports modern
 
 **Validation:**
 ```bash
-kubectl kustomize deployments/overlays/preview-gke | kubeconform -strict -summary -ignore-missing-schemas
+kubectl kustomize deployments/overlays/stg-gke | kubeconform -strict -summary -ignore-missing-schemas
 # Result: ✅ Summary: 37 resources found - Valid: 34, Invalid: 0, Errors: 0, Skipped: 3
 ```
 
@@ -415,13 +415,13 @@ python3 tests/kubernetes/test_critical_deployment_issues.py::TestCriticalSecretI
 ### 5. Production GKE Namespace Mismatch ✅
 
 **Files Changed:**
-- `deployments/overlays/production-gke/network-policy.yaml`
-- `deployments/overlays/production-gke/resource-quotas.yaml`
+- `deployments/overlays/prod-gke/network-policy.yaml`
+- `deployments/overlays/prod-gke/resource-quotas.yaml`
 
 **Issues Identified:**
-- `namespace.yaml` creates namespace `production-mcp-server-langgraph`
-- `network-policy.yaml` uses namespace `mcp-production` ❌
-- `resource-quotas.yaml` uses namespace `mcp-production` ❌
+- `namespace.yaml` creates namespace `prod-mcp-server-langgraph`
+- `network-policy.yaml` uses namespace `mcp-prod` ❌
+- `resource-quotas.yaml` uses namespace `mcp-prod` ❌
 - **NetworkPolicy and ResourceQuota NOT applied to actual namespace**
 - Production namespace has **NO network security or resource limits**
 
@@ -433,20 +433,20 @@ Copy-paste error or refactoring leftover - namespace names not aligned across ov
 # Before (BROKEN):
 # network-policy.yaml
 metadata:
-  namespace: mcp-production  # ❌ Wrong namespace
+  namespace: mcp-prod  # ❌ Wrong namespace
 
 # resource-quotas.yaml
 metadata:
-  namespace: mcp-production  # ❌ Wrong namespace
+  namespace: mcp-prod  # ❌ Wrong namespace
 
 # After (FIXED):
 # network-policy.yaml
 metadata:
-  namespace: production-mcp-server-langgraph  # ✅ Correct
+  namespace: prod-mcp-server-langgraph  # ✅ Correct
 
 # resource-quotas.yaml
 metadata:
-  namespace: production-mcp-server-langgraph  # ✅ Correct
+  namespace: prod-mcp-server-langgraph  # ✅ Correct
 ```
 
 **Impact:**
@@ -566,7 +566,7 @@ These tests are now part of the CI/CD pipeline and will prevent regression of th
 2. **Use GCP Secret Manager** directly via Workload Identity
 3. **Enable multi-zone requirements** in production overlay:
    ```yaml
-   # production-gke/deployment-patch.yaml
+   # prod-gke/deployment-patch.yaml
    - op: replace
      path: /spec/template/spec/topologySpreadConstraints/0/whenUnsatisfiable
      value: DoNotSchedule
@@ -588,8 +588,8 @@ These tests are now part of the CI/CD pipeline and will prevent regression of th
 - ✅ `deployments/base/secret.yaml`
 
 ### Production GKE Overlay
-- ✅ `deployments/overlays/production-gke/network-policy.yaml`
-- ✅ `deployments/overlays/production-gke/resource-quotas.yaml`
+- ✅ `deployments/overlays/prod-gke/network-policy.yaml`
+- ✅ `deployments/overlays/prod-gke/resource-quotas.yaml`
 
 ### Tests
 - ✅ `tests/kubernetes/test_critical_deployment_issues.py` (NEW)

@@ -1,0 +1,21 @@
+# Configuration variables for stg environment
+# These values are used by Kustomize replacements to substitute variables throughout the deployment
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-config
+  namespace: stg-mcp-server-langgraph
+data:
+  # GCP Project ID for stg
+  GCP_PROJECT_ID: "vishnu-sandbox-20250310"
+
+  # Domain for stg environment
+  # TODO: Replace STG_DOMAIN with actual stg domain
+  DOMAIN: "STG_DOMAIN"
+
+  # Environment identifier
+  ENVIRONMENT: "stg"
+
+  # Cluster name
+  CLUSTER_NAME: "stg-gke-cluster"

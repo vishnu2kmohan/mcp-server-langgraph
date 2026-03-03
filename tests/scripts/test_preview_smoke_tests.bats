@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# BATS tests for preview-smoke-tests.sh
+# BATS tests for stg-smoke-tests.sh
 # Following TDD RED-GREEN-REFACTOR methodology
 #
 # These tests validate critical fixes to prevent regressions:
@@ -14,7 +14,7 @@ load '../test_helper/bats-assert/load'
 # Test setup - run before each test
 setup() {
     # Path to script under test
-    export SCRIPT_PATH="${BATS_TEST_DIRNAME}/../../scripts/gcp/preview-smoke-tests.sh"
+    export SCRIPT_PATH="${BATS_TEST_DIRNAME}/../../scripts/gcp/stg-smoke-tests.sh"
 }
 
 # ============================================================================

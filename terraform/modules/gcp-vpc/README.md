@@ -104,7 +104,7 @@ module "vpc" {
   project_id   = "my-gcp-project"
   name_prefix  = "mcp-prod"
   region       = "us-central1"
-  cluster_name = "mcp-production-cluster"
+  cluster_name = "mcp-prod-cluster"
 
   # VPC Configuration
   routing_mode = "REGIONAL"  # Or "GLOBAL" for multi-region
@@ -668,7 +668,7 @@ See [outputs.tf](./outputs.tf) for complete list of outputs.
 See the [examples](../../environments/) directory for complete working examples:
 
 - [GCP Development](../../environments/gcp-dev/)
-- [GCP Preview](../../environments/gcp-preview/)
+- [GCP Preview](../../environments/gcp-stg/)
 - [GCP Production](../../environments/gcp-prod/)
 
 ## License

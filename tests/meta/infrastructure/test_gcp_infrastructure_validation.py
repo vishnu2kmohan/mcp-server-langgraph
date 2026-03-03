@@ -10,7 +10,7 @@ Following TDD principles - tests define expected infrastructure state.
 
 CODEX FINDING (2025-11-30):
 GCP compliance scan failed because:
-1. Cluster name mismatch: workflow used 'mcp-prod-gke' but Terraform uses 'production-mcp-server-langgraph-gke'
+1. Cluster name mismatch: workflow used 'mcp-prod-gke' but Terraform uses 'prod-mcp-server-langgraph-gke'
 2. Missing compliance-scanner service account in Terraform WIF module
 3. Inconsistent provider naming (github-provider vs github-actions-provider)
 
@@ -27,7 +27,7 @@ from tests.helpers.path_helpers import get_repo_root
 pytestmark = pytest.mark.unit
 
 REPO_ROOT = get_repo_root()
-TERRAFORM_WIF_DIR = REPO_ROOT / "terraform" / "environments" / "gcp-preview-wif-only"
+TERRAFORM_WIF_DIR = REPO_ROOT / "terraform" / "environments" / "gcp-stg-wif-only"
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
 
@@ -106,8 +106,7 @@ class TestGCPServiceAccountConsistency:
 
         assert not missing, (
             f"Found {len(missing)} service account(s) referenced in workflows but not in Terraform.\\n"
-            f"Add these to terraform/environments/gcp-preview-wif-only/main.tf:\\n"
-            + "\\n".join(f"  - {m}" for m in missing[:10])
+            f"Add these to terraform/environments/gcp-stg-wif-only/main.tf:\\n" + "\\n".join(f"  - {m}" for m in missing[:10])
         )
 
 
@@ -166,11 +165,11 @@ class TestGKEClusterNameConsistency:
 
         Expected pattern: environment-mcp-server-langgraph-gke
         Examples:
-        - production-mcp-server-langgraph-gke
+        - prod-mcp-server-langgraph-gke
         - staging-mcp-server-langgraph-gke
         - dev-mcp-server-langgraph-gke
         """
-        expected_pattern = re.compile(r"(production|staging|dev)-mcp-server-langgraph-gke")
+        expected_pattern = re.compile(r"(prod|stg|dev)-mcp-server-langgraph-gke")
 
         # Find all GKE_CLUSTER defaults in workflows
         violations = []
@@ -189,7 +188,7 @@ class TestGKEClusterNameConsistency:
 
         assert not violations, (
             f"Found {len(violations)} cluster name(s) not matching standard pattern.\\n"
-            f"Expected: (production|staging|dev)-mcp-server-langgraph-gke\\n" + "\\n".join(f"  - {v}" for v in violations)
+            f"Expected: (prod|stg|dev)-mcp-server-langgraph-gke\\n" + "\\n".join(f"  - {v}" for v in violations)
         )
 
 
@@ -261,8 +260,8 @@ class TestTerraformWorkflowParity:
 
         # Expected output keys (based on workflow expectations)
         expected_outputs = [
-            "GCP_PREVIEW_SA_EMAIL",
-            "GCP_PRODUCTION_SA_EMAIL",
+            "GCP_STG_SA_EMAIL",
+            "GCP_PROD_SA_EMAIL",
             "GCP_TERRAFORM_SA_EMAIL",
             "GCP_COMPLIANCE_SA_EMAIL",
             "GCP_WIF_PROVIDER",

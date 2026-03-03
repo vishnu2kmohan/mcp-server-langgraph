@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 REPO_ROOT = get_repo_root()
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
-PREVIEW_GKE_DIR = OVERLAYS_DIR / "preview-gke"
+PREVIEW_GKE_DIR = OVERLAYS_DIR / "stg-gke"
 
 
 def load_yaml_documents(file_path: Path) -> list[dict[str, Any]]:
@@ -102,7 +102,7 @@ def extract_init_container_service_refs(manifests: list[dict[str, Any]]) -> dict
 
 
 def test_preview_gke_overlay_builds():
-    """Test that preview-gke overlay builds without errors."""
+    """Test that stg-gke overlay builds without errors."""
     try:
         output = build_kustomize_manifests(PREVIEW_GKE_DIR)
         assert output, "Kustomize build produced empty output"
@@ -146,20 +146,20 @@ def test_all_init_container_services_exist():
 
 
 def test_staging_services_have_prefix():
-    """Test that staging services have the 'preview-' prefix applied by Kustomize."""
+    """Test that staging services have the 'stg-' prefix applied by Kustomize."""
     kustomize_output = build_kustomize_manifests(PREVIEW_GKE_DIR)
     manifests = parse_kustomize_output(kustomize_output)
 
     services = extract_services(manifests)
 
     # Exclude system services and ExternalName services
-    app_services = {s for s in services if not s.startswith("preview-mcp-server-langgraph")}
+    app_services = {s for s in services if not s.startswith("stg-mcp-server-langgraph")}
 
     for service in app_services:
         if service in ["default", "kubernetes"]:  # System services
             continue
 
-        assert service.startswith("preview-"), f"Service '{service}' doesn't have 'preview-' prefix"
+        assert service.startswith("stg-"), f"Service '{service}' doesn't have 'stg-' prefix"
 
 
 def test_init_container_refs_match_staging_prefix():
@@ -174,17 +174,17 @@ def test_init_container_refs_match_staging_prefix():
 
     service_refs = extract_init_container_service_refs(manifests)
 
-    # All refs in staging should start with 'preview-'
+    # All refs in staging should start with 'stg-'
     invalid_refs = {}
     for deployment, refs in service_refs.items():
-        invalid = [ref for ref in refs if not ref.startswith("preview-")]
+        invalid = [ref for ref in refs if not ref.startswith("stg-")]
         if invalid:
             invalid_refs[deployment] = invalid
 
     assert not invalid_refs, (
-        f"Init containers reference services without 'preview-' prefix:\n"
+        f"Init containers reference services without 'stg-' prefix:\n"
         f"{yaml.dump(invalid_refs, default_flow_style=False)}\n"
-        f"These should be prefixed with 'preview-' to match Kustomize namePrefix"
+        f"These should be prefixed with 'stg-' to match Kustomize namePrefix"
     )
 
 
@@ -195,13 +195,13 @@ def test_required_services_exist_in_staging():
 
     services = extract_services(manifests)
 
-    # Required services for preview (all have preview- prefix from Kustomize)
+    # Required services for stg (all have stg- prefix from Kustomize)
     required_services = [
-        "preview-keycloak",
-        "preview-openfga",
-        "preview-qdrant",
-        "preview-mcp-server-langgraph",
-        "preview-redis-session",  # ExternalName to Memorystore
+        "stg-keycloak",
+        "stg-openfga",
+        "stg-qdrant",
+        "stg-mcp-server-langgraph",
+        "stg-redis-session",  # ExternalName to Memorystore
     ]
 
     missing = [svc for svc in required_services if svc not in services]

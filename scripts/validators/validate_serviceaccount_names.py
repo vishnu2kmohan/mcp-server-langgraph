@@ -82,7 +82,7 @@ def validate_overlay_serviceaccounts(base_names: set[str]) -> list[tuple[Path, s
 
                     # Remove environment prefixes to get clean name
                     clean_name = sa_name
-                    for prefix in ["staging-", "production-", "dev-", "test-"]:
+                    for prefix in ["stg-", "production-", "dev-", "test-"]:
                         if clean_name.startswith(prefix):
                             clean_name = clean_name[len(prefix) :]
                             break

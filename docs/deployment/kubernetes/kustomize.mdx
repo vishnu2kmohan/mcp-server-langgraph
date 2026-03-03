@@ -65,7 +65,7 @@ k8s/
 │   │   ├── deployment-patch.yaml
 │   │   └── configmap.yaml
 │   │
-│   ├── staging/
+│   ├── stg/
 │   │   ├── kustomization.yaml
 │   │   ├── deployment-patch.yaml
 │   │   ├── hpa.yaml
@@ -284,29 +284,29 @@ spec:
             cpu: "250m"
 ```
 
-### Staging Overlay
+### STG Overlay
 
-#### overlays/staging/kustomization.yaml
+#### overlays/stg/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: langgraph-staging
+namespace: langgraph-stg
 
 bases:
   - ../../base
 
-namePrefix: staging-
+namePrefix: stg-
 
 commonLabels:
-  environment: staging
+  environment: stg
 
 configMapGenerator:
   - name: langgraph-config
     behavior: merge
     literals:
-      - ENV=staging
+      - ENV=stg
       - DEBUG=false
       - LOG_LEVEL=info
       - AUTH_PROVIDER=keycloak
@@ -327,9 +327,9 @@ patchesStrategicMerge:
 images:
   - name: mcp-server-langgraph
     newName: gcr.io/project-id/mcp-server-langgraph
-    newTag: staging
+    newTag: stg
 ```
-#### overlays/staging/deployment-patch.yaml
+#### overlays/stg/deployment-patch.yaml
 
 ```yaml
 apiVersion: apps/v1
@@ -351,7 +351,7 @@ spec:
             cpu: "500m"
 ```
 
-#### overlays/staging/hpa.yaml
+#### overlays/stg/hpa.yaml
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -375,7 +375,7 @@ spec:
 ```
 ### Production Overlay
 
-#### overlays/production/kustomization.yaml
+#### overlays/prod/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -389,7 +389,7 @@ bases:
 ## No prefix for production
 
 commonLabels:
-  environment: production
+  environment: prod
 
 commonAnnotations:
   prometheus.io/scrape: "true"
@@ -430,7 +430,7 @@ replicas:
     count: 3
 ```
 
-#### overlays/production/deployment-patch.yaml
+#### overlays/prod/deployment-patch.yaml
 
 ```yaml
 apiVersion: apps/v1
@@ -471,7 +471,7 @@ spec:
             memory: "2Gi"
             cpu: "1000m"
 ```
-#### overlays/production/pdb.yaml
+#### overlays/prod/pdb.yaml
 
 ```yaml
 apiVersion: policy/v1
@@ -485,7 +485,7 @@ spec:
       app: mcp-server-langgraph
 ```
 
-#### overlays/production/network-policy.yaml
+#### overlays/prod/network-policy.yaml
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -542,7 +542,7 @@ spec:
 #### JSON Patches
 
 ```yaml
-## overlays/production/kustomization.yaml
+## overlays/prod/kustomization.yaml
 patchesJson6902:
   - target:
       group: apps
@@ -579,7 +579,7 @@ spec:
 #### Transformers
 
 ```yaml
-## overlays/production/kustomization.yaml
+## overlays/prod/kustomization.yaml
 transformers:
   - |-
     apiVersion: builtin
@@ -595,7 +595,7 @@ transformers:
 #### Generators
 
 ```yaml
-## overlays/production/kustomization.yaml
+## overlays/prod/kustomization.yaml
 generators:
   - secret-generator.yaml
 ```
@@ -619,11 +619,11 @@ type: Opaque
 ## Development
 kubectl kustomize overlays/development
 
-## Staging
-kubectl kustomize overlays/staging
+## STG
+kubectl kustomize overlays/stg
 
 ## Production
-kubectl kustomize overlays/production
+kubectl kustomize overlays/prod
 ```
 #### Deploy
 
@@ -631,18 +631,18 @@ kubectl kustomize overlays/production
 ## Development
 kubectl apply -k overlays/development
 
-## Staging
-kubectl apply -k overlays/staging
+## STG
+kubectl apply -k overlays/stg
 
 ## Production
-kubectl apply -k overlays/production
+kubectl apply -k overlays/prod
 ```
 
 #### Delete
 
 ```bash
 ## Delete environment
-kubectl delete -k overlays/staging
+kubectl delete -k overlays/stg
 ```
 ### CI/CD Integration
 
@@ -669,9 +669,9 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
           export KUBECONFIG=kubeconfig
 
-      - name: Deploy to production
+      - name: Deploy to prod
         run: |
-          kubectl apply -k k8s/overlays/production
+          kubectl apply -k k8s/overlays/prod
 
       - name: Verify deployment
         run: |
@@ -685,7 +685,7 @@ deploy:production:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - kubectl apply -k k8s/overlays/production
+    - kubectl apply -k k8s/overlays/prod
     - kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
   only:
     - main
@@ -706,7 +706,7 @@ spec:
   source:
     repoURL: https://github.com/vishnu2kmohan/mcp-server-langgraph
     targetRevision: main
-    path: k8s/overlays/production
+    path: k8s/overlays/prod
 
   destination:
     server: https://kubernetes.default.svc
@@ -783,13 +783,13 @@ argocd app sync mcp-server-langgraph-production
 
     ```bash
     # Preview changes
-    kubectl kustomize overlays/production
+    kubectl kustomize overlays/prod
 
     # Validate
-    kubectl kustomize overlays/production | kubectl apply --dry-run=client -f -
+    kubectl kustomize overlays/prod | kubectl apply --dry-run=client -f -
 
     # Then apply
-    kubectl apply -k overlays/production
+    kubectl apply -k overlays/prod
     ```
   </Accordion>
 
@@ -819,7 +819,7 @@ argocd app sync mcp-server-langgraph-production
     ls -la k8s/base/
 
     # Validate overlay
-    kubectl kustomize k8s/overlays/production
+    kubectl kustomize k8s/overlays/prod
     ```
   </Accordion>
 
@@ -860,19 +860,19 @@ argocd app sync mcp-server-langgraph-production
 
 ```bash
 ## Validate YAML syntax
-kubectl kustomize overlays/production | kubectl apply --dry-run=client -f -
+kubectl kustomize overlays/prod | kubectl apply --dry-run=client -f -
 
 ## Check resource counts
-kubectl kustomize overlays/production | grep "^kind:" | sort | uniq -c
+kubectl kustomize overlays/prod | grep "^kind:" | sort | uniq -c
 
 ## Diff between environments
-diff <(kubectl kustomize overlays/staging) <(kubectl kustomize overlays/production)
+diff <(kubectl kustomize overlays/stg) <(kubectl kustomize overlays/prod)
 
 ## Test with kubeval
-kubectl kustomize overlays/production | kubeval --strict
+kubectl kustomize overlays/prod | kubeval --strict
 
 ## Test with kube-score
-kubectl kustomize overlays/production | kube-score score -
+kubectl kustomize overlays/prod | kube-score score -
 ```
 
 ### Next Steps

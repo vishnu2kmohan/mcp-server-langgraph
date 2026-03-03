@@ -249,7 +249,7 @@ kubectl kustomize deployments/base
 # Test overlays
 kubectl kustomize deployments/overlays/dev
 kubectl kustomize deployments/overlays/staging
-kubectl kustomize deployments/overlays/production
+kubectl kustomize deployments/overlays/prod
 
 # Deploy to dev
 kubectl apply -k deployments/overlays/dev

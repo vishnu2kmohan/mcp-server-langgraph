@@ -59,10 +59,10 @@ validate-kustomize:
 		echo "  Validating dev overlay..." && kubectl kustomize deployments/overlays/dev > /dev/null 2>&1 && echo "  dev overlay valid" \
 	) & pid1=$$!; \
 	( \
-		echo "  Validating staging overlay..." && kubectl kustomize deployments/overlays/staging > /dev/null 2>&1 && echo "  staging overlay valid" \
+		echo "  Validating stg overlay..." && kubectl kustomize deployments/overlays/stg > /dev/null 2>&1 && echo "  stg overlay valid" \
 	) & pid2=$$!; \
 	( \
-		echo "  Validating production overlay..." && kubectl kustomize deployments/overlays/production > /dev/null 2>&1 && echo "  production overlay valid" \
+		echo "  Validating prod overlay..." && kubectl kustomize deployments/overlays/prod > /dev/null 2>&1 && echo "  prod overlay valid" \
 	) & pid3=$$!; \
 	wait $$pid1 $$pid2 $$pid3
 	@echo "All Kustomize overlays valid"

@@ -29,8 +29,8 @@ This page contains the comprehensive CI/CD status for the mcp-server-langgraph p
 
 **Deployment:**
 [![Release](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/release.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/release.yaml)
-[![Deploy Staging](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-preview-gke.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-preview-gke.yaml)
-[![Deploy Production](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-production-gke.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-production-gke.yaml)
+[![Deploy STG](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-stg-gke.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-stg-gke.yaml)
+[![Deploy Production](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-prod-gke.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/deploy-prod-gke.yaml)
 
 **Automation:**
 [![Dependabot Auto-merge](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/dependabot-automerge.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/dependabot-automerge.yaml)
@@ -67,8 +67,8 @@ This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GC
 |----------------|------|-------------|
 | `GCP_PROJECT_ID` | Variable | Your Google Cloud project ID |
 | `GCP_WIF_PROVIDER` | Secret | Workload Identity Federation provider path |
-| `GCP_STAGING_SA_EMAIL` | Secret | Staging service account email |
-| `GCP_PRODUCTION_SA_EMAIL` | Secret | Production service account email |
+| `GCP_STG_SA_EMAIL` | Secret | STG service account email |
+| `GCP_PROD_SA_EMAIL` | Secret | Production service account email |
 
 **📚 Complete guides**:
 - SECRETS.md (repository root) - Setup & configuration (350+ lines)

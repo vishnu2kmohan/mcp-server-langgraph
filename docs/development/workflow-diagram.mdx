@@ -170,16 +170,16 @@ flowchart TD
     DV --> VNP[validate-network-policies]
     DV --> VSA[validate-service-accounts]
 
-    %% Staging Deployment
-    PushDev[Push to develop] --> DSG[deploy-preview-gke.yaml]
+    %% STG Deployment
+    PushDev[Push to develop] --> DSG[deploy-stg-gke.yaml]
     ManualS[Manual trigger] --> DSG
 
     DSG --> AuthS[GKE auth]
-    AuthS --> HelmS[Helm deploy staging]
+    AuthS --> HelmS[Helm deploy stg]
     HelmS --> SmokeS[Smoke tests]
 
     %% Production Deployment
-    Release[Release published] --> DPG[deploy-production-gke.yaml]
+    Release[Release published] --> DPG[deploy-prod-gke.yaml]
     ManualP[Manual trigger + Approval] --> DPG
 
     DPG --> Approve[Manual approval]
@@ -486,8 +486,8 @@ flowchart TD
 - observability-alerts.yaml
 
 ### On-Demand (Manual/Conditional)
-- deploy-preview-gke.yaml (push to develop OR manual)
-- deploy-production-gke.yaml (release OR manual with approval)
+- deploy-stg-gke.yaml (push to develop OR manual)
+- deploy-prod-gke.yaml (release OR manual with approval)
 - release.yaml (tag push OR manual)
 - bump-deployment-versions.yaml (release OR manual)
 - dependabot-automerge.yaml (Dependabot PR only)

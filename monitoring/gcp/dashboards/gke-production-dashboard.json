@@ -12,7 +12,7 @@
             "dataSets": [{
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-production\" AND resource.labels.container_name=\"mcp-server-langgraph\" AND metric.type=\"kubernetes.io/container/cpu/core_usage_time\"",
+                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-prod\" AND resource.labels.container_name=\"mcp-server-langgraph\" AND metric.type=\"kubernetes.io/container/cpu/core_usage_time\"",
                   "aggregation": {
                     "alignmentPeriod": "60s",
                     "perSeriesAligner": "ALIGN_RATE",
@@ -41,7 +41,7 @@
             "dataSets": [{
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-production\" AND resource.labels.container_name=\"mcp-server-langgraph\" AND metric.type=\"kubernetes.io/container/memory/used_bytes\"",
+                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-prod\" AND resource.labels.container_name=\"mcp-server-langgraph\" AND metric.type=\"kubernetes.io/container/memory/used_bytes\"",
                   "aggregation": {
                     "alignmentPeriod": "60s",
                     "perSeriesAligner": "ALIGN_MEAN",
@@ -70,7 +70,7 @@
             "dataSets": [{
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\" AND metric.type=\"kubernetes.io/pod/network/received_bytes_count\"",
+                  "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-prod\" AND metric.type=\"kubernetes.io/pod/network/received_bytes_count\"",
                   "aggregation": {
                     "alignmentPeriod": "60s",
                     "perSeriesAligner": "ALIGN_RATE",
@@ -99,7 +99,7 @@
             "dataSets": [{
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\" AND metadata.system_labels.app=\"mcp-server-langgraph\"",
+                  "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-prod\" AND metadata.system_labels.app=\"mcp-server-langgraph\"",
                   "aggregation": {
                     "alignmentPeriod": "60s",
                     "crossSeriesReducer": "REDUCE_COUNT"
@@ -251,7 +251,7 @@
             "dataSets": [{
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-production\" AND severity>=ERROR",
+                  "filter": "resource.type=\"k8s_container\" AND resource.labels.namespace_name=\"mcp-prod\" AND severity>=ERROR",
                   "aggregation": {
                     "alignmentPeriod": "60s",
                     "perSeriesAligner": "ALIGN_RATE",
@@ -306,7 +306,7 @@
           "scorecard": {
             "timeSeriesQuery": {
               "timeSeriesFilter": {
-                "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\"",
+                "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-prod\"",
                 "aggregation": {
                   "alignmentPeriod": "60s",
                   "crossSeriesReducer": "REDUCE_COUNT"
@@ -329,7 +329,7 @@
           "scorecard": {
             "timeSeriesQuery": {
               "timeSeriesFilter": {
-                "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-production\" AND metric.type=\"custom.googleapis.com/application/request_duration\"",
+                "filter": "resource.type=\"k8s_pod\" AND resource.labels.namespace_name=\"mcp-prod\" AND metric.type=\"custom.googleapis.com/application/request_duration\"",
                 "aggregation": {
                   "alignmentPeriod": "60s",
                   "perSeriesAligner": "ALIGN_MEAN",

@@ -74,7 +74,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
     INFISICAL_CLIENT_ID=your-client-id
     INFISICAL_CLIENT_SECRET=your-client-secret
     INFISICAL_PROJECT_ID=your-project-id
-    INFISICAL_ENVIRONMENT=production  # dev, staging, production
+    INFISICAL_ENVIRONMENT=production  # dev, stg, production
     ```
 
   </Step>
@@ -206,7 +206,7 @@ environment = os.getenv("ENVIRONMENT", "development")
 
 secrets = client.get_all_secrets(
     project_id=project_id,
-    environment=environment  # dev, staging, production
+    environment=environment  # dev, stg, production
 )
 ```
 ### Kubernetes Integration
@@ -284,7 +284,7 @@ mcp-server-langgraph/
 │   │   └── REDIS_PASSWORD
 │   └── observability/
 │       └── LANGSMITH_API_KEY
-├── staging/
+├── stg/
 │   └── ...
 └── development/
     └── ...
@@ -421,7 +421,7 @@ client.delete_secret(
     Create dedicated service accounts per environment:
 
     - `langgraph-dev` (development)
-    - `langgraph-staging` (staging)
+    - `langgraph-stg` (stg)
     - `langgraph-prod` (production)
     - `cicd-deploy` (CI/CD pipelines)
   </Accordion>

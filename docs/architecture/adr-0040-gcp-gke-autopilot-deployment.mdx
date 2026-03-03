@@ -74,7 +74,7 @@ terraform/
 │   └── gke-workload-identity/   # IAM bindings
 └── environments/
     ├── gcp-dev/                 # Development (cost-optimized)
-    ├── gcp-staging/             # Staging (production-like)
+    ├── gcp-stg/             # STG (production-like)
     └── gcp-prod/                # Production (full HA)
 ```
 
@@ -257,7 +257,7 @@ metadata:
 - ✅ Cloud SQL module
 - ✅ Memorystore module
 - ✅ Workload Identity module
-- ✅ Environment configurations (dev, staging, prod)
+- ✅ Environment configurations (dev, stg, prod)
 
 ### Phase 2: Security (In Progress)
 - ✅ Binary Authorization

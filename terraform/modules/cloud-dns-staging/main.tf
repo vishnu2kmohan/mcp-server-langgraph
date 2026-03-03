@@ -27,7 +27,7 @@ resource "google_dns_managed_zone" "staging_internal" {
   }
 
   labels = {
-    environment = "staging"
+    environment = "stg"
     managed_by  = "terraform"
     purpose     = "internal-services"
   }

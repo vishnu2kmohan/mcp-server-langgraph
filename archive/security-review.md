@@ -153,7 +153,7 @@ subprocess.run(
 
 **Action**:
 ```yaml
-# In values-production.yaml, make Kong required
+# In values-prod.yaml, make Kong required
 kong:
   enabled: true
   required: true  # Add this

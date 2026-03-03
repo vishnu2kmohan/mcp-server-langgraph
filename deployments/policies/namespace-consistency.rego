@@ -13,8 +13,8 @@ deny[msg] {
 
     # Check for common mistakes
     mistakes := {
-        "mcp-staging": "staging-mcp-server-langgraph",
-        "mcp-production": "production-mcp-server-langgraph"
+        "mcp-stg": "stg-mcp-server-langgraph",
+        "mcp-prod": "prod-mcp-server-langgraph"
     }
 
     expected := mistakes[hardcoded_namespace]
@@ -54,7 +54,7 @@ namespace_is_project(ns) {
 
 namespace_is_project(ns) {
     # Allow overlay-specific namespaces
-    project_namespaces := {"staging-mcp-server-langgraph", "production-mcp-server-langgraph", "dev-mcp-server-langgraph", "preview-mcp-server-langgraph"}
+    project_namespaces := {"stg-mcp-server-langgraph", "prod-mcp-server-langgraph", "dev-mcp-server-langgraph"}
     project_namespaces[ns]
 }
 

@@ -31,7 +31,7 @@ class GKEAutopilotValidator:
     """Validator for GKE Autopilot compliance"""
 
     # GKE Autopilot LimitRange constraints
-    # Updated 2025-12-04: Aligned with staging-mcp-staging-limits LimitRange
+    # Updated 2025-12-04: Aligned with stg-mcp-stg-limits LimitRange
     MAX_CPU_RATIO = 4.0
     MAX_MEMORY_RATIO = 4.0
     MIN_CPU_REQUEST = "100m"  # GKE Autopilot minimum for init containers

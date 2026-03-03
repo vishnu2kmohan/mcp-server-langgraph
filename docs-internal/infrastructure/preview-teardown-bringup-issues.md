@@ -38,7 +38,7 @@ During the teardown and recreation of the preview GKE infrastructure, we encount
 
 **Code Changes**:
 ```bash
-# scripts/gcp/teardown-preview-infrastructure.sh
+# scripts/gcp/teardown-stg-infrastructure.sh
 readonly RUNTIME_DATABASES=(
     "keycloak"
     "openfga"
@@ -81,7 +81,7 @@ cleanup_runtime_databases() {
 
 **Code Changes**:
 ```bash
-# scripts/gcp/teardown-preview-infrastructure.sh
+# scripts/gcp/teardown-stg-infrastructure.sh
 log_info "Waiting 60 seconds for Service Networking Connection to propagate..."
 sleep 60
 
@@ -194,7 +194,7 @@ terraform force-unlock -force <lock-id>
 **Resolution**:
 ```bash
 terraform import "module.memorystore.google_redis_instance.main" \
-    "projects/PROJECT_ID/locations/REGION/instances/preview-mcp-slg-redis"
+    "projects/PROJECT_ID/locations/REGION/instances/stg-mcp-slg-redis"
 ```
 
 **Prevention**:
@@ -259,11 +259,11 @@ resource "google_monitoring_alert_policy" "pods_pending" {
 **Workaround**:
 ```bash
 # Create cluster via gcloud instead of Terraform
-gcloud container clusters create-auto preview-mcp-server-langgraph-gke \
+gcloud container clusters create-auto stg-mcp-server-langgraph-gke \
   --region=us-central1 \
   --project=vishnu-sandbox-20250310 \
-  --network=preview-mcp-slg-vpc \
-  --subnetwork=preview-mcp-slg-nodes-us-central1 \
+  --network=stg-mcp-slg-vpc \
+  --subnetwork=stg-mcp-slg-nodes-us-central1 \
   --cluster-secondary-range-name=pods \
   --services-secondary-range-name=services \
   --enable-private-nodes \
@@ -272,7 +272,7 @@ gcloud container clusters create-auto preview-mcp-server-langgraph-gke \
 
 # Then import into Terraform
 terraform import "module.gke.google_container_cluster.autopilot" \
-    "projects/PROJECT_ID/locations/us-central1/clusters/preview-mcp-server-langgraph-gke"
+    "projects/PROJECT_ID/locations/us-central1/clusters/stg-mcp-server-langgraph-gke"
 ```
 
 **Prevention**:
@@ -295,16 +295,16 @@ terraform import "module.gke.google_container_cluster.autopilot" \
 
 **Root Cause**:
 - Script used old `staging-mcp-server-langgraph-*` naming convention
-- Resources were renamed to `preview-mcp-slg-*` pattern
+- Resources were renamed to `stg-mcp-slg-*` pattern
 - Script wasn't updated during staging→preview rename
 
 **Resolution**:
 Updated all resource names in teardown script:
 ```bash
-readonly VPC_NAME="preview-mcp-slg-vpc"
-readonly CLOUD_SQL_INSTANCE="preview-mcp-slg-postgres"
-readonly REDIS_INSTANCE="preview-mcp-slg-redis"
-readonly PRIVATE_SERVICES_ADDRESS="preview-mcp-slg-private-services"
+readonly VPC_NAME="stg-mcp-slg-vpc"
+readonly CLOUD_SQL_INSTANCE="stg-mcp-slg-postgres"
+readonly REDIS_INSTANCE="stg-mcp-slg-redis"
+readonly PRIVATE_SERVICES_ADDRESS="stg-mcp-slg-private-services"
 ```
 
 **Prevention**:
@@ -330,10 +330,10 @@ readonly PRIVATE_SERVICES_ADDRESS="preview-mcp-slg-private-services"
 **Resolution**:
 ```bash
 readonly SERVICE_ACCOUNTS=(
-    "preview-mcp-slg-sa"
-    "preview-keycloak"
-    "preview-openfga"
-    "github-actions-preview"
+    "stg-mcp-slg-sa"
+    "stg-keycloak"
+    "stg-openfga"
+    "github-actions-stg"
     "github-actions-production"
     "github-actions-terraform"
 )
@@ -352,7 +352,7 @@ readonly SERVICE_ACCOUNTS=(
 **Phase**: Terraform Apply
 
 **Symptoms**:
-- `Error 400: database "mcp_langgraph_preview" already exists`
+- `Error 400: database "mcp_langgraph_stg" already exists`
 
 **Root Cause**:
 - Database was created during previous deployment
@@ -360,7 +360,7 @@ readonly SERVICE_ACCOUNTS=(
 
 **Resolution**:
 - Either import the database or delete it manually before apply
-- For fresh start, delete with: `gcloud sql databases delete mcp_langgraph_preview --instance=preview-mcp-slg-postgres`
+- For fresh start, delete with: `gcloud sql databases delete mcp_langgraph_stg --instance=stg-mcp-slg-postgres`
 
 ---
 
@@ -379,7 +379,7 @@ readonly SERVICE_ACCOUNTS=(
 
 **Resolution**:
 ```bash
-local short_prefix="preview-mcp-slg"
+local short_prefix="stg-mcp-slg"
 local nat_router="${short_prefix}-router-${REGION}"
 local nat_config="${short_prefix}-nat-${REGION}"
 ```
@@ -522,7 +522,7 @@ gcloud container clusters create-auto CLUSTER_NAME \
 
 **Symptoms**:
 - MCP server init container `wait-for-redis` stuck in Running state
-- `nc: bad address 'preview-redis-session'` error
+- `nc: bad address 'stg-redis-session'` error
 
 **Root Cause**:
 - Redis ExternalName service pointed to old staging DNS: `redis-session-staging.staging.internal`
@@ -537,8 +537,8 @@ gcloud container clusters create-auto CLUSTER_NAME \
 apiVersion: v1
 kind: Service
 metadata:
-  name: preview-redis-session
-  namespace: preview-mcp-server-langgraph
+  name: stg-redis-session
+  namespace: stg-mcp-server-langgraph
 spec:
   type: ClusterIP
   ports:
@@ -549,8 +549,8 @@ spec:
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: preview-redis-session
-  namespace: preview-mcp-server-langgraph
+  name: stg-redis-session
+  namespace: stg-mcp-server-langgraph
 subsets:
 - addresses:
   - ip: 10.192.48.85  # Memorystore Redis private IP
@@ -592,10 +592,10 @@ subsets:
 **Resolution**:
 ```bash
 # Get Memorystore AUTH string
-gcloud redis instances get-auth-string preview-mcp-slg-redis --region=us-central1
+gcloud redis instances get-auth-string stg-mcp-slg-redis --region=us-central1
 
 # Add all missing secrets
-kubectl patch secret preview-mcp-server-langgraph-secrets -n preview-mcp-server-langgraph \
+kubectl patch secret stg-mcp-server-langgraph-secrets -n stg-mcp-server-langgraph \
   --type='json' -p='[
     {"op": "add", "path": "/data/redis-password", "value": "<base64>"},
     {"op": "add", "path": "/data/redis-url", "value": "<base64>"},
@@ -677,20 +677,20 @@ resource "google_monitoring_alert_policy" "pods_pending" {
 ### Infrastructure State
 | Component | Status | Notes |
 |-----------|--------|-------|
-| GKE Autopilot Cluster | Running | `preview-mcp-server-langgraph-gke` |
-| CloudSQL PostgreSQL | Running | `preview-mcp-slg-postgres` |
-| Memorystore Redis | Running | `preview-mcp-slg-redis` (10.192.48.85:6378) |
+| GKE Autopilot Cluster | Running | `stg-mcp-server-langgraph-gke` |
+| CloudSQL PostgreSQL | Running | `stg-mcp-slg-postgres` |
+| Memorystore Redis | Running | `stg-mcp-slg-redis` (10.192.48.85:6378) |
 | VPC + Private Services | Configured | Private IP connectivity working |
 | Workload Identity | Configured | 3 service accounts bound, all IAM bindings in TF state |
 
 ### Pod Status
 | Pod | Ready | Status |
 |-----|-------|--------|
-| preview-keycloak | 2/2 | Running |
-| preview-mcp-server-langgraph | 2/2 | Running |
-| preview-openfga | 2/2 | Running |
-| preview-otel-collector | 1/1 | Running |
-| preview-qdrant | 1/1 | Running |
+| stg-keycloak | 2/2 | Running |
+| stg-mcp-server-langgraph | 2/2 | Running |
+| stg-openfga | 2/2 | Running |
+| stg-otel-collector | 1/1 | Running |
+| stg-qdrant | 1/1 | Running |
 
 ### Terraform State Summary
 | Module | Resources | Status |
@@ -710,7 +710,7 @@ resource "google_monitoring_alert_policy" "pods_pending" {
 | GKE | **Disabled** | Metrics unavailable in Cloud Monitoring |
 | Memorystore | **Disabled** | Metrics unavailable in Cloud Monitoring |
 
-**Configuration**: `terraform/environments/gcp-preview/main.tf`
+**Configuration**: `terraform/environments/gcp-stg/main.tf`
 - GKE: `enable_monitoring_alerts = false` (line 191)
 - Memorystore: `enable_monitoring_alerts = false` (line 337)
 
@@ -718,7 +718,7 @@ resource "google_monitoring_alert_policy" "pods_pending" {
 ```bash
 # Edit main.tf to set enable_monitoring_alerts = true for gke and memorystore
 # Then run:
-cd terraform/environments/gcp-preview
+cd terraform/environments/gcp-stg
 terraform apply
 ```
 

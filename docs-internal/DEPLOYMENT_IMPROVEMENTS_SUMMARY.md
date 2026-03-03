@@ -155,16 +155,16 @@ stringData:
 ### 1.5 Production GKE - Namespace Mismatch ✅
 
 **Problem:**
-- `namespace.yaml` creates `production-mcp-server-langgraph`
-- `network-policy.yaml` uses `mcp-production` ❌
-- `resource-quotas.yaml` uses `mcp-production` ❌
+- `namespace.yaml` creates `prod-mcp-server-langgraph`
+- `network-policy.yaml` uses `mcp-prod` ❌
+- `resource-quotas.yaml` uses `mcp-prod` ❌
 - **Result:** NetworkPolicy and ResourceQuota NOT applied to actual namespace
 
 **Solution:**
 ```yaml
 # Aligned all namespace references
 metadata:
-  namespace: production-mcp-server-langgraph  # Consistent everywhere
+  namespace: prod-mcp-server-langgraph  # Consistent everywhere
 ```
 
 **Impact:**
@@ -173,7 +173,7 @@ metadata:
 - ✅ Network security policies active
 - ✅ Resource consumption controlled
 
-**Files:** `deployments/overlays/production-gke/network-policy.yaml`, `deployments/overlays/production-gke/resource-quotas.yaml`
+**Files:** `deployments/overlays/prod-gke/network-policy.yaml`, `deployments/overlays/prod-gke/resource-quotas.yaml`
 
 ---
 
@@ -365,7 +365,7 @@ image: docker.io/library/busybox:1.36
 
 # Added documentation for production overrides
 # Production example: ghcr.io/your-org/mcp-server-langgraph:2.8.0
-# GKE example: us-central1-docker.pkg.dev/project-id/mcp-production/...
+# GKE example: us-central1-docker.pkg.dev/project-id/mcp-prod/...
 ```
 
 **Impact:**
@@ -423,8 +423,8 @@ M deployments/base/networkpolicy.yaml          (namespace labels, egress)
 M deployments/base/deployment.yaml            (zone spreading, affinity)
 M deployments/base/kustomization.yaml         (remove secret.yaml)
 M deployments/base/secret.yaml                (openfga-datastore-uri, docs)
-M deployments/overlays/production-gke/network-policy.yaml  (namespace)
-M deployments/overlays/production-gke/resource-quotas.yaml (namespace)
+M deployments/overlays/prod-gke/network-policy.yaml  (namespace)
+M deployments/overlays/prod-gke/resource-quotas.yaml (namespace)
 A tests/kubernetes/test_critical_deployment_issues.py
 A docs/CRITICAL_FIXES_SUMMARY.md
 ```
@@ -483,7 +483,7 @@ A tests/kubernetes/test_high_priority_improvements.py
    - Use SSD-backed storage for production performance
 
 3. **Production Overlay Review**
-   - Consider re-enabling hard zone requirements in production-gke overlay
+   - Consider re-enabling hard zone requirements in prod-gke overlay
    - Configure production-specific image registries
    - Review and apply environment-specific configurations
 

@@ -56,11 +56,11 @@ class TestCriticalIssues:
         - If redis_ssl: "false", URLs must use redis:// scheme
         - Mismatched configuration causes TLS handshake failures
 
-        Validates: deployments/overlays/production/configmap-patch.yaml:29
+        Validates: deployments/overlays/prod/configmap-patch.yaml:29
         """
         overlays_to_check = [
-            ("deployments/overlays/production/configmap-patch.yaml", "production"),
-            ("deployments/overlays/preview-gke/configmap-patch.yaml", "preview-gke"),
+            ("deployments/overlays/prod/configmap-patch.yaml", "production"),
+            ("deployments/overlays/stg-gke/configmap-patch.yaml", "stg-gke"),
         ]
 
         for config_path, overlay_name in overlays_to_check:
@@ -117,7 +117,7 @@ class TestCriticalIssues:
         """
         Test that environment variables use correct casing (uppercase).
 
-        Issue #3 (Critical): preview-gke deployment-patch.yaml uses lowercase
+        Issue #3 (Critical): stg-gke deployment-patch.yaml uses lowercase
         redis_url/checkpoint_redis_url but application expects uppercase.
 
         Expected: REDIS_URL, CHECKPOINT_REDIS_URL (uppercase)
@@ -126,12 +126,12 @@ class TestCriticalIssues:
         Impact: Application may fail to read configuration even with
         case_sensitive=False due to direct env lookups in code.
 
-        Validates: deployments/overlays/preview-gke/deployment-patch.yaml:78,83
+        Validates: deployments/overlays/stg-gke/deployment-patch.yaml:78,83
         """
-        deployment_patch = REPO_ROOT / "deployments/overlays/preview-gke/deployment-patch.yaml"
+        deployment_patch = REPO_ROOT / "deployments/overlays/stg-gke/deployment-patch.yaml"
 
         if not deployment_patch.exists():
-            pytest.skip("preview-gke deployment-patch.yaml not found")
+            pytest.skip("stg-gke deployment-patch.yaml not found")
 
         with open(deployment_patch) as f:
             try:
@@ -167,7 +167,7 @@ class TestCriticalIssues:
                     if env_name.upper() in required_uppercase and env_name != env_name.upper():
                         pytest.fail(
                             f"Environment variable '{env_name}' should be uppercase '{env_name.upper()}'\n"
-                            f"Location: preview-gke/deployment-patch.yaml, container '{container.get('name')}'\n"
+                            f"Location: stg-gke/deployment-patch.yaml, container '{container.get('name')}'\n"
                             f"Reason: Application code uses direct uppercase lookups"
                         )
 
@@ -175,7 +175,7 @@ class TestCriticalIssues:
         """
         Test that no hard-coded internal IPs exist in deployment configs.
 
-        Issue #4 (Critical): preview-gke overlay hard-codes internal IPs:
+        Issue #4 (Critical): stg-gke overlay hard-codes internal IPs:
         - 10.138.129.37 (Memorystore Redis)
         - 10.110.0.3 (Cloud SQL)
         - 10.110.1.4 (Memorystore Redis)
@@ -184,14 +184,14 @@ class TestCriticalIssues:
         Solution: Use Cloud DNS names instead.
 
         Validates:
-        - deployments/overlays/preview-gke/redis-session-endpoints.yaml:10
-        - deployments/overlays/preview-gke/configmap-patch.yaml:24,33
+        - deployments/overlays/stg-gke/redis-session-endpoints.yaml:10
+        - deployments/overlays/stg-gke/configmap-patch.yaml:24,33
         """
         files_to_check = [
-            "deployments/overlays/preview-gke/redis-session-endpoints.yaml",
-            "deployments/overlays/preview-gke/configmap-patch.yaml",
-            "deployments/overlays/preview-gke/deployment-patch.yaml",
-            "deployments/overlays/production-gke/configmap-patch.yaml",
+            "deployments/overlays/stg-gke/redis-session-endpoints.yaml",
+            "deployments/overlays/stg-gke/configmap-patch.yaml",
+            "deployments/overlays/stg-gke/deployment-patch.yaml",
+            "deployments/overlays/prod-gke/configmap-patch.yaml",
         ]
 
         # Regex to match private IP addresses (10.x, 172.16-31.x, 192.168.x)
@@ -230,7 +230,7 @@ class TestCriticalIssues:
                 error_msg += f"    Line: {issue['content']}\n\n"
 
             error_msg += "Fix: Replace with Cloud DNS names (e.g., redis.staging.internal)\n"
-            error_msg += "See: deployments/overlays/preview-gke/README.md for DNS setup"
+            error_msg += "See: deployments/overlays/stg-gke/README.md for DNS setup"
 
             pytest.fail(error_msg)
 
@@ -239,13 +239,13 @@ class TestCriticalIssues:
         """
         Test that Kustomize variables are properly substituted.
 
-        Issue #5 (Critical): production-gke kustomization.yaml has
+        Issue #5 (Critical): prod-gke kustomization.yaml has
         $(GCP_PROJECT_ID) in image name without proper substitution.
 
         Impact: Image pull fails with literal $(GCP_PROJECT_ID) in name.
         Solution: Migrate to Helm-based templating.
 
-        Validates: deployments/overlays/production-gke/kustomization.yaml:76
+        Validates: deployments/overlays/prod-gke/kustomization.yaml:76
         """
         # CODEX FINDING #1: Check if kustomize is available
         if not shutil.which("kustomize"):
@@ -254,8 +254,8 @@ class TestCriticalIssues:
                 "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
             )
 
-        # Build production-gke overlay
-        overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
+        # Build prod-gke overlay
+        overlay_path = REPO_ROOT / "deployments/overlays/prod-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -300,7 +300,7 @@ class TestCriticalIssues:
                 error_msg += f"  {issue['resource']}: {issue['pattern']}\n"
 
             error_msg += "\nFix: Migrate to Helm chart with proper templating\n"
-            error_msg += "See: deployments/helm/values-production-gke.yaml"
+            error_msg += "See: deployments/helm/values-prod-gke.yaml"
 
             pytest.fail(error_msg)
 
@@ -308,19 +308,19 @@ class TestCriticalIssues:
         """
         Test that production configs have no placeholder values.
 
-        Issue #6 (Critical): production-gke configmap-patch.yaml contains:
+        Issue #6 (Critical): prod-gke configmap-patch.yaml contains:
         - YOUR_PROJECT_ID
         - ${GCP_PROJECT_ID} (unsubstituted)
 
         Impact: Pods start with invalid configuration.
         Solution: Use Helm values or External Secrets.
 
-        Validates: deployments/overlays/production-gke/configmap-patch.yaml:48
+        Validates: deployments/overlays/prod-gke/configmap-patch.yaml:48
         """
-        config_patch = REPO_ROOT / "deployments/overlays/production-gke/configmap-patch.yaml"
+        config_patch = REPO_ROOT / "deployments/overlays/prod-gke/configmap-patch.yaml"
 
         if not config_patch.exists():
-            pytest.skip("production-gke configmap-patch.yaml not found")
+            pytest.skip("prod-gke configmap-patch.yaml not found")
 
         with open(config_patch) as f:
             lines = f.readlines()
@@ -370,18 +370,18 @@ class TestMediumPriorityIssues:
         """
         Test that service account annotations use variables, not hard-coded projects.
 
-        Issue #8 (Medium): production-gke serviceaccount-patch.yaml hard-codes:
+        Issue #8 (Medium): prod-gke serviceaccount-patch.yaml hard-codes:
         iam.gke.io/gcp-service-account: mcp-prod-app-sa@my-gcp-project.iam...
 
         Impact: Workload Identity fails in actual GCP project.
         Solution: Use Helm templating with project ID variable.
 
-        Validates: deployments/overlays/production-gke/serviceaccount-patch.yaml:8
+        Validates: deployments/overlays/prod-gke/serviceaccount-patch.yaml:8
         """
-        sa_patch = REPO_ROOT / "deployments/overlays/production-gke/serviceaccount-patch.yaml"
+        sa_patch = REPO_ROOT / "deployments/overlays/prod-gke/serviceaccount-patch.yaml"
 
         if not sa_patch.exists():
-            pytest.skip("production-gke serviceaccount-patch.yaml not found")
+            pytest.skip("prod-gke serviceaccount-patch.yaml not found")
 
         with open(sa_patch) as f:
             content = f.read()
@@ -483,13 +483,13 @@ class TestLowPriorityIssues:
         """
         Test that all secret generators are actually used.
 
-        Issue #13 (Low): production-gke kustomization.yaml defines
+        Issue #13 (Low): prod-gke kustomization.yaml defines
         app-config-secrets generator but nothing references it.
 
         Impact: Dead code, confusion.
         Solution: Remove unused generator.
 
-        Validates: deployments/overlays/production-gke/kustomization.yaml:100-104
+        Validates: deployments/overlays/prod-gke/kustomization.yaml:100-104
         """
         # CODEX FINDING #1: Check if kustomize is available
         if not shutil.which("kustomize"):
@@ -498,10 +498,10 @@ class TestLowPriorityIssues:
                 "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
             )
 
-        kustomization = REPO_ROOT / "deployments/overlays/production-gke/kustomization.yaml"
+        kustomization = REPO_ROOT / "deployments/overlays/prod-gke/kustomization.yaml"
 
         if not kustomization.exists():
-            pytest.skip("production-gke kustomization.yaml not found")
+            pytest.skip("prod-gke kustomization.yaml not found")
 
         with open(kustomization) as f:
             try:
@@ -516,7 +516,7 @@ class TestLowPriorityIssues:
             return
 
         # Build the overlay to see what's actually used
-        overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
+        overlay_path = REPO_ROOT / "deployments/overlays/prod-gke"
         result = subprocess.run(
             ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
@@ -543,7 +543,7 @@ class TestLowPriorityIssues:
             pytest.fail(
                 f"Unused secret generators found: {', '.join(unused_generators)}\n\n"
                 f"These generators are defined but never referenced by any workload.\n"
-                f"Fix: Remove from deployments/overlays/production-gke/kustomization.yaml\n"
+                f"Fix: Remove from deployments/overlays/prod-gke/kustomization.yaml\n"
                 f"Or: Add volumeMount/envFrom references in deployment"
             )
 
@@ -583,10 +583,10 @@ class TestLowPriorityIssues:
         Test that ArgoCD applications use environment-specific values files.
 
         Issue #15 (Low): argocd/applications/mcp-server-app.yaml uses:
-        valueFiles: [values.yaml] instead of values-production.yaml
+        valueFiles: [values.yaml] instead of values-prod.yaml
 
         Impact: Production uses generic values instead of prod-specific config.
-        Solution: Use values-production.yaml or document inline overrides.
+        Solution: Use values-prod.yaml or document inline overrides.
 
         Validates: deployments/argocd/applications/mcp-server-app.yaml:30
         """
@@ -606,7 +606,7 @@ class TestLowPriorityIssues:
         value_files = helm_config.get("valueFiles", [])
 
         # If using generic values.yaml, should have inline values or comment
-        if "values.yaml" in value_files and "values-production.yaml" not in value_files:
+        if "values.yaml" in value_files and "values-prod.yaml" not in value_files:
             # Check if there are inline value overrides
             inline_values = helm_config.get("values")
 
@@ -614,7 +614,7 @@ class TestLowPriorityIssues:
                 pytest.fail(
                     "ArgoCD application uses generic values.yaml without inline overrides.\n\n"
                     "Current: valueFiles: [values.yaml]\n"
-                    "Recommended: valueFiles: [values-production.yaml]\n\n"
+                    "Recommended: valueFiles: [values-prod.yaml]\n\n"
                     "Fix: Use environment-specific values file or add inline value overrides"
                 )
 
@@ -682,8 +682,8 @@ class TestRedisSSLConsistency:
         """
         configs_to_check = [
             ("deployments/base/configmap.yaml", "base"),
-            ("deployments/overlays/production/configmap-patch.yaml", "production"),
-            ("deployments/overlays/preview-gke/configmap-patch.yaml", "preview-gke"),
+            ("deployments/overlays/prod/configmap-patch.yaml", "production"),
+            ("deployments/overlays/stg-gke/configmap-patch.yaml", "stg-gke"),
         ]
 
         redis_configs = {}

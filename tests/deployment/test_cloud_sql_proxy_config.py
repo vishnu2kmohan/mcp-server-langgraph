@@ -22,7 +22,7 @@ import yaml
 pytestmark = [pytest.mark.unit, pytest.mark.validation]
 # Test data
 OVERLAYS_DIR = Path(__file__).parent.parent.parent / "deployments" / "overlays"
-STAGING_GKE_DIR = OVERLAYS_DIR / "preview-gke"
+STAGING_GKE_DIR = OVERLAYS_DIR / "stg-gke"
 
 # Files that should contain Cloud SQL Proxy sidecars
 PROXY_PATCH_FILES = [

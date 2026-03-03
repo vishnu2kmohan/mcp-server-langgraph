@@ -13,7 +13,7 @@ contentType: "how-to"
 Before deploying infrastructure with Terraform, you need to create a **remote backend** to store Terraform state files. This guide walks through setting up Google Cloud Storage (GCS) buckets for secure, versioned, and collaborative Terraform state management.
 
 <Info>
-  This is a **one-time setup** per GCP project. Once complete, all Terraform environments (dev, staging, prod) will use these buckets.
+  This is a **one-time setup** per GCP project. Once complete, all Terraform environments (dev, stg, prod) will use these buckets.
 </Info>
 
 <CardGroup cols={2}>
@@ -294,12 +294,12 @@ After backend setup, configure each environment to use the state bucket:
     ```
   </Tab>
 
-  <Tab title="Staging">
-    ```hcl terraform/environments/gcp-staging/backend.tf
+  <Tab title="STG">
+    ```hcl terraform/environments/gcp-stg/backend.tf
     terraform {
       backend "gcs" {
         bucket = "mcp-langgraph-terraform-state"
-        prefix = "environments/staging"
+        prefix = "environments/stg"
       }
     }
     ```
@@ -334,7 +334,7 @@ After backend setup, configure each environment to use the state bucket:
     ├── environments/
     │   ├── development/
     │   │   └── default.tfstate
-    │   ├── staging/
+    │   ├── stg/
     │   │   └── default.tfstate
     │   └── production/
     │       └── default.tfstate
@@ -359,7 +359,7 @@ After backend setup, configure each environment to use the state bucket:
     mcp-langgraph-dev-terraform-state/
     └── default.tfstate
 
-    mcp-langgraph-staging-terraform-state/
+    mcp-langgraph-stg-terraform-state/
     └── default.tfstate
 
     mcp-langgraph-prod-terraform-state/
@@ -682,7 +682,7 @@ For CI/CD pipelines, use a dedicated service account:
     All 6 production-ready modules
   </Card>
   <Card title="Multi-Environment" icon="server" href="/deployment/infrastructure/multi-environment">
-    Dev, staging, prod configurations
+    Dev, stg, prod configurations
   </Card>
   <Card title="GKE Production" icon="kubernetes" href="/deployment/kubernetes/gke-production">
     Deploy infrastructure to production

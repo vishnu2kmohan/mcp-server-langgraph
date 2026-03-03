@@ -134,7 +134,7 @@ module "github_actions_wif" {
       artifact_registry_repositories = [
         {
           location   = "us-central1"
-          repository = "mcp-production"
+          repository = "mcp-prod"
           role       = "roles/artifactregistry.writer"
         }
       ]
@@ -202,7 +202,7 @@ Once the module is applied, add these secrets to your GitHub repository:
 
 1. **GCP_WIF_PROVIDER**: The Workload Identity Provider name (from `workload_identity_provider_name` output)
 2. **GCP_STAGING_SA_EMAIL**: The staging service account email (from `service_account_emails["staging"]` output)
-3. **GCP_PRODUCTION_SA_EMAIL**: The production service account email (from `service_account_emails["production"]` output)
+3. **GCP_PROD_SA_EMAIL**: The production service account email (from `service_account_emails["production"]` output)
 4. **GCP_TERRAFORM_SA_EMAIL**: The terraform service account email (from `service_account_emails["terraform"]` output)
 
 ### GitHub Actions Workflow Example

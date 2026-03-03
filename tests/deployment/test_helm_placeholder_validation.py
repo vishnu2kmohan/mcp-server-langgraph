@@ -79,10 +79,10 @@ class TestHelmPlaceholderValidation:
         2. Use environment variable substitution
         3. Be documented as templates requiring replacement
         """
-        staging_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-staging.yaml"
+        staging_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-stg.yaml"
 
         if not staging_values.exists():
-            pytest.skip("Staging values file not found")
+            pytest.skip("STG values file not found")
 
         result = find_placeholders_in_file(staging_values)
         placeholders = result["placeholders"]
@@ -110,10 +110,10 @@ class TestHelmPlaceholderValidation:
         2. Environment variable substitution (${{ vars.GCP_PROJECT_ID }})
         3. Secret references
         """
-        production_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-production.yaml"
+        production_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-prod.yaml"
 
         if not production_values.exists():
-            pytest.skip("Production values file not found")
+            pytest.skip("Prod values file not found")
 
         result = find_placeholders_in_file(production_values)
         placeholders = result["placeholders"]
@@ -164,7 +164,7 @@ class TestHelmPlaceholderValidation:
         """
         Test that .local.yaml pattern is documented for actual deployments.
 
-        Users should create values-staging.local.yaml with real values,
+        Users should create values-stg.local.yaml with real values,
         and .local.yaml files should be in .gitignore.
         """
         gitignore_path = Path(__file__).parent.parent.parent / ".gitignore"

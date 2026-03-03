@@ -21,7 +21,7 @@ resource "aws_secretsmanager_secret" "secrets" {
 
   name                    = each.key
   description             = each.value.description
-  kms_key_id              = var.kms_key_id              # CMK encryption (production) or null (dev/staging)
+  kms_key_id              = var.kms_key_id              # CMK encryption (prod) or null (dev/stg)
   recovery_window_in_days = var.recovery_window_in_days # Secret recovery window (default: 30 days)
 
   tags = merge(

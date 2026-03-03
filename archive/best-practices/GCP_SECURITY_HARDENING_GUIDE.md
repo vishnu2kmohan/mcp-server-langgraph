@@ -203,14 +203,14 @@ master_authorized_networks_cidrs = [
 
 **Verify**:
 ```bash
-kubectl get networkpolicies -n mcp-production
+kubectl get networkpolicies -n mcp-prod
 ```
 
 **Test**:
 ```bash
 # Try to access pod from unauthorized namespace (should fail)
 kubectl run test --image=busybox -n default -- \
-  wget -qO- http://production-mcp-server-langgraph.mcp-production:8000
+  wget -qO- http://prod-mcp-server-langgraph.mcp-prod:8000
 ```
 
 ### 3.4 Cloud Armor (DDoS Protection)
@@ -357,7 +357,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: developer
-  namespace: mcp-production
+  namespace: mcp-prod
 rules:
 - apiGroups: [""]
   resources: ["pods", "services"]
@@ -370,7 +370,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: developer-binding
-  namespace: mcp-production
+  namespace: mcp-prod
 subjects:
 - kind: User
   name: developer@company.com
@@ -410,7 +410,7 @@ defaultAdmissionRule:
 **Test Enforcement**:
 ```bash
 # Try unsigned image (should block)
-kubectl run test --image=nginx:latest -n mcp-production
+kubectl run test --image=nginx:latest -n mcp-prod
 
 # Expected error:
 # Error: admission webhook denied the request
@@ -449,7 +449,7 @@ gcloud container images describe IMAGE_URL \
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mcp-production
+  name: mcp-prod
   labels:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
@@ -466,7 +466,7 @@ metadata:
 
 **Verify**:
 ```bash
-kubectl label namespace mcp-production pod-security.kubernetes.io/enforce=restricted
+kubectl label namespace mcp-prod pod-security.kubernetes.io/enforce=restricted
 ```
 
 ---
@@ -489,7 +489,7 @@ POLICY_ID=$(gcloud access-context-manager policies list \
   --format="value(name)")
 
 # 3. Create service perimeter
-gcloud access-context-manager perimeters create mcp-production \
+gcloud access-context-manager perimeters create mcp-prod \
   --policy=$POLICY_ID \
   --title="MCP Production Perimeter" \
   --resources=projects/PROJECT_NUMBER \
@@ -549,7 +549,7 @@ spec:
     kinds:
       - apiGroups: ["apps"]
         kinds: ["Deployment"]
-    namespaces: ["mcp-production"]
+    namespaces: ["mcp-prod"]
   parameters:
     labels: ["environment", "team", "application"]
 ```
@@ -633,7 +633,7 @@ kubectl apply -f https://github.com/GoogleCloudPlatform/gke-policy-library/relea
 trivy config terraform/
 
 # 2. Scan Kubernetes manifests
-trivy config deployments/overlays/production-gke/
+trivy config deployments/overlays/prod-gke/
 
 # 3. Scan container images
 trivy image IMAGE_URL
@@ -667,7 +667,7 @@ kubectl logs -l app=kube-bench
 **2. Containment**:
 ```bash
 # Isolate affected pods
-kubectl label pod SUSPICIOUS_POD quarantine=true -n mcp-production
+kubectl label pod SUSPICIOUS_POD quarantine=true -n mcp-prod
 
 # Network policy to isolate
 kubectl apply -f - <<EOF
@@ -675,7 +675,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: isolate-suspicious-pod
-  namespace: mcp-production
+  namespace: mcp-prod
 spec:
   podSelector:
     matchLabels:
@@ -690,7 +690,7 @@ EOF
 **3. Investigation**:
 ```bash
 # Export pod logs
-kubectl logs POD_NAME -n mcp-production --all-containers > incident-logs.txt
+kubectl logs POD_NAME -n mcp-prod --all-containers > incident-logs.txt
 
 # Check audit logs
 gcloud logging read \

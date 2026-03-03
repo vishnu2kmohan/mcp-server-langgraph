@@ -140,7 +140,7 @@ terraform/
 
 **Kubernetes** (10 files, ~1,500 lines):
 ```
-deployments/overlays/production-gke/
+deployments/overlays/prod-gke/
 ├── kustomization.yaml
 ├── namespace.yaml
 ├── deployment-patch.yaml
@@ -157,7 +157,7 @@ deployments/overlays/production-gke/
 **Automation** (9 files, ~2,500 lines):
 ```
 ├── .github/workflows/
-│   ├── deploy-production-gke.yaml (400 lines)
+│   ├── deploy-prod-gke.yaml (400 lines)
 │   ├── gcp-compliance-scan.yaml (350 lines)
 │   └── gcp-drift-detection.yaml (300 lines)
 ├── deployments/argocd/ (3 files, 600 lines)
@@ -258,7 +258,7 @@ All critical components complete:
 ```bash
 cd terraform/backend-setup-gcp && terraform apply
 cd ../environments/gcp-prod && terraform apply
-kubectl apply -k ../../deployments/overlays/production-gke
+kubectl apply -k ../../deployments/overlays/prod-gke
 ```
 
 **Guided Deploy**: Follow `deployments/GKE_DEPLOYMENT_GUIDE.md` or `docs/deployment/kubernetes/gke-production.mdx`

@@ -13,7 +13,7 @@ contentType: "explanation"
 This checklist covers all critical security areas that should be audited before and during production deployment. Use this as a systematic guide to ensure your MCP Server deployment meets security best practices.
 
 <Warning>
-**Do not deploy to production until all critical items are addressed.** High and critical items must be resolved; medium items should be planned for resolution.
+**Do not deploy to prod until all critical items are addressed.** High and critical items must be resolved; medium items should be planned for resolution.
 </Warning>
 
 ### Authentication & Authorization
@@ -462,7 +462,7 @@ This checklist covers all critical security areas that should be audited before 
     # List backups
     velero backup get
 
-    # Test restore (in staging)
+    # Test restore (in stg)
     velero restore create --from-backup backup-name
 
     # Check backup encryption
@@ -690,7 +690,7 @@ trivy image mcp-server-langgraph:latest
 
 ## 4. Check Kubernetes configuration
 echo "Checking Kubernetes configs..."
-kubectl kustomize overlays/production | kubesec scan -
+kubectl kustomize overlays/prod | kubesec scan -
 
 ## 5. Network policy check
 echo "Verifying network policies..."

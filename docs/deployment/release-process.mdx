@@ -218,11 +218,11 @@ helm upgrade --install mcp-server-langgraph \
 ## Development
 kubectl apply -k deployments/kustomize/overlays/dev
 
-## Staging
-kubectl apply -k deployments/kustomize/overlays/staging
+## STG
+kubectl apply -k deployments/kustomize/overlays/stg
 
 ## Production
-kubectl apply -k deployments/kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/prod
 ```
 
 ### Release Checklist
@@ -256,9 +256,9 @@ kubectl apply -k deployments/kustomize/overlays/production
 
 #### After Release
 
-- [ ] Deploy to staging environment
+- [ ] Deploy to stg environment
 - [ ] Run smoke tests
-- [ ] Deploy to production (if applicable)
+- [ ] Deploy to prod (if applicable)
 - [ ] Announce release (Slack, Discord, Twitter, etc.)
 - [ ] Update documentation site (if hosted separately)
 
@@ -373,42 +373,42 @@ git push origin main
 ```
 ### Continuous Deployment
 
-For automated deployments to staging/production:
+For automated deployments to stg/production:
 
 1. Create environment-specific workflows in `.github/workflows/`
 2. Use deployment environments in GitHub
 3. Add approval gates for production
 4. Integrate with ArgoCD or Flux for GitOps
 
-**Example**: `.github/workflows/deploy-staging.yaml`
+**Example**: `.github/workflows/deploy-stg.yaml`
 
 ```yaml
-name: Deploy to Staging
+name: Deploy to STG
 
 on:
   release:
     types: [published]
 
 jobs:
-  deploy-staging:
+  deploy-stg:
     runs-on: ubuntu-latest
-    environment: staging
+    environment: stg
     steps:
       - uses: actions/checkout@v5
-      - name: Deploy to staging
+      - name: Deploy to stg
         run: |
-          kubectl apply -k deployments/kustomize/overlays/staging
+          kubectl apply -k deployments/kustomize/overlays/stg
 ```
 
 ### Best Practices
 
-1. **Always test releases in staging first**
+1. **Always test releases in stg first**
 2. **Use pre-release versions for testing** (beta, rc)
 3. **Keep CHANGELOG.md updated** with each release
 4. **Tag commits after merging to main**, not on feature branches
 5. **Use semantic versioning consistently**
 6. **Document breaking changes prominently**
-7. **Automate deployment to staging**, manual to production
+7. **Automate deployment to stg**, manual to production
 8. **Monitor after release** (Grafana dashboards)
 
 ### Security

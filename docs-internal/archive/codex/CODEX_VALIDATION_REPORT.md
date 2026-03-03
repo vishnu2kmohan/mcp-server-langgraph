@@ -42,7 +42,7 @@ This report documents the comprehensive validation and resolution of deployment 
 ### Critical Issues (P0) - Production Blockers
 
 #### 1. Redis SSL Configuration Mismatch ✅
-**Location**: `deployments/overlays/production/configmap-patch.yaml:29`
+**Location**: `deployments/overlays/prod/configmap-patch.yaml:29`
 
 **Issue**:
 - ConfigMap enabled `redis_ssl: "true"` while using non-TLS `redis://` URLs
@@ -57,7 +57,7 @@ This report documents the comprehensive validation and resolution of deployment 
 ---
 
 #### 2. Environment Variable Casing Inconsistency ✅
-**Location**: `deployments/overlays/preview-gke/deployment-patch.yaml:78,83`
+**Location**: `deployments/overlays/stg-gke/deployment-patch.yaml:78,83`
 
 **Issue**:
 - Used lowercase `redis_url` and `checkpoint_redis_url`
@@ -74,8 +74,8 @@ This report documents the comprehensive validation and resolution of deployment 
 
 #### 3. Hard-coded Internal IP Addresses ✅
 **Locations**:
-- `deployments/overlays/preview-gke/redis-session-endpoints.yaml:10`
-- `deployments/overlays/preview-gke/configmap-patch.yaml:24,33,64`
+- `deployments/overlays/stg-gke/redis-session-endpoints.yaml:10`
+- `deployments/overlays/stg-gke/configmap-patch.yaml:24,33,64`
 
 **Issue**:
 - Hard-coded IPs: 10.138.129.37, 10.110.0.3, 10.110.1.4
@@ -92,14 +92,14 @@ This report documents the comprehensive validation and resolution of deployment 
 
 **Test Coverage**: `test_no_hardcoded_internal_ips`
 
-**Documentation**: `deployments/overlays/preview-gke/DNS_SETUP.md`
+**Documentation**: `deployments/overlays/stg-gke/DNS_SETUP.md`
 
 ---
 
 #### 4. Unsubstituted Kustomize Variables ✅
 **Locations**:
-- `deployments/overlays/production-gke/kustomization.yaml:76`
-- `deployments/overlays/production-gke/otel-collector-configmap-patch.yaml:63,75`
+- `deployments/overlays/prod-gke/kustomization.yaml:76`
+- `deployments/overlays/prod-gke/otel-collector-configmap-patch.yaml:63,75`
 
 **Issue**:
 - `$(GCP_PROJECT_ID)` left unsubstituted in image names and configs
@@ -108,18 +108,18 @@ This report documents the comprehensive validation and resolution of deployment 
 
 **Fix**:
 - Replaced with `PLACEHOLDER_GCP_PROJECT_ID` + clear documentation
-- Created `values-production-gke.yaml` for Helm-based templating
-- Added `production-gke/README.md` documenting migration to Helm
+- Created `values-prod-gke.yaml` for Helm-based templating
+- Added `prod-gke/README.md` documenting migration to Helm
 - Helm approach provides proper variable substitution
 
 **Test Coverage**: `test_no_unsubstituted_kustomize_variables`
 
-**Documentation**: `deployments/overlays/production-gke/README.md`
+**Documentation**: `deployments/overlays/prod-gke/README.md`
 
 ---
 
 #### 5. Hard-coded GCP Project ID ✅
-**Location**: `deployments/overlays/production-gke/serviceaccount-patch.yaml:8`
+**Location**: `deployments/overlays/prod-gke/serviceaccount-patch.yaml:8`
 
 **Issue**:
 - Hard-coded `my-gcp-project` in Workload Identity annotation
@@ -134,7 +134,7 @@ This report documents the comprehensive validation and resolution of deployment 
 ---
 
 #### 6. Additional Placeholder Values in Production ✅
-**Location**: `deployments/overlays/production-gke/configmap-patch.yaml:60`
+**Location**: `deployments/overlays/prod-gke/configmap-patch.yaml:60`
 
 **Issue**:
 - `YOUR_PROJECT_ID` placeholder remained in production config
@@ -187,7 +187,7 @@ This report documents the comprehensive validation and resolution of deployment 
 ### Additional Issues Discovered
 
 #### 9. Kustomize Service ID Conflict ✅
-**Location**: `deployments/overlays/preview-gke/`
+**Location**: `deployments/overlays/stg-gke/`
 
 **Issue**:
 - `redis-session-endpoints.yaml` created duplicate Service resource
@@ -220,8 +220,8 @@ This report documents the comprehensive validation and resolution of deployment 
 
 #### 11. Helm Values Placeholder Issues ✅
 **Locations**:
-- `deployments/helm/values-production.yaml:87,139`
-- `deployments/helm/values-staging.yaml:37,51,65,108`
+- `deployments/helm/values-prod.yaml:87,139`
+- `deployments/helm/values-stg.yaml:37,51,65,108`
 
 **Issues**:
 - `auth.example.com` in production Keycloak URL
@@ -242,7 +242,7 @@ This report documents the comprehensive validation and resolution of deployment 
 #### 12. Missing Namespace Resources in Overlays ✅
 **Locations**:
 - `deployments/overlays/dev/kustomization.yaml`
-- `deployments/overlays/production/kustomization.yaml`
+- `deployments/overlays/prod/kustomization.yaml`
 - `deployments/overlays/staging/kustomization.yaml`
 
 **Issue**:
@@ -261,8 +261,8 @@ This report documents the comprehensive validation and resolution of deployment 
 
 #### 13. Config Vars Placeholder Issues ✅
 **Locations**:
-- `deployments/overlays/preview-gke/config-vars.yaml:14`
-- `deployments/overlays/production-gke/config-vars.yaml:14`
+- `deployments/overlays/stg-gke/config-vars.yaml:14`
+- `deployments/overlays/prod-gke/config-vars.yaml:14`
 
 **Issue**:
 - `example.com` in DOMAIN configuration variables
@@ -322,19 +322,19 @@ $ python -m pytest tests/deployment/test_codex_findings_validation.py \
    - 12 tests covering all critical, medium, and low priority issues
    - TDD approach with clear test descriptions
 
-2. **`deployments/helm/values-production-gke.yaml`** (173 lines)
+2. **`deployments/helm/values-prod-gke.yaml`** (173 lines)
    - Production-ready Helm values for GKE
    - Proper templating with project ID variables
    - External Secrets integration
    - Comprehensive configuration
 
-3. **`deployments/overlays/production-gke/README.md`** (198 lines)
+3. **`deployments/overlays/prod-gke/README.md`** (198 lines)
    - Helm migration guide
    - Kustomize limitations documentation
    - Troubleshooting guide
    - Step-by-step migration instructions
 
-4. **`deployments/overlays/preview-gke/DNS_SETUP.md`** (268 lines)
+4. **`deployments/overlays/stg-gke/DNS_SETUP.md`** (268 lines)
    - Cloud DNS setup instructions
    - gcloud CLI commands
    - Terraform examples
@@ -346,28 +346,28 @@ $ python -m pytest tests/deployment/test_codex_findings_validation.py \
 
 1. `deployments/README.md` - Updated directory structure
 2. `deployments/base/serviceaccount-roles.yaml` - Added main app RBAC
-3. `deployments/overlays/production/configmap-patch.yaml` - Fixed Redis SSL
-4. `deployments/overlays/production/kustomization.yaml` - Added namespace patch
-5. `deployments/overlays/production-gke/kustomization.yaml` - Helm migration notes
-6. `deployments/overlays/production-gke/configmap-patch.yaml` - Fixed placeholders
-7. `deployments/overlays/production-gke/otel-collector-configmap-patch.yaml` - Fixed variables
-8. `deployments/overlays/production-gke/serviceaccount-patch.yaml` - Fixed project ID
-9. `deployments/overlays/production-gke/config-vars.yaml` - Fixed domain placeholder
+3. `deployments/overlays/prod/configmap-patch.yaml` - Fixed Redis SSL
+4. `deployments/overlays/prod/kustomization.yaml` - Added namespace patch
+5. `deployments/overlays/prod-gke/kustomization.yaml` - Helm migration notes
+6. `deployments/overlays/prod-gke/configmap-patch.yaml` - Fixed placeholders
+7. `deployments/overlays/prod-gke/otel-collector-configmap-patch.yaml` - Fixed variables
+8. `deployments/overlays/prod-gke/serviceaccount-patch.yaml` - Fixed project ID
+9. `deployments/overlays/prod-gke/config-vars.yaml` - Fixed domain placeholder
 10. `deployments/overlays/staging/kustomization.yaml` - Added namespace resource
-11. `deployments/overlays/preview-gke/configmap-patch.yaml` - Cloud DNS names
-12. `deployments/overlays/preview-gke/deployment-patch.yaml` - Fixed env var casing
-13. `deployments/overlays/preview-gke/kustomization.yaml` - Fixed Service conflict
-14. `deployments/overlays/preview-gke/redis-session-service-patch.yaml` - ExternalName with DNS
-15. `deployments/overlays/preview-gke/config-vars.yaml` - Fixed domain placeholder
+11. `deployments/overlays/stg-gke/configmap-patch.yaml` - Cloud DNS names
+12. `deployments/overlays/stg-gke/deployment-patch.yaml` - Fixed env var casing
+13. `deployments/overlays/stg-gke/kustomization.yaml` - Fixed Service conflict
+14. `deployments/overlays/stg-gke/redis-session-service-patch.yaml` - ExternalName with DNS
+15. `deployments/overlays/stg-gke/config-vars.yaml` - Fixed domain placeholder
 16. `deployments/overlays/dev/kustomization.yaml` - Added namespace resource
-17. `deployments/helm/values-production.yaml` - Fixed placeholders
-18. `deployments/helm/values-staging.yaml` - Fixed placeholders
+17. `deployments/helm/values-prod.yaml` - Fixed placeholders
+18. `deployments/helm/values-stg.yaml` - Fixed placeholders
 19. `tests/deployment/pytest.ini` - Added missing markers
 20. `tests/deployment/test_helm_placeholder_validation.py` - Fixed test bug
 
 ### Deleted (1 file)
 
-1. `deployments/overlays/preview-gke/redis-session-endpoints.yaml` - Obsolete (superseded by patch)
+1. `deployments/overlays/stg-gke/redis-session-endpoints.yaml` - Obsolete (superseded by patch)
 
 ---
 
@@ -449,7 +449,7 @@ All deployment configurations are now:
 ### Migration Recommendations
 
 1. **For New Deployments**: Use Helm chart with environment-specific values files
-2. **For Existing Kustomize Deployments**: Follow migration guide in production-gke/README.md
+2. **For Existing Kustomize Deployments**: Follow migration guide in prod-gke/README.md
 3. **For Staging GKE**: Configure Cloud DNS before deploying (see DNS_SETUP.md)
 
 ---
@@ -479,8 +479,8 @@ The deployment configurations are now **production-ready** with proper security 
 
 **Next Steps**:
 1. ✅ All changes committed to origin/main
-2. Configure Cloud DNS for preview-gke per DNS_SETUP.md
-3. Consider migrating production-gke to Helm for better templating
+2. Configure Cloud DNS for stg-gke per DNS_SETUP.md
+3. Consider migrating prod-gke to Helm for better templating
 4. Review and merge changes to production branch
 
 ---

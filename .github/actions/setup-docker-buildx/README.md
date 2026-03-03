@@ -108,8 +108,8 @@ jobs:
 This composite action is used in:
 - `.github/workflows/ci.yaml` - CI/CD pipeline builds
 - `.github/workflows/release.yaml` - Release multiplatform builds
-- `.github/workflows/deploy-preview-gke.yaml` - Staging deployments
-- `.github/workflows/deploy-production-gke.yaml` - Production deployments
+- `.github/workflows/deploy-stg-gke.yaml` - Staging deployments
+- `.github/workflows/deploy-prod-gke.yaml` - Production deployments
 
 ## Maintenance
 

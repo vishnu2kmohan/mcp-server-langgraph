@@ -85,7 +85,7 @@ services:
       - mcp-network
 
   # Redis (sessions + checkpoints)
-  # Redis 7.2 to match Memorystore (terraform/environments/gcp-preview/main.tf: redis_version = "REDIS_7_2")
+  # Redis 7.2 to match Memorystore (terraform/environments/gcp-stg/main.tf: redis_version = "REDIS_7_2")
   redis:
     image: redis:7.2-alpine
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru

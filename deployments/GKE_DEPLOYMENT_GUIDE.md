@@ -336,7 +336,7 @@ terraform apply tfplan
 Apply complete! Resources: 25+ added, 0 changed, 0 destroyed.
 
 Outputs:
-cluster_name = "production-mcp-server-langgraph-gke"
+cluster_name = "prod-mcp-server-langgraph-gke"
 kubectl_config_command = "gcloud container clusters get-credentials..."
 cloudsql_connection_name = "PROJECT_ID:us-central1:mcp-prod-postgres"
 redis_host = "10.x.x.x"
@@ -378,7 +378,7 @@ kube-system       Active   5m
 PROJECT_ID="YOUR_PROJECT_ID"
 
 # Create secrets
-gcloud secrets create mcp-production-secrets \
+gcloud secrets create mcp-prod-secrets \
   --replication-policy="automatic" \
   --project="$PROJECT_ID"
 
@@ -404,7 +404,7 @@ cat > /tmp/secrets.json <<EOF
 EOF
 
 # Upload secrets
-gcloud secrets versions add mcp-production-secrets \
+gcloud secrets versions add mcp-prod-secrets \
   --data-file=/tmp/secrets.json \
   --project="$PROJECT_ID"
 
@@ -438,7 +438,7 @@ kubectl wait --for=condition=ready pod \
 ### Step 3.3: Deploy Application
 
 ```bash
-cd deployments/overlays/production-gke
+cd deployments/overlays/prod-gke
 
 # Update kustomization.yaml with your project ID
 sed -i "s/PROJECT_ID/$PROJECT_ID/g" kustomization.yaml
@@ -451,38 +451,38 @@ sed -i "s/YOUR_PROJECT_ID/$PROJECT_ID/g" configmap-patch.yaml
 kubectl apply -k .
 
 # Watch rollout
-kubectl rollout status deployment/production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl rollout status deployment/prod-mcp-server-langgraph \
+  -n mcp-prod \
   --timeout=10m
 ```
 
 **Expected Output**:
 ```
-namespace/mcp-production created
-serviceaccount/production-mcp-server-langgraph created
-deployment.apps/production-mcp-server-langgraph created
-service/production-mcp-server-langgraph created
-horizontalpodautoscaler.autoscaling/production-mcp-server-langgraph created
+namespace/mcp-prod created
+serviceaccount/prod-mcp-server-langgraph created
+deployment.apps/prod-mcp-server-langgraph created
+service/prod-mcp-server-langgraph created
+horizontalpodautoscaler.autoscaling/prod-mcp-server-langgraph created
 poddisruptionbudget.policy/mcp-server-langgraph-pdb created
 
-Waiting for deployment "production-mcp-server-langgraph" rollout to finish...
-deployment "production-mcp-server-langgraph" successfully rolled out
+Waiting for deployment "prod-mcp-server-langgraph" rollout to finish...
+deployment "prod-mcp-server-langgraph" successfully rolled out
 ```
 
 ### Step 3.4: Verify Deployment
 
 ```bash
 # Check pods
-kubectl get pods -n mcp-production
+kubectl get pods -n mcp-prod
 
 # Check services
-kubectl get svc -n mcp-production
+kubectl get svc -n mcp-prod
 
 # View logs
-kubectl logs -n mcp-production -l app=mcp-server-langgraph --tail=50
+kubectl logs -n mcp-prod -l app=mcp-server-langgraph --tail=50
 
 # Test health endpoint
-kubectl port-forward -n mcp-production svc/production-mcp-server-langgraph 8000:8000 &
+kubectl port-forward -n mcp-prod svc/prod-mcp-server-langgraph 8000:8000 &
 curl http://localhost:8000/health/live
 curl http://localhost:8000/health/ready
 ```
@@ -519,7 +519,7 @@ terraform apply -auto-approve
 
 ```bash
 # Sign production images
-IMAGE_URL="us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:2.8.0"
+IMAGE_URL="us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:2.8.0"
 
 ./deployments/security/binary-authorization/sign-image.sh \
   PROJECT_ID \
@@ -533,7 +533,7 @@ Network policies are already included in the production overlay (`network-policy
 
 Verify:
 ```bash
-kubectl get networkpolicies -n mcp-production
+kubectl get networkpolicies -n mcp-prod
 ```
 
 ### Step 4.4: Enable Private Endpoint (Optional - Maximum Security)
@@ -553,7 +553,7 @@ terraform apply -auto-approve
 Access cluster:
 ```bash
 # From within VPC (bastion host or Cloud Shell)
-gcloud container clusters get-credentials production-mcp-server-langgraph-gke \
+gcloud container clusters get-credentials prod-mcp-server-langgraph-gke \
   --region=us-central1 \
   --internal-ip
 ```
@@ -569,7 +569,7 @@ gcloud container clusters get-credentials production-mcp-server-langgraph-gke \
 ```bash
 # Check logs are flowing
 gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production"' \
+  'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-prod"' \
   --limit=20 \
   --project=PROJECT_ID
 ```
@@ -579,7 +579,7 @@ gcloud logging read \
 ```bash
 # List metrics
 gcloud monitoring time-series list \
-  --filter='resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production"' \
+  --filter='resource.type="k8s_container" AND resource.labels.namespace_name="mcp-prod"' \
   --project=PROJECT_ID \
   --format=json \
   --limit=5
@@ -603,13 +603,13 @@ Open dashboards:
 
 ```bash
 # Get service endpoint (if LoadBalancer)
-SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph \
-  -n mcp-production \
+SERVICE_IP=$(kubectl get svc prod-mcp-server-langgraph \
+  -n mcp-prod \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
 # Or port-forward
-kubectl port-forward -n mcp-production \
-  svc/production-mcp-server-langgraph 8000:8000 &
+kubectl port-forward -n mcp-prod \
+  svc/prod-mcp-server-langgraph 8000:8000 &
 
 # Test endpoints
 curl http://localhost:8000/health/live     # Should return 200
@@ -621,8 +621,8 @@ curl http://localhost:8000/health/startup  # Should return 200
 
 ```bash
 # Test Cloud SQL connection
-kubectl exec -it -n mcp-production \
-  $(kubectl get pod -n mcp-production -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n mcp-prod \
+  $(kubectl get pod -n mcp-prod -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
   -c cloud-sql-proxy \
   -- wget -qO- http://localhost:9801/readiness
 
@@ -633,8 +633,8 @@ kubectl exec -it -n mcp-production \
 
 ```bash
 # Check Redis from application pod
-kubectl exec -it -n mcp-production \
-  $(kubectl get pod -n mcp-production -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n mcp-prod \
+  $(kubectl get pod -n mcp-prod -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
   -- sh -c 'echo PING | nc $REDIS_HOST $REDIS_PORT'
 
 # Should return: +PONG
@@ -644,8 +644,8 @@ kubectl exec -it -n mcp-production \
 
 ```bash
 # Verify service account annotation
-kubectl get sa production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl get sa prod-mcp-server-langgraph \
+  -n mcp-prod \
   -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
 
 # Should show: mcp-prod-app-sa@PROJECT_ID.iam.gserviceaccount.com
@@ -661,7 +661,7 @@ kubectl get sa production-mcp-server-langgraph \
 
 **Diagnosis**:
 ```bash
-kubectl describe pod POD_NAME -n mcp-production
+kubectl describe pod POD_NAME -n mcp-prod
 ```
 
 **Common Causes**:
@@ -671,7 +671,7 @@ kubectl describe pod POD_NAME -n mcp-production
 
 2. **Image pull errors**: Can't pull from Artifact Registry
    - Solution: Verify Workload Identity permissions
-   - Check: `kubectl get events -n mcp-production`
+   - Check: `kubectl get events -n mcp-prod`
 
 3. **Binary Authorization blocking**: Image not signed
    - Solution: Sign the image
@@ -684,7 +684,7 @@ kubectl describe pod POD_NAME -n mcp-production
 **Diagnosis**:
 ```bash
 # Check Cloud SQL Proxy logs
-kubectl logs -n mcp-production POD_NAME -c cloud-sql-proxy
+kubectl logs -n mcp-prod POD_NAME -c cloud-sql-proxy
 
 # Check private service connection
 gcloud services vpc-peerings list --network=mcp-prod-vpc
@@ -703,7 +703,7 @@ gcloud services vpc-peerings list --network=mcp-prod-vpc
 **Diagnosis**:
 ```bash
 # Check service account annotation
-kubectl get sa -n mcp-production production-mcp-server-langgraph -o yaml
+kubectl get sa -n mcp-prod prod-mcp-server-langgraph -o yaml
 
 # Check IAM binding
 gcloud iam service-accounts get-iam-policy \
@@ -799,25 +799,25 @@ For issues or questions:
 
 ```bash
 # View all resources
-kubectl get all -n mcp-production
+kubectl get all -n mcp-prod
 
 # Scale deployment manually
-kubectl scale deployment production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl scale deployment prod-mcp-server-langgraph \
+  -n mcp-prod \
   --replicas=5
 
 # View resource usage
-kubectl top pods -n mcp-production
+kubectl top pods -n mcp-prod
 kubectl top nodes
 
 # Export configuration
-kubectl get deployment production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl get deployment prod-mcp-server-langgraph \
+  -n mcp-prod \
   -o yaml > deployment-backup.yaml
 
 # Rollback deployment
-kubectl rollout undo deployment/production-mcp-server-langgraph \
-  -n mcp-production
+kubectl rollout undo deployment/prod-mcp-server-langgraph \
+  -n mcp-prod
 ```
 
 ### B. Terraform Commands

@@ -167,19 +167,19 @@ echo "   # Get dev cluster credentials"
 echo "   gcloud container clusters get-credentials mcp-dev-gke --zone=us-central1-a"
 echo "   argocd cluster add gke_${PROJECT_ID}_us-central1-a_mcp-dev-gke --name=gcp-dev"
 echo
-echo "   # Get preview cluster credentials"
-echo "   gcloud container clusters get-credentials preview-mcp-server-langgraph-gke --region=us-central1"
-echo "   argocd cluster add gke_${PROJECT_ID}_us-central1_preview-mcp-server-langgraph-gke --name=gcp-preview"
+echo "   # Get stg cluster credentials"
+echo "   gcloud container clusters get-credentials stg-mcp-server-langgraph-gke --region=us-central1"
+echo "   argocd cluster add gke_${PROJECT_ID}_us-central1_stg-mcp-server-langgraph-gke --name=gcp-stg"
 echo
-echo "   # Get production cluster credentials"
-echo "   gcloud container clusters get-credentials production-mcp-server-langgraph-gke --region=us-central1"
-echo "   argocd cluster add gke_${PROJECT_ID}_us-central1_production-mcp-server-langgraph-gke --name=gcp-production"
+echo "   # Get prod cluster credentials"
+echo "   gcloud container clusters get-credentials prod-mcp-server-langgraph-gke --region=us-central1"
+echo "   argocd cluster add gke_${PROJECT_ID}_us-central1_prod-mcp-server-langgraph-gke --name=gcp-prod"
 echo
 echo "4. Apply application definitions:"
-echo "   kubectl apply -f deployments/argocd/gcp-production-app.yaml"
+echo "   kubectl apply -f deployments/argocd/gcp-prod-app.yaml"
 echo "   kubectl apply -f deployments/argocd/gcp-multi-cluster-setup.yaml"
 echo
 echo "5. Sync applications:"
-echo "   argocd app sync mcp-server-production-gke"
+echo "   argocd app sync mcp-server-prod-gke"
 echo
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

@@ -1,7 +1,7 @@
 # Preview GKE Infrastructure Remediation Plan
 
 **Created**: 2025-12-06
-**Based on**: 16 issues from teardown/bringup session (preview-teardown-bringup-issues.md)
+**Based on**: 16 issues from teardown/bringup session (stg-teardown-bringup-issues.md)
 **Methodology**: TDD, DRY, KISS, YAGNI, SOLID, 12-Factor, Cloud-Native
 
 ---
@@ -68,7 +68,7 @@ All fixes follow Test-Driven Development (TDD) with Terraform validation tests.
 Keep monitoring alerts disabled during initial deployment. Enable after metrics are populated (~30 min of cluster activity).
 
 ```hcl
-# terraform/environments/gcp-preview/main.tf
+# terraform/environments/gcp-stg/main.tf
 
 module "gke" {
   # ...
@@ -113,7 +113,7 @@ resource "google_monitoring_alert_policy" "pods_pending" {
 
 Create alerts in a separate Terraform workspace/directory that runs after initial infrastructure is deployed.
 
-**Current Status**: Option A implemented - GKE and Memorystore alerts disabled in `terraform/environments/gcp-preview/main.tf`. CloudSQL alerts remain enabled (CloudSQL metrics are available immediately).
+**Current Status**: Option A implemented - GKE and Memorystore alerts disabled in `terraform/environments/gcp-stg/main.tf`. CloudSQL alerts remain enabled (CloudSQL metrics are available immediately).
 
 **Validation**:
 ```bash
@@ -217,12 +217,12 @@ def test_wif_undelete_script_handles_missing_pool():
 **Enhancement**: Make runtime databases configurable and discoverable.
 
 ```hcl
-# terraform/environments/gcp-preview/terraform.tfvars
+# terraform/environments/gcp-stg/terraform.tfvars
 runtime_databases = ["keycloak", "openfga"]
 ```
 
 ```bash
-# scripts/gcp/teardown-preview-infrastructure.sh
+# scripts/gcp/teardown-stg-infrastructure.sh
 # Read from Terraform output instead of hardcoding
 RUNTIME_DATABASES=$(terraform output -json runtime_databases 2>/dev/null | jq -r '.[]' || echo "keycloak openfga")
 ```
@@ -240,7 +240,7 @@ RUNTIME_DATABASES=$(terraform output -json runtime_databases 2>/dev/null | jq -r
 **Enhancement**: Exponential backoff with configurable max retries.
 
 ```bash
-# scripts/gcp/teardown-preview-infrastructure.sh
+# scripts/gcp/teardown-stg-infrastructure.sh
 wait_for_service_networking_release() {
     local max_retries="${1:-5}"
     local base_delay="${2:-30}"
@@ -373,8 +373,8 @@ concurrency:
 
 set -euo pipefail
 
-NAMESPACE="${1:-preview-mcp-server-langgraph}"
-SECRET_NAME="${2:-preview-mcp-server-langgraph-secrets}"
+NAMESPACE="${1:-stg-mcp-server-langgraph}"
+SECRET_NAME="${2:-stg-mcp-server-langgraph-secrets}"
 
 REQUIRED_KEYS=(
     "redis-password"
@@ -453,7 +453,7 @@ output "resource_names" {
 ```
 
 ```bash
-# scripts/gcp/teardown-preview-infrastructure.sh
+# scripts/gcp/teardown-stg-infrastructure.sh
 # Read names from Terraform output
 eval "$(terraform output -json resource_names | jq -r 'to_entries | .[] | "\(.key | ascii_upcase)=\(.value)"')"
 ```
@@ -522,14 +522,14 @@ uv run --frozen pytest tests/terraform/ -v --tb=short
 ### Integration Tests
 ```bash
 # Validate Terraform plan
-cd terraform/environments/gcp-preview
+cd terraform/environments/gcp-stg
 terraform plan -detailed-exitcode
 ```
 
 ### Smoke Tests
 ```bash
 # After deployment
-./scripts/gcp/preview-smoke-tests.sh
+./scripts/gcp/stg-smoke-tests.sh
 ```
 
 ---

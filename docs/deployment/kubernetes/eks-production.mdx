@@ -277,7 +277,7 @@ flowchart TB
     application_service_account_namespace = "mcp-server-langgraph"
 
     tags = {
-      Environment = "production"
+      Environment = "prod"
       ManagedBy   = "terraform"
       Project     = "mcp-langgraph"
     }
@@ -433,7 +433,7 @@ flowchart TB
 
   <Step title="Deploy using Kustomize">
     ```bash
-    kubectl apply -k deployments/kubernetes/overlays/production-eks
+    kubectl apply -k deployments/kubernetes/overlays/prod-eks
     ```
 
     **Or manually**:
@@ -730,7 +730,7 @@ See [EKS Runbooks](/deployment/operations/eks-runbooks) for detailed troubleshoo
 | **Total** | | **~$823.66** |
 
 <Tip>
-**Cost Savings**: Enable spot instances, use single NAT gateway in dev/staging, right-size node types, enable Cluster Autoscaler.
+**Cost Savings**: Enable spot instances, use single NAT gateway in dev/stg, right-size node types, enable Cluster Autoscaler.
 </Tip>
 
 ---

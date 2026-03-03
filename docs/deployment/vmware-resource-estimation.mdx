@@ -198,7 +198,7 @@ Based on the Kubernetes manifests and Docker configurations, here are the resour
 - No Keycloak (use in-memory auth)
 - No autoscaling
 - Minimal monitoring
-- Suitable for developers and staging environments
+- Suitable for developers and stg environments
 
 #### Scenario 2: Production (Standard)
 
@@ -650,7 +650,7 @@ wrk -t12 -c400 -d30s --latency \
 
 #### Multi-Tenancy
 
-If running multiple environments (dev, staging, prod):
+If running multiple environments (dev, stg, prod):
 
 - **Option 1:** Separate clusters (better isolation, higher cost)
 - **Option 2:** Resource pools on same cluster (lower cost, shared resources)
@@ -700,7 +700,7 @@ For a typical production deployment:
 
 3. **Deploy Application:**
    - Use Helm charts: `helm install langgraph-agent ./deployments/helm/mcp-server-langgraph`
-   - Or Kustomize: `kubectl apply -k deployments/kubernetes/overlays/production`
+   - Or Kustomize: `kubectl apply -k deployments/kubernetes/overlays/prod`
 
 4. **Validate and Monitor:**
    - Run load tests

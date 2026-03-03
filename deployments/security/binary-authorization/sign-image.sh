@@ -10,7 +10,7 @@
 #   ./sign-image.sh PROJECT_ID ENVIRONMENT IMAGE_URL
 #
 # Example:
-#   ./sign-image.sh my-project production us-central1-docker.pkg.dev/my-project/mcp-production/app:v1.0.0
+#   ./sign-image.sh my-project production us-central1-docker.pkg.dev/my-project/mcp-prod/app:v1.0.0
 #
 # ==============================================================================
 
@@ -29,7 +29,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 # Validate arguments
 if [ $# -lt 3 ]; then
     log_error "Usage: $0 PROJECT_ID ENVIRONMENT IMAGE_URL"
-    log_error "Example: $0 my-project production us-central1-docker.pkg.dev/my-project/mcp-production/app:v1.0.0"
+    log_error "Example: $0 my-project production us-central1-docker.pkg.dev/my-project/mcp-prod/app:v1.0.0"
     exit 1
 fi
 
@@ -38,8 +38,8 @@ ENVIRONMENT="$2"
 IMAGE_URL="$3"
 
 # Validate environment
-if [[ ! "$ENVIRONMENT" =~ ^(development|staging|production)$ ]]; then
-    log_error "Environment must be: development, staging, or production"
+if [[ ! "$ENVIRONMENT" =~ ^(dev|stg|prod|development|staging|production)$ ]]; then
+    log_error "Environment must be: dev, stg, prod (or legacy: development, staging, production)"
     exit 1
 fi
 

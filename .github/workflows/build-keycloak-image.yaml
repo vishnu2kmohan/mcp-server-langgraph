@@ -13,7 +13,7 @@ name: Build Keycloak Optimized Image
 # - Weekly schedule (to get security updates)
 #
 # The image is pushed to:
-# - Preview/Dev: ghcr.io/vishnu2kmohan/keycloak-optimized (GHCR)
+# - STG/Dev: ghcr.io/vishnu2kmohan/keycloak-optimized (GHCR)
 # - Production: Promoted from GHCR to cloud-specific registries (GCP, AWS, Azure)
 # ==============================================================================
 
@@ -161,7 +161,7 @@ jobs:
         uses: ./.github/actions/setup-gcp-auth
         with:
           workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service-account: ${{ secrets.GCP_PRODUCTION_SA_EMAIL }}
+          service-account: ${{ secrets.GCP_PROD_SA_EMAIL }}
           token-format: access_token
 
       - name: Configure Docker for Artifact Registry
@@ -170,21 +170,21 @@ jobs:
 
       - name: Promote image from GHCR to production registry
         run: |
-          # Pull from GHCR (source of truth for preview images)
+          # Pull from GHCR (source of truth for stg images)
           docker pull ghcr.io/${{ github.repository_owner }}/agent-studio-keycloak:${{ env.KEYCLOAK_VERSION }}
 
           # Tag for GCP production registry
           docker tag \
             ghcr.io/${{ github.repository_owner }}/agent-studio-keycloak:${{ env.KEYCLOAK_VERSION }} \
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-prod/keycloak:${{ env.KEYCLOAK_VERSION }}
 
           docker tag \
             ghcr.io/${{ github.repository_owner }}/agent-studio-keycloak:${{ env.KEYCLOAK_VERSION }} \
-            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:latest
+            ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-prod/keycloak:latest
 
           # Push to GCP production registry
-          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}
-          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:latest
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-prod/keycloak:${{ env.KEYCLOAK_VERSION }}
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-prod/keycloak:latest
 
           echo "✅ Promoted from GHCR to GCP production registry"
 
@@ -193,7 +193,7 @@ jobs:
           echo "## Production Push Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Source:** ghcr.io/${{ github.repository_owner }}/agent-studio-keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Target:** ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-production/keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/mcp-prod/keycloak:${{ env.KEYCLOAK_VERSION }}" >> $GITHUB_STEP_SUMMARY
 
   # Verify the built image works
   # Pulls from GHCR for verification and security scanning

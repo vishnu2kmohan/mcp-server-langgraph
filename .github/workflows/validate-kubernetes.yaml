@@ -131,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        overlay: [dev, production, production-gke, preview-gke]
+        overlay: [dev, production, prod-gke, stg-gke]
     steps:
       - uses: actions/checkout@v6
 
@@ -202,7 +202,7 @@ jobs:
             exit 1
           fi
           # Check Ingress in production
-          if grep -r "cors-allow-origin.*\*" deployments/overlays/production* \
+          if grep -r "cors-allow-origin.*\*" deployments/overlays/prod* \
             --include="*.yaml" 2>/dev/null | grep -v "#"; then
             echo "❌ ERROR: Production ingress uses wildcard CORS"
             exit 1

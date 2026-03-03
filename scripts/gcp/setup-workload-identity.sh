@@ -147,18 +147,18 @@ log_success "Workload Identity Provider: $WORKLOAD_IDENTITY_PROVIDER"
 
 log_info "Creating service accounts..."
 
-# Preview deployment service account
-SA_PREVIEW="github-actions-preview"
-SA_PREVIEW_EMAIL="$SA_PREVIEW@$GCP_PROJECT_ID.iam.gserviceaccount.com"
+# STG deployment service account
+SA_STG_DEPLOY="github-actions-stg"
+SA_STG_DEPLOY_EMAIL="$SA_STG_DEPLOY@$GCP_PROJECT_ID.iam.gserviceaccount.com"
 
-if gcloud iam service-accounts describe "$SA_PREVIEW_EMAIL" --project="$GCP_PROJECT_ID" &>/dev/null; then
-    log_warning "Service account '$SA_PREVIEW' already exists"
+if gcloud iam service-accounts describe "$SA_STG_DEPLOY_EMAIL" --project="$GCP_PROJECT_ID" &>/dev/null; then
+    log_warning "Service account '$SA_STG_DEPLOY' already exists"
 else
-    gcloud iam service-accounts create "$SA_PREVIEW" \
-        --display-name="GitHub Actions Preview Deployment" \
-        --description="Service account for GitHub Actions preview deployments" \
+    gcloud iam service-accounts create "$SA_STG_DEPLOY" \
+        --display-name="GitHub Actions STG Deployment" \
+        --description="Service account for GitHub Actions stg deployments" \
         --project="$GCP_PROJECT_ID"
-    log_success "Service account '$SA_PREVIEW' created"
+    log_success "Service account '$SA_STG_DEPLOY' created"
 fi
 
 # Terraform service account
@@ -195,8 +195,8 @@ fi
 
 log_info "Granting IAM permissions..."
 
-# Permissions for preview service account
-PREVIEW_ROLES=(
+# Permissions for stg service account
+STG_DEPLOY_ROLES=(
     "roles/container.developer"           # GKE deployment
     "roles/artifactregistry.writer"       # Push Docker images
     "roles/logging.logWriter"            # Write logs
@@ -204,19 +204,19 @@ PREVIEW_ROLES=(
     "roles/storage.objectViewer"         # Read from buckets
 )
 
-for role in "${PREVIEW_ROLES[@]}"; do
+for role in "${STG_DEPLOY_ROLES[@]}"; do
     if gcloud projects get-iam-policy "$GCP_PROJECT_ID" \
         --flatten="bindings[].members" \
-        --filter="bindings.members:serviceAccount:$SA_PREVIEW_EMAIL AND bindings.role:$role" \
+        --filter="bindings.members:serviceAccount:$SA_STG_DEPLOY_EMAIL AND bindings.role:$role" \
         --format="value(bindings.role)" | grep -q "$role"; then
-        log_success "$SA_PREVIEW already has $role"
+        log_success "$SA_STG_DEPLOY already has $role"
     else
         gcloud projects add-iam-policy-binding "$GCP_PROJECT_ID" \
-            --member="serviceAccount:$SA_PREVIEW_EMAIL" \
+            --member="serviceAccount:$SA_STG_DEPLOY_EMAIL" \
             --role="$role" \
             --condition=None \
             --no-user-output-enabled
-        log_success "Granted $role to $SA_PREVIEW"
+        log_success "Granted $role to $SA_STG_DEPLOY"
     fi
 done
 
@@ -276,20 +276,20 @@ done
 
 log_info "Configuring Workload Identity Federation bindings..."
 
-# Allow GitHub Actions from the specific repository to impersonate the preview SA
-PREVIEW_BINDING_MEMBER="principalSet://iam.googleapis.com/$WORKLOAD_IDENTITY_PROVIDER/attribute.repository/$GITHUB_REPO"
+# Allow GitHub Actions from the specific repository to impersonate the stg SA
+STG_BINDING_MEMBER="principalSet://iam.googleapis.com/$WORKLOAD_IDENTITY_PROVIDER/attribute.repository/$GITHUB_REPO"
 
-if gcloud iam service-accounts get-iam-policy "$SA_PREVIEW_EMAIL" \
+if gcloud iam service-accounts get-iam-policy "$SA_STG_DEPLOY_EMAIL" \
     --flatten="bindings[].members" \
-    --filter="bindings.members:$PREVIEW_BINDING_MEMBER" \
+    --filter="bindings.members:$STG_BINDING_MEMBER" \
     --format="value(bindings.role)" | grep -q "roles/iam.workloadIdentityUser"; then
-    log_success "WIF binding already exists for $SA_PREVIEW"
+    log_success "WIF binding already exists for $SA_STG_DEPLOY"
 else
-    gcloud iam service-accounts add-iam-policy-binding "$SA_PREVIEW_EMAIL" \
-        --member="$PREVIEW_BINDING_MEMBER" \
+    gcloud iam service-accounts add-iam-policy-binding "$SA_STG_DEPLOY_EMAIL" \
+        --member="$STG_BINDING_MEMBER" \
         --role="roles/iam.workloadIdentityUser" \
         --project="$GCP_PROJECT_ID"
-    log_success "Added WIF binding for $SA_PREVIEW"
+    log_success "Added WIF binding for $SA_STG_DEPLOY"
 fi
 
 # Allow GitHub Actions to impersonate the Terraform SA
@@ -330,7 +330,7 @@ fi
 
 log_info "Setting up Artifact Registry..."
 
-REPO_NAME="mcp-preview"
+REPO_NAME="mcp-stg"
 REPO_LOCATION="$GCP_REGION"
 
 if gcloud artifacts repositories describe "$REPO_NAME" \
@@ -341,7 +341,7 @@ else
     gcloud artifacts repositories create "$REPO_NAME" \
         --repository-format=docker \
         --location="$REPO_LOCATION" \
-        --description="Docker images for MCP preview environment" \
+        --description="Docker images for MCP stg environment" \
         --project="$GCP_PROJECT_ID"
     log_success "Artifact Registry repository '$REPO_NAME' created"
 fi
@@ -363,15 +363,15 @@ echo -e "${BLUE}GCP_WIF_PROVIDER${NC}"
 echo "$WORKLOAD_IDENTITY_PROVIDER"
 echo ""
 echo "-------------------------------------------------------------------------------"
-echo -e "${BLUE}GCP_STAGING_SA_EMAIL${NC}"
-echo "$SA_STAGING_EMAIL"
+echo -e "${BLUE}GCP_STG_SA_EMAIL${NC}"
+echo "$SA_STG_EMAIL"
 echo ""
 echo "-------------------------------------------------------------------------------"
 echo -e "${BLUE}GCP_TERRAFORM_SA_EMAIL${NC}"
 echo "$SA_TERRAFORM_EMAIL"
 echo ""
 echo "-------------------------------------------------------------------------------"
-echo -e "${BLUE}GCP_PRODUCTION_SA_EMAIL${NC} (optional)"
+echo -e "${BLUE}GCP_PROD_SA_EMAIL${NC} (optional)"
 echo "$SA_PRODUCTION_EMAIL"
 echo ""
 echo "================================================================================"
@@ -398,13 +398,13 @@ Secrets to Add:
 Name: GCP_WIF_PROVIDER
 Value: $WORKLOAD_IDENTITY_PROVIDER
 
-Name: GCP_STAGING_SA_EMAIL
-Value: $SA_STAGING_EMAIL
+Name: GCP_STG_SA_EMAIL
+Value: $SA_STG_EMAIL
 
 Name: GCP_TERRAFORM_SA_EMAIL
 Value: $SA_TERRAFORM_EMAIL
 
-Name: GCP_PRODUCTION_SA_EMAIL (optional)
+Name: GCP_PROD_SA_EMAIL (optional)
 Value: $SA_PRODUCTION_EMAIL
 
 Additional Configuration:
@@ -420,7 +420,7 @@ Artifact Registry:
 - URL: $REPO_LOCATION-docker.pkg.dev/$GCP_PROJECT_ID/$REPO_NAME
 
 Service Accounts Created:
-- Staging: $SA_STAGING_EMAIL
+- STG: $SA_STG_EMAIL
 - Terraform: $SA_TERRAFORM_EMAIL
 - Production: $SA_PRODUCTION_EMAIL
 

@@ -24,7 +24,7 @@ CLOUD_OVERLAYS_DIR = REPO_ROOT / "deployments" / "kubernetes" / "overlays"
 
 # All overlays that should build successfully
 OVERLAYS_TO_TEST = [
-    OVERLAYS_DIR / "preview-gke",
+    OVERLAYS_DIR / "stg-gke",
 ]
 
 # Cloud-specific overlays (AWS, GCP, Azure)

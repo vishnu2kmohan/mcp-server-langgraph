@@ -1,5 +1,5 @@
 """
-Tests for preview GKE deployment workflow validation.
+Tests for stg GKE deployment workflow validation.
 
 These tests ensure the CD pipeline and Kustomize configuration are correctly aligned,
 preventing issues like:
@@ -29,17 +29,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.ci, pytest.mark.deployment, pytest.m
 
 @pytest.fixture(scope="module")
 def workflow_content() -> str:
-    """Load the preview GKE deployment workflow."""
-    workflow_path = Path(__file__).parent.parent.parent / ".github" / "workflows" / "deploy-preview-gke.yaml"
+    """Load the stg GKE deployment workflow."""
+    workflow_path = Path(__file__).parent.parent.parent / ".github" / "workflows" / "deploy-stg-gke.yaml"
     return workflow_path.read_text()
 
 
 @pytest.fixture(scope="module")
 def kustomization_content() -> dict:
-    """Load the preview GKE kustomization.yaml."""
-    kustomization_path = (
-        Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "kustomization.yaml"
-    )
+    """Load the stg GKE kustomization.yaml."""
+    kustomization_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "stg-gke" / "kustomization.yaml"
     return yaml.safe_load(kustomization_path.read_text())
 
 
@@ -117,8 +115,8 @@ class TestRolloutMonitoring:
         Missing rollout monitoring caused Keycloak CrashLoopBackOff to go undetected.
         """
         # Check for kubectl rollout status for Keycloak
-        assert "preview-keycloak" in workflow_content, "Workflow should reference preview-keycloak deployment"
-        assert "kubectl rollout status deployment/preview-keycloak" in workflow_content, (
+        assert "stg-keycloak" in workflow_content, "Workflow should reference stg-keycloak deployment"
+        assert "kubectl rollout status deployment/stg-keycloak" in workflow_content, (
             "Workflow should monitor Keycloak rollout status"
         )
 
@@ -129,8 +127,8 @@ class TestRolloutMonitoring:
         All critical deployments should be monitored to prevent silent failures.
         """
         # Check for kubectl rollout status for OpenFGA
-        assert "preview-openfga" in workflow_content, "Workflow should reference preview-openfga deployment"
-        assert "kubectl rollout status deployment/preview-openfga" in workflow_content, (
+        assert "stg-openfga" in workflow_content, "Workflow should reference stg-openfga deployment"
+        assert "kubectl rollout status deployment/stg-openfga" in workflow_content, (
             "Workflow should monitor OpenFGA rollout status"
         )
 
@@ -151,7 +149,7 @@ class TestRolloutMonitoring:
 
 @pytest.mark.xdist_group(name="preview_deployment")
 class TestPreviewProductionParity:
-    """Tests for preview-production parity (12 Factor App compliance)."""
+    """Tests for stg-production parity (12 Factor App compliance)."""
 
     def teardown_method(self) -> None:
         """Clean up after each test to prevent memory issues in xdist."""
@@ -159,9 +157,9 @@ class TestPreviewProductionParity:
 
     def test_preview_has_hpa_configuration_for_autoscaling(self, kustomization_content: dict) -> None:
         """
-        Verify preview has HPA configuration for autoscaling parity.
+        Verify stg has HPA configuration for autoscaling parity.
 
-        12 Factor App: "Keep development, preview, and production as similar as possible"
+        12 Factor App: "Keep development, stg, and production as similar as possible"
         """
         patches = kustomization_content.get("patches", [])
         patch_paths = [p.get("path", "") for p in patches if isinstance(p, dict)]
@@ -172,7 +170,7 @@ class TestPreviewProductionParity:
 
     def test_preview_has_pdb_configuration_for_availability(self, kustomization_content: dict) -> None:
         """
-        Verify preview has PodDisruptionBudget for availability parity.
+        Verify stg has PodDisruptionBudget for availability parity.
         """
         resources = kustomization_content.get("resources", [])
 
@@ -183,7 +181,7 @@ class TestPreviewProductionParity:
 
     def test_preview_has_liveness_probe_patches_for_compliance(self, kustomization_content: dict) -> None:
         """
-        Verify preview has differentiated liveness probes (kube-score compliance).
+        Verify stg has differentiated liveness probes (kube-score compliance).
 
         kube-score requires readiness and liveness probes to be different.
         """
@@ -212,13 +210,13 @@ class TestGracefulShutdown:
 
     @pytest.fixture(scope="class")
     def preview_deployment_patch_content(self) -> dict:
-        """Load the preview deployment patch."""
-        patch_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "deployment-patch.yaml"
+        """Load the stg deployment patch."""
+        patch_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "stg-gke" / "deployment-patch.yaml"
         return yaml.safe_load(patch_path.read_text())
 
     def test_preview_has_termination_grace_period_configured(self, preview_deployment_patch_content: dict) -> None:
         """
-        Verify preview deployment has terminationGracePeriodSeconds configured.
+        Verify stg deployment has terminationGracePeriodSeconds configured.
 
         LLM requests can take 30-60s, so pods need adequate time to finish.
         """
@@ -234,7 +232,7 @@ class TestGracefulShutdown:
 
     def test_preview_has_prestop_hook_for_draining(self, preview_deployment_patch_content: dict) -> None:
         """
-        Verify preview deployment has preStop lifecycle hook.
+        Verify stg deployment has preStop lifecycle hook.
 
         preStop hook allows load balancer to drain connections before SIGTERM.
         """
@@ -250,7 +248,7 @@ class TestGracefulShutdown:
 
     def test_preview_has_startup_probe_for_slow_starts(self, preview_deployment_patch_content: dict) -> None:
         """
-        Verify preview deployment has startupProbe configured.
+        Verify stg deployment has startupProbe configured.
 
         startupProbe prevents liveness/readiness probes from running until app is started.
         """

@@ -195,7 +195,7 @@ jobs:
         run: helm lint deployments/helm/langgraph-agent
 
       - name: Validate Kustomize overlays
-        run: kustomize build deployments/kustomize/overlays/production
+        run: kustomize build deployments/kustomize/overlays/prod
 ```
 
 **Duration**: ~15 minutes

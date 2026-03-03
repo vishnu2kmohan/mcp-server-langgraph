@@ -78,10 +78,10 @@ All expected failures occurred, proving tests correctly identify issues.
 ### BLOCKER Fixes (Commit: a30ac1c)
 
 #### BLOCKER 1: Missing Job Dependency
-**File:** `.github/workflows/deploy-production-gke.yaml:545`
+**File:** `.github/workflows/deploy-prod-gke.yaml:545`
 **Issue:** rollback-on-failure job referenced `needs.build-and-push.outputs.image_tag` without declaring `build-and-push` in its needs array
 **Impact:** Rollback notifications would fail with undefined reference errors
-**Fix:** Added `build-and-push` to needs array: `needs: [build-and-push, deploy-production, post-deployment-validation]`
+**Fix:** Added `build-and-push` to needs array: `needs: [build-and-push, deploy-prod, post-deployment-validation]`
 **Test:** ✅ PASSING
 
 #### BLOCKER 2: Invalid Secret in Job Context
@@ -124,7 +124,7 @@ All expected failures occurred, proving tests correctly identify issues.
 **Test:** ✅ VERIFIED (now correctly fails on errors)
 
 #### HIGH 3: Fork Protection Accuracy
-**File:** `tests/test_workflow_security.py` + `deploy-production-gke.yaml:211`
+**File:** `tests/test_workflow_security.py` + `deploy-prod-gke.yaml:211`
 **Issue:** Test flagged validation jobs that don't access GCP; one deployment job lacked fork guard
 **Impact:** False positives in test suite; potential secret exposure in fork
 **Fix:**
@@ -154,7 +154,7 @@ All expected failures occurred, proving tests correctly identify issues.
 **Test:** ✅ PASSING
 
 #### MEDIUM 2: Health Check Resilience
-**File:** `.github/workflows/deploy-production-gke.yaml` (2 locations)
+**File:** `.github/workflows/deploy-prod-gke.yaml` (2 locations)
 **Lines:** 383-401, 449-467
 **Issue:** Health checks lacked timeouts and retries
 **Impact:** Deployments could hang on transient failures
@@ -201,7 +201,7 @@ pytest tests/test_workflow_*.py tests/test_docker_paths.py -v
 ✅ 198 passed, 24 skipped, 0 failures
 
 # Individual blocker workflow tests:
-test_workflow_syntax_valid[deploy-production-gke.yaml]  ✅ PASSED
+test_workflow_syntax_valid[deploy-prod-gke.yaml]  ✅ PASSED
 test_workflow_syntax_valid[dora-metrics.yaml]           ✅ PASSED
 test_workflow_syntax_valid[observability-alerts.yaml]   ✅ PASSED
 
@@ -263,15 +263,15 @@ All pre-commit hooks pass:
 
 | Category | Issue | Location | Status | Commit |
 |----------|-------|----------|--------|--------|
-| **BLOCKER** | Missing job dependency | deploy-production-gke.yaml:545 | ✅ FIXED | a30ac1c |
+| **BLOCKER** | Missing job dependency | deploy-prod-gke.yaml:545 | ✅ FIXED | a30ac1c |
 | **BLOCKER** | Secret in job context | dora-metrics.yaml:242 | ✅ FIXED | a30ac1c |
 | **BLOCKER** | Secret in job context (3 jobs) | observability-alerts.yaml:119,206,253 | ✅ FIXED | a30ac1c |
 | **HIGH** | Missing --frozen flag | ci.yaml:105 | ✅ FIXED | a61c50b |
 | **HIGH** | Error suppression | test-workflows.sh:102 | ✅ FIXED | baf478b |
-| **HIGH** | Fork protection | deploy-production-gke.yaml:211 | ✅ FIXED | baf478b |
+| **HIGH** | Fork protection | deploy-prod-gke.yaml:211 | ✅ FIXED | baf478b |
 | **HIGH** | Docker verification | ci.yaml:410 | ✅ FIXED | baf478b |
 | **MEDIUM** | Input context error (4 locations) | observability-alerts.yaml:87,123,149,211 | ✅ FIXED | baf478b |
-| **MEDIUM** | Health check timeout | deploy-production-gke.yaml:383,449 | ✅ FIXED | baf478b |
+| **MEDIUM** | Health check timeout | deploy-prod-gke.yaml:383,449 | ✅ FIXED | baf478b |
 | **MEDIUM** | Pre-commit hook | .pre-commit-config.yaml | ✅ ADDED | baf478b |
 | **ADDITIONAL** | Outdated docs | .github/*.md | ✅ ARCHIVED | baf478b |
 | **ADDITIONAL** | Test complexity | test_workflow_security.py | ✅ REFACTORED | baf478b |
@@ -469,7 +469,7 @@ With these changes in place:
 - `tests/test_docker_paths.py` - Docker configuration validation
 
 ### Workflows Fixed
-- `.github/workflows/deploy-production-gke.yaml` - Blocker 1, high 3, medium 2
+- `.github/workflows/deploy-prod-gke.yaml` - Blocker 1, high 3, medium 2
 - `.github/workflows/dora-metrics.yaml` - Blocker 2
 - `.github/workflows/observability-alerts.yaml` - Blocker 3, medium 1
 - `.github/workflows/ci.yaml` - High 1, high 4

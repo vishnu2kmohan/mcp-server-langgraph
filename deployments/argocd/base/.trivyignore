@@ -37,4 +37,4 @@
 # Owner: @platform-team
 # ==============================================================================
 AVD-KSV-0109: argocd-install.yaml
-AVD-KSV-0109: gcp-production-app.yaml
+AVD-KSV-0109: gcp-prod-app.yaml

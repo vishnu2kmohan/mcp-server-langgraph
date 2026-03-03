@@ -53,7 +53,7 @@ def test_job_dependencies_declared(workflow_file):
     Otherwise, the workflow will fail at runtime with undefined reference errors.
 
     Expected to FAIL initially (RED phase) for:
-    - deploy-production-gke.yaml:545 - rollback-on-failure references needs.build-and-push
+    - deploy-prod-gke.yaml:545 - rollback-on-failure references needs.build-and-push
       but doesn't include build-and-push in its needs array
 
     Correct pattern:

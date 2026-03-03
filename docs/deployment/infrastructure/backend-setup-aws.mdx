@@ -237,11 +237,11 @@ terraform {
   }
 }
 
-# Staging
+# STG
 terraform {
   backend "s3" {
-    bucket = "mcp-langgraph-terraform-state-staging"
-    key    = "staging/terraform.tfstate"
+    bucket = "mcp-langgraph-terraform-state-stg"
+    key    = "stg/terraform.tfstate"
     # ...
   }
 }

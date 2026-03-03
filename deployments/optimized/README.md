@@ -10,7 +10,7 @@ This directory contains **experimental** deployment optimizations that were test
 
 **For active deployments, use**:
 - **Production**: `deployments/helm/mcp-server-langgraph/` (Helm chart - recommended)
-- **Staging**: `deployments/overlays/preview-gke/` (Kustomize)
+- **Staging**: `deployments/overlays/stg-gke/` (Kustomize)
 - **Development**: `deployments/overlays/dev/` (Kustomize)
 
 ---
@@ -111,10 +111,10 @@ rm -rf deployments/optimized/
 
 1. **Review the changes** in this directory
 2. **Extract the optimizations** you want (resource limits, probe timings, etc.)
-3. **Add them to Helm chart** as values in `values-production.yaml`:
+3. **Add them to Helm chart** as values in `values-prod.yaml`:
 
 ```yaml
-# Example: values-production-optimized.yaml
+# Example: values-prod-optimized.yaml
 resources:
   limits:
     memory: 2Gi

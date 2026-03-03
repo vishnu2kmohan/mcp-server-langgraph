@@ -29,9 +29,9 @@
 # Daily health check routine
 
 PROJECT_ID="YOUR_PROJECT_ID"
-CLUSTER="production-mcp-server-langgraph-gke"
+CLUSTER="prod-mcp-server-langgraph-gke"
 REGION="us-central1"
-NAMESPACE="mcp-production"
+NAMESPACE="mcp-prod"
 
 echo "=== GKE Production Health Check ==="
 echo "Date: $(date)"
@@ -123,36 +123,36 @@ echo -e "\n=== Health Check Complete ==="
 
 ```bash
 # 1. Check pod status immediately
-kubectl get pods -n mcp-production
+kubectl get pods -n mcp-prod
 
 # 2. Get pod logs (all pods)
-kubectl logs -n mcp-production -l app=mcp-server-langgraph --tail=100
+kubectl logs -n mcp-prod -l app=mcp-server-langgraph --tail=100
 
 # 3. Describe failing pods
-kubectl describe pod POD_NAME -n mcp-production
+kubectl describe pod POD_NAME -n mcp-prod
 
 # 4. Check recent events
-kubectl get events -n mcp-production --sort-by='.lastTimestamp' | tail -20
+kubectl get events -n mcp-prod --sort-by='.lastTimestamp' | tail -20
 
 # 5. Quick fixes to try:
 
 # Option A: Restart deployment
-kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout restart deployment/prod-mcp-server-langgraph -n mcp-prod
 
 # Option B: Rollback to previous version
-kubectl rollout undo deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout undo deployment/prod-mcp-server-langgraph -n mcp-prod
 
 # Option C: Scale up to overcome bad pods
-kubectl scale deployment production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl scale deployment prod-mcp-server-langgraph \
+  -n mcp-prod \
   --replicas=6
 
 # 6. Monitor recovery
-kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout status deployment/prod-mcp-server-langgraph -n mcp-prod
 
 # 7. Verify health
-kubectl exec -it -n mcp-production \
-  $(kubectl get pod -n mcp-production -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n mcp-prod \
+  $(kubectl get pod -n mcp-prod -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}') \
   -- curl -f http://localhost:8000/health/live
 ```
 
@@ -160,7 +160,7 @@ kubectl exec -it -n mcp-production \
 ```bash
 # Check Cloud Logging for errors
 gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production" AND severity>=ERROR' \
+  'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-prod" AND severity>=ERROR' \
   --limit=50 \
   --format=json \
   --project=PROJECT_ID > incident-logs.json
@@ -184,17 +184,17 @@ jq '.[] | {time: .timestamp, message: .jsonPayload.message, pod: .resource.label
 
 ```bash
 # 1. Check resource usage
-kubectl top pods -n mcp-production
+kubectl top pods -n mcp-prod
 kubectl top nodes
 
 # 2. Check HPA status
-kubectl get hpa -n mcp-production -o yaml
+kubectl get hpa -n mcp-prod -o yaml
 
 # 3. Check if hitting resource limits
-kubectl describe pod -n mcp-production -l app=mcp-server-langgraph | grep -A 10 "Limits\|Requests"
+kubectl describe pod -n mcp-prod -l app=mcp-server-langgraph | grep -A 10 "Limits\|Requests"
 
 # 4. Review recent deployments
-kubectl rollout history deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout history deployment/prod-mcp-server-langgraph -n mcp-prod
 
 # 5. Check Cloud SQL performance
 gcloud sql operations list \
@@ -208,12 +208,12 @@ gcloud monitoring time-series list \
   --project=PROJECT_ID
 
 # 7. Scale up if needed (temporary)
-kubectl scale deployment production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl scale deployment prod-mcp-server-langgraph \
+  -n mcp-prod \
   --replicas=10
 
 # 8. Monitor improvement
-watch -n 5 'kubectl top pods -n mcp-production'
+watch -n 5 'kubectl top pods -n mcp-prod'
 ```
 
 **Permanent Fix**: Adjust resource requests/limits based on actual usage
@@ -231,7 +231,7 @@ watch -n 5 'kubectl top pods -n mcp-production'
 
 ```bash
 # 1. Check Cloud SQL Proxy health
-kubectl logs -n mcp-production -l app=mcp-server-langgraph -c cloud-sql-proxy --tail=50
+kubectl logs -n mcp-prod -l app=mcp-server-langgraph -c cloud-sql-proxy --tail=50
 
 # 2. Verify Cloud SQL instance is running
 gcloud sql instances describe mcp-prod-postgres \
@@ -246,14 +246,14 @@ gcloud sql operations list \
 
 # 4. Check for blocked queries
 # (Connect to database via Cloud SQL Proxy)
-kubectl port-forward -n mcp-production svc/production-mcp-server-langgraph 5432:5432 &
+kubectl port-forward -n mcp-prod svc/prod-mcp-server-langgraph 5432:5432 &
 psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph" -c "SELECT pid, query, state FROM pg_stat_activity WHERE state != 'idle';"
 
 # 5. Kill long-running queries (if needed)
 psql -c "SELECT pg_terminate_backend(PID);"
 
 # 6. Restart Cloud SQL Proxy pods
-kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout restart deployment/prod-mcp-server-langgraph -n mcp-prod
 ```
 
 **Prevention**: Monitor connection pool size, set `postgres_max_connections` appropriately
@@ -281,7 +281,7 @@ gh release create v1.1.0 --title "Release 1.1.0" --notes "Release notes"
 **Manual Deployment** (Emergency):
 ```bash
 # 1. Update image tag
-cd deployments/overlays/production-gke
+cd deployments/overlays/prod-gke
 kustomize edit set image mcp-server-langgraph=ARTIFACT_REGISTRY/IMAGE:TAG
 
 # 2. Dry-run
@@ -291,35 +291,35 @@ kubectl apply -k . --dry-run=server
 kubectl apply -k .
 
 # 4. Monitor
-kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-production --timeout=10m
+kubectl rollout status deployment/prod-mcp-server-langgraph -n mcp-prod --timeout=10m
 
 # 5. Verify
-kubectl get pods -n mcp-production
-kubectl logs -n mcp-production -l app=mcp-server-langgraph --tail=20
+kubectl get pods -n mcp-prod
+kubectl logs -n mcp-prod -l app=mcp-server-langgraph --tail=20
 ```
 
 ### Rollback Deployment
 
 ```bash
 # Quick rollback (last revision)
-kubectl rollout undo deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout undo deployment/prod-mcp-server-langgraph -n mcp-prod
 
 # Rollback to specific revision
-kubectl rollout history deployment/production-mcp-server-langgraph -n mcp-production
-kubectl rollout undo deployment/production-mcp-server-langgraph -n mcp-production --to-revision=5
+kubectl rollout history deployment/prod-mcp-server-langgraph -n mcp-prod
+kubectl rollout undo deployment/prod-mcp-server-langgraph -n mcp-prod --to-revision=5
 
 # Monitor rollback
-kubectl rollout status deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout status deployment/prod-mcp-server-langgraph -n mcp-prod
 ```
 
 ### Emergency Stop
 
 ```bash
 # Scale to zero (stops all pods)
-kubectl scale deployment production-mcp-server-langgraph -n mcp-production --replicas=0
+kubectl scale deployment prod-mcp-server-langgraph -n mcp-prod --replicas=0
 
 # Resume
-kubectl scale deployment production-mcp-server-langgraph -n mcp-production --replicas=3
+kubectl scale deployment prod-mcp-server-langgraph -n mcp-prod --replicas=3
 ```
 
 ---
@@ -391,13 +391,13 @@ gcloud redis instances import gs://BUCKET_NAME/redis-backup.rdb \
 
 ```bash
 # Scale deployment
-kubectl scale deployment production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl scale deployment prod-mcp-server-langgraph \
+  -n mcp-prod \
   --replicas=10
 
 # Update HPA
-kubectl patch hpa production-mcp-server-langgraph \
-  -n mcp-production \
+kubectl patch hpa prod-mcp-server-langgraph \
+  -n mcp-prod \
   --patch '{"spec":{"minReplicas":5,"maxReplicas":30}}'
 ```
 
@@ -406,7 +406,7 @@ kubectl patch hpa production-mcp-server-langgraph \
 **Check current usage**:
 ```bash
 # GKE resource usage
-gcloud container clusters describe production-mcp-server-langgraph-gke \
+gcloud container clusters describe prod-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format="yaml(resourceUsageExportConfig, currentMasterVersion)"
 
@@ -441,12 +441,12 @@ NEW_JWT_SECRET=$(openssl rand -base64 32)
 NEW_API_KEY=$(openssl rand -base64 32)
 
 # 2. Update Secret Manager
-gcloud secrets versions add mcp-production-secrets \
+gcloud secrets versions add mcp-prod-secrets \
   --data-file=<(jq --arg jwt "$NEW_JWT_SECRET" '.jwt_secret = $jwt' secrets.json) \
   --project=PROJECT_ID
 
 # 3. Restart pods to pick up new secrets (External Secrets Operator auto-syncs)
-kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout restart deployment/prod-mcp-server-langgraph -n mcp-prod
 ```
 
 ### Audit Access Logs
@@ -525,7 +525,7 @@ gcloud redis instances describe mcp-prod-redis \
 
 3. **Deploy application**:
    ```bash
-   kubectl apply -k deployments/overlays/production-gke
+   kubectl apply -k deployments/overlays/prod-gke
    ```
 
 **RTO** (Recovery Time Objective): 45-60 minutes
@@ -566,12 +566,12 @@ gcloud alpha monitoring policies create \
 ```bash
 # CPU usage
 gcloud monitoring time-series list \
-  --filter='metric.type="kubernetes.io/container/cpu/core_usage_time" AND resource.labels.namespace_name="mcp-production"' \
+  --filter='metric.type="kubernetes.io/container/cpu/core_usage_time" AND resource.labels.namespace_name="mcp-prod"' \
   --project=PROJECT_ID
 
 # Memory usage
 gcloud monitoring time-series list \
-  --filter='metric.type="kubernetes.io/container/memory/used_bytes" AND resource.labels.namespace_name="mcp-production"' \
+  --filter='metric.type="kubernetes.io/container/memory/used_bytes" AND resource.labels.namespace_name="mcp-prod"' \
   --project=PROJECT_ID
 ```
 
@@ -585,7 +585,7 @@ gcloud monitoring time-series list \
 
 **Check upgrade status**:
 ```bash
-gcloud container clusters describe production-mcp-server-langgraph-gke \
+gcloud container clusters describe prod-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format="yaml(currentMasterVersion,releaseChannel)"
 ```
@@ -596,7 +596,7 @@ gcloud container clusters describe production-mcp-server-langgraph-gke \
 gcloud container get-server-config --region=us-central1
 
 # Upgrade cluster
-gcloud container clusters upgrade production-mcp-server-langgraph-gke \
+gcloud container clusters upgrade prod-mcp-server-langgraph-gke \
   --region=us-central1 \
   --cluster-version=VERSION \
   --project=PROJECT_ID
@@ -629,27 +629,27 @@ gcloud sql instances reschedule-maintenance mcp-prod-postgres \
 
 ```bash
 # Real-time logs
-kubectl logs -f -n mcp-production -l app=mcp-server-langgraph --max-log-requests=10
+kubectl logs -f -n mcp-prod -l app=mcp-server-langgraph --max-log-requests=10
 
 # Cloud Logging (last hour)
 gcloud logging read \
-  'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-production"' \
+  'resource.type="k8s_container" AND resource.labels.namespace_name="mcp-prod"' \
   --limit=100 \
   --format=json \
   --project=PROJECT_ID
 
 # Specific pod
-kubectl logs POD_NAME -n mcp-production -c mcp-server-langgraph
+kubectl logs POD_NAME -n mcp-prod -c mcp-server-langgraph
 ```
 
 ### Update Configuration
 
 ```bash
 # Edit ConfigMap
-kubectl edit configmap production-mcp-server-langgraph-config -n mcp-production
+kubectl edit configmap prod-mcp-server-langgraph-config -n mcp-prod
 
 # Restart to pick up changes (Reloader does this automatically)
-kubectl rollout restart deployment/production-mcp-server-langgraph -n mcp-production
+kubectl rollout restart deployment/prod-mcp-server-langgraph -n mcp-prod
 ```
 
 ### Connect to Database
@@ -660,7 +660,7 @@ cloud-sql-proxy PROJECT_ID:us-central1:mcp-prod-postgres &
 psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph"
 
 # Or via kubectl port-forward
-kubectl port-forward -n mcp-production svc/production-mcp-server-langgraph 5432:5432 &
+kubectl port-forward -n mcp-prod svc/prod-mcp-server-langgraph 5432:5432 &
 psql "host=localhost port=5432 user=postgres dbname=mcp_langgraph"
 ```
 

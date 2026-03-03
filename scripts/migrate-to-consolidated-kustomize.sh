@@ -252,11 +252,11 @@ kubectl apply -k deployments/base
 # Development
 kubectl apply -k deployments/overlays/dev
 
-# Staging
-kubectl apply -k deployments/overlays/staging
+# stg
+kubectl apply -k deployments/overlays/stg
 
 # Production
-kubectl apply -k deployments/overlays/production
+kubectl apply -k deployments/overlays/prod
 ```
 
 ### With Helm

@@ -132,7 +132,7 @@ def test_fork_protection_on_deployment_jobs(workflow_file):
         workflow = yaml.safe_load(f)
 
     # Skip non-deployment workflows
-    if "deploy" not in workflow_file.name and "production" not in workflow_file.name:
+    if "deploy" not in workflow_file.name and "prod" not in workflow_file.name:
         pytest.skip(f"Not a deployment workflow: {workflow_file.name}")
 
     errors = []

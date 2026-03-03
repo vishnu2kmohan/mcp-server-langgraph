@@ -1,0 +1,23 @@
+# Configuration variables for prod environment
+# These values are used by Kustomize replacements to substitute variables throughout the deployment
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-config
+  namespace: prod-mcp-server-langgraph
+data:
+  # GCP Project ID for prod
+  # UPDATE THIS: Replace with your actual GCP project ID before deploying
+  GCP_PROJECT_ID: "vishnu-prod-project"
+
+  # Domain for prod environment
+  # UPDATE THIS: Replace with your actual prod domain before deploying
+  # Example: mcp.mycompany.com
+  DOMAIN: "mcp-api.prod-cluster.local"
+
+  # Environment identifier
+  ENVIRONMENT: "prod"
+
+  # Cluster name
+  CLUSTER_NAME: "prod-gke-cluster"

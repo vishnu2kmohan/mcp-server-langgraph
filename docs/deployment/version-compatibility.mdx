@@ -137,7 +137,7 @@ This document tracks all infrastructure component versions across deployment met
 **Migration Steps:**
 1. Backup Keycloak database: `kubectl exec -it postgres-0 -- pg_dump -U postgres keycloak > keycloak-backup.sql`
 2. Review [release notes](https://www.keycloak.org/docs/latest/release_notes/)
-3. Test authentication flows in staging environment
+3. Test authentication flows in stg environment
 4. Update client configurations if needed
 
 #### OpenTelemetry Collector 0.91.0 → 0.137.0
@@ -213,7 +213,7 @@ curl http://localhost:3000/api/health
 
 ```bash
 ## Deploy with Kustomize
-kubectl apply -k deployments/kustomize/overlays/staging
+kubectl apply -k deployments/kustomize/overlays/stg
 
 ## Check all pods
 kubectl get pods -n mcp-server-langgraph
@@ -258,7 +258,7 @@ kubectl logs -n mcp-server-langgraph -l app=keycloak --tail=50
 We follow this upgrade cadence:
 
 - **Patch versions** (x.y.Z): Apply immediately in development, test, then production
-- **Minor versions** (x.Y.z): Test in staging for 1 week before production
+- **Minor versions** (x.Y.z): Test in stg for 1 week before production
 - **Major versions** (X.y.z): Extended testing (2-4 weeks), create rollback plan
 
 #### Update Frequency

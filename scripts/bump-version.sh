@@ -7,7 +7,7 @@
 #   ./scripts/bump-version.sh <new-version> [--dry-run]
 #
 # EXAMPLES:
-#   # Preview changes without modifying files
+#   # stg changes without modifying files
 #   ./scripts/bump-version.sh 2.8.0 --dry-run
 #
 #   # Apply version update
@@ -18,7 +18,7 @@
 #   - Helm Chart.yaml (version and appVersion)
 #   - Helm values.yaml (image tag)
 #   - Kustomize base/kustomization.yaml (image tag)
-#   - Kustomize overlays (production, staging)
+#   - Kustomize overlays (production, stg)
 #   - Package.json (if exists)
 #
 # VALIDATION:
@@ -48,8 +48,8 @@ PYPROJECT_FILE="$PROJECT_ROOT/pyproject.toml"
 HELM_CHART_FILE="$PROJECT_ROOT/deployments/helm/mcp-server-langgraph/Chart.yaml"
 HELM_VALUES_FILE="$PROJECT_ROOT/deployments/helm/mcp-server-langgraph/values.yaml"
 KUSTOMIZE_BASE_FILE="$PROJECT_ROOT/deployments/kustomize/base/kustomization.yaml"
-KUSTOMIZE_PROD_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/production/kustomization.yaml"
-KUSTOMIZE_STAGING_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/staging/kustomization.yaml"
+KUSTOMIZE_PROD_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/prod/kustomization.yaml"
+KUSTOMIZE_STG_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/stg/kustomization.yaml"
 # KUSTOMIZE_DEV_FILE is reserved for future use (dev overlay uses dev-latest tag)
 # shellcheck disable=SC2034
 KUSTOMIZE_DEV_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/dev/kustomization.yaml"
@@ -184,7 +184,7 @@ main() {
         echo ""
         echo "Examples:"
         echo "  $0 2.8.0           # Apply version update"
-        echo "  $0 2.8.0 --dry-run # Preview changes"
+        echo "  $0 2.8.0 --dry-run # stg changes"
         exit 1
     fi
 
@@ -264,11 +264,11 @@ main() {
         "newTag: v$NEW_VERSION" \
         "Kustomize production image tag"
 
-    # Update Kustomize staging overlay
-    update_file "$KUSTOMIZE_STAGING_FILE" \
-        "newTag: staging-.*" \
-        "newTag: staging-$NEW_VERSION" \
-        "Kustomize staging image tag"
+    # Update Kustomize stg overlay
+    update_file "$KUSTOMIZE_STG_FILE" \
+        "newTag: stg-.*" \
+        "newTag: stg-$NEW_VERSION" \
+        "Kustomize stg image tag"
 
     # Note: Dev overlay uses 'dev-latest', not versioned
 
@@ -295,7 +295,7 @@ main() {
     verify_update "$HELM_VALUES_FILE" "tag: \"$NEW_VERSION\"" "Helm image tag" || VERIFICATION_FAILED=true
     verify_update "$KUSTOMIZE_BASE_FILE" "newTag: $NEW_VERSION" "Kustomize base tag" || VERIFICATION_FAILED=true
     verify_update "$KUSTOMIZE_PROD_FILE" "newTag: v$NEW_VERSION" "Kustomize production tag" || VERIFICATION_FAILED=true
-    verify_update "$KUSTOMIZE_STAGING_FILE" "newTag: staging-$NEW_VERSION" "Kustomize staging tag" || VERIFICATION_FAILED=true
+    verify_update "$KUSTOMIZE_STG_FILE" "newTag: stg-$NEW_VERSION" "Kustomize stg tag" || VERIFICATION_FAILED=true
 
     echo ""
 

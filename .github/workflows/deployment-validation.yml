@@ -173,13 +173,13 @@ jobs:
           kustomize build deployments/overlays/dev
 
           echo "Building production overlay..."
-          kustomize build deployments/overlays/production
+          kustomize build deployments/overlays/prod
 
-          echo "Building preview-gke overlay..."
-          kustomize build deployments/overlays/preview-gke
+          echo "Building stg-gke overlay..."
+          kustomize build deployments/overlays/stg-gke
 
-          echo "Building production-gke overlay..."
-          kustomize build deployments/overlays/production-gke
+          echo "Building prod-gke overlay..."
+          kustomize build deployments/overlays/prod-gke
 
           # Codex Finding #2 (P0): Validate cloud-specific overlays
           echo "Building AWS overlay..."
@@ -194,14 +194,14 @@ jobs:
       # Codex Finding #3 (P0): Validate no placeholders in production overlays
       - name: Check for placeholders in production builds
         run: |
-          echo "Checking production-gke for placeholders..."
-          kustomize build deployments/overlays/production-gke | \
+          echo "Checking prod-gke for placeholders..."
+          kustomize build deployments/overlays/prod-gke | \
             grep -E "PLACEHOLDER|TODO:|FIXME:" && \
-            echo "::error::Placeholders found in production-gke" && exit 1 || \
-            echo "✓ No placeholders in production-gke"
+            echo "::error::Placeholders found in prod-gke" && exit 1 || \
+            echo "✓ No placeholders in prod-gke"
 
           echo "Checking production for placeholders..."
-          kustomize build deployments/overlays/production | \
+          kustomize build deployments/overlays/prod | \
             grep -E "PLACEHOLDER|TODO:|FIXME:" && \
             echo "::error::Placeholders found in production" && exit 1 || \
             echo "✓ No placeholders in production"
@@ -244,8 +244,8 @@ jobs:
           }
 
           validate_overlay "base"
-          validate_overlay "overlays/production-gke"
-          validate_overlay "overlays/preview-gke"
+          validate_overlay "overlays/prod-gke"
+          validate_overlay "overlays/stg-gke"
           validate_overlay "kubernetes/overlays/aws"
           validate_overlay "kubernetes/overlays/gcp"
           validate_overlay "kubernetes/overlays/azure"
@@ -348,18 +348,18 @@ jobs:
           fi
 
           echo ""
-          echo "🔍 Validating preview-gke with OPA policies..."
-          if kustomize build deployments/overlays/preview-gke | conftest test -p deployments/policies - --output tap | tee /tmp/staging-opa.txt; then
-            echo "✅ Preview-GKE passed all OPA policy checks"
+          echo "🔍 Validating stg-gke with OPA policies..."
+          if kustomize build deployments/overlays/stg-gke | conftest test -p deployments/policies - --output tap | tee /tmp/stg-opa.txt; then
+            echo "✅ STG-GKE passed all OPA policy checks"
           else
-            echo "❌ Preview-GKE failed OPA policy validation"
-            cat /tmp/staging-opa.txt
+            echo "❌ STG-GKE failed OPA policy validation"
+            cat /tmp/stg-opa.txt
             exit 1
           fi
 
           echo ""
-          echo "🔍 Validating production-gke with OPA policies..."
-          if kustomize build deployments/overlays/production-gke | conftest test -p deployments/policies - --output tap | tee /tmp/production-opa.txt; then
+          echo "🔍 Validating prod-gke with OPA policies..."
+          if kustomize build deployments/overlays/prod-gke | conftest test -p deployments/policies - --output tap | tee /tmp/production-opa.txt; then
             echo "✅ Production-GKE passed all OPA policy checks"
           else
             echo "❌ Production-GKE failed OPA policy validation"
@@ -374,8 +374,8 @@ jobs:
         run: |
           # Warnings are expected for base/overlay YAML files before Kustomize patching
           conftest test deployments/base/*.yaml -p deployments/policies || true
-          conftest test deployments/overlays/preview-gke/*.yaml -p deployments/policies || true
-          conftest test deployments/overlays/production-gke/*.yaml -p deployments/policies || true
+          conftest test deployments/overlays/stg-gke/*.yaml -p deployments/policies || true
+          conftest test deployments/overlays/prod-gke/*.yaml -p deployments/policies || true
 
   validate-grafana-dashboards:
     name: Validate Grafana Dashboards

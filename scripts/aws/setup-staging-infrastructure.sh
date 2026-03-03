@@ -1,12 +1,12 @@
 #!/bin/bash
-# One-time setup script for AWS EKS staging infrastructure
-# This script provisions all required AWS resources for the staging environment
+# One-time setup script for AWS EKS stg infrastructure
+# This script provisions all required AWS resources for the stg environment
 
 set -e
 
 # Configuration
 AWS_REGION="${AWS_REGION:-us-east-1}"
-ENVIRONMENT="aws-staging"
+ENVIRONMENT="aws-stg"
 PROJECT_NAME="mcp-langgraph"
 
 # Colors
@@ -107,7 +107,7 @@ deploy_infrastructure() {
     terraform plan -out=tfplan
 
     # Apply
-    log_warn "About to create AWS resources. This will incur costs (~\$324/month for staging)."
+    log_warn "About to create AWS resources. This will incur costs (~\$324/month for stg)."
     read -p "Continue? (yes/no): " CONFIRM
     if [ "$CONFIRM" != "yes" ]; then
         log_error "Deployment cancelled"
@@ -150,7 +150,7 @@ deploy_monitoring() {
 
 print_summary() {
     log_info "\n=========================================="
-    log_info "STAGING INFRASTRUCTURE SETUP COMPLETE!"
+    log_info "stg INFRASTRUCTURE SETUP COMPLETE!"
     log_info "==========================================\n"
 
     CLUSTER_NAME=$(terraform -chdir="terraform/environments/$ENVIRONMENT" output -raw cluster_name)
@@ -165,7 +165,7 @@ print_summary() {
     echo ""
     log_info "Next steps:"
     log_info "1. Deploy application:"
-    log_info "   export AWS_ENVIRONMENT=aws-staging"
+    log_info "   export AWS_ENVIRONMENT=aws-stg"
     log_info "   ./scripts/deploy-aws-eks.sh"
     echo ""
     log_info "2. Access CloudWatch Dashboard:"
@@ -178,7 +178,7 @@ print_summary() {
 
 # Main
 main() {
-    log_info "Starting AWS EKS staging infrastructure setup..."
+    log_info "Starting AWS EKS stg infrastructure setup..."
 
     check_prerequisites
     setup_terraform_backend

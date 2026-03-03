@@ -180,7 +180,7 @@ class TestNetworkPolicy:
             [f"  - Port {port} ({required_egress_ports[port]})" for port in sorted(missing_ports)]
         )
 
-    @pytest.mark.parametrize("overlay", ["preview-gke", "production-gke"])
+    @pytest.mark.parametrize("overlay", ["stg-gke", "prod-gke"])
     def test_gke_overlay_network_policy_has_cloud_sql_proxy_port(self, project_root: Path, overlay: str) -> None:
         """
         Test that GKE overlay NetworkPolicies include port 3307 for Cloud SQL Proxy.
@@ -247,7 +247,7 @@ class TestKustomizeOverlays:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.parametrize("overlay", ["dev", "staging", "production"])
+    @pytest.mark.parametrize("overlay", ["dev", "stg-gke", "prod-gke", "prod"])
     @requires_tool("kustomize")
     def test_kustomize_overlay_builds(self, project_root: Path, overlay: str) -> None:
         """

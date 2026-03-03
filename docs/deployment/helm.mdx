@@ -91,7 +91,7 @@ kubectl get ingress -n mcp-server-langgraph
 deployments/helm/mcp-server-langgraph/
 ├── Chart.yaml              # Chart metadata
 ├── values.yaml             # Default configuration
-├── values-production.yaml  # Production overrides
+├── values-prod.yaml  # Production overrides
 ├── templates/
 │   ├── deployment.yaml     # Main application
 │   ├── service.yaml        # Kubernetes Service
@@ -123,9 +123,9 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 #### With Custom Values File
 
 <Tabs>
-  <Tab title="Create values-production.yaml">
+  <Tab title="Create values-prod.yaml">
     ```yaml
-    # values-production.yaml
+    # values-prod.yaml
     replicaCount: 5
 
     image:
@@ -218,7 +218,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --namespace mcp-server-langgraph \
       --create-namespace \
-      --values values-production.yaml \
+      --values values-prod.yaml \
       --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
       --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
       --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
@@ -564,12 +564,12 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
 ```bash
 ## Update values if needed
-vim values-production.yaml
+vim values-prod.yaml
 
 ## Upgrade release
 helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --namespace mcp-server-langgraph \
-  --values values-production.yaml \
+  --values values-prod.yaml \
   --set image.tag=v2.8.0
 
 ## Check rollout
@@ -766,7 +766,7 @@ kubectl label configmap langgraph-dashboards \
 
     # Verify rendered templates
     helm template mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
-      --values values-production.yaml \
+      --values values-prod.yaml \
       --debug
     ```
   </Accordion>
@@ -775,7 +775,7 @@ kubectl label configmap langgraph-dashboards \
 ```bash
     # Check what will change
     helm diff upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
-      --values values-production.yaml
+      --values values-prod.yaml
 
     # Force upgrade
     helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
@@ -785,7 +785,7 @@ kubectl label configmap langgraph-dashboards \
     # If stuck, delete and reinstall
     helm uninstall mcp-server-langgraph -n mcp-server-langgraph
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
-      --values values-production.yaml
+      --values values-prod.yaml
     ```
   </Accordion>
 </AccordionGroup>
@@ -810,7 +810,7 @@ kubectl label configmap langgraph-dashboards \
   <Accordion title="Testing" icon="vial">
     - **Test with helm lint** before deployment
     - **Use --dry-run** to preview changes
-    - **Deploy to staging** first
+    - **Deploy to stg** first
     - **Validate with smoke tests** after deployment
   </Accordion>
 

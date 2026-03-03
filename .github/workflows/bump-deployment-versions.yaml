@@ -146,7 +146,7 @@ jobs:
 
             **Kustomize:**
             \`\`\`bash
-            kubectl apply -k deployments/kustomize/overlays/production
+            kubectl apply -k deployments/kustomize/overlays/prod
             \`\`\`
 
             ---

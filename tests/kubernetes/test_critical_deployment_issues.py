@@ -27,7 +27,7 @@ pytestmark = pytest.mark.unit
 # Define project root relative to test file
 PROJECT_ROOT = get_repo_root()
 DEPLOYMENTS_BASE = PROJECT_ROOT / "deployments" / "base"
-DEPLOYMENTS_PROD_GKE = PROJECT_ROOT / "deployments" / "overlays" / "production-gke"
+DEPLOYMENTS_PROD_GKE = PROJECT_ROOT / "deployments" / "overlays" / "prod-gke"
 
 
 @pytest.mark.xdist_group(name="testcriticalnetworkpolicyissues")
@@ -394,9 +394,9 @@ class TestCriticalNamespaceIssues:
         RED: Production GKE overlay has namespace mismatch.
         GREEN: All resources should use the same namespace.
 
-        Issue: namespace.yaml creates 'production-mcp-server-langgraph'
-        Issue: network-policy.yaml uses 'mcp-production'
-        Issue: resource-quotas.yaml uses 'mcp-production'
+        Issue: namespace.yaml creates 'prod-mcp-server-langgraph'
+        Issue: network-policy.yaml uses 'mcp-prod'
+        Issue: resource-quotas.yaml uses 'mcp-prod'
         Fix: Align namespace names across all files
         """
         namespace_path = DEPLOYMENTS_PROD_GKE / "namespace.yaml"

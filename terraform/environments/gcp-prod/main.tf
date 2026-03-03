@@ -22,7 +22,7 @@ provider "google" {
   region  = var.region
 
   default_labels = {
-    environment = "production"
+    environment = "prod"
     managed_by  = "terraform"
     project     = "mcp-server-langgraph"
   }
@@ -30,14 +30,14 @@ provider "google" {
 
 locals {
   # Full name for GKE cluster and K8s resources (no length limit)
-  name_prefix  = "production-mcp-server-langgraph"
+  name_prefix  = "prod-mcp-server-langgraph"
   cluster_name = "${local.name_prefix}-gke"
 
   # Short name for VPC, Cloud SQL, Redis (20 char limit)
-  short_prefix = "production-mcp-slg"
+  short_prefix = "prod-mcp-slg"
 
   common_labels = {
-    environment = "production"
+    environment = "prod"
     managed_by  = "terraform"
     project     = "mcp-server-langgraph"
     team        = var.team

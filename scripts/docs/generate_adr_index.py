@@ -383,7 +383,7 @@ def generate_index(dry_run: bool = False) -> bool:
     Generate the ADR index README.md.
 
     Args:
-        dry_run: If True, only preview changes
+        dry_run: If True, only stg changes
 
     Returns:
         True if successful, False otherwise
@@ -483,12 +483,12 @@ Examples:
   %(prog)s                    Generate adr/README.md
   %(prog)s --check            Check if README is up-to-date
   %(prog)s --validate         Validate ADR numbering only
-  %(prog)s --dry-run          Preview changes
+  %(prog)s --dry-run          stg changes
         """,
     )
     parser.add_argument("--check", action="store_true", help="Check if index is up-to-date")
     parser.add_argument("--validate", action="store_true", help="Validate ADR numbering only")
-    parser.add_argument("--dry-run", action="store_true", help="Preview changes without writing files")
+    parser.add_argument("--dry-run", action="store_true", help="stg changes without writing files")
 
     args = parser.parse_args()
 

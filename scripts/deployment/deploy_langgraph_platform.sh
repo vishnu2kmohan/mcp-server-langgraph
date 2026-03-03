@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-mcp-server-langgraph}"
-ENVIRONMENT="${ENVIRONMENT:-staging}"  # staging or production
+ENVIRONMENT="${ENVIRONMENT:-stg}"  # stg or prod
 
 # Functions
 print_info() {

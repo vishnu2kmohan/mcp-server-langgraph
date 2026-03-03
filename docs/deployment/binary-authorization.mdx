@@ -61,7 +61,7 @@ contentType: "how-to"
 
     **Implementation**:
     - Dev: Allow all (no signing)
-    - Staging: Require staging attestor (audit mode)
+    - STG: Require stg attestor (audit mode)
     - Prod: Require prod attestor (enforcing mode)
   </Accordion>
 
@@ -199,7 +199,7 @@ flowchart TB
     ```
     ./deployments/security/binary-authorization/sign-image.sh \
       PROJECT_ID production \
-      us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:v1.0.0
+      us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:v1.0.0
     ```
 
     Creates attestation for the image.
@@ -214,7 +214,7 @@ flowchart TB
     # Error: admission webhook denied the request
 
     # Deploy signed image (should succeed)
-    kubectl apply -k deployments/overlays/production-gke
+    kubectl apply -k deployments/overlays/prod-gke
     ```
   </Step>
 </Steps>
@@ -239,7 +239,7 @@ flowchart TB
     **Risk**: Zero tolerance for unsigned images
   </Tab>
 
-  <Tab title="Audit (Staging)">
+  <Tab title="Audit (STG)">
     ```yaml
     evaluationMode: REQUIRE_ATTESTATION
     enforcementMode: DRYRUN_AUDIT_LOG_ONLY
@@ -283,7 +283,7 @@ spec:
 
   # Exception for system images
   clusterAdmissionRules:
-    us-central1.production-mcp-server-langgraph-gke:
+    us-central1.prod-mcp-server-langgraph-gke:
       evaluationMode: REQUIRE_ATTESTATION
       enforcementMode: ENFORCING_MODE
       requireAttestationsBy:
@@ -296,17 +296,17 @@ spec:
     - namePattern: k8s.gcr.io/*
 ```
 
-```yaml Staging Policy
+```yaml STG Policy
 apiVersion: binaryauthorization.googleapis.com/v1
 kind: Policy
 metadata:
-  name: staging-policy
+  name: stg-policy
 spec:
   defaultAdmissionRule:
     evaluationMode: REQUIRE_ATTESTATION
     enforcementMode: DRYRUN_AUDIT_LOG_ONLY  # Audit mode
     requireAttestationsBy:
-      - projects/PROJECT_ID/attestors/staging-attestor
+      - projects/PROJECT_ID/attestors/stg-attestor
 
   admissionWhitelistPatterns:
     - namePattern: gcr.io/gke-release/*
@@ -331,7 +331,7 @@ spec:
 ### GitHub Actions Integration
 
 <CodeGroup>
-```yaml .github/workflows/deploy-production-gke.yaml
+```yaml .github/workflows/deploy-prod-gke.yaml
 name: Deploy to Production GKE
 on:
   push:
@@ -359,20 +359,20 @@ jobs:
 
       - name: Build Image
         run: |
-          docker build -t us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:${{ github.ref_name }} .
+          docker build -t us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:${{ github.ref_name }} .
 
       - name: Push Image
         run: |
-          docker push us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:${{ github.ref_name }}
+          docker push us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:${{ github.ref_name }}
 
       - name: Sign Image
         run: |
-          IMAGE_URL="us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:${{ github.ref_name }}"
+          IMAGE_URL="us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:${{ github.ref_name }}"
           IMAGE_DIGEST=$(gcloud artifacts docker images describe $IMAGE_URL --format='get(image_summary.digest)')
 
           # Create attestation
           gcloud beta container binauthz attestations sign-and-create \
-            --artifact-url="us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph@${IMAGE_DIGEST}" \
+            --artifact-url="us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph@${IMAGE_DIGEST}" \
             --attestor=production-attestor \
             --attestor-project=PROJECT_ID \
             --keyversion-project=PROJECT_ID \
@@ -383,7 +383,7 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          kubectl apply -k deployments/overlays/production-gke
+          kubectl apply -k deployments/overlays/prod-gke
 ```bash
 ```bash Manual Signing Script
 #!/bin/bash
@@ -437,7 +437,7 @@ gcloud container binauthz attestors describe production-attestor \
 
 # List attestations for image
 gcloud container binauthz attestations list \
-  --artifact-url="us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph@sha256:ABC123" \
+  --artifact-url="us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph@sha256:ABC123" \
   --attestor=production-attestor \
   --attestor-project=PROJECT_ID
 ```
@@ -530,8 +530,8 @@ gcloud logging read \
 # Production key
 production-binauthz/attestor-key
 
-# Staging key (different key ring)
-staging-binauthz/attestor-key
+# STG key (different key ring)
+stg-binauthz/attestor-key
 
 # Development (no signing required)
 ```
@@ -592,7 +592,7 @@ gcloud kms keys add-iam-policy-binding attestor-key \
 
     - ✅ **CC6.6**: Logical access segregation
 
-      - Production attestor separate from dev/staging
+      - Production attestor separate from dev/stg
       - KMS keys isolated per environment
 
     - ✅ **CC7.2**: System monitoring
@@ -666,9 +666,9 @@ Binary Authorization helps achieve **SLSA Level 3** (Supply Chain Levels for Sof
     Monitor for 1 week, ensure no failures.
   </Step>
 
-  <Step title="3. Enable Audit Mode (Staging)">
+  <Step title="3. Enable Audit Mode (STG)">
     ```bash
-    # Staging cluster - audit mode
+    # STG cluster - audit mode
     # Terraform: binary_authorization_mode = "DRYRUN_AUDIT_LOG_ONLY"
     terraform apply
     ```
@@ -685,7 +685,7 @@ Binary Authorization helps achieve **SLSA Level 3** (Supply Chain Levels for Sof
 
     **Only after**:
     - All images signed
-    - No denials in staging for 2 weeks
+    - No denials in stg for 2 weeks
     - Rollback plan tested
   </Step>
 </Steps>
@@ -704,7 +704,7 @@ Binary Authorization helps achieve **SLSA Level 3** (Supply Chain Levels for Sof
   <Card title="GitOps (ArgoCD)" icon="code-branch" href="/deployment/gitops-argocd">
     Automated deployments with image signing
   </Card>
-  <Card title="CI/CD Pipeline" icon="github" href="https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/.github/workflows/deploy-production-gke.yaml">
+  <Card title="CI/CD Pipeline" icon="github" href="https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/.github/workflows/deploy-prod-gke.yaml">
     GitHub Actions with Binary Auth integration
   </Card>
 </CardGroup>

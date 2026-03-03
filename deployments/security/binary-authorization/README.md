@@ -88,7 +88,7 @@ terraform apply
 ./deployments/security/binary-authorization/sign-image.sh \
   PROJECT_ID \
   production \
-  us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:v1.0.0
+  us-central1-docker.pkg.dev/PROJECT_ID/mcp-prod/mcp-server-langgraph:v1.0.0
 ```
 
 ### Automated Signing in CI/CD
@@ -185,7 +185,7 @@ gcloud container binauthz attestations list \
 # Try deploying unsigned image (should fail in production)
 kubectl run test-unsigned \
   --image=nginx:latest \
-  --namespace=mcp-production
+  --namespace=mcp-prod
 
 # Should see error:
 # Error: admission webhook denied the request:

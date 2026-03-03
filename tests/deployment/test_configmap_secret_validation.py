@@ -8,11 +8,11 @@ This test suite validates that:
 4. No missing ConfigMap keys that would cause CreateContainerConfigError
 
 These tests follow TDD principles and are designed to prevent the pod crash issues
-that occurred on 2025-11-12 in preview-mcp-server-langgraph namespace.
+that occurred on 2025-11-12 in stg-mcp-server-langgraph namespace.
 
 Root Causes Prevented:
 - Issue #1: Missing ConfigMap keys (session_cookie_secure, rate_limit_per_minute, etc.)
-- Issue #2: Secret name mismatch (mcp-server-langgraph-secrets vs preview-mcp-server-langgraph-secrets)
+- Issue #2: Secret name mismatch (mcp-server-langgraph-secrets vs stg-mcp-server-langgraph-secrets)
 """
 
 import gc
@@ -109,8 +109,8 @@ class TestConfigMapValidation:
     @pytest.mark.parametrize(
         "overlay,namespace",
         [
-            ("deployments/overlays/preview-gke", "preview-mcp-server-langgraph"),
-            ("deployments/overlays/production-gke", "production-mcp-server-langgraph"),
+            ("deployments/overlays/stg-gke", "stg-mcp-server-langgraph"),
+            ("deployments/overlays/prod-gke", "prod-mcp-server-langgraph"),
         ],
     )
     def test_all_configmap_keys_exist(self, overlay, namespace):
@@ -154,7 +154,7 @@ class TestConfigMapValidation:
     @pytest.mark.parametrize(
         "overlay",
         [
-            "deployments/overlays/preview-gke",
+            "deployments/overlays/stg-gke",
         ],
     )
     def test_required_configmap_keys_present_staging(self, overlay):
@@ -298,8 +298,8 @@ class TestSecretValidation:
     @pytest.mark.parametrize(
         "overlay,expected_prefix",
         [
-            ("deployments/overlays/preview-gke", "preview-"),
-            ("deployments/overlays/production-gke", "production-"),
+            ("deployments/overlays/stg-gke", "stg-"),
+            ("deployments/overlays/prod-gke", "production-"),
         ],
     )
     def test_primary_app_secret_names_match_external_secrets(self, overlay, expected_prefix):
@@ -308,7 +308,7 @@ class TestSecretValidation:
 
         This test would have caught the issue where deployment referenced
         'mcp-server-langgraph-secrets' but ExternalSecret created
-        'preview-mcp-server-langgraph-secrets'.
+        'stg-mcp-server-langgraph-secrets'.
 
         Note: Only validates secrets that should be managed by ExternalSecrets.
         Other secrets (like otel-collector-secrets) may be managed differently.
@@ -346,8 +346,8 @@ class TestSecretValidation:
     @pytest.mark.parametrize(
         "overlay,expected_prefix",
         [
-            ("deployments/overlays/preview-gke", "preview-"),
-            ("deployments/overlays/production-gke", "production-"),
+            ("deployments/overlays/stg-gke", "stg-"),
+            ("deployments/overlays/prod-gke", "production-"),
         ],
     )
     def test_all_external_secret_data_mappings_exist(self, overlay, expected_prefix):
@@ -384,8 +384,8 @@ class TestSecretValidation:
     @pytest.mark.parametrize(
         "overlay",
         [
-            "deployments/overlays/preview-gke",
-            "deployments/overlays/production-gke",
+            "deployments/overlays/stg-gke",
+            "deployments/overlays/prod-gke",
         ],
     )
     def test_all_secret_keys_referenced_are_created(self, overlay):
@@ -451,8 +451,8 @@ class TestKustomizePrefixConsistency:
     @pytest.mark.parametrize(
         "overlay,expected_prefix",
         [
-            ("deployments/overlays/preview-gke", "preview-"),
-            ("deployments/overlays/production-gke", "production-"),
+            ("deployments/overlays/stg-gke", "stg-"),
+            ("deployments/overlays/prod-gke", "production-"),
         ],
     )
     def test_patch_files_use_prefixed_secret_names(self, overlay, expected_prefix):
@@ -461,7 +461,7 @@ class TestKustomizePrefixConsistency:
 
         This catches the issue where deployment-redis-url-json-patch.yaml
         referenced 'mcp-server-langgraph-secrets' instead of
-        'preview-mcp-server-langgraph-secrets'.
+        'stg-mcp-server-langgraph-secrets'.
         """
         kustomization = self.read_kustomization(overlay)
 

@@ -1,22 +1,22 @@
 ---
 title: Multi-Environment Strategy
-description: 'Configure dev, staging, and production environments with Terraform for consistent, cost-optimized infrastructure'
+description: 'Configure dev, stg, and production environments with Terraform for consistent, cost-optimized infrastructure'
 icon: 'layer-group'
 seoTitle: "Multi-Environment Strategy - Infrastructure as Code"
-seoDescription: "MCP Server infrastructure: Configure dev, staging, and production environments with Terraform for consistent, cost-optimized infrastructure"
+seoDescription: "MCP Server infrastructure: Configure dev, stg, and production environments with Terraform for consistent, cost-optimized infrastructure"
 keywords: ["infrastructure as code", "Terraform", "IaC", "cloud infrastructure", "MCP deployment"]
 contentType: "how-to"
 ---
 
 ## Overview
 
-MCP Server uses a **multi-environment Terraform strategy** to maintain consistent infrastructure across development, staging, and production while optimizing costs and managing risk.
+MCP Server uses a **multi-environment Terraform strategy** to maintain consistent infrastructure across development, stg, and production while optimizing costs and managing risk.
 
 <CardGroup cols={3}>
   <Card title="Development" icon="flask">
     Cost-optimized for testing
   </Card>
-  <Card title="Staging" icon="vial">
+  <Card title="STG" icon="vial">
     Production-like validation
   </Card>
   <Card title="Production" icon="rocket">
@@ -39,7 +39,7 @@ MCP Server uses a **multi-environment Terraform strategy** to maintain consisten
   <Step title="Parameter-Driven Differences">
     **Use variables** to adjust sizing, HA, and features
     - Dev: Single zone, smaller instances
-    - Staging: Regional, production-like
+    - STG: Regional, production-like
     - Prod: Regional, HA, monitoring
   </Step>
 
@@ -51,9 +51,9 @@ MCP Server uses a **multi-environment Terraform strategy** to maintain consisten
   </Step>
 
   <Step title="Progressive Rollout">
-    **Test changes in dev → staging → prod**
+    **Test changes in dev → stg → prod**
     - Validate in dev
-    - Load test in staging
+    - Load test in stg
     - Deploy to prod with confidence
   </Step>
 </Steps>
@@ -64,7 +64,7 @@ MCP Server uses a **multi-environment Terraform strategy** to maintain consisten
 
 ### Configuration Matrix
 
-| Component | Development | Staging | Production |
+| Component | Development | STG | Production |
 |-----------|-------------|---------|------------|
 | **GKE Cluster** | Zonal (1 zone) | Regional (3 zones) | Regional (3 zones) |
 | **GKE Mode** | Autopilot | Autopilot | Autopilot |
@@ -92,15 +92,15 @@ terraform/environments/
 │   ├── backend.tf           # GCS backend (dev prefix)
 │   └── outputs.tf           # Cluster details, connection info
 │
-├── gcp-staging/
+├── gcp-stg/
 │   ├── main.tf              # Same modules as dev
 │   ├── variables.tf         # Same variables
-│   ├── terraform.tfvars     # Staging-specific values (larger sizes)
-│   ├── backend.tf           # GCS backend (staging prefix)
+│   ├── terraform.tfvars     # STG-specific values (larger sizes)
+│   ├── backend.tf           # GCS backend (stg prefix)
 │   └── outputs.tf
 │
 └── gcp-prod/
-    ├── main.tf              # Same modules as dev/staging
+    ├── main.tf              # Same modules as dev/stg
     ├── variables.tf         # Same variables
     ├── terraform.tfvars     # Production values (HA, monitoring)
     ├── backend.tf           # GCS backend (prod prefix)
@@ -188,7 +188,7 @@ terraform/environments/
 
 ---
 
-## Staging Environment
+## STG Environment
 
 ### Purpose
 
@@ -203,17 +203,17 @@ terraform/environments/
   <Tab title="terraform.tfvars">
     ```hcl
     # Project & Region
-    project_id = "mcp-staging-project"
+    project_id = "mcp-stg-project"
     region     = "us-central1"
 
     # VPC
-    vpc_name = "mcp-staging-vpc"
+    vpc_name = "mcp-stg-vpc"
     nodes_cidr    = "10.10.0.0/24"
     pods_cidr     = "10.11.0.0/16"
     services_cidr = "10.12.0.0/16"
 
     # GKE
-    cluster_name     = "mcp-preview-gke"
+    cluster_name     = "mcp-stg-gke"
     regional_cluster = true  # 3 zones for HA
 
     # Cloud SQL
@@ -237,7 +237,7 @@ terraform/environments/
 
     # Cost
     labels = {
-      environment = "staging"
+      environment = "stg"
       cost_center = "engineering"
     }
     ```
@@ -262,19 +262,19 @@ terraform/environments/
   <Accordion title="No Read Replicas">
     **Production**: Has Cloud SQL read replicas for read scaling.
 
-    **Staging**: No read replicas (cost savings, same testing value).
+    **STG**: No read replicas (cost savings, same testing value).
   </Accordion>
 
   <Accordion title="Binary Auth in Audit Mode">
     **Production**: Binary Authorization **enforcing** (blocks unsigned images).
 
-    **Staging**: **Audit mode** (logs denials, doesn't block). Allows testing image signing without risk.
+    **STG**: **Audit mode** (logs denials, doesn't block). Allows testing image signing without risk.
   </Accordion>
 
   <Accordion title="Smaller Database">
     **Production**: db-custom-4-15360 (4 vCPU).
 
-    **Staging**: db-custom-2-7680 (2 vCPU). Sufficient for load testing without production traffic.
+    **STG**: db-custom-2-7680 (2 vCPU). Sufficient for load testing without production traffic.
   </Accordion>
 </AccordionGroup>
 
@@ -306,7 +306,7 @@ terraform/environments/
     nat_ip_count  = 2  # 2 static NAT IPs for egress
 
     # GKE
-    cluster_name     = "production-mcp-server-langgraph-gke"
+    cluster_name     = "prod-mcp-server-langgraph-gke"
     regional_cluster = true  # 3 zones for HA
 
     # Security
@@ -355,7 +355,7 @@ terraform/environments/
 
     # Labels
     labels = {
-      environment = "production"
+      environment = "prod"
       cost_center = "engineering"
       sla         = "99.9"
       compliance  = "soc2"
@@ -452,12 +452,12 @@ terraform/environments/
     - Basic smoke tests pass
   </Step>
 
-  <Step title="2. Deploy to Staging">
+  <Step title="2. Deploy to STG">
     ```bash
-    cd terraform/environments/gcp-staging
+    cd terraform/environments/gcp-stg
     terraform init
-    terraform plan -out=staging.tfplan
-    terraform apply staging.tfplan
+    terraform plan -out=stg.tfplan
+    terraform apply stg.tfplan
     ```
 
     **Validation**:
@@ -524,12 +524,12 @@ terraform/environments/
     ```
   </Tab>
 
-  <Tab title="Staging">
-    ```hcl terraform/environments/gcp-staging/backend.tf
+  <Tab title="STG">
+    ```hcl terraform/environments/gcp-stg/backend.tf
     terraform {
       backend "gcs" {
         bucket = "mcp-langgraph-terraform-state"
-        prefix = "environments/staging"
+        prefix = "environments/stg"
       }
     }
     ```
@@ -598,10 +598,10 @@ variable "enable_binary_authorization" {
 
 **Only `terraform.tfvars` differs** across environments:
 
-| Variable | Dev | Staging | Prod |
+| Variable | Dev | STG | Prod |
 |----------|-----|---------|------|
-| `project_id` | mcp-dev | mcp-staging | mcp-prod |
-| `cluster_name` | mcp-dev-gke | mcp-preview-gke | production-mcp-server-langgraph-gke |
+| `project_id` | mcp-dev | mcp-stg | mcp-prod |
+| `cluster_name` | mcp-dev-gke | mcp-stg-gke | prod-mcp-server-langgraph-gke |
 | `regional_cluster` | false | true | true |
 | `cloudsql_tier` | db-custom-1-3840 | db-custom-2-7680 | db-custom-4-15360 |
 | `redis_tier` | BASIC | STANDARD_HA | STANDARD_HA |
@@ -614,7 +614,7 @@ variable "enable_binary_authorization" {
 <Steps>
   <Step title="Unit Tests (Terraform Validate)">
     ```bash
-    for env in gcp-dev gcp-staging gcp-prod; do
+    for env in gcp-dev gcp-stg gcp-prod; do
       cd terraform/environments/$env
       terraform init -backend=false
       terraform validate
@@ -648,10 +648,10 @@ variable "enable_binary_authorization" {
     - Secrets in code (Gitleaks)
   </Step>
 
-  <Step title="Load Testing (Staging)">
+  <Step title="Load Testing (STG)">
     ```bash
-    # Deploy to staging
-    cd terraform/environments/gcp-staging
+    # Deploy to stg
+    cd terraform/environments/gcp-stg
     terraform apply
 
     # Run load tests (example with k6)
@@ -686,13 +686,13 @@ gcloud scheduler jobs create http scale-up-dev \
 
 **Savings**: $50-70/month (60-70%)
 
-### Staging
+### STG
 
 <Check>**Right-size** based on actual load test results</Check>
 
 ```bash
 # Monitor actual usage
-kubectl top pods -n staging-mcp-server-langgraph --containers
+kubectl top pods -n stg-mcp-server-langgraph --containers
 
 # Adjust pod requests
 kubectl patch deployment mcp-server-langgraph \
@@ -747,9 +747,9 @@ committed_use_term             = "3_YEAR"  # 52% discount
     ```xml
   </Step>
 
-  <Step title="Validate in Staging">
+  <Step title="Validate in STG">
     ```
-    cd terraform/environments/gcp-staging
+    cd terraform/environments/gcp-stg
     terraform init && terraform apply
     ```xml
   </Step>

@@ -416,7 +416,7 @@ bulkhead_active_operations{service}
 
 ### Rollout Strategy
 1. **Development**: Enable for all services, test thoroughly
-2. **Staging**: A/B test (50% traffic with resilience)
+2. **STG**: A/B test (50% traffic with resilience)
 3. **Production**: Gradual rollout (10% → 25% → 50% → 100% over 4 weeks)
 4. **Monitoring**: Watch for regressions, roll back if needed
 

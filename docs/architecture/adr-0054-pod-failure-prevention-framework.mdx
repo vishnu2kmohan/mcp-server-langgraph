@@ -32,7 +32,7 @@ Infrastructure & Deployment
 
 ## Context
 
-On 2025-11-12, we experienced multiple pod crash failures in the staging environment:
+On 2025-11-12, we experienced multiple pod crash failures in the stg environment:
 
 1. **Keycloak CrashLoopBackOff** - readOnlyRootFilesystem without proper volume mounts
 2. **OTEL Collector** - GKE Autopilot CPU ratio violation (5.0 > 4.0)
@@ -106,7 +106,7 @@ We will implement a **comprehensive Pod Failure Prevention Framework** consistin
   - Common mistakes to avoid
 
 #### C. Remediation Reports
-- **Location**: `docs-internal/operations/STAGING_POD_CRASH_REMEDIATION.md`
+- **Location**: `docs-internal/operations/STG_POD_CRASH_REMEDIATION.md`
 - **Content**:
   - Root cause analysis
   - Detailed solutions
@@ -300,7 +300,7 @@ We will implement a **comprehensive Pod Failure Prevention Framework** consistin
 
 1. **Pod Failure Rate** (Target: < 1% of deployments)
    - Track: Number of pod failures per deployment
-   - Baseline (before): ~20% failure rate in staging
+   - Baseline (before): ~20% failure rate in stg
    - Target (after): < 1% failure rate
 
 2. **Mean Time to Resolution (MTTR)** (Target: < 30 minutes)
@@ -319,7 +319,7 @@ We will implement a **comprehensive Pod Failure Prevention Framework** consistin
 ### Qualitative Metrics:
 
 1. **Developer Confidence**
-   - Developers feel confident deploying to staging/production
+   - Developers feel confident deploying to stg/production
    - Reduced anxiety around deployments
 
 2. **Incident Prevention**
@@ -344,7 +344,7 @@ We will implement a **comprehensive Pod Failure Prevention Framework** consistin
 ## References
 
 ### Internal Documentation:
-- [Staging Pod Crash Remediation Report](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs-internal/operations/STAGING_POD_CRASH_REMEDIATION.md)
+- [STG Pod Crash Remediation Report](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs-internal/operations/STG_POD_CRASH_REMEDIATION.md)
 - [Troubleshooting Runbook](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs-internal/operations/POD_FAILURE_TROUBLESHOOTING_RUNBOOK.md)
 - [Deployment Checklist](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs-internal/operations/DEPLOYMENT_CHECKLIST.md)
 

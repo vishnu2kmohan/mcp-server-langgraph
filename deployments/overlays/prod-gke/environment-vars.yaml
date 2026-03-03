@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-vars
+  namespace: prod-mcp-server-langgraph
+data:
+  # GCP Project ID - UPDATE THIS with your actual GCP project ID
+  # This ConfigMap is used as a source for Kustomize variable substitution
+  # For prod deployments, update deployment-config ConfigMap instead
+  GCP_PROJECT_ID: "vishnu-prod-project"

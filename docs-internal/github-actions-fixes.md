@@ -285,7 +285,7 @@ Before creating next release, verify:
 
 - [ ] Helm chart lints successfully: `helm lint deployments/helm/mcp-server-langgraph`
 - [ ] Helm template renders: `helm template test deployments/helm/mcp-server-langgraph`
-- [ ] Kustomize overlays validate: `kubectl kustomize deployments/kustomize/overlays/production`
+- [ ] Kustomize overlays validate: `kubectl kustomize deployments/kustomize/overlays/prod`
 - [ ] Docker image builds: `docker build -t mcp-server-langgraph:test .`
 - [ ] Version bump script works: `DRY_RUN=1 bash scripts/deployment/bump-versions.sh 2.5.0`
 - [ ] All workflow YAML files are valid (GitHub Actions syntax)
@@ -312,7 +312,7 @@ Before creating next release, verify:
 2. **Option A - Blue/Green Deployment** (Recommended):
    ```bash
    # Deploy new version alongside old
-   kubectl apply -k deployments/kustomize/overlays/production
+   kubectl apply -k deployments/kustomize/overlays/prod
 
    # Verify new deployment
    kubectl get pods -n mcp-server-langgraph
@@ -328,7 +328,7 @@ Before creating next release, verify:
    kubectl label namespace langgraph-agent name=mcp-server-langgraph
 
    # Apply new manifests
-   kubectl apply -k deployments/kustomize/overlays/production
+   kubectl apply -k deployments/kustomize/overlays/prod
 
    # Delete old resources
    kubectl delete deployment langgraph-agent -n mcp-server-langgraph

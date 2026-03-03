@@ -1,5 +1,5 @@
 """
-Pre-deployment validation tests for preview environment.
+Pre-deployment validation tests for stg environment.
 
 Prevents deployment failures by validating configuration before deploy.
 
@@ -22,10 +22,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 @pytest.mark.deployment
-@pytest.mark.preview
-@pytest.mark.xdist_group(name="testpreviewdeploymentrequirements")
+@pytest.mark.stg
+@pytest.mark.xdist_group(name="teststgdeploymentrequirements")
 class TestPreviewDeploymentRequirements:
-    """Test preview deployment meets all requirements."""
+    """Test stg deployment meets all requirements."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -33,7 +33,7 @@ class TestPreviewDeploymentRequirements:
 
     def test_keycloak_has_cloud_sql_proxy_sidecar(self):
         """
-        Test: Preview Keycloak must have Cloud SQL Proxy sidecar for database connectivity.
+        Test: STG Keycloak must have Cloud SQL Proxy sidecar for database connectivity.
 
         RED (Before Fix):
         - Keycloak deployment missing Cloud SQL Proxy sidecar
@@ -47,11 +47,11 @@ class TestPreviewDeploymentRequirements:
 
         REFACTOR:
         - This test prevents regression
-        - Validates preview overlay has sidecar
+        - Validates stg overlay has sidecar
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
-        assert patch_file.exists(), f"Preview Keycloak patch file not found: {patch_file}"
+        assert patch_file.exists(), f"STG Keycloak patch file not found: {patch_file}"
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -62,19 +62,19 @@ class TestPreviewDeploymentRequirements:
         container_names = [c["name"] for c in containers]
 
         assert "cloud-sql-proxy" in container_names, (
-            "Preview Keycloak deployment missing Cloud SQL Proxy sidecar.\n"
+            "STG Keycloak deployment missing Cloud SQL Proxy sidecar.\n"
             "Without this sidecar, Keycloak cannot connect to Cloud SQL database.\n"
-            "Fix: Add cloud-sql-proxy container to deployments/overlays/preview-gke/keycloak-patch.yaml"
+            "Fix: Add cloud-sql-proxy container to deployments/overlays/stg-gke/keycloak-patch.yaml"
         )
 
     def test_keycloak_db_url_points_to_localhost(self):
         """
-        Test: Preview Keycloak must connect to database via Cloud SQL Proxy on localhost.
+        Test: STG Keycloak must connect to database via Cloud SQL Proxy on localhost.
 
         Validates KC_DB_URL environment variable points to 127.0.0.1:5432
         (Cloud SQL Proxy sidecar listens on localhost)
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -96,11 +96,11 @@ class TestPreviewDeploymentRequirements:
 
     def test_cloud_sql_proxy_has_correct_instance_connection_string(self):
         """
-        Test: Cloud SQL Proxy must have correct instance connection string for preview.
+        Test: Cloud SQL Proxy must have correct instance connection string for stg.
 
         Validates the connection string format and project ID.
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -136,7 +136,7 @@ class TestPreviewDeploymentRequirements:
 
         Ensures Kubernetes can detect proxy failures and restart if needed.
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -163,7 +163,7 @@ class TestPreviewDeploymentRequirements:
 
         Ensures proxy connects to Cloud SQL instance via private IP, not public.
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -185,13 +185,13 @@ class TestPreviewDeploymentRequirements:
         """
         Test: Keycloak container has all required volume mounts.
 
-        NOTE: Preview uses readOnlyRootFilesystem: false due to Quarkus JIT compilation
+        NOTE: STG uses readOnlyRootFilesystem: false due to Quarkus JIT compilation
         requirements (see GitHub issue #10150). This is a documented exception.
         Production uses readOnlyRootFilesystem: true with explicit volume mounts.
 
         Cross-validates with security hardening requirements.
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -210,7 +210,7 @@ class TestPreviewDeploymentRequirements:
         # doesn't need runtime Quarkus augmentation.
         # See: docker/Dockerfile.keycloak and https://www.keycloak.org/server/containers
         assert readonly_fs is True, (
-            "Preview Keycloak should use readOnlyRootFilesystem: true with optimized image.\n"
+            "STG Keycloak should use readOnlyRootFilesystem: true with optimized image.\n"
             "The custom Keycloak image pre-compiles Quarkus at build time via 'kc.sh build'.\n"
             "See: docker/Dockerfile.keycloak\n"
             f"Current value: {readonly_fs}"
@@ -232,11 +232,11 @@ class TestPreviewDeploymentRequirements:
 
     def test_preview_uses_preview_secrets(self):
         """
-        Test: Preview deployment references preview-specific secrets.
+        Test: STG deployment references stg-specific secrets.
 
-        Prevents accidentally using production secrets in preview.
+        Prevents accidentally using production secrets in stg.
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -253,19 +253,19 @@ class TestPreviewDeploymentRequirements:
             if "valueFrom" in env_var and "secretKeyRef" in env_var["valueFrom"]:
                 secret_name = env_var["valueFrom"]["secretKeyRef"]["name"]
 
-                assert "preview" in secret_name.lower(), (
+                assert "stg" in secret_name.lower(), (
                     f"Environment variable {env_var['name']} references secret '{secret_name}' "
-                    f"which doesn't appear to be preview-specific.\n"
-                    f"Preview should use preview-prefixed secrets to prevent production data leakage."
+                    f"which doesn't appear to be stg-specific.\n"
+                    f"STG should use stg-prefixed secrets to prevent production data leakage."
                 )
 
     def test_keycloak_resource_limits_appropriate_for_preview(self):
         """
-        Test: Keycloak resource requests/limits are appropriate for preview environment.
+        Test: Keycloak resource requests/limits are appropriate for stg environment.
 
-        Preview should have lower limits than production but sufficient for testing.
+        STG should have lower limits than production but sufficient for testing.
         """
-        patch_file = Path("deployments/overlays/preview-gke/keycloak-patch.yaml")
+        patch_file = Path("deployments/overlays/stg-gke/keycloak-patch.yaml")
 
         with open(patch_file) as f:
             manifest = yaml.safe_load(f)
@@ -283,7 +283,7 @@ class TestPreviewDeploymentRequirements:
         requests = resources["requests"]
         limits = resources["limits"]
 
-        # Validate memory (preview should have at least 512Mi)
+        # Validate memory (stg should have at least 512Mi)
         assert "memory" in requests, "Memory request not specified"
         assert "memory" in limits, "Memory limit not specified"
 

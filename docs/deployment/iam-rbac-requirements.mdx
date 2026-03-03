@@ -35,7 +35,7 @@ All permissions follow the **principle of least privilege** - granting only the 
 
 ## GCP (Google Kubernetes Engine)
 
-### Service Account: `mcp-staging-sa@PROJECT_ID.iam.gserviceaccount.com`
+### Service Account: `mcp-stg-sa@PROJECT_ID.iam.gserviceaccount.com`
 
 #### Required IAM Roles
 
@@ -52,7 +52,7 @@ All permissions follow the **principle of least privilege** - granting only the 
 
 ```bash
 PROJECT_ID="your-project-id"
-SERVICE_ACCOUNT="mcp-staging-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+SERVICE_ACCOUNT="mcp-stg-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 
 # CRITICAL: Artifact Registry Writer
 gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -106,9 +106,9 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: mcp-server-langgraph
-  namespace: staging-mcp-server-langgraph
+  namespace: stg-mcp-server-langgraph
   annotations:
-    iam.gke.io/gcp-service-account: mcp-staging-sa@PROJECT_ID.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: mcp-stg-sa@PROJECT_ID.iam.gserviceaccount.com
 ```
 #### Verification
 
@@ -264,8 +264,8 @@ aws iam put-role-policy \
 #### Grant Commands (Azure CLI)
 
 ```bash
-RESOURCE_GROUP="mcp-production-rg"
-CLUSTER_NAME="mcp-production"
+RESOURCE_GROUP="mcp-prod-rg"
+CLUSTER_NAME="mcp-prod"
 ACR_NAME="mcpcontainerregistry"
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
@@ -423,7 +423,7 @@ permissions:
 #!/bin/bash
 # validate-gcp-permissions.sh
 
-SERVICE_ACCOUNT="mcp-staging-sa@PROJECT_ID.iam.gserviceaccount.com"
+SERVICE_ACCOUNT="mcp-stg-sa@PROJECT_ID.iam.gserviceaccount.com"
 
 REQUIRED_ROLES=(
   "roles/artifactregistry.writer"
@@ -472,7 +472,7 @@ echo "✓ IAM policies validated"
 # validate-azure-permissions.sh
 
 SP_OBJECT_ID="your-service-principal-id"
-RESOURCE_GROUP="mcp-production-rg"
+RESOURCE_GROUP="mcp-prod-rg"
 
 echo "Validating Azure RBAC roles..."
 az role assignment list --assignee $SP_OBJECT_ID --resource-group $RESOURCE_GROUP
@@ -563,7 +563,7 @@ AWS EKS and Azure AKS deployment documentation is available via deployment scrip
 </Note>
 
 ### Scripts
-- **GCP Setup**: `scripts/gcp/setup-staging-infrastructure.sh`
+- **GCP Setup**: `scripts/gcp/setup-stg-infrastructure.sh`
 - **AWS Setup**: `scripts/deploy-aws-eks.sh`
 - **Azure Setup**: `scripts/deploy-azure-aks.sh`
 

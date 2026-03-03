@@ -17,7 +17,7 @@ We provide **6 production-ready Terraform modules** for deploying complete GCP i
     VPC, GKE, Cloud SQL, Redis, Workload Identity, Backend
   </Card>
   <Card title="3 Environments" icon="layer-group">
-    Dev, Staging, Production configurations
+    Dev, STG, Production configurations
   </Card>
   <Card title="9,000+ Lines" icon="code">
     Production-grade infrastructure code
@@ -42,7 +42,7 @@ flowchart TB
 
     subgraph Environments[Environment Configurations]
         Dev[Development<br/>Cost-optimized]
-        Staging[Staging<br/>Production-like]
+        STG[STG<br/>Production-like]
         Prod[Production<br/>Enterprise-grade]
     end
 
@@ -62,7 +62,7 @@ flowchart TB
     class GKE clusterStyle
     class SQL,Redis dataStyle
     class WI authStyle
-    class Dev,Staging,Prod envStyle
+    class Dev,STG,Prod envStyle
 ```
 ---
 
@@ -108,9 +108,9 @@ terraform apply
     **Cost**: $880-1,275/month
   </Tab>
 
-  <Tab title="Staging">
+  <Tab title="STG">
     ```bash
-    cd terraform/environments/gcp-staging
+    cd terraform/environments/gcp-stg
 
     cp terraform.tfvars.example terraform.tfvars
     terraform init
@@ -158,7 +158,7 @@ module "vpc" {
   project_id   = "my-project"
   name_prefix  = "mcp-prod"
   region       = "us-central1"
-  cluster_name = "production-mcp-server-langgraph-gke"
+  cluster_name = "prod-mcp-server-langgraph-gke"
 
   nodes_cidr    = "10.0.0.0/20"   # 4096 IPs
   pods_cidr     = "10.4.0.0/14"   # 262k IPs
@@ -172,7 +172,7 @@ module "vpc" {
   project_id   = var.project_id
   name_prefix  = "mcp-prod"
   region       = "us-central1"
-  cluster_name = "production-mcp-server-langgraph-gke"
+  cluster_name = "prod-mcp-server-langgraph-gke"
 
   # Network configuration
   nodes_cidr    = "10.0.0.0/20"
@@ -187,7 +187,7 @@ module "vpc" {
   flow_logs_sampling     = 0.1
 
   labels = {
-    environment = "production"
+    environment = "prod"
     managed_by  = "terraform"
   }
 }
@@ -224,7 +224,7 @@ module "gke" {
   source = "../../modules/gke-autopilot"
 
   project_id   = var.project_id
-  cluster_name = "production-mcp-server-langgraph-gke"
+  cluster_name = "prod-mcp-server-langgraph-gke"
   region       = "us-central1"
 
   # Network from VPC module
@@ -242,7 +242,7 @@ module "gke" {
   source = "../../modules/gke-autopilot"
 
   project_id   = var.project_id
-  cluster_name = "production-mcp-server-langgraph-gke"
+  cluster_name = "prod-mcp-server-langgraph-gke"
   region       = "us-central1"
 
   # Network configuration
@@ -277,7 +277,7 @@ module "gke" {
   release_channel = "STABLE"
 
   labels = {
-    environment = "production"
+    environment = "prod"
   }
 }
 ```
@@ -408,7 +408,7 @@ module "workload_identity" {
   source = "../../modules/gke-workload-identity"
 
   project_id = var.project_id
-  namespace  = "mcp-production"
+  namespace  = "mcp-prod"
 
   service_accounts = {
     "mcp-server-sa" = {
@@ -484,7 +484,7 @@ module "vpc" {
   project_id   = var.project_id
   name_prefix  = "mcp-prod"
   region       = "us-central1"
-  cluster_name = "production-mcp-server-langgraph-gke"
+  cluster_name = "prod-mcp-server-langgraph-gke"
 
   nodes_cidr    = "10.0.0.0/20"
   pods_cidr     = "10.4.0.0/14"
@@ -498,7 +498,7 @@ module "gke" {
   source = "../../modules/gke-autopilot"
 
   project_id   = var.project_id
-  cluster_name = "production-mcp-server-langgraph-gke"
+  cluster_name = "prod-mcp-server-langgraph-gke"
   region       = "us-central1"
 
   # Use VPC outputs
@@ -551,7 +551,7 @@ module "workload_identity" {
   source = "../../modules/gke-workload-identity"
 
   project_id = var.project_id
-  namespace  = "mcp-production"
+  namespace  = "mcp-prod"
 
   service_accounts = {
     "mcp-server-sa" = {
@@ -583,7 +583,7 @@ module "workload_identity" {
   <Card title="Cost">
     **$100-150/month**
 
-    50% cheaper than staging
+    50% cheaper than stg
   </Card>
 </CardGroup>
 
@@ -597,9 +597,9 @@ terraform apply
 
 ---
 
-#### Staging (Production-Like)
+#### STG (Production-Like)
 
-**Location**: `terraform/environments/gcp-staging/`
+**Location**: `terraform/environments/gcp-stg/`
 
 <CardGroup cols={2}>
   <Card title="Configuration">
@@ -955,7 +955,7 @@ output "resource_id" {
     Terraform state backend configuration
   </Card>
   <Card title="Multi-Environment Strategy" icon="layer-group" href="/deployment/infrastructure/multi-environment">
-    Dev, staging, production workflows
+    Dev, stg, production workflows
   </Card>
   <Card title="GKE Production Deployment" icon="rocket" href="/deployment/kubernetes/gke-production">
     Complete production deployment guide

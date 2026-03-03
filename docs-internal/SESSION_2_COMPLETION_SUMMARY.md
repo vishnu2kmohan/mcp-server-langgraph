@@ -34,15 +34,15 @@ Successfully completed comprehensive Helm/Kubernetes configuration hardening acr
 
 #### P0-3: Network Policy JGroups Egress for Keycloak Clustering
 - **Problem**: Missing egress rules preventing Keycloak cluster formation (TCP/7800)
-- **Fix**: Validated existing configuration in preview-gke overlay
-- **Files**: `deployments/overlays/preview-gke/network-policy.yaml`
+- **Fix**: Validated existing configuration in stg-gke overlay
+- **Files**: `deployments/overlays/stg-gke/network-policy.yaml`
 - **Validation**: ✅ Network policy tests passing (7/7)
 - **Impact**: Keycloak clustering functional
 
 #### P0-4: Cloud SQL Proxy Health Probe Configuration
 - **Problem**: Health probes must use correct port (9801) and endpoints
 - **Fix**: Validated existing proxy configuration in staging/production overlays
-- **Files**: `deployments/overlays/preview-gke/keycloak-patch.yaml` (lines 101-150)
+- **Files**: `deployments/overlays/stg-gke/keycloak-patch.yaml` (lines 101-150)
 - **Validation**: ✅ Cloud SQL proxy tests passing (11/11)
 - **Impact**: Reliable proxy health monitoring
 
@@ -57,8 +57,8 @@ Successfully completed comprehensive Helm/Kubernetes configuration hardening acr
 #### Production Cloud SQL Proxy /tmp Mount Missing
 - **Problem**: Production overlay adds proxy sidecar without /tmp mount
 - **Fix**: Added /tmp volume mount via JSON6902 patch
-- **Files**: `deployments/overlays/production-gke/deployment-containers-patch.yaml`
-- **Detection**: Regression test `test_readonly_fs_has_tmp_mount[production-gke]`
+- **Files**: `deployments/overlays/prod-gke/deployment-containers-patch.yaml`
+- **Detection**: Regression test `test_readonly_fs_has_tmp_mount[prod-gke]`
 
 ### ✅ P1 - High Priority Issues (5/5, ~12 hours)
 
@@ -172,9 +172,9 @@ python scripts/audit_resource_ratios.py: All ratios ≤ 4.0 ✅
 - `deployments/base/keycloak-deployment.yaml` - readOnlyRootFilesystem volumes
 - `deployments/base/qdrant-deployment.yaml` - /tmp and /var/tmp mounts
 - `deployments/base/otel-collector-deployment.yaml` - CPU ratio fix
-- `deployments/overlays/production-gke/deployment-containers-patch.yaml` - Cloud SQL proxy /tmp
-- `deployments/overlays/preview-gke/otel-collector-config.yaml` - Deprecated key removal
-- `deployments/overlays/production-gke/otel-collector-config.yaml` - Deprecated key removal
+- `deployments/overlays/prod-gke/deployment-containers-patch.yaml` - Cloud SQL proxy /tmp
+- `deployments/overlays/stg-gke/otel-collector-config.yaml` - Deprecated key removal
+- `deployments/overlays/prod-gke/otel-collector-config.yaml` - Deprecated key removal
 - `deployments/kubernetes/overlays/gcp/otel-collector-config*.yaml` - Deprecated key removal (2 files)
 
 ### Tests

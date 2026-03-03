@@ -43,20 +43,20 @@ image: gcr.io/project/app:2.4.0
 image: mcp-server-langgraph:latest
 image: mcp-server-langgraph  # defaults to latest
 ```
-#### Staging (Recommended)
+#### STG (Recommended)
 
-Staging environments **SHOULD** use explicit version tags with environment prefix:
+STG environments **SHOULD** use explicit version tags with environment prefix:
 
 ```yaml
 ## ✅ PREFERRED
-newTag: staging-2.4.0
+newTag: stg-2.4.0
 
 ## ⚠️ ACCEPTABLE (for pre-release testing)
-newTag: staging-rc1
-newTag: staging-beta
+newTag: stg-rc1
+newTag: stg-beta
 
 ## 🔴 AVOID
-newTag: staging-latest
+newTag: stg-latest
 ```
 
 #### Development (Flexible)
@@ -95,8 +95,8 @@ newTag: dev-2.4.0-${GIT_SHA}
 | **Kustomize** |
 | `deployments/kustomize/base/kustomization.yaml` | 2.4.0 | ✅ Pinned | Base |
 | `deployments/kustomize/overlays/dev/kustomization.yaml` | dev-latest | ⚠️ Latest | Development |
-| `deployments/kustomize/overlays/staging/kustomization.yaml` | staging-2.4.0 | ✅ Pinned | Staging |
-| `deployments/kustomize/overlays/production/kustomization.yaml` | v2.4.0 | ✅ Pinned | Production |
+| `deployments/kustomize/overlays/stg/kustomization.yaml` | stg-2.4.0 | ✅ Pinned | STG |
+| `deployments/kustomize/overlays/prod/kustomization.yaml` | v2.4.0 | ✅ Pinned | Production |
 | **Cloud Run** |
 | `deployments/cloudrun/service.yaml` | 2.4.0 | ✅ Pinned | Template |
 
@@ -165,8 +165,8 @@ Run the version sync script:
 ## - deployments/helm/mcp-server-langgraph/values.yaml (image.tag)
 ## - deployments/kubernetes/base/deployment.yaml
 ## - deployments/kustomize/base/kustomization.yaml
-## - deployments/kustomize/overlays/staging/kustomization.yaml
-## - deployments/kustomize/overlays/production/kustomization.yaml
+## - deployments/kustomize/overlays/stg/kustomization.yaml
+## - deployments/kustomize/overlays/prod/kustomization.yaml
 ## - deployments/cloudrun/service.yaml
 ```
 #### 3. Create Git Tag
@@ -210,16 +210,16 @@ Our CI/CD pipeline automatically creates:
 mcp-server-langgraph:2.4.0
 mcp-server-langgraph:v2.4.0
 
-## Git SHA (development/staging)
+## Git SHA (development/stg)
 mcp-server-langgraph:dev-a1b2c3d
-mcp-server-langgraph:staging-a1b2c3d
+mcp-server-langgraph:stg-a1b2c3d
 
 ## Combined (traceability)
 mcp-server-langgraph:2.4.0-a1b2c3d
 mcp-server-langgraph:v2.4.0-rc1
 
 ## Environment-specific
-mcp-server-langgraph:staging-2.4.0
+mcp-server-langgraph:stg-2.4.0
 mcp-server-langgraph:prod-2.4.0
 ```
 
@@ -253,20 +253,20 @@ images:
 
 **Rationale**: Rapid iteration, auto-deploy on commit
 
-#### Staging
+#### STG
 
 ```yaml
-## kustomize/overlays/staging/kustomization.yaml
+## kustomize/overlays/stg/kustomization.yaml
 images:
   - name: mcp-server-langgraph
-    newTag: staging-2.4.0  # Explicit version
+    newTag: stg-2.4.0  # Explicit version
 ```
 **Rationale**: Testing specific versions before production
 
 #### Production
 
 ```yaml
-## kustomize/overlays/production/kustomization.yaml
+## kustomize/overlays/prod/kustomization.yaml
 images:
   - name: mcp-server-langgraph
     newTag: v2.4.0  # Production version tag
@@ -306,7 +306,7 @@ Before deploying to production:
 - [ ] All Kustomize overlays updated
 - [ ] Git tag created and pushed
 - [ ] CI/CD built correct version
-- [ ] Staging tested with exact production tag
+- [ ] STG tested with exact production tag
 - [ ] Rollback plan documented
 
 #### Automated Verification
@@ -328,11 +328,11 @@ Before deploying to production:
 
 ```bash
 ## Update overlay to previous version
-cd deployments/kustomize/overlays/production
+cd deployments/kustomize/overlays/prod
 vim kustomization.yaml  # Change newTag: v2.4.0 → v2.3.0
 
 ## Apply rollback
-kubectl apply -k deployments/kustomize/overlays/production
+kubectl apply -k deployments/kustomize/overlays/prod
 
 ## Verify rollback
 kubectl rollout status deployment/prod-mcp-server-langgraph
@@ -467,7 +467,7 @@ See [VERSION_COMPATIBILITY](/deployment/version-compatibility) for detailed infr
 - ✅ Use explicit semantic version tags (2.4.0)
 - ✅ Update all deployment configs when bumping version
 - ✅ Create git tags for releases
-- ✅ Test with production tags in staging
+- ✅ Test with production tags in stg
 - ✅ Document version changes in CHANGELOG.md
 - ✅ Use imagePullPolicy: IfNotPresent with pinned tags
 - ✅ Maintain version consistency across all files

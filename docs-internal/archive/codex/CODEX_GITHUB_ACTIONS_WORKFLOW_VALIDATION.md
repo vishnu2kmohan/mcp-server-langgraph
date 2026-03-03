@@ -217,7 +217,7 @@ All tests **PASS** ✅
 #### 1. Secret Validation for GCP Workflows
 
 **Codex Claim**:
-> "gcp-compliance-scan.yaml:135, gcp-drift-detection.yaml:200, deploy-preview-gke.yaml:195 assume secrets/Workload Identity resources exist; on scheduled runs or forks they fail at auth"
+> "gcp-compliance-scan.yaml:135, gcp-drift-detection.yaml:200, deploy-stg-gke.yaml:195 assume secrets/Workload Identity resources exist; on scheduled runs or forks they fail at auth"
 
 **Status**: 🟡 **PARTIALLY VALID**
 
@@ -245,14 +245,14 @@ All tests **PASS** ✅
 #### 2. Docker Build Logic Duplication
 
 **Codex Claim**:
-> "ci.yaml:323, deploy-preview-gke.yaml:153, deploy-production-gke.yaml:168 currently duplicate Docker build logic; consider extracting to a reusable workflow or composite"
+> "ci.yaml:323, deploy-stg-gke.yaml:153, deploy-prod-gke.yaml:168 currently duplicate Docker build logic; consider extracting to a reusable workflow or composite"
 
 **Status**: ✅ **VALID** improvement opportunity
 
 **Locations**:
 - `ci.yaml:271-373` - Docker build matrix job (base, full, test variants)
-- `deploy-preview-gke.yaml:86-172` - Staging deployment build
-- `deploy-production-gke.yaml:109-199` - Production deployment build
+- `deploy-stg-gke.yaml:86-172` - Staging deployment build
+- `deploy-prod-gke.yaml:109-199` - Production deployment build
 
 **Analysis**:
 - Similar patterns repeated: setup-buildx → docker/login → build-push-action
@@ -574,8 +574,8 @@ if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 ```
 
 **Files Modified**:
-- `.github/workflows/deploy-preview-gke.yaml` (4 jobs)
-- `.github/workflows/deploy-production-gke.yaml` (4 jobs)
+- `.github/workflows/deploy-stg-gke.yaml` (4 jobs)
+- `.github/workflows/deploy-prod-gke.yaml` (4 jobs)
 - `.github/workflows/gcp-compliance-scan.yaml` (1 job)
 - `.github/workflows/gcp-drift-detection.yaml` (3 jobs)
 
@@ -617,8 +617,8 @@ if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 
 **Current State**:
 - Docker builds in ci.yaml (matrix: base, full, test variants)
-- Docker builds in deploy-preview-gke.yaml (Artifact Registry)
-- Docker builds in deploy-production-gke.yaml (SBOM + provenance)
+- Docker builds in deploy-stg-gke.yaml (Artifact Registry)
+- Docker builds in deploy-prod-gke.yaml (SBOM + provenance)
 
 **Why Defer**:
 - Each workflow has unique requirements (matrix vs single, SBOM, different registries)

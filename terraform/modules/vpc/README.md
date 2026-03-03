@@ -39,7 +39,7 @@ module "vpc" {
   flow_logs_traffic_type     = "ALL"
 
   tags = {
-    Environment = "production"
+    Environment = "prod"
     Team        = "platform"
     CostCenter  = "engineering"
   }

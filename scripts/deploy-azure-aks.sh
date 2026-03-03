@@ -12,8 +12,8 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-mcp-production-rg}"
-CLUSTER_NAME="${AKS_CLUSTER_NAME:-mcp-production}"
+RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-mcp-prod-rg}"
+CLUSTER_NAME="${AKS_CLUSTER_NAME:-mcp-prod}"
 LOCATION="${AZURE_LOCATION:-eastus}"
 # ENVIRONMENT reserved for future Terraform automation
 # shellcheck disable=SC2034

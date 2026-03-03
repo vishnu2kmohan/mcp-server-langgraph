@@ -388,7 +388,7 @@ class TestWorkflowPerformanceOptimizations:
             )
 
 
-@pytest.mark.xdist_group(name="teststagingdeployworkflow")
+@pytest.mark.xdist_group(name="teststgdeployworkflow")
 class TestStagingDeployWorkflow:
     """
     Test staging deployment workflow configuration.
@@ -405,7 +405,7 @@ class TestStagingDeployWorkflow:
     @pytest.fixture
     def staging_deploy_workflow_path(self) -> Path:
         """Path to staging deploy workflow file."""
-        return Path(".github/workflows/deploy-preview-gke.yaml")
+        return Path(".github/workflows/deploy-stg-gke.yaml")
 
     @pytest.fixture
     def staging_deploy_workflow(self, staging_deploy_workflow_path: Path) -> dict | None:
@@ -418,7 +418,7 @@ class TestStagingDeployWorkflow:
     @pytest.fixture
     def staging_trivyignore_path(self) -> Path:
         """Path to staging .trivyignore file."""
-        return Path("deployments/overlays/preview-gke/.trivyignore")
+        return Path("deployments/overlays/stg-gke/.trivyignore")
 
     def test_trivy_scan_uses_trivyignores(self, staging_deploy_workflow: dict | None):
         """

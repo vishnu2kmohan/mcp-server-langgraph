@@ -64,12 +64,10 @@ class TestQdrantSecurityContext:
         This prevents the container from writing to its root filesystem,
         which is a security best practice. Previously flagged by Trivy.
 
-        File: deployments/overlays/preview-gke/qdrant-patch.yaml:12
+        File: deployments/overlays/stg-gke/qdrant-patch.yaml:12
         Finding: Trivy flagged missing securityContext.readOnlyRootFilesystem
         """
-        qdrant_patch_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "qdrant-patch.yaml"
-        )
+        qdrant_patch_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "stg-gke" / "qdrant-patch.yaml"
 
         assert qdrant_patch_path.exists(), f"Qdrant patch file not found: {qdrant_patch_path}"
 
@@ -99,9 +97,7 @@ class TestQdrantSecurityContext:
 
         This prevents privilege escalation attacks.
         """
-        qdrant_patch_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "qdrant-patch.yaml"
-        )
+        qdrant_patch_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "stg-gke" / "qdrant-patch.yaml"
 
         if not qdrant_patch_path.exists():
             pytest.skip("Qdrant patch file not found")
@@ -127,9 +123,7 @@ class TestQdrantSecurityContext:
 
         This follows the principle of least privilege.
         """
-        qdrant_patch_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "qdrant-patch.yaml"
-        )
+        qdrant_patch_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "stg-gke" / "qdrant-patch.yaml"
 
         if not qdrant_patch_path.exists():
             pytest.skip("Qdrant patch file not found")
@@ -169,12 +163,10 @@ class TestOpenFGAWorkloadIdentity:
         This enables secure authentication to GCP services without
         using service account keys.
 
-        File: deployments/overlays/preview-gke/serviceaccount-openfga.yaml:6
+        File: deployments/overlays/stg-gke/serviceaccount-openfga.yaml:6
         Finding: Missing iam.gke.io/gcp-service-account annotation
         """
-        sa_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "serviceaccount-openfga.yaml"
-        )
+        sa_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "stg-gke" / "serviceaccount-openfga.yaml"
 
         assert sa_path.exists(), f"OpenFGA ServiceAccount file not found: {sa_path}"
 
@@ -204,9 +196,7 @@ class TestOpenFGAWorkloadIdentity:
 
         This ensures the principle of least privilege is documented.
         """
-        sa_path = (
-            Path(__file__).parent.parent.parent / "deployments" / "overlays" / "preview-gke" / "serviceaccount-openfga.yaml"
-        )
+        sa_path = Path(__file__).parent.parent.parent / "deployments" / "overlays" / "stg-gke" / "serviceaccount-openfga.yaml"
 
         if not sa_path.exists():
             pytest.skip("OpenFGA ServiceAccount file not found")
@@ -318,14 +308,14 @@ class TestHelmPlaceholderSecurity:
         if accidentally deployed with test/placeholder values.
 
         Files:
-        - deployments/helm/values-staging.yaml:108
-        - deployments/helm/values-production.yaml:139
+        - deployments/helm/values-stg.yaml:108
+        - deployments/helm/values-prod.yaml:139
         """
         # NOTE: These files are TEMPLATES that should be replaced during deployment.
         # This test verifies they are documented as templates and not used directly.
 
-        staging_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-staging.yaml"
-        production_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-production.yaml"
+        staging_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-stg.yaml"
+        production_values = Path(__file__).parent.parent.parent / "deployments" / "helm" / "values-prod.yaml"
 
         # Read files and check for placeholder patterns
         # We expect these placeholders to exist in template files,
