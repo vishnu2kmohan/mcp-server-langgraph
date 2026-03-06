@@ -302,18 +302,14 @@ trap cleanup EXIT INT TERM
 
 # -----------------------------------------------------------------------------
 # Lane runner: execute a lane's hooks via pre-commit with isolated cache
+# pre-commit 4.x uses positional args: `pre-commit run HOOK_ID`
+# Each hook must be run individually (no multi-hook flag).
 # -----------------------------------------------------------------------------
 run_lane() {
     local lane_name="$1"
     shift
     local hooks=("$@")
     local log_file="$log_dir/${lane_name}.log"
-
-    # Build --hook-id arguments
-    local hook_args=""
-    for hook in "${hooks[@]}"; do
-        hook_args="$hook_args --hook-id $hook"
-    done
 
     # Isolate PRE_COMMIT_HOME per lane to prevent concurrent cache corruption
     local lane_cache="$HOME/.cache/pre-commit-lane-${lane_name}"
@@ -322,16 +318,25 @@ run_lane() {
     (
         echo "=== Lane: $lane_name ===" > "$log_file"
         echo "Started: $(date '+%H:%M:%S')" >> "$log_file"
+        echo "Hooks: ${#hooks[@]}" >> "$log_file"
         echo "" >> "$log_file"
 
-        PRE_COMMIT_HOME="$lane_cache" \
-            pre-commit run --hook-stage pre-push $hook_args \
-            --from-ref "$FROM_REF" --to-ref "$TO_REF" >> "$log_file" 2>&1
-        local exit_code=$?
+        local lane_exit=0
+        for hook in "${hooks[@]}"; do
+            echo "--- Running: $hook ---" >> "$log_file"
+            PRE_COMMIT_HOME="$lane_cache" \
+                pre-commit run "$hook" --hook-stage pre-push \
+                --from-ref "$FROM_REF" --to-ref "$TO_REF" >> "$log_file" 2>&1
+            local hook_exit=$?
+            if [[ $hook_exit -ne 0 ]]; then
+                echo "  FAILED (exit code: $hook_exit)" >> "$log_file"
+                lane_exit=1
+            fi
+        done
 
         echo "" >> "$log_file"
-        echo "Finished: $(date '+%H:%M:%S') (exit code: $exit_code)" >> "$log_file"
-        exit $exit_code
+        echo "Finished: $(date '+%H:%M:%S') (exit code: $lane_exit)" >> "$log_file"
+        exit $lane_exit
     ) &
     lane_pids+=($!)
 }
