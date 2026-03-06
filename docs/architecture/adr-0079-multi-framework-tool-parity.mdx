@@ -427,6 +427,15 @@ flowchart LR
     ADAPT --> LC
     ADAPT --> CS
     ADAPT --> MCP
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef devStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef registryStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef frameworkStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class IMPL devStyle
+    class REG,ADAPT registryStyle
+    class LC,CS,MCP frameworkStyle
 ```
 
 ### Execution Flow

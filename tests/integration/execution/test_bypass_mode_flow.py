@@ -15,6 +15,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from tests.conftest import get_user_id
+
 from mcp_server_langgraph.audit.models import AuditEventType
 from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 from mcp_server_langgraph.execution.bypass_audit import log_bypass_audit_event
@@ -194,7 +196,7 @@ class TestBypassModeEndToEndFlow:
         # Mock audit service to verify it's called correctly
         audit_service = AsyncMock(return_value=None)
         current_user = {
-            "user_id": "user:integration-test-user",
+            "user_id": get_user_id("integration"),
             "username": "test-user",
         }
 
@@ -295,7 +297,7 @@ class TestBypassModePrometheusIntegration:
         THEN Prometheus metrics should also be recorded.
         """
         with patch("mcp_server_langgraph.execution.bypass_audit.record_bypass_activation") as mock_activation:
-            current_user = {"user_id": "user:test"}
+            current_user = {"user_id": get_user_id("prometheus")}
 
             await log_bypass_audit_event(
                 audit_service=None,  # No audit service
@@ -307,7 +309,7 @@ class TestBypassModePrometheusIntegration:
             )
 
             # Metrics should still be recorded even without audit service
-            mock_activation.assert_called_once_with(user="user:test")
+            mock_activation.assert_called_once_with(user=get_user_id("prometheus"))
 
 
 # =============================================================================

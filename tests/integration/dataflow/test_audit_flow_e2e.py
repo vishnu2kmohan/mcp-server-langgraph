@@ -17,6 +17,8 @@ from uuid import uuid4
 
 import pytest
 
+from tests.conftest import get_user_id
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.audit,
@@ -235,7 +237,7 @@ class TestAuditDataFlowE2E:
 
         # Log event for different actor
         other_event = create_audit_event(
-            actor_id="user:other-user",
+            actor_id=get_user_id("other"),
             request_id=f"req-{uuid4().hex[:8]}",
             event_type=AuditEventType.DATA_CREATE,
         )
@@ -317,6 +319,7 @@ class TestAuditBroadcasterFlow:
         assert broadcast_event["actor"]["actor_id"] == unique_actor_id
 
 
+@pytest.mark.xdist_group(name="audit_scheduler_integration")
 class TestAuditSchedulerIntegration:
     """
     E2E tests for audit scheduler lifecycle with new bootstrap architecture.

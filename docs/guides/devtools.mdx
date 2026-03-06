@@ -26,7 +26,6 @@ Agent Studio DevTools provides a comprehensive debugging environment for inspect
 ### Architecture
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','secondaryColor':'#ffffb3','tertiaryColor':'#bebada'}}}%%
 flowchart TB
     subgraph Frontend
         DTP[DevToolsPanel]
@@ -56,6 +55,15 @@ flowchart TB
     WS --> LGS
     Tabs --> CS
     TL --> DTS
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef frontendStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef reduxStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef tabsStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class DTP,TL,WS frontendStyle
+    class DTS,LGS,CS reduxStyle
+    class Console,State,Network,Agent,Exec,AI,OTEL tabsStyle
 ```
 
 ### Quick Start

@@ -12,6 +12,7 @@ Tests cover:
 
 import pytest
 
+from tests.conftest import get_user_id
 from mcp_server_langgraph.api.v1.user import (
     compute_persona,
     get_visible_modules_for_persona,
@@ -96,7 +97,7 @@ class TestUserInfoResponseModel:
     def test_response_includes_api_version(self):
         """Response should include api_version field."""
         response = UserInfoResponse(
-            user_id="user:test",
+            user_id=get_user_id("persona"),
             username="test",
             persona="user",
             roles=[],
@@ -107,7 +108,7 @@ class TestUserInfoResponseModel:
     def test_response_includes_base_persona(self):
         """Response should include base_persona field."""
         response = UserInfoResponse(
-            user_id="user:test",
+            user_id=get_user_id("persona"),
             username="test",
             persona="admin",
             roles=["admin"],
@@ -117,7 +118,7 @@ class TestUserInfoResponseModel:
     def test_response_includes_sub_persona(self):
         """Response should include optional sub_persona field."""
         response = UserInfoResponse(
-            user_id="user:test",
+            user_id=get_user_id("persona"),
             username="test",
             persona="developer",
             sub_persona="alice-builder",
@@ -128,7 +129,7 @@ class TestUserInfoResponseModel:
     def test_response_includes_visible_modules(self):
         """Response should include visible_modules list."""
         response = UserInfoResponse(
-            user_id="user:test",
+            user_id=get_user_id("persona"),
             username="test",
             persona="admin",
             visible_modules=["chat", "admin", "audit"],
@@ -140,7 +141,7 @@ class TestUserInfoResponseModel:
     def test_response_includes_feature_flags(self):
         """Response should include feature_flags dict."""
         response = UserInfoResponse(
-            user_id="user:test",
+            user_id=get_user_id("persona"),
             username="test",
             persona="user",
             feature_flags={"focus_mode": True, "canvas_shortcuts": False},

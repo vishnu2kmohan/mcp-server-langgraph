@@ -13,6 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi import FastAPI, HTTPException, status
 
+from tests.conftest import get_user_id
+
 from mcp_server_langgraph.api.v1.references import references_router
 from mcp_server_langgraph.auth.dependencies import require_reference_viewer_global
 from mcp_server_langgraph.core.dependencies import get_connection_repository
@@ -54,7 +56,7 @@ class TestReferencesAPIIntegration:
         3. API checks connection:viewer auth via OpenFGA
         4. API returns resolved reference with metadata
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
 
         mock_connection = MagicMock()
         mock_connection.id = "conn-uuid-123"
@@ -143,7 +145,7 @@ class TestReferencesAPIIntegration:
 
         Verifies the API can handle mixed reference types in a single request.
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
 
         mock_connection = MagicMock()
         mock_connection.id = "conn-uuid-456"
@@ -220,7 +222,7 @@ class TestReferencesAPIIntegration:
 
         When enable_markdown_references is False, the endpoint should not be available.
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
         app = create_test_app(user_override=mock_user)
 
         with patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags:
@@ -245,7 +247,7 @@ class TestReferencesAPIIntegration:
         The API should return a resolved reference with status='not_found',
         not an HTTP 404.
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
 
         mock_repo = MagicMock()
         mock_repo.get_by_server_name = AsyncMock(return_value=None)
@@ -293,7 +295,7 @@ class TestReferencesAPIIntegration:
         When OpenFGA denies connection:viewer, the reference should have
         status='unauthorized'.
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
 
         mock_connection = MagicMock()
         mock_connection.id = "conn-uuid-789"
@@ -347,7 +349,7 @@ class TestReferencesAPIIntegration:
         When resolving [[skill:name@version]], the metadata should contain
         the requested version for client-side validation.
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
 
         mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
@@ -404,7 +406,7 @@ class TestReferencesAPIIntegration:
 
         Memory notes inherit viewer access from their parent session.
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
 
         mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)
@@ -463,7 +465,7 @@ class TestReferencesAPIIntegration:
 
         Execution plans inherit viewer access from their parent session.
         """
-        mock_user = {"sub": "user:test-user-123", "user_id": "test-user-123"}
+        mock_user = {"sub": get_user_id("refs"), "user_id": get_user_id("refs").split(":")[-1]}
 
         mock_auth = AsyncMock(return_value=None)
         mock_auth.authorize = AsyncMock(return_value=True)

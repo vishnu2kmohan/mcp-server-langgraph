@@ -32,6 +32,7 @@ import uuid
 
 import pytest
 
+from tests.conftest import get_user_id
 from tests.constants import TEST_QDRANT_PORT
 
 # Guard for optional qdrant_client dependency
@@ -166,7 +167,7 @@ def mock_openfga_authorization():
     """
     from unittest.mock import AsyncMock, patch
 
-    mock_client = AsyncMock()  # noqa: async-mock-config
+    mock_client = AsyncMock(spec=True)
     mock_client.check_permission = AsyncMock(return_value=True)
 
     with patch(
@@ -379,7 +380,7 @@ class TestSemanticIndexManagerToolSearch:
             # Search for calculator-related query (user_id required for authorization)
             results = await manager.search_tools(
                 query="calculate the sum of numbers",
-                user_id="user:test_alice",
+                user_id=get_user_id("alice"),
                 limit=3,
                 min_score=0.0,  # Low threshold to get results with mock embedder
             )
@@ -442,7 +443,7 @@ class TestSemanticIndexManagerToolSearch:
             # Query uses words from indexed content for mock embedder similarity
             results = await manager.search_tools(
                 query="calculator basic arithmetic",
-                user_id="user:test_alice",
+                user_id=get_user_id("alice"),
                 category=ToolCategory.CALCULATOR,
                 limit=10,
                 min_score=0.0,
@@ -545,7 +546,7 @@ class TestSemanticIndexManagerSkillSearch:
             # Search for skills (user_id required for authorization)
             results = await manager.search_skills(
                 query="review code quality",
-                user_id="user:test_alice",
+                user_id=get_user_id("alice"),
                 limit=5,
                 min_score=0.0,
             )
@@ -766,7 +767,7 @@ class TestSemanticIndexManagerMultiTenant:
             # Search with tenant filter (user_id required for authorization)
             results = await manager.search_tools(
                 query="calculator",
-                user_id="user:test_alice",
+                user_id=get_user_id("alice"),
                 tenant_id="tenant-001",
                 limit=10,
                 min_score=0.0,
@@ -808,14 +809,14 @@ class TestSemanticIndexManagerMultiTenant:
                     content="Tenant 1 context information",
                     memory_type=MemoryType.CONTEXT,
                     tenant_id="tenant-001",
-                    user_id="user:test_alice",  # Required for search filter
+                    user_id=get_user_id("alice"),  # Required for search filter
                 ),
                 MemoryIndexEntry(
                     memory_id=str(uuid.uuid4()),
                     content="Tenant 2 context information",
                     memory_type=MemoryType.CONTEXT,
                     tenant_id="tenant-002",
-                    user_id="user:test_alice",  # Same user, different tenant
+                    user_id=get_user_id("alice"),  # Same user, different tenant
                 ),
             ]
 
@@ -825,8 +826,8 @@ class TestSemanticIndexManagerMultiTenant:
             # Search with tenant filter (current_user_id and search_user_id for authorization)
             results = await manager.search_memories(
                 query="context information",
-                current_user_id="user:test_alice",  # User making the request
-                search_user_id="user:test_alice",  # User's memories (same for own search)
+                current_user_id=get_user_id("alice"),  # User making the request
+                search_user_id=get_user_id("alice"),  # User's memories (same for own search)
                 tenant_id="tenant-001",
                 limit=10,
                 min_score=0.0,

@@ -35,8 +35,9 @@ flowchart LR
 
     Templates --> Services
 
-    classDef templateStyle fill:#b3e2cd,stroke:#1a9850,stroke-width:2px,color:#333
-    classDef serviceStyle fill:#fdcdac,stroke:#f4a582,stroke-width:2px,color:#333
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef templateStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
 
     class List,Get,Suggestions,Categories,Apply templateStyle
     class GitHub,Slack,Notion,Custom serviceStyle

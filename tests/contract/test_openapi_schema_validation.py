@@ -15,6 +15,8 @@ from typing import Any
 import jsonschema
 import pytest
 
+from tests.conftest import get_user_id
+
 pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 # Load OpenAPI schema once at module level
@@ -187,7 +189,7 @@ class TestUserInfoResponseValidation:
         validator = build_validator_with_resolver(schema, "UserInfoResponse")
 
         valid_response = {
-            "user_id": "user:admin",
+            "user_id": get_user_id("admin"),
             "username": "admin",
             "email": "admin@example.com",
             "roles": ["admin"],
@@ -213,7 +215,7 @@ class TestUserInfoResponseValidation:
         validator = build_validator_with_resolver(schema, "UserInfoResponse")
 
         valid_response = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "email": "alice@example.com",
             "roles": ["developer"],
@@ -233,7 +235,7 @@ class TestUserInfoResponseValidation:
         validator = build_validator_with_resolver(schema, "UserInfoResponse")
 
         valid_response = {
-            "user_id": "user:bob",
+            "user_id": get_user_id("bob"),
             "username": "bob",
             "persona": "user",  # Minimal required fields
         }
@@ -247,7 +249,7 @@ class TestUserInfoResponseValidation:
         validator = build_validator_with_resolver(schema, "UserInfoResponse")
 
         invalid_response = {
-            "user_id": "user:test",
+            "user_id": get_user_id("schema"),
             # Missing 'username' and 'persona' which are required
         }
 
@@ -260,7 +262,7 @@ class TestUserInfoResponseValidation:
         validator = build_validator_with_resolver(schema, "UserInfoResponse")
 
         invalid_response = {
-            "user_id": "user:test",
+            "user_id": get_user_id("schema"),
             "username": "test",
             "persona": "superuser",  # Invalid - not in enum
         }
@@ -274,7 +276,7 @@ class TestUserInfoResponseValidation:
         validator = build_validator_with_resolver(schema, "UserInfoResponse")
 
         invalid_response = {
-            "user_id": "user:test",
+            "user_id": get_user_id("schema"),
             "username": "test",
             "persona": "user",
             "visible_modules": "chat,workflows",  # Should be array, not string
@@ -289,7 +291,7 @@ class TestUserInfoResponseValidation:
         validator = build_validator_with_resolver(schema, "UserInfoResponse")
 
         invalid_response = {
-            "user_id": "user:test",
+            "user_id": get_user_id("schema"),
             "username": "test",
             "persona": "user",
             "feature_flags": ["flag1", "flag2"],  # Should be object, not array

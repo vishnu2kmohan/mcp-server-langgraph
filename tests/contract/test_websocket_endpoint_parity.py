@@ -423,7 +423,7 @@ class TestWebSocketAuthorizationTupleParity:
             "ai:orchestrator",
         ]
 
-        required_users = ["user:admin", "user:alice", "user:bob"]
+        required_users = ["user:admin", "user:alice", "user:bob"]  # Safe: OpenFGA sample tuples
 
         for resource in critical_resources:
             users_with_access = {

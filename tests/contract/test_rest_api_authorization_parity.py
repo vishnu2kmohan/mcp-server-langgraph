@@ -194,7 +194,7 @@ class TestRestApiAuthorizationTupleParity:
             "marketplace:default",
         ]
 
-        required_viewers = ["user:admin", "user:alice", "user:bob"]
+        required_viewers = ["user:admin", "user:alice", "user:bob"]  # Safe: OpenFGA sample tuples
 
         # Check viewer-accessible resources
         for resource in viewer_accessible:
@@ -213,12 +213,16 @@ class TestRestApiAuthorizationTupleParity:
             }
 
             # At minimum, admin should have access
-            if "user:admin" not in users_with_access:
+            if "user:admin" not in users_with_access:  # Safe: OpenFGA sample tuples
                 pytest.fail(f"Admin must have access to restricted resource: {resource}")
 
         # Check admin-only resources
         for resource in admin_only:
-            admin_tuples = [t for t in tuples if t.get("object") == resource and t.get("user") == "user:admin"]
+            admin_tuples = [
+                t
+                for t in tuples
+                if t.get("object") == resource and t.get("user") == "user:admin"  # Safe: OpenFGA sample tuples
+            ]
             assert len(admin_tuples) >= 1, f"Admin-only resource '{resource}' missing admin tuple"
 
     def test_cost_endpoints_have_viewer_tuples(self) -> None:
@@ -228,7 +232,7 @@ class TestRestApiAuthorizationTupleParity:
 
         # Should have tuples for admin, alice, bob
         users = {t["user"] for t in cost_tuples if t.get("user", "").startswith("user:")}
-        required = {"user:admin", "user:alice", "user:bob"}
+        required = {"user:admin", "user:alice", "user:bob"}  # Safe: OpenFGA sample tuples
 
         missing = required - users
         if missing:
@@ -242,10 +246,10 @@ class TestRestApiAuthorizationTupleParity:
         users = {t["user"] for t in compliance_tuples if t.get("user", "").startswith("user:")}
 
         # Admin must have access
-        assert "user:admin" in users, "Admin must have compliance access"
+        assert "user:admin" in users, "Admin must have compliance access"  # Safe: OpenFGA sample tuples
 
         # Alice (as compliance-officer sub-persona) should have access
-        assert "user:alice" in users, "Alice (compliance-officer) should have compliance access"
+        assert "user:alice" in users, "Alice (compliance-officer) should have compliance access"  # Safe: OpenFGA sample tuples
 
 
 class TestRestApiDynamicResources:
