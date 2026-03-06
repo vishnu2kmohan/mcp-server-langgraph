@@ -108,7 +108,7 @@ class TestWebSocketCircuitBreaker:
         # Force failures using sync calls
         for _ in range(10):
             try:
-                breaker.call(lambda: (_ for _ in ()).throw(Exception("failure")))  # noqa: E731
+                breaker.call(lambda: (_ for _ in ()).throw(Exception("failure")))
             except Exception:
                 pass
 
@@ -126,7 +126,7 @@ class TestWebSocketCircuitBreaker:
         # Force circuit open
         for _ in range(10):
             try:
-                breaker.call(lambda: (_ for _ in ()).throw(Exception("failure")))  # noqa: E731
+                breaker.call(lambda: (_ for _ in ()).throw(Exception("failure")))
             except Exception:
                 pass
 

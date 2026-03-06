@@ -89,8 +89,8 @@ _prompt_usage_total: Any = None
 
 def _init_prompt_metrics() -> bool:
     """Initialize prompt metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _prompt_usage_total  # noqa: PLW0603
+    global _metrics_available
+    global _prompt_usage_total
 
     if _metrics_available is not None:
         return _metrics_available

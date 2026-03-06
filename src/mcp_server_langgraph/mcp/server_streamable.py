@@ -2597,8 +2597,8 @@ async def list_resources() -> dict[str, Any]:
 
 
 # Include health check routes
-from mcp_server_langgraph.health.checks import app as health_app  # noqa: E402
-from mcp_server_langgraph.health.checks import prometheus_metrics  # noqa: E402
+from mcp_server_langgraph.health.checks import app as health_app
+from mcp_server_langgraph.health.checks import prometheus_metrics
 
 app.mount("/health", health_app)
 
@@ -2618,9 +2618,9 @@ async def root_metrics() -> Any:
 
 # Use RouterRegistry pattern for centralized router management
 # This eliminates maintenance burden of manually adding routers to both app.py and server_streamable.py
-from mcp_server_langgraph.api.router_registry import get_router_registry  # noqa: E402
-from mcp_server_langgraph.api.routers import register_default_routers  # noqa: E402
-from mcp_server_langgraph.api.version import router as version_router  # noqa: E402
+from mcp_server_langgraph.api.router_registry import get_router_registry
+from mcp_server_langgraph.api.routers import register_default_routers
+from mcp_server_langgraph.api.version import router as version_router
 
 # Register and mount all default routers via the registry pattern
 _registry = get_router_registry()

@@ -176,7 +176,7 @@ class TestSubagentLLMIntegration:
             llm_factory=mock_llm,
         )
 
-        _result = await subagent.execute()  # noqa: F841 (verifying execution completes)
+        _result = await subagent.execute()
 
         # Verify LLM was called
         mock_llm.ainvoke.assert_called_once()

@@ -61,7 +61,7 @@ SUGGESTIONS:
 REQUIRES_REFINEMENT: no
 
 FEEDBACK:
-Excellent response with accurate information, comprehensive coverage, and clear structure. Minor improvements suggested but not required."""  # noqa: E501
+Excellent response with accurate information, comprehensive coverage, and clear structure. Minor improvements suggested but not required."""
 
 
 @pytest.fixture

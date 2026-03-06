@@ -30,6 +30,7 @@ import pytest
 from mcp_server_langgraph.websocket.authz import WebSocketAuthorizationMiddleware
 from mcp_server_langgraph.websocket.base import WebSocketBase
 from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+from tests.conftest import get_user_id
 
 pytestmark = [
     pytest.mark.integration,
@@ -48,19 +49,19 @@ TEST_JWT_SECRET = "integration-test-jwt-secret-for-websocket-auth"
 
 PERSONAS = {
     "admin": {
-        "user_id": "user:admin",
+        "user_id": get_user_id("admin"),
         "username": "admin",
         "email": "admin@example.com",
         "roles": ["admin", "user"],
     },
     "alice": {
-        "user_id": "user:alice",
+        "user_id": get_user_id("alice"),
         "username": "alice",
         "email": "alice@example.com",
         "roles": ["editor", "user"],
     },
     "bob": {
-        "user_id": "user:bob",
+        "user_id": get_user_id("bob"),
         "username": "bob",
         "email": "bob@example.com",
         "roles": ["user"],
@@ -158,7 +159,7 @@ def mock_openfga_client():
         async def check_permission(
             user: str,
             relation: str,
-            object: str,  # noqa: A002
+            object: str,
         ) -> bool:
             """Simulate OpenFGA authorization check based on sample tuples."""
             # Extract user_id from "user:xxx" format

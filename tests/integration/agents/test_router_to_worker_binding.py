@@ -251,7 +251,7 @@ class TestToolBindingFlow:
         provider = HierarchicalCapabilityProvider()
         mock_llm_factory = MagicMock()
 
-        _worker = WorkerAgent(  # noqa: F841
+        _worker = WorkerAgent(
             llm_factory=mock_llm_factory,
             capability_provider=provider,
         )
@@ -267,7 +267,7 @@ class TestToolBindingFlow:
             mock_get.return_value = []
 
             # Worker should be able to resolve tools (even if empty)
-            _tools = await provider.get_tools(  # noqa: F841
+            _tools = await provider.get_tools(
                 scope=request.scope,
                 names=request.tools,
             )

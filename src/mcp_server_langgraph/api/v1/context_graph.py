@@ -112,7 +112,7 @@ def get_decision_repository(request: Request) -> "DecisionTraceRepositoryBase":
 _get_repository = get_decision_repository
 
 
-@router.get("/traces/{trace_id}", response_model=DecisionTraceRead)
+@router.get("/traces/{trace_id}")
 async def get_trace(
     trace_id: str,
     request: Request,
@@ -167,7 +167,7 @@ async def get_trace(
     return trace
 
 
-@router.get("/sessions/{session_id}/traces", response_model=list[DecisionTraceSummary])
+@router.get("/sessions/{session_id}/traces")
 async def get_session_traces(
     session_id: str,
     request: Request,
@@ -224,7 +224,7 @@ async def get_session_traces(
     )
 
 
-@router.post("/precedents/search", response_model=list[PrecedentSearchResult])
+@router.post("/precedents/search")
 async def search_precedents(
     body: PrecedentSearchRequest,
     request: Request,

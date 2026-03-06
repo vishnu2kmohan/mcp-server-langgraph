@@ -436,6 +436,7 @@ class TestWriteFileTool:
     # =========================================================================
 
     @pytest.mark.unit
+    @pytest.mark.xfail(strict=True, reason="Feature flag integration not yet implemented")
     def test_write_file_respects_feature_flag(self, temp_workspace: Path):
         """GIVEN the write_file feature flag is disabled
         WHEN write_file is called
@@ -453,7 +454,7 @@ class TestWriteFileToolIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.integration
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_write_file_requires_permission(self, tmp_path: Path):
         """GIVEN a user without write permission

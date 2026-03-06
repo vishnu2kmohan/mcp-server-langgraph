@@ -149,6 +149,7 @@ EOF
 )
 
 # Count patterns before
+# shellcheck disable=SC2086
 BEFORE_COUNT=$(grep -rE '(text|bg|border)-neutral-(100|200|300|400|500|600|700|800|900)' $FILES 2>/dev/null | wc -l | tr -d ' ')
 echo "Legacy patterns found: $BEFORE_COUNT"
 
@@ -156,7 +157,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo ""
     echo "Would apply the following transformations:"
     echo "$SED_COMMANDS" | grep -v '^#' | grep -v '^$' | head -20
-    echo "... and $(echo "$SED_COMMANDS" | grep -v '^#' | grep -v '^$' | wc -l | tr -d ' ') more"
+    echo "... and $(echo "$SED_COMMANDS" | grep -v '^#' | grep -vc '^$' | tr -d ' ') more"
     exit 0
 fi
 
@@ -164,6 +165,7 @@ fi
 echo "Applying migrations..."
 for file in $FILES; do
     # Use a temp file for atomic writes
+    # shellcheck disable=SC2034
     TEMP_FILE=$(mktemp)
 
     # Apply all sed commands
@@ -178,6 +180,7 @@ for file in $FILES; do
 done
 
 # Count patterns after
+# shellcheck disable=SC2086
 AFTER_COUNT=$(grep -rE '(text|bg|border)-neutral-(100|200|300|400|500|600|700|800|900)' $FILES 2>/dev/null | wc -l | tr -d ' ')
 
 echo ""

@@ -281,7 +281,7 @@ _limiter: Limiter | None = None
 
 def get_limiter() -> Limiter:
     """Get the rate limiter instance, creating it lazily if needed."""
-    global _limiter  # noqa: PLW0603
+    global _limiter
     if _limiter is None:
         _limiter = _create_limiter()
     return _limiter

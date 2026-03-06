@@ -170,7 +170,7 @@ class TestHttpClientManagerClose:
         from mcp_server_langgraph.core.http_client import HttpClientManager
 
         manager = HttpClientManager()
-        _client = await manager.get_client()  # noqa: F841 - call needed to init
+        _client = await manager.get_client()
 
         await manager.close()
 
@@ -185,7 +185,7 @@ class TestHttpClientManagerClose:
         from mcp_server_langgraph.core.http_client import HttpClientManager
 
         manager = HttpClientManager()
-        _client = await manager.get_client()  # noqa: F841 - call needed to init
+        _client = await manager.get_client()
 
         # Should not raise on multiple calls
         await manager.close()

@@ -124,9 +124,7 @@ class HierarchicalSkillRegistry(SkillRegistry):
 
             for check_scope in scopes_to_check:
                 if check_scope in self._scoped_skills:
-                    # Sequential override by scope priority - not a comprehension
-                    for name, skill in self._scoped_skills[check_scope].items():
-                        skills_by_name[name] = skill  # noqa: PERF403
+                    skills_by_name.update(self._scoped_skills[check_scope])
 
             return list(skills_by_name.values())
         else:
@@ -164,9 +162,7 @@ class HierarchicalSkillRegistry(SkillRegistry):
         all_skills: dict[str, Skill] = {}
 
         for scope_skills in self._scoped_skills.values():
-            # Deduplication by name - intentionally not a comprehension
-            for name, skill in scope_skills.items():
-                all_skills[name] = skill  # noqa: PERF403
+            all_skills.update(scope_skills)
 
         # Also include any skills only in base registry
         for skill in super().list_all():

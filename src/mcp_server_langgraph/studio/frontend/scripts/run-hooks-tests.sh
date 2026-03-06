@@ -16,6 +16,7 @@ set -e
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+# shellcheck disable=SC2034
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
@@ -68,6 +69,7 @@ else
     FAILED_SHARDS=()
 
     for i in $(seq 1 $SHARD_COUNT); do
+        # shellcheck disable=SC2086
         if ! run_shard $i; then
             FAILED_SHARDS+=("$i")
         fi

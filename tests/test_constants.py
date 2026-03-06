@@ -37,25 +37,50 @@ def test_jwt_secret_constant_exists():
 
 
 def test_mock_jwt_token_uses_constant():
-    """Verify mock_jwt_token fixture uses TEST_JWT_SECRET."""
+    """Verify mock_jwt_token fixture uses TEST_JWT_SECRET.
 
-    conftest_path = Path(__file__).parent / "conftest.py"
-    conftest_content = conftest_path.read_text()
+    The fixture was extracted from conftest.py to tests/plugins/auth_plugin.py
+    during Phase 5 fixture organization.
+    """
 
-    # Find the mock_jwt_token fixture
-    fixture_match = re.search(
-        r"@pytest\.fixture\s+def\s+mock_jwt_token\(\):.*?return jwt\.encode\([^)]+\)", conftest_content, re.DOTALL
+    # Search for mock_jwt_token fixture in plugin files (extracted from conftest.py)
+    plugin_paths = [
+        Path(__file__).parent / "plugins" / "auth_plugin.py",
+        Path(__file__).parent / "plugins" / "mock_fixtures_plugin.py",
+        Path(__file__).parent / "conftest.py",
+    ]
+
+    fixture_found = False
+    for plugin_path in plugin_paths:
+        if not plugin_path.exists():
+            continue
+
+        plugin_content = plugin_path.read_text()
+
+        # Find the mock_jwt_token fixture
+        fixture_match = re.search(
+            r"@pytest\.fixture\s+def\s+mock_jwt_token\(\):.*?return jwt\.encode\([^)]+\)",
+            plugin_content,
+            re.DOTALL,
+        )
+
+        if fixture_match is not None:
+            fixture_code = fixture_match.group(0)
+
+            # Verify it imports and uses TEST_JWT_SECRET
+            assert "from tests.constants import TEST_JWT_SECRET" in plugin_content, (
+                f"{plugin_path.name} must import TEST_JWT_SECRET from tests.constants"
+            )
+            assert "TEST_JWT_SECRET" in fixture_code, (
+                f"mock_jwt_token fixture in {plugin_path.name} must use TEST_JWT_SECRET constant"
+            )
+            fixture_found = True
+            break
+
+    assert fixture_found, (
+        "mock_jwt_token fixture not found in any plugin file or conftest.py. "
+        "Expected in tests/plugins/auth_plugin.py or tests/plugins/mock_fixtures_plugin.py"
     )
-
-    assert fixture_match is not None, "mock_jwt_token fixture not found in conftest.py"
-
-    fixture_code = fixture_match.group(0)
-
-    # Verify it imports and uses TEST_JWT_SECRET
-    assert "from tests.constants import TEST_JWT_SECRET" in conftest_content, (
-        "conftest.py must import TEST_JWT_SECRET from tests.constants"
-    )
-    assert "TEST_JWT_SECRET" in fixture_code, "mock_jwt_token fixture must use TEST_JWT_SECRET constant"
 
 
 def test_env_test_file_uses_correct_jwt_secret():
@@ -131,9 +156,10 @@ def test_docker_compose_uses_env_test_file():
                         )
                         services_with_jwt_in_environment.append(service_name)
 
-    # Verify at least mcp-server-test uses env_file pattern
-    assert "mcp-server-test" in services_with_env_file, (
-        "mcp-server-test should use env_file: .env.test for 12-factor compliance"
+    # Verify at least agent-studio-test uses env_file pattern
+    # (renamed from mcp-server-test to agent-studio-test)
+    assert "agent-studio-test" in services_with_env_file, (
+        "agent-studio-test should use env_file: .env.test for 12-factor compliance"
     )
 
 

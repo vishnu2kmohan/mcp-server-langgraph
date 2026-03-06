@@ -38,18 +38,18 @@ pytest_plugins = [
     "tests.plugins.container_plugin",
 ]
 
-import logging  # noqa: E402
-import os  # noqa: E402
-import sys  # noqa: E402
-import warnings  # noqa: E402
+import logging
+import os
+import sys
+import warnings
 
-import pytest  # noqa: E402
+import pytest
 
-from tests.constants import TEST_JWT_SECRET  # noqa: E402
+from tests.constants import TEST_JWT_SECRET
 
 # Guard optional dev dependencies
 try:
-    from hypothesis import Phase, settings  # noqa: E402
+    from hypothesis import Phase, settings
 
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
@@ -57,10 +57,10 @@ except ImportError:
     settings = None
     Phase = None
 
-from opentelemetry import trace  # noqa: E402
-from opentelemetry.sdk.trace import TracerProvider  # noqa: E402
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor  # noqa: E402
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter  # noqa: E402
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 # Set minimal test environment variables
 os.environ.setdefault("ENVIRONMENT", "test")

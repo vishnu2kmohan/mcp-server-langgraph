@@ -24,9 +24,9 @@ _injection_risk_histogram: Any = None
 
 def _init_metrics() -> bool:
     """Initialize metrics lazily to avoid import issues."""
-    global _metrics_available  # noqa: PLW0603
-    global _injection_detection_counter  # noqa: PLW0603
-    global _injection_risk_histogram  # noqa: PLW0603
+    global _metrics_available
+    global _injection_detection_counter
+    global _injection_risk_histogram
 
     if _injection_detection_counter is not None:
         return _metrics_available

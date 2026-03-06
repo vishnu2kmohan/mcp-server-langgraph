@@ -72,7 +72,7 @@ class HookedChatModel(BaseChatModel):
             max_tokens: Default max tokens for generation
             **kwargs: Additional kwargs passed to parent
         """
-        super().__init__(
+        super().__init__(  # type: ignore[call-arg]
             inner=inner,
             hook_dispatcher=hook_dispatcher,
             model_name=model_name,
@@ -139,7 +139,7 @@ class HookedChatModel(BaseChatModel):
                 messages.append(HumanMessage(content=content))
         return messages
 
-    def _generate(
+    def _generate(  # type: ignore[override]
         self,
         messages: list[BaseMessage],
         stop: list[str] | None = None,
@@ -153,7 +153,7 @@ class HookedChatModel(BaseChatModel):
 
         return asyncio.get_event_loop().run_until_complete(self._agenerate(messages, stop, **kwargs))
 
-    async def _agenerate(
+    async def _agenerate(  # type: ignore[override]
         self,
         messages: list[BaseMessage],
         stop: list[str] | None = None,
@@ -296,9 +296,9 @@ class HookedChatModel(BaseChatModel):
                         llm_output=result.llm_output,
                     )
 
-            return result
+            return result  # type: ignore[no-any-return]
 
-    def bind_tools(self, tools: list[Any], **kwargs: Any) -> HookedChatModel:
+    def bind_tools(self, tools: list[Any], **kwargs: Any) -> HookedChatModel:  # type: ignore[override]
         """Delegate bind_tools to inner model, preserve wrapper.
 
         NOTE: Native tool configs are NOT passed here. Use invocation kwargs.

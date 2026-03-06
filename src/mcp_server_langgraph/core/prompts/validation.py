@@ -52,10 +52,10 @@ _validation_parse_error_total: Any = None
 
 def _init_validation_metrics() -> bool:
     """Initialize validation metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _validation_success_total  # noqa: PLW0603
-    global _validation_failure_total  # noqa: PLW0603
-    global _validation_parse_error_total  # noqa: PLW0603
+    global _metrics_available
+    global _validation_success_total
+    global _validation_failure_total
+    global _validation_parse_error_total
 
     if _metrics_available is not None:
         return _metrics_available

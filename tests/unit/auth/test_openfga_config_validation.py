@@ -212,12 +212,12 @@ class TestSampleTuplesStructure:
         tuples = tuples_data["tuples"]
 
         for i, t in enumerate(tuples):
-            # Skip section header entries (documentation dividers, not tuples)
-            if "_section" in t:
+            # Skip section/comment-only entries (documentation dividers, not tuples)
+            if "_section" in t or (set(t.keys()) - {"_comment"} == set()):
                 continue
-            assert "user" in t, f"Tuple {i} missing 'user' field"
-            assert "relation" in t, f"Tuple {i} missing 'relation' field"
-            assert "object" in t, f"Tuple {i} missing 'object' field"
+            assert "user" in t, f"Tuple {i} missing 'user' field: {t}"
+            assert "relation" in t, f"Tuple {i} missing 'relation' field: {t}"
+            assert "object" in t, f"Tuple {i} missing 'object' field: {t}"
 
 
 @pytest.mark.xdist_group(name="test_openfga_config")
@@ -227,6 +227,16 @@ class TestTupleModelCrossValidation:
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
+
+    @staticmethod
+    def _is_data_tuple(t: dict) -> bool:
+        """Check if a tuple entry is a real data tuple (not a section/comment divider)."""
+        if "_section" in t:
+            return False
+        # Comment-only entries have no user/relation/object keys
+        if "user" not in t and "relation" not in t and "object" not in t:
+            return False
+        return True
 
     def _get_model_types_and_relations(self, model_data: dict) -> dict[str, set[str]]:
         """Extract type -> relations mapping from model."""
@@ -281,8 +291,7 @@ class TestTupleModelCrossValidation:
         errors = []
 
         for t in tuples:
-            # Skip section header entries (documentation dividers, not tuples)
-            if "_section" in t:
+            if not self._is_data_tuple(t):
                 continue
             obj_type = self._extract_object_type(t["object"])
             if obj_type not in valid_types:
@@ -304,8 +313,7 @@ class TestTupleModelCrossValidation:
         errors = []
 
         for t in tuples:
-            # Skip section header entries (documentation dividers, not tuples)
-            if "_section" in t:
+            if not self._is_data_tuple(t):
                 continue
             obj_type = self._extract_object_type(t["object"])
             relation = t["relation"]
@@ -337,8 +345,7 @@ class TestTupleModelCrossValidation:
         errors = []
 
         for t in tuples:
-            # Skip section header entries (documentation dividers, not tuples)
-            if "_section" in t:
+            if not self._is_data_tuple(t):
                 continue
             user_type = self._extract_user_type(t["user"])
             if user_type not in valid_types:
@@ -370,8 +377,7 @@ class TestTupleModelCrossValidation:
         errors = []
 
         for t in tuples:
-            # Skip section header entries (documentation dividers, not tuples)
-            if "_section" in t:
+            if not self._is_data_tuple(t):
                 continue
 
             obj_type = self._extract_object_type(t["object"])

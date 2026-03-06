@@ -235,7 +235,7 @@ class TestSwarmRaceStrategy:
 
         # Create agents with different response times
         async def slow_response(req, cancel_event=None):
-            await asyncio.sleep(2.0)  # noqa: S101 - intentional for timeout test
+            await asyncio.sleep(2.0)  # noqa: sleep-duration
             return AgentResult(content="Slow", success=True)
 
         slow_agent = MagicMock()
@@ -445,7 +445,7 @@ class TestSwarmErrorHandling:
         )
 
         async def slow_run(req, cancel_event=None):
-            await asyncio.sleep(10.0)  # noqa: S101 - intentional for timeout test
+            await asyncio.sleep(10.0)  # noqa: sleep-duration
             return AgentResult(content="Slow", success=True)
 
         slow_agent = MagicMock()

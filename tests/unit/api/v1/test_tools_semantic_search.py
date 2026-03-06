@@ -9,7 +9,6 @@ Feature Flag: enable_semantic_tool_search (FF_ENABLE_SEMANTIC_TOOL_SEARCH)
 """
 
 # Import MCP SDK mocks first to avoid import errors
-# ruff: noqa: E402
 import sys
 from types import ModuleType
 from unittest.mock import MagicMock

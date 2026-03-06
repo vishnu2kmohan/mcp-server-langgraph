@@ -78,6 +78,15 @@ class TestDocumentationNavigation:
             "architecture/adr-0071-compile-time-graph-composition",
             "architecture/adr-0072-bootstrap-phase-architecture",
             "architecture/adr-0073-configuration-domain-decomposition",
+            "architecture/adr-0093-chat-input-unification",
+            "architecture/adr-0094-kb-focus-mode",
+            "architecture/adr-0095-multi-tenant-vector-search-isolation",
+            "architecture/adr-0096-alert-consolidation-and-quality",
+            "architecture/adr-0103-websocket-authentication-requirement",
+            "architecture/adr-0104-message-rendering-consolidation",
+            "architecture/adr-0105-orchestrator-selection",
+            "architecture/adr-0106-native-llm-provider-tools",
+            "architecture/adr-0107-secrets-provider-selection",
         }
 
         # Find orphaned files

@@ -32,7 +32,7 @@ pytestmark = [
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost/authn")
 TOKEN_URL = f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 CLIENT_ID = "mcp-server"
-CLIENT_SECRET = "test-client-secret-for-e2e-tests"  # noqa: S105
+CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 # Test users from tests/e2e/default-realm.json
 TEST_USERS = {

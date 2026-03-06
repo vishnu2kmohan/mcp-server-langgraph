@@ -159,7 +159,11 @@ def test_app(mock_workflow_service: MockWorkflowServiceAdapter) -> FastAPI:
         "roles": ["admin"],
         "realm_access": {"roles": ["admin"]},
     }
-    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    async def _override_current_user():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = _override_current_user
 
     # Override all workflow-related auth dependencies
     app.dependency_overrides[require_workflow_viewer] = lambda: mock_user

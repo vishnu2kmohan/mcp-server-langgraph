@@ -61,14 +61,14 @@ _screenshot_cache_misses_total: Any = None
 
 def _init_metrics() -> bool:
     """Initialize visual verification metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _visual_verification_requests_total  # noqa: PLW0603
-    global _visual_verification_duration  # noqa: PLW0603
-    global _visual_verification_score  # noqa: PLW0603
-    global _visual_verification_urls_total  # noqa: PLW0603
-    global _visual_verification_retries_total  # noqa: PLW0603
-    global _screenshot_cache_hits_total  # noqa: PLW0603
-    global _screenshot_cache_misses_total  # noqa: PLW0603
+    global _metrics_available
+    global _visual_verification_requests_total
+    global _visual_verification_duration
+    global _visual_verification_score
+    global _visual_verification_urls_total
+    global _visual_verification_retries_total
+    global _screenshot_cache_hits_total
+    global _screenshot_cache_misses_total
 
     if _metrics_available is not None:
         return _metrics_available

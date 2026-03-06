@@ -103,7 +103,7 @@ class TestRetrieveSkillsNodeBehavior:
             "selected_skills": None,
         }
 
-        result = await _retrieve_skills_impl(
+        await _retrieve_skills_impl(
             state=state,
             semantic_index_manager=mock_manager,
             max_selected_skills=5,

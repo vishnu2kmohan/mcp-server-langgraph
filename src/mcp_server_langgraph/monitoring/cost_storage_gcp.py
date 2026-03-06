@@ -175,7 +175,7 @@ class BigQueryCostStorage:
                 estimated_cost_usd
             FROM `{self._table_id}`
             WHERE 1=1
-        """  # noqa: S608
+        """
 
         params = []
 
@@ -270,7 +270,7 @@ class BigQueryCostStorage:
             SELECT COUNT(*) as count
             FROM `{self._table_id}`
             WHERE timestamp < @cutoff
-        """  # noqa: S608
+        """
 
         from google.cloud import bigquery
 
@@ -288,7 +288,7 @@ class BigQueryCostStorage:
         delete_query = f"""
             DELETE FROM `{self._table_id}`
             WHERE timestamp < @cutoff
-        """  # noqa: S608
+        """
 
         await loop.run_in_executor(
             None,
@@ -338,7 +338,7 @@ class BigQueryCostStorage:
                 MAX(timestamp) as period_end
             FROM `{self._table_id}`
             WHERE 1=1
-        """  # noqa: S608 - table_id from config
+        """
 
         from google.cloud import bigquery
 
@@ -412,7 +412,7 @@ class BigQueryCostStorage:
                 COUNT(*) as request_count
             FROM `{self._table_id}`
             WHERE 1=1
-        """  # noqa: S608 - table_id and interval from config
+        """
 
         from google.cloud import bigquery
 
@@ -480,7 +480,7 @@ class BigQueryCostStorage:
                 COUNT(*) as request_count
             FROM `{self._table_id}`
             WHERE 1=1
-        """  # noqa: S608 - table_id from config
+        """
 
         from google.cloud import bigquery
 

@@ -11,7 +11,7 @@ import pytest
 
 from src.mcp_server_langgraph.api.v1.user import PERSONA_VISIBLE_MODULES
 
-pytestmark = pytest.mark.contract
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 
 # Frontend NAV_ITEMS IDs (must stay in sync with ActivityBar.tsx NAV_ITEMS)

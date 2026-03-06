@@ -90,7 +90,7 @@ class SecureConnectionConfig:
         async with self._cache_lock:
             # Double-check after acquiring lock
             if cache_key in self._credential_cache:
-                return self._credential_cache[cache_key]
+                return dict(self._credential_cache[cache_key])
 
             # Fetch from Secrets Manager
             secret_id = f"{secret_path}/{secret_key}"

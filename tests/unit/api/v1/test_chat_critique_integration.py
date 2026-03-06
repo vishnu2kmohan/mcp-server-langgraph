@@ -59,6 +59,8 @@ class TestChatCritiqueIntegration:
         mock_routing.skills_needed = []
         mock_routing.execution_mode = "react"
         mock_routing.routing_rationale = "Complex task"
+        mock_routing.tool_preference = None
+        mock_routing.tool_selection_mode = None
 
         service._router_agent.route = AsyncMock(return_value=mock_routing)
 
@@ -140,6 +142,8 @@ class TestChatCritiqueIntegration:
         mock_routing.skills_needed = []
         mock_routing.execution_mode = "react"
         mock_routing.routing_rationale = "Complex task"
+        mock_routing.tool_preference = None
+        mock_routing.tool_selection_mode = None
 
         service._router_agent.route = AsyncMock(return_value=mock_routing)
 
@@ -198,6 +202,8 @@ class TestChatCritiqueIntegration:
         mock_routing.skills_needed = []
         mock_routing.execution_mode = "direct"
         mock_routing.routing_rationale = "Simple greeting"
+        mock_routing.tool_preference = None
+        mock_routing.tool_selection_mode = None
 
         service._router_agent.route = AsyncMock(return_value=mock_routing)
 
@@ -255,6 +261,8 @@ class TestChatCritiqueIntegration:
         mock_routing.skills_needed = []
         mock_routing.execution_mode = "react"
         mock_routing.routing_rationale = "Analysis task"
+        mock_routing.tool_preference = None
+        mock_routing.tool_selection_mode = None
 
         service._router_agent.route = AsyncMock(return_value=mock_routing)
 

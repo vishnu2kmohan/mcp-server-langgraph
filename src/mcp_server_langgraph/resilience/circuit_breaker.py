@@ -178,7 +178,7 @@ def get_circuit_breaker(name: str) -> pybreaker.CircuitBreaker:
     return breaker
 
 
-def circuit_breaker(  # noqa: C901
+def circuit_breaker(
     name: str,
     fail_max: int | None = None,
     timeout: int | None = None,
@@ -323,7 +323,7 @@ def circuit_breaker(  # noqa: C901
                         span.set_attribute("circuit_breaker.success", False)
                         raise
 
-                except pybreaker.CircuitBreakerError as e:  # noqa: F841
+                except pybreaker.CircuitBreakerError:
                     # This shouldn't happen with our manual implementation, but just in case
                     span.set_attribute("circuit_breaker.success", False)
                     raise

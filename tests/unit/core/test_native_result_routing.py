@@ -24,6 +24,8 @@ class TestNativeResultRouting:
     @pytest.mark.asyncio
     async def test_native_results_detected_and_appended(self):
         """Native tool results should be detected and appended as ToolMessages."""
+        from unittest.mock import patch
+
         from mcp_server_langgraph.core.agent_graph_builder import (
             _generate_response_impl,
         )
@@ -50,13 +52,18 @@ class TestNativeResultRouting:
             "next_action": "",
         }
 
-        result = await _generate_response_impl(
-            state=state,
-            model=mock_model,
-            bound_tools=[],
-            model_with_tools=None,
-            pydantic_agent=None,
-        )
+        # Mock adispatch_custom_event since it requires a parent run context
+        with patch(
+            "langchain_core.callbacks.manager.adispatch_custom_event",
+            new_callable=AsyncMock,
+        ):
+            result = await _generate_response_impl(
+                state=state,
+                model=mock_model,
+                bound_tools=[],
+                model_with_tools=None,
+                pydantic_agent=None,
+            )
 
         # Should have appended messages: AI response + native ToolMessage
         messages = result.get("messages", [])
@@ -70,6 +77,8 @@ class TestNativeResultRouting:
     @pytest.mark.asyncio
     async def test_native_results_route_to_respond(self):
         """Native tool results should route to 'respond' for refinement."""
+        from unittest.mock import patch
+
         from mcp_server_langgraph.core.agent_graph_builder import (
             _generate_response_impl,
         )
@@ -94,13 +103,18 @@ class TestNativeResultRouting:
             "next_action": "",
         }
 
-        result = await _generate_response_impl(
-            state=state,
-            model=mock_model,
-            bound_tools=[],
-            model_with_tools=None,
-            pydantic_agent=None,
-        )
+        # Mock adispatch_custom_event since it requires a parent run context
+        with patch(
+            "langchain_core.callbacks.manager.adispatch_custom_event",
+            new_callable=AsyncMock,
+        ):
+            result = await _generate_response_impl(
+                state=state,
+                model=mock_model,
+                bound_tools=[],
+                model_with_tools=None,
+                pydantic_agent=None,
+            )
 
         # Should route to "respond" to allow model to refine based on results
         # or "end" if already final - implementation may vary

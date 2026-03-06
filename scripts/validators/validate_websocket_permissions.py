@@ -67,9 +67,7 @@ def extract_websocket_permissions_map(user_py_path: Path) -> dict[str, tuple[str
             for key, value in zip(value_node.keys, value_node.values, strict=True):
                 if isinstance(key, ast.Constant) and isinstance(value, ast.Tuple):
                     permission_key = key.value
-                    tuple_values = tuple(
-                        elt.value for elt in value.elts if isinstance(elt, ast.Constant)
-                    )
+                    tuple_values = tuple(elt.value for elt in value.elts if isinstance(elt, ast.Constant))
                     if len(tuple_values) == 3:
                         permissions_map[permission_key] = tuple_values
             return permissions_map
@@ -103,9 +101,7 @@ def extract_types_and_relations(model: dict[str, Any]) -> dict[str, set[str]]:
     return types_relations
 
 
-def validate_permissions(
-    permissions_map: dict[str, tuple[str, str, str]], types_relations: dict[str, set[str]]
-) -> list[str]:
+def validate_permissions(permissions_map: dict[str, tuple[str, str, str]], types_relations: dict[str, set[str]]) -> list[str]:
     """Validate that all permissions map to valid OpenFGA types and relations.
 
     Returns list of error messages.
@@ -115,9 +111,7 @@ def validate_permissions(
     for perm_key, (obj_type, obj_id, relation) in permissions_map.items():
         # Check if type exists
         if obj_type not in types_relations:
-            errors.append(
-                f"Permission '{perm_key}': OpenFGA type '{obj_type}' not found in model.json"
-            )
+            errors.append(f"Permission '{perm_key}': OpenFGA type '{obj_type}' not found in model.json")
             continue
 
         # Check if relation exists for this type
@@ -144,10 +138,7 @@ def main() -> int:
 
     # Check permission count
     if len(permissions_map) != EXPECTED_PERMISSION_COUNT:
-        print(
-            f"WARNING: Expected {EXPECTED_PERMISSION_COUNT} permissions, "
-            f"found {len(permissions_map)}"
-        )
+        print(f"WARNING: Expected {EXPECTED_PERMISSION_COUNT} permissions, found {len(permissions_map)}")
 
     # Load and parse OpenFGA model
     model = load_openfga_model(OPENFGA_MODEL_PATH)

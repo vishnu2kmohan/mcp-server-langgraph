@@ -357,17 +357,17 @@ class TestDevToolsFeatureFlags:
 
         assert flags.devtools_panel is True
 
-    def test_devtools_ai_insights_default_false(self) -> None:
+    def test_devtools_ai_insights_default_true(self) -> None:
         """
         GIVEN default feature flags
         WHEN FeatureFlags is instantiated
-        THEN devtools_ai_insights should be False (experimental feature)
+        THEN devtools_ai_insights should be True (promoted after stabilization)
         """
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
-        assert flags.devtools_ai_insights is False
+        assert flags.devtools_ai_insights is True
 
     def test_devtools_ai_layout_default_false(self) -> None:
         """
@@ -495,7 +495,7 @@ class TestDevToolsFeatureFlagsInUIFeatures:
         features = flags.get_ui_features_for_role("admin")
 
         assert features["devtools_panel"] is True
-        assert features["devtools_ai_insights"] is False
+        assert features["devtools_ai_insights"] is True
         assert features["devtools_ai_layout"] is False
         assert features["devtools_network_tab"] is True
 
@@ -541,6 +541,6 @@ class TestDevToolsFeatureFlagsInUIFeatures:
         flags = FeatureFlags()
 
         assert flags.is_feature_enabled("devtools_panel") is True
-        assert flags.is_feature_enabled("devtools_ai_insights") is False
+        assert flags.is_feature_enabled("devtools_ai_insights") is True
         assert flags.is_feature_enabled("devtools_ai_layout") is False
         assert flags.is_feature_enabled("devtools_network_tab") is True

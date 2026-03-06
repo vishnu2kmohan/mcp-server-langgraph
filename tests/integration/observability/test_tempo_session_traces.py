@@ -127,7 +127,7 @@ class TestTempoTraceRetrievalIntegration:
         reason="LGTM infrastructure flaky in parallel execution",
     )
     @pytest.mark.asyncio
-    async def test_tempo_client_search_traces_with_session_tag(self, session_id: str) -> None:
+    async def test_tempo_client_search_traces_with_session_tag(self, session_id: str, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         GIVEN a session_id
         WHEN searching traces in Tempo with session_id tag
@@ -140,7 +140,7 @@ class TestTempoTraceRetrievalIntegration:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
         client = TempoTracingClient()
         await client.initialize()
@@ -161,7 +161,7 @@ class TestTempoTraceRetrievalIntegration:
         reason="LGTM infrastructure flaky in parallel execution",
     )
     @pytest.mark.asyncio
-    async def test_tempo_client_health_check(self) -> None:
+    async def test_tempo_client_health_check(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         GIVEN Tempo is running
         WHEN checking health
@@ -174,7 +174,7 @@ class TestTempoTraceRetrievalIntegration:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
         client = TempoTracingClient()
         await client.initialize()
@@ -198,7 +198,7 @@ class TestSessionTraceEndpointIntegration:
         reason="LGTM infrastructure flaky in parallel execution",
     )
     @pytest.mark.asyncio
-    async def test_get_session_trace_with_tempo_client(self, session_id: str) -> None:
+    async def test_get_session_trace_with_tempo_client(self, session_id: str, monkeypatch: pytest.MonkeyPatch) -> None:
         """
         GIVEN a valid session and Tempo client
         WHEN calling get_session_trace
@@ -215,7 +215,7 @@ class TestSessionTraceEndpointIntegration:
             TempoTracingClient,
         )
 
-        os.environ["TEMPO_URL"] = f"http://localhost:{TEST_TEMPO_PORT}"
+        monkeypatch.setenv("TEMPO_URL", f"http://localhost:{TEST_TEMPO_PORT}")
 
         client = TempoTracingClient()
         await client.initialize()
@@ -269,7 +269,9 @@ class TestSessionTraceEndpointIntegration:
             await client.close()
 
     @pytest.mark.asyncio
-    async def test_get_session_trace_graceful_degradation_when_tempo_unavailable(self, session_id: str) -> None:
+    async def test_get_session_trace_graceful_degradation_when_tempo_unavailable(
+        self, session_id: str, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """
         GIVEN Tempo is unavailable
         WHEN calling get_session_trace logic
@@ -278,7 +280,7 @@ class TestSessionTraceEndpointIntegration:
         from mcp_server_langgraph.api.v1.sessions import SessionTraceResponse
 
         # Simulate Tempo unavailable by using invalid URL
-        os.environ["TEMPO_URL"] = "http://localhost:1"  # Invalid port
+        monkeypatch.setenv("TEMPO_URL", "http://localhost:1")  # Invalid port
 
         # The endpoint should gracefully degrade
         steps: list = []
@@ -347,7 +349,7 @@ class TestSpanThinkingObjectIntegration:
         WHEN converting to SpanResponse format via _span_to_dict
         THEN thinking should be object with content and tokens fields.
         """
-        from dataclasses import dataclass
+        from dataclasses import dataclass, field
         from enum import Enum
 
         from mcp_server_langgraph.api.v1.observability import ObservabilityServiceImpl
@@ -360,7 +362,7 @@ class TestSpanThinkingObjectIntegration:
             span_id: str = "span-integration-123"
             parent_span_id: str | None = None
             operation_name: str = "llm-call"
-            start_time: datetime = datetime.now(UTC)
+            start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
             duration_ms: float = 1500.0
             status_code: StatusCode = StatusCode.OK
             attributes: dict = None
@@ -400,7 +402,7 @@ class TestSpanThinkingObjectIntegration:
         WHEN converting to SpanResponse format
         THEN thinking should be None.
         """
-        from dataclasses import dataclass
+        from dataclasses import dataclass, field
         from enum import Enum
 
         from mcp_server_langgraph.api.v1.observability import ObservabilityServiceImpl
@@ -413,7 +415,7 @@ class TestSpanThinkingObjectIntegration:
             span_id: str = "span-no-thinking"
             parent_span_id: str | None = None
             operation_name: str = "tool-call"
-            start_time: datetime = datetime.now(UTC)
+            start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
             duration_ms: float = 200.0
             status_code: StatusCode = StatusCode.OK
             attributes: dict = None
@@ -437,7 +439,7 @@ class TestSpanThinkingObjectIntegration:
         WHEN converting to SpanResponse format
         THEN model_name should use llm.model as fallback.
         """
-        from dataclasses import dataclass
+        from dataclasses import dataclass, field
         from enum import Enum
 
         from mcp_server_langgraph.api.v1.observability import ObservabilityServiceImpl
@@ -450,7 +452,7 @@ class TestSpanThinkingObjectIntegration:
             span_id: str = "span-llm-model"
             parent_span_id: str | None = None
             operation_name: str = "llm-call"
-            start_time: datetime = datetime.now(UTC)
+            start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
             duration_ms: float = 800.0
             status_code: StatusCode = StatusCode.OK
             attributes: dict = None

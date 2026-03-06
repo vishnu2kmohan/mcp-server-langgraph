@@ -41,7 +41,7 @@ class TestAlertHandlerInit:
 
         assert handler._broadcaster is mock_broadcaster
         assert handler._subscribed is False
-        assert handler._user_id is None
+        assert handler.user_id is None
 
     def test_init_with_metrics(self) -> None:
         """GIVEN metrics WHEN creating handler THEN stores metrics."""
@@ -79,16 +79,17 @@ class TestAlertHandlerLifecycle:
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         user = AuthUser(id="user-123", username="testuser")
+        handler._user = user  # Base class sets this before calling on_connect
 
         await handler.on_connect(user)
 
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
 
     @pytest.mark.asyncio
     async def test_on_disconnect_unsubscribes(self) -> None:
         """GIVEN subscribed handler WHEN on_disconnect called THEN unsubscribes."""
         from mcp_server_langgraph.websocket.handlers.alert import AlertHandler
-        from mcp_server_langgraph.websocket.types import WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -99,7 +100,7 @@ class TestAlertHandlerLifecycle:
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
 
         await handler.on_disconnect()
 
@@ -137,7 +138,7 @@ class TestAlertHandlerMessages:
     async def test_handle_subscribe(self) -> None:
         """GIVEN subscribe message WHEN handle_message called THEN subscribes."""
         from mcp_server_langgraph.websocket.handlers.alert import AlertHandler
-        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -147,7 +148,7 @@ class TestAlertHandlerMessages:
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
 
         message = MessageEnvelope(type="subscribe", id="msg-1")
         response = await handler.handle_message(message)
@@ -162,7 +163,7 @@ class TestAlertHandlerMessages:
     async def test_handle_subscribe_already_subscribed(self) -> None:
         """GIVEN already subscribed WHEN subscribe again THEN does not re-subscribe."""
         from mcp_server_langgraph.websocket.handlers.alert import AlertHandler
-        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -173,7 +174,7 @@ class TestAlertHandlerMessages:
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True  # Already subscribed
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
 
         message = MessageEnvelope(type="subscribe", id="msg-1")
         response = await handler.handle_message(message)

@@ -41,7 +41,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
+def __getattr__(name: str):  # type: ignore[no-untyped-def]
     """
     Lazy import heavy dependencies on demand.
 

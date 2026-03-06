@@ -510,7 +510,7 @@ class TestDynamicToolFiltering:
         }
 
         # Call the implementation helper
-        result = await _generate_response_impl(
+        await _generate_response_impl(
             state=state,
             model=mock_model,
             bound_tools=all_tools,
@@ -574,7 +574,7 @@ class TestDynamicToolFiltering:
             "selected_tools": None,  # No selection - use all tools
         }
 
-        result = await _generate_response_impl(
+        await _generate_response_impl(
             state=state,
             model=mock_model,
             bound_tools=all_tools,
@@ -628,7 +628,7 @@ class TestDynamicToolFiltering:
             "selected_tools": [],  # Empty list - fall back to all tools
         }
 
-        result = await _generate_response_impl(
+        await _generate_response_impl(
             state=state,
             model=mock_model,
             bound_tools=[MagicMock()],
@@ -657,7 +657,7 @@ class TestNativeResultDetection:
     @pytest.mark.asyncio
     async def test_generate_response_detects_native_results(self, monkeypatch):
         """generate_response should detect native tool results and append them."""
-        from unittest.mock import AsyncMock, MagicMock
+        from unittest.mock import AsyncMock, MagicMock, patch
 
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
@@ -682,6 +682,7 @@ class TestNativeResultDetection:
             },
         ]
         mock_response.tool_calls = None  # No standard tool calls
+        mock_response.additional_kwargs = {}  # Explicit dict, not MagicMock
 
         mock_model = MagicMock()
         mock_model.ainvoke = AsyncMock(return_value=mock_response)
@@ -693,13 +694,18 @@ class TestNativeResultDetection:
             "tool_preference": "native",
         }
 
-        result = await _generate_response_impl(
-            state=state,
-            model=mock_model,
-            bound_tools=[],
-            model_with_tools=None,
-            pydantic_agent=None,
-        )
+        # Mock adispatch_custom_event since it requires a LangChain run context
+        with patch(
+            "langchain_core.callbacks.manager.adispatch_custom_event",
+            new_callable=AsyncMock,
+        ):
+            result = await _generate_response_impl(
+                state=state,
+                model=mock_model,
+                bound_tools=[],
+                model_with_tools=None,
+                pydantic_agent=None,
+            )
 
         # Should have detected native results
         # The response messages should include the original response

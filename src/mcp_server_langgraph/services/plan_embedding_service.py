@@ -19,7 +19,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, UTC
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from mcp_server_langgraph.core.constants import assert_embedding_dimension
 
@@ -30,6 +30,9 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.repositories.plan_template import PlanTemplateRepository
 
 logger = logging.getLogger(__name__)
+
+# Strong references to fire-and-forget background tasks to prevent GC (RUF006)
+_background_tasks: set[asyncio.Task[Any]] = set()
 
 
 class PlanEmbeddingService:
@@ -59,13 +62,13 @@ class PlanEmbeddingService:
         self._max_retries = max_retries
         self._retry_delay = retry_delay
         self._running = False
-        self._task: asyncio.Task | None = None
+        self._task: asyncio.Task[None] | None = None
 
-    async def _get_embedding_service(self):
+    async def _get_embedding_service(self) -> Any:
         """Get the embedding service instance."""
         from mcp_server_langgraph.llm.embeddings import get_embedding_service
 
-        service = await get_embedding_service()
+        service = get_embedding_service()
         return service
 
     async def generate_embedding(self, text: str) -> list[float]:
@@ -86,7 +89,7 @@ class PlanEmbeddingService:
         # Validate embedding dimension
         assert_embedding_dimension(len(embedding), "PlanEmbeddingService.generate_embedding")
 
-        return embedding
+        return embedding  # type: ignore[no-any-return]
 
     async def embed_execution_plan(self, plan: ExecutionPlan) -> ExecutionPlan:
         """Generate embedding for an execution plan.
@@ -286,10 +289,12 @@ async def schedule_plan_embedding(plan: ExecutionPlan) -> None:
         return
 
     # Spawn background task (fire-and-forget)
-    asyncio.create_task(  # noqa: RUF006
+    task = asyncio.create_task(
         _embed_with_retry(service, "plan", plan),
         name=f"embed_plan_{plan.plan_id}",
     )
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def schedule_template_embedding(template: PlanTemplate) -> None:
@@ -306,10 +311,12 @@ async def schedule_template_embedding(template: PlanTemplate) -> None:
         return
 
     # Spawn background task (fire-and-forget)
-    asyncio.create_task(  # noqa: RUF006
+    task = asyncio.create_task(
         _embed_with_retry(service, "template", template),
         name=f"embed_template_{template.template_id}",
     )
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def _embed_with_retry(
@@ -327,9 +334,9 @@ async def _embed_with_retry(
     for attempt in range(service._max_retries):
         try:
             if item_type == "plan":
-                await service.embed_execution_plan(item)
+                await service.embed_execution_plan(item)  # type: ignore[arg-type]
             else:
-                await service.embed_plan_template(item)
+                await service.embed_plan_template(item)  # type: ignore[arg-type]
             return
         except Exception as e:
             if attempt < service._max_retries - 1:

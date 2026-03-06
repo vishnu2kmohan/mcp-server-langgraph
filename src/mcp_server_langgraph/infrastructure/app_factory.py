@@ -142,7 +142,7 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
     logger.info("LiteLLM cost tracking callback registered")
 
     if container:
-        _telemetry = container.get_telemetry()  # noqa: F841
+        _telemetry = container.get_telemetry()
         logger.info(f"Application starting (environment: {container.settings.environment})")
 
         # Validate checkpoint configuration at startup (fail-fast)

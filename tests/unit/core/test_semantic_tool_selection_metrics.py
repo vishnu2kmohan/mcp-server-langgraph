@@ -88,9 +88,9 @@ class TestSearchToolsMetricsIntegration:
         mock_embedder.embed_query = MagicMock(return_value=[0.1] * 384)
 
         mock_point = MagicMock()
-        mock_point.id = "tool:test"
+        mock_point.id = "builtin:test"
         mock_point.payload = {
-            "tool_id": "tool:test",
+            "tool_id": "builtin:test",
             "name": "test_tool",
             "description": "A test tool",
             "category": "other",
@@ -144,7 +144,7 @@ class TestSearchToolsMetricsIntegration:
 
         # Pre-populate query cache
         cached_entry = ToolIndexEntry(
-            tool_id="tool:cached",
+            tool_id="builtin:cached",
             name="cached_tool",
             description="A cached tool",
             category="other",

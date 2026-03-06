@@ -16,7 +16,7 @@ from mcp_server_langgraph.api.v1.feedback import (
     HallucinationCategoryCounts,
 )
 
-pytestmark = pytest.mark.contract
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 # Frontend expected fields (from types/api.ts)
 # Note: Frontend uses snake_case in types, transformed to camelCase at runtime

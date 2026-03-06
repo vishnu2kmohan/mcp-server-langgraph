@@ -76,7 +76,7 @@ class AuditEventType(StrEnum):
     LOGOUT = "logout"
     """User logout."""
 
-    PASSWORD_CHANGE = "password.change"  # noqa: S105 - enum value, not a password
+    PASSWORD_CHANGE = "password.change"  # noqa: S105
     """Password change (FedRAMP AU-2 required)."""
 
     MFA_ENABLED = "mfa.enabled"
@@ -95,13 +95,13 @@ class AuditEventType(StrEnum):
     OAUTH2_CALLBACK_FAILED = "oauth2.callback.failed"
     """OAuth2 authorization callback failed (invalid code, state mismatch, etc.)."""
 
-    TOKEN_REFRESH_SUCCESS = "token.refresh.success"  # noqa: S105 - enum value, not a password
+    TOKEN_REFRESH_SUCCESS = "token.refresh.success"  # noqa: S105
     """Access token refresh completed successfully."""
 
-    TOKEN_REFRESH_FAILED = "token.refresh.failed"  # noqa: S105 - enum value, not a password
+    TOKEN_REFRESH_FAILED = "token.refresh.failed"  # noqa: S105
     """Access token refresh failed (expired/invalid refresh token)."""
 
-    TOKEN_REVOKED = "token.revoked"  # noqa: S105 - enum value, not a password
+    TOKEN_REVOKED = "token.revoked"  # noqa: S105
     """Token added to denylist on logout."""
 
     # Authorization events (SOC 2 CC6.1, FedRAMP AU-2)

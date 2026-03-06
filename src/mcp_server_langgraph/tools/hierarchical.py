@@ -126,9 +126,7 @@ class HierarchicalToolRegistry:
 
             for check_scope in scopes_to_check:
                 if check_scope in self._scoped_tools:
-                    # Sequential override by scope priority - not a comprehension
-                    for name, tool in self._scoped_tools[check_scope].items():
-                        tools_by_name[name] = tool  # noqa: PERF403
+                    tools_by_name.update(self._scoped_tools[check_scope])
 
             return list(tools_by_name.values())
         else:
@@ -189,9 +187,7 @@ class HierarchicalToolRegistry:
         all_tools: dict[str, ToolSpec] = {}
 
         for scope_tools in self._scoped_tools.values():
-            # Deduplication by name - intentionally not a comprehension
-            for name, tool in scope_tools.items():
-                all_tools[name] = tool  # noqa: PERF403
+            all_tools.update(scope_tools)
 
         # Also include any tools only in flat registry
         for name, tool in self._flat_tools.items():

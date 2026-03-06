@@ -132,7 +132,7 @@ class TestStreamViaLangGraphFullConversation:
             captured_args.append(initial_state)
             # Yield nothing - we just want to capture the call
             return
-            yield  # Make this an async generator  # noqa: RET503
+            yield  # Make this an async generator
 
         mock_agent = MagicMock()
         mock_agent.astream_events = mock_astream_events
@@ -180,7 +180,7 @@ class TestStreamViaLangGraphFullConversation:
         async def mock_astream_events(initial_state: Any, *args: Any, **kwargs: Any):
             captured_args.append(initial_state)
             return
-            yield  # Make this an async generator  # noqa: RET503
+            yield  # Make this an async generator
 
         mock_agent = MagicMock()
         mock_agent.astream_events = mock_astream_events

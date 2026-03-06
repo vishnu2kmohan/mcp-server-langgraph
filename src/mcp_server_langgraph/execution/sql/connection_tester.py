@@ -231,7 +231,7 @@ class ConnectionTester:
                 timeout=10,
             )
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(pool=pool), pool
+            return driver_cls(pool=pool), pool  # type: ignore[call-arg]
 
         if dialect == "sqlite":
             db_path = credentials.get("db_path") or credentials.get("database") or ":memory:"
@@ -244,7 +244,7 @@ class ConnectionTester:
                 if not abs_path.startswith(os.path.abspath(allowed_dir) + os.sep):
                     raise ValueError(f"SQLite path must be within {allowed_dir}")
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(db_path=db_path), None
+            return driver_cls(db_path=db_path), None  # type: ignore[call-arg]
 
         if dialect == "duckdb":
             db_path = credentials.get("db_path") or credentials.get("database") or ":memory:"
@@ -257,15 +257,15 @@ class ConnectionTester:
                 if not abs_path.startswith(os.path.abspath(allowed_dir) + os.sep):
                     raise ValueError(f"DuckDB path must be within {allowed_dir}")
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(db_path=db_path), None
+            return driver_cls(db_path=db_path), None  # type: ignore[call-arg]
 
         if dialect == "bigquery":
             project = credentials.get("project_id") or credentials.get("project", "")
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(project=project), None
+            return driver_cls(project=project), None  # type: ignore[call-arg]
 
         if dialect == "mysql":
-            import aiomysql  # type: ignore[import-untyped]
+            import aiomysql  # type: ignore[import-not-found,import-untyped]
 
             pool = await aiomysql.create_pool(
                 host=credentials.get("host") or "localhost",
@@ -278,10 +278,10 @@ class ConnectionTester:
                 connect_timeout=10,
             )
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(pool=pool), pool
+            return driver_cls(pool=pool), pool  # type: ignore[call-arg]
 
         if dialect == "redshift":
-            import redshift_connector  # type: ignore[import-untyped]
+            import redshift_connector  # type: ignore[import-not-found,import-untyped]
 
             # Run sync connector in thread executor to avoid blocking event loop
             conn = await asyncio.to_thread(
@@ -293,10 +293,10 @@ class ConnectionTester:
                 database=credentials.get("database") or "",
             )
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(connection=conn), conn
+            return driver_cls(connection=conn), conn  # type: ignore[call-arg]
 
         if dialect == "snowflake":
-            import snowflake.connector  # type: ignore[import-untyped]
+            import snowflake.connector  # type: ignore[import-not-found,import-untyped]
 
             # Run sync connector in thread executor to avoid blocking event loop
             conn = await asyncio.to_thread(
@@ -308,10 +308,10 @@ class ConnectionTester:
                 database=credentials.get("database") or "",
             )
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(connection=conn), conn
+            return driver_cls(connection=conn), conn  # type: ignore[call-arg]
 
         if dialect == "clickhouse":
-            import asynch  # type: ignore[import-untyped]
+            import asynch  # type: ignore[import-not-found,import-untyped]
 
             client = await asynch.connect(
                 host=credentials.get("host") or "localhost",
@@ -321,10 +321,10 @@ class ConnectionTester:
                 database=credentials.get("database") or "default",
             )
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(client=client), client
+            return driver_cls(client=client), client  # type: ignore[call-arg]
 
         if dialect == "trino":
-            from trino.dbapi import connect as trino_connect  # type: ignore[import-untyped]
+            from trino.dbapi import connect as trino_connect  # type: ignore[import-not-found,import-untyped]
 
             # Run sync connector in thread executor to avoid blocking event loop
             conn = await asyncio.to_thread(
@@ -336,7 +336,7 @@ class ConnectionTester:
                 schema=credentials.get("schema") or "",
             )
             driver_cls = self._registry.get_driver(dialect)
-            return driver_cls(connection=conn), conn
+            return driver_cls(connection=conn), conn  # type: ignore[call-arg]
 
         # Fallback: unknown dialect
         raise KeyError(f"No driver factory for dialect '{dialect}'")

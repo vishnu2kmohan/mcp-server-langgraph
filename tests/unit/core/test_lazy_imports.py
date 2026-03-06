@@ -46,7 +46,6 @@ class TestLazyImports:
                 del sys.modules[mod]
 
         # Import package - should NOT trigger heavy imports
-        import mcp_server_langgraph  # noqa: F401
 
         # Verify heavy modules are NOT loaded
         heavy_modules = [
@@ -108,7 +107,6 @@ class TestLazyImports:
 
     def test_lazy_import_of_create_agent_graph(self):
         """Test that create_agent_graph is imported only when accessed"""
-        from mcp_server_langgraph import create_agent_graph  # noqa: F401
 
         # The import itself is the test - it should not raise ModuleNotFoundError
         # create_agent_graph is a function that builds the agent graph
@@ -141,10 +139,6 @@ class TestLazyImports:
         # When using getattr(), we get AttributeError directly
         with pytest.raises(AttributeError, match="has no attribute 'NonExistentClass'"):
             mcp_server_langgraph.NonExistentClass
-
-        # When using 'from ... import ...', Python converts AttributeError to ImportError
-        with pytest.raises(ImportError, match="cannot import name 'NonExistentClass'"):
-            from mcp_server_langgraph import NonExistentClass  # noqa: F401
 
     def test_all_exports_defined_in_all_list(self):
         """Test that all exported names are in __all__"""

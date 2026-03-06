@@ -312,6 +312,351 @@
         "title": "AddWorkflowShareRequest",
         "type": "object"
       },
+      "AdminPlanListResponse": {
+        "description": "List of execution plans with admin fields (v35.0 Phase 2f).",
+        "properties": {
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/AdminPlanResponse"
+            },
+            "title": "Plans",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plans",
+          "total"
+        ],
+        "title": "AdminPlanListResponse",
+        "type": "object"
+      },
+      "AdminPlanResponse": {
+        "description": "Response model for admin view with additional fields (v35.0 Phase 2f).\n\nExtends PlanResponse with admin-only fields for debugging and audit:\n- user_id: User who created the plan\n- created_by: User/system that created the plan\n- embedding_status: Status of embedding generation\n- embedding_error: Error message if embedding failed",
+        "properties": {
+          "actual_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "complexity": {
+            "title": "Complexity",
+            "type": "string"
+          },
+          "confidence": {
+            "default": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "critic_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Critic Model"
+          },
+          "critique_rounds": {
+            "default": 0,
+            "title": "Critique Rounds",
+            "type": "integer"
+          },
+          "embedding_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Error"
+          },
+          "embedding_status": {
+            "default": "pending",
+            "title": "Embedding Status",
+            "type": "string"
+          },
+          "estimated_cost": {
+            "title": "Estimated Cost",
+            "type": "string"
+          },
+          "executed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Executed At"
+          },
+          "executor_model": {
+            "title": "Executor Model",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "force_approval": {
+            "default": false,
+            "title": "Force Approval",
+            "type": "boolean"
+          },
+          "kb_focus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kb Focus"
+          },
+          "llm_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Provider"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "orchestrator": {
+            "default": "standard",
+            "title": "Orchestrator",
+            "type": "string"
+          },
+          "plan_id": {
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "rejected_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected At"
+          },
+          "rejected_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected By"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "requires_approval": {
+            "default": true,
+            "title": "Requires Approval",
+            "type": "boolean"
+          },
+          "risk_level": {
+            "title": "Risk Level",
+            "type": "string"
+          },
+          "selected_tool_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Tool Ids"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "skills_needed": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skills Needed"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "suggested_orchestrator": {
+            "default": "standard",
+            "title": "Suggested Orchestrator",
+            "type": "string"
+          },
+          "task_type": {
+            "title": "Task Type",
+            "type": "string"
+          },
+          "thinking_budget": {
+            "default": "none",
+            "title": "Thinking Budget",
+            "type": "string"
+          },
+          "tool_preference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Preference"
+          },
+          "tool_selection_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Selection Mode"
+          },
+          "tools_needed": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tools Needed"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "required": [
+          "plan_id",
+          "session_id",
+          "status",
+          "complexity",
+          "risk_level",
+          "task_type",
+          "executor_model",
+          "estimated_cost",
+          "message"
+        ],
+        "title": "AdminPlanResponse",
+        "type": "object"
+      },
       "AdoptionMetric": {
         "description": "Adoption metric submission.",
         "properties": {
@@ -3411,6 +3756,18 @@
       "ChatCompletionRequest": {
         "description": "Request body for chat completion.",
         "properties": {
+          "client_history_fallback": {
+            "default": false,
+            "description": "When true, indicates messages contain client-supplied conversation history as a defense-in-depth fallback. Server should validate and prefer stored history when available.",
+            "title": "Client History Fallback",
+            "type": "boolean"
+          },
+          "emit_agent_execution_trace": {
+            "default": true,
+            "description": "Emit LangGraph Agent Execution Traces to DevTools. Enabled by default when FF_ENABLE_AGENT_EXECUTION_TRACING is true. Set to false to explicitly disable for a specific request. DISTINCT from OTEL distributed tracing and Decision Traces.",
+            "title": "Emit Agent Execution Trace",
+            "type": "boolean"
+          },
           "enable_thinking": {
             "default": true,
             "description": "Whether to enable extended thinking for supported models. Set to False to disable thinking even on models that support it.",
@@ -3493,6 +3850,19 @@
             "description": "Reasoning effort level for models supporting extended thinking (Claude Opus 4.5, Sonnet 4, Gemini 2.5). Maps to LiteLLM's reasoning_effort parameter which translates to Anthropic's thinking budget.",
             "title": "Reasoning Effort"
           },
+          "request_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional client-provided idempotency key. If provided, duplicate requests with the same request_id will return cached responses. Must be alphanumeric with hyphens, underscores, and dots only (max 128 chars).",
+            "title": "Request Id"
+          },
           "resource_uris": {
             "anyOf": [
               {
@@ -3537,16 +3907,22 @@
             "type": "number"
           },
           "tool_preference": {
-            "default": "auto",
-            "description": "Tool preference for this request: 'auto' = prefer native tools when available, 'native' = only use native LLM provider tools (fallback to builtin if unavailable), 'builtin' = only use built-in tools, 'mcp' = only use MCP server tools.",
-            "enum": [
-              "auto",
-              "native",
-              "builtin",
-              "mcp"
+            "anyOf": [
+              {
+                "enum": [
+                  "auto",
+                  "native",
+                  "builtin",
+                  "mcp"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Tool Preference",
-            "type": "string"
+            "description": "Tool preference for this request (None = use router suggestion): 'auto' = prefer native tools when available, 'native' = only use native LLM provider tools (fallback to builtin if unavailable), 'builtin' = only use built-in tools, 'mcp' = only use MCP server tools.",
+            "title": "Tool Preference"
           },
           "tool_selection_mode": {
             "default": "auto",
@@ -3558,6 +3934,22 @@
             ],
             "title": "Tool Selection Mode",
             "type": "string"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional list of tools for idempotency hashing (internal use).",
+            "title": "Tools"
           }
         },
         "required": [
@@ -3693,6 +4085,18 @@
             "description": "Message content",
             "title": "Content",
             "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional message ID for dedup",
+            "title": "Id"
           },
           "role": {
             "description": "Message role",
@@ -5948,6 +6352,534 @@
           "cost"
         ],
         "title": "DailyCostResponse",
+        "type": "object"
+      },
+      "DatabaseConnectionCreateRequest": {
+        "description": "Request to create a database connection.",
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "connection_method": {
+            "default": "credentials",
+            "description": "credentials | secret_ref | connection_string",
+            "title": "Connection Method",
+            "type": "string"
+          },
+          "connection_string": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection String"
+          },
+          "database": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "dialect": {
+            "description": "Database dialect (postgres, mysql, sqlite, bigquery, snowflake, duckdb, redshift, clickhouse, trino)",
+            "title": "Dialect",
+            "type": "string"
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "maximum": 65535.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "scope": {
+            "default": "user",
+            "description": "user | project | session",
+            "title": "Scope",
+            "type": "string"
+          },
+          "secret_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Key"
+          },
+          "secret_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Path"
+          },
+          "ssl_mode": {
+            "default": "require",
+            "description": "disable | require | verify-ca | verify-full",
+            "title": "Ssl Mode",
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "warehouse_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Id"
+          }
+        },
+        "required": [
+          "name",
+          "dialect"
+        ],
+        "title": "DatabaseConnectionCreateRequest",
+        "type": "object"
+      },
+      "DatabaseConnectionListResponse": {
+        "description": "Response for listing database connections.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DatabaseConnectionResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "DatabaseConnectionListResponse",
+        "type": "object"
+      },
+      "DatabaseConnectionResponse": {
+        "description": "Database connection response (without secrets).",
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "database": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "dialect": {
+            "title": "Dialect",
+            "type": "string"
+          },
+          "dialect_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dialect Version"
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_tested_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Tested At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "ssl_mode": {
+            "default": "require",
+            "title": "Ssl Mode",
+            "type": "string"
+          },
+          "status": {
+            "default": "disconnected",
+            "title": "Status",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "warehouse_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Id"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "dialect",
+          "owner_id",
+          "tenant_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DatabaseConnectionResponse",
+        "type": "object"
+      },
+      "DatabaseConnectionTestResult": {
+        "description": "Result of testing a database connection.",
+        "properties": {
+          "dialect_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dialect Version"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "success": {
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "title": "DatabaseConnectionTestResult",
+        "type": "object"
+      },
+      "DatabaseConnectionUpdateRequest": {
+        "description": "Request to update a database connection.\n\nSupports both metadata updates and credential rotation.\nWhen credential fields are provided, they are stored in Secrets Manager.",
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "connection_string": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection String"
+          },
+          "database": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "maximum": 65535.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "ssl_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssl Mode"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "warehouse_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Id"
+          }
+        },
+        "title": "DatabaseConnectionUpdateRequest",
         "type": "object"
       },
       "DecisionOutcome": {
@@ -11351,6 +12283,28 @@
             "title": "Force Approval",
             "type": "boolean"
           },
+          "kb_focus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kb Focus"
+          },
+          "llm_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Provider"
+          },
           "message": {
             "title": "Message",
             "type": "string"
@@ -11406,9 +12360,37 @@
             "title": "Risk Level",
             "type": "string"
           },
+          "selected_tool_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Tool Ids"
+          },
           "session_id": {
             "title": "Session Id",
             "type": "string"
+          },
+          "skills_needed": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skills Needed"
           },
           "status": {
             "title": "Status",
@@ -11428,12 +12410,41 @@
             "title": "Thinking Budget",
             "type": "string"
           },
+          "tool_preference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Preference"
+          },
+          "tool_selection_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Selection Mode"
+          },
           "tools_needed": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Tools Needed",
-            "type": "array"
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tools Needed"
           }
         },
         "required": [
@@ -18679,6 +19690,15 @@
             "title": "Email",
             "type": "string"
           },
+          "execution_plans": {
+            "description": "Execution plans (Phase 9 GDPR)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Execution Plans",
+            "type": "array"
+          },
           "export_id": {
             "description": "Unique export identifier",
             "title": "Export Id",
@@ -18694,6 +19714,15 @@
             "description": "Additional metadata",
             "title": "Metadata",
             "type": "object"
+          },
+          "plan_templates": {
+            "description": "Plan templates (Phase 9 GDPR)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Plan Templates",
+            "type": "array"
           },
           "preferences": {
             "additionalProperties": true,
@@ -20748,8 +21777,15 @@
             "type": "integer"
           },
           "description": {
-            "title": "Description",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
           "name": {
             "title": "Name",
@@ -26318,7 +27354,7 @@
     },
     "/api/v1/chat/completions": {
       "post": {
-        "description": "Create a chat completion.\n\nRequires authentication. The user must be authenticated to create completions.\n\nSends messages to the LLM and returns the assistant's response.\n\nRaises:\n    HTTPException 401: When authentication is required\n    HTTPException 428: When MCP requires user elicitation (authentication, consent)\n    HTTPException 403: When permission is denied\n    HTTPException 503: When MCP server is unavailable",
+        "description": "Create a chat completion.\n\nRequires authentication. The user must be authenticated to create completions.\n\nSends messages to the LLM and returns the assistant's response.\n\nIdempotency: If request_id is provided, duplicate requests with the same\nrequest_id will return the cached response. Concurrent requests will receive\n409 Conflict. Request content mismatch will also receive 409 Conflict.\n\nRaises:\n    HTTPException 401: When authentication is required\n    HTTPException 409: When request_id is in progress or content mismatch\n    HTTPException 428: When MCP requires user elicitation (authentication, consent)\n    HTTPException 403: When permission is denied\n    HTTPException 503: When MCP server is unavailable",
         "operationId": "create_completion_api_v1_chat_completions_post",
         "requestBody": {
           "content": {
@@ -26402,7 +27438,7 @@
     },
     "/api/v1/chat/{session_id}/history": {
       "get": {
-        "description": "Get chat history for a session.\n\nRequires authentication. Returns all messages in chronological order.\n\nNote: In a full implementation, this would also verify the user has\naccess to this specific session (owner/viewer). Currently requires\nonly authentication.",
+        "description": "Get chat history for a session.\n\nRequires authentication. Returns all messages in chronological order.\n\nNote: Session storage enforces ownership (user-scoped access). Unauthorized\naccess returns 404.",
         "operationId": "get_history_api_v1_chat__session_id__history_get",
         "parameters": [
           {
@@ -29877,6 +30913,350 @@
         "tags": [
           "v1",
           "cost"
+        ]
+      }
+    },
+    "/api/v1/database-connections/": {
+      "get": {
+        "description": "List database connections for the current user's tenant.",
+        "operationId": "list_database_connections_api_v1_database_connections__get",
+        "parameters": [
+          {
+            "description": "Filter by dialect",
+            "in": "query",
+            "name": "dialect",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by dialect",
+              "title": "Dialect"
+            }
+          },
+          {
+            "description": "Filter by status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Search by name",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search by name",
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseConnectionListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Database Connections",
+        "tags": [
+          "v1",
+          "database-connections"
+        ]
+      },
+      "post": {
+        "description": "Create a database connection with credentials stored in Secrets Manager.",
+        "operationId": "create_database_connection_api_v1_database_connections__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatabaseConnectionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseConnectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Database Connection",
+        "tags": [
+          "v1",
+          "database-connections"
+        ]
+      }
+    },
+    "/api/v1/database-connections/{connection_id}": {
+      "delete": {
+        "description": "Delete a database connection.",
+        "operationId": "delete_database_connection_api_v1_database_connections__connection_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Database Connection",
+        "tags": [
+          "v1",
+          "database-connections"
+        ]
+      },
+      "get": {
+        "description": "Get a database connection by ID.",
+        "operationId": "get_database_connection_api_v1_database_connections__connection_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseConnectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Database Connection",
+        "tags": [
+          "v1",
+          "database-connections"
+        ]
+      },
+      "patch": {
+        "description": "Update a database connection.\n\nSupports both metadata updates and credential rotation.\nWhen credential fields (username, password, connection_string) are provided,\nthe credentials are updated in Secrets Manager.\n\nArgs:\n    retest: If True, automatically test the connection after updating.",
+        "operationId": "update_database_connection_api_v1_database_connections__connection_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Connection Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Re-test connection after update",
+            "in": "query",
+            "name": "retest",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Re-test connection after update",
+              "title": "Retest",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatabaseConnectionUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseConnectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Database Connection",
+        "tags": [
+          "v1",
+          "database-connections"
+        ]
+      }
+    },
+    "/api/v1/database-connections/{connection_id}/test": {
+      "post": {
+        "description": "Test a database connection.\n\nRetrieves the connection from the DB, resolves credentials from\nSecrets Manager, validates egress, and attempts a driver connection.\nUpdates the connection status with the test result.",
+        "operationId": "test_database_connection_api_v1_database_connections__connection_id__test_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Connection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseConnectionTestResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Database Connection",
+        "tags": [
+          "v1",
+          "database-connections"
         ]
       }
     },
@@ -33602,6 +34982,62 @@
         ]
       }
     },
+    "/api/v1/plans/all": {
+      "get": {
+        "description": "List all execution plans with pagination (Admin endpoint).\n\nv35.0: Returns all plans regardless of status, sorted by created_at DESC.\nApplies hard caps: limit \u2264 1000, offset \u2264 100000.\nClamps negative values to 0 for consistent behavior across backends.\nRequires admin role for access (Phase 2f).\n\nArgs:\n    admin_user: Admin user (from require_admin dependency)\n    limit: Maximum number of plans to return (default 100, max 1000)\n    offset: Number of plans to skip (default 0, max 100000)\n\nReturns:\n    Paginated list of all execution plans with admin fields",
+        "operationId": "list_all_plans_api_v1_plans_all_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPlanListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List All Plans",
+        "tags": [
+          "v1",
+          "execution-plans",
+          "execution-plans"
+        ]
+      }
+    },
     "/api/v1/plans/sessions/{session_id}/plans": {
       "get": {
         "description": "List all execution plans for a session.\n\nReturns all plans (pending, approved, rejected) for the specified session.\nRequires authentication.",
@@ -36402,6 +37838,72 @@
           }
         },
         "summary": "Update session metadata",
+        "tags": [
+          "v1",
+          "sessions"
+        ]
+      }
+    },
+    "/api/v1/sessions/{session_id}/agent-execution-trace": {
+      "get": {
+        "description": "Get LangGraph node execution traces for a session.\n\nReturns historical traces of LangGraph node execution (router, planner, executor)\nfrom the database. This endpoint returns persisted traces, NOT OTEL distributed\ntraces from Tempo.\n\nUsed by DevTools AgentTraceTab for historical trace display after page reload.\nLive traces are received via WebSocket `trace_step` messages.\n\nPhase 4: LangGraph Execution Trace Persistence\n\nArgs:\n    session_id: The session to get traces for\n    limit: Maximum traces to return (default 100)\n    offset: Pagination offset (default 0)\n\nReturns:\n    List of execution trace summaries with timing and status\n\nExample Response:\n    {\n        \"session_id\": \"sess-123\",\n        \"traces\": [\n            {\n                \"trace_id\": \"trace-abc\",\n                \"node_name\": \"router\",\n                \"status\": \"completed\",\n                \"start_time\": 1704720000000,\n                \"end_time\": 1704720001000,\n                \"duration_ms\": 1000,\n                \"sequence_number\": 0\n            }\n        ],\n        \"total\": 5,\n        \"has_more\": false\n    }",
+        "operationId": "get_session_agent_execution_trace_api_v1_sessions__session_id__agent_execution_trace_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Session Agent Execution Trace Api V1 Sessions  Session Id  Agent Execution Trace Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Session Agent Execution Trace",
         "tags": [
           "v1",
           "sessions"

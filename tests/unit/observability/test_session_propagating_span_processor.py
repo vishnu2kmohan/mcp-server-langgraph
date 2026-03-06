@@ -37,6 +37,12 @@ class TestSessionPropagatingSpanProcessor:
     This ensures LangGraph internal spans have session.id for DevTools trace rendering.
     """
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
     def test_processor_implements_span_processor_interface(self) -> None:
         """
         GIVEN SessionPropagatingSpanProcessor

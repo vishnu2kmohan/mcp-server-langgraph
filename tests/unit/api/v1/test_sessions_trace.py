@@ -113,7 +113,11 @@ class TestSessionTraceEndpoint:
             "user_id": "user:alice",
             "username": "alice",
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         # Mock Tempo client
         if mock_tempo_client:

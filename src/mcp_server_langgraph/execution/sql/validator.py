@@ -216,6 +216,7 @@ class SQLValidator:
             return ValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
         ast = statements[0]
+        assert ast is not None, "Parser returned None expression"
 
         # -------------------------------------------------------------- #
         # 3. Verify statement type (whitelist with wrapper support)
@@ -321,7 +322,7 @@ class SQLValidator:
             # Block known dangerous functions
             if isinstance(node, exp.Func):
                 # Normalise the function name from the SQL name mapping
-                func_name = type(node).sql_name().lower() if hasattr(type(node), "sql_name") else ""
+                func_name = type(node).sql_name().lower() if hasattr(type(node), "sql_name") else ""  # type: ignore[no-untyped-call]
                 if not func_name:
                     # Fallback: use the class key
                     func_name = node.key.lower() if hasattr(node, "key") else ""

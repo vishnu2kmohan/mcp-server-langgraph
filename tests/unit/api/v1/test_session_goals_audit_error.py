@@ -4,6 +4,7 @@ Tests for Session Goal Endpoints - Audit Logging and Error Handling.
 TDD: Tests verify audit logging and error handling behavior.
 """
 
+import gc
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi import FastAPI
@@ -108,7 +109,10 @@ def app(
     app.include_router(sessions_router, prefix="/api/v1")
 
     # Override dependencies
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    async def _override_current_user():
+        return mock_current_user
+
+    app.dependency_overrides[get_current_user] = _override_current_user
     app.dependency_overrides[get_session_goal_repository] = lambda: mock_goal_repository
     app.dependency_overrides[get_audit_log_repository] = lambda: mock_audit_repository
 
@@ -128,6 +132,10 @@ def app(
 @pytest.mark.xdist_group(name="test_session_goals_audit")
 class TestSetGoalAuditLogging:
     """Tests for audit logging on set_session_goal endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_set_goal_logs_audit_event(
@@ -161,6 +169,10 @@ class TestSetGoalAuditLogging:
 @pytest.mark.xdist_group(name="test_session_goals_audit")
 class TestCompleteGoalAuditLogging:
     """Tests for audit logging on complete_session_goal endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_complete_goal_logs_audit_event(
@@ -202,6 +214,10 @@ class TestCompleteGoalAuditLogging:
 class TestSetGoalErrorHandling:
     """Tests for error handling on set_session_goal endpoint."""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
     @pytest.mark.asyncio
     async def test_set_goal_handles_repository_error(
         self,
@@ -228,6 +244,10 @@ class TestSetGoalErrorHandling:
 @pytest.mark.xdist_group(name="test_session_goals_errors")
 class TestCompleteGoalErrorHandling:
     """Tests for error handling on complete_session_goal endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_complete_goal_handles_repository_error(
@@ -256,6 +276,10 @@ class TestCompleteGoalErrorHandling:
 @pytest.mark.xdist_group(name="test_session_goals_errors")
 class TestGetHistoryErrorHandling:
     """Tests for error handling on get_session_goal_history endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_history_handles_repository_error(

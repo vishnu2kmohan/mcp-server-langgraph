@@ -135,7 +135,7 @@ FALLBACK_STRATEGIES = {
 }
 
 
-def with_fallback(  # noqa: C901
+def with_fallback(
     fallback: Any | None = None,
     fallback_fn: Callable[..., Any] | None = None,
     fallback_strategy: FallbackStrategy | None = None,

@@ -8,7 +8,6 @@ Reference: MCP Protocol 2025-11-25 capability aggregation
 """
 
 # Import MCP SDK mocks first to avoid import errors
-# ruff: noqa: E402
 import sys
 from types import ModuleType
 from unittest.mock import MagicMock

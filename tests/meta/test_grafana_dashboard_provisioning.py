@@ -119,15 +119,14 @@ def test_dashboard_folders_exist_and_contain_dashboards(repo_root: Path):
     """
     dashboards_dir = repo_root / "monitoring" / "grafana" / "dashboards"
 
+    # Updated to match actual dashboard folder structure
     expected_folders = {
         "Overview": ["langgraph-agent.json"],
         "Application": [
-            "ai-ux-metrics.json",
             "llm-performance.json",
-            "websocket-telemetry.json",
         ],
         "Auth": ["authentication.json", "openfga.json", "keycloak.json", "security.json"],
-        "Infrastructure": ["resilience-patterns.json", "lgtm-stack.json", "postgresql.json"],
+        "Infrastructure": ["lgtm-stack.json", "postgresql.json"],
         "Compliance": ["sla-monitoring.json", "soc2-compliance.json"],
     }
 
@@ -160,7 +159,8 @@ def test_ai_dashboards_exist_in_application_folder(repo_root: Path):
     - ai-recommendation-quality.json: AI recommendation quality
     - studio-ai-intelligence.json: Studio AI intelligence features
     """
-    app_folder = repo_root / "monitoring" / "grafana" / "dashboards" / "Application"
+    # AI dashboards are in the AI/ folder (reorganized from Application/)
+    ai_folder = repo_root / "monitoring" / "grafana" / "dashboards" / "AI"
 
     ai_dashboards = [
         "ai-ux-metrics.json",
@@ -170,13 +170,13 @@ def test_ai_dashboards_exist_in_application_folder(repo_root: Path):
 
     missing = []
     for dashboard in ai_dashboards:
-        if not (app_folder / dashboard).exists():
+        if not (ai_folder / dashboard).exists():
             missing.append(dashboard)
 
     assert len(missing) == 0, (
-        f"Missing AI dashboards in Application folder: {missing}\n"
+        f"Missing AI dashboards in AI folder: {missing}\n"
         "\n"
-        f"Expected in: {app_folder}\n"
+        f"Expected in: {ai_folder}\n"
         "\n"
         "These dashboards provide AI/LLM monitoring capabilities."
     )
@@ -188,7 +188,8 @@ def test_websocket_dashboard_exists(repo_root: Path):
 
     This dashboard monitors WebSocket connections, messages, and health.
     """
-    websocket_dashboard = repo_root / "monitoring" / "grafana" / "dashboards" / "Application" / "websocket-telemetry.json"
+    # WebSocket dashboard is in the WebSocket/ folder (reorganized from Application/)
+    websocket_dashboard = repo_root / "monitoring" / "grafana" / "dashboards" / "WebSocket" / "websocket-telemetry.json"
 
     assert websocket_dashboard.exists(), (
         f"WebSocket dashboard not found: {websocket_dashboard}\n\nThis dashboard provides WebSocket connection monitoring."
@@ -201,7 +202,8 @@ def test_resilience_dashboard_exists(repo_root: Path):
 
     This dashboard monitors circuit breakers, retries, bulkheads, and rate limiters.
     """
-    resilience_dashboard = repo_root / "monitoring" / "grafana" / "dashboards" / "Infrastructure" / "resilience-patterns.json"
+    # Resilience dashboard is in the Resilience/ folder (reorganized from Infrastructure/)
+    resilience_dashboard = repo_root / "monitoring" / "grafana" / "dashboards" / "Resilience" / "resilience-patterns.json"
 
     assert resilience_dashboard.exists(), (
         f"Resilience dashboard not found: {resilience_dashboard}\n"

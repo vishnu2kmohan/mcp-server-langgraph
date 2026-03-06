@@ -83,7 +83,6 @@ async def async_engine() -> AsyncGenerator[AsyncEngine, None]:
 
     # Create tables
     from mcp_server_langgraph.models.base import Base
-    import mcp_server_langgraph.storage.workflow.postgres_models  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

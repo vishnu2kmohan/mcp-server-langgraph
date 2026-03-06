@@ -1,17 +1,17 @@
 """
-WebSocket Prometheus Metrics Tests.
+WebSocket Metrics Tests.
 
-TDD tests for WebSocket reconnection and connection metrics
-exposed via Prometheus.
+TDD tests for WebSocket connection and message metrics
+collected via WebSocketMetrics class with OpenTelemetry integration.
 
 These metrics track:
-- WebSocket reconnection attempts
-- Success/failure rates
-- Connection states per endpoint
+- WebSocket connections and disconnections
+- Message send/receive counts
+- Errors, rate limiting, and connection rejections
+- Message processing latency
 """
 
 import gc
-from unittest.mock import patch
 
 import pytest
 
@@ -19,93 +19,152 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="websocket_prometheus_metrics")
-class TestWebSocketPrometheusMetrics:
-    """Test WebSocket Prometheus metrics exporter."""
+class TestWebSocketMetrics:
+    """Test WebSocket metrics collection."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_init_websocket_metrics_lazy_call_returns_bool(self) -> None:
-        """Metrics should be initialized lazily."""
-        from mcp_server_langgraph.websocket.metrics import (
-            _init_websocket_metrics,
-        )
+    def test_websocket_metrics_initialization(self) -> None:
+        """WebSocketMetrics should initialize with zero counters."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
-        result = _init_websocket_metrics()
-        assert isinstance(result, bool)
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        assert metrics.active_connections == 0
+        assert metrics.total_connections == 0
+        assert metrics.messages_received == 0
+        assert metrics.messages_sent == 0
+        assert metrics.errors == 0
 
-    def test_record_reconnection_attempt_increments_counter(self) -> None:
-        """Recording a reconnection attempt should increment the counter."""
-        from mcp_server_langgraph.websocket.metrics import (
-            record_reconnection_attempt,
-        )
+    def test_record_connection_increments_counters(self) -> None:
+        """Recording a connection should increment active and total counters."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
-        # Should not raise
-        record_reconnection_attempt(
-            endpoint_id="notifications",
-            success=True,
-        )
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_connection(user_id="user-123")
 
-    def test_record_reconnection_failure_with_reason(self) -> None:
-        """Recording a failure should include the failure reason."""
-        from mcp_server_langgraph.websocket.metrics import (
-            record_reconnection_attempt,
-        )
+        assert metrics.active_connections == 1
+        assert metrics.total_connections == 1
 
-        # Should not raise
-        record_reconnection_attempt(
-            endpoint_id="alerts",
-            success=False,
-            failure_reason="network_error",
-        )
+    def test_record_disconnect_decrements_active(self) -> None:
+        """Recording a disconnect should decrement active connections."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
-    def test_record_connection_state_change(self) -> None:
-        """Recording connection state should update the gauge."""
-        from mcp_server_langgraph.websocket.metrics import (
-            record_connection_state,
-        )
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_connection()
+        metrics.record_disconnect()
 
-        # Should not raise
-        record_connection_state(
-            endpoint_id="traces",
-            is_connected=True,
-        )
+        assert metrics.active_connections == 0
+        assert metrics.total_connections == 1
 
-    def test_record_connection_disconnect(self) -> None:
-        """Recording disconnect should update the gauge."""
-        from mcp_server_langgraph.websocket.metrics import (
-            record_connection_state,
-        )
+    def test_record_disconnect_does_not_go_negative(self) -> None:
+        """Active connections should not go below zero."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
-        # Should not raise
-        record_connection_state(
-            endpoint_id="traces",
-            is_connected=False,
-        )
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_disconnect()
 
-    def test_record_reconnection_duration(self) -> None:
-        """Recording reconnection duration should update the histogram."""
-        from mcp_server_langgraph.websocket.metrics import (
-            record_reconnection_duration,
-        )
+        assert metrics.active_connections == 0
 
-        # Should not raise
-        record_reconnection_duration(
-            endpoint_id="devtools",
-            duration_seconds=0.5,
-        )
+    def test_record_message_received(self) -> None:
+        """Recording a received message should increment the counter."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
 
-    def test_metrics_graceful_degradation_without_prometheus(self) -> None:
-        """Metrics should not raise if prometheus_client is unavailable."""
-        with patch.dict("sys.modules", {"prometheus_client": None}):
-            # Force reimport to test graceful degradation
-            from mcp_server_langgraph.websocket import metrics
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_message_received(message_type="ping")
 
-            # These should not raise even without prometheus
-            metrics.record_reconnection_attempt("test", success=True)
-            metrics.record_connection_state("test", is_connected=True)
-            metrics.record_reconnection_duration("test", duration_seconds=1.0)
+        assert metrics.messages_received == 1
+
+    def test_record_message_sent(self) -> None:
+        """Recording a sent message should increment the counter."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_message_sent(message_type="pong")
+
+        assert metrics.messages_sent == 1
+
+    def test_record_error_increments_error_counter(self) -> None:
+        """Recording an error should increment the error counter."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_error(error_type="network_error")
+
+        assert metrics.errors == 1
+
+    def test_record_rate_limit_exceeded(self) -> None:
+        """Recording rate limit exceeded should increment the counter."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_rate_limit_exceeded(user_id="user-123")
+
+        assert metrics.rate_limit_exceeded == 1
+
+    def test_record_connection_rejected(self) -> None:
+        """Recording a rejected connection should increment the counter."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_connection_rejected(reason="auth_failed")
+
+        assert metrics.connections_rejected == 1
+
+    def test_record_token_expired(self) -> None:
+        """Recording a token expiration should increment the counter."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_token_expired(user_id="user-123")
+
+        assert metrics.token_expirations == 1
+
+    def test_record_latency_updates_histogram(self) -> None:
+        """Recording latency should update the histogram."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="notifications")
+        metrics.record_latency(latency_ms=50.0)
+
+        assert metrics.average_latency == 50.0
+
+    def test_record_message_latency_converts_seconds_to_ms(self) -> None:
+        """record_message_latency should convert seconds to milliseconds."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="devtools")
+        metrics.record_message_latency(message_type="request", latency_seconds=0.5)
+
+        assert metrics.average_latency == 500.0
+
+    def test_get_stats_returns_all_metrics(self) -> None:
+        """get_stats should return a dictionary with all metric values."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="traces")
+        metrics.record_connection()
+        metrics.record_message_received()
+
+        stats = metrics.get_stats()
+        assert stats["endpoint_name"] == "traces"
+        assert stats["active_connections"] == 1
+        assert stats["total_connections"] == 1
+        assert stats["messages_received"] == 1
+
+    def test_reset_clears_all_metrics(self) -> None:
+        """reset should set all counters back to zero."""
+        from mcp_server_langgraph.websocket.metrics import WebSocketMetrics
+
+        metrics = WebSocketMetrics(endpoint_name="traces")
+        metrics.record_connection()
+        metrics.record_error()
+        metrics.reset()
+
+        assert metrics.active_connections == 0
+        assert metrics.total_connections == 0
+        assert metrics.errors == 0
 
 
 @pytest.mark.xdist_group(name="websocket_prometheus_metrics")
@@ -123,17 +182,18 @@ class TestWebSocketMetricsAPI:
 
         payload = WebSocketMetricsPayload(
             endpoint_id="notifications",
-            total_attempts=10,
-            total_reconnections=8,
-            consecutive_failures=0,
-            success_rate=80.0,
-            failures_by_reason={"network_error": 1, "token_expired": 1},
+            reconnect_count=8,
+            total_connect_time_ms=1200.0,
+            last_disconnect_reason="network_error",
+            error_count=2,
+            messages_sent=50,
+            messages_received=45,
         )
 
         # Validate payload schema
         assert payload.endpoint_id == "notifications"
-        assert payload.total_attempts == 10
-        assert payload.success_rate == 80.0
+        assert payload.reconnect_count == 8
+        assert payload.messages_sent == 50
 
     @pytest.mark.asyncio
     async def test_post_websocket_metrics_validates_input(self) -> None:
@@ -144,12 +204,12 @@ class TestWebSocketMetricsAPI:
 
         with pytest.raises(ValidationError):
             WebSocketMetricsPayload(
-                endpoint_id="",  # Empty endpoint ID should fail
-                total_attempts=-1,  # Negative should fail
-                total_reconnections=0,
-                consecutive_failures=0,
-                success_rate=150.0,  # > 100% should fail
-                failures_by_reason={},
+                endpoint_id="",  # Empty endpoint ID should fail (min_length=1)
+                reconnect_count=-1,  # Negative should fail (ge=0)
+                total_connect_time_ms=0,
+                error_count=0,
+                messages_sent=0,
+                messages_received=0,
             )
 
     @pytest.mark.asyncio
@@ -163,19 +223,20 @@ class TestWebSocketMetricsAPI:
         metrics_list = [
             WebSocketMetricsPayload(
                 endpoint_id="notifications",
-                total_attempts=5,
-                total_reconnections=5,
-                consecutive_failures=0,
-                success_rate=100.0,
-                failures_by_reason={},
+                reconnect_count=5,
+                total_connect_time_ms=800.0,
+                error_count=0,
+                messages_sent=20,
+                messages_received=18,
             ),
             WebSocketMetricsPayload(
                 endpoint_id="alerts",
-                total_attempts=3,
-                total_reconnections=2,
-                consecutive_failures=1,
-                success_rate=66.67,
-                failures_by_reason={"network_error": 1},
+                reconnect_count=2,
+                total_connect_time_ms=400.0,
+                last_disconnect_reason="network_error",
+                error_count=1,
+                messages_sent=10,
+                messages_received=8,
             ),
         ]
 

@@ -173,7 +173,7 @@ def get_variant_for_user(
     # Create a hash of experiment name + user_id for deterministic assignment
     hash_input = f"{experiment.name}:{user_id}"
     # MD5 used for consistent hashing (not security), safe for A/B bucket assignment
-    hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)  # noqa: S324
+    hash_value = int(hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest(), 16)  # noqa: S324
 
     # Map hash to 0-99 range
     bucket = hash_value % 100

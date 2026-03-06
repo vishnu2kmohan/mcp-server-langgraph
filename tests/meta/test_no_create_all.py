@@ -195,6 +195,7 @@ class TestAlembicMigrationCoverage:
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent.parent,
+            timeout=60,
         )
 
         # Count the number of heads

@@ -20,7 +20,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "validators"))
 
 
-from validate_pytest_markers import get_registered_markers, get_used_markers  # noqa: E402
+from validate_pytest_markers import get_registered_markers, get_used_markers
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit

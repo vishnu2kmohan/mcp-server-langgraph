@@ -20,7 +20,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "validators"))
 
 
-from validate_gke_autopilot_compliance import GKEAutopilotValidator  # noqa: E402
+from validate_gke_autopilot_compliance import GKEAutopilotValidator
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit

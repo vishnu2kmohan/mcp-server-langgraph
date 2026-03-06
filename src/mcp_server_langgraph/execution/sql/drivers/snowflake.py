@@ -32,7 +32,7 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import snowflake.connector  # noqa: F401
+    import snowflake.connector  # type: ignore[import-not-found,import-untyped]  # noqa: F401
 
     _HAS_SNOWFLAKE = True
 except ImportError:
@@ -40,7 +40,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from snowflake.connector import SnowflakeConnection
-    from snowflake.connector.cursor import SnowflakeCursor
+    from snowflake.connector.cursor import SnowflakeCursor  # type: ignore[import-not-found,import-untyped]
 
 
 class SnowflakeDriver(DatabaseDriver):

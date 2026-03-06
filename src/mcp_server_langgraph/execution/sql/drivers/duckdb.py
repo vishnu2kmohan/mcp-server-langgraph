@@ -27,7 +27,7 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import duckdb
+    import duckdb  # type: ignore[import-not-found,import-untyped]
 
     _HAS_DUCKDB = True
 except ImportError:

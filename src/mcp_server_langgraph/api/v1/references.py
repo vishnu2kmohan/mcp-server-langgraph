@@ -64,7 +64,7 @@ class ResolveResponse(BaseModel):
     resolved: list[ResolvedReference]
 
 
-@references_router.post("/resolve", response_model=ResolveResponse)
+@references_router.post("/resolve")
 async def resolve_references(
     body: ResolveRequest,
     request: Request,

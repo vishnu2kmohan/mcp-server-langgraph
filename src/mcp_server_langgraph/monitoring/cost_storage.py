@@ -1167,7 +1167,7 @@ class PostgresCostStorage:
         async with get_async_session(self._database_url) as session:
             if use_timescale:
                 # Use TimescaleDB time_bucket for efficient grouping
-                # noqa: S608 - bucket_interval is validated enum from function signature
+
                 query = f"""
                     SELECT
                         time_bucket('{bucket_interval}', timestamp) AS bucket,
@@ -1176,7 +1176,7 @@ class PostgresCostStorage:
                         COUNT(*) AS request_count
                     FROM token_usage_records
                     WHERE 1=1
-                """  # noqa: S608
+                """
             else:
                 # Fallback to date_trunc
                 query = """

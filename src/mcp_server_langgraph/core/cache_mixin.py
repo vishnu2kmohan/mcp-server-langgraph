@@ -221,9 +221,7 @@ class TieredCacheMixin:
         # Sort keys for determinism
         sorted_json = json.dumps(request_data, sort_keys=True, default=str)
         # MD5 used for cache key generation (non-security purpose)
-        hash_suffix = hashlib.md5(  # noqa: S324
-            sorted_json.encode(), usedforsecurity=False
-        ).hexdigest()[:16]
+        hash_suffix = hashlib.md5(sorted_json.encode(), usedforsecurity=False).hexdigest()[:16]
         return self._make_cache_key(method, hash_suffix)
 
     # =========================================================================

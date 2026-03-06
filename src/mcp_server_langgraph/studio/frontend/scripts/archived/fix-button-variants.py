@@ -85,9 +85,7 @@ def should_skip(path: Path) -> bool:
     if path.name in SKIP_FILES:
         return True
     # Skip test and story files
-    if ".test." in path.name or ".stories." in path.name:
-        return True
-    return False
+    return bool(".test." in path.name or ".stories." in path.name)
 
 
 def fix_button_variants(content: str, dry_run: bool = False) -> tuple[str, dict[str, int]]:
@@ -98,7 +96,6 @@ def fix_button_variants(content: str, dry_run: bool = False) -> tuple[str, dict[
         Tuple of (modified_content, fixes_dict)
     """
     fixes: dict[str, int] = defaultdict(int)
-    original = content
 
     for text, variant in BUTTON_TEXT_TO_VARIANT.items():
         # Pattern[str]: <Button (without variant=) ... >Text</Button>
@@ -106,8 +103,8 @@ def fix_button_variants(content: str, dry_run: bool = False) -> tuple[str, dict[
         pattern = re.compile(rf"(<Button\b)(?![^>]*\bvariant=)([^>]*>)\s*{re.escape(text)}\s*(</Button>)", re.IGNORECASE)
 
         def replacer(match: re.Match[str]) -> str:
-            fixes[f"{text} → {variant}"] += 1
-            return f'{match.group(1)} variant="{variant}"{match.group(2)}{text}{match.group(3)}'
+            fixes[f"{text} → {variant}"] += 1  # noqa: B023
+            return f'{match.group(1)} variant="{variant}"{match.group(2)}{text}{match.group(3)}'  # noqa: B023
 
         content = pattern.sub(replacer, content)
 
@@ -207,10 +204,7 @@ def main() -> int:
     args = parser.parse_args()
 
     # Collect files
-    if args.files:
-        files = [Path(f) for f in args.files if Path(f).suffix in EXTENSIONS]
-    else:
-        files = list(FRONTEND_SRC.rglob("*.tsx"))
+    files = [Path(f) for f in args.files if Path(f).suffix in EXTENSIONS] if args.files else list(FRONTEND_SRC.rglob("*.tsx"))
 
     files = [f for f in files if f.exists() and not should_skip(f)]
 

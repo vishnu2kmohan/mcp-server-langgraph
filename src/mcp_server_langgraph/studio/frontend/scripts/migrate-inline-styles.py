@@ -171,10 +171,7 @@ def scan_file(file_path: Path) -> list[Violation]:
                     value = match.group(1) if match.lastindex else "0"
                     tw_value = get_tailwind_spacing(value)
                     prefix = "h" if "height" in pattern_name else "w" if "width" in pattern_name else "p"
-                    if tw_value:
-                        suggested = f'className="{prefix}-{tw_value}"'
-                    else:
-                        suggested = f'className="{prefix}-[{value}px]"'
+                    suggested = f'className="{prefix}-{tw_value}"' if tw_value else f'className="{prefix}-[{value}px]"'
                 elif pattern_name == "dynamic_width_percent":
                     expr = match.group(1) if match.lastindex else "percentage"
                     suggested = f"style={{{{ '--progress': `${{{expr}}}%` }}}} className=\"progress-bar-fill\""

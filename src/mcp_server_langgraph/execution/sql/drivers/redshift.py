@@ -27,7 +27,7 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import redshift_connector
+    import redshift_connector  # type: ignore[import-not-found,import-untyped]
 
     _HAS_REDSHIFT = True
 except ImportError:
@@ -47,7 +47,7 @@ class RedshiftDriver(DatabaseDriver):
 
     def __init__(
         self,
-        connection: redshift_connector.Connection | None = None,  # type: ignore[name-defined]
+        connection: redshift_connector.Connection | None = None,
     ) -> None:
         if not _HAS_REDSHIFT:
             raise ImportError(

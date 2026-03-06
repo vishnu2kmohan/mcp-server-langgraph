@@ -70,8 +70,15 @@ def bypass_manager() -> BypassManager:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="bypass_mode_e2e")
 class TestBypassModeEndToEndFlow:
     """Integration tests for the complete bypass mode flow."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_low_risk_simple_plan_auto_approves(
         self,
@@ -220,8 +227,15 @@ class TestBypassModeEndToEndFlow:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="bypass_mode_prometheus")
 class TestBypassModePrometheusIntegration:
     """Integration tests for Prometheus metrics in bypass flow."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_approval_metrics_recorded_on_auto_approve(
         self,
@@ -302,8 +316,15 @@ class TestBypassModePrometheusIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="bypass_mode_risk_matrix")
 class TestBypassModeRiskMatrixComplete:
     """Comprehensive tests for the risk/complexity auto-approval matrix."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     @pytest.mark.parametrize(
         "risk_level,complexity,expected_auto_approve",
@@ -351,8 +372,15 @@ class TestBypassModeRiskMatrixComplete:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="bypass_mode_edge_cases")
 class TestBypassModeEdgeCases:
     """Edge case tests for bypass mode."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_empty_tools_list_no_escalation(
         self,

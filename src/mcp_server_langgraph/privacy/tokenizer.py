@@ -40,8 +40,8 @@ class PIITokenizer:
     """
 
     # Token format: <<PII_TYPE_HASH>>
-    TOKEN_PREFIX = "<<"  # noqa: S105 - Token delimiter, not a password
-    TOKEN_SUFFIX = ">>"  # noqa: S105 - Token delimiter, not a password
+    TOKEN_PREFIX = "<<"  # noqa: S105
+    TOKEN_SUFFIX = ">>"  # noqa: S105
     TOKEN_PATTERN = re.compile(r"<<PII_[A-Z_]+_[a-f0-9]+>>")
 
     def __init__(self) -> None:

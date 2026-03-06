@@ -19,7 +19,7 @@ from datetime import UTC
 pytestmark = pytest.mark.unit
 
 if TYPE_CHECKING:
-    pass
+    from datetime import datetime
 
 
 @pytest.fixture

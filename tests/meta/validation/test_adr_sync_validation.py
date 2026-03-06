@@ -36,8 +36,15 @@ VALIDATOR_SCRIPT = PROJECT_ROOT / "scripts" / "validators" / "check_adr_sync.py"
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="adr_sync_validator")
 class TestADRSyncValidator:
     """Test ADR synchronization validator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_validator_script_exists(self):
         """GIVEN the repository structure WHEN checking for validator THEN it should exist."""
@@ -254,8 +261,15 @@ Some other content
 
 @pytest.mark.meta
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="adr_sync_integration")
 class TestADRSyncIntegration:
     """Integration tests for ADR sync validator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_all_source_adrs_have_mdx(self):
         """GIVEN ADRs in adr/ WHEN checking docs/ THEN all should have .mdx equivalents."""

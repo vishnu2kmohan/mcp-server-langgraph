@@ -32,6 +32,7 @@ from typing import Any
 import pytest
 
 pytestmark = [
+    pytest.mark.unit,
     pytest.mark.contract,
     pytest.mark.authorization,
     pytest.mark.openfga,
@@ -255,7 +256,7 @@ def get_user_relations_for_resource(tuples: list[dict[str, Any]], user: str, res
 
     Args:
         tuples: List of OpenFGA tuples
-        user: User ID (e.g., "admin" or "user:admin")
+        user: User ID (e.g., a username or prefixed user identifier)
         resource: Resource object (e.g., "ai:suggestions")
 
     Returns:
@@ -486,7 +487,7 @@ class TestWebSocketAuthorizationRelationCoverage:
             if len(parts) != 2:
                 continue
             resource_type = parts[0]
-            _type_inheritance = inheritance.get(resource_type, {})  # noqa: F841
+            _type_inheritance = inheritance.get(resource_type, {})
 
             # Get required relation from ws_router (or default to 'viewer')
             # For this test, we check against actual tuples

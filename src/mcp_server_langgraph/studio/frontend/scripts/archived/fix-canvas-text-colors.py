@@ -68,7 +68,6 @@ BORDER_FIXES = [
 def fix_file(filepath: Path, dry_run: bool = False) -> int:
     """Fix a single file. Returns number of replacements made."""
     content = filepath.read_text()
-    original = content
     changes = 0
 
     all_fixes = TEXT_FIXES + DARK_TEXT_FIXES + BORDER_FIXES

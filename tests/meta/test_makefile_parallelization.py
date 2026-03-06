@@ -65,8 +65,10 @@ class TestMakefileParallelization:
         assert match, "test-ci target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, (
-            f"test-ci should use '-n auto' for parallel execution\nFound: {pytest_args}\nExpected: Should contain '-n auto'"
+        # Accept either literal -n auto or $(PYTEST_PARALLEL_FLAG) variable
+        assert "-n auto" in pytest_args or "PYTEST_PARALLEL_FLAG" in pytest_args, (
+            f"test-ci should use '-n auto' or $(PYTEST_PARALLEL_FLAG) for parallel execution\n"
+            f"Found: {pytest_args}\nExpected: Should contain '-n auto' or '$(PYTEST_PARALLEL_FLAG)'"
         )
 
     @pytest.mark.meta
@@ -200,6 +202,8 @@ class TestMakefileParallelizationBestPractices:
             "test-fast",  # Already parallelized according to analysis
             "fast",  # Alias or variant
             "help-common",  # Documentation target, not a test target
+            "deploy-dev",  # Deployment target, not a test runner
+            "test-coverage-html",  # Coverage report generation, uses $(PYTEST_PARALLEL_FLAG) variable
         ]
 
         targets_without_parallel = [t for t in targets_without_parallel if t not in exceptions]

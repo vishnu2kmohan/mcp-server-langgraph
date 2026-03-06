@@ -119,8 +119,11 @@ class TestE2EOrganization:
         real_clients_file = e2e_dir / "real_clients.py"
         assert real_clients_file.exists(), f"E2E real clients file not found at {real_clients_file}"
 
-        keycloak_config = e2e_dir / "mcp-test-realm.json"
-        assert keycloak_config.exists(), f"Keycloak test realm config not found at {keycloak_config}"
+        # Keycloak config may be named mcp-test-realm.json or default-realm.json
+        keycloak_configs = [e2e_dir / "mcp-test-realm.json", e2e_dir / "default-realm.json"]
+        assert any(c.exists() for c in keycloak_configs), (
+            f"Keycloak test realm config not found. Checked: {[str(c) for c in keycloak_configs]}"
+        )
 
     def test_no_e2e_journeys_in_integration_directory(self):
         """
@@ -151,8 +154,9 @@ class TestE2EOrganization:
         import sys
         from pathlib import Path
 
-        # Add scripts directory to path temporarily
-        scripts_dir = Path(__file__).parent.parent.parent / "scripts"
+        # Add scripts/validators directory to path temporarily
+        # check_e2e_completion.py lives in scripts/validators/, not scripts/
+        scripts_dir = Path(__file__).parent.parent.parent / "scripts" / "validators"
         sys.path.insert(0, str(scripts_dir))
 
         try:

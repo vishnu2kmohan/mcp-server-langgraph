@@ -152,7 +152,6 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     Returns:
         True if sync was needed, False otherwise
     """
-    source_path = Path(f"adr/adr-{adr_number}-*.md")  # noqa: F841
     source_files = list(Path("adr").glob(f"adr-{adr_number}-*.md"))
 
     if not source_files:

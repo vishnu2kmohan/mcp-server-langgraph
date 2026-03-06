@@ -645,23 +645,23 @@ class TestEgressValidationIntegration:
 # Endpoint CRUD tests (Phase 6c)
 # ============================================================================
 
-import uuid  # noqa: E402
-from datetime import UTC, datetime  # noqa: E402
-from unittest.mock import AsyncMock, patch  # noqa: E402
+import uuid
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, patch
 
-from fastapi import FastAPI  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
-from mcp_server_langgraph.api.v1.database_connections import (  # noqa: E402
+from mcp_server_langgraph.api.v1.database_connections import (
     database_connections_router,
     get_egress_validator as _get_egress_validator,
     get_secrets_provider as _get_secrets_provider,
 )
-from mcp_server_langgraph.execution.sql.connection_tester import (  # noqa: E402
+from mcp_server_langgraph.execution.sql.connection_tester import (
     ConnectionTestResult as TesterResult,
     ConnectionTester,
 )
-from mcp_server_langgraph.repositories.database_connections import (  # noqa: E402
+from mcp_server_langgraph.repositories.database_connections import (
     DatabaseConnectionEntity,
     DatabaseConnectionRepository,
 )

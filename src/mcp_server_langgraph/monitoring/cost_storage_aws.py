@@ -205,7 +205,7 @@ class TimestreamCostStorage:
                 estimated_cost_usd
             FROM "{self._database}"."{self._table}"
             WHERE 1=1
-        """  # noqa: S608
+        """
 
         if filters:
             if "user_id" in filters:
@@ -328,7 +328,7 @@ class TimestreamCostStorage:
                 MAX(time) as period_end
             FROM "{self._database}"."{self._table}"
             WHERE 1=1
-        """  # noqa: S608 - database/table from config
+        """
 
         if start_date:
             ts = int(start_date.timestamp() * 1000)
@@ -399,7 +399,7 @@ class TimestreamCostStorage:
                 COUNT(*) as request_count
             FROM "{self._database}"."{self._table}"
             WHERE 1=1
-        """  # noqa: S608 - database/table from config
+        """
 
         if start_date:
             ts = int(start_date.timestamp() * 1000)
@@ -461,7 +461,7 @@ class TimestreamCostStorage:
                 COUNT(*) as request_count
             FROM "{self._database}"."{self._table}"
             WHERE 1=1
-        """  # noqa: S608 - database/table from config
+        """
 
         if start_date:
             ts = int(start_date.timestamp() * 1000)

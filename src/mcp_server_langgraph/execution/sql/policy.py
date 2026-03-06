@@ -89,7 +89,7 @@ class RowLimitEnforcer:
         existing_limit = RowLimitEnforcer._get_limit_value(ast)
 
         if existing_limit is None:
-            return ast.limit(max_rows)
+            return ast.limit(max_rows)  # type: ignore[attr-defined, no-any-return]
         elif isinstance(existing_limit, int):
             if existing_limit > max_rows:
                 return RowLimitEnforcer._replace_limit(ast, max_rows)
@@ -97,7 +97,7 @@ class RowLimitEnforcer:
         else:
             # Parameterized or expression-based LIMIT (e.g., LIMIT :limit, LIMIT ?)
             # Wrap in subquery to enforce hard cap regardless of parameter value
-            return exp.select("*").from_(ast.subquery()).limit(max_rows)
+            return exp.select("*").from_(ast.subquery()).limit(max_rows)  # type: ignore[attr-defined]
 
     @staticmethod
     def _get_limit_value(ast: exp.Expression) -> int | str | None:
@@ -114,4 +114,4 @@ class RowLimitEnforcer:
 
     @staticmethod
     def _replace_limit(ast: exp.Expression, new_limit: int) -> exp.Expression:
-        return ast.copy().limit(new_limit, copy=False)
+        return ast.copy().limit(new_limit, copy=False)  # type: ignore[attr-defined, no-any-return]

@@ -61,18 +61,18 @@ class PostgresPlanTemplateRepository(PlanTemplateRepository):
             template_id=model.template_id,
             name=model.name,
             description=model.description,
-            orchestrator=model.orchestrator,
-            thinking_budget=model.thinking_budget,
+            orchestrator=model.orchestrator,  # type: ignore[arg-type]
+            thinking_budget=model.thinking_budget,  # type: ignore[arg-type]
             critique_rounds=model.critique_rounds,
             auto_approve=model.auto_approve,
             tags=model.tags or [],
             created_by=model.created_by,
             use_count=model.use_count,
-            success_rate=model.success_rate,
+            success_rate=model.success_rate,  # type: ignore[arg-type]
             last_used_at=model.last_used_at,
             created_at=model.created_at,
             updated_at=model.updated_at,
-            embedding_status=model.embedding_status or "pending",
+            embedding_status=model.embedding_status or "pending",  # type: ignore[arg-type]
             embedding_error=model.embedding_error,
             embedding_failed_at=model.embedding_failed_at,
         )
@@ -162,7 +162,7 @@ class PostgresPlanTemplateRepository(PlanTemplateRepository):
         async with self._session_factory() as session:
             result = await session.execute(delete(PlanTemplateModel).where(PlanTemplateModel.template_id == template_id))
             await session.commit()
-            return result.rowcount > 0
+            return result.rowcount > 0  # type: ignore[no-any-return]
 
     async def list_all(self, limit: int = 100) -> list[PlanTemplate]:
         """List all templates."""
@@ -345,7 +345,7 @@ class PostgresPlanTemplateRepository(PlanTemplateRepository):
         async with self._session_factory() as session:
             result = await session.execute(delete(PlanTemplateModel).where(PlanTemplateModel.created_by == user_id))
             await session.commit()
-            return result.rowcount
+            return result.rowcount  # type: ignore[no-any-return]
 
     async def list_pending_embeddings(self, limit: int = 100) -> list[PlanTemplate]:
         """List templates with pending embeddings for background processing."""

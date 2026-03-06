@@ -109,11 +109,13 @@ class TestMCPWebSocketHandlerLifecycle:
         user = AuthUser(id="user-123", username="testuser")
         # Mock the roles attribute
         user.roles = ["admin", "viewer"]
+        # Set _user as run() does before calling on_connect
+        handler._user = user
 
         with patch("mcp_server_langgraph.mcp.message_handler.AuthenticatedMCPHandler") as mock_auth_handler:
             await handler.on_connect(user)
 
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
         assert handler._roles == ["admin", "viewer"]
         mock_auth_handler.assert_called_once()
 
@@ -125,7 +127,7 @@ class TestMCPWebSocketHandlerLifecycle:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = MCPWebSocketHandler()
 
-        with patch("mcp_server_langgraph.mcp.message_handler.MCPMessageHandler") as mock_handler:
+        with patch("mcp_server_langgraph.mcp.message_handler.AuthenticatedMCPHandler") as mock_handler:
             await handler.on_connect(None)
 
         mock_handler.assert_called_once()
@@ -139,7 +141,9 @@ class TestMCPWebSocketHandlerLifecycle:
             handler = MCPWebSocketHandler()
 
         handler._mcp_handler = MagicMock()
-        handler._user_id = "user-123"
+        from mcp_server_langgraph.websocket.types import AuthUser
+
+        handler._user = AuthUser(id="user-123", username="testuser", email="test@example.com", roles=["developer"])
 
         await handler.on_disconnect()
 

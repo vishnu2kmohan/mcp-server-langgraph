@@ -49,7 +49,7 @@ class TestQueryResultCaching:
 
         # Pre-populate cache with a result
         cached_entry = ToolIndexEntry(
-            tool_id="tool:cached",
+            tool_id="builtin:cached",
             name="cached_tool",
             description="A cached tool",
             category="other",
@@ -87,9 +87,9 @@ class TestQueryResultCaching:
 
         # Mock Qdrant response
         mock_point = MagicMock()
-        mock_point.id = "tool:test"
+        mock_point.id = "builtin:test"
         mock_point.payload = {
-            "tool_id": "tool:test",
+            "tool_id": "builtin:test",
             "name": "test_tool",
             "description": "A test tool",
             "category": "other",
@@ -209,7 +209,7 @@ class TestQueryCacheMetrics:
 
         # Pre-populate cache
         cached_entry = ToolIndexEntry(
-            tool_id="tool:cached",
+            tool_id="builtin:cached",
             name="cached_tool",
             description="A cached tool",
             category="other",

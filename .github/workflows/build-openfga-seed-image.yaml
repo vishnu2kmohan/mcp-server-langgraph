@@ -103,7 +103,7 @@ jobs:
       # Validate tuples against model schema before building image
       # This catches issues like computed-only relations being directly assigned
       - name: Set up uv for validation
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 

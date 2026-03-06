@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from mcp_server_langgraph.observability.telemetry import logger
 
-__all__ = ["ConnectionScope", "ConnectionLike", "ScopeChecker"]
+__all__ = ["ConnectionScope", "ConnectionLike"]
 
 
 class ConnectionScope(str, Enum):

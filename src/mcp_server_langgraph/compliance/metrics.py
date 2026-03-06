@@ -33,17 +33,17 @@ _gdpr_retention_cleanup_total: Any = None
 
 def _init_metrics() -> bool:
     """Initialize SOC2 compliance metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _compliance_score_gauge  # noqa: PLW0603
-    global _evidence_items_total  # noqa: PLW0603
-    global _audit_logs_total  # noqa: PLW0603
-    global _access_review_items_total  # noqa: PLW0603
-    global _compliance_job_executions_total  # noqa: PLW0603
-    global _compliance_report_generated_total  # noqa: PLW0603
-    global _gdpr_anonymization_total  # noqa: PLW0603
-    global _gdpr_data_export_total  # noqa: PLW0603
-    global _gdpr_data_deletion_total  # noqa: PLW0603
-    global _gdpr_retention_cleanup_total  # noqa: PLW0603
+    global _metrics_available
+    global _compliance_score_gauge
+    global _evidence_items_total
+    global _audit_logs_total
+    global _access_review_items_total
+    global _compliance_job_executions_total
+    global _compliance_report_generated_total
+    global _gdpr_anonymization_total
+    global _gdpr_data_export_total
+    global _gdpr_data_deletion_total
+    global _gdpr_retention_cleanup_total
 
     if _metrics_available is not None:
         return _metrics_available

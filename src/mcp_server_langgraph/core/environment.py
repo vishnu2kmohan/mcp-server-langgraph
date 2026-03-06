@@ -39,6 +39,6 @@ def is_developer_mode(settings: Settings | None = None) -> bool:
     # Handle None environment value safely
     environment = settings.environment
     if environment is None:
-        return False
+        return False  # type: ignore[unreachable]
 
     return environment.lower() == "development"

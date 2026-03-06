@@ -244,7 +244,7 @@ class RemediationExecutor:
             except TimeoutError as e:
                 duration_ms = int((time.monotonic() - start_time) * 1000)
                 # Timeout is an expected condition, not an exception needing traceback
-                logger.warning(  # noqa: TRY400
+                logger.warning(
                     f"Remediation {remediation.remediation_id} timed out",
                     extra={
                         "remediation_id": remediation.remediation_id,

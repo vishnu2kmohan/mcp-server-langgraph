@@ -86,7 +86,7 @@ async def init_agent_execution_trace_repository(settings: Settings) -> bool:
 
         session_factory = get_async_session()
         if session_factory is None:
-            logger.error(
+            logger.error(  # type: ignore[unreachable]
                 "Cannot initialize agent execution trace repository: async session not available. "
                 "Ensure database is initialized before calling this function."
             )
@@ -94,7 +94,7 @@ async def init_agent_execution_trace_repository(settings: Settings) -> bool:
             return False
 
         # Create and register the repository
-        repository = PostgresLangGraphExecutionTraceRepository(session_factory=session_factory)
+        repository = PostgresLangGraphExecutionTraceRepository(session_factory=session_factory)  # type: ignore[arg-type]
         set_langgraph_execution_trace_repository(repository)
 
         logger.info(

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 """
 Tests for scripts/validate_mintlify_docs.py
 
@@ -22,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 # Try to import the validation module (may not be available in Docker container)
 try:
-    from validate_mintlify_docs import (  # noqa: E402
+    from validate_mintlify_docs import (
         ValidationReport,
         check_filename_convention,
         check_frontmatter,

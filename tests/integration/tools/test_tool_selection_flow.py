@@ -146,7 +146,7 @@ class TestRetrieveToolsIntegration:
 
         from mcp_server_langgraph.core.agent_graph_builder import _retrieve_tools_impl
 
-        result = await _retrieve_tools_impl(
+        await _retrieve_tools_impl(
             state=state,
             semantic_index_manager=mock_semantic_index,
             max_selected_tools=5,

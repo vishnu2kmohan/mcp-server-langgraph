@@ -24,7 +24,7 @@ from mcp_server_langgraph.agents.orchestrator import Orchestrator, Subtask, Task
 from mcp_server_langgraph.agents.subagent import Subagent, SubagentStatus
 
 # Domain marker only - benchmark/performance markers auto-applied by conftest.py
-pytestmark = pytest.mark.agents
+pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
 def create_mock_subagent(

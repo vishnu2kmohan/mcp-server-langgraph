@@ -171,7 +171,7 @@ class TestNetworkModeDocumentation:
         Test that DockerSandbox documents that allowlist is not implemented
         """
         # Check _get_network_mode has documentation about allowlist
-        _ = DockerSandbox._get_network_mode.__doc__ or ""  # noqa: F841
+        _ = DockerSandbox._get_network_mode.__doc__ or ""
 
         # At minimum, the code should have comments (checked via reading source)
         # This test ensures the limitation is documented somewhere

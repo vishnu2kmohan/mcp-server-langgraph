@@ -174,6 +174,12 @@ class TestSkillSearchQdrantIntegration:
     """Integration tests for SkillSearchTool with real Qdrant."""
 
     @pytest.mark.asyncio
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
     async def test_adapter_connects_to_qdrant(self, qdrant_client) -> None:
         """Test VectorProviderAdapter connects to real Qdrant."""
         from mcp_server_langgraph.skills.adapters import VectorProviderAdapter

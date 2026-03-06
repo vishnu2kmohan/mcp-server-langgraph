@@ -92,10 +92,7 @@ REPLACEMENTS = [
 
 def should_skip_file(file_path: Path) -> bool:
     """Check if file should be skipped"""
-    for skip in SKIP_PATTERNS:
-        if skip in file_path.parts:
-            return True
-    return False
+    return any(skip in file_path.parts for skip in SKIP_PATTERNS)
 
 
 def find_violations(content: str, file_path: Path) -> list[Violation]:

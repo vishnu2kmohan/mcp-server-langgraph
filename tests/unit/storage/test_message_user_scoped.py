@@ -153,7 +153,7 @@ class TestContextvarStorageAdapter:
         mock_service = AsyncMock(return_value=None)
         mock_service.get_session_messages = AsyncMock(return_value=[])
 
-        adapter = ContextvarSessionStorageAdapter(session_service=mock_service)
+        ContextvarSessionStorageAdapter(session_service=mock_service)
 
         # Set contextvar
         set_current_user_id("test-user-123")

@@ -451,7 +451,7 @@ FEEDBACK:
 
         return prompt
 
-    def _parse_verification_judgment(self, judgment: str, threshold: float) -> VerificationResult:  # noqa: C901
+    def _parse_verification_judgment(self, judgment: str, threshold: float) -> VerificationResult:
         """
         Parse LLM judgment into structured VerificationResult.
 

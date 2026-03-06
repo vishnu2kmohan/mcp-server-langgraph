@@ -514,7 +514,7 @@ class TestMCPToolRegistryIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.integration
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_registry_integrates_with_get_all_tools(self):
         """GIVEN a populated registry

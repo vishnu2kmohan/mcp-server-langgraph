@@ -19,11 +19,13 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.helpers.path_helpers import get_repo_root
+
 # Mark all tests as unit tests
 pytestmark = [pytest.mark.unit]
 
 # Paths
-PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 SCRIPT_PATH = PROJECT_ROOT / "scripts" / "convert-k8s-crd-alerts.py"
 
 

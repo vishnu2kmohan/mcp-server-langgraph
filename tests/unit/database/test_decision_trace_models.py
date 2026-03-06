@@ -11,6 +11,7 @@ from decimal import Decimal
 import pytest
 
 from mcp_server_langgraph.database import Base
+from tests.conftest import get_user_id
 
 pytestmark = pytest.mark.unit
 
@@ -123,7 +124,7 @@ class TestDecisionTrace:
             run_id="run-xyz",
             session_id="session-456",
             organization_id="org:acme",
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             timestamp=datetime(2026, 1, 8, 12, 0, 0, tzinfo=UTC),
             sequence_number=0,
             decision_type="routing",
@@ -152,7 +153,7 @@ class TestDecisionTrace:
             workflow_id="workflow-789",
             project_id="project:backend",
             organization_id="org:acme",
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             timestamp=timestamp,
             sequence_number=5,
             decision_type="tool_selection",
@@ -330,7 +331,6 @@ class TestDatabaseBaseContainsDecisionTables:
     def test_base_metadata_contains_decision_traces_table(self) -> None:
         """Test Base metadata contains the decision_traces table."""
         # Import to ensure models are registered
-        from mcp_server_langgraph.database.models import DecisionTrace  # noqa: F401
 
         table_names = list(Base.metadata.tables.keys())
         assert "decision_traces" in table_names
@@ -338,7 +338,6 @@ class TestDatabaseBaseContainsDecisionTables:
     def test_base_metadata_contains_decision_edges_table(self) -> None:
         """Test Base metadata contains the decision_edges table."""
         # Import to ensure models are registered
-        from mcp_server_langgraph.database.models import DecisionEdge  # noqa: F401
 
         table_names = list(Base.metadata.tables.keys())
         assert "decision_edges" in table_names

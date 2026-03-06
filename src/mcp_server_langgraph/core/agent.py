@@ -24,9 +24,9 @@ from mcp_server_langgraph.observability.telemetry import logger
 
 # Import Dynamic Context Loader if enabled
 try:
-    from mcp_server_langgraph.core.dynamic_context_loader import (  # noqa: F401
-        DynamicContextLoader,
-        search_and_load_context,
+    from mcp_server_langgraph.core.dynamic_context_loader import (
+        DynamicContextLoader,  # noqa: F401
+        search_and_load_context,  # noqa: F401
     )
 
     DYNAMIC_CONTEXT_AVAILABLE = True

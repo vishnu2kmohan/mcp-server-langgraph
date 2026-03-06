@@ -104,7 +104,7 @@ class TestRetrieveMemoriesNodeBehavior:
             "user_id": "user-123",
         }
 
-        result = await _retrieve_memories_impl(
+        await _retrieve_memories_impl(
             state=state,
             semantic_index_manager=mock_manager,
             max_retrieved_memories=10,

@@ -63,7 +63,11 @@ def mock_app(mock_feature_flags: MagicMock) -> Generator[FastAPI, None, None]:
         "username": "testuser",
         "roles": ["user"],
     }
-    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    async def _override_current_user():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = _override_current_user
 
     # Patch feature_flags at the core module (where @feature_gated reads from)
     # and at the memory API module level
@@ -291,7 +295,11 @@ class TestMemoryFeatureFlag:
         app.include_router(memory_router, prefix="/api/v1/memory")
 
         mock_user = {"sub": "test-user-id"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags = MagicMock()
         mock_flags.enable_agentic_memory = False
@@ -315,7 +323,11 @@ class TestMemoryFeatureFlag:
         app.include_router(memory_router, prefix="/api/v1/memory")
 
         mock_user = {"sub": "test-user-id"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags = MagicMock()
         mock_flags.enable_agentic_memory = False

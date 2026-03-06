@@ -66,7 +66,7 @@ class TestAgentFactory:
         container = create_test_container()
 
         # Container should use no-op telemetry in test mode
-        _ = container.get_telemetry()  # noqa: F841
+        _ = container.get_telemetry()
 
         # Agent creation should not raise errors with no-op telemetry
         agent = create_agent(container=container)

@@ -33,7 +33,7 @@ REFERENCES:
 - ADR-0052: Pytest-xdist Isolation Strategy
 """
 
-# ruff: noqa: F841  # Template contains intentional placeholder variables
+# Template contains intentional placeholder variables
 
 # ============================================================================
 # REQUIRED IMPORTS
@@ -124,7 +124,6 @@ class TestExampleIntegration:
         THEN: Data is persisted and retrievable
         """
         # GIVEN: Database connection (from fixture)
-        conn = postgres_connection_clean
 
         # WHEN: Insert test data
         # await conn.execute(
@@ -152,7 +151,6 @@ class TestExampleIntegration:
         THEN: Data is cached and retrievable
         """
         # GIVEN: Redis connection (from fixture)
-        redis = redis_client_clean
 
         # WHEN: Set cache value
         # await redis.setex("test:key", 3600, "test-value")
@@ -175,8 +173,6 @@ class TestExampleIntegration:
         THEN: Cache hit returns cached data, miss queries DB
         """
         # GIVEN: Infrastructure connections
-        conn = postgres_connection_clean
-        redis = redis_client_clean
 
         # WHEN: Store in DB and cache
         # user_id = "user-123"
@@ -207,8 +203,6 @@ class TestExampleIntegration:
         THEN: Local changes persisted, external service called correctly
         """
         # GIVEN: Real infrastructure
-        conn = postgres_connection_clean
-        redis = redis_client_clean
 
         # GIVEN: Mocked external service
         mock_llm = AsyncMock(return_value=None)
@@ -248,7 +242,6 @@ class TestExampleIntegration:
         THEN: User is created/retrieved successfully
         """
         # GIVEN: Keycloak client (from fixture)
-        keycloak = keycloak_client_real
 
         # WHEN: Create test user
         # user_data = {
@@ -284,7 +277,6 @@ class TestExampleIntegration:
         THEN: Permissions are correctly enforced
         """
         # GIVEN: OpenFGA client (from fixture)
-        openfga = openfga_client_real
 
         # WHEN: Write authorization tuple
         # await openfga.write_tuples([
@@ -320,7 +312,6 @@ class TestExampleIntegration:
         THEN: Changes are rolled back
         """
         # GIVEN: Database connection
-        conn = postgres_connection_clean
 
         # WHEN: Transaction fails
         # try:
@@ -350,8 +341,6 @@ class TestExampleIntegration:
         """
 
         # GIVEN: Infrastructure connections
-        conn = postgres_connection_clean
-        redis = redis_client_clean
 
         # WHEN: Concurrent operations
         # async def increment_counter():
@@ -395,8 +384,6 @@ class TestExampleAPIIntegration:
         THEN: Response is correct and data is persisted
         """
         # GIVEN: Test client and database
-        client = test_client
-        conn = postgres_connection_clean
 
         # WHEN: Make API request
         # response = client.post(

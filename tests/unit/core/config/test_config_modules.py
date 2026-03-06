@@ -65,7 +65,7 @@ class TestSettingsDefaults:
         from mcp_server_langgraph.core.config import Settings
 
         s = Settings()
-        assert s.service_name == "mcp-server-langgraph"
+        assert s.service_name == "agent-studio"
 
     def test_default_auth_provider(self):
         """Default auth provider should be inmemory."""

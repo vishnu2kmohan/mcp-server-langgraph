@@ -483,7 +483,7 @@ _name_generator: ArtifactNameGenerator | None = None
 
 def get_artifact_name_generator() -> ArtifactNameGenerator:
     """Get the singleton artifact name generator instance."""
-    global _name_generator  # noqa: PLW0603
+    global _name_generator
     if _name_generator is None:
         _name_generator = ArtifactNameGenerator()
     return _name_generator

@@ -92,7 +92,8 @@ class TestSlashCommands:
                 if end_frontmatter != -1:
                     content = content[end_frontmatter + 3 :].strip()
 
-            if not content.startswith("#"):
+            # Commands migrated to skills may have "See skill:" redirect instead of heading
+            if not content.startswith("#") and not content.startswith("See skill:"):
                 commands_without_heading.append(cmd_file.name)
 
         assert len(commands_without_heading) == 0, (
@@ -199,13 +200,9 @@ class TestSlashCommands:
             pytest.skip("commands directory does not exist")
 
         # New commands recommended by Anthropic best practices
-        # Note: explore-codebase.md moved to skills (~/.claude/skills/)
+        # Note: Most commands migrated to skills (~/.claude/skills/) for progressive disclosure
         new_commands = {
-            "tdd.md": "Start TDD workflow for a feature",
-            "plan-feature.md": "Feature planning with ultrathink",
-            "verify-tests.md": "Run and verify all tests pass",
             "fix-mypy.md": "Systematic MyPy error fixing",
-            "review-pr.md": "Comprehensive PR review checklist",
         }
 
         missing_commands = []

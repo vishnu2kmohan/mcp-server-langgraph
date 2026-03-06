@@ -29,7 +29,6 @@ from pathlib import Path
 def refactor_file(filepath: Path, dry_run: bool = False) -> int:
     """Refactor a single file to use subscription response helpers."""
     content = filepath.read_text()
-    original_content = content
     changes = 0
 
     # Pattern 1: Simple subscribed response
@@ -39,44 +38,44 @@ def refactor_file(filepath: Path, dry_run: bool = False) -> int:
     #     id=message.id,
     # )
     subscribed_pattern = re.compile(
-        r'MessageEnvelope\(\s*'
+        r"MessageEnvelope\(\s*"
         r'type="subscribed",\s*'
         r'payload=\{"message":\s*"([^"]+)"\},\s*'
-        r'id=(\S+?),?\s*'  # Non-greedy match to exclude trailing comma
-        r'\)',
-        re.MULTILINE | re.DOTALL
+        r"id=(\S+?),?\s*"  # Non-greedy match to exclude trailing comma
+        r"\)",
+        re.MULTILINE | re.DOTALL,
     )
 
     def replace_subscribed(match: re.Match[str]) -> str:
         message = match.group(1)
-        correlation_id = match.group(2).rstrip(',')  # Remove trailing comma
+        correlation_id = match.group(2).rstrip(",")  # Remove trailing comma
         nonlocal changes
         changes += 1
         # Use default message if it matches standard pattern
         if message in ("Successfully subscribed", "Successfully subscribed to alerts"):
-            return f'self.create_subscribed_response(correlation_id={correlation_id})'
+            return f"self.create_subscribed_response(correlation_id={correlation_id})"
         return f'self.create_subscribed_response(\n            correlation_id={correlation_id},\n            message="{message}",\n        )'
 
     content = subscribed_pattern.sub(replace_subscribed, content)
 
     # Pattern 2: Simple unsubscribed response
     unsubscribed_pattern = re.compile(
-        r'MessageEnvelope\(\s*'
+        r"MessageEnvelope\(\s*"
         r'type="unsubscribed",\s*'
         r'payload=\{"message":\s*"([^"]+)"\},\s*'
-        r'id=(\S+?),?\s*'  # Non-greedy match to exclude trailing comma
-        r'\)',
-        re.MULTILINE | re.DOTALL
+        r"id=(\S+?),?\s*"  # Non-greedy match to exclude trailing comma
+        r"\)",
+        re.MULTILINE | re.DOTALL,
     )
 
     def replace_unsubscribed(match: re.Match[str]) -> str:
         message = match.group(1)
-        correlation_id = match.group(2).rstrip(',')  # Remove trailing comma
+        correlation_id = match.group(2).rstrip(",")  # Remove trailing comma
         nonlocal changes
         changes += 1
         # Use default message if it matches standard pattern
         if message in ("Successfully unsubscribed", "Successfully unsubscribed from alerts"):
-            return f'self.create_unsubscribed_response(correlation_id={correlation_id})'
+            return f"self.create_unsubscribed_response(correlation_id={correlation_id})"
         return f'self.create_unsubscribed_response(\n            correlation_id={correlation_id},\n            message="{message}",\n        )'
 
     content = unsubscribed_pattern.sub(replace_unsubscribed, content)

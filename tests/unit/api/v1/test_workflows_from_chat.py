@@ -197,7 +197,7 @@ class TestFromChatFeatureFlag:
     @pytest.mark.asyncio
     async def test_from_chat_disabled_returns_404(self) -> None:
         """When enable_workflow_from_chat=False, endpoint should return 404."""
-        from mcp_server_langgraph.api.v1.workflows import workflows_router
+        from mcp_server_langgraph.api.v1.workflows import workflows_router, get_workflow_service
         from mcp_server_langgraph.auth.dependencies import get_current_user
 
         app = FastAPI()
@@ -205,10 +205,18 @@ class TestFromChatFeatureFlag:
 
         # Mock user
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
+
+        # Mock workflow service to avoid storage dependency
+        mock_service = AsyncMock(return_value=None)
+        app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
         # Mock feature flag as disabled
-        with patch("mcp_server_langgraph.core.feature_flags.get_feature_flags") as mock_flags:
+        with patch("mcp_server_langgraph.api.v1.workflows.get_feature_flags") as mock_flags:
             mock_flags.return_value.enable_workflow_from_chat = False
 
             client = TestClient(app)
@@ -248,7 +256,11 @@ class TestFromChatSuccessfulGeneration:
 
         # Mock dependencies
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         # Create mock flags object
         mock_flags_obj = MagicMock()
@@ -293,7 +305,11 @@ class TestFromChatSuccessfulGeneration:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -330,7 +346,11 @@ class TestFromChatSuccessfulGeneration:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -372,14 +392,22 @@ class TestFromChatValidation:
     @pytest.mark.asyncio
     async def test_from_chat_requires_session_id(self) -> None:
         """Request without session_id should fail validation."""
-        from mcp_server_langgraph.api.v1.workflows import workflows_router
+        from mcp_server_langgraph.api.v1.workflows import workflows_router, get_workflow_service
         from mcp_server_langgraph.auth.dependencies import get_current_user
 
         app = FastAPI()
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
+
+        # Mock workflow service to avoid storage dependency
+        mock_service = AsyncMock(return_value=None)
+        app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -399,14 +427,22 @@ class TestFromChatValidation:
     @pytest.mark.asyncio
     async def test_from_chat_invalid_refinement_mode(self) -> None:
         """Invalid refinement_mode should fail validation."""
-        from mcp_server_langgraph.api.v1.workflows import workflows_router
+        from mcp_server_langgraph.api.v1.workflows import workflows_router, get_workflow_service
         from mcp_server_langgraph.auth.dependencies import get_current_user
 
         app = FastAPI()
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
+
+        # Mock workflow service to avoid storage dependency
+        mock_service = AsyncMock(return_value=None)
+        app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -433,7 +469,11 @@ class TestFromChatValidation:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -478,7 +518,11 @@ class TestFromChatRefinementModes:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -513,7 +557,11 @@ class TestFromChatRefinementModes:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -566,7 +614,11 @@ class TestFromChatSanitization:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -605,10 +657,14 @@ class TestFromChatAuthentication:
     @pytest.mark.asyncio
     async def test_from_chat_requires_authentication(self) -> None:
         """Unauthenticated requests should return 401."""
-        from mcp_server_langgraph.api.v1.workflows import workflows_router
+        from mcp_server_langgraph.api.v1.workflows import workflows_router, get_workflow_service
 
         app = FastAPI()
         app.include_router(workflows_router, prefix="/api/v1")
+
+        # Mock workflow service to avoid storage dependency
+        mock_service = AsyncMock(return_value=None)
+        app.dependency_overrides[get_workflow_service] = lambda: mock_service
 
         # No auth override - should use real auth which will fail
         mock_flags_obj = MagicMock()

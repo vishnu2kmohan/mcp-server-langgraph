@@ -75,7 +75,10 @@ def app(
     app.include_router(sessions_router, prefix="/api/v1")
 
     # Override FastAPI dependencies
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    async def _override_current_user():
+        return mock_current_user
+
+    app.dependency_overrides[get_current_user] = _override_current_user
     app.dependency_overrides[get_session_goal_repository] = lambda: mock_goal_repository
     app.dependency_overrides[get_audit_log_repository] = lambda: mock_audit_repository
 

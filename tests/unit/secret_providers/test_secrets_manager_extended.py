@@ -89,7 +89,7 @@ class TestSecretString:
         secret = SecretString("value")
         assert secret != "value"
         assert secret != 123
-        assert secret != None  # noqa: E711
+        assert secret is not None
 
     def test_secret_string_hash_same_value(self) -> None:
         """GIVEN two SecretStrings with the same value

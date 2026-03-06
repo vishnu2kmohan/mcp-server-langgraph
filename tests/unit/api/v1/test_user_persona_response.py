@@ -64,7 +64,7 @@ class TestGetVisibleModulesForPersona:
         modules = get_visible_modules_for_persona("alice-builder")
         assert "chat" in modules
         assert "workflows" in modules  # Normalized: 'workflows' not 'flows'
-        assert "mcp" in modules
+        assert "connections" in modules  # Normalized: 'connections' not 'mcp'
         assert "agents" in modules
         assert "admin" not in modules  # No admin access
 
@@ -182,7 +182,7 @@ class TestVisibleModulesNormalization:
     The backend PERSONA_VISIBLE_MODULES must use IDs that match frontend ActivityBar NAV_ITEMS.
     """
 
-    # Frontend NAV_ITEM IDs (source of truth from ActivityBar.tsx)
+    # Frontend NAV_ITEM IDs (source of truth from navConstants.ts)
     FRONTEND_NAV_ITEM_IDS = [
         # Core Work
         "projects",
@@ -190,17 +190,15 @@ class TestVisibleModulesNormalization:
         "workflows",  # NOT "flows"
         # AI & Data
         "agents",
-        "mcp",
         "vectors",
-        "connections",
-        "files",
+        "connections",  # NOT "mcp"
+        "artifacts",  # NOT "files"
         # Observability
-        "traces",
         "observability",
-        "metrics",
         "cost",  # NOT "costs"
         # Admin
         "admin",
+        "skills",
         "audit",
         "compliance",
         # Bottom items

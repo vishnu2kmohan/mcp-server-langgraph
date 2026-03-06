@@ -162,7 +162,7 @@ class TestSecretString:
         # Should not be equal to plain string
         assert secret != "test-value"
         # Should not be equal to None
-        assert secret != None  # noqa: E711
+        assert secret is not None
         # Should not be equal to int
         assert secret != 123
 

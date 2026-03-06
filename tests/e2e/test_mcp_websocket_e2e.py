@@ -38,7 +38,7 @@ E2E_WS_BASE_URL = os.getenv("E2E_WS_BASE_URL", "ws://localhost:8000")
 E2E_HTTP_BASE_URL = os.getenv("E2E_HTTP_BASE_URL", "http://localhost:8000")
 E2E_KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost/authn")
 E2E_CLIENT_ID = "mcp-server"
-E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"  # noqa: S105
+E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 
 def _get_keycloak_token(

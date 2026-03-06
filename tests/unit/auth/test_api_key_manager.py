@@ -787,7 +787,7 @@ class TestAPIKeyRedisCache:
         await api_key_manager_with_cache.revoke_api_key(user_id, key_id)
 
         # Assert - should have invalidated cache
-        mock_redis_client.delete.assert_called_once_with(f"apikey:{cache_hash}")
+        mock_redis_client.delete.assert_called_once_with(f"apikey:{cache_hash}:v1")
 
     @pytest.mark.asyncio
     async def test_cache_disabled_skips_redis(self, mock_keycloak_client, mock_redis_client):

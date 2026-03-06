@@ -677,7 +677,7 @@ export function SkillsPage() {
           onClick={() => setShowSettings(false)}
         >
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+          <div className="absolute inset-0 bg-overlay-6" aria-hidden="true" />
 
           {/* Panel */}
           <div

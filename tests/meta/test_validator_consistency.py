@@ -169,7 +169,7 @@ class TestValidatorConsistency:
                 from unittest.mock import AsyncMock
 
                 def test_something():
-                    mock = AsyncMock(return_value=None)  # Unconfigured violation
+                    mock = AsyncMock()  # Unconfigured violation - no return_value/side_effect/spec
                     assert mock
                 """
             )
@@ -183,7 +183,7 @@ class TestValidatorConsistency:
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should detect issues
-        assert len(lib_issues) > 0, "Library should detect issues"
+        assert len(lib_issues) > 0, "Library should detect unconfigured AsyncMock()"
         assert result.returncode == 1, "Script should return exit code 1"
         assert "not configured" in result.stderr or "AsyncMock" in result.stderr
 
@@ -387,6 +387,9 @@ class TestValidatorLocation:
             allowed_scripts = [
                 "check_subprocess_timeout.py",
                 "check_banned_imports.py",
+                "check_frontend_design_system.py",
+                "check_keycloak_theme.py",
+                "check_no_create_all.py",
             ]
             for f in py_files:
                 if f.stem.startswith("check_"):

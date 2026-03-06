@@ -42,10 +42,10 @@ def mock_openfga_client():
 def mock_qdrant_client():
     """Create a mock Qdrant client for testing."""
     client = MagicMock()
-    client.get_collections = MagicMock(return_value=MagicMock(collections=[]))
-    client.create_collection = MagicMock()
-    client.delete_collection = MagicMock()
-    client.search = MagicMock(return_value=[])
+    client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
+    client.create_collection = AsyncMock(return_value=True)
+    client.delete_collection = AsyncMock(return_value=True)
+    client.search = AsyncMock(return_value=[])
     return client
 
 

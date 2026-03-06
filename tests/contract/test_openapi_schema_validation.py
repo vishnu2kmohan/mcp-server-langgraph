@@ -15,7 +15,7 @@ from typing import Any
 import jsonschema
 import pytest
 
-pytestmark = pytest.mark.contract
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 # Load OpenAPI schema once at module level
 OPENAPI_SCHEMA_PATH = Path(__file__).parent.parent.parent / "api" / "openapi.json"

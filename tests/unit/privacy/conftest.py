@@ -75,6 +75,3 @@ def ensure_privacy_modules_loaded() -> None:
     available for patching by the feature flag fixture.
     """
     # Import to ensure modules are loaded
-    import mcp_server_langgraph.privacy.detectors  # noqa: F401
-    import mcp_server_langgraph.privacy.lookup_table  # noqa: F401
-    import mcp_server_langgraph.privacy.tokenizer  # noqa: F401

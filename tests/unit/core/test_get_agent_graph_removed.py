@@ -46,12 +46,17 @@ class TestGetAgentGraphRemoved:
     def test_import_get_agent_graph_raises_error(self):
         """
         GIVEN: A consumer trying to import get_agent_graph
-        WHEN: Using 'from mcp_server_langgraph.core.agent import get_agent_graph'
-        THEN: ImportError should be raised
+        WHEN: Checking if get_agent_graph exists in agent module
+        THEN: It should not be importable (removed after DI migration)
         """
-        with pytest.raises(ImportError):
-            # This should fail after removal
-            from mcp_server_langgraph.core.agent import get_agent_graph  # noqa: F401
+        from mcp_server_langgraph.core import agent
+
+        importlib.reload(agent)
+
+        # Verify get_agent_graph is not accessible
+        assert not hasattr(agent, "get_agent_graph"), (
+            "get_agent_graph should be removed from agent module. All consumers should use create_agent_graph() instead."
+        )
 
     def test_agent_graph_cache_not_in_module(self):
         """

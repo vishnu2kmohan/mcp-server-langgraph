@@ -8,7 +8,7 @@ instead of raw vector embeddings.
 
 import gc
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -67,6 +67,7 @@ class TestVectorsTextUpsertEndpoint:
         mock_model.embed_query.return_value = mock_embedding
 
         mock_qdrant = MagicMock()
+        mock_qdrant.upsert = AsyncMock(return_value=None)
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -95,6 +96,7 @@ class TestVectorsTextUpsertEndpoint:
         mock_model.embed_query.return_value = mock_embedding
 
         mock_qdrant = MagicMock()
+        mock_qdrant.upsert = AsyncMock(return_value=None)
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -116,6 +118,7 @@ class TestVectorsTextUpsertEndpoint:
         mock_model.embed_query.return_value = mock_embedding
 
         mock_qdrant = MagicMock()
+        mock_qdrant.upsert = AsyncMock(return_value=None)
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -138,6 +141,7 @@ class TestVectorsTextUpsertEndpoint:
         mock_model.embed_query.return_value = [0.1] * 384
 
         mock_qdrant = MagicMock()
+        mock_qdrant.upsert = AsyncMock(return_value=None)
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -161,6 +165,7 @@ class TestVectorsTextUpsertEndpoint:
         mock_model.embed_query.return_value = [0.1] * 384
 
         mock_qdrant = MagicMock()
+        mock_qdrant.upsert = AsyncMock(return_value=None)
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -182,6 +187,7 @@ class TestVectorsTextUpsertEndpoint:
         mock_model.embed_query.return_value = [0.1] * 384
 
         mock_qdrant = MagicMock()
+        mock_qdrant.upsert = AsyncMock(return_value=None)
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -229,6 +235,7 @@ class TestVectorsTextUpsertEndpoint:
         mock_model.embed_query.return_value = [0.1] * 384
 
         mock_qdrant = MagicMock()
+        mock_qdrant.upsert = AsyncMock(return_value=None)
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)

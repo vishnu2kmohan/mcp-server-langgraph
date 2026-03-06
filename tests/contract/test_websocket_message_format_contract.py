@@ -34,7 +34,7 @@ import pytest
 if TYPE_CHECKING:
     from typing import Any
 
-pytestmark = [pytest.mark.contract, pytest.mark.websocket]
+pytestmark = [pytest.mark.unit, pytest.mark.contract, pytest.mark.websocket]
 
 
 def get_frontend_hook_path(hook_name: str) -> Path:

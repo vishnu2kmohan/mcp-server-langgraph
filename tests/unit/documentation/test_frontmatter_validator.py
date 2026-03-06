@@ -19,7 +19,7 @@ _scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts"
 sys.path.insert(0, str(_scripts_dir))
 
 
-from validators.frontmatter_validator import (  # noqa: E402
+from validators.frontmatter_validator import (
     FrontmatterValidator,
     InvalidYAMLError,
     MissingFrontmatterError,

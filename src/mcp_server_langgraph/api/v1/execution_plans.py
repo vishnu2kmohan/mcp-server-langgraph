@@ -219,7 +219,7 @@ def get_plan_repo() -> ExecutionPlanRepository:
     Delegates to core.dependencies.get_execution_plan_repository() for
     centralized DI management. Returns InMemory or Postgres based on settings.
     """
-    return get_execution_plan_repository()
+    return get_execution_plan_repository()  # type: ignore[no-any-return]
 
 
 def set_plan_repo(repo: ExecutionPlanRepository) -> None:

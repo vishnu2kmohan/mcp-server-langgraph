@@ -101,11 +101,13 @@ class TestMCPAggregatedHandler:
             broadcaster=mock_broadcaster,
         )
         handler._websocket = MagicMock()
+        # Simulate base class run() which sets _user before calling on_connect
+        handler._user = mock_user
 
         await handler.on_connect(mock_user)
 
         mock_broadcaster.subscribe.assert_called_once()
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
 
     @pytest.mark.asyncio
     async def test_on_disconnect_unsubscribes_from_broadcaster(self, handler_config, mock_broadcaster, mock_user) -> None:
@@ -137,7 +139,7 @@ class TestMCPAggregatedHandler:
             broadcaster=mock_broadcaster,
         )
         handler._websocket = MagicMock()
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="testuser", email="test@example.com", roles=["developer"])
 
         message = MessageEnvelope(type="subscribe", id="req-1")
         response = await handler.handle_message(message)
@@ -158,7 +160,7 @@ class TestMCPAggregatedHandler:
             broadcaster=mock_broadcaster,
         )
         handler._websocket = MagicMock()
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="testuser", email="test@example.com", roles=["developer"])
 
         message = MessageEnvelope(type="get_counts", id="req-2")
         response = await handler.handle_message(message)
@@ -182,7 +184,7 @@ class TestMCPAggregatedHandler:
             broadcaster=mock_broadcaster,
         )
         handler._websocket = MagicMock()
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="testuser", email="test@example.com", roles=["developer"])
         handler._subscribed = True
 
         message = MessageEnvelope(type="unsubscribe", id="req-3")

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.skills.models import Skill
 
 # Domain marker only - benchmark/performance markers auto-applied by conftest.py
-pytestmark = pytest.mark.skills
+pytestmark = [pytest.mark.unit, pytest.mark.skills]
 
 
 def create_test_skill(name: str, description: str = "Test skill") -> "Skill":

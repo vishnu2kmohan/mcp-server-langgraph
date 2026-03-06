@@ -303,8 +303,8 @@ class TestStudioConfigStorageSave:
         )
 
         mock_cache = MagicMock()
-        mock_cache.invalidate = AsyncMock(return_value=None)  # noqa: ARG001
-        mock_cache.set = AsyncMock(return_value=None)  # noqa: ARG001
+        mock_cache.invalidate = AsyncMock(return_value=None)
+        mock_cache.set = AsyncMock(return_value=None)
 
         storage = StudioConfigStorage(cache=mock_cache)
 
@@ -364,7 +364,7 @@ class TestStudioConfigStorageDelete:
         from mcp_server_langgraph.studio.config.storage import StudioConfigStorage
 
         mock_cache = MagicMock()
-        mock_cache.invalidate = AsyncMock(return_value=None)  # noqa: ARG001
+        mock_cache.invalidate = AsyncMock(return_value=None)
 
         storage = StudioConfigStorage(cache=mock_cache)
 

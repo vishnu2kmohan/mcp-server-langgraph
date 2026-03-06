@@ -290,13 +290,11 @@ class EvidenceCollector:
 
             # Query OpenFGA for RBAC role count
             rbac_roles_configured = False
-            rbac_role_count = 0
             if self.openfga_client:
                 try:
                     # Check if OpenFGA has any authorization models configured
                     # This indicates RBAC is set up
                     rbac_roles_configured = True
-                    rbac_role_count = 1  # Placeholder - would need to count actual roles  # noqa: F841
                 except Exception as e:
                     logger.warning(f"Failed to query OpenFGA roles: {e}")
                     rbac_roles_configured = False

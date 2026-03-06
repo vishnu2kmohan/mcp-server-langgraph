@@ -61,18 +61,26 @@ class TestOpenFGAAsyncInitialization:
         )
 
         # Act: Create app with settings
-        with patch("mcp_server_langgraph.app.run_startup_validation_async"):
+        # Mock init_semantic to avoid google_vertex embedding import
+        with (
+            patch("mcp_server_langgraph.app.run_startup_validation_async"),
+            patch(
+                "mcp_server_langgraph.bootstrap.init_semantic",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+        ):
             app = create_app(settings_override=settings, skip_startup_validation=True)
 
-        # Assert: After app creation, openfga_client should be accessible
-        # Note: In lifespan pattern, this is set during startup event
-        # We need to trigger the lifespan by creating a test client
-        with TestClient(app):
-            # The lifespan should have run and set app.state.openfga_client
-            assert hasattr(app.state, "openfga_client"), (
-                "app.state.openfga_client should be set during lifespan startup. "
-                "This is required for the async initialization pattern."
-            )
+            # Assert: After app creation, openfga_client should be accessible
+            # Note: In lifespan pattern, this is set during startup event
+            # We need to trigger the lifespan by creating a test client
+            with TestClient(app):
+                # The lifespan should have run and set app.state.openfga_client
+                assert hasattr(app.state, "openfga_client"), (
+                    "app.state.openfga_client should be set during lifespan startup. "
+                    "This is required for the async initialization pattern."
+                )
 
     def test_openfga_client_is_none_when_config_incomplete(self, monkeypatch):
         """
@@ -100,13 +108,21 @@ class TestOpenFGAAsyncInitialization:
             openfga_store_name=None,
         )
 
-        with patch("mcp_server_langgraph.app.run_startup_validation_async"):
+        # Mock init_semantic to avoid google_vertex embedding import
+        with (
+            patch("mcp_server_langgraph.app.run_startup_validation_async"),
+            patch(
+                "mcp_server_langgraph.bootstrap.init_semantic",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+        ):
             app = create_app(settings_override=settings, skip_startup_validation=True)
 
-        with TestClient(app):
-            assert hasattr(app.state, "openfga_client"), "app.state.openfga_client should be set even when None"
-            # When config is incomplete, it should be None
-            assert app.state.openfga_client is None, "app.state.openfga_client should be None when config incomplete"
+            with TestClient(app):
+                assert hasattr(app.state, "openfga_client"), "app.state.openfga_client should be set even when None"
+                # When config is incomplete, it should be None
+                assert app.state.openfga_client is None, "app.state.openfga_client should be None when config incomplete"
 
 
 @pytest.mark.xdist_group(name="openfga_async_dependency")
@@ -206,7 +222,7 @@ class TestOpenFGAAsyncInitializationEnsures:
         client = OpenFGAClient(config=config)
 
         # Mock _ensure_initialized to track if it's called
-        _original_ensure = original_ensure = client._ensure_initialized  # noqa: F841
+        _original_ensure = client._ensure_initialized
         client._ensure_initialized = AsyncMock(return_value=None)  # noqa: async-mock-config
 
         # Act: Call ensure_initialized (simulating what lifespan should do)
@@ -339,7 +355,7 @@ class TestOpenFGAAuthorizationModelAsyncFileIO:
             "mcp_server_langgraph.auth.openfga.asyncio.to_thread",
             return_value=model_data,
         ) as mock_to_thread:
-            _result = await OpenFGAAuthorizationModel.aget_model_definition()  # noqa: F841
+            _result = await OpenFGAAuthorizationModel.aget_model_definition()
 
             # Verify asyncio.to_thread was called
             mock_to_thread.assert_called_once()
@@ -388,7 +404,7 @@ class TestLoadSampleTuplesAsync:
             "mcp_server_langgraph.auth.openfga.asyncio.to_thread",
             return_value=sample_tuples,
         ) as mock_to_thread:
-            _result = await aload_sample_tuples()  # noqa: F841
+            _result = await aload_sample_tuples()
 
             # Verify asyncio.to_thread was called
             mock_to_thread.assert_called_once()

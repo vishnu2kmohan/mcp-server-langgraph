@@ -1063,7 +1063,7 @@ class Settings(BaseSettings):
             for model, provider, cred in missing_creds:
                 logger.warning(f"  - Model '{model}' (provider: {provider}) requires '{cred.upper()}' environment variable")
 
-    def load_secrets(self) -> None:  # noqa: C901
+    def load_secrets(self) -> None:
         """
         Load secrets from Infisical or environment variables.
 

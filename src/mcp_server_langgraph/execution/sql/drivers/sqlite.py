@@ -41,7 +41,7 @@ class SQLiteDriver(DatabaseDriver):
 
     def __init__(self, db_path: str = ":memory:") -> None:
         self._db_path = db_path
-        self._conn: aiosqlite.Connection | None = None  # type: ignore[name-defined]
+        self._conn: aiosqlite.Connection | None = None
 
     # -- DatabaseDriver protocol ------------------------------------------------
 
@@ -62,7 +62,7 @@ class SQLiteDriver(DatabaseDriver):
         try:
             self._conn = await aiosqlite.connect(self._db_path)
             # Enable dict-like row access via sqlite3.Row
-            self._conn.row_factory = aiosqlite.Row  # type: ignore[assignment]
+            self._conn.row_factory = aiosqlite.Row
             logger.debug("SQLite connection opened: %s", self._db_path)
         except Exception as exc:
             self._conn = None
@@ -84,7 +84,7 @@ class SQLiteDriver(DatabaseDriver):
 
         if cursor.description is None:
             # Non-SELECT statement (INSERT, UPDATE, DELETE, DDL)
-            await self._conn.commit()
+            await self._conn.commit()  # type: ignore[unreachable]
             return []
 
         columns = [desc[0] for desc in cursor.description]

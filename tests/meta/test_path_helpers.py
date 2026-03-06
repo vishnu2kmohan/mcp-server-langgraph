@@ -163,9 +163,9 @@ def test_get_integration_test_file_validates_existence():
     """
     from tests.helpers import get_integration_test_file
 
-    # Act & Assert: Non-existent file should raise FileNotFoundError
+    # Act & Assert: Non-existent file should raise FileNotFoundError when require_exists=True
     with pytest.raises(FileNotFoundError) as exc_info:
-        get_integration_test_file("api/test_nonexistent_file.py")
+        get_integration_test_file("api/test_nonexistent_file.py", require_exists=True)
 
     # Assert: Error message is helpful
     error_msg = str(exc_info.value)

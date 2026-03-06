@@ -122,6 +122,8 @@ class TestFixtureDecorators:
             "unused_tcp_port",  # pytest-asyncio
             "unused_tcp_port_factory",  # pytest-asyncio
             "benchmark",  # pytest-benchmark
+            "mocker",  # pytest-mock
+            "mock",  # pytest-mock (deprecated alias)
         }
 
         # Find test functions with undefined fixture parameters
@@ -192,6 +194,9 @@ class TestFixtureDecorators:
                             if self._returns_generator(node):
                                 # Check if it has @pytest.fixture decorator
                                 if not self._has_fixture_decorator(node):
+                                    # Skip @contextmanager decorated functions (valid yield usage)
+                                    if self._has_contextmanager_decorator(node):
+                                        continue
                                     # Check if it looks like a fixture (naming patterns)
                                     if self._looks_like_fixture(node.name):
                                         rel_path = test_file.relative_to(tests_dir.parent)
@@ -261,6 +266,25 @@ class TestFixtureDecorators:
                     ):
                         return True
 
+        return False
+
+    def _has_contextmanager_decorator(self, func_node: ast.FunctionDef) -> bool:
+        """
+        Check if a function has @contextmanager decorator.
+
+        Args:
+            func_node: AST node for the function
+
+        Returns:
+            True if function has @contextmanager, False otherwise
+        """
+        for decorator in func_node.decorator_list:
+            # @contextmanager
+            if isinstance(decorator, ast.Name) and decorator.id == "contextmanager":
+                return True
+            # @contextlib.contextmanager
+            if isinstance(decorator, ast.Attribute) and decorator.attr == "contextmanager":
+                return True
         return False
 
     def _looks_like_fixture(self, func_name: str) -> bool:
@@ -454,8 +478,12 @@ class TestFixtureDecorators:
         violations = []
         tests_dir = Path(__file__).parent.parent
 
+        # Directories excluded from placeholder detection:
+        # - meta/: meta-tests validate structure, not implementation
+        # - templates/: template files intentionally have 'pass' as placeholder
+        excluded_dirs = {"meta", "templates"}
         for test_file in tests_dir.rglob("test_*.py"):
-            if test_file.parent.name == "meta":
+            if test_file.parent.name in excluded_dirs:
                 continue
 
             try:

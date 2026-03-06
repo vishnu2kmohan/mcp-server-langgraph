@@ -18,7 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 
 from mcp_server_langgraph.api.v1.sessions import sessions_router
 from mcp_server_langgraph.models.base import Base
-import mcp_server_langgraph.models.session_goal  # noqa: F401
 from mcp_server_langgraph.repositories.session_goal import PostgresSessionGoalRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -142,7 +141,10 @@ def app(
     app.include_router(sessions_router, prefix="/api/v1")
 
     # Override dependencies
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    async def _override_current_user():
+        return mock_current_user
+
+    app.dependency_overrides[get_current_user] = _override_current_user
 
     # Use real repository with test database session
     def get_test_repository():
@@ -160,10 +162,17 @@ def app(
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="session_goals_e2e")
 class TestSessionGoalsE2EFlow:
     """E2E tests for the complete session goals flow."""
 
     @pytest.mark.asyncio
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
     async def test_create_goal_and_retrieve_history(
         self,
         app: FastAPI,

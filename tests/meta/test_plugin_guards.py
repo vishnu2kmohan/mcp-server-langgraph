@@ -112,19 +112,22 @@ class TestPluginCLIModeGuards:
         assert result.returncode == 0
 
     @pytest.mark.meta
-    @pytest.mark.timeout(180)  # Extended timeout for subprocess that spawns pytest with 90s timeout
+    @pytest.mark.timeout(300)  # Extended timeout for subprocess that spawns pytest with 120s timeout
     def test_plugin_allows_fixtures_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --fixtures
 
         GIVEN: Pytest with fixture organization plugin
-        WHEN: Running pytest --fixtures
+        WHEN: Running pytest --fixtures (scoped to tests/meta/ for speed)
         THEN: Command succeeds and shows fixtures without validation errors
+
+        Note: Scoped to tests/meta/ because full codebase `pytest --fixtures`
+        takes ~10 minutes due to 2000+ test files.
         """
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", "--fixtures"],
+            [sys.executable, "-m", "pytest", "--fixtures", "tests/meta/"],
             capture_output=True,
-            timeout=90,  # Increased from 30s - pytest_sessionfinish litellm cleanup can be slow
+            timeout=120,  # Scoped to tests/meta/ so should be much faster
             cwd=Path(__file__).parent.parent.parent,
             env=self._get_subprocess_env(),
         )

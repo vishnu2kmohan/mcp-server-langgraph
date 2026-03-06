@@ -37,7 +37,7 @@ def string_to_qdrant_id(string_id: str) -> str:
         UUID string format for Qdrant
     """
     # Create a deterministic hash from the string ID
-    hash_bytes = hashlib.md5(string_id.encode()).hexdigest()  # noqa: S324 - Not for security
+    hash_bytes = hashlib.md5(string_id.encode(), usedforsecurity=False).hexdigest()  # noqa: S324
     # Format as UUID: 8-4-4-4-12
     return f"{hash_bytes[:8]}-{hash_bytes[8:12]}-{hash_bytes[12:16]}-{hash_bytes[16:20]}-{hash_bytes[20:32]}"
 
@@ -243,9 +243,9 @@ class MessageSemanticIndexManager:
             if exclude_session_id:
                 must_not_conditions.append(FieldCondition(key="session_id", match=MatchValue(value=exclude_session_id)))
 
-            query_filter = Filter(must=must_conditions, must_not=must_not_conditions)
+            query_filter = Filter(must=must_conditions, must_not=must_not_conditions)  # type: ignore[arg-type]
 
-            results = await self._client.search(
+            results = await self._client.search(  # type: ignore[attr-defined]
                 collection_name=self.COLLECTION_NAME,
                 query_vector=query_embedding,
                 query_filter=query_filter,

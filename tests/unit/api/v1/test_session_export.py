@@ -90,7 +90,7 @@ def mock_session_service() -> AsyncMock:
 @pytest.fixture
 def app(mock_current_user: dict[str, Any], mock_session_service: AsyncMock) -> FastAPI:
     """Create test FastAPI app with export router."""
-    from mcp_server_langgraph.api.v1.session_export import set_session_service
+    from mcp_server_langgraph.api.v1.sessions import set_session_service
     from mcp_server_langgraph.auth.middleware import get_current_user
 
     test_app = FastAPI()
@@ -101,7 +101,7 @@ def app(mock_current_user: dict[str, Any], mock_session_service: AsyncMock) -> F
 
     test_app.dependency_overrides[get_current_user] = override_get_current_user
 
-    # Set mock session service
+    # Set mock session service via sessions module (session_export imports from there)
     set_session_service(mock_session_service)
 
     test_app.include_router(session_export_router, prefix="/api/v1")

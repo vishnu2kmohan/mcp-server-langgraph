@@ -70,11 +70,11 @@ class SQLExecutionLogger:
         message: str,
         *,
         sql: str | None = None,
-        params: dict | None = None,
+        params: dict[str, Any] | None = None,
         tenant_id: str | None = None,
         duration_ms: float | None = None,
         error: Exception | None = None,
-        extra: dict | None = None,
+        extra: dict[str, Any] | None = None,
     ) -> None:
         log_extra: dict[str, Any] = {
             "tenant_id": tenant_id,

@@ -32,7 +32,7 @@ WARNINGS=0
 
 # Get files to check
 if [ $# -gt 0 ]; then
-    FILES="$@"
+    FILES="$*"
 else
     FILES=$(find src -name "*.test.tsx" -o -name "*.test.ts")
 fi

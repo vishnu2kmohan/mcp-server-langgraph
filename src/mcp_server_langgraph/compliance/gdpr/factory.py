@@ -162,9 +162,7 @@ async def create_gdpr_storage(
     elif backend == "memory":
         return create_memory_storage()
     else:
-        raise ValueError(  # noqa: TRY003
-            f"Invalid GDPR storage backend: {backend}. Must be 'postgres' or 'memory'."  # noqa: EM102
-        )
+        raise ValueError(f"Invalid GDPR storage backend: {backend}. Must be 'postgres' or 'memory'.")
 
 
 # ============================================================================

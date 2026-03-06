@@ -55,11 +55,11 @@ _llm_streaming_chunks: Any = None
 
 def _init_metrics() -> bool:
     """Initialize streaming metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _llm_streaming_ttfc  # noqa: PLW0603
-    global _llm_streaming_inter_chunk_latency  # noqa: PLW0603
-    global _llm_streaming_duration  # noqa: PLW0603
-    global _llm_streaming_chunks  # noqa: PLW0603
+    global _metrics_available
+    global _llm_streaming_ttfc
+    global _llm_streaming_inter_chunk_latency
+    global _llm_streaming_duration
+    global _llm_streaming_chunks
 
     if _metrics_available is not None:
         return _metrics_available

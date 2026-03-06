@@ -66,7 +66,7 @@ class SessionPropagatingSpanProcessor(SpanProcessor):
             # (common in async scenarios and context propagation)
             parent_span = trace.get_current_span(parent_context) if parent_context is not None else trace.get_current_span()
             if parent_span is None:
-                return
+                return  # type: ignore[unreachable]
 
             # Get parent attributes (handle both Span and ReadableSpan)
             parent_attrs = getattr(parent_span, "attributes", None)

@@ -22,7 +22,7 @@ from mcp_server_langgraph.api.v1.feedback import (
     Severity,
 )
 
-pytestmark = pytest.mark.contract
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 
 # =============================================================================

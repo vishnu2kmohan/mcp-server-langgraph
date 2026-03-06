@@ -400,7 +400,7 @@ class TestOutputGuardrailsIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.integration
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_guardrails_integrate_with_after_model_hook(self):
         """GIVEN output guardrails configured

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import gc
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -163,17 +163,37 @@ class TestMCPWebSocketAppStateIntegration:
         from starlette.testclient import TestClient
         from mcp_server_langgraph.app import create_app
         from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.api.v1.mcp_websocket import MCPWebSocketLifecycleManager
+
+        # Create a mock AppState that provides websocket_lifecycle
+        mock_lifecycle = MCPWebSocketLifecycleManager()
+        mock_websocket_state = MagicMock()
+        mock_websocket_state.mcp_lifecycle_manager = mock_lifecycle
+
+        mock_state = MagicMock()
+        mock_state.security = MagicMock(openfga_client=None)
+        mock_state.http = MagicMock(http_client_manager=None)
+        mock_state.storage = MagicMock(audit_service=None)
+        mock_state.websocket = mock_websocket_state
+        mock_state.context_graph = None
+        mock_state.skills = None
+        mock_state.cleanup = AsyncMock(return_value=None)
 
         # Create app with test settings
         test_settings = Settings()
         app = create_app(settings_override=test_settings, skip_startup_validation=True)
 
-        # Use TestClient which handles lifespan properly
-        with TestClient(app, raise_server_exceptions=False) as client:
-            # Make a request to trigger lifespan
-            client.get("/health/ready")
-            # app.state should have websocket_lifecycle after startup
-            assert hasattr(app.state, "websocket_lifecycle")
+        with (
+            patch("mcp_server_langgraph.app.bootstrap_all", new_callable=AsyncMock, return_value=mock_state),
+            patch("mcp_server_langgraph.tools.unified_registry.sync_mcp_tools", new_callable=AsyncMock),
+            patch("mcp_server_langgraph.bootstrap.semantic.index_all_tools", new_callable=AsyncMock),
+        ):
+            # Use TestClient which handles lifespan properly
+            with TestClient(app, raise_server_exceptions=False) as client:
+                # Make a request to trigger lifespan
+                client.get("/health/ready")
+                # app.state should have websocket_lifecycle after startup
+                assert hasattr(app.state, "websocket_lifecycle")
 
     @pytest.mark.asyncio
     async def test_websocket_lifecycle_in_app_state_is_lifecycle_manager(self) -> None:
@@ -187,15 +207,34 @@ class TestMCPWebSocketAppStateIntegration:
         from mcp_server_langgraph.app import create_app
         from mcp_server_langgraph.core.config import Settings
 
+        # Create a mock AppState that provides websocket_lifecycle
+        mock_lifecycle = MCPWebSocketLifecycleManager()
+        mock_websocket_state = MagicMock()
+        mock_websocket_state.mcp_lifecycle_manager = mock_lifecycle
+
+        mock_state = MagicMock()
+        mock_state.security = MagicMock(openfga_client=None)
+        mock_state.http = MagicMock(http_client_manager=None)
+        mock_state.storage = MagicMock(audit_service=None)
+        mock_state.websocket = mock_websocket_state
+        mock_state.context_graph = None
+        mock_state.skills = None
+        mock_state.cleanup = AsyncMock(return_value=None)
+
         test_settings = Settings()
         app = create_app(settings_override=test_settings, skip_startup_validation=True)
 
-        with TestClient(app, raise_server_exceptions=False) as client:
-            # Make a request to trigger lifespan
-            client.get("/health/ready")
-            lifecycle = app.state.websocket_lifecycle
-            # Should be either None or MCPWebSocketLifecycleManager
-            assert lifecycle is None or isinstance(lifecycle, MCPWebSocketLifecycleManager)
+        with (
+            patch("mcp_server_langgraph.app.bootstrap_all", new_callable=AsyncMock, return_value=mock_state),
+            patch("mcp_server_langgraph.tools.unified_registry.sync_mcp_tools", new_callable=AsyncMock),
+            patch("mcp_server_langgraph.bootstrap.semantic.index_all_tools", new_callable=AsyncMock),
+        ):
+            with TestClient(app, raise_server_exceptions=False) as client:
+                # Make a request to trigger lifespan
+                client.get("/health/ready")
+                lifecycle = app.state.websocket_lifecycle
+                # Should be either None or MCPWebSocketLifecycleManager
+                assert lifecycle is None or isinstance(lifecycle, MCPWebSocketLifecycleManager)
 
 
 @pytest.mark.xdist_group(name="test_mcp_websocket_lifespan_integration")

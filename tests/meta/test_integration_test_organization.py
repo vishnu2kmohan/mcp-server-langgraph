@@ -130,6 +130,8 @@ class TestIntegrationTestOrganization:
             allowed_locations = [
                 tests_dir / "integration",
                 tests_dir / "meta",  # Meta-tests may test integration infrastructure
+                tests_dir / "e2e",  # E2E tests may also have integration markers
+                tests_dir / "templates",  # Template files for test generation
             ]
 
             # Check if file is in allowed location

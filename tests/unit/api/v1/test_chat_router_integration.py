@@ -322,13 +322,16 @@ class TestRouterAgentIntegration:
 
         messages = [{"role": "user", "content": "Hello"}]
 
-        chunks = []
-        async for chunk in service.create_stream(
-            session_id="test-session",
-            messages=messages,
-            # enable_routing not set (default False)
-        ):
-            chunks.append(chunk)
+        with patch("mcp_server_langgraph.api.v1.chat.settings") as mock_settings:
+            mock_settings.enable_chat_routing = False
+
+            chunks = []
+            async for chunk in service.create_stream(
+                session_id="test-session",
+                messages=messages,
+                enable_routing=False,
+            ):
+                chunks.append(chunk)
 
         # Router should NOT be called
         mock_router_agent.route.assert_not_called()

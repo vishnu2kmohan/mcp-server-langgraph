@@ -19,7 +19,7 @@ from mcp_server_langgraph.execution.sql.exceptions import SQLConnectionError
 try:
     import asyncpg
 except ImportError:
-    asyncpg = None  # type: ignore[assignment]
+    asyncpg = None
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +36,11 @@ class PostgresDriver(DatabaseDriver):
         An ``asyncpg.Pool`` instance from which connections are acquired.
     """
 
-    def __init__(self, pool: asyncpg.Pool) -> None:  # type: ignore[name-defined]
+    def __init__(self, pool: asyncpg.Pool) -> None:
         if asyncpg is None:
             raise SQLConnectionError("asyncpg is not installed. Install it with: pip install asyncpg")
         self._pool = pool
-        self._conn: asyncpg.Connection | None = None  # type: ignore[name-defined]
+        self._conn: asyncpg.Connection | None = None
         self._current_pid: int | None = None
 
     # -- DatabaseDriver protocol ------------------------------------------------

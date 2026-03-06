@@ -171,9 +171,7 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:
                 followed_by = re.compile(mp["followed_by"])
                 for j in range(i + 1, min(i + 6, len(lines))):
                     if followed_by.search(lines[j]):
-                        violations.append(
-                            (i + 1, line.strip(), f"{mp['message']}. {mp['replacement']}")
-                        )
+                        violations.append((i + 1, line.strip(), f"{mp['message']}. {mp['replacement']}"))
                         break
 
     # Check BroadcasterMixin usage

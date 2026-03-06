@@ -33,19 +33,19 @@ _suggestion_interactions: Any = None
 
 def _init_suggestion_metrics() -> bool:
     """Initialize suggestion metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _suggestion_counter  # noqa: PLW0603
-    global _suggestion_latency  # noqa: PLW0603
-    global _suggestion_confidence  # noqa: PLW0603
-    global _chat_suggestion_counter  # noqa: PLW0603
-    global _chat_suggestion_latency  # noqa: PLW0603
-    global _suggestion_tokens_total  # noqa: PLW0603
-    global _suggestion_cost_total  # noqa: PLW0603
-    global _suggestion_rate_limit_hits  # noqa: PLW0603
-    global _suggestion_personalization  # noqa: PLW0603
-    global _suggestion_cache_operations  # noqa: PLW0603
-    global _suggestion_streaming_requests  # noqa: PLW0603
-    global _suggestion_interactions  # noqa: PLW0603
+    global _metrics_available
+    global _suggestion_counter
+    global _suggestion_latency
+    global _suggestion_confidence
+    global _chat_suggestion_counter
+    global _chat_suggestion_latency
+    global _suggestion_tokens_total
+    global _suggestion_cost_total
+    global _suggestion_rate_limit_hits
+    global _suggestion_personalization
+    global _suggestion_cache_operations
+    global _suggestion_streaming_requests
+    global _suggestion_interactions
 
     if _metrics_available is not None:
         return _metrics_available
@@ -1448,12 +1448,12 @@ Make suggestions specific to the content and conversation context, not generic."
                 if _suggestion_tokens_total:
                     _suggestion_tokens_total.labels(
                         model=self.model_name,
-                        token_type="prompt",  # noqa: S106 - metric label, not password
+                        token_type="prompt",
                         suggestion_type="chat_followup",
                     ).inc(prompt_tokens)
                     _suggestion_tokens_total.labels(
                         model=self.model_name,
-                        token_type="completion",  # noqa: S106 - metric label, not password
+                        token_type="completion",
                         suggestion_type="chat_followup",
                     ).inc(completion_tokens)
 
@@ -1486,9 +1486,9 @@ _artifact_suggestion_errors: Any = None
 
 def _init_artifact_metrics() -> bool:
     """Initialize artifact suggestion metrics lazily."""
-    global _artifact_suggestion_counter  # noqa: PLW0603
-    global _artifact_suggestion_latency  # noqa: PLW0603
-    global _artifact_suggestion_errors  # noqa: PLW0603
+    global _artifact_suggestion_counter
+    global _artifact_suggestion_latency
+    global _artifact_suggestion_errors
 
     if _artifact_suggestion_counter is not None:
         return True
@@ -1604,7 +1604,7 @@ class ArtifactSuggestionAgent:
     def _cache_key(self, content: str, content_type: str, language: str | None) -> str:
         """Generate cache key from content hash."""
         key_str = f"{content_type}:{language or 'unknown'}:{content}"
-        return hashlib.md5(key_str.encode()).hexdigest()  # noqa: S324 - md5 for cache key, not security
+        return hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()
 
     def _get_cached(self, key: str) -> list[ArtifactSuggestion] | None:
         """Get cached suggestions if not expired."""

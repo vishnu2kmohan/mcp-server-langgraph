@@ -392,7 +392,7 @@ def log_retry_attempt_manual(
     )
 
 
-def retry_with_backoff(  # noqa: C901
+def retry_with_backoff(
     max_attempts: int | None = None,
     exponential_base: float | None = None,
     exponential_max: float | None = None,

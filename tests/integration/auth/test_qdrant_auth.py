@@ -95,7 +95,7 @@ KEYCLOAK_URL = f"{GATEWAY_URL}/authn"
 
 # Test credentials from tests/e2e/default-realm.json
 ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"  # noqa: S105
+ADMIN_PASSWORD = "admin123"
 
 
 @pytest.mark.xdist_group(name="test_qdrant_auth")

@@ -42,7 +42,7 @@ class TestNotificationHandlerInit:
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         assert handler._broadcaster is mock_broadcaster
-        assert handler._user_id is None
+        assert handler.user_id is None
 
     def test_init_with_metrics(self) -> None:
         """GIVEN metrics WHEN creating handler THEN stores metrics."""
@@ -86,10 +86,11 @@ class TestNotificationHandlerLifecycle:
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         user = AuthUser(id="user-123", username="testuser")
+        handler._user = user  # Base class sets this before calling on_connect
 
         await handler.on_connect(user)
 
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
         mock_broadcaster.subscribe.assert_called_once_with(mock_ws, user_id="user-123")
 
     @pytest.mark.asyncio
@@ -108,10 +109,11 @@ class TestNotificationHandlerLifecycle:
 
         # No websocket set
         user = AuthUser(id="user-123", username="testuser")
+        handler._user = user  # Base class sets this before calling on_connect
 
         await handler.on_connect(user)
 
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
         mock_broadcaster.subscribe.assert_not_called()
 
     @pytest.mark.asyncio
@@ -120,7 +122,7 @@ class TestNotificationHandlerLifecycle:
         from mcp_server_langgraph.websocket.handlers.notifications import (
             NotificationWebSocketHandler,
         )
-        from mcp_server_langgraph.websocket.types import WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -130,7 +132,7 @@ class TestNotificationHandlerLifecycle:
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
 
         await handler.on_disconnect()
 
@@ -142,7 +144,7 @@ class TestNotificationHandlerLifecycle:
         from mcp_server_langgraph.websocket.handlers.notifications import (
             NotificationWebSocketHandler,
         )
-        from mcp_server_langgraph.websocket.types import WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -151,7 +153,7 @@ class TestNotificationHandlerLifecycle:
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         # No websocket set
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
 
         await handler.on_disconnect()
 
@@ -192,7 +194,7 @@ class TestNotificationHandlerMessages:
         from mcp_server_langgraph.websocket.handlers.notifications import (
             NotificationWebSocketHandler,
         )
-        from mcp_server_langgraph.websocket.types import MessageEnvelope, WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, MessageEnvelope, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -200,7 +202,7 @@ class TestNotificationHandlerMessages:
         with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
         message = MessageEnvelope(type="custom_ack", id="msg-2")
 
         # Should not raise

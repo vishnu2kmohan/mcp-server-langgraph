@@ -41,7 +41,7 @@ class TestAuditHandlerInit:
 
         assert handler._broadcaster is mock_broadcaster
         assert isinstance(handler._current_filter, AuditFilter)
-        assert handler._user_id is None
+        assert handler.user_id is None
 
 
 @pytest.mark.xdist_group(name="websocket_audit_handler_lifecycle")
@@ -67,17 +67,18 @@ class TestAuditHandlerLifecycle:
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         user = AuthUser(id="user-123", username="testuser")
+        handler._user = user  # Base class sets this before calling on_connect
 
         await handler.on_connect(user)
 
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
         mock_broadcaster.subscribe.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_on_disconnect_unsubscribes(self) -> None:
         """GIVEN connected WHEN on_disconnect called THEN unsubscribes."""
         from mcp_server_langgraph.websocket.handlers.audit import AuditHandler
-        from mcp_server_langgraph.websocket.types import WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -87,7 +88,7 @@ class TestAuditHandlerLifecycle:
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
 
         await handler.on_disconnect()
 

@@ -15,7 +15,7 @@ import gc
 import pytest
 
 # Domain marker only - benchmark/performance markers auto-applied by conftest.py
-pytestmark = pytest.mark.pii
+pytestmark = [pytest.mark.unit, pytest.mark.pii]
 
 
 def generate_text_with_pii(length: int, pii_count: int = 5) -> str:

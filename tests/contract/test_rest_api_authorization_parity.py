@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.contract, pytest.mark.authorization]
+pytestmark = [pytest.mark.unit, pytest.mark.contract, pytest.mark.authorization]
 
 
 def get_project_root() -> Path:

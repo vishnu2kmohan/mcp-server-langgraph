@@ -26,11 +26,13 @@ from typing import Any
 import pytest
 import yaml
 
+from tests.helpers.path_helpers import get_repo_root
+
 # Mark all tests as unit tests
 pytestmark = [pytest.mark.unit]
 
 # Paths
-PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+PROJECT_ROOT = get_repo_root()
 CANONICAL_RULES_DIR = PROJECT_ROOT / "monitoring" / "prometheus" / "rules"
 CANONICAL_ALERTS_DIR = PROJECT_ROOT / "monitoring" / "prometheus" / "alerts"
 DEPLOYMENTS_ALERTING_DIR = PROJECT_ROOT / "deployments" / "monitoring" / "alerting-rules"
@@ -596,7 +598,7 @@ class TestDashboardAlertLinking:
 
         # Don't fail on invalid UIDs for now - just warn
         # Dashboard UIDs may be dynamically generated
-        if False:  # noqa: SIM223  # Disabled check - UIDs may be dynamic
+        if False:  # Disabled check - UIDs may be dynamic
             errors.append(
                 f"Found {len(invalid_uids)} alerts referencing non-existent dashboard UIDs:\n"
                 + "\n".join(f"  {x}" for x in invalid_uids[:10])

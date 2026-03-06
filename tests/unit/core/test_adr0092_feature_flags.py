@@ -211,13 +211,13 @@ class TestADR0092OptionalFeatureFlags:
             assert flags.enable_progressive_skill_loading is True
 
     def test_enable_semantic_skill_search_exists(self) -> None:
-        """Test enable_semantic_skill_search flag exists with default False."""
+        """Test enable_semantic_skill_search flag exists with default True."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
         assert hasattr(flags, "enable_semantic_skill_search")
-        assert flags.enable_semantic_skill_search is False
+        assert flags.enable_semantic_skill_search is True
 
     def test_enable_semantic_skill_search_can_be_enabled(self) -> None:
         """Test enable_semantic_skill_search can be set to True."""
@@ -240,13 +240,13 @@ class TestADR0092OptionalFeatureFlags:
             assert flags.enable_semantic_skill_search is True
 
     def test_enable_semantic_memory_search_exists(self) -> None:
-        """Test enable_semantic_memory_search flag exists with default False."""
+        """Test enable_semantic_memory_search flag exists with default True."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
         assert hasattr(flags, "enable_semantic_memory_search")
-        assert flags.enable_semantic_memory_search is False
+        assert flags.enable_semantic_memory_search is True
 
     def test_enable_semantic_memory_search_can_be_enabled(self) -> None:
         """Test enable_semantic_memory_search can be set to True."""
@@ -340,23 +340,23 @@ class TestADR0092FeatureFlagIntegration:
         # Should not raise
         flags.require_feature("enable_capability_resolution", "Capability Resolution")
 
-    def test_all_adr0092_flags_default_to_false(self) -> None:
-        """Test all ADR-0092 flags default to False for safe rollout."""
+    def test_all_adr0092_flags_default_to_expected_values(self) -> None:
+        """Test all ADR-0092 flags default to expected values."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
-        # Core flags
+        # Core flags (default False)
         assert flags.enable_enhanced_router_output is False
         assert flags.enable_capability_resolution is False
         assert flags.enable_studio_md_loading is False
         assert flags.enable_multi_pattern_execution is False
 
-        # Optional flags
+        # Optional flags (promoted to True after stabilization)
         assert flags.enable_user_capability_selection is False
         assert flags.enable_progressive_skill_loading is False
-        assert flags.enable_semantic_skill_search is False
-        assert flags.enable_semantic_memory_search is False
+        assert flags.enable_semantic_skill_search is True
+        assert flags.enable_semantic_memory_search is True
         assert flags.enable_hitl_undo_rollback is False
 
     def test_adr0092_flags_can_be_enabled_together(self) -> None:
@@ -453,13 +453,13 @@ class TestUIShellFeatureFlags:
         gc.collect()
 
     def test_enable_model_selector_in_shell_exists(self) -> None:
-        """Test enable_model_selector_in_shell flag exists with default False."""
+        """Test enable_model_selector_in_shell flag exists with default True."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
         assert hasattr(flags, "enable_model_selector_in_shell")
-        assert flags.enable_model_selector_in_shell is False
+        assert flags.enable_model_selector_in_shell is True
 
     def test_enable_model_selector_in_shell_can_be_enabled(self) -> None:
         """Test enable_model_selector_in_shell can be set to True."""
@@ -482,13 +482,13 @@ class TestUIShellFeatureFlags:
             assert flags.enable_model_selector_in_shell is True
 
     def test_enable_url_fetch_in_shell_exists(self) -> None:
-        """Test enable_url_fetch_in_shell flag exists with default False."""
+        """Test enable_url_fetch_in_shell flag exists with default True."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
         assert hasattr(flags, "enable_url_fetch_in_shell")
-        assert flags.enable_url_fetch_in_shell is False
+        assert flags.enable_url_fetch_in_shell is True
 
     def test_enable_url_fetch_in_shell_can_be_enabled(self) -> None:
         """Test enable_url_fetch_in_shell can be set to True."""

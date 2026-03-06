@@ -67,7 +67,7 @@ class TestAISuggestionsHandler:
 
         handler = AISuggestionsHandler(config=ai_suggestions_config)
 
-        assert handler._user_id is None
+        assert handler.user_id is None
         assert handler._session_context == {}
 
     @pytest.mark.asyncio
@@ -79,10 +79,12 @@ class TestAISuggestionsHandler:
 
         handler = AISuggestionsHandler(config=ai_suggestions_config)
         handler._websocket = MagicMock()
+        # Simulate base class run() which sets _user before calling on_connect
+        handler._user = mock_user
 
         await handler.on_connect(mock_user)
 
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
 
     @pytest.mark.asyncio
     async def test_on_disconnect_logs_user_id_when_on_connect_was_called(
@@ -95,10 +97,12 @@ class TestAISuggestionsHandler:
 
         handler = AISuggestionsHandler(config=ai_suggestions_config)
         handler._websocket = MagicMock()
+        # Simulate base class run() which sets _user before calling on_connect
+        handler._user = mock_user
 
         # Normal flow: on_connect is called first
         await handler.on_connect(mock_user)
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
 
         # Then disconnect - capture logs at INFO level
         with caplog.at_level(logging.INFO, logger=AI_SUGGESTIONS_LOGGER):
@@ -130,8 +134,8 @@ class TestAISuggestionsHandler:
         # Simulate the race condition:
         # Base class has set self._user, but on_connect() was never called
         handler._user = mock_user  # Base class user is set
-        # handler._user_id is still None (on_connect never called)
-        assert handler._user_id is None
+        # user_id property derives from _user, so it should be available
+        assert handler.user_id == "user-123"
 
         # Disconnect happens - capture logs at INFO level
         with caplog.at_level(logging.INFO, logger=AI_SUGGESTIONS_LOGGER):
@@ -156,7 +160,7 @@ class TestAISuggestionsHandler:
         handler._websocket = MagicMock()
 
         # Neither base class user nor handler user_id is set
-        assert handler._user_id is None
+        assert handler.user_id is None
         assert handler._user is None
 
         # Disconnect happens - should not crash - capture logs at INFO level
@@ -264,7 +268,7 @@ class TestAISuggestionsHandlerErrorResponses:
         handler = AISuggestionsHandler(config=ai_suggestions_config)
         handler._websocket = MagicMock()
         handler._user = mock_user
-        handler._user_id = mock_user.id
+        # user_id is now a property on base class backed by self._user (already set above)
 
         # Create a message that will trigger an exception (missing required fields)
         bad_message = MessageEnvelope(
@@ -296,7 +300,7 @@ class TestAISuggestionsHandlerErrorResponses:
         handler = AISuggestionsHandler(config=ai_suggestions_config)
         handler._websocket = MagicMock()
         handler._user = mock_user
-        handler._user_id = mock_user.id
+        # user_id is now a property on base class backed by self._user (already set above)
 
         # Create a suggestion request with missing session_id
         message = MessageEnvelope(

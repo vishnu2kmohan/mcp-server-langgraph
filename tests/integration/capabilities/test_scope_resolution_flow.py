@@ -290,7 +290,7 @@ class TestEndToEndScopeResolution:
                 skills=[],
                 scope=CapabilityScope.PROJECT,
             ),
-        ) as _mock_resolve:  # noqa: F841
+        ) as _mock_resolve:
             resolved = await provider.resolve(request)
 
             assert isinstance(resolved, ResolvedCapabilities)

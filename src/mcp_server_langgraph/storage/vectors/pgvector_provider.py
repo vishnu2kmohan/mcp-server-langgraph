@@ -133,7 +133,7 @@ class PgVectorProvider(VectorSearchProvider):
                     ON CONFLICT (id) DO UPDATE SET
                         vector = EXCLUDED.vector,
                         metadata = EXCLUDED.metadata
-                    """,  # noqa: S608
+                    """,
                     id,
                     vector_str,
                     metadata_json,
@@ -181,6 +181,9 @@ class PgVectorProvider(VectorSearchProvider):
             if filters:
                 conditions = []
                 for key, value in filters.items():
+                    # Validate key is a safe SQL identifier (defense-in-depth)
+                    if not key or not all(c.isalnum() or c == "_" for c in key):
+                        raise ValueError(f"Invalid filter key: {key!r}")
                     filter_values.append(json.dumps(value))
                     param_idx = len(filter_values) + 1
                     conditions.append(f"metadata->>'{key}' = ${param_idx}")
@@ -202,7 +205,7 @@ class PgVectorProvider(VectorSearchProvider):
                 {filter_clause}
                 ORDER BY vector <=> $1::vector
                 LIMIT ${2 + len(filter_values)}
-            """  # noqa: S608
+            """
 
             async with self._pool.acquire() as conn:
                 rows = await conn.fetch(
@@ -249,7 +252,7 @@ class PgVectorProvider(VectorSearchProvider):
             async with self._pool.acquire() as conn:
                 # S608: table name comes from internal config, not user input
                 await conn.execute(
-                    f"DELETE FROM {table} WHERE id = $1",  # noqa: S608
+                    f"DELETE FROM {table} WHERE id = $1",
                     id,
                 )
 

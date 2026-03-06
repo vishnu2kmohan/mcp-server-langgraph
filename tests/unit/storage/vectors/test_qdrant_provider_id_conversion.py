@@ -332,7 +332,7 @@ class TestQdrantVectorProviderErrorHandling:
         )
 
         mock_client = AsyncMock(return_value=None)
-        provider = QdrantVectorProvider(client=mock_client, vector_size=768)
+        QdrantVectorProvider(client=mock_client, vector_size=768)
 
         with patch.dict("sys.modules", {"qdrant_client.models": None}):
             with patch(

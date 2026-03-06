@@ -100,9 +100,9 @@ KEYCLOAK_URL = f"{GATEWAY_URL}/authn"
 
 # Test credentials from tests/e2e/default-realm.json
 ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"  # noqa: S105
+ADMIN_PASSWORD = "admin123"
 ALICE_USERNAME = "alice"
-ALICE_PASSWORD = "alice123"  # noqa: S105
+ALICE_PASSWORD = "alice123"
 
 
 @pytest.mark.xdist_group(name="test_grafana_oauth2")
@@ -368,7 +368,7 @@ class TestGrafanaClientConfiguration:
                 "grant_type": "password",
                 "client_id": "admin-cli",
                 "username": "admin",
-                "password": "admin",  # noqa: S106
+                "password": "admin",
             },
             timeout=10,
         )

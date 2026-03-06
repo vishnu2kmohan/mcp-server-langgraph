@@ -34,8 +34,15 @@ def create_test_app(user_override=None, repo_override=None):
     return app
 
 
+@pytest.mark.xdist_group(name="references_api_integration")
 class TestReferencesAPIIntegration:
     """Integration tests for /api/v1/references/resolve endpoint."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     async def test_resolve_tool_reference_full_flow(self):
         """

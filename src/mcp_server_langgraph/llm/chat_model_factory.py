@@ -91,7 +91,7 @@ def _create_anthropic_model(settings: Settings, model_name: str, enable_streamin
     """Create Anthropic ChatModel."""
     from langchain_anthropic import ChatAnthropic
 
-    return ChatAnthropic(
+    return ChatAnthropic(  # type: ignore[call-arg]
         model=model_name,
         temperature=settings.model_temperature,
         max_tokens=settings.model_max_tokens,
@@ -117,7 +117,7 @@ def _create_vertex_ai_model(settings: Settings, model_name: str, enable_streamin
     """Create Vertex AI ChatModel."""
     from langchain_google_vertexai import ChatVertexAI
 
-    return ChatVertexAI(
+    return ChatVertexAI(  # type: ignore[no-any-return]
         model=model_name,
         temperature=settings.model_temperature,
         max_output_tokens=settings.model_max_tokens,
@@ -131,7 +131,7 @@ def _create_openai_model(settings: Settings, model_name: str, enable_streaming: 
     """Create OpenAI ChatModel."""
     from langchain_openai import ChatOpenAI
 
-    return ChatOpenAI(
+    return ChatOpenAI(  # type: ignore[no-any-return]
         model=model_name,
         temperature=settings.model_temperature,
         max_tokens=settings.model_max_tokens,
@@ -144,7 +144,7 @@ def _create_azure_model(settings: Settings, enable_streaming: bool) -> BaseChatM
     """Create Azure OpenAI ChatModel."""
     from langchain_openai import AzureChatOpenAI
 
-    return AzureChatOpenAI(
+    return AzureChatOpenAI(  # type: ignore[no-any-return]
         azure_deployment=settings.azure_deployment_name,
         temperature=settings.model_temperature,
         max_tokens=settings.model_max_tokens,
@@ -162,9 +162,9 @@ def _create_litellm_adapter(settings: Settings) -> BaseChatModel:
     that don't have native LangChain integrations.
     """
     try:
-        from langchain_community.chat_models import ChatLiteLLM
+        from langchain_community.chat_models import ChatLiteLLM  # type: ignore[import-not-found,import-untyped]
 
-        return ChatLiteLLM(
+        return ChatLiteLLM(  # type: ignore[no-any-return]
             model=settings.model_name,
             temperature=settings.model_temperature,
             max_tokens=settings.model_max_tokens,

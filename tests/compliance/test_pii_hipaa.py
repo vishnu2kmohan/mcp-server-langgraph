@@ -21,7 +21,7 @@ import gc
 
 import pytest
 
-pytestmark = [pytest.mark.compliance, pytest.mark.pii, pytest.mark.hipaa]
+pytestmark = [pytest.mark.unit, pytest.mark.compliance, pytest.mark.pii, pytest.mark.hipaa]
 
 
 @pytest.mark.compliance

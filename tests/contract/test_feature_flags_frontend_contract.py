@@ -21,7 +21,7 @@ import pytest
 
 from mcp_server_langgraph.core.feature_flags import get_feature_flags
 
-pytestmark = pytest.mark.contract
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 # Feature flags that MUST be exposed to frontend
 # These are referenced in frontend code via isEnabled() or useFeatureFlag()
@@ -189,6 +189,7 @@ class TestFeatureFlagsFrontendContract:
             capture_output=True,
             text=True,
             check=False,
+            timeout=60,
         )
 
         if result.returncode != 0 and not result.stdout:

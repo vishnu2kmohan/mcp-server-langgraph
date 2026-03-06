@@ -165,7 +165,7 @@ class TestApplicationContainer:
             container = ApplicationContainer(config)
 
             # Get telemetry - should NOT call global init_observability
-            _telemetry = container.get_telemetry()  # noqa: F841
+            _telemetry = container.get_telemetry()
 
             # The global init function should never be called for test containers
             mock_init.assert_not_called()

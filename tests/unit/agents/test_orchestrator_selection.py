@@ -530,7 +530,7 @@ class TestSelectOrchestratorImpl:
 
 
 @pytest.mark.unit
-@pytest.mark.integration
+@pytest.mark.unit
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="swarm_streaming")
 class TestSwarmStreaming:
@@ -693,7 +693,7 @@ class TestSwarmStreaming:
 
 
 @pytest.mark.unit
-@pytest.mark.integration
+@pytest.mark.unit
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="task_orchestrator_streaming")
 class TestTaskOrchestratorStreaming:
@@ -790,7 +790,7 @@ class TestTaskOrchestratorStreaming:
 
 
 @pytest.mark.unit
-@pytest.mark.integration
+@pytest.mark.unit
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="chat_routing_dispatch")
 class TestChatRoutingDispatch:

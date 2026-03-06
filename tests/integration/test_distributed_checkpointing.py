@@ -111,7 +111,7 @@ class TestMemoryCheckpointer:
             }
 
             config = {"configurable": {"thread_id": "test-thread-123"}}
-            result1 = await graph.ainvoke(initial_state, config)  # noqa: F841
+            await graph.ainvoke(initial_state, config)
 
             # Second message (same thread)
             followup_state: AgentState = {

@@ -69,11 +69,20 @@ def fallback_check(files: list[str]) -> int:
     CRITICAL_PATTERNS = [
         (r"\b(text|bg|border|ring)-(white|black)\b", "raw-tailwind-color"),
         (r'style\s*=\s*\{\s*\{[^}]*(?:color|background|backgroundColor)\s*:\s*["\']?#[0-9a-fA-F]{3,8}', "inline-hex-color"),
-        (r'\b(?:stroke|fill|color|backgroundColor|bgColor|textColor|borderColor|nodeColor|maskColor)\s*=\s*["{]["\']?#[0-9a-fA-F]{3,8}', "jsx-prop-hex-color"),
-        (r'\b(?:stroke|fill|color|backgroundColor|bgColor|textColor|borderColor|nodeColor|maskColor)\s*=\s*["\'`]rgba?\([^)]+\)', "jsx-prop-rgba-color"),
-        (r'\b(?:stroke|fill|color|backgroundColor|bgColor|textColor|borderColor|nodeColor|maskColor)\s*=\s*["\'`]hsla?\([^)]+\)', "jsx-prop-hsl-color"),
-        (r'\b(?:bg|text|border|ring|fill|stroke)-\[#[0-9a-fA-F]{3,8}\]', "arbitrary-hex-class"),
-        (r'\b(?:bg|text|border|ring|fill|stroke)-\[rgba?\([^\]]+\)\]', "arbitrary-rgba-class"),
+        (
+            r'\b(?:stroke|fill|color|backgroundColor|bgColor|textColor|borderColor|nodeColor|maskColor)\s*=\s*["{]["\']?#[0-9a-fA-F]{3,8}',
+            "jsx-prop-hex-color",
+        ),
+        (
+            r'\b(?:stroke|fill|color|backgroundColor|bgColor|textColor|borderColor|nodeColor|maskColor)\s*=\s*["\'`]rgba?\([^)]+\)',
+            "jsx-prop-rgba-color",
+        ),
+        (
+            r'\b(?:stroke|fill|color|backgroundColor|bgColor|textColor|borderColor|nodeColor|maskColor)\s*=\s*["\'`]hsla?\([^)]+\)',
+            "jsx-prop-hsl-color",
+        ),
+        (r"\b(?:bg|text|border|ring|fill|stroke)-\[#[0-9a-fA-F]{3,8}\]", "arbitrary-hex-class"),
+        (r"\b(?:bg|text|border|ring|fill|stroke)-\[rgba?\([^\]]+\)\]", "arbitrary-rgba-class"),
     ]
 
     SKIP_PATTERNS = {".test.", ".stories.", "node_modules", "__snapshots__"}

@@ -154,7 +154,7 @@ class TestPatternAnalyzer:
         asyncio_tests = self.marker_usage.get("asyncio", 0)
         async_percentage = (asyncio_tests / self.test_count) * 100 if self.test_count > 0 else 0
         report.append(
-            f"- **Async tests**: {asyncio_tests} ({async_percentage:.1f}%) - {'High' if async_percentage > 50 else 'Moderate'} async usage"  # noqa: E501
+            f"- **Async tests**: {asyncio_tests} ({async_percentage:.1f}%) - {'High' if async_percentage > 50 else 'Moderate'} async usage"
         )
 
         unit_tests = self.marker_usage.get("unit", 0)

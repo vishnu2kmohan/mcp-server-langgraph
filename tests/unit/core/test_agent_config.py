@@ -331,16 +331,19 @@ class TestSemanticToolSelectionConfig:
         monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
         monkeypatch.setenv("ENVIRONMENT", "test")
 
+        from unittest.mock import MagicMock
+
         from mcp_server_langgraph.core.agent_config import AgentConfig
-        from mcp_server_langgraph.core.config import Settings
 
-        settings = Settings(
-            enable_semantic_tool_search=True,
-            max_selected_tools=15,
-            semantic_tool_search_threshold=0.7,
-        )
+        # Use a mock Settings with the semantic search attributes
+        # (enable_semantic_tool_search lives on FeatureFlags, not Settings,
+        # but from_settings uses getattr with fallback so a mock works)
+        mock_settings = MagicMock()
+        mock_settings.enable_semantic_tool_search = True
+        mock_settings.max_selected_tools = 15
+        mock_settings.semantic_tool_search_threshold = 0.7
 
-        config = AgentConfig.from_settings(settings)
+        config = AgentConfig.from_settings(mock_settings)
 
         assert config.enable_semantic_tool_search is True
         assert config.max_selected_tools == 15

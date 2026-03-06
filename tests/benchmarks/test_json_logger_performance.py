@@ -16,6 +16,7 @@ import logging
 import pytest
 
 pytestmark = [
+    pytest.mark.unit,
     pytest.mark.benchmark,
     pytest.mark.xdist_group(name="json_logger_benchmarks"),
 ]

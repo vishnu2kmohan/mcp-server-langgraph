@@ -8,7 +8,7 @@ instead of raw vector embeddings.
 
 import gc
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -71,7 +71,7 @@ class TestVectorsTextSearchEndpoint:
         mock_result.id = "point-1"
         mock_result.score = 0.95
         mock_result.payload = {"text": "Sample result"}
-        mock_qdrant.search.return_value = [mock_result]
+        mock_qdrant.search = AsyncMock(return_value=[mock_result])
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -97,7 +97,7 @@ class TestVectorsTextSearchEndpoint:
         mock_model.embed_query.return_value = mock_embedding
 
         mock_qdrant = MagicMock()
-        mock_qdrant.search.return_value = []
+        mock_qdrant.search = AsyncMock(return_value=[])
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -122,7 +122,7 @@ class TestVectorsTextSearchEndpoint:
         mock_model.embed_query.return_value = [0.1] * 384
 
         mock_qdrant = MagicMock()
-        mock_qdrant.search.return_value = []
+        mock_qdrant.search = AsyncMock(return_value=[])
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)
@@ -142,7 +142,7 @@ class TestVectorsTextSearchEndpoint:
         mock_model.embed_query.return_value = [0.1] * 384
 
         mock_qdrant = MagicMock()
-        mock_qdrant.search.return_value = []
+        mock_qdrant.search = AsyncMock(return_value=[])
 
         app = self._create_app_with_mocks(mock_qdrant=mock_qdrant, mock_embeddings=mock_model)
         client = TestClient(app)

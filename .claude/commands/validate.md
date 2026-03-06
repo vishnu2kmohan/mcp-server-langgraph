@@ -34,7 +34,7 @@ Execute comprehensive validation of all deployment configurations and schemas.
 
 3. **Docker Compose Validation**
    ```bash
-   make validate-docker compose
+   make validate-docker-compose
    ```
    Validates:
    - YAML syntax

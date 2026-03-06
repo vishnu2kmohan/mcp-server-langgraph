@@ -93,25 +93,19 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     clients = realm_config.get("clients", [])
     assert isinstance(clients, list), f"Realm 'clients' must be an array, got: {type(clients)}"
 
-    # Find mcp-server client
+    # Find mcp-server client (or agent-studio variant)
+    # Client ID was renamed from 'mcp-server' to 'agent-studio-keycloak-client-id-for-e2e-tests'
+    accepted_client_ids = ["mcp-server", "agent-studio-keycloak-client-id-for-e2e-tests"]
     mcp_client = None
     for client in clients:
-        if client.get("clientId") == "mcp-server":
+        if client.get("clientId") in accepted_client_ids:
             mcp_client = client
             break
 
     assert mcp_client is not None, (
-        "Client 'mcp-server' not found in realm configuration.\n"
+        "MCP server client not found in realm configuration.\n"
         "\n"
-        "Expected client configuration:\n"
-        "{\n"
-        '  "clientId": "mcp-server",\n'
-        '  "enabled": true,\n'
-        '  "publicClient": false,\n'
-        '  "serviceAccountsEnabled": true,\n'
-        '  "directAccessGrantsEnabled": false\n'
-        "}\n"
-        "\n"
+        f"Expected one of: {accepted_client_ids}\n"
         f"Found clients: {[c.get('clientId') for c in clients]}"
     )
 
@@ -512,26 +506,21 @@ def test_realm_json_has_openfga_server_client(repo_root: Path):
 
     clients = realm_config.get("clients", [])
 
-    # Find openfga-server client
+    # Find openfga-server client (or agent-studio variant)
+    # Client ID was renamed from 'openfga-server' to 'agent-studio-openfga-oidc-cient-id-for-e2e-tests'
+    accepted_client_ids = ["openfga-server", "agent-studio-openfga-oidc-cient-id-for-e2e-tests"]
     openfga_client = None
     for client in clients:
-        if client.get("clientId") == "openfga-server":
+        if client.get("clientId") in accepted_client_ids:
             openfga_client = client
             break
 
     assert openfga_client is not None, (
-        "Client 'openfga-server' not found in realm configuration.\n"
+        "OpenFGA client not found in realm configuration.\n"
         "\n"
         "This causes OpenFGA API authentication failures.\n"
         "\n"
-        "Expected client configuration:\n"
-        "{\n"
-        '  "clientId": "openfga-server",\n'
-        '  "enabled": true,\n'
-        '  "publicClient": false,\n'
-        '  "serviceAccountsEnabled": true\n'
-        "}\n"
-        "\n"
+        f"Expected one of: {accepted_client_ids}\n"
         f"Found clients: {[c.get('clientId') for c in clients]}"
     )
 

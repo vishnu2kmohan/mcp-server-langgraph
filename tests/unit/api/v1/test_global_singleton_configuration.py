@@ -236,6 +236,11 @@ class TestBootstrapConfiguresGlobalSingletons:
             patch("mcp_server_langgraph.bootstrap.init_auth") as mock_auth,
             patch("mcp_server_langgraph.bootstrap.init_storage") as mock_storage,
             patch("mcp_server_langgraph.bootstrap.init_http_client") as mock_http,
+            patch("mcp_server_langgraph.bootstrap.init_skills") as mock_skills,
+            patch("mcp_server_langgraph.bootstrap.init_context_graph") as mock_ctx,
+            patch("mcp_server_langgraph.bootstrap.init_agent_execution_trace_repository") as mock_agent_trace,
+            patch("mcp_server_langgraph.bootstrap.init_semantic") as mock_semantic,
+            patch("mcp_server_langgraph.bootstrap.init_model_sync") as mock_model_sync,
         ):
             mock_obs.return_value = MagicMock()
             mock_auth.return_value = MagicMock(
@@ -245,6 +250,19 @@ class TestBootstrapConfiguresGlobalSingletons:
                 cleanup=AsyncMock(return_value=None)
             )  # async-mock-configured (cleanup callback)  # noqa: async-mock-config
             mock_http.return_value = MagicMock(
+                cleanup=AsyncMock(return_value=None)
+            )  # async-mock-configured (cleanup callback)  # noqa: async-mock-config
+            mock_skills.return_value = MagicMock(
+                cleanup=AsyncMock(return_value=None)
+            )  # async-mock-configured (cleanup callback)  # noqa: async-mock-config
+            mock_ctx.return_value = MagicMock(
+                cleanup=AsyncMock(return_value=None)
+            )  # async-mock-configured (cleanup callback)  # noqa: async-mock-config
+            mock_agent_trace.return_value = False
+            mock_semantic.return_value = MagicMock(
+                cleanup=AsyncMock(return_value=None)
+            )  # async-mock-configured (cleanup callback)  # noqa: async-mock-config
+            mock_model_sync.return_value = MagicMock(
                 cleanup=AsyncMock(return_value=None)
             )  # async-mock-configured (cleanup callback)  # noqa: async-mock-config
 

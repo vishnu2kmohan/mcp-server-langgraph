@@ -1,7 +1,3 @@
-# Module: 00-conditions
-# Description: Conditional authorization expressions
-# Reference: ADR-0068 Phase 6 - Conditions
-
 {
   "conditions": {
     "time_bound_share": {

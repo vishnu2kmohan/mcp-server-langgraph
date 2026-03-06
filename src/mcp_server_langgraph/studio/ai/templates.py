@@ -38,8 +38,8 @@ def _init_embeddings() -> bool:
     Returns:
         True if embeddings are available, False otherwise
     """
-    global _embeddings_available  # noqa: PLW0603
-    global _embedding_model  # noqa: PLW0603
+    global _embeddings_available
+    global _embedding_model
 
     if _embeddings_available is not None:
         return _embeddings_available
@@ -214,7 +214,7 @@ class TemplateRecommender:
 
     def _initialize_embeddings(self) -> None:
         """Pre-compute embeddings for all templates (lazy initialization)."""
-        global _template_embeddings  # noqa: PLW0603
+        global _template_embeddings
 
         if self._embeddings_initialized or not self._enable_embeddings:
             return

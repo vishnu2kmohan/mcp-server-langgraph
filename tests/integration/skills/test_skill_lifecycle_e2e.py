@@ -104,7 +104,7 @@ class MockVectorProvider:
         results = []
         for doc_id, data in self._storage[collection].items():
             # Simple dot product score (normalized vectors assumed)
-            score = sum(a * b for a, b in zip(query_vector[:10], data["vector"][:10]))
+            score = sum(a * b for a, b in zip(query_vector[:10], data["vector"][:10], strict=False))
             if score >= min_score:
                 results.append(
                     {
@@ -194,6 +194,12 @@ class TestSkillLifecycleE2E:
     """E2E tests for complete skill lifecycle."""
 
     @pytest.mark.asyncio
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
     async def test_install_indexes_skill_for_search(
         self,
         temp_install_path: Path,
@@ -223,7 +229,7 @@ class TestSkillLifecycleE2E:
             "dependencies": [],
         }
 
-        with MagicMock() as mock_fetch:
+        with MagicMock():
             installer._fetch_skill_from_marketplace = AsyncMock(return_value=mock_skill_data)
 
             # Install the skill

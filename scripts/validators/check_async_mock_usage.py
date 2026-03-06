@@ -35,7 +35,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 # Import validation logic from shared library
-from tests.validation_lib import async_mocks  # noqa: E402
+from tests.validation_lib import async_mocks
 
 
 def main() -> int:

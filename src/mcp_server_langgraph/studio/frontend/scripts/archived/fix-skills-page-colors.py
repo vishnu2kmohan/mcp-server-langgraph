@@ -54,7 +54,6 @@ SEMANTIC_FIXES = [
 def fix_file(filepath: Path, dry_run: bool = False) -> int:
     """Fix a single file. Returns number of replacements made."""
     content = filepath.read_text()
-    original = content
     changes = 0
 
     all_fixes = SURFACE_FIXES + BORDER_FIXES + TEXT_FIXES + ACCENT_FIXES + SEMANTIC_FIXES

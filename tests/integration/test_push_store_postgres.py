@@ -116,7 +116,6 @@ async def setup_database(test_engine):
     2. Existing database (from migrations) - uses existing table
     """
     from mcp_server_langgraph.models.base import Base
-    import mcp_server_langgraph.notifications.push_store  # noqa: F401
 
     tables_created = False
 

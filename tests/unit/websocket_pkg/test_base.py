@@ -932,7 +932,7 @@ class TestGetAuthMiddlewareFromWebsocket:
         """GIVEN websocket WHEN getting auth middleware THEN delegates to dependencies."""
         from mcp_server_langgraph.websocket.base import get_auth_middleware_from_websocket
 
-        _mock_ws = MagicMock()  # noqa: F841 - Reserved for future use
+        _mock_ws = MagicMock()
         mock_middleware = MagicMock()
 
         with patch(
@@ -1037,6 +1037,8 @@ class TestWebSocketBaseRun:
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None
+        mock_ws.query_params = {"v": "1.0.0"}
+        mock_ws.headers = {}
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1101,6 +1103,8 @@ class TestWebSocketBaseRun:
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_ws.client_state = None
+        mock_ws.query_params = {"v": "1.0.0"}
+        mock_ws.headers = {}
 
         from starlette.websockets import WebSocketDisconnect
 
@@ -1482,7 +1486,7 @@ class TestWebSocketBaseTokenValidation:
             handler = TestHandler(config)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_ws.query_params = {"token": "expiring-token"}
+        mock_ws.query_params = {"token": "expiring-token", "v": "1.0.0"}
         mock_ws.headers = {}
         mock_ws.client_state = None
 

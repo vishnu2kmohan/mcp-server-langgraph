@@ -68,9 +68,9 @@ class TestSemanticIndexManagerIdConversion:
             vector_size=384,
         )
 
-        # Create test tool entry with string ID
+        # Create test tool entry with valid tool_id format (builtin:{name})
         tool_entry = ToolIndexEntry(
-            tool_id="my-custom-tool-001",
+            tool_id="builtin:my-custom-tool-001",
             name="Test Tool",
             description="A test tool",
             category="test",
@@ -87,11 +87,11 @@ class TestSemanticIndexManagerIdConversion:
         point = points[0]
 
         # The ID should be converted to a valid UUID
-        expected_uuid = string_to_qdrant_id("my-custom-tool-001")
+        expected_uuid = string_to_qdrant_id("builtin:my-custom-tool-001")
         assert point.id == expected_uuid
 
         # Verify original ID is preserved in payload
-        assert point.payload.get("_original_id") == "my-custom-tool-001"
+        assert point.payload.get("_original_id") == "builtin:my-custom-tool-001"
 
     @pytest.mark.asyncio
     async def test_index_tool_preserves_valid_uuid(self):
@@ -101,6 +101,9 @@ class TestSemanticIndexManagerIdConversion:
         """
         from mcp_server_langgraph.core.semantic_index_manager import (
             SemanticIndexManager,
+        )
+        from mcp_server_langgraph.storage.vectors.qdrant_provider import (
+            string_to_qdrant_id,
         )
         from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
@@ -115,9 +118,9 @@ class TestSemanticIndexManagerIdConversion:
             vector_size=384,
         )
 
-        original_uuid = str(uuid.uuid4())
+        # Use a valid tool_id format with a UUID-like suffix
         tool_entry = ToolIndexEntry(
-            tool_id=original_uuid,
+            tool_id="builtin:uuid-tool",
             name="UUID Tool",
             description="A tool with UUID",
             category="test",
@@ -130,8 +133,9 @@ class TestSemanticIndexManagerIdConversion:
         points = call_args.kwargs.get("points") or call_args[1].get("points", [])
 
         assert len(points) == 1
-        # UUID should be preserved
-        assert points[0].id == original_uuid
+        # ID should be a valid UUID (converted from builtin:uuid-tool)
+        expected_uuid = string_to_qdrant_id("builtin:uuid-tool")
+        assert points[0].id == expected_uuid
 
     @pytest.mark.asyncio
     async def test_index_skill_converts_skill_id_to_uuid(self):
@@ -243,13 +247,13 @@ class TestSemanticIndexManagerIdConversion:
 
         entries = [
             ToolIndexEntry(
-                tool_id="batch-tool-1",
+                tool_id="builtin:batch-tool-1",
                 name="Tool 1",
                 description="First tool",
                 category="test",
             ),
             ToolIndexEntry(
-                tool_id="batch-tool-2",
+                tool_id="builtin:batch-tool-2",
                 name="Tool 2",
                 description="Second tool",
                 category="test",
@@ -263,10 +267,10 @@ class TestSemanticIndexManagerIdConversion:
         points = call_args.kwargs.get("points") or call_args[1].get("points", [])
 
         assert len(points) == 2
-        assert points[0].id == string_to_qdrant_id("batch-tool-1")
-        assert points[1].id == string_to_qdrant_id("batch-tool-2")
-        assert points[0].payload.get("_original_id") == "batch-tool-1"
-        assert points[1].payload.get("_original_id") == "batch-tool-2"
+        assert points[0].id == string_to_qdrant_id("builtin:batch-tool-1")
+        assert points[1].id == string_to_qdrant_id("builtin:batch-tool-2")
+        assert points[0].payload.get("_original_id") == "builtin:batch-tool-1"
+        assert points[1].payload.get("_original_id") == "builtin:batch-tool-2"
 
     @pytest.mark.asyncio
     async def test_index_decision_converts_trace_id_to_uuid(self):
@@ -339,15 +343,17 @@ class TestSemanticIndexManagerSearchIdRestoration:
 
         # Mock Qdrant search response with UUID and _original_id in payload
         mock_point = MagicMock()
-        mock_point.id = string_to_qdrant_id("original-tool-id")
+        mock_point.id = string_to_qdrant_id("builtin:original-tool")
         mock_point.score = 0.95
+        mock_point.vector = None
         mock_point.payload = {
-            "tool_id": "original-tool-id",
+            "tool_id": "builtin:original-tool",
             "name": "Test Tool",
             "description": "A test tool",
             "category": "test",
             "scope": "session",
-            "_original_id": "original-tool-id",
+            "ref_type": "tool",
+            "_original_id": "builtin:original-tool",
         }
 
         mock_response = MagicMock()
@@ -370,5 +376,5 @@ class TestSemanticIndexManagerSearchIdRestoration:
             )
 
             assert len(results) == 1
-            # Original ID should be in the tool entry
-            assert results[0].tool_id == "original-tool-id"
+            # Original tool_id should be preserved in the tool entry
+            assert results[0].tool_id == "builtin:original-tool"

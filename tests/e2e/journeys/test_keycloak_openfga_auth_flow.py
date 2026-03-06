@@ -399,7 +399,7 @@ class TestKeycloakAuthentication:
         ROPC is now disabled per security audit (ADR-0086).
         Token exchange and client_credentials cannot test invalid user credentials.
         """
-        pytest.skip("ROPC is disabled per ADR-0086")
+        pass  # Skipped via decorator - ROPC disabled per ADR-0086
 
     def test_userinfo_endpoint_returns_claims(self):
         """

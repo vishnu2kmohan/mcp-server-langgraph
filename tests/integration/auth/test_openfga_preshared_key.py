@@ -46,7 +46,7 @@ OPENFGA_URL = os.getenv("OPENFGA_URL", "http://localhost:9080")
 
 # Test preshared key from .env.test / docker-compose.test.yml
 VALID_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
-INVALID_PRESHARED_KEY = "invalid-key-that-should-fail"  # noqa: S105
+INVALID_PRESHARED_KEY = "invalid-key-that-should-fail"
 
 
 @pytest.mark.xdist_group(name="test_openfga_preshared_key")

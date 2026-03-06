@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.contract, pytest.mark.xdist_group(name="canvas_contract")]
+pytestmark = [pytest.mark.unit, pytest.mark.contract, pytest.mark.xdist_group(name="canvas_contract")]
 
 
 def get_frontend_canvas_actions() -> set[str]:

@@ -578,6 +578,22 @@ split-on-trailing-comma = true
 "src/mcp_server_langgraph/monitoring/cost_tracker.py" = [
     "S106",  # False positive: "input"/"output" are LLM token types, not auth tokens
 ]
+"src/mcp_server_langgraph/monitoring/cost_storage.py" = [
+    "S608",  # SQL queries use f-strings with validated/controlled table names, not user input
+]
+"src/mcp_server_langgraph/monitoring/cost_storage_aws.py" = [
+    "S608",  # SQL queries use f-strings with validated/controlled table names, not user input
+]
+"src/mcp_server_langgraph/monitoring/cost_storage_gcp.py" = [
+    "S608",  # SQL queries use f-strings with validated/controlled table names, not user input
+]
+"src/mcp_server_langgraph/storage/vectors/pgvector_provider.py" = [
+    "S608",  # SQL queries use f-strings with controlled table/column names, not user input
+]
+"src/mcp_server_langgraph/studio/ai/suggestions.py" = [
+    "S106",  # False positive: "input"/"output" are LLM token types, not auth tokens
+    "S324",  # MD5 used for suggestion cache key fingerprinting, not cryptographic purposes
+]
 # __all__ intentionally grouped by category for documentation purposes
 "src/mcp_server_langgraph/compliance/__init__.py" = ["RUF022"]
 "src/mcp_server_langgraph/resilience/__init__.py" = ["RUF022"]
@@ -586,6 +602,22 @@ split-on-trailing-comma = true
 "src/mcp_server_langgraph/compliance/soc2/evidence.py" = ["ASYNC230"]
 "src/mcp_server_langgraph/schedulers/compliance.py" = ["ASYNC230"]
 "tests/integration/test_soc2_evidence.py" = ["ASYNC230"]
+# Pre-commit hooks use subprocess intentionally
+".pre-commit-hooks/check_frontend_design_system.py" = [
+    "S603",   # subprocess with controlled commands, not untrusted input
+    "S112",   # try-except-continue for file reading errors (best effort)
+]
+# Alembic migrations use f-strings for SQL with controlled constants
+"alembic/versions/*.py" = [
+    "S608",   # SQL in migrations uses controlled constants, not user input
+]
+# Remediation webhook is a deployment helper script
+"deployments/remediation/webhook/main.py" = [
+    "FAST001",  # response_model is intentional for API documentation
+    "ASYNC221", # subprocess in executor is the correct async pattern
+    "S603",     # subprocess with controlled commands
+    "TRY400",   # logging.error is intentional (not an exception handler)
+]
 
 [tool.ruff.format]
 # Use black-compatible formatting

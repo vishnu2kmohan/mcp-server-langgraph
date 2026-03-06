@@ -262,7 +262,6 @@ def _get_native_tools() -> list[UnifiedToolResponse]:
     "",
     summary="List all available tools",
     description="Get unified list of built-in, MCP, and native tools for manual selection",
-    response_model=UnifiedToolsListResponse,
 )
 async def list_tools(
     current_user: CurrentUser,
@@ -453,7 +452,6 @@ def get_embedding_service() -> "EmbeddingServiceProtocol":
     "/semantic-search",
     summary="Semantic tool search",
     description="Find tools using natural language query via vector similarity search",
-    response_model=SemanticToolSearchResponse,
 )
 async def semantic_search_tools(
     request: SemanticToolSearchRequest,
@@ -577,7 +575,6 @@ class NativeToolMetricsResponse(BaseModel):
     "/metrics/comparison",
     summary="Get native vs builtin tool metrics",
     description="Compare performance metrics between native and builtin tools",
-    response_model=NativeToolMetricsResponse,
 )
 async def get_tool_metrics_comparison(
     current_user: CurrentUser,
@@ -668,7 +665,6 @@ class NativeCapabilitiesResponse(BaseModel):
     "/native-capabilities/{model_id:path}",
     summary="Get native tool capabilities for a model",
     description="Detect which native LLM provider tools are available for a specific model",
-    response_model=NativeCapabilitiesResponse,
 )
 async def get_native_capabilities(
     model_id: str,
@@ -686,11 +682,9 @@ async def get_native_capabilities(
         Native capabilities response with supported tools and their status
     """
     from mcp_server_langgraph.agents.model_registry import ModelRegistry
-    from mcp_server_langgraph.tools.native_handler import NativeToolHandler
 
     registry = ModelRegistry()
     caps = registry.get(model_id)
-    handler = NativeToolHandler(model_id)
 
     capabilities: list[NativeToolCapability] = []
 

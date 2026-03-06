@@ -46,7 +46,11 @@ class TestChatSuggestionsEndpoint:
             "roles": ["user"],
             "realm_access": {"roles": ["user"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         return app
 
@@ -136,7 +140,11 @@ class TestAuthSwitchOrgEndpoint:
             "roles": ["user"],
             "realm_access": {"roles": ["user"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
 
         return app
@@ -207,7 +215,11 @@ class TestWorkflowExecuteEndpoint:
             "roles": ["admin"],
             "realm_access": {"roles": ["admin"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[require_workflow_viewer] = lambda: mock_user
         app.dependency_overrides[require_workflow_editor] = lambda: mock_user
         app.dependency_overrides[require_workflow_owner] = lambda: mock_user
@@ -288,7 +300,11 @@ class TestWorkflowExecutionStatusEndpoint:
             "roles": ["admin"],
             "realm_access": {"roles": ["admin"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[require_workflow_viewer] = lambda: mock_user
         app.dependency_overrides[require_workflow_editor] = lambda: mock_user
         app.dependency_overrides[require_workflow_owner] = lambda: mock_user
@@ -347,7 +363,7 @@ class TestAdminUserApiKeyEndpoint:
     def mock_api_key_manager(self) -> MagicMock:
         """Create a mock API key manager that generates keys."""
         # Use explicit test value to avoid gitleaks false positives
-        test_key = "mcpkey_" + "test" + "0000"  # noqa: S105 (not a real secret)
+        test_key = "mcpkey_" + "test" + "0000"
         mock_manager = MagicMock()
         mock_manager.list_api_keys = AsyncMock(return_value=[])
         mock_manager.create_api_key = AsyncMock(
@@ -389,7 +405,11 @@ class TestAdminUserApiKeyEndpoint:
             "roles": ["admin"],
             "realm_access": {"roles": ["admin"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[require_admin] = lambda: mock_user
 
         return app
@@ -446,7 +466,11 @@ class TestCanvasActionEndpoint:
             "roles": ["user"],
             "realm_access": {"roles": ["user"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         return app
 
@@ -563,7 +587,11 @@ class TestInterpretCommandEndpoint:
             "roles": ["user"],
             "realm_access": {"roles": ["user"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         return app
 

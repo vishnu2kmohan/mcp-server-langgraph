@@ -142,9 +142,7 @@ def should_skip(path: Path) -> bool:
         return True
     if path.name in SKIP_FILES:
         return True
-    if ".test." in path.name or ".stories." in path.name:
-        return True
-    return False
+    return bool(".test." in path.name or ".stories." in path.name)
 
 
 def get_variant_for_text(text: str) -> str | None:
@@ -337,10 +335,7 @@ def main() -> int:
     parser.add_argument("files", nargs="*", help="Specific files to fix")
     args = parser.parse_args()
 
-    if args.files:
-        files = [Path(f) for f in args.files if Path(f).suffix in EXTENSIONS]
-    else:
-        files = list(FRONTEND_SRC.rglob("*.tsx"))
+    files = [Path(f) for f in args.files if Path(f).suffix in EXTENSIONS] if args.files else list(FRONTEND_SRC.rglob("*.tsx"))
 
     files = [f for f in files if f.exists() and not should_skip(f)]
 

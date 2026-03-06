@@ -113,8 +113,9 @@ def validate_css_pseudo_elements(theme_path: Path) -> list[ThemeValidationError]
 
         # Find all pseudo-element selectors
         # Pattern: selector::before or selector::after
-        pseudo_pattern = re.compile(r"([^\s{,]+)::(?:before|after)\s*\{", re.MULTILINE)
-        matches = pseudo_pattern.findall(content)
+        # Captures selector INCLUDING ::before/::after to distinguish them
+        pseudo_pattern = re.compile(r"([^\s{,]+::(before|after))\s*\{", re.MULTILINE)
+        matches = [m[0] for m in pseudo_pattern.findall(content)]
 
         # Count occurrences
         counts = Counter(matches)
@@ -122,7 +123,7 @@ def validate_css_pseudo_elements(theme_path: Path) -> list[ThemeValidationError]
         for selector, count in counts.items():
             if count > 1:
                 # Find line numbers for all occurrences
-                pattern = re.compile(re.escape(selector) + r"::(?:before|after)")
+                pattern = re.compile(re.escape(selector))
                 line_numbers = []
                 for line_no, line in enumerate(content.splitlines(), 1):
                     if pattern.search(line):
@@ -132,7 +133,7 @@ def validate_css_pseudo_elements(theme_path: Path) -> list[ThemeValidationError]
                     ThemeValidationError(
                         file_path=css_file,
                         line_no=int(line_numbers[0]) if line_numbers else 0,
-                        message=f"Duplicate pseudo-element '{selector}::before/after' defined {count} times (lines: {', '.join(line_numbers)})",
+                        message=f"Duplicate pseudo-element '{selector}' defined {count} times (lines: {', '.join(line_numbers)})",
                         fix="Consolidate into a single selector definition",
                     )
                 )

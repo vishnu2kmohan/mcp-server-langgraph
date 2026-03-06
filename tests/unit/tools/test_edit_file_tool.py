@@ -549,7 +549,7 @@ class TestEditFileToolIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.integration
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_edit_file_requires_permission(self, tmp_path: Path):
         """GIVEN a user without edit permission

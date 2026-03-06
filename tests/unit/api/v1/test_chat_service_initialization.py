@@ -104,7 +104,7 @@ class TestGetChatServiceInitialization:
         # Only mock if storage exists
         if original_storage is not None:
             with patch.object(original_storage, "get_messages", mock_get_messages):
-                result = await service._load_and_merge_history(
+                await service._load_and_merge_history(
                     session_id="test-session",
                     new_messages=[{"role": "user", "content": "Hello"}],
                 )

@@ -68,8 +68,8 @@ class TestModuleImports:
         # This test validates by successfully importing all modules
         # Circular imports would cause ImportError or recursion
         try:
-            import mcp_server_langgraph.core.agent  # noqa: F401
-            import mcp_server_langgraph.core.config  # noqa: F401
+            import mcp_server_langgraph.core.agent
+            import mcp_server_langgraph.core.config
             import mcp_server_langgraph.core.container  # noqa: F401
         except (ImportError, RecursionError) as e:
             pytest.fail(f"Circular import detected in core modules: {e}")

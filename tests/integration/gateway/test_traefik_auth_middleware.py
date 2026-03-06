@@ -70,7 +70,7 @@ GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost")
 # Keycloak test credentials
 KEYCLOAK_URL = f"{GATEWAY_URL}/authn"
 TEST_USERNAME = "testuser"
-TEST_PASSWORD = "testpassword"  # noqa: S105
+TEST_PASSWORD = "testpassword"
 
 
 @pytest.mark.xdist_group(name="testtrafeikauthpublicroutes")

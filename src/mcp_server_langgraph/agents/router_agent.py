@@ -333,10 +333,7 @@ def _select_orchestrator_impl(
         # - consensus: needs summarized context for agreement
         # - race/cascade: use scoped context (last message) for speed
         context_strategy: Literal["scoped", "summarized", "full"]
-        if strategy == "consensus":
-            context_strategy = "summarized"
-        else:
-            context_strategy = "scoped"
+        context_strategy = "summarized" if strategy == "consensus" else "scoped"
 
         # Derive model from complexity (using TIER_MODELS)
         # Default to flash model if complexity not found

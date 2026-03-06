@@ -101,10 +101,10 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
         return ExecutionPlan(
             plan_id=model.plan_id,
             session_id=model.session_id,
-            status=model.status,
-            complexity=model.complexity,
-            risk_level=model.risk_level,
-            task_type=model.task_type,
+            status=model.status,  # type: ignore[arg-type]
+            complexity=model.complexity,  # type: ignore[arg-type]
+            risk_level=model.risk_level,  # type: ignore[arg-type]
+            task_type=model.task_type,  # type: ignore[arg-type]
             executor_model=model.executor_model,
             critic_model=model.critic_model,
             estimated_cost=model.estimated_cost,
@@ -113,9 +113,9 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
             tools_needed=model.tools_needed,  # v35.0: Preserve None semantics
             force_approval=model.force_approval,
             confidence=model.confidence,
-            suggested_orchestrator=model.suggested_orchestrator,
+            suggested_orchestrator=model.suggested_orchestrator,  # type: ignore[arg-type]
             critique_rounds=model.critique_rounds,
-            thinking_budget=model.thinking_budget,
+            thinking_budget=model.thinking_budget,  # type: ignore[arg-type]
             created_at=model.created_at,
             expires_at=model.expires_at,
             executed_at=model.executed_at,
@@ -130,12 +130,12 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
             skills_needed=model.skills_needed,
             selected_tool_ids=model.selected_tool_ids,
             llm_provider=model.llm_provider,
-            kb_focus=model.kb_focus,
+            kb_focus=model.kb_focus,  # type: ignore[arg-type]
             # v35.0 Phase 2e: Tool preference fields
             tool_preference=model.tool_preference,
-            tool_selection_mode=model.tool_selection_mode,
+            tool_selection_mode=model.tool_selection_mode,  # type: ignore[arg-type]
             # Embedding status
-            embedding_status=model.embedding_status or "pending",
+            embedding_status=model.embedding_status or "pending",  # type: ignore[arg-type]
             embedding_error=model.embedding_error,
             embedding_failed_at=model.embedding_failed_at,
         )
@@ -234,7 +234,7 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
         async with self._session_factory() as session:
             result = await session.execute(delete(ExecutionPlanModel).where(ExecutionPlanModel.plan_id == plan_id))
             await session.commit()
-            return result.rowcount > 0
+            return result.rowcount > 0  # type: ignore[no-any-return]
 
     async def list_by_session(self, session_id: str) -> list[ExecutionPlan]:
         """List all plans for a session.
@@ -299,7 +299,7 @@ class PostgresExecutionPlanRepository(ExecutionPlanRepository):
         async with self._session_factory() as session:
             result = await session.execute(delete(ExecutionPlanModel).where(ExecutionPlanModel.user_id == user_id))
             await session.commit()
-            return result.rowcount
+            return result.rowcount  # type: ignore[no-any-return]
 
     async def list_pending_embeddings(self, limit: int = 100) -> list[ExecutionPlan]:
         """List plans with pending embeddings for background processing.

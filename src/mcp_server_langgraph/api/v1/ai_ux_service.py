@@ -2340,7 +2340,7 @@ Compare with last period and generate actionable insights."""
             if v is not None:
                 # Convert complex types to string for cache key (not for security)
                 if isinstance(v, (dict, list)):
-                    v = hashlib.md5(json.dumps(v, sort_keys=True).encode()).hexdigest()[:8]  # noqa: S324
+                    v = hashlib.md5(json.dumps(v, sort_keys=True).encode(), usedforsecurity=False).hexdigest()[:8]  # noqa: S324
                 key_parts.append(f"{k}:{v}")
 
         return ":".join(key_parts)

@@ -40,20 +40,20 @@ _session_lifecycle_events_total: Any = None
 
 def _init_metrics() -> bool:
     """Initialize Prometheus auth metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _auth_login_attempts_total  # noqa: PLW0603
-    global _auth_login_failures_total  # noqa: PLW0603
-    global _auth_login_duration_seconds  # noqa: PLW0603
-    global _auth_token_verifications_total  # noqa: PLW0603
-    global _auth_token_created_total  # noqa: PLW0603
-    global _auth_token_refresh_total  # noqa: PLW0603
-    global _auth_jwks_cache_operations_total  # noqa: PLW0603
-    global _auth_sessions_active  # noqa: PLW0603
-    global _auth_session_created_total  # noqa: PLW0603
-    global _auth_session_revoked_total  # noqa: PLW0603
-    global _auth_authorization_checks_total  # noqa: PLW0603
-    global _auth_authorization_duration_seconds  # noqa: PLW0603
-    global _session_lifecycle_events_total  # noqa: PLW0603
+    global _metrics_available
+    global _auth_login_attempts_total
+    global _auth_login_failures_total
+    global _auth_login_duration_seconds
+    global _auth_token_verifications_total
+    global _auth_token_created_total
+    global _auth_token_refresh_total
+    global _auth_jwks_cache_operations_total
+    global _auth_sessions_active
+    global _auth_session_created_total
+    global _auth_session_revoked_total
+    global _auth_authorization_checks_total
+    global _auth_authorization_duration_seconds
+    global _session_lifecycle_events_total
 
     if _metrics_available is not None:
         return _metrics_available

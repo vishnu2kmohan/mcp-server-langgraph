@@ -122,7 +122,7 @@ class EgressValidator:
         ips: list[str] = []
         for family, socktype, proto, canonname, sockaddr in results:
             # sockaddr is (ip, port) for IPv4, (ip, port, flow, scope) for IPv6
-            ip_str = sockaddr[0]
+            ip_str = str(sockaddr[0])
             if self._is_ip_blocked(ip_str):
                 return (
                     False,

@@ -37,7 +37,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 # Import validation logic from shared library
-from tests.validation_lib import memory_safety  # noqa: E402
+from tests.validation_lib import memory_safety
 
 
 def main() -> int:

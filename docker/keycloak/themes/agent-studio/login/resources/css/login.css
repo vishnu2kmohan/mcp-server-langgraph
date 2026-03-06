@@ -322,31 +322,6 @@ body.kc-login {
   color: transparent !important;
 }
 
-/* Display "Agent Studio" title and "Sign in to continue" subtitle */
-#kc-header-wrapper::after {
-  content: "Agent Studio" !important;
-  display: block !important;
-  font-size: var(--kc-font-size-2xl) !important;  /* 24px - matches text-2xl */
-  font-weight: var(--kc-font-weight-bold) !important;  /* 700 - matches font-bold */
-  line-height: var(--kc-line-height-tight) !important;
-  color: var(--kc-text-primary) !important;
-  margin-top: 0 !important;
-}
-
-/* Header section - add subtitle via pf-c-login__header or kc-header */
-.pf-c-login__header::after,
-.pf-v5-c-login__header::after,
-#kc-header::after {
-  content: "Sign in to continue" !important;
-  display: block !important;
-  font-size: var(--kc-font-size-sm) !important;  /* 14px - matches text-sm */
-  font-weight: var(--kc-font-weight-normal) !important;  /* 400 */
-  line-height: var(--kc-line-height-normal) !important;
-  color: var(--kc-text-muted) !important;
-  margin-top: var(--kc-space-2) !important;  /* 8px - tight spacing between title and subtitle */
-  text-align: center !important;
-}
-
 /* Icon ABOVE the realm name - displays the project logo SVG directly
  * The icon.svg already has its own gradient background (#3b82f6 to #1d4ed8),
  * so we don't add any background-color here to avoid color mismatch.
@@ -368,6 +343,31 @@ body.kc-login {
   flex-shrink: 0 !important;
   box-shadow: var(--kc-shadow-lg) !important;  /* shadow-lg token */
   overflow: hidden !important;
+}
+
+/* Display "Agent Studio" title */
+#kc-header-wrapper::after {
+  content: "Agent Studio" !important;
+  display: block !important;
+  font-size: var(--kc-font-size-2xl) !important;  /* 24px - matches text-2xl */
+  font-weight: var(--kc-font-weight-bold) !important;  /* 700 - matches font-bold */
+  line-height: var(--kc-line-height-tight) !important;
+  color: var(--kc-text-primary) !important;
+  margin-top: 0 !important;
+}
+
+/* Header section - add "Sign in to continue" subtitle */
+.pf-c-login__header::after,
+.pf-v5-c-login__header::after,
+#kc-header::after {
+  content: "Sign in to continue" !important;
+  display: block !important;
+  font-size: var(--kc-font-size-sm) !important;  /* 14px - matches text-sm */
+  font-weight: var(--kc-font-weight-normal) !important;  /* 400 */
+  line-height: var(--kc-line-height-normal) !important;
+  color: var(--kc-text-muted) !important;
+  margin-top: var(--kc-space-2) !important;  /* 8px - tight spacing between title and subtitle */
+  text-align: center !important;
 }
 
 /* Hide PatternFly brand images if they exist */
@@ -945,9 +945,7 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
 .pf-c-input-group > *,
 .pf-v5-c-input-group > *,
 .pf-c-input-group__item::before,
-.pf-v5-c-input-group__item::before,
-.pf-c-input-group__item::after,
-.pf-v5-c-input-group__item::after {
+.pf-v5-c-input-group__item::before {
   border: none !important;
   box-shadow: none !important;
 }
@@ -970,6 +968,7 @@ input:not(.pf-c-text-input-group__text-input):not(.pf-v5-c-text-input-group__tex
   display: none !important;
   border: none !important;
   border-left: none !important;
+  box-shadow: none !important;
   content: none !important;
 }
 
@@ -1105,8 +1104,7 @@ button[data-password-toggle] .pf-c-button__icon {
 .pf-c-button.pf-m-plain[aria-label*="Hide"]::before,
 .pf-v5-c-button.pf-m-plain[aria-label*="Hide"]::before,
 .pf-v5-c-text-input-group__utilities button[aria-label*="Hide"]::before,
-.pf-c-text-input-group__utilities button[aria-label*="Hide"]::before,
-button[aria-label*="Hide password"]::before {
+.pf-c-text-input-group__utilities button[aria-label*="Hide"]::before {
   /* Open eye SVG - slate-10 color (#777b84) */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23777b84' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") !important;
 }
@@ -1119,15 +1117,12 @@ button[aria-label*="Hide password"]::before {
 .pf-c-button.pf-m-plain[aria-label*="Show"]::before,
 .pf-v5-c-button.pf-m-plain[aria-label*="Show"]::before,
 .pf-v5-c-text-input-group__utilities button[aria-label*="Show"]::before,
-.pf-c-text-input-group__utilities button[aria-label*="Show"]::before,
-button[aria-label*="Show password"]::before {
+.pf-c-text-input-group__utilities button[aria-label*="Show"]::before {
   /* Slashed eye SVG - slate-10 color (#777b84) */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23777b84' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49'/%3E%3Cpath d='M14.084 14.158a3 3 0 0 1-4.242-4.242'/%3E%3Cpath d='M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143'/%3E%3Cpath d='m2 2 20 20'/%3E%3C/svg%3E") !important;
 }
 
 /* Remove any ::after pseudo-elements that might interfere */
-.pf-c-button.pf-m-control::after,
-.pf-v5-c-button.pf-m-control::after,
 .pf-c-button.pf-m-plain::after,
 .pf-v5-c-button.pf-m-plain::after,
 .pf-v5-c-text-input-group__utilities button::after,

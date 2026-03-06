@@ -107,7 +107,7 @@ class TestToolIndexAuthorization:
                 version=1,
                 score=0.95,
                 payload={
-                    "tool_id": "tool-123",
+                    "tool_id": "builtin:tool-123",
                     "name": "calculator",
                     "description": "Perform calculations",
                     "category": "math",
@@ -155,7 +155,7 @@ class TestToolIndexAuthorization:
                 version=1,
                 score=0.9,
                 payload={
-                    "tool_id": "tool-1",
+                    "tool_id": "builtin:tool-1",
                     "name": "admin_tool",
                     "description": "Admin only tool",
                     "category": "admin",
@@ -461,7 +461,7 @@ class TestTenantIsolation:
                 version=1,
                 score=0.9,
                 payload={
-                    "tool_id": "tool-acme-1",
+                    "tool_id": "builtin:tool-acme-1",
                     "name": "acme_calculator",
                     "description": "ACME org calculator",
                     "category": "math",

@@ -75,12 +75,19 @@ class TestWorkflowExecutionsListEndpoint:
             workflow_executions_router,
             get_execution_history_manager,
         )
+        from mcp_server_langgraph.auth.dependencies import require_workflow_viewer
 
         app = FastAPI()
         app.include_router(workflow_executions_router, prefix="/api/v1")
 
         if mock_manager:
             app.dependency_overrides[get_execution_history_manager] = lambda: mock_manager
+
+        # Override auth dependency
+        async def _mock_viewer() -> dict:
+            return {"sub": "test-user", "preferred_username": "testuser"}
+
+        app.dependency_overrides[require_workflow_viewer] = _mock_viewer
 
         return app
 
@@ -174,12 +181,19 @@ class TestWorkflowExecutionGetEndpoint:
             workflow_executions_router,
             get_execution_history_manager,
         )
+        from mcp_server_langgraph.auth.dependencies import require_workflow_viewer
 
         app = FastAPI()
         app.include_router(workflow_executions_router, prefix="/api/v1")
 
         if mock_manager:
             app.dependency_overrides[get_execution_history_manager] = lambda: mock_manager
+
+        # Override auth dependency
+        async def _mock_viewer() -> dict:
+            return {"sub": "test-user", "preferred_username": "testuser"}
+
+        app.dependency_overrides[require_workflow_viewer] = _mock_viewer
 
         return app
 

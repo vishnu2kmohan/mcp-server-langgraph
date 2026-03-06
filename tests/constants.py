@@ -59,7 +59,7 @@ Production JWT secrets must be:
 #   - docker-compose.test.yml (via env_file: .env.test)
 #   - .github/workflows/*.yaml (JWT_SECRET_KEY environment variable)
 #   - tests/conftest.py (mock_jwt_token fixture)
-TEST_JWT_SECRET = "test-jwt-secret-key-for-e2e-testing-only"
+TEST_JWT_SECRET = "agent-studio-jwt-secret-key-for-e2e-tests"
 
 # JWT algorithm for test token encoding/decoding
 # IMPORTANT: Must match settings.jwt_algorithm in core/config.py

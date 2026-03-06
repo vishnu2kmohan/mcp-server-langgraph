@@ -32,13 +32,13 @@ _orchestrator_tasks_failed_total: Any = None
 
 def _init_metrics() -> bool:
     """Initialize Prometheus orchestrator metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _orchestrator_ws_subscribers  # noqa: PLW0603
-    global _orchestrator_active_tasks  # noqa: PLW0603
-    global _orchestrator_queue_depth  # noqa: PLW0603
-    global _orchestrator_tasks_started_total  # noqa: PLW0603
-    global _orchestrator_tasks_completed_total  # noqa: PLW0603
-    global _orchestrator_tasks_failed_total  # noqa: PLW0603
+    global _metrics_available
+    global _orchestrator_ws_subscribers
+    global _orchestrator_active_tasks
+    global _orchestrator_queue_depth
+    global _orchestrator_tasks_started_total
+    global _orchestrator_tasks_completed_total
+    global _orchestrator_tasks_failed_total
 
     if _metrics_available is not None:
         return _metrics_available

@@ -40,7 +40,7 @@ class LiteLLMChatModel(BaseChatModel):
         Args:
             settings: Application settings containing LLM configuration
         """
-        super().__init__(
+        super().__init__(  # type: ignore[call-arg]
             model_name=settings.model_name,
             temperature=settings.model_temperature,
             max_tokens=settings.model_max_tokens,
@@ -52,7 +52,7 @@ class LiteLLMChatModel(BaseChatModel):
         """Return identifier for this LLM type."""
         return f"litellm_{self.provider}"
 
-    def _generate(
+    def _generate(  # type: ignore[override]
         self,
         messages: list[BaseMessage],
         stop: list[str] | None = None,
@@ -63,7 +63,7 @@ class LiteLLMChatModel(BaseChatModel):
 
         return asyncio.get_event_loop().run_until_complete(self._agenerate(messages, stop, **kwargs))
 
-    async def _agenerate(
+    async def _agenerate(  # type: ignore[override]
         self,
         messages: list[BaseMessage],
         stop: list[str] | None = None,

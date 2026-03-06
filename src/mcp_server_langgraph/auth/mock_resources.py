@@ -64,7 +64,7 @@ class MockResourceGenerator:
     def get_resources(
         self,
         user_id: str,
-        relation: str,  # noqa: ARG002 (reserved for future use)
+        relation: str,
         resource_type: str,
     ) -> list[str]:
         """

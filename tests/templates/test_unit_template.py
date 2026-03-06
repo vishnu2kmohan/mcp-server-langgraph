@@ -27,7 +27,7 @@ REFERENCES:
 - Reference implementation: tests/integration/security/test_api_key_indexed_lookup.py
 """
 
-# ruff: noqa: F841  # Template contains intentional placeholder variables
+# Template contains intentional placeholder variables
 
 # ============================================================================
 # REQUIRED IMPORTS
@@ -96,7 +96,6 @@ class TestExampleFeature:
         THEN: Expected outcome occurs
         """
         # GIVEN: Setup test data
-        test_input = "example"
 
         # WHEN: Call function under test
         # result = your_function(test_input)
@@ -337,7 +336,6 @@ class TestExamplePerformance:
         Run separately: pytest tests/ -k performance --no-cov
         """
         # GIVEN: Large dataset
-        large_dataset_size = 1000
 
         # WHEN: Process large dataset
         # start_time = time.time()

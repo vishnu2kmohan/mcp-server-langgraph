@@ -80,10 +80,11 @@ class TestAgentRequestHandlerLifecycle:
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         user = AuthUser(id="user-123", username="testuser")
+        handler._user = user  # Base class sets this before calling on_connect
 
         await handler.on_connect(user)
 
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
         # accept=False because WebSocketBase already accepted the connection
         mock_broadcaster.connect.assert_called_once_with(mock_ws, "sess-123", "user-123", accept=False)
 
@@ -91,7 +92,7 @@ class TestAgentRequestHandlerLifecycle:
     async def test_on_disconnect_unregisters(self) -> None:
         """GIVEN connected WHEN on_disconnect called THEN disconnects."""
         from mcp_server_langgraph.websocket.handlers.agent_request import AgentRequestHandler
-        from mcp_server_langgraph.websocket.types import WebSocketConfig
+        from mcp_server_langgraph.websocket.types import AuthUser, WebSocketConfig
 
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = MagicMock()
@@ -102,7 +103,7 @@ class TestAgentRequestHandlerLifecycle:
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = mock_ws
         handler._subscribed = True
-        handler._user_id = "user-123"
+        handler._user = AuthUser(id="user-123", username="user-123")
 
         await handler.on_disconnect()
 

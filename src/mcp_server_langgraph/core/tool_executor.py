@@ -113,7 +113,7 @@ class NativeToolCircuitBreaker:
                 return False
 
             # Check if timeout has expired (half-open)
-            if time.time() - state.last_failure_time > self.reset_timeout_seconds:
+            if time.time() - state.last_failure_time > self.reset_timeout_seconds:  # noqa: SIM103
                 # Allow retry (half-open state)
                 return False
 
@@ -234,7 +234,7 @@ def get_native_tool_rate_limit(provider: str) -> int:
     from mcp_server_langgraph.core.config import settings
 
     provider_lower = provider.lower()
-    if provider_lower == "anthropic":
+    if provider_lower == "anthropic":  # noqa: SIM116
         return settings.native_tool_rate_limit_anthropic
     elif provider_lower == "google":
         return settings.native_tool_rate_limit_google

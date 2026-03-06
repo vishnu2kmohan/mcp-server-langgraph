@@ -465,7 +465,7 @@ class TestDevToolsLoggingHandler:
             DevToolsLoggingHandler,
         )
 
-        _handler = DevToolsLoggingHandler()  # noqa: F841 - instantiation test
+        _handler = DevToolsLoggingHandler()
 
         record = logging.LogRecord(
             name="mcp_server_langgraph.api",
@@ -879,7 +879,7 @@ class TestLoggingHandlerEdgeCases:
             DevToolsLoggingHandler,
         )
 
-        _handler = DevToolsLoggingHandler()  # noqa: F841 - instantiation test
+        _handler = DevToolsLoggingHandler()
 
         record = logging.LogRecord(
             name="test",

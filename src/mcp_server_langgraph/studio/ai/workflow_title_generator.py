@@ -265,7 +265,7 @@ _workflow_title_generator: WorkflowTitleGenerator | None = None
 
 def get_workflow_title_generator() -> WorkflowTitleGenerator:
     """Get the singleton workflow title generator instance."""
-    global _workflow_title_generator  # noqa: PLW0603
+    global _workflow_title_generator
     if _workflow_title_generator is None:
         _workflow_title_generator = WorkflowTitleGenerator()
     return _workflow_title_generator

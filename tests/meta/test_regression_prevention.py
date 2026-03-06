@@ -54,12 +54,26 @@ class TestPytestFixtureValidation:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                # Check if function has yield (potential fixture)
-                has_yield = any(isinstance(n, ast.Yield) or isinstance(n, ast.YieldFrom) for n in ast.walk(node))
+                # Check if function has yield directly (not in nested functions)
+                def _walk_no_nested_funcs(node: ast.AST):
+                    """Walk AST but don't descend into nested function definitions."""
+                    yield node
+                    for child in ast.iter_child_nodes(node):
+                        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                            continue  # Skip nested functions entirely
+                        yield from _walk_no_nested_funcs(child)
+
+                has_yield = any(
+                    isinstance(n, (ast.Yield, ast.YieldFrom))
+                    for stmt in node.body
+                    if not isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    for n in _walk_no_nested_funcs(stmt)
+                )
 
                 if has_yield:
-                    # Check for @pytest.fixture decorator (with or without arguments)
+                    # Check for @pytest.fixture or @contextmanager decorator
                     has_fixture_decorator = False
+                    has_contextmanager = False
                     for dec in node.decorator_list:
                         # Direct decorator: @pytest.fixture or @fixture
                         if (
@@ -78,8 +92,15 @@ class TestPytestFixtureValidation:
                                 and dec.func.attr == "fixture"
                             ):
                                 has_fixture_decorator = True
+                        # @contextmanager - valid yield usage, not a fixture
+                        if isinstance(dec, ast.Name) and dec.id == "contextmanager":
+                            has_contextmanager = True
+                        elif isinstance(dec, ast.Attribute) and dec.attr == "contextmanager":
+                            has_contextmanager = True
 
-                    fixtures.append((node.name, has_fixture_decorator, node.lineno))
+                    # Skip context managers - they legitimately use yield without @pytest.fixture
+                    if not has_contextmanager:
+                        fixtures.append((node.name, has_fixture_decorator, node.lineno))
 
         return fixtures
 

@@ -50,12 +50,12 @@ def _init_metrics() -> bool:
     Returns:
         True if metrics are available, False if prometheus_client is not installed.
     """
-    global _metrics_available  # noqa: PLW0603
-    global _litellm_sync_total  # noqa: PLW0603
-    global _litellm_sync_duration_seconds  # noqa: PLW0603
-    global _litellm_sync_models_updated_total  # noqa: PLW0603
-    global _litellm_sync_last_success_timestamp  # noqa: PLW0603
-    global _litellm_sync_errors_total  # noqa: PLW0603
+    global _metrics_available
+    global _litellm_sync_total
+    global _litellm_sync_duration_seconds
+    global _litellm_sync_models_updated_total
+    global _litellm_sync_last_success_timestamp
+    global _litellm_sync_errors_total
 
     if _metrics_available is not None:
         return _metrics_available

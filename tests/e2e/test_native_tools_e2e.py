@@ -24,6 +24,8 @@ import time
 
 import pytest
 
+from mcp_server_langgraph.core.numeric import safe_average
+
 # Skip markers for provider availability
 has_anthropic_key = bool(os.getenv("ANTHROPIC_API_KEY"))
 has_google_key = bool(os.getenv("GOOGLE_API_KEY"))
@@ -63,6 +65,12 @@ class TestAnthropicNativeWebSearch:
     """E2E tests for Anthropic native web search."""
 
     @pytest.mark.skipif(not has_anthropic_key, reason="ANTHROPIC_API_KEY not set")
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
     def test_native_tool_handler_detects_anthropic_capability(self):
         """NativeToolHandler should detect Anthropic web_search capability."""
         from mcp_server_langgraph.tools.native_handler import NativeToolHandler
@@ -275,7 +283,7 @@ class TestNativeToolLatencyComparison:
             )
             latencies.append((time.perf_counter() - start) * 1000)
 
-        avg_latency = sum(latencies) / len(latencies)
+        avg_latency = safe_average(latencies)
         print(f"Native web search average latency: {avg_latency:.2f}ms")
         print(f"Latencies: {[f'{lat:.2f}ms' for lat in latencies]}")
 

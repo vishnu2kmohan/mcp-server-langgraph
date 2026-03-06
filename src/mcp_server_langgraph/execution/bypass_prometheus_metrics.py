@@ -13,7 +13,10 @@ Uses lazy-loading pattern to handle missing prometheus_client gracefully.
 """
 
 from decimal import Decimal
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
+
+if TYPE_CHECKING:
+    from prometheus_client import Counter, Gauge
 
 # Lazy-loaded metrics - initialized on first use
 _metrics_available: bool | None = None

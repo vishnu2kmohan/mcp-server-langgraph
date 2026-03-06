@@ -7,8 +7,11 @@ TDD tests for automatic tool indexing during bootstrap:
 3. Handle indexing errors gracefully (fail-open)
 4. Track indexing metrics
 
-RED Phase: These tests define the expected behavior.
-GREEN Phase: Implementation will add indexing to bootstrap/semantic.py.
+Architecture (v26):
+- init_semantic_manager(): Creates manager, registers singleton
+- index_all_tools(): Indexes tools from unified registry (after MCP sync)
+- init_semantic(): Backwards-compatible alias for init_semantic_manager()
+- ToolIndexEntry.from_langchain_tool(): Factory method for creating index entries
 """
 
 import gc
@@ -29,57 +32,51 @@ class TestStartupToolIndexing:
 
     @pytest.mark.asyncio
     async def test_init_semantic_indexes_tools_when_enabled(self) -> None:
-        """init_semantic should index all tools when semantic tool search is enabled."""
-        from mcp_server_langgraph.core.config import Settings
-
-        mock_settings = MagicMock(spec=Settings)
-        mock_settings.qdrant_url = "localhost"
-        mock_settings.qdrant_port = 6333
-        mock_settings.qdrant_collection_name = "test_collection"
-        mock_settings.embedding_provider = "local"
-        mock_settings.embedding_model_name = "all-MiniLM-L6-v2"
-        mock_settings.embedding_dimensions = 384
-        mock_settings.auth_cache_warm_entries = []
-
+        """index_all_tools should index tools from unified registry when enabled."""
         mock_manager = AsyncMock(return_value=None)
         mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(return_value=None)
 
-        # Mock tools
-        mock_tool1 = MagicMock()
-        mock_tool1.name = "calculator"
-        mock_tool1.description = "Perform calculations"
-        mock_tool2 = MagicMock()
-        mock_tool2.name = "search"
-        mock_tool2.description = "Search knowledge base"
+        # Mock registered tools from unified registry
+        mock_reg1 = MagicMock()
+        mock_reg1.name = "calculator"
+        mock_reg1.source = "builtin"
+        mock_reg1.tool_id = "builtin:calculator"
+        mock_reg1.tool = MagicMock()
+        mock_reg1.tool.name = "calculator"
+        mock_reg1.tool.description = "Perform calculations"
+
+        mock_reg2 = MagicMock()
+        mock_reg2.name = "search"
+        mock_reg2.source = "builtin"
+        mock_reg2.tool_id = "builtin:search"
+        mock_reg2.tool = MagicMock()
+        mock_reg2.tool.name = "search"
+        mock_reg2.tool.description = "Search knowledge base"
+
+        mock_registry = MagicMock()
+        mock_registry.get_all.return_value = [mock_reg1, mock_reg2]
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
-                "qdrant_client.AsyncQdrantClient",
-            ),
-            patch(
-                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-            ),
-            patch(
-                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
                 return_value=mock_manager,
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
+                "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
+                return_value=mock_registry,
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-                return_value=[mock_tool1, mock_tool2],
+                "mcp_server_langgraph.tools.semantic_index.ToolIndexEntry.from_langchain_tool",
+                side_effect=lambda tool, tool_id: MagicMock(name=tool.name, tool_id=tool_id),
             ),
         ):
             mock_ff.enable_semantic_tool_search = True
-            mock_ff.enable_semantic_skill_search = False
-            mock_ff.enable_semantic_memory_search = False
 
-            from mcp_server_langgraph.bootstrap.semantic import init_semantic
+            from mcp_server_langgraph.bootstrap.semantic import index_all_tools
 
-            await init_semantic(mock_settings)
+            await index_all_tools()
 
             # Verify tools were indexed
             mock_manager.index_tools_batch.assert_called_once()
@@ -89,143 +86,108 @@ class TestStartupToolIndexing:
 
     @pytest.mark.asyncio
     async def test_init_semantic_skips_tool_indexing_when_tool_search_disabled(self) -> None:
-        """init_semantic should skip tool indexing when tool search is disabled."""
-        from mcp_server_langgraph.core.config import Settings
-
-        mock_settings = MagicMock(spec=Settings)
-        mock_settings.qdrant_url = "localhost"
-        mock_settings.qdrant_port = 6333
-        mock_settings.qdrant_collection_name = "test_collection"
-        mock_settings.embedding_provider = "local"
-        mock_settings.embedding_model_name = "all-MiniLM-L6-v2"
-        mock_settings.embedding_dimensions = 384
-        mock_settings.auth_cache_warm_entries = []
-
+        """index_all_tools should skip indexing when tool search is disabled."""
         mock_manager = AsyncMock(return_value=None)
-        mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(return_value=None)
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
-                "qdrant_client.AsyncQdrantClient",
-            ),
-            patch(
-                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-            ),
-            patch(
-                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
                 return_value=mock_manager,
             ),
-            patch(
-                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
-            ),
-            patch(
-                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-            ) as mock_get_tools,
         ):
-            # Enable skill search but NOT tool search
             mock_ff.enable_semantic_tool_search = False
-            mock_ff.enable_semantic_skill_search = True
-            mock_ff.enable_semantic_memory_search = False
 
-            from mcp_server_langgraph.bootstrap.semantic import init_semantic
+            from mcp_server_langgraph.bootstrap.semantic import index_all_tools
 
-            await init_semantic(mock_settings)
+            await index_all_tools()
 
             # Tool indexing should NOT happen
             mock_manager.index_tools_batch.assert_not_called()
-            mock_get_tools.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_init_semantic_handles_indexing_error_gracefully(self) -> None:
-        """init_semantic should continue even if tool indexing fails."""
-        from mcp_server_langgraph.core.config import Settings
-
-        mock_settings = MagicMock(spec=Settings)
-        mock_settings.qdrant_url = "localhost"
-        mock_settings.qdrant_port = 6333
-        mock_settings.qdrant_collection_name = "test_collection"
-        mock_settings.embedding_provider = "local"
-        mock_settings.embedding_model_name = "all-MiniLM-L6-v2"
-        mock_settings.embedding_dimensions = 384
-        mock_settings.auth_cache_warm_entries = []
-
+        """index_all_tools should continue even if tool indexing fails (fail-open)."""
         mock_manager = AsyncMock(return_value=None)
         mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(side_effect=Exception("Qdrant connection failed"))
 
-        mock_tool = MagicMock()
-        mock_tool.name = "calculator"
-        mock_tool.description = "Perform calculations"
+        mock_reg = MagicMock()
+        mock_reg.name = "calculator"
+        mock_reg.source = "builtin"
+        mock_reg.tool_id = "builtin:calculator"
+        mock_reg.tool = MagicMock()
+        mock_reg.tool.name = "calculator"
+        mock_reg.tool.description = "Perform calculations"
+
+        mock_registry = MagicMock()
+        mock_registry.get_all.return_value = [mock_reg]
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
-                "qdrant_client.AsyncQdrantClient",
-            ),
-            patch(
-                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-            ),
-            patch(
-                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
                 return_value=mock_manager,
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
+                "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
+                return_value=mock_registry,
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-                return_value=[mock_tool],
+                "mcp_server_langgraph.tools.semantic_index.ToolIndexEntry.from_langchain_tool",
+                side_effect=lambda tool, tool_id: MagicMock(name=tool.name, tool_id=tool_id),
             ),
         ):
             mock_ff.enable_semantic_tool_search = True
-            mock_ff.enable_semantic_skill_search = False
-            mock_ff.enable_semantic_memory_search = False
 
-            from mcp_server_langgraph.bootstrap.semantic import init_semantic
+            from mcp_server_langgraph.bootstrap.semantic import index_all_tools
 
-            # Should not raise, should return state (fail-open)
-            result = await init_semantic(mock_settings)
-            assert result is not None
-            assert result.manager is mock_manager
+            # Should not raise (fail-open)
+            await index_all_tools()
 
 
 @pytest.mark.xdist_group(name="semantic_startup_indexing")
 class TestToolToIndexEntryConversion:
-    """Tests for converting tools to ToolIndexEntry for indexing."""
+    """Tests for converting tools to ToolIndexEntry via factory method."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     def test_convert_tool_to_index_entry(self) -> None:
-        """Should convert a BaseTool to ToolIndexEntry with proper fields."""
-        from mcp_server_langgraph.bootstrap.semantic import _tool_to_index_entry
-        from mcp_server_langgraph.tools.semantic_index import ToolCategory
+        """Should convert a tool to ToolIndexEntry with proper fields via from_langchain_tool."""
+        from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         mock_tool = MagicMock()
         mock_tool.name = "calculator"
         mock_tool.description = "Perform mathematical calculations"
+        mock_tool.args_schema = None
 
-        entry = _tool_to_index_entry(mock_tool)
+        entry = ToolIndexEntry.from_langchain_tool(
+            mock_tool,
+            tool_id="builtin:calculator",
+        )
 
-        assert entry.tool_id == "tool:calculator"
+        assert entry.tool_id == "builtin:calculator"
         assert entry.name == "calculator"
         assert entry.description == "Perform mathematical calculations"
-        assert entry.category == ToolCategory.OTHER.value
 
     def test_convert_tool_with_empty_description(self) -> None:
         """Should handle tools with empty or missing descriptions."""
-        from mcp_server_langgraph.bootstrap.semantic import _tool_to_index_entry
+        from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         mock_tool = MagicMock()
         mock_tool.name = "mystery_tool"
         mock_tool.description = ""
+        mock_tool.args_schema = None
 
-        entry = _tool_to_index_entry(mock_tool)
+        entry = ToolIndexEntry.from_langchain_tool(
+            mock_tool,
+            tool_id="builtin:mystery_tool",
+        )
 
-        assert entry.tool_id == "tool:mystery_tool"
+        assert entry.tool_id == "builtin:mystery_tool"
         assert entry.name == "mystery_tool"
         assert entry.description == ""  # Empty is OK
 
@@ -240,52 +202,46 @@ class TestStartupIndexingMetrics:
 
     @pytest.mark.asyncio
     async def test_init_semantic_logs_indexed_count(self) -> None:
-        """init_semantic should log the number of tools indexed."""
-        from mcp_server_langgraph.core.config import Settings
-
-        mock_settings = MagicMock(spec=Settings)
-        mock_settings.qdrant_url = "localhost"
-        mock_settings.qdrant_port = 6333
-        mock_settings.qdrant_collection_name = "test_collection"
-        mock_settings.embedding_provider = "local"
-        mock_settings.embedding_model_name = "all-MiniLM-L6-v2"
-        mock_settings.embedding_dimensions = 384
-        mock_settings.auth_cache_warm_entries = []
-
+        """index_all_tools should log the number of tools indexed."""
         mock_manager = AsyncMock(return_value=None)
         mock_manager.ensure_collection = AsyncMock(return_value=None)
         mock_manager.index_tools_batch = AsyncMock(return_value=None)
 
-        mock_tools = [MagicMock(name=f"tool_{i}", description=f"Tool {i}") for i in range(10)]
+        mock_regs = []
+        for i in range(10):
+            reg = MagicMock()
+            reg.name = f"tool_{i}"
+            reg.source = "builtin"
+            reg.tool_id = f"builtin:tool_{i}"
+            reg.tool = MagicMock()
+            reg.tool.name = f"tool_{i}"
+            reg.tool.description = f"Tool {i}"
+            mock_regs.append(reg)
+
+        mock_registry = MagicMock()
+        mock_registry.get_all.return_value = mock_regs
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
-                "qdrant_client.AsyncQdrantClient",
-            ),
-            patch(
-                "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-            ),
-            patch(
-                "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
+                "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
                 return_value=mock_manager,
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
+                "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
+                return_value=mock_registry,
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.semantic.get_all_tools",
-                return_value=mock_tools,
+                "mcp_server_langgraph.tools.semantic_index.ToolIndexEntry.from_langchain_tool",
+                side_effect=lambda tool, tool_id: MagicMock(name=tool.name, tool_id=tool_id),
             ),
             patch("mcp_server_langgraph.bootstrap.semantic.logger") as mock_logger,
         ):
             mock_ff.enable_semantic_tool_search = True
-            mock_ff.enable_semantic_skill_search = False
-            mock_ff.enable_semantic_memory_search = False
 
-            from mcp_server_langgraph.bootstrap.semantic import init_semantic
+            from mcp_server_langgraph.bootstrap.semantic import index_all_tools
 
-            await init_semantic(mock_settings)
+            await index_all_tools()
 
             # Verify info log was called with indexed count
             mock_logger.info.assert_called()

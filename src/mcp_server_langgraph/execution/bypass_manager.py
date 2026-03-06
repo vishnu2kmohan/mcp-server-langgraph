@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
-from mcp_server_langgraph.api.v1.tools import SANDBOX_REQUIRED_TOOLS
+from mcp_server_langgraph.api.v1.tools import SANDBOX_REQUIRED_TOOLS  # type: ignore[attr-defined]
 from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 from mcp_server_langgraph.execution.bypass_prometheus_metrics import (
     record_estimated_cost,
@@ -149,7 +149,7 @@ class BypassManager:
                 model=plan.executor_model,
                 task_type=plan.task_type,
                 complexity=plan.complexity,
-                thinking_budget=plan.thinking_budget or "none",
+                thinking_budget=plan.thinking_budget or "none",  # type: ignore[unreachable]
             )
         except Exception:
             # Don't fail the evaluation if cost estimation fails

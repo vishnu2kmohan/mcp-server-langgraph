@@ -218,7 +218,7 @@ _title_generator: SessionTitleGenerator | None = None
 
 def get_title_generator() -> SessionTitleGenerator:
     """Get the singleton title generator instance."""
-    global _title_generator  # noqa: PLW0603
+    global _title_generator
     if _title_generator is None:
         _title_generator = SessionTitleGenerator()
     return _title_generator

@@ -282,7 +282,7 @@ class TestRealLLMWorkerIntegration:
         from mcp_server_langgraph.core.scopes import CapabilityScope
 
         provider = NullCapabilityProvider()
-        _worker = WorkerAgent(capability_provider=provider)  # noqa: F841
+        _worker = WorkerAgent(capability_provider=provider)
 
         # Create request with capability fields from router
         request = AgentRequest(

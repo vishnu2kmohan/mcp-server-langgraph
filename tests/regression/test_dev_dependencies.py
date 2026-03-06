@@ -376,6 +376,14 @@ def get_project_modules() -> set[str]:
         "check_e2e_completion",  # Script for E2E test completion tracking
         "profile_hooks",  # Script for profiling pre-commit hooks
         "generate_dashboard_metrics",  # Script for DORA/dependency/flakiness metrics
+        # Internal/sub-module imports (not top-level packages)
+        "_pytest",  # pytest internal API (imported via from _pytest.*)
+        "xdist",  # pytest-xdist internal module (imported as xdist.*)
+        # Namespace packages (sub-modules of larger packages)
+        "azure",  # azure-identity namespace package (azure.identity)
+        "google",  # google-cloud namespace package (google.cloud.*, google.auth.*)
+        # Config module (project-internal or environment-specific)
+        "config",  # Local config module (not a PyPI package)
     }
 
 
@@ -566,6 +574,11 @@ def test_dev_dependencies_are_importable():
             "mypy",  # Type checker, may not be installed in all environments
             "pre_commit",  # Pre-commit hooks, installed as CLI tool
             "semgrep",  # Security scanner, installed as CLI tool
+            # Optional LLM provider packages (not always installed in all environments)
+            "langchain_openai",  # Only needed when using OpenAI provider
+            "langchain_huggingface",  # Only needed when using HuggingFace provider
+            # Browser automation (requires system-level browser installation)
+            "playwright",  # Requires `playwright install` for browser binaries
         }
     )
 

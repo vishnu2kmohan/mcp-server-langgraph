@@ -461,7 +461,7 @@ def e2e_keycloak_base_url():
 
 # OAuth2 client configuration for E2E tests
 E2E_CLIENT_ID = "mcp-server"
-E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"  # noqa: S105
+E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 
 @pytest.fixture

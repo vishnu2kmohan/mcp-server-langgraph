@@ -335,7 +335,7 @@ class TestContextGraphRepository:
         }
 
         # Test create
-        trace_id = await repo.create(trace_data)
+        await repo.create(trace_data)
 
         # Verify add was called
         mock_session.add.assert_called_once()

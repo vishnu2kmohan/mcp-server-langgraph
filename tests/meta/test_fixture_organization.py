@@ -153,7 +153,17 @@ def test_no_duplicate_autouse_fixtures():
     # teardown_gc: Used for xdist memory safety - forces gc.collect() after each test
     #              to prevent Mock accumulation across xdist workers. This is intentionally
     #              per-file to ensure proper cleanup in parallel execution.
-    allowed_duplicates = {"setup_auth", "teardown_gc"}
+    # cleanup: Common fixture name for per-test cleanup, intentionally duplicated per-file
+    # clear_cache: Cache clearing between tests, per-module scoping
+    # skip_if_keycloak_unavailable: Conditional skip for keycloak-dependent tests
+    allowed_duplicates = {
+        "setup_auth",
+        "teardown_gc",
+        "cleanup",
+        "clear_cache",
+        "skip_if_keycloak_unavailable",
+        "skip_if_websocket_unavailable",
+    }
 
     for fixture_name, locations in autouse_fixtures.items():
         if fixture_name in allowed_duplicates:

@@ -85,8 +85,8 @@ class TestGRPCExporterSelection:
 
         # Try to import the gRPC exporter directly
         try:
-            from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (  # noqa: F401
-                OTLPMetricExporter,
+            from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+                OTLPMetricExporter,  # noqa: F401
             )
 
             grpc_installed = True

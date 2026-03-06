@@ -40,8 +40,11 @@ class TestOrchestratorStatusBroadcaster:
         reset_orchestrator_status_broadcaster()
 
     def teardown_method(self) -> None:
-        """Clean up after each test."""
+        """Clean up after each test. Force GC to prevent mock accumulation in xdist workers."""
         reset_orchestrator_status_broadcaster()
+        import gc
+
+        gc.collect()
 
     # =========================================================================
     # Subscription Tests
@@ -429,7 +432,7 @@ class TestTaskCategory:
 
     def test_task_category_enum_contains_all_expected_values(self) -> None:
         """TaskCategory has all expected values."""
-        expected = {"ux", "session", "conversation", "canvas", "diagram", "trace", "hitl", "command", "alert"}
+        expected = {"ux", "session", "conversation", "canvas", "diagram", "trace", "hitl", "command", "alert", "workflow"}
         actual = {c.value for c in TaskCategory}
         assert actual == expected
 
@@ -507,11 +510,12 @@ class TestOrchestratorStatusHandler:
         handler._websocket = ws
 
         user = AuthUser(id="user-123", username="user123", email="test@example.com")
+        handler._user = user  # Base class sets this before calling on_connect
         await handler.on_connect(user)
 
         assert broadcaster.subscriber_count == 1
         assert handler._subscribed is True
-        assert handler._user_id == "user-123"
+        assert handler.user_id == "user-123"
 
     @pytest.mark.asyncio
     async def test_on_connect_logs_user_info(self) -> None:
@@ -524,9 +528,10 @@ class TestOrchestratorStatusHandler:
         handler._websocket = ws
 
         user = AuthUser(id="admin-user", username="admin", email="admin@example.com")
+        handler._user = user  # Base class sets this before calling on_connect
         await handler.on_connect(user)
 
-        assert handler._user_id == "admin-user"
+        assert handler.user_id == "admin-user"
 
     # =========================================================================
     # on_disconnect Tests
@@ -579,7 +584,7 @@ class TestOrchestratorStatusHandler:
 
         ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
-        handler._user_id = "user-789"
+        handler._user = AuthUser(id="user-789", username="user789", email="user789@example.com")
         handler._subscribed = False
 
         message = MessageEnvelope(type="subscribe", id="msg-1")
@@ -599,7 +604,7 @@ class TestOrchestratorStatusHandler:
 
         ws = AsyncMock(return_value=None)  # noqa: async-mock-config
         handler._websocket = ws
-        handler._user_id = "user-789"
+        handler._user = AuthUser(id="user-789", username="user789", email="user789@example.com")
 
         # First subscribe
         await broadcaster.subscribe(ws, user_id="user-789")

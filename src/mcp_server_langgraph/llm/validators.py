@@ -126,8 +126,8 @@ class LLMValidator:
                     validated = model_class(content=content) if hasattr(model_class, "content") else None  # type: ignore[assignment]
 
                     if validated is None:
-                        raise ValueError(  # noqa: TRY003
-                            f"Cannot parse non-JSON content for {model_class.__name__}. "  # noqa: EM102
+                        raise ValueError(
+                            f"Cannot parse non-JSON content for {model_class.__name__}. "
                             "Model must accept 'content' field or response must be valid JSON."
                         )
 

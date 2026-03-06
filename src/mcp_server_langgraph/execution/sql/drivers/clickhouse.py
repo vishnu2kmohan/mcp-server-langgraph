@@ -27,7 +27,7 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import asynch  # type: ignore[import-untyped]  # noqa: F401
+    import asynch  # type: ignore[import-not-found,import-untyped]  # noqa: F401
 
     _HAS_CLICKHOUSE = True
 except ImportError:

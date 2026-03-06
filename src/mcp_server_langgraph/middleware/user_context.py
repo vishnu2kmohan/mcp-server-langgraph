@@ -78,7 +78,7 @@ class UserContextMiddleware(BaseHTTPMiddleware):
                 token = _current_user_id.set(user_id)
 
             response = await call_next(request)
-            return response
+            return response  # type: ignore[no-any-return]
         finally:
             # Guaranteed cleanup - reset contextvar
             if token is not None:
@@ -116,7 +116,7 @@ class UserContextMiddleware(BaseHTTPMiddleware):
                     },
                 )
                 return None
-            return user_id
+            return user_id  # type: ignore[no-any-return]
 
         # Fallback for object (shouldn't happen with current auth middleware)
         user_id = getattr(user, "sub", None) or getattr(user, "id", None)
@@ -126,4 +126,4 @@ class UserContextMiddleware(BaseHTTPMiddleware):
                 extra={"user_type": type(user).__name__},
             )
             return None
-        return user_id
+        return user_id  # type: ignore[no-any-return]

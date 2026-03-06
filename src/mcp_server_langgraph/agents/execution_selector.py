@@ -62,7 +62,7 @@ class ExecutionModeSelector:
         requires_multi_step: bool = False,
         requires_determinism: bool = False,
         requires_batch_processing: bool = False,
-        context_budget: str = "normal",  # noqa: S107
+        context_budget: str = "normal",
         latency_requirement: str = "normal",
         requires_approval: bool = False,
         requires_clarification: bool = False,

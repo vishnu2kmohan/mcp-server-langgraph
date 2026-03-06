@@ -29,7 +29,7 @@ class TestRetryBasics:
         """Test that function is retried on failure"""
         call_count = 0
 
-        @retry_with_backoff(max_attempts=3, exponential_base=1)
+        @retry_with_backoff(max_attempts=3, exponential_base=1, retry_on=ValueError)
         async def sometimes_failing_func():
             nonlocal call_count
             call_count += 1
@@ -46,7 +46,7 @@ class TestRetryBasics:
     async def test_retry_exhausted_raises_error(self):
         """Test that RetryExhaustedError is raised after max attempts"""
 
-        @retry_with_backoff(max_attempts=3)
+        @retry_with_backoff(max_attempts=3, retry_on=ValueError)
         async def always_failing_func():
             raise ValueError("Permanent failure")
 
@@ -97,7 +97,7 @@ class TestExponentialBackoff:
             sleep_durations.append(duration)
             # Don't actually sleep - return immediately
 
-        @retry_with_backoff(max_attempts=4, exponential_base=2, exponential_max=10)
+        @retry_with_backoff(max_attempts=4, exponential_base=2, exponential_max=10, retry_on=ValueError)
         async def timed_failing_func():
             nonlocal call_count
             call_count += 1
@@ -141,7 +141,7 @@ class TestExponentialBackoff:
             sleep_durations.append(duration)
             # Don't actually sleep
 
-        @retry_with_backoff(max_attempts=6, exponential_base=10, exponential_max=2)
+        @retry_with_backoff(max_attempts=6, exponential_base=10, exponential_max=2, retry_on=ValueError)
         async def timed_failing_func():
             nonlocal call_count
             call_count += 1
@@ -276,7 +276,7 @@ class TestRetryStrategies:
         """Test exponential backoff strategy"""
         call_count = 0
 
-        @retry_with_backoff(max_attempts=3, strategy=RetryStrategy.EXPONENTIAL, exponential_base=2)
+        @retry_with_backoff(max_attempts=3, strategy=RetryStrategy.EXPONENTIAL, exponential_base=2, retry_on=ValueError)
         async def func():
             nonlocal call_count
             call_count += 1
@@ -303,7 +303,7 @@ class TestRetryMetrics:
         """Test that retry attempt metric is emitted"""
         call_count = 0
 
-        @retry_with_backoff(max_attempts=3)
+        @retry_with_backoff(max_attempts=3, retry_on=ValueError)
         async def func():
             nonlocal call_count
             call_count += 1
@@ -311,7 +311,7 @@ class TestRetryMetrics:
                 raise ValueError("Retry")
             return "success"
 
-        with patch("mcp_server_langgraph.resilience.retry.retry_attempt_counter") as mock_metric:  # noqa: F841
+        with patch("mcp_server_langgraph.resilience.retry.retry_attempt_counter"):
             result = await func()
             assert result == "success"
 
@@ -320,11 +320,11 @@ class TestRetryMetrics:
     async def test_retry_exhausted_metric(self):
         """Test that retry exhausted metric is emitted"""
 
-        @retry_with_backoff(max_attempts=2)
+        @retry_with_backoff(max_attempts=2, retry_on=ValueError)
         async def func():
             raise ValueError("Always fails")
 
-        with patch("mcp_server_langgraph.resilience.retry.retry_exhausted_counter") as mock_metric:  # noqa: F841
+        with patch("mcp_server_langgraph.resilience.retry.retry_exhausted_counter"):
             with pytest.raises(RetryExhaustedError):
                 await func()
 
@@ -345,7 +345,7 @@ class TestRetryWithOtherPatterns:
 
         call_count = 0
 
-        @retry_with_backoff(max_attempts=3, exponential_base=1)
+        @retry_with_backoff(max_attempts=3, exponential_base=1, retry_on=ValueError)
         @with_timeout(seconds=10)
         async def func():
             nonlocal call_count
@@ -366,7 +366,7 @@ class TestRetryWithOtherPatterns:
         call_count = 0
 
         @circuit_breaker(name="test_combo", fail_max=5)
-        @retry_with_backoff(max_attempts=2)
+        @retry_with_backoff(max_attempts=2, retry_on=ValueError)
         async def func():
             nonlocal call_count
             call_count += 1

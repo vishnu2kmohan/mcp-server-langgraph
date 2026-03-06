@@ -372,7 +372,7 @@ class TestSemanticSearchFlow:
         )
 
         with patch.object(manager, "_check_authorization", new_callable=AsyncMock, return_value=True):
-            results = await manager.search_tools(
+            await manager.search_tools(
                 query="execute code",
                 user_id=unique_user_id,
                 category="code",

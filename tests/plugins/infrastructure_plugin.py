@@ -117,7 +117,7 @@ def test_app_settings(test_infrastructure_ports):
         qdrant_url="localhost",
         qdrant_port=test_infrastructure_ports["qdrant"],
         # Security settings
-        jwt_secret_key="test-jwt-secret-key-for-e2e-testing-only",
+        jwt_secret_key="agent-studio-jwt-secret-key-for-e2e-tests",
         hipaa_integrity_secret="test-hipaa-secret-for-e2e-testing-only",
         # Test-specific settings
         log_level="DEBUG",

@@ -32,7 +32,7 @@ def _require_sandbox_env() -> None:
         pytest.skip("Sandbox runner tests require CODE_EXECUTION_NETWORK_MODE=unrestricted for fetch/screenshot")
 
     try:
-        import docker  # noqa: F401
+        import docker
     except Exception:
         pytest.skip("Docker package not available")
 

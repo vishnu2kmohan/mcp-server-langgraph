@@ -314,7 +314,7 @@ class TestMCPToolProxyIntegration:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.integration
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_proxy_works_with_langchain_agent(self):
         """GIVEN MCPToolProxies

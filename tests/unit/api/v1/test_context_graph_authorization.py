@@ -183,7 +183,7 @@ class TestContextGraphSessionTracesAuthorization:
         mock_request = _create_mock_request(mock_auth_service)
 
         # WHEN listing session traces
-        traces = await get_session_traces(
+        await get_session_traces(
             session_id="session-123",
             request=mock_request,
             limit=100,

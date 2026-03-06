@@ -55,7 +55,10 @@ def app_with_mocks(mock_repo: InMemoryExecutionPlanRepository, mock_user: dict[s
     app.include_router(execution_plans_router, prefix="/api/v1")
 
     # Override authentication
-    app.dependency_overrides[get_current_user] = lambda: mock_user
+    async def _override_current_user():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = _override_current_user
 
     return app
 

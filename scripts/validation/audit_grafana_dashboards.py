@@ -26,7 +26,7 @@ def query_mimir(promql: str) -> dict[str, Any]:
     url = f"{MIMIR_URL}/api/v1/query?query={encoded_query}"
 
     try:
-        with urllib.request.urlopen(url, timeout=10) as response:  # nosec B310 # noqa: S310
+        with urllib.request.urlopen(url, timeout=10) as response:  # nosec B310  # noqa: S310
             return json.loads(response.read().decode())  # type: ignore[no-any-return]
     except Exception as e:
         return {"status": "error", "error": str(e)}

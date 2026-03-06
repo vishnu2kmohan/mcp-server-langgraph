@@ -84,6 +84,9 @@ from mcp_server_langgraph.storage.session import (
 
 logger = logging.getLogger(__name__)
 
+# Strong references to fire-and-forget background tasks to prevent GC (RUF006)
+_background_tasks: set[asyncio.Task[Any]] = set()
+
 
 # Type alias for authenticated user dependency
 CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
@@ -830,12 +833,12 @@ class InMemorySessionService(SessionService):
             if idx is not None:
                 messages = session.get("messages", [])
                 if 0 <= idx < len(messages):
-                    return messages[idx]
+                    return messages[idx]  # type: ignore[no-any-return]
 
         # Fallback: linear scan if index missing (shouldn't happen normally)
         for msg in session.get("messages", []):
             if msg.get("metadata", {}).get("request_id") == request_id:
-                return msg
+                return msg  # type: ignore[no-any-return]
 
         return None
 
@@ -1599,9 +1602,9 @@ class PostgresSessionService(SessionService):
 
         # v8 Phase 1: Fire-and-forget embedding for session similarity
         if self._embedding_service is not None:
-            asyncio.create_task(  # noqa: RUF006 - fire-and-forget; suppress RUF006
-                self._embedding_service.on_message_persisted(session_id, result)
-            )
+            task = asyncio.create_task(self._embedding_service.on_message_persisted(session_id, result))
+            _background_tasks.add(task)
+            task.add_done_callback(_background_tasks.discard)
 
         return result
 

@@ -27,6 +27,7 @@ set -e
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+# shellcheck disable=SC2034
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
@@ -92,6 +93,7 @@ run_pool() {
 
     # Use single fork to prevent OOM from parallel workers accumulating memory
     # jsdom + React Testing Library can consume 300-500MB per test file
+    # shellcheck disable=SC2034,SC2086
     VITEST_MAX_FORKS=1 NODE_OPTIONS="--max-old-space-size=${memory} --expose-gc" \
         npm test -- --run $dirs 2>&1 || {
         echo -e "${RED}Pool '$pool' failed${NC}"
@@ -103,12 +105,14 @@ run_pool() {
 }
 
 # Parse arguments
+# shellcheck disable=SC2034
 CI_MODE=false
 SPECIFIC_POOL=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ci)
+            # shellcheck disable=SC2034
             CI_MODE=true
             shift
             ;;

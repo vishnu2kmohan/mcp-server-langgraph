@@ -298,7 +298,11 @@ class TestAgentConfigExtendedEndpoint:
             "roles": ["user"],
             "realm_access": {"roles": ["user"]},
         }
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         return app
 

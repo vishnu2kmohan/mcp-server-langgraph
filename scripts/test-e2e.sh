@@ -299,7 +299,7 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
        POSTGRES_PASSWORD=postgres \
        KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests \
        KEYCLOAK_ADMIN_PASSWORD=admin \
-       JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only \
+       JWT_SECRET_KEY=agent-studio-jwt-secret-key-for-e2e-tests \
        uv run --frozen pytest "${PYTEST_ARGS[@]}"; then
         END_TIME=$(date +%s)
 

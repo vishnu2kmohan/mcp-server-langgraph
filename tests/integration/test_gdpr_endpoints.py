@@ -422,8 +422,6 @@ class TestGDPRProductionGuard:
             if "mcp_server_langgraph.api.gdpr" in sys.modules:
                 del sys.modules["mcp_server_langgraph.api.gdpr"]
 
-            import mcp_server_langgraph.api.gdpr  # noqa: F401
-
     def test_production_guard_allows_postgres(self, monkeypatch):
         """Test that production guard allows postgres backend."""
         monkeypatch.setenv("ENVIRONMENT", "production")
@@ -434,7 +432,5 @@ class TestGDPRProductionGuard:
 
         if "mcp_server_langgraph.api.gdpr" in sys.modules:
             del sys.modules["mcp_server_langgraph.api.gdpr"]
-
-        import mcp_server_langgraph.api.gdpr  # noqa: F401
 
         # Should not raise

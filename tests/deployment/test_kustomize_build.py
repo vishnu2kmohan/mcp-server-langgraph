@@ -302,7 +302,7 @@ def test_container_images_have_tags(overlay_dir: Path):
 
 @requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for kustomization validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
-def test_kustomization_resources_exist(overlay_dir: Path):  # noqa: C901
+def test_kustomization_resources_exist(overlay_dir: Path):
     """
     Test that all resource files referenced in kustomization.yaml actually exist.
 

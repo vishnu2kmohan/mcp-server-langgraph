@@ -138,10 +138,10 @@ _llm_requests_total: Any = None
 
 def _init_metrics() -> bool:
     """Initialize LLM metrics lazily."""
-    global _metrics_available  # noqa: PLW0603
-    global _llm_token_usage_total  # noqa: PLW0603
-    global _llm_request_duration  # noqa: PLW0603
-    global _llm_requests_total  # noqa: PLW0603
+    global _metrics_available
+    global _llm_token_usage_total
+    global _llm_request_duration
+    global _llm_requests_total
 
     if _metrics_available is not None:
         return _metrics_available

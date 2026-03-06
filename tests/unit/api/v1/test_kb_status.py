@@ -55,7 +55,10 @@ class TestKBStatusEndpoint:
         app.include_router(router, prefix="/api/v1/kb")
 
         # Override auth dependency
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
+        async def _override_current_user():
+            return mock_current_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         return app
 

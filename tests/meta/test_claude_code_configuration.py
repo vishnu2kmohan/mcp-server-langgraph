@@ -190,12 +190,10 @@ class TestClaudeCodeConfiguration:
 
         # New commands recommended by Anthropic best practices
         # Note: explore-codebase.md moved to skills (~/.claude/skills/)
+        # Note: tdd.md, plan-feature.md, verify-tests.md, review-pr.md
+        #   moved to skills (~/.claude/skills/) for progressive disclosure
         recommended_commands = [
-            "tdd.md",
-            "plan-feature.md",
-            "verify-tests.md",
             "fix-mypy.md",
-            "review-pr.md",
         ]
 
         existing_commands = [f.name for f in commands_dir.glob("*.md")]
@@ -210,10 +208,19 @@ class TestClaudeCodeConfiguration:
         )
 
     def test_templates_directory_exists(self, claude_dir: Path):
-        """Test that .claude/templates/ directory exists."""
+        """Test that .claude/templates/ directory exists.
+
+        Note: Templates may exist at project level (.claude/templates/) or
+        globally (~/.claude/templates/). Skip if using global templates.
+        """
         templates_dir = claude_dir / "templates"
-        # This should already exist
-        assert templates_dir.exists(), ".claude/templates/ directory should exist"
+        global_templates = Path.home() / ".claude" / "templates"
+        skills_dir = claude_dir / "skills"
+        # Templates can be at project level, global level, or migrated to skills
+        assert templates_dir.exists() or global_templates.exists() or skills_dir.exists(), (
+            ".claude/templates/ directory should exist (project or global level) "
+            "or .claude/skills/ should exist as alternative"
+        )
 
     def test_templates_are_markdown(self, claude_dir: Path):
         """Test that all templates are .md files."""
@@ -304,7 +311,10 @@ class TestSlashCommandQuality:
                 parts = content.split("---", 2)
                 if len(parts) >= 3:
                     body = parts[2].strip()
-                    assert body.startswith("#"), f"Command {cmd_file.name} should have a markdown heading after frontmatter"
+                    # Commands migrated to skills may have "See skill:" redirect instead of heading
+                    assert body.startswith("#") or body.startswith("See skill:"), (
+                        f"Command {cmd_file.name} should have a markdown heading or skill redirect after frontmatter"
+                    )
             else:
                 assert content.startswith("#"), (
                     f"Command {cmd_file.name} should start with a markdown heading or YAML frontmatter"

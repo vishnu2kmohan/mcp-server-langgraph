@@ -77,7 +77,7 @@ class TestStudioDiscoveryScopes:
         results = discovery.discover(tmp_path)
 
         assert len(results) >= 1
-        _scopes = [scope for scope, _ in results]  # noqa: F841
+        _scopes = [scope for scope, _ in results]
         assert CapabilityScope.PROJECT in _scopes
 
     def test_discover_finds_user_studio_md(self, tmp_path: Path) -> None:
@@ -95,7 +95,7 @@ class TestStudioDiscoveryScopes:
         with patch.object(Path, "home", return_value=tmp_path):
             results = discovery.discover(tmp_path, include_user=True)
 
-        _scopes = [scope for scope, _ in results]  # noqa: F841
+        _scopes = [scope for scope, _ in results]
         # USER scope should be found if home is mocked properly
         assert len(results) >= 0  # May be 0 if home mock doesn't work
 

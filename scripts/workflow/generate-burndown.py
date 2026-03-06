@@ -175,8 +175,6 @@ def draw_burndown_chart(history: list[tuple[str, int, str]], width: int = 40, he
 
         # Plot points
         for i, (date, count, _) in enumerate(history):
-            x_pos = int(i * width / (len(history) - 1))  # noqa: F841
-
             # Calculate Y position for this count
             y_pos = int((count - min_count) / (max_count - min_count) * height)
 

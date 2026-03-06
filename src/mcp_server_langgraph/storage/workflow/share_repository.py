@@ -390,7 +390,7 @@ class PostgresWorkflowShareRepository:
             result = await session.execute(
                 select(WorkflowModel.id).where(
                     WorkflowModel.share_link == share_link,
-                    WorkflowModel.is_public == True,  # noqa: E712
+                    WorkflowModel.is_public,
                 )
             )
             row = result.scalar_one_or_none()

@@ -315,7 +315,7 @@ class TestEndToEndKBFocusWiring:
         service = ChatServiceImpl()
 
         # Verify the service accepts kb_focus in create_stream
-        _messages = [{"role": "user", "content": "Hello"}]  # noqa: F841 - setup for future invocation
+        _messages = [{"role": "user", "content": "Hello"}]
 
         # The actual invocation would require full infrastructure,
         # but we can verify the parameter is accepted

@@ -273,9 +273,8 @@ class TestServicePrincipalFixtureConfiguration:
         """
         from tests.helpers import get_integration_test_file
 
-        try:
-            test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
-        except FileNotFoundError:
+        test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
+        if not test_file.exists():
             pytest.skip("Service principal test file not found")
 
         content = test_file.read_text()
@@ -297,9 +296,8 @@ class TestServicePrincipalFixtureConfiguration:
         """
         from tests.helpers import get_integration_test_file
 
-        try:
-            test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
-        except FileNotFoundError:
+        test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
+        if not test_file.exists():
             pytest.skip("Service principal test file not found")
 
         content = test_file.read_text()
@@ -320,9 +318,8 @@ class TestServicePrincipalFixtureConfiguration:
         """
         from tests.helpers import get_integration_test_file
 
-        try:
-            test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
-        except FileNotFoundError:
+        test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
+        if not test_file.exists():
             pytest.skip("Service principal test file not found")
 
         content = test_file.read_text()
@@ -340,9 +337,8 @@ def test_service_principal_tests_have_xdist_groups():
     """
     from tests.helpers import get_integration_test_file
 
-    try:
-        test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
-    except FileNotFoundError:
+    test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
+    if not test_file.exists():
         pytest.skip("Service principal test file not found")
 
     content = test_file.read_text()

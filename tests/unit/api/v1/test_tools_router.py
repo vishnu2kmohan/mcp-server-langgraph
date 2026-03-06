@@ -9,7 +9,6 @@ replacing semantic search with explicit user selection.
 """
 
 # Import MCP SDK mocks first to avoid import errors
-# ruff: noqa: E402
 import sys
 from types import ModuleType
 from unittest.mock import MagicMock
@@ -64,8 +63,11 @@ if "mcp.client.session" not in sys.modules:
     sys.modules["mcp.client.session"] = mock
 
 import gc
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any, Generator
 from unittest.mock import AsyncMock, patch
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.agents.model_registry import ModelCapabilities
 
 import pytest
 from fastapi import FastAPI
@@ -890,7 +892,7 @@ class TestNativeToolsIntegration:
 
             for tool in data["tools"]:
                 assert "provider" in tool
-                assert tool["provider"] in ("anthropic", "google", None)
+                assert tool["provider"] in ("anthropic", "google", "openai", None)
 
     def test_builtin_tool_id_format(
         self,

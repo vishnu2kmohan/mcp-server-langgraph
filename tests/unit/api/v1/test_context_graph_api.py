@@ -114,7 +114,10 @@ class TestGetTraceEndpoint:
         mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(return_value=mock_trace_read)
 
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
+        async def _override_current_user():
+            return mock_current_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[get_decision_repository] = lambda: mock_repo
 
         try:
@@ -143,7 +146,10 @@ class TestGetTraceEndpoint:
         mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_id = AsyncMock(return_value=None)
 
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
+        async def _override_current_user():
+            return mock_current_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[get_decision_repository] = lambda: mock_repo
 
         try:
@@ -177,7 +183,10 @@ class TestGetSessionTracesEndpoint:
         mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_session = AsyncMock(return_value=[mock_trace_summary, mock_trace_summary])
 
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
+        async def _override_current_user():
+            return mock_current_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[get_decision_repository] = lambda: mock_repo
 
         try:
@@ -206,7 +215,10 @@ class TestGetSessionTracesEndpoint:
         mock_repo = AsyncMock(return_value=None)
         mock_repo.get_by_session = AsyncMock(return_value=[mock_trace_summary])
 
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
+        async def _override_current_user():
+            return mock_current_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
         app.dependency_overrides[get_decision_repository] = lambda: mock_repo
 
         try:

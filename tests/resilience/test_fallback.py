@@ -252,7 +252,7 @@ class TestFallbackMetrics:
         async def failing_func():
             raise ValueError("Error")
 
-        with patch("mcp_server_langgraph.resilience.fallback.fallback_used_counter") as mock_metric:  # noqa: F841
+        with patch("mcp_server_langgraph.resilience.fallback.fallback_used_counter"):
             result = await failing_func()
             assert result == "fallback_value"
 
@@ -329,7 +329,7 @@ class TestFallbackComposition:
         call_count = 0
 
         @with_fallback(fallback="fallback_value")
-        @retry_with_backoff(max_attempts=2)
+        @retry_with_backoff(max_attempts=2, retry_on=ValueError)
         async def func():
             nonlocal call_count
             call_count += 1

@@ -98,7 +98,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -162,7 +162,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -219,7 +219,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -290,7 +290,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -351,7 +351,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=failing_service,
             ),
             patch(
@@ -411,7 +411,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=None,
             ),
             patch(
@@ -480,7 +480,7 @@ class TestStreamingMessagePersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -656,7 +656,7 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -726,7 +726,7 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -798,7 +798,7 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(
@@ -869,7 +869,7 @@ class TestThinkingContentPersistence:
 
         with (
             patch(
-                "mcp_server_langgraph.api.v1.chat.get_session_service",
+                "mcp_server_langgraph.api.v1.sessions.get_session_service",
                 return_value=mock_session_service,
             ),
             patch(

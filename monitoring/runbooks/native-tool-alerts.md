@@ -372,6 +372,15 @@ This is informational. Consider:
 
 ---
 
+## Escalation
+
+- **On-call SRE**: Slack #sre-oncall
+- **Service Owner**: @langgraph-team
+- **Critical circuit breaker alerts**: Page via PagerDuty
+- **Provider outages**: Check provider status pages and contact provider support
+
+---
+
 ## Related Documentation
 
 - [ADR-0102: Native LLM Provider Tools Integration](../../adr/adr-0102-native-llm-provider-tools.md)

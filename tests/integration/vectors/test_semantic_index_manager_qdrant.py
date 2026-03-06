@@ -181,6 +181,12 @@ class TestSemanticIndexManagerConnection:
     """Tests for SemanticIndexManager Qdrant connectivity."""
 
     @pytest.mark.asyncio
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
+
     async def test_manager_connects_to_qdrant(
         self, qdrant_url: str, collection_name: str, mock_embedder: MockEmbeddingService, cleanup_collection: None
     ) -> None:

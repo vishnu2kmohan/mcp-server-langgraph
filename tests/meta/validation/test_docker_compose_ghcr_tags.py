@@ -9,11 +9,12 @@ Reference: Test Infrastructure Improvements Plan
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import pytest
 import yaml
+
+from tests.helpers.path_helpers import get_repo_root
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.meta, pytest.mark.docker]
@@ -22,26 +23,27 @@ pytestmark = [pytest.mark.meta, pytest.mark.docker]
 GHCR_REGISTRY = "ghcr.io/vishnu2kmohan"
 
 # Custom-built services that must have GHCR tags
+# Image names renamed from mcp-server-langgraph-* to agent-studio-*
 CUSTOM_BUILD_SERVICES = {
     "alembic-migrate-test": {
-        "image_name": "mcp-server-langgraph-alembic",
+        "image_name": "agent-studio-alembic",
         "expected_tags": ["latest", "local"],
     },
     "openfga-seed-test": {
-        "image_name": "mcp-server-langgraph-openfga-seed",
+        "image_name": "agent-studio-openfga-seed",
         "expected_tags": ["latest", "local"],
     },
     "keycloak-test": {
-        "image_name": "mcp-server-langgraph-keycloak",
+        "image_name": "agent-studio-keycloak",
         "expected_tags": ["latest", "local"],
     },
-    "mcp-server-test": {
-        "image_name": "mcp-server-langgraph",
+    "agent-studio-test": {
+        "image_name": "agent-studio",
         "expected_tags": ["test-latest", "test-local"],
     },
     # NOTE: authz-proxy-test removed in Phase 4 decommission
     "agent-studio-sandbox": {
-        "image_name": "mcp-server-langgraph-agent-studio-sandbox",
+        "image_name": "agent-studio-sandbox",
         "expected_tags": ["latest", "local"],
     },
 }
@@ -50,7 +52,7 @@ CUSTOM_BUILD_SERVICES = {
 @pytest.fixture(scope="module")
 def compose_config() -> dict[str, Any]:
     """Load and parse docker-compose.test.yml."""
-    project_root = Path(__file__).parents[3]
+    project_root = get_repo_root()
     compose_path = project_root / "docker-compose.test.yml"
 
     if not compose_path.exists():
@@ -188,7 +190,7 @@ class TestBuildContextIntegrity:
         THEN all specified build contexts should exist
         """
         services = compose_config.get("services", {})
-        project_root = Path(__file__).parents[3]
+        project_root = get_repo_root()
         missing_contexts = []
 
         for service_name in CUSTOM_BUILD_SERVICES:
@@ -214,7 +216,7 @@ class TestBuildContextIntegrity:
         THEN all specified Dockerfiles should exist
         """
         services = compose_config.get("services", {})
-        project_root = Path(__file__).parents[3]
+        project_root = get_repo_root()
         missing_dockerfiles = []
 
         for service_name in CUSTOM_BUILD_SERVICES:
@@ -289,7 +291,7 @@ class TestInfrastructureMakefileTargets:
     @pytest.fixture(scope="class")
     def infrastructure_mk_content(self) -> str:
         """Load infrastructure.mk content."""
-        project_root = Path(__file__).parents[3]
+        project_root = get_repo_root()
         mk_path = project_root / "make" / "infrastructure.mk"
 
         if not mk_path.exists():

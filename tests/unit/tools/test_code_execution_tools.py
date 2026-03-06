@@ -168,7 +168,7 @@ class TestExecutePythonTool:
         mock_settings.code_execution_allowed_imports = ["json", "math"]
         mock_get_sandbox.return_value = mock_sandbox
 
-        _result = execute_python.invoke({"code": "print('test')", "timeout": 60})  # noqa: F841
+        _result = execute_python.invoke({"code": "print('test')", "timeout": 60})
 
         # Should execute successfully
         mock_get_sandbox.assert_called_once()
@@ -225,7 +225,7 @@ class TestCodeExecutionToolIntegration:
             mock_settings.enable_code_execution = True
             mock_settings.code_execution_backend = "docker-engine"
 
-            _result = execute_python.invoke({"code": "print('test')"})  # noqa: F841
+            _result = execute_python.invoke({"code": "print('test')"})
 
             # Should use Docker sandbox
             mock_get_sandbox.assert_called_once()
@@ -243,7 +243,7 @@ class TestCodeExecutionToolIntegration:
             mock_settings.enable_code_execution = True
             mock_settings.code_execution_backend = "kubernetes"
 
-            _result = execute_python.invoke({"code": "print('test')"})  # noqa: F841
+            _result = execute_python.invoke({"code": "print('test')"})
 
             # Should use Kubernetes sandbox
             mock_get_sandbox.assert_called_once()

@@ -262,7 +262,14 @@ class TestBootstrapLifecycle:
         from mcp_server_langgraph.core.config import Settings
 
         settings = Settings()
-        result = await bootstrap_all(settings)
+        # Mock init_semantic to avoid google_vertex embedding import
+        with patch(
+            "mcp_server_langgraph.bootstrap.init_semantic",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
+            result = await bootstrap_all(settings)
+            await result.cleanup()
         assert isinstance(result, AppState)
 
     @pytest.mark.asyncio
@@ -337,9 +344,16 @@ class TestBootstrapStreamingSettingsWiring:
             mock_state.cleanup = AsyncMock(return_value=None)  # async-mock-configured
             return mock_state
 
-        with patch(
-            "mcp_server_langgraph.bootstrap.init_websocket_lifecycle",
-            side_effect=mock_init_websocket,
+        with (
+            patch(
+                "mcp_server_langgraph.bootstrap.init_websocket_lifecycle",
+                side_effect=mock_init_websocket,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.init_semantic",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
         ):
             state = await bootstrap_all(settings)
             await state.cleanup()
@@ -378,9 +392,16 @@ class TestBootstrapStreamingSettingsWiring:
             mock_state.cleanup = AsyncMock(return_value=None)  # async-mock-configured
             return mock_state
 
-        with patch(
-            "mcp_server_langgraph.bootstrap.init_websocket_lifecycle",
-            side_effect=mock_init_websocket,
+        with (
+            patch(
+                "mcp_server_langgraph.bootstrap.init_websocket_lifecycle",
+                side_effect=mock_init_websocket,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.init_semantic",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
         ):
             state = await bootstrap_all(settings)
             await state.cleanup()
@@ -405,9 +426,16 @@ class TestBootstrapStreamingSettingsWiring:
 
         settings = Settings(streaming_enabled=False)
 
-        with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
-            None,
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
+                None,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.init_semantic",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
         ):
             state = await bootstrap_all(settings)
 
@@ -434,9 +462,16 @@ class TestBootstrapStreamingSettingsWiring:
             streaming_metrics_cleanup_interval=900,
         )
 
-        with patch(
-            "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
-            None,
+        with (
+            patch(
+                "mcp_server_langgraph.api.v1.mcp_websocket._lifecycle_manager",
+                None,
+            ),
+            patch(
+                "mcp_server_langgraph.bootstrap.init_semantic",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
         ):
             state = await bootstrap_all(settings)
 
@@ -568,7 +603,14 @@ class TestBootstrapSkillsIntegration:
 
         settings = Settings()
 
-        with patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=False):
+        with (
+            patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=False),
+            patch(
+                "mcp_server_langgraph.bootstrap.init_semantic",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+        ):
             state = await bootstrap_all(settings)
 
             assert hasattr(state, "skills")

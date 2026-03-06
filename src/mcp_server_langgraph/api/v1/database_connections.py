@@ -230,7 +230,7 @@ def _resolve_host_from_connection_string(conn_str: str) -> tuple[str | None, int
 # ============================================================================
 
 
-async def _get_db_session():
+async def _get_db_session():  # type: ignore[no-untyped-def]
     """Lazy import wrapper for get_db_session to avoid circular imports."""
     from mcp_server_langgraph.core.dependencies import get_db_session
 
@@ -420,9 +420,9 @@ async def create_database_connection(
     user: CurrentUser,
     repo: Annotated[Any, Depends(get_db_conn_repository)],
     egress_validator: Annotated[RuntimeEgressValidator | None, Depends(get_egress_validator)] = None,
-    secrets_provider: Annotated[SecretsProvider, Depends(get_secrets_provider)] = None,
+    secrets_provider: Annotated[SecretsProvider, Depends(get_secrets_provider)] = None,  # type: ignore[assignment]
     credential_cache: Annotated[TTLCache, Depends(get_credential_cache)] = None,
-    credential_cache_lock: Annotated[asyncio.Lock, Depends(get_credential_cache_lock)] = None,
+    credential_cache_lock: Annotated[asyncio.Lock, Depends(get_credential_cache_lock)] = None,  # type: ignore[assignment]
 ) -> DatabaseConnectionResponse:
     """Create a database connection with credentials stored in Secrets Manager."""
     from mcp_server_langgraph.repositories.database_connections import (
@@ -660,7 +660,7 @@ async def update_database_connection(
     request: DatabaseConnectionUpdateRequest,
     user: CurrentUser,
     repo: Annotated[Any, Depends(get_db_conn_repository)],
-    secrets_provider: Annotated[SecretsProvider, Depends(get_secrets_provider)] = None,
+    secrets_provider: Annotated[SecretsProvider, Depends(get_secrets_provider)] = None,  # type: ignore[assignment]
     tester: Annotated[Any, Depends(get_connection_tester)] = None,
     retest: bool = Query(False, description="Re-test connection after update"),
 ) -> DatabaseConnectionResponse:

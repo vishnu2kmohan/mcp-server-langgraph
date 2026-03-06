@@ -261,7 +261,6 @@ class AlertmanagerWebhookResponse(BaseModel):
 
 @alertmanager_webhook_router.post(
     "/webhooks/alertmanager",
-    response_model=AlertmanagerWebhookResponse,  # noqa: FAST001 - explicit for OpenAPI docs
     summary="Receive alerts from Alertmanager",
     description="Webhook endpoint for Prometheus Alertmanager to push alerts.",
 )

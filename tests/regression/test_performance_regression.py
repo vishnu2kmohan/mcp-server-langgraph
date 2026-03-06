@@ -105,7 +105,7 @@ def check_regression(metric_name: str, measured_p95: float, unit: str = "seconds
         return {
             "regression": True,
             "reason": "threshold_exceeded",
-            "message": f"{metric_name} p95 ({measured_p95:.2f}{baseline['unit']}) exceeds threshold ({threshold}{baseline['unit']})",  # noqa: E501
+            "message": f"{metric_name} p95 ({measured_p95:.2f}{baseline['unit']}) exceeds threshold ({threshold}{baseline['unit']})",
             "baseline_p95": baseline["p95"],
             "measured_p95": measured_p95,
             "regression_percent": regression_percent,
@@ -344,9 +344,13 @@ class TestLLMPerformance:
 
             stats = await measure_latency_async(call_llm, iterations=20)
 
-            # This is mocked so should be fast
-            # Real LLM calls would be slower
-            assert stats["p95"] < 1.0, "Mocked LLM calls should be very fast"
+            # This is mocked so should be fast, but includes resilience infrastructure
+            # overhead (bulkhead, circuit breaker, rate limiter, adaptive bulkhead).
+            # Real LLM calls would be slower.
+            assert stats["p95"] < 2.0, (
+                f"Mocked LLM calls should be reasonably fast (p95={stats['p95']:.2f}s). "
+                f"Overhead from resilience patterns is expected but should be under 2s."
+            )
 
 
 @pytest.mark.regression

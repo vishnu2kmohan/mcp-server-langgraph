@@ -187,19 +187,19 @@ class TestContextGraphFeatureFlagsDefaults:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_enable_context_graph_default_false(self) -> None:
-        """enable_context_graph should default to False (opt-in feature)."""
+    def test_enable_context_graph_default_true(self) -> None:
+        """enable_context_graph should default to True (promoted after stabilization)."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
-        assert flags.enable_context_graph is False
+        assert flags.enable_context_graph is True
 
-    def test_enable_precedent_search_default_false(self) -> None:
-        """enable_precedent_search should default to False."""
+    def test_enable_precedent_search_default_true(self) -> None:
+        """enable_precedent_search should default to True (promoted after stabilization)."""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
-        assert flags.enable_precedent_search is False
+        assert flags.enable_precedent_search is True
 
     def test_context_graph_async_persistence_default_true(self) -> None:
         """context_graph_async_persistence should default to True."""

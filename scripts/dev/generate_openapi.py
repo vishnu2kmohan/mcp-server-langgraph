@@ -8,7 +8,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from mcp_server_langgraph.mcp.server_streamable import app  # noqa: E402
+from mcp_server_langgraph.mcp.server_streamable import app
 
 
 def generate_openapi_schema():

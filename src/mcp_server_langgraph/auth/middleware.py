@@ -40,7 +40,7 @@ CanUseToolCallback = Callable[
 # FastAPI imports for dependency injection (optional, only if using FastAPI endpoints)
 
 try:
-    from fastapi import Depends  # noqa: F401 (used in type hints)
+    from fastapi import Depends  # noqa: F401
 
     FASTAPI_AVAILABLE = True
 except ImportError:

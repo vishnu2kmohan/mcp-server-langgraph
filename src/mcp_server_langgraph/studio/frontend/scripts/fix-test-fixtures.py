@@ -42,7 +42,6 @@ def main() -> int:
             continue
 
         content = path.read_text()
-        original = content
 
         content, added = add_transform_import(content)
         if added:

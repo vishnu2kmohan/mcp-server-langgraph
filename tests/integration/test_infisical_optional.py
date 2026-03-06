@@ -211,7 +211,7 @@ class TestInfisicalLogging:
 
         # Create manager without credentials
         with caplog.at_level("WARNING"):
-            mgr = SecretsManager(client_id=None, client_secret=None)  # noqa: F841
+            SecretsManager(client_id=None, client_secret=None)
 
             # Should log warning about fallback mode
             assert any("fallback" in record.message.lower() for record in caplog.records)

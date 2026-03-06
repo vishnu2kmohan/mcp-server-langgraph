@@ -170,6 +170,20 @@ class TestKubectlSafetyEnforcement:
 
         violations = []
 
+        # Pattern to detect actual kubectl invocations (not just string mentions in docs/data)
+        # Matches: subprocess.run(...kubectl...), os.system(...kubectl...),
+        #          Popen(...kubectl...), ["kubectl", ...] as first element (command)
+        # Does NOT match: tools_needed=["bash", "kubectl"] (kubectl as data, not command)
+        import re
+
+        kubectl_invoke_pattern = re.compile(
+            r"subprocess\.\w+\(.*?kubectl|"
+            r"os\.system\(.*?kubectl|"
+            r"Popen\(.*?kubectl|"
+            r'\[["\']kubectl["\']',
+            re.DOTALL,
+        )
+
         for test_file in test_files:
             # Skip meta-tests
             if "meta" in str(test_file):
@@ -178,8 +192,8 @@ class TestKubectlSafetyEnforcement:
             with open(test_file) as f:
                 source = f.read()
 
-            # Check if file uses kubectl
-            if "kubectl" not in source:
+            # Check if file actually invokes kubectl (not just mentions in docstrings/assertions)
+            if not kubectl_invoke_pattern.search(source):
                 continue
 
             tree = ast.parse(source)

@@ -358,10 +358,10 @@ async def delete_connection(
 
 
 @connections_router.post("/{connection_id}/test")
-async def test_connection(  # noqa: PT028
+async def test_connection(
     request: Request,
     connection_id: str,
-    user: ConnectionOwner,  # noqa: PT028
+    user: ConnectionOwner,
     repo: ConnectionRepository = Depends(get_connection_repository),  # noqa: PT028
     mcp_client: MCPClient = Depends(get_mcp_client),  # noqa: PT028
     audit_repo: AuditLogRepository = Depends(get_audit_log_repository),  # noqa: PT028

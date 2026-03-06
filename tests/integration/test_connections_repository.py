@@ -22,8 +22,6 @@ from mcp_server_langgraph.core.secrets import InMemorySecretsProvider
 from mcp_server_langgraph.models.base import Base
 
 # Import model modules to register tables on Base.metadata:
-import mcp_server_langgraph.models.connection  # noqa: F401
-import mcp_server_langgraph.models.project  # noqa: F401
 from mcp_server_langgraph.models.project import ProjectModel
 from mcp_server_langgraph.repositories.connections import PostgresConnectionRepository
 from mcp_server_langgraph.storage.models import (

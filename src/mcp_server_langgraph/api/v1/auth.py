@@ -1725,7 +1725,6 @@ class BypassPermissionResponse(BaseModel):
     "/bypass-permission",
     summary="Check bypass execution mode permission",
     description="Check if current user has bypass_executor permission on system:global",
-    response_model=BypassPermissionResponse,
 )
 async def check_bypass_permission(
     request: Request,

@@ -109,7 +109,7 @@ class TestLLMFallbackKwargs:
                 )
 
                 messages = [HumanMessage(content="test message")]
-                result = await factory.ainvoke(messages)  # noqa: F841
+                await factory.ainvoke(messages)
 
                 # Should have tried twice (primary + fallback)
                 assert mock_acompletion.call_count == 2
@@ -162,7 +162,7 @@ class TestLLMFallbackKwargs:
                 )
 
                 messages = [HumanMessage(content="test message")]
-                result = await factory.ainvoke(messages)  # noqa: F841
+                await factory.ainvoke(messages)
 
                 # Should have tried twice (primary + fallback)
                 assert mock_acompletion.call_count == 2
@@ -203,7 +203,7 @@ class TestLLMFallbackKwargs:
             )
 
             messages = [HumanMessage(content="test message")]
-            result = await factory.ainvoke(messages)  # noqa: F841
+            await factory.ainvoke(messages)
 
             assert mock_acompletion.call_count == 2
 

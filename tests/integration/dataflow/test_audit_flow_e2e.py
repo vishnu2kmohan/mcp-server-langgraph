@@ -11,6 +11,7 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 """
 
 import gc
+import os
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -348,7 +349,7 @@ class TestAuditSchedulerIntegration:
         # Create minimal test settings
         test_settings = Settings(
             environment="test",
-            database_url="postgresql://test:test@localhost:5432/test",
+            database_url=f"postgresql://test:test@localhost:{os.getenv('POSTGRES_PORT', '9432')}/test",
             audit_scheduler_enabled=False,
         )
 
@@ -398,7 +399,7 @@ class TestAuditSchedulerIntegration:
 
         test_settings = Settings(
             environment="test",
-            database_url="postgresql://test:test@localhost:5432/test",
+            database_url=f"postgresql://test:test@localhost:{os.getenv('POSTGRES_PORT', '9432')}/test",
             audit_scheduler_enabled=True,
             audit_scheduler_hours=24,
         )

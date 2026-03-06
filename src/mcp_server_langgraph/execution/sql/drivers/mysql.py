@@ -28,7 +28,7 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import aiomysql
+    import aiomysql  # type: ignore[import-not-found,import-untyped]
 
     _HAS_MYSQL = True
 except ImportError:
@@ -45,11 +45,11 @@ class MySQLDriver(DatabaseDriver):
         pool: An ``aiomysql.Pool`` instance from which connections are acquired.
     """
 
-    def __init__(self, pool: aiomysql.Pool) -> None:  # type: ignore[name-defined]
+    def __init__(self, pool: aiomysql.Pool) -> None:
         if not _HAS_MYSQL:
             raise ImportError("aiomysql is required for MySQLDriver. Install it with: pip install aiomysql")
         self._pool = pool
-        self._conn: aiomysql.Connection | None = None  # type: ignore[name-defined]
+        self._conn: aiomysql.Connection | None = None
         self._current_thread_id: int | None = None
 
     @property
@@ -105,7 +105,7 @@ class MySQLDriver(DatabaseDriver):
                     # KILL QUERY does not support parameterized queries in MySQL.
                     # Validate thread_id is an integer to prevent SQL injection.
                     if not isinstance(thread_id, int):
-                        logger.warning("Invalid thread_id type: %s", type(thread_id))
+                        logger.warning("Invalid thread_id type: %s", type(thread_id))  # type: ignore[unreachable]
                         return False
                     await cursor.execute(f"KILL QUERY {int(thread_id)}")
                 logger.info("Killed MySQL query on thread_id %d", thread_id)

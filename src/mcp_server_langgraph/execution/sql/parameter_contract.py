@@ -62,7 +62,7 @@ class ParameterContract:
         self.dialect = dialect
         self.style = self.DRIVER_STYLES[driver]
 
-    def translate(self, sql: str, params: Mapping[str, Any]) -> tuple[str, list | dict]:
+    def translate(self, sql: str, params: Mapping[str, Any]) -> tuple[str, list[Any] | dict[str, Any]]:
         """Translate canonical :name placeholders to driver-specific format."""
         try:
             ast = sqlglot.parse_one(sql, dialect=self.dialect)
@@ -115,7 +115,7 @@ class ParameterContract:
                 return node
 
             translated_ast = ast.transform(transform_named)
-            return translated_ast.sql(dialect=self.dialect), params
+            return translated_ast.sql(dialect=self.dialect), dict(params)
 
     def validate_param_count(self, sql: str, params: Mapping[str, Any]) -> None:
         """Ensure all placeholders have corresponding params."""

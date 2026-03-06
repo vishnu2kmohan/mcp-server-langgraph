@@ -130,10 +130,7 @@ def upgrade() -> None:
         f"COMMENT ON COLUMN sessions.user_id IS "
         f"'Owner user ID (required). Sentinel value \"{SYSTEM_SENTINEL}\" for legacy data.'"
     )
-    op.execute(
-        f"COMMENT ON COLUMN messages.user_id IS "
-        f"'Owner user ID (required). Enables user-scoped message access.'"
-    )
+    op.execute("COMMENT ON COLUMN messages.user_id IS 'Owner user ID (required). Enables user-scoped message access.'")
 
 
 def downgrade() -> None:

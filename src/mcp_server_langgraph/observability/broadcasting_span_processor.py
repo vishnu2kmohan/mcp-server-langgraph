@@ -36,6 +36,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Strong references to fire-and-forget background tasks to prevent GC (RUF006)
+_background_tasks: set[asyncio.Task[Any]] = set()
+
 
 def span_to_broadcast_dict(span: ReadableSpan) -> dict[str, Any]:
     """
@@ -164,8 +167,9 @@ class BroadcastingSpanProcessor(SpanProcessor):
         try:
             loop = asyncio.get_running_loop()
             # Schedule async broadcast to WebSocket subscribers (fire-and-forget)
-            # Task reference intentionally not stored - best-effort broadcast
-            loop.create_task(self._broadcaster.broadcast_span(span_data))  # noqa: RUF006
+            task = loop.create_task(self._broadcaster.broadcast_span(span_data))
+            _background_tasks.add(task)
+            task.add_done_callback(_background_tasks.discard)
         except RuntimeError:
             # No running event loop - that's fine, span is already queued
             pass

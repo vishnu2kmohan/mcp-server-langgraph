@@ -103,13 +103,13 @@ _semantic_cache_operations: Any = None
 
 def _init_semantic_auth_metrics() -> bool:
     """Initialize Prometheus auth cache metrics lazily."""
-    global _prometheus_available  # noqa: PLW0603
-    global _semantic_auth_cache_total  # noqa: PLW0603
-    global _semantic_auth_cache_size  # noqa: PLW0603
-    global _semantic_cache_warming_duration  # noqa: PLW0603
-    global _semantic_tool_search_duration  # noqa: PLW0603
-    global _semantic_tool_search_results  # noqa: PLW0603
-    global _semantic_cache_operations  # noqa: PLW0603
+    global _prometheus_available
+    global _semantic_auth_cache_total
+    global _semantic_auth_cache_size
+    global _semantic_cache_warming_duration
+    global _semantic_tool_search_duration
+    global _semantic_tool_search_results
+    global _semantic_cache_operations
 
     if _prometheus_available is not None:
         return _prometheus_available

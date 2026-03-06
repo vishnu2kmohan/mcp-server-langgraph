@@ -325,7 +325,6 @@ def set_recommendation_service(service: AIRecommendationService | None) -> None:
 
 @alert_recommendation_router.get(
     "/",
-    response_model=AlertListResponse,  # noqa: FAST001 - explicit for OpenAPI docs
     summary="List alerts",
     description="Get all alerts with optional filtering by severity and state.",
 )
@@ -367,7 +366,6 @@ async def list_alerts(
 
 @alert_recommendation_router.get(
     "/{alert_id}/recommendation",
-    response_model=AIRecommendation,  # noqa: FAST001 - explicit for OpenAPI docs
     summary="Get alert recommendation",
     description="Get AI-generated recommendation for an alert.",
 )
@@ -442,7 +440,6 @@ async def get_alert_recommendation(
 
 @alert_recommendation_router.post(
     "/{alert_id}/recommendation/regenerate",
-    response_model=AIRecommendation,  # noqa: FAST001 - explicit for OpenAPI docs
     summary="Regenerate alert recommendation",
     description="Force regenerate AI recommendation for an alert.",
 )

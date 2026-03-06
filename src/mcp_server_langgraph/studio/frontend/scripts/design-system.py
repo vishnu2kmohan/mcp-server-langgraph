@@ -1158,9 +1158,7 @@ def should_skip(path: Path) -> bool:
     """Check if path should be skipped."""
     if any(skip in path.parts for skip in SKIP_DIRS):
         return True
-    if path.name in SKIP_FILES:
-        return True
-    return False
+    return path.name in SKIP_FILES
 
 
 def check_file(

@@ -487,7 +487,7 @@ def _initialize_registry() -> UnifiedToolRegistry:
         pass
 
     # Register native tools
-    for (_name, _provider), defn in NATIVE_TOOLS.items():
+    for defn in NATIVE_TOOLS.values():
         registry.register_native(
             name=defn.name,
             provider=defn.provider,

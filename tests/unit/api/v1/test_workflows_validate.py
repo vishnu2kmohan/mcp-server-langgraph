@@ -153,7 +153,11 @@ class TestValidateValidWorkflow:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -188,7 +192,11 @@ class TestValidateValidWorkflow:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -244,7 +252,11 @@ class TestValidateInvalidWorkflow:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -280,7 +292,11 @@ class TestValidateInvalidWorkflow:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -334,7 +350,11 @@ class TestValidateWorkflowNotFound:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True
@@ -379,7 +399,11 @@ class TestValidateUsesCentralizedValidator:
         app.include_router(workflows_router, prefix="/api/v1")
 
         mock_user = {"sub": "user-123", "email": "test@example.com"}
-        app.dependency_overrides[get_current_user] = lambda: mock_user
+
+        async def _override_current_user():
+            return mock_user
+
+        app.dependency_overrides[get_current_user] = _override_current_user
 
         mock_flags_obj = MagicMock()
         mock_flags_obj.enable_workflow_from_chat = True

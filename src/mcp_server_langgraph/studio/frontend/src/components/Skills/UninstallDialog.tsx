@@ -49,7 +49,7 @@ export function UninstallDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-6"
       onClick={onClose}
     >
       <div

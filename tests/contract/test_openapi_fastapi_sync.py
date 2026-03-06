@@ -24,7 +24,7 @@ from typing import Any
 
 import pytest
 
-pytestmark = [pytest.mark.contract, pytest.mark.xdist_group(name="openapi_sync")]
+pytestmark = [pytest.mark.unit, pytest.mark.contract, pytest.mark.xdist_group(name="openapi_sync")]
 
 
 def get_openapi_schema_path() -> Path:

@@ -40,7 +40,11 @@ def create_agents_test_app() -> FastAPI:
         "roles": ["user"],
         "realm_access": {"roles": ["user"]},
     }
-    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    async def _override_current_user():
+        return mock_user
+
+    app.dependency_overrides[get_current_user] = _override_current_user
 
     return app
 
@@ -195,7 +199,7 @@ class TestAgentMetricsEndpoint:
 
         app = create_agents_test_app()
 
-        with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
+        with patch("mcp_server_langgraph.api.v1.agents._get_metrics_client") as mock_get_client:
             mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             mock_client.query_instant = AsyncMock(
                 return_value=MagicMock(
@@ -217,7 +221,7 @@ class TestAgentMetricsEndpoint:
 
         app = create_agents_test_app()
 
-        with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
+        with patch("mcp_server_langgraph.api.v1.agents._get_metrics_client") as mock_get_client:
             mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             mock_client.query_instant = AsyncMock(
                 return_value=MagicMock(
@@ -242,7 +246,7 @@ class TestAgentMetricsEndpoint:
 
         app = create_agents_test_app()
 
-        with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
+        with patch("mcp_server_langgraph.api.v1.agents._get_metrics_client") as mock_get_client:
             mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             mock_client.query_instant = AsyncMock(
                 return_value=MagicMock(
@@ -280,7 +284,7 @@ class TestAgentMetricsErrorHandling:
 
         app = create_agents_test_app()
 
-        with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
+        with patch("mcp_server_langgraph.api.v1.agents._get_metrics_client") as mock_get_client:
             mock_get_client.return_value = None
 
             client = TestClient(app)
@@ -295,7 +299,7 @@ class TestAgentMetricsErrorHandling:
 
         app = create_agents_test_app()
 
-        with patch("mcp_server_langgraph.api.v1.agents.get_metrics_client") as mock_get_client:
+        with patch("mcp_server_langgraph.api.v1.agents._get_metrics_client") as mock_get_client:
             mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config - configured below
             # First query succeeds, second fails
             mock_client.query_instant = AsyncMock(

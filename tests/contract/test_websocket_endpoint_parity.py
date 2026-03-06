@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.contract, pytest.mark.websocket]
+pytestmark = [pytest.mark.unit, pytest.mark.contract, pytest.mark.websocket]
 
 
 def get_frontend_websocket_ts_path() -> Path:

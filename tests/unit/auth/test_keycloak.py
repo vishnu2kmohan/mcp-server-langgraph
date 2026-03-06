@@ -13,19 +13,19 @@ import pytest
 from tests.helpers.async_mock_helpers import configured_async_mock
 
 httpx = pytest.importorskip("httpx", reason="httpx required for Keycloak tests")
-import jwt  # noqa: E402
-from cryptography.hazmat.primitives import serialization  # noqa: E402
-from cryptography.hazmat.primitives.asymmetric import rsa  # noqa: E402
-from jwt.algorithms import RSAAlgorithm  # noqa: E402
+import jwt
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from jwt.algorithms import RSAAlgorithm
 
-from mcp_server_langgraph.auth.keycloak import (  # noqa: E402
+from mcp_server_langgraph.auth.keycloak import (
     KeycloakClient,
     KeycloakConfig,
     KeycloakUser,
     TokenValidator,
     sync_user_to_openfga,
 )
-from tests.conftest import get_user_id  # noqa: E402
+from tests.conftest import get_user_id
 
 pytestmark = pytest.mark.unit
 

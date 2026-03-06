@@ -870,6 +870,7 @@ class TestMySQLDriver:
 
     @pytest.fixture(autouse=True)
     def _mock_mysql(self):
+        """Mock MySQL driver availability for all tests in this class."""
         with patch("mcp_server_langgraph.execution.sql.drivers.mysql._HAS_MYSQL", True):
             yield
 
@@ -938,6 +939,7 @@ class TestDuckDBDriver:
 
     @pytest.fixture(autouse=True)
     def _mock_duckdb(self):
+        """Mock DuckDB driver availability for all tests in this class."""
         with patch("mcp_server_langgraph.execution.sql.drivers.duckdb._HAS_DUCKDB", True):
             yield
 
@@ -973,6 +975,7 @@ class TestRedshiftDriver:
 
     @pytest.fixture(autouse=True)
     def _mock_redshift(self):
+        """Mock Redshift driver availability for all tests in this class."""
         with patch("mcp_server_langgraph.execution.sql.drivers.redshift._HAS_REDSHIFT", True):
             yield
 
@@ -1017,6 +1020,7 @@ class TestClickHouseDriver:
 
     @pytest.fixture(autouse=True)
     def _mock_clickhouse(self):
+        """Mock ClickHouse driver availability for all tests in this class."""
         with patch(
             "mcp_server_langgraph.execution.sql.drivers.clickhouse._HAS_CLICKHOUSE",
             True,
@@ -1064,6 +1068,7 @@ class TestTrinoDriver:
 
     @pytest.fixture(autouse=True)
     def _mock_trino(self):
+        """Mock Trino driver availability for all tests in this class."""
         with patch("mcp_server_langgraph.execution.sql.drivers.trino._HAS_TRINO", True):
             yield
 

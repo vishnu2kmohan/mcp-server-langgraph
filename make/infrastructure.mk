@@ -138,7 +138,7 @@ test-e2e:
 	@bash scripts/utils/wait_for_services.sh docker-compose.test.yml
 	@echo ""
 	@echo "Running E2E tests..."
-	TESTING=true OTEL_SDK_DISABLED=true KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests KEYCLOAK_ADMIN_PASSWORD=admin JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only $(PYTEST) -n auto -m e2e -v --tb=short
+	TESTING=true OTEL_SDK_DISABLED=true KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests KEYCLOAK_ADMIN_PASSWORD=admin JWT_SECRET_KEY=agent-studio-jwt-secret-key-for-e2e-tests $(PYTEST) -n auto -m e2e -v --tb=short
 	@echo "E2E tests complete"
 
 test-e2e-ci:

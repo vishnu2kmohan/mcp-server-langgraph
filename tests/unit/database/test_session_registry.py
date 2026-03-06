@@ -156,8 +156,8 @@ def reset_engine_registry():
     from mcp_server_langgraph.database import session as session_module
 
     # Store original state (used for restoration in cleanup, but not asserted in tests)
-    _original_engines = session_module._engines.copy() if hasattr(session_module, "_engines") else {}  # noqa: F841
-    _original_makers = session_module._session_makers.copy() if hasattr(session_module, "_session_makers") else {}  # noqa: F841
+    _original_engines = session_module._engines.copy() if hasattr(session_module, "_engines") else {}
+    _original_makers = session_module._session_makers.copy() if hasattr(session_module, "_session_makers") else {}
 
     # Clear before test
     if hasattr(session_module, "_engines"):

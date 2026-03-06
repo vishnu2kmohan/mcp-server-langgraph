@@ -139,7 +139,7 @@ class RedisSessionManager:
             updated_at=now,
             messages=[],
             config=config or SessionConfig(),
-            user_id=user_id,
+            user_id=user_id,  # type: ignore[arg-type]
             status=status,
             workflow_id=workflow_id,
         )
@@ -300,7 +300,7 @@ class RedisSessionManager:
         if session is None:
             return None
 
-        message = Message(
+        message = Message(  # type: ignore[call-arg]
             message_id=str(uuid.uuid4()),
             role=role,
             content=content,

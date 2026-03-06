@@ -5,8 +5,8 @@ This module provides SQLAlchemy models and database session management
 for persisting cost tracking data, context graph decision traces, and other metrics.
 """
 
-from mcp_server_langgraph.database.models import (
-    Base,
+from mcp_server_langgraph.database.models import (  # type: ignore[attr-defined]
+    Base as Base,
     BudgetRecord,
     DecisionEdge,
     DecisionTrace,

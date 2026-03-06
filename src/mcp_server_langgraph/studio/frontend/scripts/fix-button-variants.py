@@ -446,10 +446,7 @@ def main() -> None:
     script_dir = Path(__file__).parent
     src_dir = script_dir.parent / "src"
 
-    if args.file:
-        files = [Path(args.file)]
-    else:
-        files = find_tsx_files(src_dir)
+    files = [Path(args.file)] if args.file else find_tsx_files(src_dir)
 
     total_fixes = 0
     files_fixed = 0

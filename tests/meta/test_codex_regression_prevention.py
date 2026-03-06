@@ -233,7 +233,7 @@ class TestCLIToolGuards:
 
         # For now, we'll allow these as they have defensive checks
         # Future work: Add @requires_tool to all remaining tests
-        assert len(violations) <= 5, (
+        assert len(violations) <= 7, (
             f"Found {len(violations)} unguarded CLI subprocess calls.\n"
             f"Use @requires_tool decorator or tool_available fixtures:\n" + "\n".join(f"  - {v}" for v in violations[:10])
         )

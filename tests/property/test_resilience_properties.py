@@ -256,7 +256,7 @@ class TestBulkheadProperties:
         num_tasks = max_concurrent * 2
         tasks = [concurrent_operation() for _ in range(num_tasks)]
 
-        _ = await asyncio.gather(*tasks, return_exceptions=True)  # noqa: F841
+        _ = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Property: Max observed concurrent should never exceed limit
         assert max_observed[0] <= max_concurrent

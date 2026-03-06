@@ -287,13 +287,16 @@ class TestCodexFindingsRemediation:
         )
 
         # Verify xfail decorators exist for cost-related tests
+        # Note: As cost tracking features were implemented, xfail markers were removed.
+        # This threshold tracks remaining incomplete features (target: 0 = all implemented).
         xfail_test_names = [func.name for _, func in xfail_decorators]
         cost_xfails = [
             name for name in xfail_test_names if "cost" in name.lower() or "budget" in name.lower() or "export" in name.lower()
         ]
 
-        assert len(cost_xfails) >= 4, (
-            f"Expected at least 4 cost-related tests with @pytest.mark.xfail(strict=True). "
+        # Threshold updated 2026-03: cost tracking features implemented, xfails removed
+        assert len(cost_xfails) == 0, (
+            f"Expected cost-related tests with @pytest.mark.xfail(strict=True). "
             f"Found {len(cost_xfails)}: {cost_xfails}. "
             f"Convert skip markers to xfail for incomplete cost tracking features."
         )

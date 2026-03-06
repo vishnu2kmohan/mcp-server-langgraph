@@ -186,7 +186,7 @@ class TestLLMFactoryProviderBulkhead:
 
         from mcp_server_langgraph.llm.factory import LLMFactory
 
-        _factory = LLMFactory(  # noqa: F841 - Created but skipped in RED phase
+        _factory = LLMFactory(
             provider="anthropic",
             model_name="claude-sonnet-4-5-20250929",
             api_key="test-key",
@@ -228,7 +228,7 @@ class TestLLMFactoryProviderBulkhead:
         """Fallback should use the fallback model's provider bulkhead, not primary."""
         from mcp_server_langgraph.llm.factory import LLMFactory
 
-        _factory = LLMFactory(  # noqa: F841 - Created but skipped in RED phase
+        _factory = LLMFactory(
             provider="anthropic",
             model_name="claude-sonnet-4-5-20250929",
             api_key="test-key",

@@ -20,6 +20,10 @@ from starlette.responses import Response
 
 
 logger = logging.getLogger(__name__)
+
+# Strong references to fire-and-forget background tasks to prevent GC (RUF006)
+_background_tasks: set[Any] = set()
+
 if TYPE_CHECKING:
     from starlette.types import ASGIApp
 
@@ -259,7 +263,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                 return
 
             # Create task to broadcast counter metric (fire-and-forget)
-            loop.create_task(  # noqa: RUF006
+            task = loop.create_task(
                 broadcaster.broadcast_metric(
                     name="http_requests_total",
                     value=1.0,  # Counter increment
@@ -268,9 +272,11 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                     metric_type=MetricType.COUNTER,
                 )
             )
+            _background_tasks.add(task)
+            task.add_done_callback(_background_tasks.discard)
 
             # Create task to broadcast duration metric (fire-and-forget)
-            loop.create_task(  # noqa: RUF006
+            task = loop.create_task(
                 broadcaster.broadcast_metric(
                     name="http_request_duration_seconds",
                     value=duration,
@@ -279,6 +285,8 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                     metric_type=MetricType.HISTOGRAM,
                 )
             )
+            _background_tasks.add(task)
+            task.add_done_callback(_background_tasks.discard)
         except Exception as e:
             # Don't let broadcast failures break the request
             logger.debug("Metrics broadcast failed: %s", e)

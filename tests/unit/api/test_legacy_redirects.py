@@ -47,14 +47,14 @@ class TestLegacyRedirectConfiguration:
 
         assert "/builder" in REDIRECT_MAPPINGS or any("/builder" in k for k in REDIRECT_MAPPINGS)
 
-    def test_redirect_config_includes_playground_api_routes(self) -> None:
+    def test_redirect_config_does_not_include_decommissioned_playground(self) -> None:
         """GIVEN redirect configuration
-        WHEN accessing playground API route mappings
-        THEN should include /playground/* -> /api/v1/sessions/*
+        WHEN accessing route mappings
+        THEN should NOT include /playground (decommissioned)
         """
         from mcp_server_langgraph.api.redirects import REDIRECT_MAPPINGS
 
-        assert "/playground" in REDIRECT_MAPPINGS or any("/playground" in k for k in REDIRECT_MAPPINGS)
+        assert "/playground" not in REDIRECT_MAPPINGS and not any("/playground" in k for k in REDIRECT_MAPPINGS)
 
 
 @pytest.mark.unit

@@ -203,7 +203,7 @@ def main():
 
     if high_priority_count > 0:
         print(
-            f"\n{Colors.RED}{Colors.BOLD}❌ Link check failed! Found {high_priority_count} high-priority broken links{Colors.RESET}"  # noqa: E501
+            f"\n{Colors.RED}{Colors.BOLD}❌ Link check failed! Found {high_priority_count} high-priority broken links{Colors.RESET}"
         )
         print(f"\n{Colors.YELLOW}💡 Quick fixes:{Colors.RESET}")
         print("  • Review file paths and update broken links")
