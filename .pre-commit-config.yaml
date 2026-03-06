@@ -118,7 +118,6 @@ repos:
     pass_filenames: false
     stages:
     - pre-commit
-    - pre-push
   - id: check-banned-imports
     name: Validate no banned/deprecated imports
     description: 'Detects usage of deprecated imports (e.g., toml instead of tomllib).
@@ -237,7 +236,6 @@ repos:
     pass_filenames: false
     stages:
     - pre-commit
-    - pre-push
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
     # CRITICAL: OTEL_SDK_DISABLED must be set BEFORE uv run to prevent pytest-xdist

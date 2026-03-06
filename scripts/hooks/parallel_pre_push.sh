@@ -117,6 +117,7 @@ LANE_3_HOOKS=(
 LANE_4_NAME="type-check-validators"
 LANE_4_HOOKS=(
     mypy
+    validate-fast
     validate-fast-precommit
     check-subprocess-timeout
     check-banned-imports
