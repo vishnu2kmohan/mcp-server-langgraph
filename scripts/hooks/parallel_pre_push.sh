@@ -315,6 +315,12 @@ run_lane() {
     local lane_cache="$HOME/.cache/pre-commit-lane-${lane_name}"
     mkdir -p "$lane_cache"
 
+    # Isolate GIT_INDEX_FILE per lane to prevent concurrent index.lock contention.
+    # pre-commit internally runs `git write-tree` which takes an exclusive lock on
+    # the index. Without isolation, concurrent lanes deadlock on index.lock.
+    local lane_index="$log_dir/.git-index-${lane_name}"
+    cp "${GIT_INDEX_FILE:-$(git rev-parse --git-dir)/index}" "$lane_index" 2>/dev/null || true
+
     (
         echo "=== Lane: $lane_name ===" > "$log_file"
         echo "Started: $(date '+%H:%M:%S')" >> "$log_file"
@@ -324,6 +330,7 @@ run_lane() {
         local lane_exit=0
         for hook in "${hooks[@]}"; do
             echo "--- Running: $hook ---" >> "$log_file"
+            GIT_INDEX_FILE="$lane_index" \
             PRE_COMMIT_HOME="$lane_cache" \
                 pre-commit run "$hook" --hook-stage pre-push \
                 --from-ref "$FROM_REF" --to-ref "$TO_REF" >> "$log_file" 2>&1
