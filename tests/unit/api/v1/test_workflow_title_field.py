@@ -151,7 +151,6 @@ def client(test_app: FastAPI) -> TestClient:
     return TestClient(test_app)
 
 
-@pytest.mark.xdist_group(name="test_workflow_title_field")
 class TestWorkflowTitleField:
     """Tests for workflow title field (TDD RED phase)."""
 

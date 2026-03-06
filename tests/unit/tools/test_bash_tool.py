@@ -79,7 +79,6 @@ def sandbox_and_feature_flags(sandbox_enabled_settings: MagicMock) -> Iterator[M
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_unit")
 class TestBashToolBasicFunctionality:
     """Test basic bash tool functionality."""
 
@@ -114,7 +113,6 @@ class TestBashToolBasicFunctionality:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_allowlist")
 class TestBashToolAllowlist:
     """Test command allowlist security controls."""
 
@@ -166,7 +164,6 @@ class TestBashToolAllowlist:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_security")
 class TestBashToolSecurity:
     """Test security controls for bash execution."""
 
@@ -228,7 +225,6 @@ class TestBashToolSecurity:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_execution")
 class TestBashToolExecution:
     """Test bash command execution."""
 
@@ -336,7 +332,6 @@ class TestBashToolExecution:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_output")
 class TestBashToolOutput:
     """Test output formatting and truncation."""
 
@@ -373,7 +368,6 @@ class TestBashToolOutput:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_schema")
 class TestBashToolInputSchema:
     """Test input schema validation."""
 
@@ -411,7 +405,6 @@ class TestBashToolInputSchema:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_feature_flag")
 class TestBashToolFeatureFlag:
     """Test feature flag integration."""
 
@@ -444,7 +437,6 @@ class TestBashToolFeatureFlag:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="bash_tool_exports")
 class TestBashToolExports:
     """Test module exports."""
 

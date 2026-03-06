@@ -431,7 +431,6 @@ class TestWorkflowShareRepositoryProtocol:
         assert hasattr(WorkflowShareRepositoryProtocol, "get_by_share_link")
 
 
-@pytest.mark.xdist_group(name="test_postgres_workflow_share_repository_structure")
 class TestPostgresWorkflowShareRepositoryStructure:
     """Tests for PostgresWorkflowShareRepository class structure."""
 

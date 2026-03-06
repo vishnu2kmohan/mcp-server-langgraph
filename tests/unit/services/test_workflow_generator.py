@@ -104,7 +104,6 @@ class TestWorkflowGeneratorClass:
         assert callable(WorkflowGenerator.generate_from_session)
 
 
-@pytest.mark.xdist_group(name="test_workflow_generator_integration")
 class TestWorkflowGeneratorIntegration:
     """Integration-style unit tests for workflow generation."""
 
@@ -244,7 +243,6 @@ class TestWorkflowGeneratorIntegration:
         assert 0.0 <= result.confidence <= 1.0
 
 
-@pytest.mark.xdist_group(name="workflow_generator_prompt_building")
 class TestWorkflowGeneratorPromptBuilding:
     """Tests for prompt building logic."""
 
@@ -286,7 +284,6 @@ class TestWorkflowGeneratorPromptBuilding:
         assert "llm" in system_prompt.lower()
 
 
-@pytest.mark.xdist_group(name="workflow_generator_factory")
 class TestCreateWorkflowGeneratorFactory:
     """Tests for workflow generator factory function."""
 

@@ -41,7 +41,6 @@ def sandbox_enabled_settings() -> Iterator[MagicMock]:
         yield mock_settings
 
 
-@pytest.mark.xdist_group(name="test_computer_use_flag")
 class TestComputerUseFeatureFlag:
     def teardown_method(self) -> None:
         gc.collect()
@@ -54,7 +53,6 @@ class TestComputerUseFeatureFlag:
         assert flags.enable_computer_use is False
 
 
-@pytest.mark.xdist_group(name="test_mouse_tools")
 class TestMouseInteractionTools:
     def teardown_method(self) -> None:
         gc.collect()
@@ -92,7 +90,6 @@ class TestMouseInteractionTools:
         assert result.get("selector") == "#submit-button"
 
 
-@pytest.mark.xdist_group(name="test_keyboard_tools")
 class TestKeyboardTools:
     def teardown_method(self) -> None:
         gc.collect()
@@ -114,7 +111,6 @@ class TestKeyboardTools:
         assert "hello" in json.dumps(result)
 
 
-@pytest.mark.xdist_group(name="test_navigation_tools")
 class TestNavigationTools:
     def teardown_method(self) -> None:
         gc.collect()

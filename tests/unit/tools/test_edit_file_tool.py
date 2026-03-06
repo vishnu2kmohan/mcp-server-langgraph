@@ -19,7 +19,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="edit_file_tool")
 class TestEditFileTool:
     """Test suite for edit_file tool."""
 
@@ -541,7 +540,6 @@ class TestEditFileTool:
         assert existing_file.read_text() == original_content
 
 
-@pytest.mark.xdist_group(name="edit_file_tool_integration")
 class TestEditFileToolIntegration:
     """Integration tests for edit_file tool with OpenFGA."""
 

@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.visual_verification
-@pytest.mark.xdist_group(name="visual_verification_helper")
 class TestVisualVerificationHelper:
     """Test visual verification helper functions."""
 
@@ -81,7 +80,6 @@ class TestVisualVerificationHelper:
 
 @pytest.mark.unit
 @pytest.mark.visual_verification
-@pytest.mark.xdist_group(name="visual_verification_extract_urls")
 class TestExtractURLs:
     """Test URL extraction from text."""
 
@@ -153,7 +151,6 @@ class TestExtractURLs:
 
 @pytest.mark.unit
 @pytest.mark.visual_verification
-@pytest.mark.xdist_group(name="visual_verification_prioritize_urls")
 class TestPrioritizeURLs:
     """Test URL prioritization logic."""
 
@@ -225,7 +222,6 @@ class TestPrioritizeURLs:
 
 @pytest.mark.unit
 @pytest.mark.visual_verification
-@pytest.mark.xdist_group(name="visual_verification_combine_results")
 class TestCombineVerificationResults:
     """Test result combination logic."""
 

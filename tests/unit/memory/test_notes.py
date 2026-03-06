@@ -589,7 +589,6 @@ class TestCheckpointManager:
 
 @pytest.mark.unit
 @pytest.mark.memory
-@pytest.mark.xdist_group(name="memory_notes_search")
 class TestNotesManagerSearch:
     """Additional tests for notes search functionality."""
 
@@ -675,7 +674,6 @@ class TestNotesManagerSearch:
 
 @pytest.mark.unit
 @pytest.mark.memory
-@pytest.mark.xdist_group(name="memory_notes_timestamps")
 class TestNotesManagerTimestamps:
     """Tests for note timestamp handling."""
 
@@ -757,7 +755,6 @@ class TestNotesManagerTimestamps:
 
 @pytest.mark.unit
 @pytest.mark.memory
-@pytest.mark.xdist_group(name="memory_notes_large")
 class TestNotesManagerLargeContent:
     """Tests for handling large notes and many notes."""
 
@@ -874,7 +871,6 @@ End of note"""
 
 @pytest.mark.unit
 @pytest.mark.memory
-@pytest.mark.xdist_group(name="memory_notes_markdown_parsing")
 class TestNotesManagerMarkdownParsing:
     """Tests for markdown parsing edge cases."""
 

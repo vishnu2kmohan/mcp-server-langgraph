@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="worker_agent_tool_binding_basic")
 class TestWorkerAgentToolBindingBasic:
     """Tests for WorkerAgent tool binding basic functionality."""
 
@@ -69,7 +68,6 @@ class TestWorkerAgentToolBindingBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="worker_agent_tool_resolution")
 class TestWorkerAgentToolResolution:
     """Tests for WorkerAgent tool resolution from request."""
 
@@ -157,7 +155,6 @@ class TestWorkerAgentToolResolution:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="worker_agent_merge_strategies")
 class TestWorkerAgentMergeStrategies:
     """Tests for WorkerAgent tool merge strategies."""
 
@@ -266,7 +263,6 @@ class TestWorkerAgentMergeStrategies:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="worker_agent_backward_compat")
 class TestWorkerAgentBackwardCompatibility:
     """Tests for WorkerAgent backward compatibility without capability provider."""
 
@@ -320,7 +316,6 @@ class TestWorkerAgentBackwardCompatibility:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="worker_agent_resolve_capabilities")
 class TestWorkerAgentResolveCapabilities:
     """Tests for WorkerAgent _resolve_capabilities method."""
 
@@ -381,7 +376,6 @@ class TestWorkerAgentResolveCapabilities:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="worker_agent_run_capabilities")
 class TestWorkerAgentRunUsesCapabilities:
     """Tests that run() actually wires and uses resolved capabilities.
 

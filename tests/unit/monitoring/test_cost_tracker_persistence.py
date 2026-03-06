@@ -54,7 +54,6 @@ def reset_singletons():
     _reset_cost_collector()
 
 
-@pytest.mark.xdist_group(name="test_cost_tracker_persistence")
 class TestCostMetricsCollectorPersistenceOrgFields:
     """Tests for organizational field persistence in _persist_to_database."""
 

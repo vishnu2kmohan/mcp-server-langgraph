@@ -13,7 +13,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_timeout_settings")
 class TestTimeoutEnvironmentVariables:
     """Verify timeout settings can be configured via explicit env vars."""
 
@@ -67,7 +66,6 @@ class TestTimeoutEnvironmentVariables:
         assert settings.session_idle_seconds == 3600
 
 
-@pytest.mark.xdist_group(name="test_timeout_validation")
 class TestTimeoutValidationRanges:
     """Verify timeout settings have proper validation ranges."""
 
@@ -166,7 +164,6 @@ class TestTimeoutValidationRanges:
             Settings()
 
 
-@pytest.mark.xdist_group(name="test_timeout_defaults")
 class TestTimeoutDefaults:
     """Verify timeout settings have sensible defaults."""
 

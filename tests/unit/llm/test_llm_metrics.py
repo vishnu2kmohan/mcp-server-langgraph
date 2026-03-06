@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.llm
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="llm_metrics")
 class TestLLMMetrics:
     """Test LLM metrics instrumentation."""
 

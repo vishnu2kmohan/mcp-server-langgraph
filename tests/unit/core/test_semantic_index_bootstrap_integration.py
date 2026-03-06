@@ -17,7 +17,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 
 
-@pytest.mark.xdist_group(name="semantic_index_config")
 class TestCacheWarmingConfiguration:
     """Tests for cache warming configuration settings."""
 
@@ -53,7 +52,6 @@ class TestCacheWarmingConfiguration:
             assert hasattr(settings, "auth_cache_warm_entries")
 
 
-@pytest.mark.xdist_group(name="semantic_index_bootstrap")
 class TestBootstrapCacheWarming:
     """Tests for bootstrap integration of cache warming."""
 

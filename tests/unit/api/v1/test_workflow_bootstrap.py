@@ -129,7 +129,6 @@ def expected_workflow() -> dict:
     }
 
 
-@pytest.mark.xdist_group(name="test_workflow_bootstrap")
 class TestWorkflowBootstrapEndpoint:
     """Tests for POST /api/v1/sessions/{id}/bootstrap-workflow endpoint."""
 
@@ -286,7 +285,6 @@ class TestWorkflowBootstrapEndpoint:
             assert call_args is not None
 
 
-@pytest.mark.xdist_group(name="test_workflow_bootstrapper")
 class TestWorkflowBootstrapperClass:
     """Tests for WorkflowBootstrapper class."""
 

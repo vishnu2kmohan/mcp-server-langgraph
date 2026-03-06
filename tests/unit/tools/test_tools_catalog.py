@@ -15,7 +15,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testtoolscatalog")
 class TestToolsCatalog:
     """Test suite for tools catalog"""
 
@@ -136,7 +135,6 @@ class TestToolsCatalog:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testtoolinvocation")
 class TestToolInvocation:
     """Test tool invocation patterns"""
 

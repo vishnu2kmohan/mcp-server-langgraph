@@ -24,7 +24,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.config]
 
 
-@pytest.mark.xdist_group(name="testcomplianceenvvarmigration")
 class TestComplianceEnvVarMigration:
     """Test backward-compatible migration from GDPR_* to COMPLIANCE_* env vars"""
 
@@ -254,7 +253,6 @@ class TestComplianceEnvVarMigration:
         assert "compliance" in settings.compliance_postgres_url or "gdpr" in settings.compliance_postgres_url
 
 
-@pytest.mark.xdist_group(name="testcomplianceenvvarproduction")
 class TestComplianceEnvVarProductionValidation:
     """Test production validation for compliance storage settings"""
 

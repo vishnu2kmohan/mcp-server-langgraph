@@ -23,7 +23,6 @@ pytestmark = pytest.mark.unit
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_jitter_strategies")
 class TestJitterStrategies:
     """Test jitter calculation strategies."""
 
@@ -135,7 +134,6 @@ class TestJitterStrategies:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_retry_after_parsing")
 class TestRetryAfterParsing:
     """Test Retry-After header parsing per RFC 7231."""
 
@@ -246,7 +244,6 @@ class TestRetryAfterParsing:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_overload_detection")
 class TestOverloadDetection:
     """Test overload error detection."""
 
@@ -329,7 +326,6 @@ class TestOverloadDetection:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_overload_config")
 class TestOverloadRetryConfig:
     """Test overload-specific retry configuration."""
 
@@ -392,7 +388,6 @@ class TestOverloadRetryConfig:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_llm_overload_error")
 class TestLLMOverloadError:
     """Test LLMOverloadError exception class."""
 
@@ -440,7 +435,6 @@ class TestLLMOverloadError:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_overload_retry_behavior")
 class TestOverloadRetryBehavior:
     """Test retry behavior for overload scenarios."""
 

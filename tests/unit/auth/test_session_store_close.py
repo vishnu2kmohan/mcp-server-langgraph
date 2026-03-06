@@ -13,7 +13,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="session_store_close")
 class TestSessionStoreClose:
     """Tests for SessionStore aclose() method."""
 

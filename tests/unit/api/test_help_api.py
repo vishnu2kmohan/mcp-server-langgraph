@@ -39,7 +39,6 @@ def mock_settings() -> Any:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="help_api_contextual")
 class TestContextualHelpAPI:
     """Test contextual help functionality."""
 
@@ -160,7 +159,6 @@ class TestContextualHelpAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="help_api_learning")
 class TestLearningPathAPI:
     """Test learning path functionality."""
 

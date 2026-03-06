@@ -25,7 +25,6 @@ from mcp_server_langgraph.agents.subagent import SubagentResult
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
-@pytest.mark.xdist_group(name="test_orchestrator_scale_effort")
 class TestOrchestratorScaleEffort:
     """Tests for scale_effort method."""
 
@@ -82,7 +81,6 @@ class TestOrchestratorScaleEffort:
         assert count >= 1
 
 
-@pytest.mark.xdist_group(name="test_orchestrator_execute")
 class TestOrchestratorExecute:
     """Tests for execute method."""
 
@@ -219,7 +217,6 @@ class TestOrchestratorExecute:
         mock_selector.select_model.assert_called_with("complicated")
 
 
-@pytest.mark.xdist_group(name="test_orchestrator_synthesize")
 class TestOrchestratorSynthesize:
     """Tests for synthesize method."""
 
@@ -293,7 +290,6 @@ class TestOrchestratorSynthesize:
         assert len(synthesis["outputs"]) == 0
 
 
-@pytest.mark.xdist_group(name="test_orchestrator_verifier")
 class TestOrchestratorVerifier:
     """Tests for get_verifier_model method."""
 

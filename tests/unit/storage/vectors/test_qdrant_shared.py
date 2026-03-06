@@ -20,7 +20,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="qdrant_shared")
 @pytest.mark.unit
 class TestQdrantSharedClient:
     """Tests for shared Qdrant client in storage/vectors/factory.py."""
@@ -199,7 +198,6 @@ def reset_async_qdrant_client():
         factory_module._async_qdrant_client = None
 
 
-@pytest.mark.xdist_group(name="qdrant_shared_async")
 @pytest.mark.unit
 class TestAsyncQdrantSharedClient:
     """Tests for shared async Qdrant client in storage/vectors/factory.py."""

@@ -25,7 +25,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.agents, pytest.mark.session_intellig
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_llm_summarize")
 class TestSessionSummarizeLLM:
     """Test summarize_session LLM integration."""
 
@@ -144,7 +143,6 @@ class TestSessionSummarizeLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_llm_group")
 class TestSessionGroupLLM:
     """Test group_sessions LLM integration."""
 
@@ -246,7 +244,6 @@ class TestSessionGroupLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_llm_similarity")
 class TestSessionSimilarityLLM:
     """Test find_similar_sessions LLM integration."""
 
@@ -359,7 +356,6 @@ class TestSessionSimilarityLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_llm_flags")
 class TestSessionIntelligenceFeatureFlags:
     """Test feature flag gating for session intelligence LLM calls."""
 

@@ -21,7 +21,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_semantic_index_di")
 class TestSemanticIndexManagerDependencyInjection:
     """Tests for SemanticIndexManager dependency injection into build_agent_graph."""
 
@@ -80,7 +79,6 @@ class TestSemanticIndexManagerDependencyInjection:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_calls_manager")
 class TestSelectToolsCallsSemanticIndexManager:
     """Tests verifying retrieve_tools actually calls SemanticIndexManager."""
 
@@ -217,7 +215,6 @@ class TestSelectToolsCallsSemanticIndexManager:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_fallback")
 class TestSelectToolsFallbackBehavior:
     """Tests for graceful fallback behavior in retrieve_tools."""
 

@@ -33,7 +33,6 @@ pytestmark = pytest.mark.skipif(not KUBERNETES_AVAILABLE, reason="Kubernetes pac
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="kubernetes_sandbox_async")
 class TestKubernetesSandboxAsyncExecute:
     """
     TDD tests for KubernetesSandbox.aexecute() - async non-blocking execution.

@@ -76,7 +76,6 @@ def create_mock_alerting_client(
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="fallback_alerting")
 class TestFallbackAlertingClient:
     """Unit tests for FallbackAlertingClient."""
 
@@ -384,7 +383,6 @@ class TestFallbackAlertingClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="fallback_alerting_metrics")
 class TestFallbackAlertingMetrics:
     """Unit tests for FallbackAlertingClient Prometheus metrics."""
 
@@ -678,7 +676,6 @@ class TestFallbackAlertingMetrics:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="fallback_alerting_edge_cases")
 class TestFallbackEdgeCases:
     """Tests for edge cases and uncovered paths in FallbackAlertingClient."""
 

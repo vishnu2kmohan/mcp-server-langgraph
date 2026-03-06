@@ -39,7 +39,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="context_ranker_class")
 class TestContextRankerClass:
     """Test ContextRanker class existence and structure."""
 
@@ -95,7 +94,6 @@ class TestContextRankerClass:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="context_ranking_logic")
 class TestContextRankingLogic:
     """Test context ranking scoring logic."""
 
@@ -272,7 +270,6 @@ class TestContextRankingFeatureFlag:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="dedup_methods")
 class TestSemanticDeduplicationMethods:
     """Test semantic deduplication method existence."""
 
@@ -296,7 +293,6 @@ class TestSemanticDeduplicationMethods:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="dedup_logic")
 class TestSemanticDeduplicationLogic:
     """Test semantic deduplication logic."""
 
@@ -361,7 +357,6 @@ class TestSemanticDeduplicationLogic:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="dedup_threshold")
 class TestDeduplicationThreshold:
     """Test deduplication threshold configuration."""
 
@@ -395,7 +390,6 @@ class TestDeduplicationThreshold:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="cosine_similarity")
 class TestCosineSimilarity:
     """Test cosine similarity calculation."""
 
@@ -441,7 +435,6 @@ class TestCosineSimilarity:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="ranked_context_model")
 class TestRankedContextModel:
     """Test RankedContext data model."""
 

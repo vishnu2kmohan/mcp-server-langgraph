@@ -47,7 +47,6 @@ def mock_workflow_storage() -> AsyncMock:
     return storage
 
 
-@pytest.mark.xdist_group(name="testlanggraphexecutionmanager")
 class TestLangGraphExecutionManager:
     """Tests for LangGraphExecutionManager."""
 

@@ -37,7 +37,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="lost_in_middle_flags")
 class TestLostInMiddleFeatureFlags:
     """Test feature flags for lost-in-middle mitigation."""
 
@@ -62,7 +61,6 @@ class TestLostInMiddleFeatureFlags:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="context_reorder")
 class TestContextReordering:
     """Test context reordering for lost-in-middle mitigation."""
 
@@ -151,7 +149,6 @@ class TestContextReordering:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="key_extraction")
 class TestKeyDecisionExtraction:
     """Test extraction of key decisions for attention optimization."""
 
@@ -209,7 +206,6 @@ class TestKeyDecisionExtraction:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="compaction_reorder")
 class TestCompactionWithReordering:
     """Test that compaction applies reordering when enabled."""
 
@@ -291,7 +287,6 @@ class TestContextRankingFeatureFlags:
 
 @pytest.mark.unit
 @pytest.mark.core
-@pytest.mark.xdist_group(name="dedup_flags")
 class TestSemanticDeduplicationFeatureFlags:
     """Test feature flags for semantic deduplication."""
 

@@ -16,7 +16,6 @@ from fastapi.testclient import TestClient
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="websocket_metrics_api")
 class TestWebSocketMetricsAPI:
     """Test WebSocket metrics submission API endpoint."""
 

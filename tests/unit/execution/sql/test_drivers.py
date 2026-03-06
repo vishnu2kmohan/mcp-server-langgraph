@@ -81,7 +81,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcancellationtype")
 class TestCancellationType:
     """Verify CancellationType enum values and members."""
 
@@ -117,7 +116,6 @@ class TestCancellationType:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testdatabasedriverabc")
 class TestDatabaseDriverABC:
     """Verify DatabaseDriver cannot be instantiated directly and a concrete
     subclass that implements all abstract methods works."""
@@ -185,7 +183,6 @@ class TestDatabaseDriverABC:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testquerylimits")
 class TestQueryLimits:
     """Verify QueryLimits defaults and from_sandbox factory."""
 
@@ -225,7 +222,6 @@ class TestQueryLimits:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testquerylimitsdataclass")
 class TestQueryLimitsDataclass:
     """Verify QueryLimits dataclass field values and behavior."""
 
@@ -261,7 +257,6 @@ class TestQueryLimitsDataclass:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testdriverregistry")
 class TestDriverRegistry:
     """Verify DriverRegistry register/get_driver/list_dialects behavior."""
 
@@ -368,7 +363,6 @@ class TestDriverRegistry:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsqlitedriver")
 class TestSQLiteDriver:
     """Verify SQLiteDriver behavior with in-memory database."""
 
@@ -456,7 +450,6 @@ class TestSQLiteDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testpostgresdriver")
 class TestPostgresDriver:
     """Verify PostgresDriver behavior with mocked asyncpg pool."""
 
@@ -556,7 +549,6 @@ class TestPostgresDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testbigquerydriver")
 class TestBigQueryDriver:
     """Verify BigQueryDriver behavior with mocked BigQuery client."""
 
@@ -624,7 +616,6 @@ class TestBigQueryDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsnowflakedriver")
 class TestSnowflakeDriver:
     """Verify SnowflakeDriver behavior with mocked Snowflake connection."""
 
@@ -699,7 +690,6 @@ class TestSnowflakeDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testdrivername")
 class TestDriverNameProperty:
     """Verify each driver exposes a driver_name property for ParameterContract lookup."""
 
@@ -798,7 +788,6 @@ class TestDriverNameProperty:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testabcsignaturecompliance")
 class TestABCSignatureCompliance:
     """Verify that the execute() method accepts both Sequence and Mapping params."""
 
@@ -861,7 +850,6 @@ class TestABCSignatureCompliance:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testmysqldriver")
 class TestMySQLDriver:
     """Verify MySQLDriver behavior with mocked aiomysql pool."""
 
@@ -930,7 +918,6 @@ class TestMySQLDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testduckdbdriver")
 class TestDuckDBDriver:
     """Verify DuckDBDriver behavior with mocked/real duckdb connection."""
 
@@ -966,7 +953,6 @@ class TestDuckDBDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testredshiftdriver")
 class TestRedshiftDriver:
     """Verify RedshiftDriver behavior with mocked redshift_connector."""
 
@@ -1011,7 +997,6 @@ class TestRedshiftDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testclickhousedriver")
 class TestClickHouseDriver:
     """Verify ClickHouseDriver behavior with mocked asynch client."""
 
@@ -1059,7 +1044,6 @@ class TestClickHouseDriver:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testTrinodriver")
 class TestTrinoDriver:
     """Verify TrinoDriver behavior with mocked trino connection."""
 

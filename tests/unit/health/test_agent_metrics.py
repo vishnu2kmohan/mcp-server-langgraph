@@ -14,7 +14,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.metrics]
 
 
-@pytest.mark.xdist_group(name="test_agent_metrics")
 class TestAgentCallMetrics:
     """Test agent call success/failure metrics."""
 

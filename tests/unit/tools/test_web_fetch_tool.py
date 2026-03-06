@@ -32,7 +32,6 @@ def sandbox_enabled_settings() -> Iterator[MagicMock]:
         yield mock_settings
 
 
-@pytest.mark.xdist_group(name="web_fetch_tool")
 class TestWebFetchTool:
     """Test suite for web_fetch tool (sandbox-backed)."""
 

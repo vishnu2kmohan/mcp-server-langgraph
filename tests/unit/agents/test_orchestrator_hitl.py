@@ -19,7 +19,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.multi_agent, pytest.mark.hitl]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_hitl")
 class TestOrchestratorHITLMethod:
     """Test suite for execute_with_hitl method existence and signature."""
 
@@ -52,7 +51,6 @@ class TestOrchestratorHITLMethod:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_hitl_confidence")
 class TestOrchestratorHITLConfidenceChecking:
     """Test suite for confidence-based HITL triggers."""
 
@@ -186,7 +184,6 @@ class TestOrchestratorHITLConfidenceChecking:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_hitl_approval_reason")
 class TestOrchestratorHITLApprovalReason:
     """Test suite for approval reason generation."""
 
@@ -274,7 +271,6 @@ class TestOrchestratorHITLApprovalReason:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_hitl_feature_flag")
 class TestOrchestratorHITLFeatureFlag:
     """Test suite for HITL feature flag gating."""
 
@@ -326,7 +322,6 @@ class TestOrchestratorHITLFeatureFlag:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_hitl_callback")
 class TestOrchestratorHITLCallback:
     """Test suite for approval callback handling."""
 
@@ -420,7 +415,6 @@ class TestOrchestratorHITLCallback:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_hitl_multiple")
 class TestOrchestratorHITLMultipleSubtasks:
     """Test suite for HITL with multiple subtasks."""
 

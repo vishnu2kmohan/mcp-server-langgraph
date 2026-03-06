@@ -80,7 +80,6 @@ MOCK_ALERTMANAGER_RESPONSE = [
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="mimir_alerting")
 class TestMimirAlertingClient:
     """Unit tests for MimirAlertingClient."""
 
@@ -424,7 +423,6 @@ class TestMimirAlertingClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="mimir_alerting_helpers")
 class TestMimirHelperFunctions:
     """Tests for _parse_iso_datetime, _map_severity, _map_state helper functions."""
 
@@ -514,7 +512,6 @@ class TestMimirHelperFunctions:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="mimir_alerting_edge_cases")
 class TestMimirEdgeCases:
     """Tests for edge cases and error paths in MimirAlertingClient."""
 

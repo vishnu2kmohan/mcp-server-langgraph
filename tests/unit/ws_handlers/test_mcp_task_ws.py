@@ -45,7 +45,6 @@ def mock_mcp_service() -> MagicMock:
     return service
 
 
-@pytest.mark.xdist_group(name="mcp_task_ws")
 class TestMCPTaskWebSocketHandler:
     """Test MCP Task WebSocket using WebSocketBase."""
 
@@ -251,7 +250,6 @@ class TestMCPTaskWebSocketHandler:
         assert close_args.kwargs.get("code") == 4001 or (close_args.args and close_args.args[0] == 4001)
 
 
-@pytest.mark.xdist_group(name="mcp_task_ws_router")
 class TestMCPTasksWebSocketRouterConfig:
     """Test MCP Tasks WebSocket endpoint configuration in ws_router.py."""
 

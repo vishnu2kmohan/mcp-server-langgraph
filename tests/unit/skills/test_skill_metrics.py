@@ -14,7 +14,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills, pytest.mark.metrics]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_metrics")
 class TestSkillMetricsDefinition:
     """Test suite for skill metrics definitions"""
 
@@ -78,7 +77,6 @@ class TestSkillMetricsDefinition:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_metrics_recording")
 class TestSkillMetricsRecording:
     """Test suite for skill metrics recording functions"""
 
@@ -163,7 +161,6 @@ class TestSkillMetricsRecording:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_metrics_labels")
 class TestSkillMetricsLabels:
     """Test suite for skill metrics labels"""
 

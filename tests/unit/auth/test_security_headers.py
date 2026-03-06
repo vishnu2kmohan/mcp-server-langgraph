@@ -15,7 +15,6 @@ from datetime import UTC
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testheadersanitization")
 class TestHeaderSanitization:
     """Test suite for HTTP header sanitization to prevent CWE-113"""
 
@@ -150,7 +149,6 @@ class TestHeaderSanitization:
         assert "\n" not in sanitized
 
 
-@pytest.mark.xdist_group(name="testheadersanitizationforfilenames")
 class TestHeaderSanitizationForFilenames:
     """Test header sanitization specifically for Content-Disposition filenames"""
 
@@ -208,7 +206,6 @@ class TestHeaderSanitizationForFilenames:
         assert len(safe_username) > 0
 
 
-@pytest.mark.xdist_group(name="testintegrationwithgdprendpoint")
 class TestIntegrationWithGDPREndpoint:
     """Integration tests for header security in GDPR data export endpoint"""
 

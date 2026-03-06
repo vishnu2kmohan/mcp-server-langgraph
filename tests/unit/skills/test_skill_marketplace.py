@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills, pytest.mark.skills_marketpla
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_config")
 class TestMarketplaceConfig:
     """Test suite for marketplace configuration"""
 
@@ -93,7 +92,6 @@ class TestMarketplaceConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_registry")
 class TestMarketplaceRegistry:
     """Test suite for marketplace registry management"""
 
@@ -214,7 +212,6 @@ class TestMarketplaceRegistry:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_client")
 class TestMarketplaceClient:
     """Test suite for marketplace client operations"""
 
@@ -246,7 +243,6 @@ class TestMarketplaceClient:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_installer")
 class TestSkillInstaller:
     """Test suite for skill installation"""
 
@@ -314,7 +310,6 @@ class TestSkillInstaller:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_github_api")
 class TestMarketplaceGitHubAPI:
     """Test suite for GitHub API integration"""
 
@@ -498,7 +493,6 @@ description: Research topics using web search
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_coverage")
 class TestMarketplaceCoverage:
     """Additional tests to improve marketplace.py coverage.
 
@@ -848,7 +842,6 @@ These are the instructions for the skill.
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_oci")
 class TestMarketplaceOCI:
     """Test suite for OCI registry marketplace type.
 
@@ -1151,7 +1144,6 @@ class TestMarketplaceOCI:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_registry_api")
 class TestMarketplaceRegistryAPI:
     """Test suite for custom registry marketplace type.
 
@@ -1463,7 +1455,6 @@ class TestMarketplaceRegistryAPI:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_metadata")
 class TestListSkillsWithMetadata:
     """Test suite for list_skills_with_metadata() method.
 
@@ -1865,7 +1856,6 @@ Instructions.
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_resilience")
 class TestMarketplaceRateLimitingAndRetry:
     """Test suite for rate limiting and retry logic.
 
@@ -2087,7 +2077,6 @@ class TestMarketplaceRateLimitingAndRetry:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_factory")
 class TestMarketplaceClientFactory:
     """Test suite for create_marketplace_client factory function.
 
@@ -2148,7 +2137,6 @@ class TestMarketplaceClientFactory:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_marketplace_concurrency")
 class TestMarketplaceBoundedConcurrency:
     """Test suite for bounded concurrency in parallel fetching.
 

@@ -634,7 +634,6 @@ class TestErrorHandling:
 
 @pytest.mark.unit
 @pytest.mark.mcp
-@pytest.mark.xdist_group(name="unit_mcp_server_stdio_main")
 class TestMCPServerMain:
     """Tests for main() function bootstrap sequence (v26)."""
 

@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_workflow_execution_init")
 class TestWorkflowExecutionHandlerInit:
     """Tests for WorkflowExecutionHandler initialization."""
 
@@ -71,7 +70,6 @@ class TestWorkflowExecutionHandlerInit:
         assert handler._metrics is mock_metrics
 
 
-@pytest.mark.xdist_group(name="websocket_workflow_execution_lifecycle")
 class TestWorkflowExecutionHandlerLifecycle:
     """Tests for WorkflowExecutionHandler lifecycle hooks."""
 
@@ -124,7 +122,6 @@ class TestWorkflowExecutionHandlerLifecycle:
         await handler.on_disconnect()
 
 
-@pytest.mark.xdist_group(name="websocket_workflow_execution_messages")
 class TestWorkflowExecutionHandlerMessages:
     """Tests for WorkflowExecutionHandler message handling."""
 
@@ -380,7 +377,6 @@ class TestWorkflowExecutionHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_workflow_execution_push")
 class TestWorkflowExecutionHandlerPush:
     """Tests for WorkflowExecutionHandler push functionality."""
 
@@ -608,7 +604,6 @@ class TestWorkflowExecutionHandlerPush:
         assert sent_data["payload"]["error"] == "Node failed: timeout"
 
 
-@pytest.mark.xdist_group(name="websocket_workflow_execution_protocol")
 class TestExecutionServiceProtocol:
     """Tests for ExecutionServiceProtocol."""
 

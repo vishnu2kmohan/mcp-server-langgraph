@@ -11,7 +11,6 @@ import pytest
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.mark.xdist_group(name="sql_init")
 class TestSQLModulePublicAPI:
     """Tests for SQL module __init__.py public API exports."""
 

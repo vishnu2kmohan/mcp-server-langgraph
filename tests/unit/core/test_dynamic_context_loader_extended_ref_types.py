@@ -19,7 +19,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_extended_ref_types_model")
 class TestContextReferenceExtendedTypes:
     """Tests for ContextReference with extended ref_types."""
 
@@ -86,7 +85,6 @@ class TestContextReferenceExtendedTypes:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_extended_ref_types_loading")
 class TestDynamicContextLoaderExtendedTypes:
     """Tests for loading tool, skill, and memory references."""
 
@@ -234,7 +232,6 @@ class TestDynamicContextLoaderExtendedTypes:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_extended_ref_types_filter")
 class TestSemanticSearchRefTypeFiltering:
     """Tests for filtering semantic search by ref_type."""
 
@@ -355,7 +352,6 @@ class TestSemanticSearchRefTypeFiltering:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_extended_ref_types_constants")
 class TestRefTypeConstants:
     """Tests for ref_type constants."""
 

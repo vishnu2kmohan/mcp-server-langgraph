@@ -25,7 +25,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="test_tempo_client")
 class TestTempoClientParseTraceSummary:
     """Test TempoClient._parse_trace_summary method."""
 

@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="base_agent_request")
 class TestAgentRequest:
     """Tests for AgentRequest dataclass."""
 
@@ -142,7 +141,6 @@ class TestAgentRequest:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="base_agent_result")
 class TestAgentResult:
     """Tests for AgentResult dataclass."""
 
@@ -248,7 +246,6 @@ class TestAgentResult:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="base_agent_abstract")
 class TestBaseAgent:
     """Tests for BaseAgent abstract class."""
 
@@ -303,7 +300,6 @@ class TestBaseAgent:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="worker_agent")
 class TestWorkerAgent:
     """Tests for WorkerAgent concrete implementation."""
 
@@ -366,7 +362,6 @@ class TestWorkerAgent:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="worker_agent_run")
 class TestWorkerAgentRun:
     """Tests for WorkerAgent.run execution."""
 

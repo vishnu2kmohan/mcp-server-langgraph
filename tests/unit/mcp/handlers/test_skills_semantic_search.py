@@ -78,7 +78,6 @@ def mock_skill_search_tool():
     return mock_tool
 
 
-@pytest.mark.xdist_group(name="test_skills_handler")
 class TestSkillsSemanticSearch:
     """Test semantic skill search integration."""
 

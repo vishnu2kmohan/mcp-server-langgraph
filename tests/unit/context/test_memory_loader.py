@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_loader_basic")
 class TestMemoryProgressiveLoaderBasic:
     """Tests for MemoryProgressiveLoader basic functionality."""
 
@@ -66,7 +65,6 @@ class TestMemoryProgressiveLoaderBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_entry")
 class TestMemoryEntry:
     """Tests for MemoryEntry dataclass."""
 
@@ -158,7 +156,6 @@ class TestMemoryEntry:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="loaded_memory")
 class TestLoadedMemory:
     """Tests for LoadedMemory dataclass."""
 
@@ -232,7 +229,6 @@ class TestLoadedMemory:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_loader_tiers")
 class TestMemoryProgressiveLoaderTiers:
     """Tests for MemoryProgressiveLoader tier handling."""
 
@@ -266,7 +262,6 @@ class TestMemoryProgressiveLoaderTiers:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_loader_load")
 class TestMemoryProgressiveLoaderLoad:
     """Tests for MemoryProgressiveLoader.load() method."""
 
@@ -411,7 +406,6 @@ class TestMemoryProgressiveLoaderLoad:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_loader_scope")
 class TestMemoryProgressiveLoaderScope:
     """Tests for MemoryProgressiveLoader scope handling."""
 

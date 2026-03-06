@@ -59,7 +59,6 @@ def preferences_client(preferences_app: FastAPI) -> TestClient:
     return TestClient(preferences_app)
 
 
-@pytest.mark.xdist_group(name="test_notification_preferences_api")
 class TestNotificationPreferencesAPI:
     """Tests for notification preferences API endpoints."""
 

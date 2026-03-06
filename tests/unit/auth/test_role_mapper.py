@@ -27,7 +27,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsimplerolemapping")
 class TestSimpleRoleMapping:
     """Tests for SimpleRoleMapping"""
 
@@ -109,7 +108,6 @@ class TestSimpleRoleMapping:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testgroupmapping")
 class TestGroupMapping:
     """Tests for GroupMapping"""
 
@@ -193,7 +191,6 @@ class TestGroupMapping:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testconditionalmapping")
 class TestConditionalMapping:
     """Tests for ConditionalMapping"""
 
@@ -332,7 +329,6 @@ class TestConditionalMapping:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrolemapper")
 class TestRoleMapper:
     """Tests for RoleMapper"""
 
@@ -632,7 +628,6 @@ group_mappings:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrolemapperintegration")
 class TestRoleMapperIntegration:
     """Integration tests for role mapper"""
 

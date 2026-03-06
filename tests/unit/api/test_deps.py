@@ -15,7 +15,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_deps_module_imports")
 class TestDepsModuleImports:
     """Test that all dependency providers can be imported."""
 
@@ -51,7 +50,6 @@ class TestDepsModuleImports:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_deps_get_settings")
 class TestGetSettings:
     """Test get_settings dependency provider."""
 
@@ -80,7 +78,6 @@ class TestGetSettings:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_deps_openfga_client")
 class TestGetOpenfgaClient:
     """Test get_openfga_client from request state."""
 
@@ -112,7 +109,6 @@ class TestGetOpenfgaClient:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_deps_http_client")
 class TestGetHttpClient:
     """Test get_http_client from request state."""
 
@@ -149,7 +145,6 @@ class TestGetHttpClient:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_deps_audit_service")
 class TestGetAuditService:
     """Test get_audit_service from request state."""
 
@@ -181,7 +176,6 @@ class TestGetAuditService:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_deps_db_session")
 class TestGetDbSession:
     """Test get_db_session generator."""
 
@@ -202,7 +196,6 @@ class TestGetDbSession:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_deps_cache_management")
 class TestDepsCacheManagement:
     """Test cache clearing for clean test isolation."""
 

@@ -22,7 +22,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_handler_init")
 class TestMCPWebSocketHandlerInit:
     """Tests for MCPWebSocketHandler initialization."""
 
@@ -89,7 +88,6 @@ class TestMCPWebSocketHandlerInit:
         assert valid_uuid
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_handler_lifecycle")
 class TestMCPWebSocketHandlerLifecycle:
     """Tests for MCPWebSocketHandler lifecycle hooks."""
 
@@ -151,7 +149,6 @@ class TestMCPWebSocketHandlerLifecycle:
         assert handler._mcp_handler is None
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_handler_messages")
 class TestMCPWebSocketHandlerMessages:
     """Tests for MCPWebSocketHandler message handling."""
 
@@ -296,7 +293,6 @@ class TestMCPWebSocketHandlerMessages:
         assert response.payload["error"]["code"] == -32603  # INTERNAL_ERROR
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_handler_validation")
 class TestMCPWebSocketHandlerValidation:
     """Tests for MCPWebSocketHandler JSON-RPC validation."""
 
@@ -380,7 +376,6 @@ class TestMCPWebSocketHandlerValidation:
         assert result is None
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_handler_error")
 class TestMCPWebSocketHandlerError:
     """Tests for MCPWebSocketHandler error response generation."""
 
@@ -415,7 +410,6 @@ class TestMCPWebSocketHandlerError:
         assert result["error"]["code"] == -32700
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_handler_notification")
 class TestMCPWebSocketHandlerNotification:
     """Tests for MCPWebSocketHandler notification sending."""
 

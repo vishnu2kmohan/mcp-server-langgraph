@@ -15,7 +15,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="database_registry")
 @pytest.mark.unit
 class TestSessionRegistry:
     """Tests for URL-keyed engine registry in database/session.py."""

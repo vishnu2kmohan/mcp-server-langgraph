@@ -13,7 +13,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="api_key_manager_close")
 class TestAPIKeyManagerClose:
     """Tests for APIKeyManager aclose() method."""
 

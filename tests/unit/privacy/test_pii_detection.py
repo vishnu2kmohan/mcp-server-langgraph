@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.pii]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_types")
 class TestPIIDetectionTypes:
     """Test suite for PII type definitions"""
 
@@ -59,7 +58,6 @@ class TestPIIDetectionTypes:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_email")
 class TestPIIDetectionEmail:
     """Test suite for email detection"""
 
@@ -109,7 +107,6 @@ class TestPIIDetectionEmail:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_phone")
 class TestPIIDetectionPhone:
     """Test suite for phone number detection"""
 
@@ -158,7 +155,6 @@ class TestPIIDetectionPhone:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_ssn")
 class TestPIIDetectionSSN:
     """Test suite for SSN detection"""
 
@@ -194,7 +190,6 @@ class TestPIIDetectionSSN:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_credit_card")
 class TestPIIDetectionCreditCard:
     """Test suite for credit card detection"""
 
@@ -230,7 +225,6 @@ class TestPIIDetectionCreditCard:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_ip")
 class TestPIIDetectionIPAddress:
     """Test suite for IP address detection"""
 
@@ -267,7 +261,6 @@ class TestPIIDetectionIPAddress:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_dob")
 class TestPIIDetectionDOB:
     """Test suite for date of birth detection"""
 
@@ -303,7 +296,6 @@ class TestPIIDetectionDOB:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_combined")
 class TestPIIDetectionCombined:
     """Test suite for combined PII detection scenarios"""
 
@@ -374,7 +366,6 @@ class TestPIIDetectionCombined:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_detection_feature_flag")
 class TestPIIDetectionFeatureFlag:
     """Test suite for PII detection feature flag integration"""
 

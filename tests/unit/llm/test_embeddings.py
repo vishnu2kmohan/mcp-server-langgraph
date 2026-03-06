@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="embedding_service_base")
 class TestEmbeddingServiceBase:
     """Tests for EmbeddingService abstract base class."""
 
@@ -46,7 +45,6 @@ class TestEmbeddingServiceBase:
         assert hasattr(EmbeddingService, "embed_batch")
 
 
-@pytest.mark.xdist_group(name="embedding_service_litellm")
 class TestLiteLLMEmbeddingService:
     """Tests for LiteLLM-based embedding service (multi-provider)."""
 
@@ -114,7 +112,6 @@ class TestLiteLLMEmbeddingService:
             assert results[1] == [0.4, 0.5, 0.6]
 
 
-@pytest.mark.xdist_group(name="embedding_service_inmemory")
 class TestInMemoryEmbeddingService:
     """Tests for InMemoryEmbeddingService (testing implementation)."""
 
@@ -184,7 +181,6 @@ class TestInMemoryEmbeddingService:
         assert all(len(v) == 768 for v in results)
 
 
-@pytest.mark.xdist_group(name="embedding_service_factory")
 class TestEmbeddingServiceFactory:
     """Tests for get_embedding_service factory function."""
 

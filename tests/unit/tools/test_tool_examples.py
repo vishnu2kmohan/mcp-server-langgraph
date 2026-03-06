@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.tool_examples]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_example_model")
 class TestToolExampleModel:
     """Test suite for ToolExample Pydantic model"""
 
@@ -86,7 +85,6 @@ class TestToolExampleModel:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_examples_registry")
 class TestToolExamplesRegistry:
     """Test suite for TOOL_EXAMPLES registry"""
 
@@ -136,7 +134,6 @@ class TestToolExamplesRegistry:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_get_examples_for_tool")
 class TestGetExamplesForTool:
     """Test suite for get_examples_for_tool function"""
 
@@ -175,7 +172,6 @@ class TestGetExamplesForTool:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_example_schema_validation")
 class TestExampleSchemaValidation:
     """Test suite for validating examples against tool schemas"""
 
@@ -210,7 +206,6 @@ class TestExampleSchemaValidation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_examples_serialization")
 class TestExamplesSerialization:
     """Test suite for serializing examples for MCP tools/list response"""
 
@@ -246,7 +241,6 @@ class TestExamplesSerialization:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_register_example")
 class TestRegisterExample:
     """Test suite for dynamically registering examples"""
 

@@ -25,7 +25,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="genai_semantic_conventions")
 class TestGenAISemanticConventions:
     """Test suite for GenAI semantic conventions in LLM spans."""
 

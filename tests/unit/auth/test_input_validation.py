@@ -16,7 +16,6 @@ from tests.conftest import get_user_id
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testthreadidvalidation")
 class TestThreadIdValidation:
     """Test suite for thread_id validation to prevent CWE-20"""
 
@@ -221,7 +220,6 @@ class TestThreadIdValidation:
         assert search_input.query == "test search"
 
 
-@pytest.mark.xdist_group(name="testconversationidusageincode")
 class TestConversationIdUsageInCode:
     """Integration tests verifying thread_id doesn't corrupt downstream systems"""
 

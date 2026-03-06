@@ -62,7 +62,6 @@ def _create_budget_test_app() -> FastAPI:
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="test_budget_crud")
 class TestBudgetCRUDEndpoints:
     """Tests for budget CRUD endpoints."""
 
@@ -285,7 +284,6 @@ class TestBudgetCRUDEndpoints:
             assert response.status_code == 404
 
 
-@pytest.mark.xdist_group(name="test_budget_router")
 class TestBudgetStatusEndpoint:
     """Tests for GET /cost/budget/status endpoint."""
 
@@ -393,7 +391,6 @@ class TestBudgetStatusEndpoint:
             assert float(data["remaining"]) == 150.0
 
 
-@pytest.mark.xdist_group(name="test_budget_anomaly_router")
 class TestBudgetAnomalyEndpoint:
     """Tests for GET /cost/budget/anomaly endpoint."""
 
@@ -506,7 +503,6 @@ class TestBudgetAnomalyEndpoint:
             assert data["severity"] == "critical"
 
 
-@pytest.mark.xdist_group(name="test_budget_forecast_router")
 class TestBudgetForecastEndpoint:
     """Tests for GET /cost/budget/forecast endpoint."""
 

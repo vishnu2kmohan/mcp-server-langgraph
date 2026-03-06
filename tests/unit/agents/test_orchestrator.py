@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.multi_agent]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_basic")
 class TestOrchestratorBasic:
     """Test suite for basic orchestrator functionality"""
 
@@ -48,7 +47,6 @@ class TestOrchestratorBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_decomposition")
 class TestOrchestratorDecomposition:
     """Test suite for task decomposition"""
 
@@ -96,7 +94,6 @@ class TestOrchestratorDecomposition:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_subagent")
 class TestSubagent:
     """Test suite for subagent functionality"""
 
@@ -128,7 +125,6 @@ class TestSubagent:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_subagent_llm")
 class TestSubagentLLMIntegration:
     """Test suite for subagent LLM factory integration"""
 
@@ -287,7 +283,6 @@ class TestSubagentLLMIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_coordinator")
 class TestCoordinator:
     """Test suite for task coordinator"""
 
@@ -322,7 +317,6 @@ class TestCoordinator:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_artifacts")
 class TestArtifacts:
     """Test suite for artifact storage"""
 
@@ -372,7 +366,6 @@ class TestArtifacts:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_model_selector")
 class TestModelSelector:
     """Test suite for three-tier model selection"""
 
@@ -440,7 +433,6 @@ class TestModelSelector:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_orchestrator_metrics_integration")
 class TestOrchestratorMetricsIntegration:
     """Test suite for verifying metrics are recorded during orchestration."""
 
@@ -522,7 +514,6 @@ class TestOrchestratorMetricsIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_subagent_metrics_integration")
 class TestSubagentMetricsIntegration:
     """Test suite for verifying metrics are recorded during subagent execution."""
 
@@ -586,7 +577,6 @@ class TestSubagentMetricsIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_model_selector_metrics_integration")
 class TestModelSelectorMetricsIntegration:
     """Test suite for verifying metrics are recorded during model selection."""
 

@@ -21,7 +21,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hitl, pytest.mark.multi_agent]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_hitl_metrics")
 class TestHITLMetricsRecording:
     """Test suite for HITL metrics recording functions."""
 
@@ -92,7 +91,6 @@ class TestHITLMetricsRecording:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_hitl_metrics_decisions")
 class TestHITLDecisionMetrics:
     """Test suite for HITL decision recording."""
 
@@ -167,7 +165,6 @@ class TestHITLDecisionMetrics:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_hitl_metrics_pending")
 class TestHITLPendingMetrics:
     """Test suite for HITL pending request tracking."""
 
@@ -213,7 +210,6 @@ class TestHITLPendingMetrics:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_hitl_metrics_counters")
 class TestHITLMetricsCounters:
     """Test suite for HITL metric counter definitions."""
 
@@ -268,7 +264,6 @@ class TestHITLMetricsCounters:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_hitl_tracing")
 class TestHITLTracing:
     """Test suite for HITL trace span helpers."""
 
@@ -391,7 +386,6 @@ class TestHITLTracing:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agent_task_metrics")
 class TestAgentTaskMetrics:
     """Test suite for agent task metrics (used for HITL intervention rate calculation).
 

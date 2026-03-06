@@ -743,7 +743,6 @@ class TestAIUXFeatureFlags:
         assert user_features["ai_nudges"] is True
 
 
-@pytest.mark.xdist_group(name="feature_flags_decorator")
 class TestFeatureGatedDecorator:
     """Test the @feature_gated decorator for easier testing."""
 
@@ -884,7 +883,6 @@ class TestFeatureGatedDecorator:
         assert result == "protected result"
 
 
-@pytest.mark.xdist_group(name="feature_flags_test_mode")
 class TestFeatureFlagsTestMode:
     """Test the test-mode override via environment variable."""
 
@@ -973,7 +971,6 @@ class TestFeatureFlagsTestMode:
         assert flags.is_test_mode is True
 
 
-@pytest.mark.xdist_group(name="feature_flags_hitl")
 class TestHITLFeatureFlags:
     """Test Human-in-the-Loop (HITL) feature flags for confidence-based approval."""
 
@@ -1145,7 +1142,6 @@ class TestHITLFeatureFlags:
         assert viewer_features["agent_hitl"] is True
 
 
-@pytest.mark.xdist_group(name="feature_flags_redis_l2")
 class TestFrontendRedisL2CacheFeatureFlags:
     """Test frontend Redis L2 cache feature flags for tiered caching."""
 
@@ -1237,7 +1233,6 @@ class TestFrontendRedisL2CacheFeatureFlags:
         assert user_features["frontend_redis_l2_cache"] is True
 
 
-@pytest.mark.xdist_group(name="feature_flags_intelligence")
 class TestGranularIntelligenceFeatureFlags:
     """Test granular intelligence feature flags for StudioShell AI capabilities.
 
@@ -1458,7 +1453,6 @@ class TestGranularIntelligenceFeatureFlags:
         assert features["conversation_intelligence"] is False
 
 
-@pytest.mark.xdist_group(name="feature_flags_consolidation")
 class TestFeatureFlagConsolidation:
     """Test Sprint Block 5 feature flag consolidation methods.
 
@@ -1782,7 +1776,6 @@ class TestFeatureFlagConsolidation:
         assert not any("enable_llm_suggestions" in msg for msg in warnings_list)
 
 
-@pytest.mark.xdist_group(name="feature_flags_orchestration")
 class TestOrchestrationFeatureFlags:
     """Tests for Agent Orchestration Architecture feature flags (ADR plan)."""
 

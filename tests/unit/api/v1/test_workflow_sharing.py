@@ -193,7 +193,6 @@ class TestPublicWorkflowAccessEndpoint:
         pytest.fail("GET /workflows/public/{share_link} route not found")
 
 
-@pytest.mark.xdist_group(name="test_workflow_sharing_integration")
 class TestWorkflowSharingIntegration:
     """Integration-style unit tests for workflow sharing functionality."""
 
@@ -354,7 +353,6 @@ class TestWorkflowSharingIntegration:
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.xdist_group(name="test_workflow_share_notifications")
 class TestWorkflowShareNotifications:
     """Tests for workflow share notification integration."""
 

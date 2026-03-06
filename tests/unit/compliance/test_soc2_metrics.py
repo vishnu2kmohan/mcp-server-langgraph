@@ -20,7 +20,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.compliance
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="soc2_metrics")
 class TestSOC2ComplianceMetrics:
     """Test SOC2 compliance metrics are recorded correctly."""
 

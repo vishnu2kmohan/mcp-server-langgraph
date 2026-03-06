@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="vector_settings_integration")
 class TestVectorSearchProviderSettings:
     """Tests for vector_search_provider Settings field."""
 
@@ -73,7 +72,6 @@ class TestVectorSearchProviderSettings:
         assert settings.vector_search_provider == "qdrant"
 
 
-@pytest.mark.xdist_group(name="vector_factory_settings")
 class TestVectorProviderFactorySettings:
     """Tests for get_vector_provider factory Settings integration."""
 
@@ -149,7 +147,6 @@ class TestVectorProviderFactorySettings:
                 assert isinstance(provider, QdrantVectorProvider)
 
 
-@pytest.mark.xdist_group(name="embedding_factory_settings")
 class TestEmbeddingServiceSettings:
     """Tests for get_embedding_service Settings integration."""
 

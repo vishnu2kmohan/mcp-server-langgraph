@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="conversation_loader_basic")
 class TestConversationProgressiveLoaderBasic:
     """Tests for ConversationProgressiveLoader basic functionality."""
 
@@ -55,7 +54,6 @@ class TestConversationProgressiveLoaderBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="conversation_message")
 class TestConversationMessage:
     """Tests for ConversationMessage dataclass."""
 
@@ -106,7 +104,6 @@ class TestConversationMessage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="loaded_context")
 class TestLoadedContext:
     """Tests for LoadedContext dataclass."""
 
@@ -164,7 +161,6 @@ class TestLoadedContext:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="conversation_loader_load")
 class TestConversationProgressiveLoaderLoad:
     """Tests for ConversationProgressiveLoader.load() method."""
 
@@ -247,7 +243,6 @@ class TestConversationProgressiveLoaderLoad:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="conversation_loader_estimate")
 class TestConversationProgressiveLoaderEstimate:
     """Tests for token estimation."""
 

@@ -311,7 +311,6 @@ class TestCostRetentionPolicyLogging:
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="test_cost_retention_performance")
 class TestCostRetentionPerformance:
     """Performance tests for CostRetentionPolicy cleanup operations.
 

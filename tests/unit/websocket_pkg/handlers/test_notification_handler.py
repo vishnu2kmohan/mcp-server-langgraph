@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_notification_handler_init")
 class TestNotificationHandlerInit:
     """Tests for NotificationWebSocketHandler initialization."""
 
@@ -61,7 +60,6 @@ class TestNotificationHandlerInit:
         assert handler._metrics is mock_metrics
 
 
-@pytest.mark.xdist_group(name="websocket_notification_handler_lifecycle")
 class TestNotificationHandlerLifecycle:
     """Tests for NotificationWebSocketHandler lifecycle hooks."""
 
@@ -160,7 +158,6 @@ class TestNotificationHandlerLifecycle:
         mock_broadcaster.unsubscribe.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="websocket_notification_handler_messages")
 class TestNotificationHandlerMessages:
     """Tests for NotificationWebSocketHandler message handling."""
 
@@ -210,7 +207,6 @@ class TestNotificationHandlerMessages:
         assert response is None
 
 
-@pytest.mark.xdist_group(name="websocket_notification_protocol")
 class TestBroadcasterProtocol:
     """Tests for BroadcasterProtocol."""
 

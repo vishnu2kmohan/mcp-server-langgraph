@@ -14,7 +14,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcalculatortool")
 class TestCalculatorTool:
     """Test suite for calculator tool"""
 
@@ -74,7 +73,6 @@ class TestCalculatorTool:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testaddtool")
 class TestAddTool:
     """Test suite for add tool"""
 
@@ -109,7 +107,6 @@ class TestAddTool:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsubtracttool")
 class TestSubtractTool:
     """Test suite for subtract tool"""
 
@@ -134,7 +131,6 @@ class TestSubtractTool:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testmultiplytool")
 class TestMultiplyTool:
     """Test suite for multiply tool"""
 
@@ -164,7 +160,6 @@ class TestMultiplyTool:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testdividetool")
 class TestDivideTool:
     """Test suite for divide tool"""
 
@@ -199,7 +194,6 @@ class TestDivideTool:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testtoolschemas")
 class TestToolSchemas:
     """Test tool schema generation"""
 

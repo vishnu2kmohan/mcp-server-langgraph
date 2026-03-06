@@ -75,7 +75,6 @@ def client(memory_app):
     return TestClient(memory_app)
 
 
-@pytest.mark.xdist_group(name="agentic_memory_notes_api")
 class TestNotesAPI:
     """Tests for Notes REST API endpoints."""
 
@@ -177,7 +176,6 @@ class TestNotesAPI:
         mock_notes_manager.search.assert_called_once_with("keyword")
 
 
-@pytest.mark.xdist_group(name="agentic_memory_checkpoint_api")
 class TestCheckpointAPI:
     """Tests for Checkpoint REST API endpoints."""
 
@@ -255,7 +253,6 @@ class TestCheckpointAPI:
         assert "Session Summary" in data["summary"]
 
 
-@pytest.mark.xdist_group(name="agentic_memory_feature_flag")
 class TestAgenticMemoryFeatureFlag:
     """Tests for feature flag gating."""
 

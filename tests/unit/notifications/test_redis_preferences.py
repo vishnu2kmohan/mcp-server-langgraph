@@ -30,7 +30,6 @@ def mock_redis() -> MagicMock:
     return mock
 
 
-@pytest.mark.xdist_group(name="test_redis_preferences_repository")
 class TestRedisPreferencesRepository:
     """Tests for Redis-backed preferences repository."""
 

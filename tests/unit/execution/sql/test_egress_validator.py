@@ -31,7 +31,6 @@ pytestmark = [
 
 @pytest.mark.unit
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testegressvalidatorblockedranges")
 class TestEgressValidatorBlockedRanges:
     """Verify that private/internal IP ranges are blocked."""
 
@@ -100,7 +99,6 @@ class TestEgressValidatorBlockedRanges:
 
 @pytest.mark.unit
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testegressvalidatormetadata")
 class TestEgressValidatorMetadata:
     """Verify that cloud metadata service hostnames are blocked."""
 
@@ -139,7 +137,6 @@ class TestEgressValidatorMetadata:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testegressvalidatorports")
 class TestEgressValidatorPorts:
     """Verify port allowlist enforcement."""
 
@@ -180,7 +177,6 @@ class TestEgressValidatorPorts:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testegressvalidatorallowlist")
 class TestEgressValidatorAllowlist:
     """Verify host allowlist enforcement."""
 
@@ -236,7 +232,6 @@ class TestEgressValidatorAllowlist:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testegressvalidatordns")
 class TestEgressValidatorDNS:
     """Verify DNS resolution handling."""
 
@@ -269,7 +264,6 @@ class TestEgressValidatorDNS:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testegressvalidatorresolve")
 class TestEgressValidatorResolve:
     """Verify validate_and_resolve returns IPs and prevents TOCTOU."""
 
@@ -316,7 +310,6 @@ class TestEgressValidatorResolve:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="testruntimeegressvalidator")
 class TestRuntimeEgressValidator:
     """Verify async RuntimeEgressValidator behavior."""
 

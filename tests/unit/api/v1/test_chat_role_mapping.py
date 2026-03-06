@@ -48,7 +48,6 @@ def convert_messages_to_langchain(messages: list[dict[str, Any]]) -> list:
     return langchain_messages
 
 
-@pytest.mark.xdist_group(name="chat_role_mapping")
 class TestChatRoleMapping:
     """Test suite for chat message role mapping."""
 
@@ -187,7 +186,6 @@ class TestChatRoleMapping:
         assert result[0].content == ""
 
 
-@pytest.mark.xdist_group(name="chat_role_mapping_integration")
 class TestChatRoleMappingIntegration:
     """Integration tests for role mapping in ChatServiceImpl._stream_via_llm_factory."""
 

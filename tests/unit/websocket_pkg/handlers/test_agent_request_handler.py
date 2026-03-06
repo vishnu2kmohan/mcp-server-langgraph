@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_agent_request_handler_init")
 class TestAgentRequestHandlerInit:
     """Tests for AgentRequestHandler initialization."""
 
@@ -57,7 +56,6 @@ class TestAgentRequestHandlerInit:
         assert handler._session_id == "sess-123"
 
 
-@pytest.mark.xdist_group(name="websocket_agent_request_handler_lifecycle")
 class TestAgentRequestHandlerLifecycle:
     """Tests for AgentRequestHandler lifecycle hooks."""
 
@@ -111,7 +109,6 @@ class TestAgentRequestHandlerLifecycle:
         assert handler._subscribed is False
 
 
-@pytest.mark.xdist_group(name="websocket_agent_request_handler_messages")
 class TestAgentRequestHandlerMessages:
     """Tests for AgentRequestHandler message handling."""
 
@@ -198,7 +195,6 @@ class TestAgentRequestHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_agent_request_handler_push")
 class TestAgentRequestHandlerPush:
     """Tests for AgentRequestHandler push functionality."""
 

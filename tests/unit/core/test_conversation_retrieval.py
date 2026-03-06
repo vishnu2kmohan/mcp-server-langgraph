@@ -17,7 +17,6 @@ from tests.helpers.async_mock_helpers import configured_async_mock
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.mark.xdist_group(name="conversation_retrieval")
 class TestConversationRetrieval:
     """Test suite for conversation retrieval from checkpointer."""
 

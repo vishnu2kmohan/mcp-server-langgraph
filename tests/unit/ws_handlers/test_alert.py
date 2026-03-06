@@ -45,7 +45,6 @@ def mock_alert_broadcaster() -> MagicMock:
     return broadcaster
 
 
-@pytest.mark.xdist_group(name="alert_ws")
 class TestAlertHandler:
     """Test Alert WebSocket using WebSocketBase."""
 

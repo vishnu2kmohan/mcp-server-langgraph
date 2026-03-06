@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_tool_registry")
 class TestHierarchicalToolRegistryBasic:
     """Tests for HierarchicalToolRegistry basic functionality."""
 
@@ -56,7 +55,6 @@ class TestHierarchicalToolRegistryBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_tool_registration")
 class TestHierarchicalToolRegistration:
     """Tests for scope-based tool registration."""
 
@@ -109,7 +107,6 @@ class TestHierarchicalToolRegistration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_tool_resolution")
 class TestHierarchicalToolResolution:
     """Tests for scope-based tool resolution."""
 
@@ -179,7 +176,6 @@ class TestHierarchicalToolResolution:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_tool_misc")
 class TestHierarchicalToolMisc:
     """Tests for miscellaneous tool registry functionality."""
 

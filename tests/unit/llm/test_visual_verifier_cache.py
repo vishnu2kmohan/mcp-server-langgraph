@@ -30,7 +30,6 @@ SCREENSHOT_TOOLS_PATCH = "mcp_server_langgraph.tools.screenshot_tools.capture_sc
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="visual_verifier_cache")
 class TestVisualVerificationScreenshotCache:
     """Tests for screenshot caching in visual verification."""
 
@@ -338,7 +337,6 @@ FEEDBACK: Good"""
             mock_cache.aget.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="visual_verifier_cache_metrics")
 class TestVisualVerificationCacheMetrics:
     """Tests for screenshot cache metrics."""
 

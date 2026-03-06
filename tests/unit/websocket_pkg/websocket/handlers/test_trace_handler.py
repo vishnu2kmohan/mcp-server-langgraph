@@ -72,7 +72,6 @@ def mock_user():
     )
 
 
-@pytest.mark.xdist_group(name="trace_handler")
 class TestTraceHandler:
     """Tests for TraceHandler class."""
 
@@ -254,7 +253,6 @@ class TestTraceHandler:
         assert "unknown" in response.payload.get("message", "").lower()
 
 
-@pytest.mark.xdist_group(name="trace_filter")
 class TestTraceFilter:
     """Tests for TraceFilter dataclass."""
 

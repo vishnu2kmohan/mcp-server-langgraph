@@ -344,7 +344,6 @@ class TestKBFocusFeatureFlag:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="chat_kb_focus_non_stream")
 class TestNonStreamingEndpointKBFocus:
     """Tests for kb_focus parameter in non-streaming create_completion endpoint.
 

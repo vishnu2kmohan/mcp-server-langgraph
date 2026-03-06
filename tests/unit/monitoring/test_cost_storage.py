@@ -463,7 +463,6 @@ class TestCostStorageConsistency:
         assert summary["completion_tokens"] == 500
 
 
-@pytest.mark.xdist_group(name="test_cost_storage_org")
 class TestMemoryCostStorageOrganizationalFiltering:
     """Test MemoryCostStorage organizational hierarchy filtering."""
 
@@ -623,7 +622,6 @@ class TestMemoryCostStorageOrganizationalFiltering:
         assert records[0].organization_id == "organization:acme"
 
 
-@pytest.mark.xdist_group(name="test_cost_storage_org_agg")
 @pytest.mark.cost
 class TestMemoryCostStorageOrganizationalAggregation:
     """Tests for database-level organizational cost aggregation."""
@@ -798,7 +796,6 @@ class TestMemoryCostStorageOrganizationalAggregation:
         assert org_costs[0].total_cost == Decimal("5.00")
 
 
-@pytest.mark.xdist_group(name="test_cost_storage_date_range")
 class TestMemoryCostStorageDateRangeFiltering:
     """Test MemoryCostStorage.get_records() date range filtering."""
 
@@ -1030,7 +1027,6 @@ class TestMemoryCostStorageDateRangeFiltering:
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="test_cost_storage_concurrent")
 class TestMemoryCostStorageConcurrency:
     """Test suite for concurrent operations on MemoryCostStorage.
 

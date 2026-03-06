@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_semantic_search_flags")
 class TestSemanticSearchFeatureFlags:
     """Tests for semantic search feature flag naming and configuration."""
 
@@ -79,7 +78,6 @@ class TestSemanticSearchFeatureFlags:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agent_config_semantic_flags")
 class TestAgentConfigSemanticSearchFlags:
     """Tests for AgentConfig semantic search flag wiring."""
 
@@ -175,7 +173,6 @@ class TestAgentConfigSemanticSearchFlags:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_settings_semantic_flags")
 class TestSettingsSemanticSearchFlags:
     """Tests for Settings semantic search configuration.
 

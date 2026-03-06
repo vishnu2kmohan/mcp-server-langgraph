@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="chat_service_impl")
 class TestChatServiceImpl:
     """Test suite for ChatServiceImpl."""
 

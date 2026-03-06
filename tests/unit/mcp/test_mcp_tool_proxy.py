@@ -306,7 +306,6 @@ class TestMCPToolProxyFactory:
         assert all("playwright" in p.name for p in proxies)
 
 
-@pytest.mark.xdist_group(name="mcp_tool_proxy_integration")
 class TestMCPToolProxyIntegration:
     """Integration tests for MCPToolProxy with agents."""
 

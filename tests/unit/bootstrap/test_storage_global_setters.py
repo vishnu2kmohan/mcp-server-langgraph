@@ -21,7 +21,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_storage_bootstrap_global_setters")
 class TestStorageBootstrapGlobalSetters:
     """
     Test that init_storage() calls all required global setters.

@@ -23,7 +23,6 @@ from mcp_server_langgraph.core.numeric import safe_average
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_module")
 class TestBaseOrchestratorModule:
     """Test base orchestrator module structure."""
 
@@ -56,7 +55,6 @@ class TestBaseOrchestratorModule:
         assert BaseResult is not None
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_abstract")
 class TestBaseOrchestratorIsAbstract:
     """Test that BaseOrchestrator is an abstract base class."""
 
@@ -97,7 +95,6 @@ class TestBaseOrchestratorIsAbstract:
         assert "feature_flag_name" in BaseOrchestrator.__abstractmethods__
 
 
-@pytest.mark.xdist_group(name="base_task")
 class TestBaseTask:
     """Test BaseTask dataclass."""
 
@@ -127,7 +124,6 @@ class TestBaseTask:
         assert task.data == {"key": "value"}
 
 
-@pytest.mark.xdist_group(name="base_result")
 class TestBaseResult:
     """Test BaseResult dataclass."""
 
@@ -178,7 +174,6 @@ class TestBaseResult:
         assert result.error is None
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_concrete")
 class TestConcreteOrchestrator:
     """Test concrete orchestrator implementation patterns."""
 
@@ -239,7 +234,6 @@ class TestConcreteOrchestrator:
         assert isinstance(orchestrator.is_enabled, bool)
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_execute")
 class TestBaseOrchestratorExecute:
     """Test execute method behavior."""
 
@@ -351,7 +345,6 @@ class TestBaseOrchestratorExecute:
         assert success_result.success is True
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_feature_flag")
 class TestBaseOrchestratorFeatureFlag:
     """Test feature flag integration."""
 
@@ -383,7 +376,6 @@ class TestBaseOrchestratorFeatureFlag:
         assert isinstance(orchestrator.is_enabled, bool)
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_generics")
 class TestBaseOrchestratorGenerics:
     """Test generic type support."""
 
@@ -460,7 +452,6 @@ class TestBaseOrchestratorGenerics:
         assert orchestrator is not None
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_metrics")
 class TestBaseOrchestratorMetrics:
     """Test metrics instrumentation in base orchestrator."""
 
@@ -514,7 +505,6 @@ class TestBaseOrchestratorMetrics:
         assert orchestrator.enable_metrics is False
 
 
-@pytest.mark.xdist_group(name="base_orchestrator_lifecycle")
 class TestBaseOrchestratorLifecycleCallbacks:
     """Test task lifecycle callback support."""
 

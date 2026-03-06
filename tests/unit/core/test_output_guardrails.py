@@ -392,7 +392,6 @@ class TestGuardrailChain:
         assert result.modified_output == "XAB"
 
 
-@pytest.mark.xdist_group(name="output_guardrails_integration")
 class TestOutputGuardrailsIntegration:
     """Integration tests for output guardrails with hook system."""
 

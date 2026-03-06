@@ -24,7 +24,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.agents, pytest.mark.diagram_intellig
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="diagram_intelligence_llm_analyze")
 class TestDiagramAnalyzeLLM:
     """Test analyze_diagram LLM integration."""
 
@@ -123,7 +122,6 @@ class TestDiagramAnalyzeLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="diagram_intelligence_llm_code")
 class TestDiagramToCodeLLM:
     """Test diagram_to_code LLM integration."""
 
@@ -227,7 +225,6 @@ class TestDiagramToCodeLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="diagram_intelligence_llm_flags")
 class TestDiagramIntelligenceFeatureFlags:
     """Test feature flag gating for diagram intelligence LLM calls."""
 

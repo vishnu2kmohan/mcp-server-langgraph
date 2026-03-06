@@ -24,7 +24,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.agents, pytest.mark.trace_intelligen
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="trace_intelligence_llm_summarize")
 class TestTraceSummarizeLLM:
     """Test summarize_trace LLM integration."""
 
@@ -146,7 +145,6 @@ class TestTraceSummarizeLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="trace_intelligence_llm_anomalies")
 class TestTraceAnomaliesLLM:
     """Test detect_trace_anomalies LLM integration."""
 
@@ -240,7 +238,6 @@ class TestTraceAnomaliesLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="trace_intelligence_llm_flags")
 class TestTraceIntelligenceFeatureFlags:
     """Test feature flag gating for trace intelligence LLM calls."""
 

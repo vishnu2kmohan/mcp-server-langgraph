@@ -648,7 +648,6 @@ class TestLLMIntegration:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="alert_correlation_api")
 class TestAlertCorrelationEndpoint:
     """Tests for POST /alerts/correlate endpoint."""
 

@@ -22,7 +22,6 @@ except ImportError:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcodevalidator")
 class TestCodeValidator:
     """Test suite for CodeValidator"""
 
@@ -331,7 +330,6 @@ class MyContext:
 
 @pytest.mark.unit
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testsecurityinjectionpatterns")
 class TestSecurityInjectionPatterns:
     """Security-focused tests for injection attack patterns"""
 
@@ -394,7 +392,6 @@ exec(f"{cmd}")
 
 @pytest.mark.unit
 @pytest.mark.property
-@pytest.mark.xdist_group(name="testcodevalidatorproperties")
 class TestCodeValidatorProperties:
     """Property-based tests using Hypothesis for fuzzing"""
 
@@ -462,7 +459,6 @@ class TestCodeValidatorProperties:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testvalidationresult")
 class TestValidationResult:
     """Test ValidationResult data class"""
 
@@ -495,7 +491,6 @@ class TestValidationResult:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcodevalidationerror")
 class TestCodeValidationError:
     """Test CodeValidationError exception"""
 

@@ -649,7 +649,6 @@ class TestAlertBroadcasterPushIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="broadcaster_router_integration")
 class TestAlertBroadcasterRouterIntegration:
     """Test AlertBroadcaster integration with AlertRouter."""
 
@@ -822,7 +821,6 @@ class TestAlertBroadcasterRouterIntegration:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_broadcaster_started_at")
 class TestAlertStartedAtConsistency:
     """Tests for handling optional started_at in Alert models.
 

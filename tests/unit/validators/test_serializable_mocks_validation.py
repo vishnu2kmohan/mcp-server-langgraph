@@ -29,7 +29,6 @@ from tests.fixtures.serializable_mocks import SerializableLLMMock, SerializableT
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testserializablellmmockvalidation")
 class TestSerializableLLMMockValidation:
     """
     Validation tests for SerializableLLMMock to prevent Pydantic conflicts.
@@ -190,7 +189,6 @@ class TestSerializableLLMMockValidation:
         assert mock._current_index == 0
 
 
-@pytest.mark.xdist_group(name="testserializabletoolmockvalidation")
 class TestSerializableToolMockValidation:
     """
     Validation tests for SerializableToolMock.
@@ -242,7 +240,6 @@ class TestSerializableToolMockValidation:
         assert tool.call_count == 1
 
 
-@pytest.mark.xdist_group(name="testmockcompatibilityguards")
 class TestMockCompatibilityGuards:
     """
     Guard tests to prevent incompatible patterns in mock objects.

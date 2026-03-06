@@ -15,7 +15,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="test_sorting")
 class TestSortingParams:
     """Tests for SortingParams class."""
 

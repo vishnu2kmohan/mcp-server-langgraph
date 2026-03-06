@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testappfactorypattern")
 class TestAppFactoryPattern:
     """Test app factory pattern for test configurability"""
 
@@ -133,7 +132,6 @@ class TestAppFactoryPattern:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testappfactorybackwardcompatibility")
 class TestAppFactoryBackwardCompatibility:
     """Test backward compatibility with existing deployment patterns"""
 
@@ -155,7 +153,6 @@ class TestAppFactoryBackwardCompatibility:
         assert isinstance(app, FastAPI)
 
 
-@pytest.mark.xdist_group(name="app_factory_router_tests")
 class TestAppFactoryRouterMounting:
     """
     P1: Test router mounting order and registration
@@ -205,7 +202,6 @@ class TestAppFactoryRouterMounting:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_app_startup_sequence")
 class TestAppStartupSequence:
     """Tests for app.py lifespan startup sequence (v26).
 

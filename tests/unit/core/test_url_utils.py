@@ -12,7 +12,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="url_utils")
 class TestEnsureRedisPasswordEncoded:
     """Test ensure_redis_password_encoded function."""
 

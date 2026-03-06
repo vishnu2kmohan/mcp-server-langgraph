@@ -36,7 +36,6 @@ pytestmark = pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker package not
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="docker_sandbox_async")
 class TestDockerSandboxAsyncExecute:
     """
     TDD tests for DockerSandbox.aexecute() - async non-blocking execution.

@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_audit_handler_init")
 class TestAuditHandlerInit:
     """Tests for AuditHandler initialization."""
 
@@ -44,7 +43,6 @@ class TestAuditHandlerInit:
         assert handler.user_id is None
 
 
-@pytest.mark.xdist_group(name="websocket_audit_handler_lifecycle")
 class TestAuditHandlerLifecycle:
     """Tests for AuditHandler lifecycle hooks."""
 
@@ -95,7 +93,6 @@ class TestAuditHandlerLifecycle:
         mock_broadcaster.unsubscribe.assert_called_once_with(mock_ws)
 
 
-@pytest.mark.xdist_group(name="websocket_audit_handler_messages")
 class TestAuditHandlerMessages:
     """Tests for AuditHandler message handling."""
 
@@ -181,7 +178,6 @@ class TestAuditHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_audit_handler_push")
 class TestAuditHandlerPush:
     """Tests for AuditHandler push functionality."""
 
@@ -230,7 +226,6 @@ class TestAuditHandlerPush:
         # Should not raise
 
 
-@pytest.mark.xdist_group(name="websocket_audit_filter")
 class TestAuditFilter:
     """Tests for AuditFilter dataclass."""
 

@@ -15,7 +15,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="test_filtering")
 class TestFilterParams:
     """Tests for FilterParams class."""
 

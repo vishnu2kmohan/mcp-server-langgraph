@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="react_runner_basic")
 class TestReactRunnerBasic:
     """Tests for ReACTRunner basic functionality."""
 
@@ -66,7 +65,6 @@ class TestReactRunnerBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="react_runner_execution")
 class TestReactRunnerExecution:
     """Tests for ReACTRunner execution."""
 
@@ -150,7 +148,6 @@ class TestReactRunnerExecution:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="react_runner_config")
 class TestReactRunnerConfiguration:
     """Tests for ReACTRunner configuration options."""
 
@@ -188,7 +185,6 @@ class TestReactRunnerConfiguration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="react_runner_state")
 class TestReactRunnerState:
     """Tests for ReACTRunner state management."""
 

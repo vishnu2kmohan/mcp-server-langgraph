@@ -201,7 +201,6 @@ class TestPrometheusMetricsModule:
             emit_auth_cache_metric(result="hit", resource_type="tool_index")
 
 
-@pytest.mark.xdist_group(name="semantic_index_prometheus_gauge")
 class TestPrometheusCacheSizeGauge:
     """Tests for Prometheus cache size gauge."""
 
@@ -259,7 +258,6 @@ class TestPrometheusCacheSizeGauge:
             assert last_call[1]["size"] == 1
 
 
-@pytest.mark.xdist_group(name="semantic_index_prometheus_histogram")
 class TestPrometheusCacheWarmingHistogram:
     """Tests for Prometheus cache warming duration histogram."""
 

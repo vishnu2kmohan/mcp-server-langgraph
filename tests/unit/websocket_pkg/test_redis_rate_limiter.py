@@ -615,7 +615,6 @@ class TestRateLimitInfo:
             assert info.remaining >= 0
 
 
-@pytest.mark.xdist_group(name="rate_limit_error_response")
 class TestRateLimitErrorResponse:
     """Tests for rate limit info in WebSocket error responses."""
 
@@ -676,7 +675,6 @@ class TestRateLimitErrorResponse:
         assert error_msg["payload"]["rate_limit"]["retry_after"] == 45
 
 
-@pytest.mark.xdist_group(name="redis_health_check")
 class TestRedisHealthCheck:
     """Tests for Redis connection health check."""
 

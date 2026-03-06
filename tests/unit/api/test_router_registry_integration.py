@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="test_router_registry_integration")
 class TestRouterRegistryIntegration:
     """Test RouterRegistry integration with application routers."""
 

@@ -22,7 +22,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.studio]
 
 
-@pytest.mark.xdist_group(name="test_artifact_name_generator")
 class TestArtifactNameGenerator:
     """Tests for ArtifactNameGenerator class."""
 
@@ -216,7 +215,6 @@ class TestArtifactNameGenerator:
         assert "user" in name.lower() or "profile" in name.lower()
 
 
-@pytest.mark.xdist_group(name="test_artifact_name_api")
 class TestArtifactNameEndpoint:
     """Tests for POST /api/v1/ai/artifact-name endpoint."""
 
@@ -327,7 +325,6 @@ class TestArtifactNameEndpoint:
             assert "name" in data
 
 
-@pytest.mark.xdist_group(name="test_artifact_name_llm_factory")
 class TestArtifactNameGeneratorLLMFactory:
     """Tests for LLMFactory integration (SOLID compliance).
 

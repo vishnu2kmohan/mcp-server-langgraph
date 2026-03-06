@@ -30,7 +30,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="clarification_types")
 class TestClarificationTypeEnum:
     """Test ClarificationType enum."""
 
@@ -74,7 +73,6 @@ class TestClarificationTypeEnum:
         assert ClarificationType.CONFIRMATION.value == "confirmation"
 
 
-@pytest.mark.xdist_group(name="clarification_option")
 class TestClarificationOption:
     """Test ClarificationOption model."""
 
@@ -136,7 +134,6 @@ class TestClarificationOption:
         assert option.is_recommended is False
 
 
-@pytest.mark.xdist_group(name="clarification_request")
 class TestClarificationRequest:
     """Test ClarificationRequest model."""
 
@@ -230,7 +227,6 @@ class TestClarificationRequest:
         assert request.context["key"] == "value"
 
 
-@pytest.mark.xdist_group(name="clarification_response")
 class TestClarificationResponse:
     """Test ClarificationResponse model."""
 
@@ -307,7 +303,6 @@ class TestClarificationResponse:
         assert response.responded_at is not None
 
 
-@pytest.mark.xdist_group(name="clarification_helpers")
 class TestClarificationHelperFunctions:
     """Test clarification helper functions."""
 
@@ -392,7 +387,6 @@ class TestClarificationHelperFunctions:
         assert thorough_opt["is_recommended"] is True
 
 
-@pytest.mark.xdist_group(name="clarification_state")
 class TestClarificationStateManagement:
     """Test clarification state updates."""
 

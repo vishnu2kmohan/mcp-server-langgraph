@@ -23,7 +23,6 @@ from mcp_server_langgraph.api.v1.projects import projects_router
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_remove_connection_from_project")
 class TestRemoveConnectionFromProject:
     """Tests for DELETE /{project_id}/connections/{connection_id} endpoint."""
 
@@ -77,7 +76,6 @@ class TestRemoveConnectionFromProject:
         pytest.fail("DELETE /projects/{project_id}/connections/{connection_id} route not found")
 
 
-@pytest.mark.xdist_group(name="test_remove_connection_integration")
 class TestRemoveConnectionIntegration:
     """Integration-style unit tests for remove connection functionality."""
 

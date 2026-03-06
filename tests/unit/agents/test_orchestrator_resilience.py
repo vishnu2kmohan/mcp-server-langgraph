@@ -19,7 +19,6 @@ from mcp_server_langgraph.core.feature_flags import feature_flags
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
-@pytest.mark.xdist_group(name="orchestrator_resilience_flags")
 class TestOrchestratorResilienceFeatureFlags:
     """Test feature flags for orchestrator resilience."""
 
@@ -60,7 +59,6 @@ class TestOrchestratorResilienceFeatureFlags:
         assert feature_flags.orchestrator_circuit_breaker_threshold == 3
 
 
-@pytest.mark.xdist_group(name="orchestrator_resilience_wrapper")
 class TestOrchestratorResilienceWrapper:
     """Test resilience wrapper functions for orchestrator."""
 
@@ -81,7 +79,6 @@ class TestOrchestratorResilienceWrapper:
         assert callable(resilient_subagent_execute)
 
 
-@pytest.mark.xdist_group(name="orchestrator_resilience_execute")
 class TestOrchestratorResilienceExecution:
     """Test resilience during orchestrator execution."""
 
@@ -128,7 +125,6 @@ class TestOrchestratorResilienceExecution:
             assert result.success
 
 
-@pytest.mark.xdist_group(name="coordinator_resilience")
 class TestCoordinatorResilienceIntegration:
     """Test resilience integration with Coordinator."""
 
@@ -156,7 +152,6 @@ class TestCoordinatorResilienceIntegration:
         assert "timeout" in sig.parameters or len(sig.parameters) >= 0
 
 
-@pytest.mark.xdist_group(name="orchestrator_circuit_breaker")
 class TestOrchestratorCircuitBreaker:
     """Test circuit breaker for orchestrator."""
 
@@ -186,7 +181,6 @@ class TestOrchestratorCircuitBreaker:
         assert orchestrator_cb.fail_max == 3
 
 
-@pytest.mark.xdist_group(name="orchestrator_bulkhead")
 class TestOrchestratorBulkhead:
     """Test bulkhead (concurrency limit) for orchestrator."""
 
@@ -215,7 +209,6 @@ class TestOrchestratorBulkhead:
         assert bulkhead_config.llm_limit == 10
 
 
-@pytest.mark.xdist_group(name="orchestrator_resilience_metrics")
 class TestOrchestratorResilienceMetrics:
     """Test metrics for orchestrator resilience."""
 
@@ -244,7 +237,6 @@ class TestOrchestratorResilienceMetrics:
         # No exception means metric was recorded
 
 
-@pytest.mark.xdist_group(name="orchestrator_resilience_disabled")
 class TestOrchestratorResilienceDisabled:
     """Test orchestrator behavior when resilience is disabled."""
 
@@ -277,7 +269,6 @@ class TestOrchestratorResilienceDisabled:
         assert isinstance(results, list)
 
 
-@pytest.mark.xdist_group(name="orchestrator_circuit_breaker_integration")
 class TestOrchestratorCircuitBreakerIntegration:
     """Test circuit breaker integration with orchestrator resilience.
 

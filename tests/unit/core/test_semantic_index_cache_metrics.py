@@ -45,7 +45,6 @@ def mock_openfga_client() -> AsyncMock:
     return client
 
 
-@pytest.mark.xdist_group(name="semantic_index_cache_metrics")
 class TestAuthorizationCacheMetrics:
     """Tests for authorization cache Prometheus metrics."""
 
@@ -153,7 +152,6 @@ class TestAuthorizationCacheMetrics:
         assert stats["hits"] == 0
 
 
-@pytest.mark.xdist_group(name="semantic_index_cache_size_limits")
 class TestAuthorizationCacheSizeLimits:
     """Tests for authorization cache size limits."""
 
@@ -241,7 +239,6 @@ class TestAuthorizationCacheSizeLimits:
         assert stats["size"] == 2
 
 
-@pytest.mark.xdist_group(name="semantic_index_cache_stats_extended")
 class TestAuthorizationCacheStatsExtended:
     """Extended tests for cache statistics."""
 

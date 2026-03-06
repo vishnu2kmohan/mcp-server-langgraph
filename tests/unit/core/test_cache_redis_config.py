@@ -98,7 +98,6 @@ class TestRedisURLParsing:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="testredisconnectionpool")
 class TestRedisConnectionPool:
     """Validate Redis connection pool configuration"""
 
@@ -160,7 +159,6 @@ class TestRedisConnectionPool:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="testredisfailover")
 class TestRedisFailover:
     """Validate graceful degradation when Redis is unavailable"""
 
@@ -272,7 +270,6 @@ class TestRedisDatabaseIsolation:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="testredisresilience")
 class TestRedisResilience:
     """Validate Redis retry and resilience patterns"""
 
@@ -375,7 +372,6 @@ class TestRedisProductionReadiness:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="testredisintegration")
 class TestRedisIntegration:
     """Integration tests for Redis with application components"""
 

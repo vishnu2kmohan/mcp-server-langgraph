@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="test_preferences_wiring")
 class TestCreatePreferencesRepository:
     """Tests for create_preferences_repository helper function."""
 

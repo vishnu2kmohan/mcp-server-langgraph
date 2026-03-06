@@ -13,7 +13,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_graph_builder_imports")
 class TestGraphBuilderImports:
     """Test that graph builder is importable."""
 
@@ -31,7 +30,6 @@ class TestGraphBuilderImports:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_graph_topology_with_config")
 class TestGraphTopologyWithConfig:
     """Test that graph topology changes based on AgentConfig."""
 
@@ -160,7 +158,6 @@ class TestGraphTopologyWithConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_core_nodes_always_present")
 class TestCoreNodesAlwaysPresent:
     """Test that core nodes are always present regardless of config."""
 
@@ -212,7 +209,6 @@ class TestCoreNodesAlwaysPresent:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_minimal_graph")
 class TestMinimalGraph:
     """Test minimal graph configuration."""
 

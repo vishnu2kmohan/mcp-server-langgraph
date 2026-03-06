@@ -963,7 +963,6 @@ class TestAuthFallbackWithExternalProviders:
         mock_keycloak.get_user_by_username.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="auth_middleware_production_tests")
 class TestAuthMiddlewareProductionControls:
     """
     CRITICAL P0: Test production environment security controls

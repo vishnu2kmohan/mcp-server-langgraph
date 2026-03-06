@@ -25,7 +25,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlogredactorsqlpassword")
 class TestSQLLogRedactorPassword:
     """Verify password-related redaction patterns in SQL strings."""
 
@@ -61,7 +60,6 @@ class TestSQLLogRedactorPassword:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlogredactorsqlsensitive")
 class TestSQLLogRedactorSensitivePatterns:
     """Verify redaction of secret, api_key, and token patterns."""
 
@@ -93,7 +91,6 @@ class TestSQLLogRedactorSensitivePatterns:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlogredactorsqluri")
 class TestSQLLogRedactorURIPattern:
     """Verify connection URI credential redaction."""
 
@@ -120,7 +117,6 @@ class TestSQLLogRedactorURIPattern:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlogredactorsqlnofalsepositive")
 class TestSQLLogRedactorNoFalsePositives:
     """Verify that non-sensitive SQL is not modified."""
 
@@ -144,7 +140,6 @@ class TestSQLLogRedactorNoFalsePositives:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlogredactorparams")
 class TestSQLLogRedactorParams:
     """Verify parameter redaction based on key sensitivity."""
 
@@ -237,7 +232,6 @@ class TestSQLLogRedactorParams:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testexecutionloggerfingerprint")
 class TestSQLExecutionLoggerFingerprint:
     """Verify query fingerprinting replaces literals with placeholders."""
 
@@ -288,7 +282,6 @@ class TestSQLExecutionLoggerFingerprint:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testexecutionloggerlogquery")
 class TestSQLExecutionLoggerLogQuery:
     """Verify structured log_query output with mock logger."""
 
@@ -406,7 +399,6 @@ class TestSQLExecutionLoggerLogQuery:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testexecutionloggerconstructor")
 class TestSQLExecutionLoggerConstructor:
     """Verify default and custom logger initialization."""
 

@@ -32,7 +32,6 @@ if TYPE_CHECKING:
     )
 
 
-@pytest.mark.xdist_group(name="cost_service_impl")
 class TestCostServiceImpl:
     """Test suite for CostServiceImpl."""
 

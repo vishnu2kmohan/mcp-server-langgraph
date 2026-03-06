@@ -50,7 +50,6 @@ def test_app(mock_user: dict[str, Any]) -> FastAPI:
     return app
 
 
-@pytest.mark.xdist_group(name="test_session_description_field")
 class TestSessionDescriptionField:
     """Tests for session description field (TDD RED phase)."""
 

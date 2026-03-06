@@ -66,7 +66,6 @@ def mock_genui_orchestrator() -> MagicMock:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="genui_api")
 class TestGenUIAPIEndpoint:
     """Test POST /api/v1/studio/genui endpoint."""
 
@@ -169,7 +168,6 @@ class TestGenUIAPIEndpoint:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="genui_api_flags")
 class TestGenUIFeatureFlag:
     """Test feature flag gating for GenUI endpoint."""
 

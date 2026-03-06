@@ -24,7 +24,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="ai_explanation_imports")
 class TestAIExplanationImports:
     """Test AI explanation models can be imported."""
 
@@ -59,7 +58,6 @@ class TestAIExplanationImports:
         assert ExplanationType is not None
 
 
-@pytest.mark.xdist_group(name="ai_explanation_enum")
 class TestExplanationType:
     """Test ExplanationType enum values."""
 
@@ -96,7 +94,6 @@ class TestExplanationType:
         assert ExplanationType.EVIDENCE.value == "evidence"
 
 
-@pytest.mark.xdist_group(name="confidence_factor_model")
 class TestConfidenceFactorModel:
     """Test ConfidenceFactor model validation."""
 
@@ -154,7 +151,6 @@ class TestConfidenceFactorModel:
         assert data["evidence"] == "Query could mean X or Y"
 
 
-@pytest.mark.xdist_group(name="alternative_suggestion_model")
 class TestAlternativeSuggestionModel:
     """Test AlternativeSuggestion model validation."""
 
@@ -216,7 +212,6 @@ class TestAlternativeSuggestionModel:
         assert data["trade_off"] == "Adds one extra interaction step"
 
 
-@pytest.mark.xdist_group(name="ai_explanation_model")
 class TestAIExplanationModel:
     """Test AIExplanation model validation."""
 
@@ -388,7 +383,6 @@ class TestAIExplanationModel:
         assert "ambiguous" in explanation.reasoning_trace[1]
 
 
-@pytest.mark.xdist_group(name="ai_explanation_serialization")
 class TestAIExplanationSerialization:
     """Test AIExplanation model serialization."""
 

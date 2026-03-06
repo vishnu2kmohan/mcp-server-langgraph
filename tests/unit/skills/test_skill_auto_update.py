@@ -16,7 +16,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.skills, pytest.mark.skills_marketplace]
 
 
-@pytest.mark.xdist_group(name="skills_auto_update")
 class TestSkillsAutoUpdateScheduler:
     """Tests for skills auto-update scheduler."""
 
@@ -88,7 +87,6 @@ class TestSkillsAutoUpdateScheduler:
             assert mp.auto_sync is True
 
 
-@pytest.mark.xdist_group(name="skills_version_tracking")
 class TestSkillVersionTracking:
     """Tests for skill version tracking."""
 
@@ -128,7 +126,6 @@ class TestSkillVersionTracking:
         assert compare_versions("2.0.0", "1.9.9") > 0
 
 
-@pytest.mark.xdist_group(name="skills_update_notifications")
 class TestSkillUpdateNotifications:
     """Tests for skill update notifications."""
 
@@ -158,7 +155,6 @@ class TestSkillUpdateNotifications:
             mock_apply.assert_called_once_with("web-research", "1.1.0")
 
 
-@pytest.mark.xdist_group(name="skills_update_metrics")
 class TestSkillUpdateMetrics:
     """Tests for skill update metrics."""
 

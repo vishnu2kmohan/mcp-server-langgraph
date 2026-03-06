@@ -115,7 +115,6 @@ class TestNotificationPreferences:
 
 
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="test_notification_preferences_repository")
 class TestInMemoryPreferencesRepository:
     """Tests for in-memory preferences repository."""
 
@@ -274,7 +273,6 @@ class TestInMemoryPreferencesRepository:
 
 
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="test_notification_preferences_broadcaster")
 class TestBroadcasterWithPreferences:
     """Tests for broadcaster with preferences integration."""
 

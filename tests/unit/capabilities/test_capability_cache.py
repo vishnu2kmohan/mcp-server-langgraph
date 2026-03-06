@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="capability_cache_basic")
 class TestCapabilityCacheBasic:
     """Tests for CapabilityCache basic functionality."""
 
@@ -68,7 +67,6 @@ class TestCapabilityCacheBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="capability_cache_operations")
 class TestCapabilityCacheOperations:
     """Tests for CapabilityCache get/set operations."""
 
@@ -126,7 +124,6 @@ class TestCapabilityCacheOperations:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="capability_cache_scope")
 class TestCapabilityCacheScopeOperations:
     """Tests for CapabilityCache scope-based operations."""
 
@@ -206,7 +203,6 @@ class TestCapabilityCacheScopeOperations:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="capability_cache_redis")
 class TestCapabilityCacheRedisIntegration:
     """Tests for CapabilityCache with Redis backend."""
 

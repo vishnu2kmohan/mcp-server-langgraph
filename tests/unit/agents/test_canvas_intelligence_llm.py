@@ -25,7 +25,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.agents, pytest.mark.canvas_intellige
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="canvas_intelligence_llm_artifact")
 class TestArtifactTypeLLM:
     """Test suggest_artifact_type LLM integration."""
 
@@ -96,7 +95,6 @@ class TestArtifactTypeLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="canvas_intelligence_llm_code")
 class TestCodeAnalysisLLM:
     """Test analyze_code LLM integration."""
 
@@ -198,7 +196,6 @@ class TestCodeAnalysisLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="canvas_intelligence_llm_diff")
 class TestDiffExplainLLM:
     """Test explain_diff LLM integration."""
 
@@ -271,7 +268,6 @@ class TestDiffExplainLLM:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="canvas_intelligence_llm_flags")
 class TestCanvasIntelligenceFeatureFlags:
     """Test feature flag gating for canvas intelligence LLM calls."""
 

@@ -14,7 +14,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_executor_basic")
 class TestSkillExecutorBasic:
     """Test suite for basic skill executor functionality"""
 
@@ -46,7 +45,6 @@ class TestSkillExecutorBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_executor_validation")
 class TestSkillExecutorValidation:
     """Test suite for skill execution validation"""
 
@@ -98,7 +96,6 @@ class TestSkillExecutorValidation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_executor_prepare")
 class TestSkillExecutorPrepare:
     """Test suite for skill execution preparation"""
 
@@ -149,7 +146,6 @@ class TestSkillExecutorPrepare:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_executor_result")
 class TestSkillExecutorResult:
     """Test suite for skill execution results"""
 
@@ -196,7 +192,6 @@ class TestSkillExecutorResult:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_executor_sandbox")
 class TestSkillExecutorSandboxIntegration:
     """Test suite for skill executor sandbox integration"""
 
@@ -369,7 +364,6 @@ class TestSkillExecutorSandboxIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_script_loading")
 class TestSkillScriptLoading:
     """Test suite for loading actual scripts from skill bundles"""
 
@@ -551,7 +545,6 @@ if __name__ == "__main__":
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_secret_injection")
 class TestSkillSecretInjection:
     """Test suite for skill secret injection functionality."""
 

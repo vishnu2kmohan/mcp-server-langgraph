@@ -63,7 +63,6 @@ def mock_audit_service():
     return AsyncMock()
 
 
-@pytest.mark.xdist_group(name="execution_plans_api")
 class TestExecutionPlansEndpoints:
     """Tests for execution plans API endpoints."""
 
@@ -107,7 +106,6 @@ class TestExecutionPlansEndpoints:
         assert any("reject" in route for route in routes)
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_list")
 class TestListPendingPlans:
     """Tests for listing pending plans."""
 
@@ -163,7 +161,6 @@ class TestListPendingPlans:
         assert result.plans[0].plan_id == sample_pending_plan.plan_id
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_get")
 class TestGetPlan:
     """Tests for getting a specific plan."""
 
@@ -203,7 +200,6 @@ class TestGetPlan:
         assert exc_info.value.status_code == 404
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_approve")
 class TestApprovePlan:
     """Tests for approving a plan."""
 
@@ -285,7 +281,6 @@ class TestApprovePlan:
         assert exc_info.value.status_code == 409
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_reject")
 class TestRejectPlan:
     """Tests for rejecting a plan."""
 
@@ -386,7 +381,6 @@ class TestRejectPlan:
         assert exc_info.value.status_code == 409
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_session")
 class TestListBySession:
     """Tests for listing plans by session."""
 
@@ -446,7 +440,6 @@ def sample_approved_plan() -> ExecutionPlan:
     return plan.approve(approved_by="user-123")
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_save_template")
 class TestSaveAsTemplate:
     """Tests for saving an approved plan as a template."""
 
@@ -652,7 +645,6 @@ class TestSaveAsTemplate:
         assert result.created_by == "user-123"
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_update")
 class TestUpdatePlan:
     """Tests for updating a plan before approval."""
 
@@ -806,7 +798,6 @@ class TestUpdatePlan:
         assert exc_info.value.status_code == 409
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_admin")
 class TestAdminListAll:
     """Tests for admin list_all endpoint with pagination (v35.0 Plan)."""
 
@@ -1039,7 +1030,6 @@ class TestAdminListAll:
         assert result.total == 0
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_serializers")
 class TestPlanResponseNewFields:
     """Tests for v35.0 new fields in PlanResponse and serializers."""
 
@@ -1184,7 +1174,6 @@ class TestPlanResponseNewFields:
         assert result["kb_focus"] is None
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_admin_auth")
 class TestAdminListAllAuthentication:
     """Tests for admin authentication on list_all endpoint (v35.0 Phase 2f)."""
 
@@ -1212,7 +1201,6 @@ class TestAdminListAllAuthentication:
         assert hasattr(execution_plans, "AdminUser"), "AdminUser type alias should be defined"
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_admin_response")
 class TestAdminPlanResponse:
     """Tests for AdminPlanResponse with additional admin-only fields (v35.0 Phase 2f)."""
 
@@ -1264,7 +1252,6 @@ class TestAdminPlanResponse:
         assert "embedding_error" in fields, "AdminPlanResponse should have embedding_error field"
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_admin_dict")
 class TestAdminPlanDict:
     """Tests for _plan_to_admin_dict helper function (v35.0 Phase 2f)."""
 
@@ -1378,7 +1365,6 @@ class TestAdminPlanDict:
             assert key in admin_dict, f"Admin dict should include base field: {key}"
 
 
-@pytest.mark.xdist_group(name="execution_plans_api_admin_endpoint")
 class TestAdminListAllUsesAdminResponse:
     """Tests for list_all endpoint using AdminPlanResponse (v35.0 Phase 2f)."""
 

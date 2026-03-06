@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="message_rate_limiter")
 class TestMessageRateLimiter:
     """Tests for MessageRateLimiter class."""
 
@@ -181,7 +180,6 @@ class TestMessageRateLimiter:
         assert before_reset <= limiter._window_start <= after_reset
 
 
-@pytest.mark.xdist_group(name="user_rate_limiter")
 class TestUserRateLimiter:
     """Tests for UserRateLimiter class."""
 
@@ -305,7 +303,6 @@ class TestUserRateLimiter:
         assert "user-2" in limiter._user_limiters
 
 
-@pytest.mark.xdist_group(name="connection_rate_limiter")
 class TestConnectionRateLimiter:
     """Tests for ConnectionRateLimiter class."""
 
@@ -528,7 +525,6 @@ class TestWebSocketRateLimiter:
         assert "user-2" in limiter._user_limiter._user_limiters
 
 
-@pytest.mark.xdist_group(name="redis_rate_limiter_extras")
 class TestRedisUserRateLimiterExtras:
     """Additional tests for RedisUserRateLimiter coverage."""
 
@@ -601,7 +597,6 @@ class TestRedisUserRateLimiterExtras:
         assert retry_after == 0
 
 
-@pytest.mark.xdist_group(name="redis_ws_rate_limiter_extras")
 class TestRedisWebSocketRateLimiterExtras:
     """Additional tests for RedisWebSocketRateLimiter coverage."""
 
@@ -732,7 +727,6 @@ class TestRedisWebSocketRateLimiterExtras:
         assert limiter._user_limiter is None
 
 
-@pytest.mark.xdist_group(name="rate_limiter_factory")
 class TestRateLimiterFactory:
     """Tests for rate limiter factory functions."""
 

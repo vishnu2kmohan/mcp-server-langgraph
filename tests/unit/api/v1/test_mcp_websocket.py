@@ -656,7 +656,6 @@ class TestMCPWebSocketTokenValidation:
         assert token is None
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_rate_limiting")
 class TestMCPWebSocketRateLimiting:
     """Tests for MCP WebSocket rate limiting and security measures."""
 
@@ -808,7 +807,6 @@ class TestMCPWebSocketRateLimiting:
         assert validate_message_size(oversized_message) is False
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_idle_timeout")
 class TestMCPWebSocketIdleTimeout:
     """Tests for MCP WebSocket idle connection timeout."""
 
@@ -952,7 +950,6 @@ class TestMCPWebSocketIdleTimeout:
         assert "active-session" not in idle_sessions
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_observability")
 class TestMCPWebSocketObservability:
     """Tests for MCP WebSocket observability metrics."""
 
@@ -1087,7 +1084,6 @@ class TestMCPWebSocketObservability:
         # Should not raise
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_integration")
 class TestMCPWebSocketAgentIntegration:
     """Tests for MCP WebSocket integration with real agent execution."""
 
@@ -1144,7 +1140,6 @@ class TestMCPWebSocketAgentIntegration:
             assert "session-123" in str(call_args) or call_args.kwargs.get("session_id") == "session-123"
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_keycloak")
 class TestMCPWebSocketKeycloakIntegration:
     """Tests for MCP WebSocket Keycloak token validation integration."""
 
@@ -1226,7 +1221,6 @@ class TestMCPWebSocketKeycloakIntegration:
             assert result is None
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_openfga")
 class TestMCPWebSocketOpenFGAIntegration:
     """Tests for MCP WebSocket OpenFGA authorization integration."""
 
@@ -1309,7 +1303,6 @@ class TestMCPWebSocketOpenFGAIntegration:
             assert result is True
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_streaming")
 class TestMCPWebSocketStreamingIntegration:
     """Tests for MCP WebSocket streaming response handling."""
 
@@ -1370,7 +1363,6 @@ class TestMCPWebSocketStreamingIntegration:
         assert end["params"]["streamId"] == "stream-123"
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_mcpbridge")
 class TestMCPWebSocketMCPBridgeIntegration:
     """Tests for MCP WebSocket integration with MCPBridge for real tool execution."""
 
@@ -1476,7 +1468,6 @@ class TestMCPWebSocketMCPBridgeIntegration:
             # Error should be captured in the result
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_streaming_flow")
 class TestMCPWebSocketStreamingFlow:
     """Tests for MCP WebSocket streaming tool execution flow."""
 
@@ -1585,7 +1576,6 @@ class TestMCPWebSocketStreamingFlow:
             assert any(c.get("text") == "World" for c in chunks)
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_secure_endpoint")
 class TestMCPWebSocketSecureEndpoint:
     """Tests for MCP WebSocket secure endpoint with authentication and authorization."""
 
@@ -1651,7 +1641,6 @@ class TestMCPWebSocketSecureEndpoint:
         assert "user" in handler.roles  # Default role
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_endpoint_streaming")
 class TestMCPWebSocketEndpointStreamingWiring:
     """Tests for endpoint-level streaming notification callback wiring."""
 
@@ -1730,7 +1719,6 @@ class TestMCPWebSocketEndpointStreamingWiring:
         assert "$/streaming/end" in methods
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_full_integration")
 class TestMCPWebSocketFullIntegration:
     """Full integration tests for MCP WebSocket with all security features."""
 
@@ -1837,7 +1825,6 @@ class TestMCPWebSocketFullIntegration:
         assert not manager.can_user_connect("user:alice")
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_per_user_rate_limit")
 class TestMCPWebSocketPerUserRateLimiting:
     """Tests for per-user rate limiting (shared across connections)."""
 
@@ -1937,7 +1924,6 @@ class TestMCPWebSocketPerUserRateLimiting:
         assert manager.check_and_increment("session:def456") is True
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_session_validation")
 class TestMCPWebSocketSessionValidation:
     """Tests for session ID validation and sanitization."""
 
@@ -2020,7 +2006,6 @@ class TestMCPWebSocketSessionValidation:
         assert ">" not in result
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_security_enforcement")
 class TestMCPWebSocketSecurityEnforcement:
     """Tests for security enforcement in message handling."""
 
@@ -2147,7 +2132,6 @@ class TestMCPWebSocketSecurityEnforcement:
         assert hasattr(metrics, "messages_received")
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_idle_cleanup")
 class TestMCPWebSocketIdleCleanup:
     """Tests for idle connection cleanup background task."""
 
@@ -2234,7 +2218,6 @@ class TestMCPWebSocketIdleCleanup:
         assert closed_count >= 0
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_graceful_shutdown")
 class TestMCPWebSocketGracefulShutdown:
     """Tests for graceful shutdown of WebSocket connections."""
 
@@ -2336,7 +2319,6 @@ class TestMCPWebSocketGracefulShutdown:
         mock_ws_success.close.assert_called()
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_otel")
 class TestMCPWebSocketOpenTelemetry:
     """Tests for OpenTelemetry metrics integration."""
 
@@ -2414,7 +2396,6 @@ class TestMCPWebSocketOpenTelemetry:
         # Should not raise
 
 
-@pytest.mark.xdist_group(name="test_mcp_websocket_lifespan")
 class TestMCPWebSocketLifespan:
     """Tests for FastAPI lifespan integration."""
 

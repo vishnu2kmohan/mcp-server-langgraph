@@ -20,7 +20,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_litellm_otel_integration")
 class TestLiteLLMOTelIntegration:
     """Tests for LiteLLM OpenTelemetry callback integration."""
 
@@ -74,7 +73,6 @@ class TestLiteLLMOTelIntegration:
             assert "otel" not in litellm.callbacks
 
 
-@pytest.mark.xdist_group(name="test_litellm_otel_metadata")
 class TestLiteLLMOTelMetadataPropagation:
     """Tests for metadata propagation through LiteLLM OTEL spans."""
 
@@ -167,7 +165,6 @@ class TestLiteLLMOTelMetadataPropagation:
         assert "orchestrator_id" not in metadata
 
 
-@pytest.mark.xdist_group(name="test_litellm_otel_tracer_provider")
 class TestLiteLLMOTelTracerProvider:
     """Tests for TracerProvider integration with LiteLLM OTEL."""
 
@@ -221,7 +218,6 @@ class TestLiteLLMOTelTracerProvider:
             litellm.drop_params = original_drop_params
 
 
-@pytest.mark.xdist_group(name="test_litellm_otel_chat_integration")
 @pytest.mark.asyncio
 class TestChatOTelMetadataIntegration:
     """Tests for OTEL metadata integration in chat.py."""

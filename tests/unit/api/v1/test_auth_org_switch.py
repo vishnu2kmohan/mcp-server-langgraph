@@ -20,7 +20,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_auth_org_switch")
 class TestOrganizationSwitchAuthorization:
     """Tests for POST /api/v1/auth/switch-org endpoint authorization.
 

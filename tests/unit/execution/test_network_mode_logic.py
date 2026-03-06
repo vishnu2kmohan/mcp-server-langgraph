@@ -30,7 +30,6 @@ def _clear_docker_module_cache():
         del sys.modules["mcp_server_langgraph.execution.docker_sandbox"]
 
 
-@pytest.mark.xdist_group(name="network_mode_logic")
 class TestNetworkModeLogic:
     """Test network mode logic in DockerSandbox."""
 

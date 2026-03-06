@@ -20,7 +20,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_mcp_agent_graph_migration_stdio")
 class TestMCPStdioServerAgentGraphMigration:
     """Test MCPAgentServer uses create_agent_graph() instead of deprecated singleton."""
 
@@ -134,7 +133,6 @@ class TestMCPStdioServerAgentGraphMigration:
                         )
 
 
-@pytest.mark.xdist_group(name="test_mcp_agent_graph_migration_streamable")
 class TestMCPStreamableServerAgentGraphMigration:
     """Test MCPAgentStreamableServer uses create_agent_graph() instead of deprecated singleton."""
 
@@ -254,7 +252,6 @@ class TestMCPStreamableServerAgentGraphMigration:
                         )
 
 
-@pytest.mark.xdist_group(name="test_mcp_checkpointer_cleanup")
 class TestCheckpointerCleanup:
     """Test that checkpointer resources are properly cleaned up."""
 
@@ -300,7 +297,6 @@ class TestCheckpointerCleanup:
                     mock_cleanup.assert_called_once_with(mock_checkpointer)
 
 
-@pytest.mark.xdist_group(name="test_agent_graph_instance_reuse")
 class TestAgentGraphInstanceReuse:
     """Test that servers reuse their agent graph instance."""
 

@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_search_tool_basic")
 class TestSkillSearchToolBasic:
     """Tests for SkillSearchTool basic functionality."""
 
@@ -67,7 +66,6 @@ class TestSkillSearchToolBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_search_tool_index")
 class TestSkillSearchToolIndex:
     """Tests for SkillSearchTool indexing."""
 
@@ -116,7 +114,6 @@ class TestSkillSearchToolIndex:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_search_tool_search")
 class TestSkillSearchToolSearch:
     """Tests for SkillSearchTool search."""
 
@@ -197,7 +194,6 @@ class TestSkillSearchToolSearch:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_search_result")
 class TestSkillSearchResult:
     """Tests for SkillSearchResult dataclass."""
 

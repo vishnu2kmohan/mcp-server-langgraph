@@ -502,7 +502,6 @@ class TestSemanticIndexManagerCollectionManagement:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_semantic_index_tenant_membership")
 class TestTenantMembershipDevMode:
     """Tests for _check_tenant_membership dev mode bypass (v26)."""
 

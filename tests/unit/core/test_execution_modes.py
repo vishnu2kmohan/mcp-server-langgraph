@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_mode")
 class TestExecutionModeEnum:
     """Tests for ExecutionMode enum existence and structure."""
 
@@ -91,7 +90,6 @@ class TestExecutionModeEnum:
 
 @pytest.mark.unit
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_mode_default")
 class TestExecutionModeDefault:
     """Tests for default execution mode behavior."""
 
@@ -117,7 +115,6 @@ class TestExecutionModeDefault:
 
 @pytest.mark.unit
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_mode_traits")
 class TestExecutionModeTraits:
     """Tests for execution mode characteristics and traits."""
 
@@ -200,7 +197,6 @@ class TestExecutionModeTraits:
 
 @pytest.mark.unit
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_mode_serialization")
 class TestExecutionModeSerialization:
     """Tests for ExecutionMode serialization behavior."""
 

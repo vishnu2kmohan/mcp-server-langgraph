@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testmetricdefinitions")
 class TestMetricDefinitions:
     """Test that all metrics are properly defined"""
 
@@ -87,7 +86,6 @@ class TestMetricDefinitions:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrecordloginattempt")
 class TestRecordLoginAttempt:
     """Test record_login_attempt helper function"""
 
@@ -117,7 +115,6 @@ class TestRecordLoginAttempt:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrecordtokenverification")
 class TestRecordTokenVerification:
     """Test record_token_verification helper function"""
 
@@ -154,7 +151,6 @@ class TestRecordTokenVerification:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrecordsessionoperation")
 class TestRecordSessionOperation:
     """Test record_session_operation helper function"""
 
@@ -217,7 +213,6 @@ class TestRecordSessionOperation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrecordjwksoperation")
 class TestRecordJWKSOperation:
     """Test record_jwks_operation helper function"""
 
@@ -260,7 +255,6 @@ class TestRecordJWKSOperation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrecordopenfgasync")
 class TestRecordOpenFGASync:
     """Test record_openfga_sync helper function"""
 
@@ -295,7 +289,6 @@ class TestRecordOpenFGASync:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testrecordrolemapping")
 class TestRecordRoleMapping:
     """Test record_role_mapping helper function"""
 
@@ -331,7 +324,6 @@ class TestRecordRoleMapping:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testmetricattributes")
 class TestMetricAttributes:
     """Test that metrics can be called with proper attributes"""
 

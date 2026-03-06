@@ -32,7 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.observability]
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="lgtm_tempo")
 class TestTempoTracingClient:
     """Tests for TempoTracingClient implementation."""
 
@@ -261,7 +260,6 @@ class TestTempoTracingClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="lgtm_loki")
 class TestLokiLoggingClient:
     """Tests for LokiLoggingClient implementation."""
 
@@ -548,7 +546,6 @@ class TestLokiLoggingClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="lgtm_prometheus")
 class TestPrometheusMetricsClient:
     """Tests for PrometheusMetricsClient implementation (also used by Mimir)."""
 
@@ -787,7 +784,6 @@ class TestPrometheusMetricsClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="lgtm_grafana")
 class TestGrafanaAlertingClient:
     """Tests for GrafanaAlertingClient implementation."""
 
@@ -893,7 +889,6 @@ class TestGrafanaAlertingClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="lgtm_tempo_errors")
 class TestTempoTracingClientErrorHandling:
     """Tests for Tempo client error handling and resilience.
 
@@ -989,7 +984,6 @@ class TestTempoTracingClientErrorHandling:
             assert result is None
 
 
-@pytest.mark.xdist_group(name="lgtm_loki_errors")
 class TestLokiLoggingClientErrorHandling:
     """Tests for Loki client error handling and resilience.
 
@@ -1139,7 +1133,6 @@ class TestLokiLoggingClientErrorHandling:
                 assert result.total_count == 0
 
 
-@pytest.mark.xdist_group(name="lgtm_prometheus_errors")
 class TestPrometheusMetricsClientErrorHandling:
     """Tests for Prometheus client error handling and resilience.
 
@@ -1241,7 +1234,6 @@ class TestPrometheusMetricsClientErrorHandling:
             assert result == {}
 
 
-@pytest.mark.xdist_group(name="lgtm_grafana_errors")
 class TestGrafanaAlertingClientErrorHandling:
     """Tests for Grafana client error handling and resilience.
 

@@ -13,7 +13,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_config_module_imports")
 class TestConfigModuleImports:
     """Test that all config modules can be imported."""
 
@@ -42,7 +41,6 @@ class TestConfigModuleImports:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_settings_defaults")
 class TestSettingsDefaults:
     """Test that Settings has correct default values."""
 
@@ -83,7 +81,6 @@ class TestSettingsDefaults:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_settings_validation")
 class TestSettingsValidation:
     """Test Settings validation logic."""
 
@@ -121,7 +118,6 @@ class TestSettingsValidation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_settings_methods")
 class TestSettingsMethods:
     """Test Settings helper methods."""
 
@@ -165,7 +161,6 @@ class TestSettingsMethods:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_settings_field_validators")
 class TestSettingsFieldValidators:
     """Test field validators parse correctly."""
 
@@ -189,7 +184,6 @@ class TestSettingsFieldValidators:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_settings_backwards_compat")
 class TestSettingsBackwardsCompatibility:
     """Test backwards compatibility with existing code."""
 

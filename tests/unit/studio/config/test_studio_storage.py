@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_storage_basic")
 class TestStudioConfigStorageBasic:
     """Tests for StudioConfigStorage basic functionality."""
 
@@ -58,7 +57,6 @@ class TestStudioConfigStorageBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="stored_studio_config")
 class TestStoredStudioConfig:
     """Tests for StoredStudioConfig dataclass."""
 
@@ -152,7 +150,6 @@ class TestStoredStudioConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_storage_get")
 class TestStudioConfigStorageGet:
     """Tests for StudioConfigStorage.get() method."""
 
@@ -226,7 +223,6 @@ class TestStudioConfigStorageGet:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_storage_save")
 class TestStudioConfigStorageSave:
     """Tests for StudioConfigStorage.save() method."""
 
@@ -323,7 +319,6 @@ class TestStudioConfigStorageSave:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_storage_delete")
 class TestStudioConfigStorageDelete:
     """Tests for StudioConfigStorage.delete() method."""
 
@@ -374,7 +369,6 @@ class TestStudioConfigStorageDelete:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_storage_hash")
 class TestStudioConfigStorageHashing:
     """Tests for config hash generation."""
 

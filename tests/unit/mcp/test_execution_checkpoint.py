@@ -15,7 +15,6 @@ from mcp_server_langgraph.mcp.handlers.execution import ExecutionToolHandler
 pytestmark = [pytest.mark.unit, pytest.mark.sdk]
 
 
-@pytest.mark.xdist_group(name="execution_checkpoint_integration")
 class TestExecutionCheckpointIntegration:
     """Tests for file checkpointing in execution handler."""
 

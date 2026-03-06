@@ -13,7 +13,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="conversation_store_close")
 class TestConversationStoreClose:
     """Tests for ConversationStore close() method."""
 

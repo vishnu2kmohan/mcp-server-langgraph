@@ -814,7 +814,6 @@ class TestCachedUnifiedRegistryBroadcasterIntegration:
         assert result["tool_count"] == 1
 
 
-@pytest.mark.xdist_group(name="cached_registry_broadcaster")
 class TestCachedUnifiedRegistrySetBroadcaster:
     """Tests for the set_broadcaster() method.
 
@@ -936,7 +935,6 @@ class TestCachedUnifiedRegistrySetBroadcaster:
         assert result["tool_count"] == 1
 
 
-@pytest.mark.xdist_group(name="cached_registry_semantic_reindex")
 class TestCachedUnifiedRegistrySemanticReindex:
     """Tests for post-registration semantic reindex (v26)."""
 

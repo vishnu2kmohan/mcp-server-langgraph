@@ -15,7 +15,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testobservabilitysafefallback")
 class TestObservabilitySafeFallback:
     """Test safe fallback behavior before observability initialization"""
 
@@ -139,7 +138,6 @@ class TestObservabilitySafeFallback:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testobservabilityintegration")
 class TestObservabilityIntegration:
     """Test observability integration with auth components"""
 

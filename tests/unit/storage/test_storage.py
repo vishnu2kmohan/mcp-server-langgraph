@@ -26,7 +26,6 @@ pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testuserprofile")
 class TestUserProfile:
     """Test UserProfile data model"""
 
@@ -80,7 +79,6 @@ class TestUserProfile:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testconversation")
 class TestConversation:
     """Test Conversation data model"""
 
@@ -135,7 +133,6 @@ class TestConversation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testuserpreferences")
 class TestUserPreferences:
     """Test UserPreferences data model"""
 
@@ -167,7 +164,6 @@ class TestUserPreferences:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testauditlogentry")
 class TestAuditLogEntry:
     """Test AuditLogEntry data model"""
 
@@ -207,7 +203,6 @@ class TestAuditLogEntry:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testconsentrecord")
 class TestConsentRecord:
     """Test ConsentRecord data model"""
 
@@ -245,7 +240,6 @@ class TestConsentRecord:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinmemoryuserprofilestore")
 class TestInMemoryUserProfileStore:
     """Test in-memory user profile storage"""
 
@@ -365,7 +359,6 @@ class TestInMemoryUserProfileStore:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinmemoryconversationstore")
 class TestInMemoryConversationStore:
     """Test in-memory conversation storage"""
 
@@ -514,7 +507,6 @@ class TestInMemoryConversationStore:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinmemorypreferencesstore")
 class TestInMemoryPreferencesStore:
     """Test in-memory preferences storage"""
 
@@ -586,7 +578,6 @@ class TestInMemoryPreferencesStore:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinmemoryauditlogstore")
 class TestInMemoryAuditLogStore:
     """Test in-memory audit log storage"""
 
@@ -702,7 +693,6 @@ class TestInMemoryAuditLogStore:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testinmemoryconsentstore")
 class TestInMemoryConsentStore:
     """Test in-memory consent storage"""
 

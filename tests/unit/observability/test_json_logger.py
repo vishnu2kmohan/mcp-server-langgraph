@@ -81,7 +81,6 @@ def log_record():
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcustomjsonformatter")
 class TestCustomJSONFormatter:
     """Tests for CustomJSONFormatter class"""
 
@@ -354,7 +353,6 @@ class TestCustomJSONFormatter:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsetupjsonlogging")
 class TestSetupJSONLogging:
     """Tests for setup_json_logging helper function"""
 
@@ -397,7 +395,6 @@ class TestSetupJSONLogging:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlogwithcontext")
 class TestLogWithContext:
     """Tests for log_with_context helper function"""
 

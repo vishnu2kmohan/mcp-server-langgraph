@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_router_semantic_output")
 class TestRouterOutputWithDiscovery:
     """Tests for RouterOutputWithDiscovery model."""
 
@@ -112,7 +111,6 @@ class TestRouterOutputWithDiscovery:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_router_semantic_method")
 class TestRouterAgentSemanticDiscovery:
     """Tests for route_with_semantic_discovery method."""
 
@@ -309,7 +307,6 @@ class TestRouterAgentSemanticDiscovery:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_router_semantic_integration")
 class TestRouterSemanticIntegration:
     """Integration tests for router semantic discovery."""
 

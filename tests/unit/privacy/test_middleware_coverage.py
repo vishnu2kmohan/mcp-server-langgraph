@@ -26,7 +26,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.pii, pytest.mark.coverage]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_middleware_feature_flag_coverage")
 class TestMiddlewareFeatureFlagCoverage:
     """Test suite for feature flag handling coverage."""
 
@@ -79,7 +78,6 @@ class TestMiddlewareFeatureFlagCoverage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_middleware_should_process_coverage")
 class TestMiddlewareShouldProcessCoverage:
     """Test suite for _should_process method coverage."""
 
@@ -188,7 +186,6 @@ class TestMiddlewareShouldProcessCoverage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_middleware_tokenize_value_coverage")
 class TestMiddlewareTokenizeValueCoverage:
     """Test suite for _tokenize_value method coverage."""
 
@@ -288,7 +285,6 @@ class TestMiddlewareTokenizeValueCoverage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_middleware_untokenize_value_coverage")
 class TestMiddlewareUntokenizeValueCoverage:
     """Test suite for _untokenize_value method coverage."""
 
@@ -366,7 +362,6 @@ class TestMiddlewareUntokenizeValueCoverage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_middleware_async_methods_coverage")
 class TestMiddlewareAsyncMethodsCoverage:
     """Test suite for async process_request/process_response coverage."""
 
@@ -496,7 +491,6 @@ class TestMiddlewareAsyncMethodsCoverage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_middleware_convenience_methods_coverage")
 class TestMiddlewareConvenienceMethodsCoverage:
     """Test suite for convenience methods coverage."""
 
@@ -593,7 +587,6 @@ class TestMiddlewareConvenienceMethodsCoverage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_middleware_integration_coverage")
 class TestMiddlewareIntegrationCoverage:
     """Integration tests for full middleware flow coverage."""
 

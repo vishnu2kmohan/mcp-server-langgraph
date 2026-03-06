@@ -245,7 +245,6 @@ class TestStudioRule:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_config_main")
 class TestStudioConfig:
     """Tests for main StudioConfig model."""
 
@@ -382,7 +381,6 @@ class TestStudioConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_config_validation")
 class TestStudioConfigValidation:
     """Tests for StudioConfig validation."""
 

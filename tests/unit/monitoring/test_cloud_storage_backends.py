@@ -470,7 +470,6 @@ class TestBigQueryCostStorageClient:
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="test_storage_factory")
 class TestCostStorageFactory:
     """Tests for cost storage factory."""
 

@@ -24,7 +24,6 @@ def mock_telemetry():
     return telemetry
 
 
-@pytest.mark.xdist_group(name="test_openai_native_tools")
 class TestOpenAINativeToolsValidation:
     """Tests for OpenAI native tools validation (v26)."""
 

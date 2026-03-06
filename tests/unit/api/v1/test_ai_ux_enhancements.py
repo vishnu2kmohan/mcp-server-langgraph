@@ -27,7 +27,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.ai
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ai_ux_enhancements")
 class TestCoverageImprovements:
     """Tests for improving ai_ux_service.py coverage."""
 
@@ -245,7 +244,6 @@ class TestCoverageImprovements:
 
 @pytest.mark.ai
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ai_ux_feature_flags")
 class TestFeatureFlagIntegration:
     """Tests for AI UX feature flags."""
 
@@ -309,7 +307,6 @@ class TestFeatureFlagIntegration:
 
 @pytest.mark.ai
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ai_ux_prometheus")
 class TestPrometheusMetrics:
     """Tests for Prometheus metrics integration."""
 
@@ -364,7 +361,6 @@ class TestPrometheusMetrics:
 
 @pytest.mark.ai
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ai_ux_redis_cache")
 class TestRedisCaching:
     """Tests for Redis caching of LLM responses."""
 
@@ -458,7 +454,6 @@ class TestRedisCaching:
 
 @pytest.mark.ai
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ai_ux_rate_limiting")
 class TestRateLimiting:
     """Tests for rate limiting on AI endpoints."""
 
@@ -498,7 +493,6 @@ class TestRateLimiting:
 
 @pytest.mark.ai
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ai_ux_websocket")
 class TestWebSocketSuggestions:
     """Tests for WebSocket real-time AI suggestions."""
 
@@ -541,7 +535,6 @@ class TestWebSocketSuggestions:
 
 @pytest.mark.ai
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ai_ux_openapi")
 class TestOpenAPISchemaDocumentation:
     """Tests for OpenAPI schema documentation."""
 

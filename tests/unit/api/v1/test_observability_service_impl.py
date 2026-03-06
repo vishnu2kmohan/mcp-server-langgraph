@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     )
 
 
-@pytest.mark.xdist_group(name="observability_service_impl")
 class TestObservabilityServiceImpl:
     """Test suite for ObservabilityServiceImpl."""
 
@@ -374,7 +373,6 @@ class TestObservabilityServiceImpl:
         await service.get_metrics()
 
 
-@pytest.mark.xdist_group(name="observability_safe_float")
 class TestSafeFloat:
     """Test suite for safe_float helper function used by observability.
 

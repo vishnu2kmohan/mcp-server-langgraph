@@ -20,7 +20,6 @@ from mcp_server_langgraph.resilience import metrics
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testcircuitbreakermetrics")
 class TestCircuitBreakerMetrics:
     """Tests for circuit breaker metric recording"""
 
@@ -83,7 +82,6 @@ class TestCircuitBreakerMetrics:
             assert call_args[0][1]["service"] == "llm"
 
 
-@pytest.mark.xdist_group(name="testretrymetrics")
 class TestRetryMetrics:
     """Tests for retry metric recording"""
 
@@ -153,7 +151,6 @@ class TestRetryMetrics:
             assert "exception_type" not in call_args[0][1]
 
 
-@pytest.mark.xdist_group(name="testtimeoutmetrics")
 class TestTimeoutMetrics:
     """Tests for timeout metric recording"""
 
@@ -203,7 +200,6 @@ class TestTimeoutMetrics:
                 assert call_args[0][1]["operation_type"] == op_type
 
 
-@pytest.mark.xdist_group(name="testbulkheadmetrics")
 class TestBulkheadMetrics:
     """Tests for bulkhead metric recording"""
 
@@ -273,7 +269,6 @@ class TestBulkheadMetrics:
             mock_set.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="testfallbackmetrics")
 class TestFallbackMetrics:
     """Tests for fallback metric recording"""
 
@@ -345,7 +340,6 @@ class TestFallbackMetrics:
             mock_add_cache.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="testmetricssummary")
 class TestMetricsSummary:
     """Tests for metrics summary and export functions"""
 
@@ -412,7 +406,6 @@ class TestMetricsSummary:
         assert "gauge" in prometheus_output
 
 
-@pytest.mark.xdist_group(name="testmetricsintegration")
 class TestMetricsIntegration:
     """Integration tests for metrics recording"""
 
@@ -485,7 +478,6 @@ class TestMetricsIntegration:
             mock_reject.assert_called_once()
 
 
-@pytest.mark.xdist_group(name="testmetricsopentelemetryintegration")
 class TestMetricsOpenTelemetryIntegration:
     """Tests for OpenTelemetry metrics integration"""
 
@@ -524,7 +516,6 @@ class TestMetricsOpenTelemetryIntegration:
         assert metrics.meter is not None
 
 
-@pytest.mark.xdist_group(name="testratelimitmetrics")
 class TestRateLimitMetrics:
     """Tests for rate limit metric recording"""
 
@@ -553,7 +544,6 @@ class TestRateLimitMetrics:
             assert call_args[0][1]["provider"] == "openai"
 
 
-@pytest.mark.xdist_group(name="testadaptivebulkheadmetrics")
 class TestAdaptiveBulkheadMetrics:
     """Tests for adaptive bulkhead metric recording"""
 
@@ -602,7 +592,6 @@ class TestAdaptiveBulkheadMetrics:
             assert error_args[0][1]["provider"] == "openai"
 
 
-@pytest.mark.xdist_group(name="testpoolmetrics")
 class TestPoolMetrics:
     """Tests for HTTP connection pool metric recording"""
 

@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.privacy, pytest.mark.pii]
 
 
-@pytest.mark.xdist_group(name="test_lookup_table_key_management")
 class TestLookupTableKeyManagement:
     """Tests for encryption key generation and management."""
 
@@ -79,7 +78,6 @@ class TestLookupTableKeyManagement:
         assert key1 != key2
 
 
-@pytest.mark.xdist_group(name="test_lookup_table_encryption_ops")
 class TestLookupTableEncryptionOperations:
     """Tests for encryption/decryption operations."""
 
@@ -208,7 +206,6 @@ class TestLookupTableEncryptionOperations:
             EncryptedLookupTable.from_encrypted(tampered, key=key)
 
 
-@pytest.mark.xdist_group(name="test_lookup_table_backward_compat")
 class TestLookupTableBackwardCompatibility:
     """Tests for backward compatibility with legacy format."""
 
@@ -266,7 +263,6 @@ class TestLookupTableBackwardCompatibility:
             EncryptedLookupTable.from_encrypted(encrypted)  # No key
 
 
-@pytest.mark.xdist_group(name="test_lookup_table_edge_cases")
 class TestLookupTableEncryptionEdgeCases:
     """Edge case tests for encryption."""
 

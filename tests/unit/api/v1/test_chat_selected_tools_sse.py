@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_selected_tools_sse")
 class TestSelectedToolsSSEEvent:
     """Tests for selected_tools SSE event in chat streaming."""
 
@@ -202,7 +201,6 @@ class TestSelectedToolsSSEEvent:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_selected_tools_stream_integration")
 class TestSelectedToolsStreamIntegration:
     """Integration tests for selected_tools in create_stream."""
 
@@ -260,7 +258,6 @@ class TestSelectedToolsStreamIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_selected_tools_event_format")
 class TestSelectedToolsEventFormat:
     """Tests for selected_tools SSE event format compliance."""
 

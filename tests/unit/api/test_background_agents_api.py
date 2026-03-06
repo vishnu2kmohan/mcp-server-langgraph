@@ -50,7 +50,6 @@ def sample_task_request():
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="background_agents_api")
 class TestSubmitBackgroundTask:
     """Test POST /api/v1/agents/background endpoint."""
 
@@ -126,7 +125,6 @@ class TestSubmitBackgroundTask:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="background_agents_api_list")
 class TestListBackgroundTasks:
     """Test GET /api/v1/agents/background endpoint."""
 
@@ -182,7 +180,6 @@ class TestListBackgroundTasks:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="background_agents_api_status")
 class TestGetTaskStatus:
     """Test GET /api/v1/agents/background/{id} endpoint."""
 
@@ -226,7 +223,6 @@ class TestGetTaskStatus:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="background_agents_api_cancel")
 class TestCancelTask:
     """Test DELETE /api/v1/agents/background/{id} endpoint."""
 
@@ -269,7 +265,6 @@ class TestCancelTask:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="background_agents_api_flags")
 class TestBackgroundAgentsFeatureFlag:
     """Test feature flag gating for background agents endpoints."""
 

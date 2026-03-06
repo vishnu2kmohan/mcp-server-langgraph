@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agents_metrics")
 class TestAgentsMetrics:
     """Test suite for agents metrics functionality."""
 
@@ -242,7 +241,6 @@ class TestAgentsMetrics:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agents_metrics_counters")
 class TestAgentsMetricCounters:
     """Test suite for agents metric counter operations."""
 
@@ -299,7 +297,6 @@ class TestAgentsMetricCounters:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agents_metrics_histograms")
 class TestAgentsMetricHistograms:
     """Test suite for agents metric histogram operations."""
 

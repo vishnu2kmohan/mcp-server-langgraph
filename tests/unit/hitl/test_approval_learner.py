@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="approval_learner_basic")
 class TestApprovalLearnerBasic:
     """Tests for ApprovalLearner basic functionality."""
 
@@ -56,7 +55,6 @@ class TestApprovalLearnerBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="approval_decision")
 class TestApprovalDecision:
     """Tests for ApprovalDecision dataclass."""
 
@@ -138,7 +136,6 @@ class TestApprovalDecision:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="approval_prediction")
 class TestApprovalPrediction:
     """Tests for ApprovalPrediction dataclass."""
 
@@ -190,7 +187,6 @@ class TestApprovalPrediction:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="approval_learner_record")
 class TestApprovalLearnerRecord:
     """Tests for ApprovalLearner.record_decision()."""
 
@@ -243,7 +239,6 @@ class TestApprovalLearnerRecord:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="approval_learner_predict")
 class TestApprovalLearnerPredict:
     """Tests for ApprovalLearner.predict()."""
 
@@ -349,7 +344,6 @@ class TestApprovalLearnerPredict:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="approval_learner_history")
 class TestApprovalLearnerHistory:
     """Tests for ApprovalLearner.get_history()."""
 

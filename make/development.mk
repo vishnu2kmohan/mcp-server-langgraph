@@ -235,6 +235,16 @@ logs-grafana:
 	$(DOCKER_COMPOSE) logs grafana
 
 # ==============================================================================
+# Daemon Management
+# ==============================================================================
+
+kill-daemons:  ## Stop background daemons (dmypy, etc.)
+	@echo "Stopping background daemons..."
+	@uv run --frozen dmypy kill 2>/dev/null || true
+	@rm -rf ~/.cache/pre-commit-lane-* 2>/dev/null || true
+	@echo "Daemons stopped and lane caches cleaned"
+
+# ==============================================================================
 # Cleanup
 # ==============================================================================
 

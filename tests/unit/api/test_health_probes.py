@@ -17,7 +17,6 @@ from fastapi.testclient import TestClient
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_health_liveness_probe")
 class TestLivenessProbe:
     """Tests for /health/live endpoint."""
 
@@ -46,7 +45,6 @@ class TestLivenessProbe:
         assert elapsed_ms < 50, f"Liveness probe took {elapsed_ms}ms, expected < 50ms"
 
 
-@pytest.mark.xdist_group(name="test_health_startup_probe")
 class TestStartupProbe:
     """Tests for /health/startup endpoint."""
 
@@ -72,7 +70,6 @@ class TestStartupProbe:
         assert "observability" in data
 
 
-@pytest.mark.xdist_group(name="test_health_readiness_probe")
 class TestReadinessProbe:
     """Tests for /health/ready endpoint."""
 
@@ -99,7 +96,6 @@ class TestReadinessProbe:
         assert "observability" in data["checks"]
 
 
-@pytest.mark.xdist_group(name="test_health_dependency_status")
 class TestDependencyStatus:
     """Tests for /health/deps endpoint."""
 

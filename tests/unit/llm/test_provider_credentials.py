@@ -17,7 +17,6 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="unit_provider_credentials_tests")
 class TestProviderCredentialSetup:
     """Test multi-credential provider configuration (TDD RED → GREEN)"""
 

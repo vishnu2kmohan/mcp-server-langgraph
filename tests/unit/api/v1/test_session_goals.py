@@ -142,7 +142,6 @@ def sample_session(mock_user: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-@pytest.mark.xdist_group(name="test_session_goals")
 class TestSetSessionGoalEndpoint:
     """Tests for POST /api/v1/sessions/{session_id}/goal endpoint."""
 
@@ -244,7 +243,6 @@ class TestSetSessionGoalEndpoint:
             assert "set_at" in data
 
 
-@pytest.mark.xdist_group(name="test_session_goals_complete")
 class TestCompleteSessionGoalEndpoint:
     """Tests for POST /api/v1/sessions/{session_id}/goal/complete endpoint."""
 
@@ -390,7 +388,6 @@ class TestCompleteSessionGoalEndpoint:
             assert "completed_at" in data
 
 
-@pytest.mark.xdist_group(name="test_session_goals_models")
 class TestSessionGoalModels:
     """Tests for session goal Pydantic models."""
 

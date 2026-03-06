@@ -36,7 +36,6 @@ class MockMCPResponse:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="mcp_client_session_null_checks")
 class TestMCPClientSessionNullChecks:
     """Test suite for MCP client session manager null check error paths."""
 
@@ -150,7 +149,6 @@ class TestMCPClientSessionNullChecks:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="mcp_client_session_null_checks_http")
 class TestMCPClientSessionNullChecksHTTP:
     """Test suite for MCP client session manager null checks via HTTP transport."""
 

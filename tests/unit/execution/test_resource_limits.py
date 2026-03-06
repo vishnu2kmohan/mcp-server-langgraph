@@ -21,7 +21,6 @@ except ImportError:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testresourcelimits")
 class TestResourceLimits:
     """Test suite for ResourceLimits configuration"""
 
@@ -217,7 +216,6 @@ class TestResourceLimits:
 
 @pytest.mark.unit
 @pytest.mark.property
-@pytest.mark.xdist_group(name="testresourcelimitsproperties")
 class TestResourceLimitsProperties:
     """Property-based tests for resource limits"""
 
@@ -257,7 +255,6 @@ class TestResourceLimitsProperties:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testresourcelimiterror")
 class TestResourceLimitError:
     """Test ResourceLimitError exception"""
 
@@ -277,7 +274,6 @@ class TestResourceLimitError:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testpresetresourceprofiles")
 class TestPresetResourceProfiles:
     """Test preset resource profiles for common use cases"""
 
@@ -316,7 +312,6 @@ class TestPresetResourceProfiles:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testresourcelimitscomparison")
 class TestResourceLimitsComparison:
     """Test resource limits comparison and validation"""
 
@@ -349,7 +344,6 @@ class TestResourceLimitsComparison:
 
 @pytest.mark.unit
 @pytest.mark.regression
-@pytest.mark.xdist_group(name="testresourcelimitsparameternamevalidation")
 class TestResourceLimitsParameterNameValidation:
     """
     Regression tests for ResourceLimits parameter naming

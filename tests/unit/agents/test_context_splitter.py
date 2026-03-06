@@ -33,7 +33,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="task_chunk")
 class TestTaskChunk:
     """Test TaskChunk data model."""
 
@@ -80,7 +79,6 @@ class TestTaskChunk:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_split_flags")
 class TestContextSplitFeatureFlags:
     """Test feature flags for context splitting."""
 
@@ -120,7 +118,6 @@ class TestContextSplitFeatureFlags:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_splitter_basic")
 class TestContextSplitterBasic:
     """Test ContextSplitter basic functionality."""
 
@@ -153,7 +150,6 @@ class TestContextSplitterBasic:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_splitter_split")
 class TestContextSplitterSplit:
     """Test ContextSplitter split_task functionality."""
 
@@ -218,7 +214,6 @@ class TestContextSplitterSplit:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_splitter_boundaries")
 class TestContextSplitterBoundaries:
     """Test semantic boundary detection."""
 
@@ -286,7 +281,6 @@ Third part."""
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_splitter_helpers")
 class TestContextSplitterHelpers:
     """Test helper methods."""
 

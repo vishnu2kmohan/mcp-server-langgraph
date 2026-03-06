@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_cost_tracking_init")
 class TestCostTrackingHandlerInit:
     """Tests for CostTrackingHandler initialization."""
 
@@ -62,7 +61,6 @@ class TestCostTrackingHandlerInit:
         assert handler._metrics is mock_metrics
 
 
-@pytest.mark.xdist_group(name="websocket_cost_tracking_lifecycle")
 class TestCostTrackingHandlerLifecycle:
     """Tests for CostTrackingHandler lifecycle hooks."""
 
@@ -112,7 +110,6 @@ class TestCostTrackingHandlerLifecycle:
         assert handler.subscribed_users == set()
 
 
-@pytest.mark.xdist_group(name="websocket_cost_tracking_messages")
 class TestCostTrackingHandlerMessages:
     """Tests for CostTrackingHandler message handling."""
 
@@ -333,7 +330,6 @@ class TestCostTrackingHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_cost_tracking_push")
 class TestCostTrackingHandlerPush:
     """Tests for CostTrackingHandler push functionality."""
 
@@ -430,7 +426,6 @@ class TestCostTrackingHandlerPush:
         mock_ws.send_json.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="websocket_cost_tracking_protocol")
 class TestCostServiceProtocol:
     """Tests for CostServiceProtocol."""
 

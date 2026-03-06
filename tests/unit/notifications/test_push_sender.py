@@ -524,7 +524,6 @@ class TestPushSenderCircuitBreaker:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="push_sender_fallback")
 class TestPushSenderFallbackQueue:
     """Tests for fallback queue integration in push sender."""
 
@@ -802,7 +801,6 @@ class TestPushSenderFallbackQueue:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="push_analytics_integration")
 class TestPushSenderAnalyticsIntegration:
     """Tests for PushNotificationSender integration with PushAnalytics."""
 

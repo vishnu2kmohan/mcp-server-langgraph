@@ -15,7 +15,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.defer_loading, pytest.mark.mcp]
 
 
-@pytest.mark.xdist_group(name="defer_loading_mcp_integration")
 class TestDeferLoadingMCPIntegration:
     """Test defer_loading integration with MCP tools/list handler."""
 
@@ -122,7 +121,6 @@ class TestDeferLoadingMCPIntegration:
             _DEFERRED_TOOLS.update(original)
 
 
-@pytest.mark.xdist_group(name="defer_loading_search_discovery")
 class TestDeferLoadingSearchDiscovery:
     """Test that deferred tools are discoverable via search endpoints."""
 
@@ -185,7 +183,6 @@ class TestDeferLoadingSearchDiscovery:
             _DEFERRED_TOOLS.update(original)
 
 
-@pytest.mark.xdist_group(name="defer_loading_feature_gated")
 class TestDeferLoadingFeatureGated:
     """Test feature flag gating for defer_loading."""
 

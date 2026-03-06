@@ -19,7 +19,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="testparallelexecutortimeouts")
 class TestParallelExecutorTimeouts:
     """Test suite for parallel executor timeout handling (TDD RED → GREEN)"""
 

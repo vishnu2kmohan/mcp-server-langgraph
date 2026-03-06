@@ -19,7 +19,6 @@ import pytest
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.mark.xdist_group(name="test_title_generator")
 class TestSessionTitleGenerator:
     """Tests for SessionTitleGenerator class."""
 
@@ -97,7 +96,6 @@ class TestSessionTitleGenerator:
         assert not title.lower().startswith("can you")
 
 
-@pytest.mark.xdist_group(name="test_title_generator_llm_factory")
 class TestSessionTitleGeneratorLLMFactory:
     """Tests for LLMFactory integration (SOLID compliance).
 

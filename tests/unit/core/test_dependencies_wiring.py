@@ -80,7 +80,6 @@ class TestModuleImports:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="testsettingsinjection")
 class TestSettingsInjection:
     """Validate settings can be injected into all components"""
 
@@ -141,7 +140,6 @@ class TestSettingsInjection:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="testinitializationorder")
 class TestInitializationOrder:
     """Validate components initialize in correct order"""
 
@@ -245,7 +243,6 @@ class TestProductionReadiness:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="testintegrationpoints")
 class TestIntegrationPoints:
     """Validate integration between major components"""
 

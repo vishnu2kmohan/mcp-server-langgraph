@@ -56,7 +56,6 @@ def sample_completed_goal_data(sample_goal_data: dict[str, Any]) -> dict[str, An
     }
 
 
-@pytest.mark.xdist_group(name="test_session_goal_repository")
 class TestSessionGoalRepository:
     """Tests for SessionGoalRepository."""
 
@@ -426,7 +425,6 @@ class TestSessionGoalRepository:
         assert count == 0
 
 
-@pytest.mark.xdist_group(name="test_session_goal_model")
 class TestSessionGoalModel:
     """Tests for SessionGoal SQLAlchemy model."""
 

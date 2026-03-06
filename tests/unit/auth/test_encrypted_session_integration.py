@@ -14,7 +14,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="encrypted_session_lifecycle")
 class TestEncryptedSessionLifecycle:
     """Tests for encrypted session lifecycle management."""
 
@@ -55,7 +54,6 @@ class TestEncryptedSessionLifecycle:
             assert isinstance(store, InMemorySessionStore)
 
 
-@pytest.mark.xdist_group(name="encrypted_session_settings")
 class TestEncryptedSessionSettings:
     """Tests for encrypted session settings."""
 
@@ -90,7 +88,6 @@ class TestEncryptedSessionSettings:
         assert validate_encryption_key(short_key) is False
 
 
-@pytest.mark.xdist_group(name="encrypted_session_env")
 class TestEncryptedSessionEnvironment:
     """Tests for encrypted session environment configuration."""
 

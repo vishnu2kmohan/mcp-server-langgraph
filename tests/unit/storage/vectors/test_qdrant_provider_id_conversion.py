@@ -20,7 +20,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.vectors]
 
 
-@pytest.mark.xdist_group(name="qdrant_id_conversion")
 class TestQdrantVectorProviderIdConversion:
     """Tests for QdrantVectorProvider ID conversion."""
 
@@ -128,7 +127,6 @@ class TestQdrantVectorProviderIdConversion:
         assert str(parsed) == result
 
 
-@pytest.mark.xdist_group(name="qdrant_id_conversion_upsert")
 class TestQdrantVectorProviderUpsertIdConversion:
     """Tests for QdrantVectorProvider.upsert() ID conversion."""
 
@@ -202,7 +200,6 @@ class TestQdrantVectorProviderUpsertIdConversion:
             assert used_id == original_uuid
 
 
-@pytest.mark.xdist_group(name="qdrant_id_conversion_delete")
 class TestQdrantVectorProviderDeleteIdConversion:
     """Tests for QdrantVectorProvider.delete() ID conversion."""
 
@@ -241,7 +238,6 @@ class TestQdrantVectorProviderDeleteIdConversion:
             assert points == [expected_uuid]
 
 
-@pytest.mark.xdist_group(name="qdrant_error_handling")
 class TestQdrantVectorProviderErrorHandling:
     """Tests for QdrantVectorProvider error handling paths.
 

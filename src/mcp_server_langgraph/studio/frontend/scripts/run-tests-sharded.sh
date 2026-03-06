@@ -17,7 +17,8 @@
 #
 # Parallel Mode:
 #   --parallel [N]    Run N shards concurrently (default: auto-detect based on memory)
-#                     Auto-detect formula: min(free_memory_gb * 0.8 / 4, cpu_count / 2, 8)
+#                     Auto-detect formula: min(free_memory_gb * 0.8 / 4, cpu_count * 3/4, hard_limit)
+#                     hard_limit: CI=2, local=VITEST_SHARD_CONCURRENCY_MAX (default 12)
 #                     This ensures each shard has 3GB+ memory headroom
 #
 # Shard Timeout:
@@ -216,12 +217,17 @@ get_optimal_concurrency() {
     local mem_limit=$((free_mem_gb * 80 / 100 / 4))
     [[ $mem_limit -lt 1 ]] && mem_limit=1
 
-    # CPU limit: Use half of CPUs (shards are I/O bound, not CPU bound)
-    local cpu_limit=$((cpu_count / 2))
+    # CPU limit: Use 3/4 of CPUs (shards are mixed I/O and CPU bound)
+    local cpu_limit=$((cpu_count * 3 / 4))
     [[ $cpu_limit -lt 1 ]] && cpu_limit=1
 
-    # Hard cap at 8 to prevent overwhelming the system
-    local hard_limit=8
+    # Environment-adaptive hard cap (replaces static 8)
+    local hard_limit
+    if [[ "${CI:-}" == "true" || "${GITHUB_ACTIONS:-}" == "true" ]]; then
+        hard_limit=2   # CI: 4 vCPU / 16GB -> max 2 concurrent (4GB/shard, 8GB total + OS headroom)
+    else
+        hard_limit=${VITEST_SHARD_CONCURRENCY_MAX:-12}  # Local: configurable, default 12
+    fi
 
     # Return minimum of all limits
     local optimal=$mem_limit

@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_workflow_authorization")
 class TestRequireWorkflowOwnerDependency:
     """Tests for require_workflow_owner authorization dependency."""
 
@@ -205,7 +204,6 @@ class TestRequireWorkflowOwnerDependency:
         assert result["id"] == "wf-123"
 
 
-@pytest.mark.xdist_group(name="test_workflow_sharing_endpoint_authorization")
 class TestWorkflowSharingEndpointAuthorization:
     """Tests for authorization on workflow sharing endpoints."""
 

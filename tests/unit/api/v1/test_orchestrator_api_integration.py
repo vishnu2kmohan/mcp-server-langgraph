@@ -17,7 +17,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.api]
 
 
-@pytest.mark.xdist_group(name="orchestrator_api_ux")
 class TestUXOrchestratorAPIIntegration:
     """Test UXOrchestrator integration with AI UX API endpoint."""
 
@@ -94,7 +93,6 @@ class TestUXOrchestratorAPIIntegration:
             assert result is not None
 
 
-@pytest.mark.xdist_group(name="orchestrator_api_alert")
 class TestAlertOrchestratorAPIIntegration:
     """Test AlertOrchestrator integration with Alert Recommendations API."""
 
@@ -163,7 +161,6 @@ class TestAlertOrchestratorAPIIntegration:
                 assert result is not None
 
 
-@pytest.mark.xdist_group(name="orchestrator_api_endpoint")
 class TestOrchestratorEndpoints:
     """Test orchestrator-specific API endpoints."""
 

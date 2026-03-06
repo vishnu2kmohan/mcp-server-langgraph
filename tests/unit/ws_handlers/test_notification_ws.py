@@ -44,7 +44,6 @@ def mock_broadcaster() -> MagicMock:
     return broadcaster
 
 
-@pytest.mark.xdist_group(name="notification_ws")
 class TestNotificationWebSocketHandler:
     """Test Notification WebSocket using WebSocketBase."""
 

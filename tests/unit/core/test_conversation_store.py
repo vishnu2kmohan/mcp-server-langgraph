@@ -15,7 +15,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testconversationstore")
 class TestConversationStore:
     """Test suite for ConversationStore"""
 
@@ -178,7 +177,6 @@ class TestConversationStore:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testconversationmetadata")
 class TestConversationMetadata:
     """Test ConversationMetadata dataclass"""
 

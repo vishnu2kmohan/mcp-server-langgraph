@@ -34,7 +34,6 @@ def create_mock_subagent(
     return subagent
 
 
-@pytest.mark.xdist_group(name="test_coordinator_lifecycle")
 class TestCoordinatorLifecycle:
     """Tests for subagent registration and lifecycle."""
 
@@ -112,7 +111,6 @@ class TestCoordinatorLifecycle:
         assert all(sa in listed for sa in subagents)
 
 
-@pytest.mark.xdist_group(name="test_coordinator_status")
 class TestCoordinatorStatus:
     """Tests for status tracking."""
 
@@ -160,7 +158,6 @@ class TestCoordinatorStatus:
         assert summary["failed"] == 1
 
 
-@pytest.mark.xdist_group(name="test_coordinator_execution")
 class TestCoordinatorExecution:
     """Tests for parallel execution."""
 
@@ -248,7 +245,6 @@ class TestCoordinatorExecution:
         assert result is None
 
 
-@pytest.mark.xdist_group(name="test_coordinator_artifacts")
 class TestCoordinatorArtifacts:
     """Tests for artifact storage operations."""
 
@@ -285,7 +281,6 @@ class TestCoordinatorArtifacts:
         assert artifacts == []
 
 
-@pytest.mark.xdist_group(name="test_coordinator_cancel")
 class TestCoordinatorCancel:
     """Tests for cancellation operations."""
 

@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="swarm_strategy")
 class TestSwarmStrategy:
     """Tests for SwarmStrategy enum."""
 
@@ -62,7 +61,6 @@ class TestSwarmStrategy:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="swarm_config")
 class TestSwarmConfig:
     """Tests for SwarmConfig model."""
 
@@ -149,7 +147,6 @@ class TestSwarmConfig:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="swarm_orchestrator_class")
 class TestSwarmOrchestrator:
     """Tests for SwarmOrchestrator class."""
 
@@ -216,7 +213,6 @@ class TestSwarmOrchestrator:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="swarm_race_strategy")
 class TestSwarmRaceStrategy:
     """Tests for RACE strategy execution."""
 
@@ -285,7 +281,6 @@ class TestSwarmRaceStrategy:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="swarm_cascade_strategy")
 class TestSwarmCascadeStrategy:
     """Tests for CASCADE strategy execution."""
 
@@ -352,7 +347,6 @@ class TestSwarmCascadeStrategy:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="swarm_consensus_strategy")
 class TestSwarmConsensusStrategy:
     """Tests for CONSENSUS strategy execution."""
 
@@ -427,7 +421,6 @@ class TestSwarmConsensusStrategy:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="swarm_error_handling")
 class TestSwarmErrorHandling:
     """Tests for SwarmOrchestrator error handling."""
 

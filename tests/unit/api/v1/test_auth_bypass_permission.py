@@ -20,7 +20,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_auth_bypass_permission")
 class TestBypassPermissionCheck:
     """Tests for GET /api/v1/auth/bypass-permission endpoint.
 

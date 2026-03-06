@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="agent_graph_builder_events")
 class TestDynamicContextLoadedEvent:
     """Tests for dynamic_context_loaded event emission."""
 

@@ -56,7 +56,6 @@ def test_api_key_cache_uses_separate_database(monkeypatch):
     )
 
 
-@pytest.mark.xdist_group(name="cache_isolation")
 class TestCacheIsolation:
     """
     Tests for cache isolation and pattern-based deletion.

@@ -18,7 +18,6 @@ from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testredisurlencoding")
 class TestRedisURLEncoding:
     """Test URL encoding for Redis connection strings per RFC 3986."""
 

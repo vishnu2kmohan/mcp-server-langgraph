@@ -312,7 +312,6 @@ class TestSemanticBootstrapIntegration:
         assert SemanticState is not None
 
 
-@pytest.mark.xdist_group(name="semantic_bootstrap_split")
 class TestSemanticBootstrapSplit:
     """Tests for split init_semantic_manager() and index_all_tools() (v26)."""
 

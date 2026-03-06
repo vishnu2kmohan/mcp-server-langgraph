@@ -20,7 +20,6 @@ from scripts.validators.todo_audit import AuditResult, TodoAuditor, TodoMarker
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testtodoauditor")
 class TestTodoAuditor:
     """Test suite for TodoAuditor."""
 
@@ -216,7 +215,6 @@ FIXME: Task 2
         assert result.stats["total_files"] == 0
 
 
-@pytest.mark.xdist_group(name="testtodomarker")
 class TestTodoMarker:
     """Test suite for TodoMarker dataclass."""
 
@@ -241,7 +239,6 @@ class TestTodoMarker:
         gc.collect()
 
 
-@pytest.mark.xdist_group(name="testauditresult")
 class TestAuditResult:
     """Test suite for AuditResult dataclass."""
 

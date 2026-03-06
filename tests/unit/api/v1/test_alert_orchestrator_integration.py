@@ -31,7 +31,6 @@ MOCK_USER = {
 }
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_api_init")
 class TestAlertOrchestratorAPIInjection:
     """Test AlertOrchestrator injection into API module."""
 
@@ -82,7 +81,6 @@ class TestAlertOrchestratorAPIInjection:
             set_alert_orchestrator(None)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_api_feature_flag")
 class TestAlertOrchestratorFeatureFlag:
     """Test feature flag controls orchestrator usage."""
 
@@ -104,7 +102,6 @@ class TestAlertOrchestratorFeatureFlag:
         assert isinstance(feature_flags.enable_orchestrated_alert_analysis, bool)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_api_batch")
 class TestAlertOrchestratorBatchAnalysis:
     """Test batch alert analysis uses orchestrator."""
 
@@ -168,7 +165,6 @@ class TestAlertOrchestratorBatchAnalysis:
             set_alert_orchestrator(None)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_api_fallback")
 class TestAlertOrchestratorFallback:
     """Test fallback to sequential when orchestrator disabled."""
 
@@ -237,7 +233,6 @@ class TestAlertOrchestratorFallback:
             set_alert_orchestrator(None)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_api_cost")
 class TestAlertOrchestratorCostTracking:
     """Test cost tracking integration with AlertOrchestrator."""
 
@@ -285,7 +280,6 @@ class TestAlertOrchestratorCostTracking:
         assert alert.status == BudgetStatus.OK
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_api_analyze")
 class TestAlertOrchestratorAnalyzeEndpoint:
     """Test batch analyze alerts endpoint."""
 

@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="plan_templates_api")
 class TestPlanTemplatesAPIRouter:
     """Tests for plan templates API router."""
 
@@ -39,7 +38,6 @@ class TestPlanTemplatesAPIRouter:
         assert "plan-templates" in plan_templates_router.tags
 
 
-@pytest.mark.xdist_group(name="plan_templates_list")
 class TestListTemplatesEndpoint:
     """Tests for list templates endpoint."""
 
@@ -80,7 +78,6 @@ class TestListTemplatesEndpoint:
         mock_repo.list_all.assert_called_once_with(limit=5)
 
 
-@pytest.mark.xdist_group(name="plan_templates_get")
 class TestGetTemplateEndpoint:
     """Tests for get template endpoint."""
 
@@ -136,7 +133,6 @@ class TestGetTemplateEndpoint:
         assert exc_info.value.status_code == 404
 
 
-@pytest.mark.xdist_group(name="plan_templates_create")
 class TestCreateTemplateEndpoint:
     """Tests for create template endpoint."""
 
@@ -185,7 +181,6 @@ class TestCreateTemplateEndpoint:
         mock_repo.create.assert_called_once()
 
 
-@pytest.mark.xdist_group(name="plan_templates_delete")
 class TestDeleteTemplateEndpoint:
     """Tests for delete template endpoint."""
 
@@ -229,7 +224,6 @@ class TestDeleteTemplateEndpoint:
         assert exc_info.value.status_code == 404
 
 
-@pytest.mark.xdist_group(name="plan_templates_search")
 class TestSearchTemplatesEndpoint:
     """Tests for search templates endpoint."""
 
@@ -311,7 +305,6 @@ class TestSearchTemplatesEndpoint:
         assert result.templates[0].orchestrator == "swarm"
 
 
-@pytest.mark.xdist_group(name="plan_templates_record_usage")
 class TestRecordUsageEndpoint:
     """Tests for record usage endpoint."""
 

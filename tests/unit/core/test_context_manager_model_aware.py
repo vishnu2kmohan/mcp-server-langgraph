@@ -32,7 +32,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_manager_model_aware")
 class TestModelAwareContextManager:
     """Test model-aware context compaction features."""
 
@@ -70,7 +69,6 @@ class TestModelAwareContextManager:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_manager_threshold_calculation")
 class TestDynamicThresholdCalculation:
     """Test dynamic threshold calculation based on model capabilities."""
 
@@ -138,7 +136,6 @@ class TestDynamicThresholdCalculation:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_manager_feature_flags")
 class TestFeatureFlagIntegration:
     """Test feature flag integration for model-aware compaction."""
 
@@ -180,7 +177,6 @@ class TestFeatureFlagIntegration:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_manager_backward_compat")
 class TestBackwardCompatibility:
     """Test backward compatibility with fixed thresholds."""
 
@@ -221,7 +217,6 @@ class TestBackwardCompatibility:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_manager_integration")
 class TestModelRegistryIntegration:
     """Test integration with ModelRegistry."""
 
@@ -262,7 +257,6 @@ class TestModelRegistryIntegration:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_manager_needs_compaction")
 class TestNeedsCompactionModelAware:
     """Test needs_compaction with model-aware thresholds."""
 
@@ -305,7 +299,6 @@ class TestNeedsCompactionModelAware:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="context_manager_target_after")
 class TestTargetAfterCompaction:
     """Test target_after_compaction with model-aware scaling."""
 

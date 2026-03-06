@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="adr0092_flags_core")
 class TestADR0092CoreFeatureFlags:
     """Tests for ADR-0092 core feature flags (P0/P1 priority)."""
 
@@ -144,7 +143,6 @@ class TestADR0092CoreFeatureFlags:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="adr0092_flags_optional")
 class TestADR0092OptionalFeatureFlags:
     """Tests for ADR-0092 optional feature flags (P2/P3 priority)."""
 
@@ -299,7 +297,6 @@ class TestADR0092OptionalFeatureFlags:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="adr0092_flags_integration")
 class TestADR0092FeatureFlagIntegration:
     """Tests for ADR-0092 feature flag integration with existing patterns."""
 
@@ -377,7 +374,6 @@ class TestADR0092FeatureFlagIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="adr0092_master_flag")
 class TestHierarchicalCapabilityProviderMasterFlag:
     """Tests for enable_hierarchical_capability_provider master flag.
 
@@ -440,7 +436,6 @@ class TestHierarchicalCapabilityProviderMasterFlag:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="ui_shell_feature_flags")
 class TestUIShellFeatureFlags:
     """Tests for UI shell feature flags (model selector, URL fetch in shell).
 

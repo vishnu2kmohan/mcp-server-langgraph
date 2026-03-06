@@ -49,20 +49,17 @@ repos:
     - --skip
     - B608
     stages:
-      - pre-push
+      - manual  # Consolidated into parallel-security-scan for pre-push
 - repo: https://github.com/pre-commit/mirrors-mypy
   rev: v1.13.0
   hooks:
   - id: mypy
     name: MyPy Type Checking (Blocking)
-    # CRITICAL: Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
-    entry: uv run --frozen mypy src/mcp_server_langgraph
+    # Uses dmypy daemon locally for incremental checking (~1-3s warm vs ~10-30s cold)
+    # Falls back to standard mypy in CI (daemon doesn't persist across CI jobs)
+    entry: bash scripts/hooks/dmypy_check.sh
     language: system
     types: [python]
-    args:
-    - --config-file=pyproject.toml
-    - --show-error-codes
-    - --pretty
     pass_filenames: false
     # MyPy Configuration Status (2025-11-27)
     #
@@ -480,21 +477,45 @@ repos:
       if [ ! -d "node_modules" ]; then
         echo "Installing frontend dependencies..." && npm ci --silent;
       fi &&
-      npm test -- --run 2>&1 || (echo "" && echo "ERROR - Frontend tests failed." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm test" && exit 1)'
+      REPO_ROOT=$(git rev-parse --show-toplevel) &&
+      FRONTEND_DIR="src/mcp_server_langgraph/studio/frontend/src" &&
+      if ! CHANGED=$(cd "$REPO_ROOT" && git diff --name-only @{push}.. -- "$FRONTEND_DIR/" 2>/dev/null); then
+        echo "No upstream tracking branch (first push?), running full test suite" &&
+        bash "$REPO_ROOT/src/mcp_server_langgraph/studio/frontend/scripts/run-tests-sharded.sh" --parallel;
+        exit $?;
+      fi &&
+      CONFIG_CHANGED=$(cd "$REPO_ROOT" && git diff --name-only @{push}.. -- \
+        src/mcp_server_langgraph/studio/frontend/package.json \
+        src/mcp_server_langgraph/studio/frontend/package-lock.json \
+        src/mcp_server_langgraph/studio/frontend/vite.config.ts \
+        src/mcp_server_langgraph/studio/frontend/vitest.config.ts \
+        src/mcp_server_langgraph/studio/frontend/tsconfig.json \
+        src/mcp_server_langgraph/studio/frontend/src/test/ \
+        2>/dev/null || true) &&
+      if [ -z "$CHANGED" ] && [ -z "$CONFIG_CHANGED" ]; then
+        echo "No frontend changes, skipping tests"; exit 0;
+      fi &&
+      FILE_COUNT=$(echo "$CHANGED" | wc -l) &&
+      if [ -n "$CONFIG_CHANGED" ] || [ "$FILE_COUNT" -gt 10 ]; then
+        echo "Config files changed or many files touched ($FILE_COUNT), running full sharded suite" &&
+        bash "$REPO_ROOT/src/mcp_server_langgraph/studio/frontend/scripts/run-tests-sharded.sh" --parallel;
+      else
+        echo "Running related tests for $FILE_COUNT changed file(s)..." &&
+        npx vitest run --related $CHANGED;
+      fi || (echo "" && echo "ERROR - Frontend tests failed." && echo "Run: cd src/mcp_server_langgraph/studio/frontend && npm test" && exit 1)'
     language: system
     pass_filenames: false
-    files: ^src/mcp_server_langgraph/studio/frontend/src/.*\.(ts|tsx)$
+    files: ^src/mcp_server_langgraph/studio/frontend/(src/.*\.(ts|tsx)|package(-lock)?\.json|vite\.config\.ts|vitest\.config\.ts|tsconfig\.json)$
     always_run: false
     stages:
     - pre-push
-    description: 'Runs frontend unit tests with Vitest before push.
+    description: 'Runs frontend unit tests with Vitest before push using --related for small changes.
 
       Added 2025-12-14 to catch test failures before CI.
+      Updated 2026-03-06: Uses vitest --related for small changesets (<= 10 files),
+      falls back to full sharded suite for config changes or many files.
 
-      Runs the full Vitest test suite (2,168+ tests) in run mode (not watch).
-      Catches regressions in React components, hooks, and Redux slices.
-
-      Duration: ~20-30s depending on test count.
+      Duration: ~5-10s for --related, ~20-30s for full suite.
 
       Complements TypeScript checking with behavioral validation.
 
@@ -781,6 +802,15 @@ repos:
     stages:
     - pre-push
     description: "Consolidated runner for fast validation scripts to reduce overhead.\nIncludes: pytest-config, pre-push-hook, repo-root, time-bombs, async-fixture-scope, migration-idempotency, api-schemas."
+  - id: validate-fast-precommit
+    name: Run Fast Pre-Commit Validators (Consolidated)
+    entry: uv run --frozen python -u scripts/validators/validate_fast_precommit.py
+    language: system
+    pass_filenames: false
+    always_run: true
+    stages:
+    - pre-commit
+    description: "Consolidated runner for fast pre-commit validation scripts.\nRuns multiple lightweight checks in a single Python process.\nIncludes: alembic-duplicates, websocket-permissions, adr-sync."
 
   - id: validate-docs
     name: Validate Documentation (Consolidated - MDX, Naming, Icons, ADR, Tests)
@@ -1023,7 +1053,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual  # Consolidated into parallel-security-scan for pre-push
     description: 'Scans Kubernetes manifests for security misconfigurations using Trivy.
 
 
@@ -1069,7 +1099,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual  # Consolidated into parallel-security-scan for pre-push
     description: 'Scans Terraform configurations for security misconfigurations using Checkov.
 
       Detects issues like:
@@ -1108,7 +1138,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual  # Consolidated into parallel-security-scan for pre-push
     description: 'Scans Helm charts (including subcharts) for security misconfigurations.
 
       Extends trivy-scan-k8s-manifests to cover the helm/ directory and subcharts.
@@ -1134,7 +1164,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual  # Consolidated into parallel-security-scan for pre-push
     description: 'Comprehensive Helm chart security scan including all subcharts.
 
       IMPORTANT: This hook templates the entire Helm chart (including subcharts stored
@@ -1182,7 +1212,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual  # Consolidated into parallel-security-scan for pre-push
     description: 'Static analysis for Python security issues (CodeQL equivalent).
 
       REQUIRED: Semgrep must be installed. Install via: uv sync --group dev
@@ -1232,6 +1262,26 @@ repos:
       CI always runs these checks regardless of this setting.
 
       Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      '
+  - id: parallel-security-scan
+    name: Parallel Security Scan (Consolidated)
+    entry: bash scripts/hooks/parallel_security_scan.sh
+    language: system
+    pass_filenames: false
+    always_run: true
+    stages:
+    - pre-push
+    description: 'Runs all security scans (Trivy, Semgrep, Bandit, Checkov) in parallel.
+
+      Replaces 6 individual sequential security hooks with 1 concurrent wrapper.
+      Local (16+ cores): all scans in parallel (~45-90s vs ~2-4 min sequential).
+      CI (4 vCPU): 2 concurrent scans (~30-60s improvement).
+
+      Respects SKIP_TRIVY, SKIP_SEMGREP, etc. env vars locally (ignored in CI).
+
+      Individual scans available at manual stage for targeted runs.
+
+      Added: 2026-03-06 (Plan: Speed Up Pre-Commit/Pre-Push Hooks)
       '
   - id: check-mermaid-styling
     name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling

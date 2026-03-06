@@ -21,7 +21,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.precommit
-@pytest.mark.xdist_group(name="testpostgresconnectionconfig")
 class TestPostgresConnectionConfig:
     """Validate PostgreSQL connection configuration consistency."""
 

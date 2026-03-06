@@ -29,7 +29,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="worker_agent_ainvoke")
 class TestWorkerAgentAInvoke:
     """Test suite for WorkerAgent using ainvoke API."""
 

@@ -50,7 +50,6 @@ def in_memory_repo():
     return InMemoryExecutionPlanRepository()
 
 
-@pytest.mark.xdist_group(name="execution_plan_repository")
 class TestExecutionPlanRepositoryInterface:
     """Tests for ExecutionPlanRepository abstract interface."""
 
@@ -107,7 +106,6 @@ class TestExecutionPlanRepositoryInterface:
         assert hasattr(ExecutionPlanRepository, "list_pending")
 
 
-@pytest.mark.xdist_group(name="execution_plan_repository_inmemory")
 class TestInMemoryExecutionPlanRepository:
     """Tests for InMemoryExecutionPlanRepository."""
 
@@ -267,7 +265,6 @@ class TestInMemoryExecutionPlanRepository:
         assert result is False
 
 
-@pytest.mark.xdist_group(name="execution_plan_singleton")
 class TestSharedSingleton:
     """Test get_plan_repository() returns shared singleton (v35.0 Plan)."""
 
@@ -345,7 +342,6 @@ class TestSharedSingleton:
         assert result is None
 
 
-@pytest.mark.xdist_group(name="execution_plan_list_all")
 class TestListAll:
     """Test list_all() pagination and sorting (v35.0 Plan)."""
 
@@ -541,7 +537,6 @@ class TestListAll:
         assert plans == []
 
 
-@pytest.mark.xdist_group(name="execution_plan_abstract")
 class TestAbstractListAllMethod:
     """Test that list_all is an abstract method in the base class."""
 

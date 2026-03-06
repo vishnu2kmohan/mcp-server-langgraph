@@ -108,7 +108,6 @@ class TestConfidenceApprovalNodeInitialization:
         assert callable(node)
 
 
-@pytest.mark.xdist_group(name="confidence_interrupt_behavior")
 class TestConfidenceApprovalNodeBehavior:
     """Test ConfidenceApprovalNode behavior with different confidence levels."""
 
@@ -201,7 +200,6 @@ class TestConfidenceApprovalNodeBehavior:
         assert result.get("pending_approval") is not True
 
 
-@pytest.mark.xdist_group(name="confidence_interrupt_payload")
 class TestConfidenceApprovalNodePayload:
     """Test ConfidenceApprovalNode creates proper approval request payload."""
 
@@ -281,7 +279,6 @@ class TestConfidenceApprovalNodePayload:
         assert result["current_approval_id"] is not None
 
 
-@pytest.mark.xdist_group(name="confidence_check_helper")
 class TestCheckConfidenceHelper:
     """Test check_confidence helper function."""
 
@@ -313,7 +310,6 @@ class TestCheckConfidenceHelper:
         assert check_confidence(0.65) is False  # < 0.7
 
 
-@pytest.mark.xdist_group(name="confidence_interrupt_integration")
 class TestConfidenceApprovalNodeIntegration:
     """Test ConfidenceApprovalNode integration with existing approval system."""
 

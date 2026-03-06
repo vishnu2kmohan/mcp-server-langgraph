@@ -21,7 +21,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="router_output_enhanced")
 class TestRouterOutputNewFields:
     """Tests for new RouterOutput fields."""
 
@@ -161,7 +160,6 @@ class TestRouterOutputNewFields:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="router_output_backward_compat")
 class TestRouterOutputBackwardCompatibility:
     """Tests ensuring backward compatibility with existing 8-field usage."""
 
@@ -276,7 +274,6 @@ class TestRouterOutputBackwardCompatibility:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="router_output_json")
 class TestRouterOutputJsonParsing:
     """Tests for RouterOutput JSON parsing with new fields."""
 

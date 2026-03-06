@@ -31,7 +31,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="cost_models")
 class TestCostModels:
     """Test cost tracking data models."""
 
@@ -127,7 +126,6 @@ class TestCostModels:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="cost_feature_flags")
 class TestCostFeatureFlags:
     """Test feature flags for cost tracking."""
 
@@ -195,7 +193,6 @@ class TestCostFeatureFlags:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="cost_tracker_basic")
 class TestCostTrackerBasic:
     """Test CostTracker basic functionality."""
 
@@ -245,7 +242,6 @@ class TestCostTrackerBasic:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="cost_tracker_tracking")
 class TestCostTrackerTracking:
     """Test CostTracker usage tracking."""
 
@@ -361,7 +357,6 @@ class TestCostTrackerTracking:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="cost_tracker_budget")
 class TestCostTrackerBudget:
     """Test CostTracker budget checking."""
 
@@ -463,7 +458,6 @@ class TestCostTrackerBudget:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="cost_tracker_reset")
 class TestCostTrackerReset:
     """Test CostTracker reset functionality."""
 
@@ -523,7 +517,6 @@ class TestCostTrackerReset:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="cost_tracker_metrics")
 class TestCostTrackerMetrics:
     """Test CostTracker Prometheus metrics integration."""
 

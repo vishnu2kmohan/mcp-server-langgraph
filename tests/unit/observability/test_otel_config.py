@@ -18,7 +18,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="otel_config_tests")
 class TestOtelEndpointConfiguration:
     """Test OTEL endpoint configuration reads from standard environment variables."""
 

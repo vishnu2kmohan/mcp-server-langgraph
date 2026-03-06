@@ -51,7 +51,6 @@ def mock_user():
     )
 
 
-@pytest.mark.xdist_group(name="ai_suggestions_handler")
 class TestAISuggestionsHandler:
     """Tests for AISuggestionsHandler class."""
 
@@ -171,7 +170,6 @@ class TestAISuggestionsHandler:
         assert "disconnected" in caplog.text
 
 
-@pytest.mark.xdist_group(name="ai_suggestions_handler_errors")
 class TestAISuggestionsHandlerErrorResponses:
     """Tests for AISuggestionsHandler error response format (ADR-0093 protocol compliance)."""
 

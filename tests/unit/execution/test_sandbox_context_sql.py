@@ -9,7 +9,6 @@ from mcp_server_langgraph.execution.sandbox_context import SandboxContext
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.mark.xdist_group(name="sandbox_context_sql")
 class TestSandboxContextSQL:
     """Tests for SQL validator and transpiler access from SandboxContext."""
 

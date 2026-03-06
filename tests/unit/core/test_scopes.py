@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="capability_scope")
 class TestCapabilityScopeEnum:
     """Tests for CapabilityScope enum existence and structure."""
 
@@ -107,7 +106,6 @@ class TestCapabilityScopeEnum:
 
 @pytest.mark.unit
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="capability_scope_precedence")
 class TestCapabilityScopePrecedence:
     """Tests for CapabilityScope precedence ordering."""
 
@@ -183,7 +181,6 @@ class TestCapabilityScopePrecedence:
 
 @pytest.mark.unit
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="capability_scope_utils")
 class TestCapabilityScopeUtilities:
     """Tests for CapabilityScope utility functions."""
 

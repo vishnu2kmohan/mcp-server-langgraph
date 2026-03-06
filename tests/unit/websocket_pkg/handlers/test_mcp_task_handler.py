@@ -40,7 +40,6 @@ class MockTask:
         self.status_message = None
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_task_init")
 class TestMCPTaskWebSocketHandlerInit:
     """Tests for MCPTaskWebSocketHandler initialization."""
 
@@ -81,7 +80,6 @@ class TestMCPTaskWebSocketHandlerInit:
         assert handler._metrics is mock_metrics
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_task_lifecycle")
 class TestMCPTaskWebSocketHandlerLifecycle:
     """Tests for MCPTaskWebSocketHandler lifecycle hooks."""
 
@@ -140,7 +138,6 @@ class TestMCPTaskWebSocketHandlerLifecycle:
         assert handler.subscriptions == set()
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_task_messages")
 class TestMCPTaskWebSocketHandlerMessages:
     """Tests for MCPTaskWebSocketHandler message handling."""
 
@@ -310,7 +307,6 @@ class TestMCPTaskWebSocketHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_task_conversion")
 class TestMCPTaskWebSocketHandlerConversion:
     """Tests for MCPTaskWebSocketHandler task conversion."""
 
@@ -363,7 +359,6 @@ class TestMCPTaskWebSocketHandlerConversion:
         assert result["status"] == "pending"
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_task_push")
 class TestMCPTaskWebSocketHandlerPush:
     """Tests for MCPTaskWebSocketHandler push functionality."""
 
@@ -439,7 +434,6 @@ class TestMCPTaskWebSocketHandlerPush:
         # Should not raise
 
 
-@pytest.mark.xdist_group(name="websocket_mcp_task_protocol")
 class TestMCPServiceProtocol:
     """Tests for MCPServiceProtocol."""
 

@@ -14,7 +14,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="skills_auto_update_lifecycle")
 class TestAutoUpdateLifecycleIntegration:
     """Tests for auto-update scheduler lifecycle management."""
 
@@ -112,7 +111,6 @@ class TestAutoUpdateLifecycleIntegration:
             reset_auto_update_scheduler()
 
 
-@pytest.mark.xdist_group(name="skills_auto_update_api")
 class TestAutoUpdateAPIEndpoint:
     """Tests for auto-update API endpoint."""
 
@@ -163,7 +161,6 @@ class TestAutoUpdateAPIEndpoint:
             assert "applied" in result
 
 
-@pytest.mark.xdist_group(name="skills_auto_update_settings")
 class TestAutoUpdateSettings:
     """Tests for auto-update settings integration."""
 

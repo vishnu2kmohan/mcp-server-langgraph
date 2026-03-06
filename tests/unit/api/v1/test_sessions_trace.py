@@ -21,7 +21,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="sessions_trace")
 class TestSessionTraceEndpoint:
     """Tests for GET /api/v1/sessions/{session_id}/trace endpoint."""
 

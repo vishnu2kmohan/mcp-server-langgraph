@@ -66,7 +66,6 @@ def client() -> Generator[TestClient, None, None]:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="skills_marketplace_api")
 class TestListMarketplaceSkills:
     """Test GET /admin/skills/list endpoint."""
 
@@ -199,7 +198,6 @@ class TestListMarketplaceSkills:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="skills_install_api")
 class TestInstallSkill:
     """Test POST /admin/skills/install endpoint."""
 
@@ -340,7 +338,6 @@ class TestInstallSkill:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="skills_installed_api")
 class TestListInstalledSkills:
     """Test GET /admin/skills/installed endpoint."""
 
@@ -390,7 +387,6 @@ class TestListInstalledSkills:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="skills_uninstall_api")
 class TestUninstallSkill:
     """Test DELETE /admin/skills/{skill_name} endpoint."""
 
@@ -434,7 +430,6 @@ class TestUninstallSkill:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="skills_updates_api")
 class TestCheckSkillUpdates:
     """Test GET /admin/skills/updates endpoint."""
 
@@ -527,7 +522,6 @@ class TestCheckSkillUpdates:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="skills_apply_updates_api")
 class TestApplySkillUpdates:
     """Test POST /admin/skills/updates/apply endpoint."""
 

@@ -22,7 +22,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontractconstructor")
 class TestParameterContractConstructor:
     """Verify constructor validates driver names and sets up styles correctly."""
 
@@ -88,7 +87,6 @@ class TestParameterContractConstructor:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontracttranslatepositional")
 class TestParameterContractTranslatePositional:
     """Verify translate() for positional-style drivers."""
 
@@ -154,7 +152,6 @@ class TestParameterContractTranslatePositional:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontracttranslatenamed")
 class TestParameterContractTranslateNamed:
     """Verify translate() for named-style drivers."""
 
@@ -213,7 +210,6 @@ class TestParameterContractTranslateNamed:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontracttranslatemissing")
 class TestParameterContractTranslateMissingParams:
     """Verify translate() raises on missing parameters."""
 
@@ -241,7 +237,6 @@ class TestParameterContractTranslateMissingParams:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontracttranslatesqlparse")
 class TestParameterContractTranslateSQLParseError:
     """Verify translate() wraps ParseError as SQLParseError."""
 
@@ -265,7 +260,6 @@ class TestParameterContractTranslateSQLParseError:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontractvalidateparamcount")
 class TestParameterContractValidateParamCount:
     """Verify validate_param_count() detects missing and unused params."""
 
@@ -317,7 +311,6 @@ class TestParameterContractValidateParamCount:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontractalldriverstyleparam")
 class TestParameterContractAllDriverStyles:
     """Parameterized tests across all supported driver styles."""
 
@@ -369,7 +362,6 @@ class TestParameterContractAllDriverStyles:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testparamcontractnewdrivers")
 class TestParameterContractNewDriverStyles:
     """Verify DRIVER_STYLES entries for newly added drivers."""
 

@@ -61,7 +61,6 @@ class TestOpenFGAWorkflowSharingService:
         assert hasattr(OpenFGAWorkflowSharingService, "set_workflow_owner")
 
 
-@pytest.mark.xdist_group(name="test_openfga_workflow_sharing_sync")
 class TestOpenFGASyncShare:
     """Tests for syncing shares to OpenFGA."""
 
@@ -159,7 +158,6 @@ class TestOpenFGASyncShare:
         assert call_args[0]["relation"] == "executor"
 
 
-@pytest.mark.xdist_group(name="test_openfga_workflow_sharing_remove")
 class TestOpenFGARemoveShare:
     """Tests for removing shares from OpenFGA."""
 
@@ -210,7 +208,6 @@ class TestOpenFGARemoveShare:
         assert relations == {"viewer", "editor", "executor"}
 
 
-@pytest.mark.xdist_group(name="test_openfga_workflow_sharing_owner")
 class TestOpenFGASetWorkflowOwner:
     """Tests for setting workflow owner in OpenFGA."""
 
@@ -261,7 +258,6 @@ class TestOpenFGASetWorkflowOwner:
         assert call_args[0]["object"] == "workflow:wf-123"
 
 
-@pytest.mark.xdist_group(name="test_openfga_workflow_sharing_check")
 class TestOpenFGACheckWorkflowPermission:
     """Tests for checking workflow permissions via OpenFGA."""
 

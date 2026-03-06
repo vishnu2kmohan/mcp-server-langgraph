@@ -50,7 +50,6 @@ def test_app(mock_user: dict[str, Any]) -> FastAPI:
     return app
 
 
-@pytest.mark.xdist_group(name="test_artifact_description_field")
 class TestArtifactDescriptionField:
     """Tests for artifact description field (TDD RED phase)."""
 

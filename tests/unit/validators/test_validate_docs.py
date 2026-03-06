@@ -36,7 +36,6 @@ PROJECT_ROOT = get_repo_root()
 VALIDATE_DOCS_SCRIPT = PROJECT_ROOT / "scripts" / "validators" / "validate_docs.py"
 
 
-@pytest.mark.xdist_group(name="testvalidatedocsscript")
 class TestValidateDocsScript:
     """Test the consolidated validate_docs.py script exists and is executable."""
 
@@ -71,7 +70,6 @@ class TestValidateDocsScript:
         assert "--all" in result.stdout, "Missing --all flag in help"
 
 
-@pytest.mark.xdist_group(name="testmdxvalidation")
 class TestMDXValidation:
     """Test MDX validation functionality."""
 
@@ -132,7 +130,6 @@ class TestMDXValidation:
             assert result.returncode == 0, f"Empty docs dir should pass: {result.stdout}\n{result.stderr}"
 
 
-@pytest.mark.xdist_group(name="testfilenaming")
 class TestFileNamingValidation:
     """Test file naming convention validation."""
 
@@ -196,7 +193,6 @@ class TestFileNamingValidation:
             assert result.returncode == 0, f"Kebab-case should pass: {result.stdout}\n{result.stderr}"
 
 
-@pytest.mark.xdist_group(name="testfrontmatter")
 class TestFrontmatterValidation:
     """Test frontmatter validation functionality."""
 
@@ -231,7 +227,6 @@ icon: "star"
             assert "frontmatter" in result.stdout.lower() or result.returncode == 0
 
 
-@pytest.mark.xdist_group(name="testadrvalidation")
 class TestADRValidation:
     """Test ADR synchronization validation."""
 
@@ -346,7 +341,6 @@ class TestADRValidation:
             assert result.returncode != 0, "Should fail with uppercase ADR- prefix"
 
 
-@pytest.mark.xdist_group(name="testtestsvalidation")
 class TestTestsValidation:
     """Test the --tests flag that runs pytest validation tests."""
 
@@ -367,7 +361,6 @@ class TestTestsValidation:
         assert "pytest" in result.stdout.lower() or "test" in result.stdout.lower()
 
 
-@pytest.mark.xdist_group(name="testallvalidation")
 class TestAllValidation:
     """Test the --all flag that runs all validations."""
 
@@ -413,7 +406,6 @@ class TestAllValidation:
         assert result.returncode == 0, f"Real repo failed validation:\n{result.stdout}\n{result.stderr}"
 
 
-@pytest.mark.xdist_group(name="testquietmode")
 class TestQuietMode:
     """Test quiet mode output."""
 
@@ -447,7 +439,6 @@ class TestQuietMode:
             assert len(result.stdout) < 100 or result.stdout.strip() == ""
 
 
-@pytest.mark.xdist_group(name="testexitcodes")
 class TestExitCodes:
     """Test exit codes for different scenarios."""
 

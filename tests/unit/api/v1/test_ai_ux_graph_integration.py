@@ -72,7 +72,6 @@ def artifact_storage():
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_graph_integration")
 class TestRunCompositeAnalysisWithGraph:
     """Test run_composite_analysis uses StateGraph internally."""
 
@@ -171,7 +170,6 @@ class TestRunCompositeAnalysisWithGraph:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_graph_parallel")
 class TestParallelNodeExecution:
     """Test parallel node execution in StateGraph."""
 
@@ -280,7 +278,6 @@ class TestParallelNodeExecution:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_graph_telemetry")
 class TestOpenTelemetrySpans:
     """Test OpenTelemetry spans in graph nodes."""
 
@@ -372,7 +369,6 @@ class TestOpenTelemetrySpans:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_composite_e2e")
 class TestCompositeEndpointE2E:
     """E2E tests for composite analysis endpoint."""
 

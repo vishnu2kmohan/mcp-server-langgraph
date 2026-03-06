@@ -26,7 +26,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="configurable_subagent_cap")
 class TestMaxSubagentsFeatureFlag:
     """Test max_subagents feature flag."""
 
@@ -67,7 +66,6 @@ class TestMaxSubagentsFeatureFlag:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="scale_effort_cap")
 class TestScaleEffortCap:
     """Test scale_effort uses configurable cap."""
 

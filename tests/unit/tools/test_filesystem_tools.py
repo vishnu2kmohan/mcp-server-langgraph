@@ -14,7 +14,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testreadfile")
 class TestReadFile:
     """Test suite for read_file tool"""
 
@@ -77,7 +76,6 @@ class TestReadFile:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlistdirectory")
 class TestListDirectory:
     """Test suite for list_directory tool"""
 
@@ -144,7 +142,6 @@ class TestListDirectory:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsearchfiles")
 class TestSearchFiles:
     """Test suite for search_files tool"""
 
@@ -204,7 +201,6 @@ class TestSearchFiles:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testfilesystemtoolschemas")
 class TestFilesystemToolSchemas:
     """Test filesystem tool schemas"""
 

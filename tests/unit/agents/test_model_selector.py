@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_selector_core")
 class TestModelSelectorBasics:
     """Basic tests for ModelSelector initialization and model tiers."""
 
@@ -91,7 +90,6 @@ class TestModelSelectorBasics:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_selector_vendor_detection")
 class TestVendorDetection:
     """Tests for vendor auto-detection from environment variables."""
 
@@ -216,7 +214,6 @@ class TestVendorDetection:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_selector_tier_fallback")
 class TestTierFallback:
     """Tests for tier fallback logic."""
 
@@ -306,7 +303,6 @@ class TestTierFallback:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_selector_selection")
 class TestModelSelection:
     """Tests for model selection."""
 
@@ -466,7 +462,6 @@ class TestVerifierSelection:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_selector_task_score")
 class TestModelForTaskScore:
     """Tests for get_model_for_task with complexity scores."""
 
@@ -561,7 +556,6 @@ class TestModelForTaskScore:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_selector_edge_cases")
 class TestModelSelectorEdgeCases:
     """Edge case tests for ModelSelector."""
 
@@ -627,7 +621,6 @@ class TestModelSelectorEdgeCases:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_selector_vertex_ai")
 class TestModelSelectorVertexAIAnthropic:
     """Tests for Vertex AI Anthropic vendor support (Phase 8).
 
@@ -703,7 +696,6 @@ class TestModelSelectorVertexAIAnthropic:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="litellm_model_id")
 class TestLiteLLMModelID:
     """Tests for get_litellm_model_id function (Phase 9)."""
 

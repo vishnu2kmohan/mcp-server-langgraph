@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="codebase_loader_basic")
 class TestCodebaseProgressiveLoaderBasic:
     """Tests for CodebaseProgressiveLoader basic functionality."""
 
@@ -76,7 +75,6 @@ class TestCodebaseProgressiveLoaderBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="codebase_file")
 class TestCodebaseFile:
     """Tests for CodebaseFile dataclass."""
 
@@ -141,7 +139,6 @@ class TestCodebaseFile:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="loaded_codebase")
 class TestLoadedCodebase:
     """Tests for LoadedCodebase dataclass."""
 
@@ -215,7 +212,6 @@ class TestLoadedCodebase:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="codebase_loader_patterns")
 class TestCodebaseProgressiveLoaderPatterns:
     """Tests for CodebaseProgressiveLoader pattern matching."""
 
@@ -268,7 +264,6 @@ class TestCodebaseProgressiveLoaderPatterns:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="codebase_loader_load")
 class TestCodebaseProgressiveLoaderLoad:
     """Tests for CodebaseProgressiveLoader.load() method."""
 
@@ -420,7 +415,6 @@ class TestCodebaseProgressiveLoaderLoad:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="codebase_loader_language")
 class TestCodebaseProgressiveLoaderLanguage:
     """Tests for language detection."""
 

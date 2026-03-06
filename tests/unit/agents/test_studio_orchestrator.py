@@ -30,7 +30,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.agents]
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_feature_flags")
 class TestStudioOrchestratorFeatureFlags:
     """Test feature flags for Studio AI orchestration."""
 
@@ -52,7 +51,6 @@ class TestStudioOrchestratorFeatureFlags:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_module")
 class TestStudioOrchestratorModule:
     """Test Studio orchestrator module structure."""
 
@@ -97,7 +95,6 @@ class TestStudioOrchestratorModule:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_task_category")
 class TestTaskCategory:
     """Test TaskCategory enum."""
 
@@ -173,7 +170,6 @@ class TestTaskCategory:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_task")
 class TestStudioTask:
     """Test StudioTask data class."""
 
@@ -288,7 +284,6 @@ class TestStudioTask:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_result")
 class TestStudioResult:
     """Test StudioResult data class."""
 
@@ -345,7 +340,6 @@ class TestStudioResult:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_inheritance")
 class TestStudioOrchestratorInheritance:
     """Test StudioOrchestrator inherits from BaseOrchestrator."""
 
@@ -396,7 +390,6 @@ class TestStudioOrchestratorInheritance:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_initialization")
 class TestStudioOrchestratorInitialization:
     """Test Studio orchestrator initialization."""
 
@@ -448,7 +441,6 @@ class TestStudioOrchestratorInitialization:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_task_types")
 class TestStudioTaskTypes:
     """Test Studio orchestrator task type registry."""
 
@@ -538,7 +530,6 @@ class TestStudioTaskTypes:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_execution")
 class TestStudioOrchestratorExecution:
     """Test Studio orchestrator execution."""
 
@@ -646,7 +637,6 @@ class TestStudioOrchestratorExecution:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_handlers")
 class TestStudioOrchestratorHandlers:
     """Test Studio orchestrator category-specific handlers."""
 
@@ -707,7 +697,6 @@ class TestStudioOrchestratorHandlers:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_synthesis")
 class TestStudioOrchestratorSynthesis:
     """Test Studio orchestrator cross-category synthesis."""
 
@@ -800,7 +789,6 @@ class TestStudioOrchestratorSynthesis:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_unified_analysis")
 class TestStudioOrchestratorUnifiedAnalysis:
     """Test Studio orchestrator unified analysis endpoint."""
 
@@ -845,7 +833,6 @@ class TestStudioOrchestratorUnifiedAnalysis:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_fallback")
 class TestStudioOrchestratorFallback:
     """Test Studio orchestrator feature flag and fallback behavior."""
 
@@ -873,7 +860,6 @@ class TestStudioOrchestratorFallback:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_cost")
 class TestStudioOrchestratorCostTracking:
     """Test Studio orchestrator cost tracking."""
 
@@ -911,7 +897,6 @@ class TestStudioOrchestratorCostTracking:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_metrics")
 class TestStudioOrchestratorMetrics:
     """Test Studio orchestrator metrics."""
 
@@ -931,7 +916,6 @@ class TestStudioOrchestratorMetrics:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_command")
 class TestCommandIntelligence:
     """Test Command Intelligence task handling.
 
@@ -1237,7 +1221,6 @@ class TestCommandIntelligence:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_explanation_consolidation")
 class TestExplanationOrchestratorConsolidation:
     """Test consolidation of ExplanationOrchestrator into StudioOrchestrator.
 
@@ -1526,7 +1509,6 @@ class TestExplanationOrchestratorConsolidation:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="studio_orchestrator_broadcaster")
 class TestStudioOrchestratorBroadcasterIntegration:
     """Test StudioOrchestrator integration with OrchestratorStatusBroadcaster."""
 

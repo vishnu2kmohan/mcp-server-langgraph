@@ -18,7 +18,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="compliance_service_resilience")
 class TestComplianceServiceResilience:
     """Test ComplianceService graceful degradation."""
 

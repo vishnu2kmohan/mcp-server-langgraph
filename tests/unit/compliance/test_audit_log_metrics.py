@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.compliance
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="audit_log_metrics")
 class TestAuditLogStoreMetrics:
     """Test audit log store metrics are recorded during operations."""
 

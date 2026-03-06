@@ -30,7 +30,6 @@ SCREENSHOT_TOOLS_PATCH = "mcp_server_langgraph.tools.screenshot_tools.capture_sc
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="visual_verifier_retry")
 class TestVisualVerificationRetry:
     """Tests for retry logic in visual verification."""
 
@@ -381,7 +380,6 @@ OK"""
             assert call_count == 1  # No retry for validation errors
 
 
-@pytest.mark.xdist_group(name="visual_verifier_retry_metrics")
 class TestVisualVerificationRetryMetrics:
     """Tests for retry metrics in visual verification."""
 
@@ -434,7 +432,6 @@ class TestVisualVerificationRetryMetrics:
             assert mock_record_retry.called or call_count == 2
 
 
-@pytest.mark.xdist_group(name="visual_verifier_retry_config")
 class TestVisualVerificationRetryConfig:
     """Tests for configurable retry parameters."""
 

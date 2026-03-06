@@ -21,7 +21,6 @@ from mcp_server_langgraph.core.numeric import safe_average
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.mark.xdist_group(name="test_cost_budget_alerts")
 class TestBudgetDefinition:
     """Tests for budget definition and configuration."""
 
@@ -117,7 +116,6 @@ class TestBudgetDefinition:
         assert budget.critical_threshold == 0.95
 
 
-@pytest.mark.xdist_group(name="test_cost_budget_checker")
 class TestBudgetChecker:
     """Tests for budget checking logic."""
 
@@ -224,7 +222,6 @@ class TestBudgetChecker:
         assert status.percent_used == 120.0
 
 
-@pytest.mark.xdist_group(name="test_cost_anomaly_detection")
 class TestCostAnomalyDetection:
     """Tests for cost anomaly detection."""
 
@@ -500,7 +497,6 @@ class TestCostAnomalyDetection:
         assert result.severity == "none"
 
 
-@pytest.mark.xdist_group(name="test_cost_forecasting")
 class TestCostForecasting:
     """Tests for cost forecasting based on usage trends."""
 
@@ -648,7 +644,6 @@ class TestCostForecasting:
         assert forecast.trend == "decreasing"
 
 
-@pytest.mark.xdist_group(name="test_budget_validation")
 class TestBudgetValidation:
     """Tests for Budget validation in __post_init__."""
 
@@ -721,7 +716,6 @@ class TestBudgetValidation:
             )
 
 
-@pytest.mark.xdist_group(name="test_budget_checker_all")
 class TestBudgetCheckerAll:
     """Tests for BudgetChecker.check_all method."""
 
@@ -798,7 +792,6 @@ class TestBudgetCheckerAll:
         assert results[0].status == "ok"
 
 
-@pytest.mark.xdist_group(name="test_budget_status_message")
 class TestBudgetStatusMessage:
     """Tests for BudgetStatus.message property."""
 
@@ -916,7 +909,6 @@ class TestBudgetStatusMessage:
         assert "over budget" in status.message.lower()
 
 
-@pytest.mark.xdist_group(name="test_budget_singletons")
 class TestBudgetSingletonAccessors:
     """Tests for singleton accessor functions."""
 

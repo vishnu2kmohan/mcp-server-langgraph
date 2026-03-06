@@ -14,7 +14,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_bootstrap_module_imports")
 class TestBootstrapModuleImports:
     """Test that all bootstrap modules can be imported."""
 
@@ -54,7 +53,6 @@ class TestBootstrapModuleImports:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_observability_bootstrap")
 class TestObservabilityBootstrap:
     """Test observability initialization."""
 
@@ -79,7 +77,6 @@ class TestObservabilityBootstrap:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_security_bootstrap")
 class TestSecurityBootstrap:
     """Test security initialization."""
 
@@ -118,7 +115,6 @@ class TestSecurityBootstrap:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_storage_bootstrap")
 class TestStorageBootstrap:
     """Test storage initialization."""
 
@@ -205,7 +201,6 @@ class TestStorageBootstrap:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_http_bootstrap")
 class TestHttpBootstrap:
     """Test HTTP client initialization."""
 
@@ -247,7 +242,6 @@ class TestHttpBootstrap:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_bootstrap_lifecycle")
 class TestBootstrapLifecycle:
     """Test complete bootstrap lifecycle."""
 
@@ -306,7 +300,6 @@ class TestBootstrapLifecycle:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_bootstrap_streaming_wiring")
 class TestBootstrapStreamingSettingsWiring:
     """Tests for StreamingSettings wiring through bootstrap_all.
 
@@ -488,7 +481,6 @@ class TestBootstrapStreamingSettingsWiring:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skills_bootstrap")
 class TestSkillsBootstrap:
     """Test skills system initialization.
 
@@ -579,7 +571,6 @@ class TestSkillsBootstrap:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_bootstrap_skills_integration")
 class TestBootstrapSkillsIntegration:
     """Test skills bootstrap integration with bootstrap_all."""
 

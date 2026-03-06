@@ -58,7 +58,6 @@ class LoopResult:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_loop_agent_flag")
 class TestLoopAgentFeatureFlag:
     """Test LoopAgent feature flag integration."""
 
@@ -102,7 +101,6 @@ class TestLoopAgentFeatureFlag:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_loop_agent_module")
 class TestLoopAgentModule:
     """Test the LoopAgent module structure."""
 
@@ -148,7 +146,6 @@ class TestLoopAgentModule:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_loop_agent_init")
 class TestLoopAgentInitialization:
     """Test LoopAgent initialization and configuration."""
 
@@ -218,7 +215,6 @@ class TestLoopAgentInitialization:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_loop_agent_execution")
 class TestLoopAgentExecution:
     """Test LoopAgent execution behavior."""
 
@@ -324,7 +320,6 @@ class TestLoopAgentExecution:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_loop_agent_errors")
 class TestLoopAgentErrorHandling:
     """Test LoopAgent error handling behavior."""
 
@@ -399,7 +394,6 @@ class TestLoopAgentErrorHandling:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_loop_agent_state")
 class TestLoopAgentStateTracking:
     """Test LoopAgent iteration state tracking."""
 
@@ -462,7 +456,6 @@ class TestLoopAgentStateTracking:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_loop_agent_exports")
 class TestLoopAgentExports:
     """Test module exports for LoopAgent."""
 

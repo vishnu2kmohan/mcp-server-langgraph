@@ -13,7 +13,6 @@ from unittest.mock import AsyncMock, patch
 pytestmark = [pytest.mark.unit, pytest.mark.sdk]
 
 
-@pytest.mark.xdist_group(name="can_use_tool_auth")
 class TestCanUseTool:
     """Tests for can_use_tool callback pattern."""
 

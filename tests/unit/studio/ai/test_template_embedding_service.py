@@ -21,7 +21,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="template_embedding_service")
 class TestTemplateRecommenderEmbeddingService:
     """Tests for EmbeddingService integration with TemplateRecommender."""
 
@@ -135,7 +134,6 @@ class TestTemplateRecommenderEmbeddingService:
         assert isinstance(result, list)
 
 
-@pytest.mark.xdist_group(name="template_embedding_precompute")
 class TestTemplateEmbeddingPrecomputation:
     """Tests for pre-computing template embeddings."""
 
@@ -196,7 +194,6 @@ class TestTemplateEmbeddingPrecomputation:
         assert second_call_count == expected_second_calls
 
 
-@pytest.mark.xdist_group(name="template_embedding_factory")
 class TestTemplateRecommenderFactory:
     """Tests for factory function to create TemplateRecommender with EmbeddingService."""
 

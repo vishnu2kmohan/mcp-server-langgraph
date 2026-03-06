@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_heart_metrics_init")
 class TestHeartMetricsHandlerInit:
     """Tests for HeartMetricsHandler initialization."""
 
@@ -62,7 +61,6 @@ class TestHeartMetricsHandlerInit:
         assert handler._metrics is mock_metrics
 
 
-@pytest.mark.xdist_group(name="websocket_heart_metrics_lifecycle")
 class TestHeartMetricsHandlerLifecycle:
     """Tests for HeartMetricsHandler lifecycle hooks."""
 
@@ -124,7 +122,6 @@ class TestHeartMetricsHandlerLifecycle:
         assert handler.subscribed_dimensions == set()
 
 
-@pytest.mark.xdist_group(name="websocket_heart_metrics_messages")
 class TestHeartMetricsHandlerMessages:
     """Tests for HeartMetricsHandler message handling."""
 
@@ -315,7 +312,6 @@ class TestHeartMetricsHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_heart_metrics_push")
 class TestHeartMetricsHandlerPush:
     """Tests for HeartMetricsHandler push functionality."""
 
@@ -412,7 +408,6 @@ class TestHeartMetricsHandlerPush:
         # Should not raise
 
 
-@pytest.mark.xdist_group(name="websocket_heart_metrics_constants")
 class TestHeartMetricsConstants:
     """Tests for HEART metrics constants."""
 
@@ -439,7 +434,6 @@ class TestHeartMetricsConstants:
         assert expected == VALID_TIME_RANGES
 
 
-@pytest.mark.xdist_group(name="websocket_heart_metrics_protocol")
 class TestHeartMetricsServiceProtocol:
     """Tests for HeartMetricsServiceProtocol."""
 

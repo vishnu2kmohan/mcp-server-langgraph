@@ -17,7 +17,6 @@ from tests.conftest import get_user_id
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testlogsanitization")
 class TestLogSanitization:
     """Test suite for log sanitization to prevent CWE-200/CWE-532 vulnerabilities"""
 
@@ -258,7 +257,6 @@ class TestLogSanitization:
         assert sanitized["message"] == "Hello, world!"
 
 
-@pytest.mark.xdist_group(name="testlogsanitizationwithrealworldpayloads")
 class TestLogSanitizationWithRealWorldPayloads:
     """Test log sanitization with realistic MCP tool call payloads"""
 

@@ -26,7 +26,6 @@ from mcp_server_langgraph.api.v1.sessions import (
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_session_create_request_contract")
 class TestSessionCreateRequestContract:
     """Tests for SessionCreateRequest model contract."""
 
@@ -53,7 +52,6 @@ class TestSessionCreateRequestContract:
         assert request.name == "My New Session"
 
 
-@pytest.mark.xdist_group(name="test_session_response_contract")
 class TestSessionResponseContract:
     """Tests for SessionResponse model contract."""
 
@@ -148,7 +146,6 @@ class TestSessionResponseContract:
             assert response.status.value == status_value  # type: ignore[union-attr]
 
 
-@pytest.mark.xdist_group(name="test_message_response_contract")
 class TestMessageResponseContract:
     """Tests for MessageResponse model contract."""
 
@@ -390,7 +387,6 @@ class TestMessageResponseContract:
         assert not hasattr(response, "thinking_tokens") or response.thinking_tokens is None
 
 
-@pytest.mark.xdist_group(name="test_session_service_contract")
 class TestSessionServiceContract:
     """Tests for session service response contract."""
 
@@ -500,7 +496,6 @@ class TestSessionServiceContract:
         assert len(message_ids) == len(set(message_ids))  # All unique
 
 
-@pytest.mark.xdist_group(name="test_session_response_serialization")
 class TestSessionResponseSerialization:
     """Tests for proper JSON serialization of session responses."""
 
@@ -541,7 +536,6 @@ class TestSessionResponseSerialization:
         assert data["message_id"] == "msg-456"
 
 
-@pytest.mark.xdist_group(name="test_session_config_response_contract")
 class TestSessionConfigResponseContract:
     """Tests for SessionConfigResponse model contract.
 
@@ -625,7 +619,6 @@ class TestSessionConfigResponseContract:
         assert config.max_tokens == 8192
 
 
-@pytest.mark.xdist_group(name="test_session_response_config_field")
 class TestSessionResponseConfigField:
     """Tests for SessionResponse.config field integration."""
 
@@ -706,7 +699,6 @@ class TestSessionResponseConfigField:
         assert data["config"]["max_tokens"] == 4096
 
 
-@pytest.mark.xdist_group(name="test_session_config_update_contract")
 class TestSessionConfigUpdateContract:
     """Tests for SessionConfigUpdateRequest model contract.
 
@@ -779,7 +771,6 @@ class TestSessionConfigUpdateContract:
         assert request.max_tokens == 16384
 
 
-@pytest.mark.xdist_group(name="test_in_memory_session_config_update")
 class TestInMemorySessionConfigUpdate:
     """Tests for InMemorySessionService.update_config method."""
 
@@ -862,7 +853,6 @@ class TestInMemorySessionConfigUpdate:
         assert result is None
 
 
-@pytest.mark.xdist_group(name="test_redis_session_config_persistence")
 class TestRedisSessionConfigPersistence:
     """Tests for Redis session service config persistence."""
 
@@ -934,7 +924,6 @@ class TestRedisSessionConfigPersistence:
         assert config.max_tokens == 2000  # preserved
 
 
-@pytest.mark.xdist_group(name="test_postgres_session_config_persistence")
 class TestPostgresSessionConfigPersistence:
     """Tests for PostgreSQL session service config persistence."""
 
@@ -975,7 +964,6 @@ class TestPostgresSessionConfigPersistence:
         assert call_args[1]["config"].max_tokens == 4000
 
 
-@pytest.mark.xdist_group(name="test_session_trace_response_contract")
 class TestSessionTraceResponseContract:
     """Tests for SessionTraceResponse model contract (GET /sessions/{id}/trace)."""
 
@@ -1021,7 +1009,6 @@ class TestSessionTraceResponseContract:
         assert response.raw_output is None
 
 
-@pytest.mark.xdist_group(name="test_session_messages_thinking_contract")
 class TestSessionMessagesThinkingContract:
     """Tests for thinking object in get_session_messages endpoint.
 

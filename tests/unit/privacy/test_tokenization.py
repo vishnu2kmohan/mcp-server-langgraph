@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.pii]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_tokenizer_basic")
 class TestPIITokenizerBasic:
     """Test suite for basic tokenization functionality"""
 
@@ -84,7 +83,6 @@ class TestPIITokenizerBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_tokenizer_untokenize")
 class TestPIITokenizerUntokenize:
     """Test suite for untokenization (restoration)"""
 
@@ -139,7 +137,6 @@ class TestPIITokenizerUntokenize:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_tokenizer_roundtrip")
 class TestPIITokenizerRoundtrip:
     """Test suite for tokenize/untokenize roundtrip"""
 
@@ -188,7 +185,6 @@ class TestPIITokenizerRoundtrip:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_tokenizer_token_format")
 class TestPIITokenizerTokenFormat:
     """Test suite for token format and structure"""
 
@@ -245,7 +241,6 @@ class TestPIITokenizerTokenFormat:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_tokenizer_edge_cases")
 class TestPIITokenizerEdgeCases:
     """Test suite for edge cases and error handling"""
 
@@ -298,7 +293,6 @@ class TestPIITokenizerEdgeCases:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_pii_lookup_table")
 class TestPIILookupTable:
     """Test suite for encrypted lookup table storage"""
 

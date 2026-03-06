@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.auth
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="session_metrics_inmemory")
 class TestInMemorySessionMetrics:
     """Test session metrics are recorded during operations."""
 
@@ -117,7 +116,6 @@ class TestInMemorySessionMetrics:
 @pytest.mark.unit
 @pytest.mark.auth
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="session_metrics_redis")
 class TestRedisSessionMetrics:
     """Test session metrics are recorded during Redis session operations."""
 

@@ -20,7 +20,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.monitoring]
 
 
-@pytest.mark.xdist_group(name="test_cost_allocation_tags_model")
 class TestCostAllocationTagsModel:
     """Tests for allocation tags in TokenUsage model."""
 
@@ -79,7 +78,6 @@ class TestCostAllocationTagsModel:
         assert usage.allocation_tags is None or usage.allocation_tags == {}
 
 
-@pytest.mark.xdist_group(name="test_cost_allocation_tags_db")
 class TestCostAllocationTagsDatabase:
     """Tests for allocation tags in database model."""
 
@@ -112,7 +110,6 @@ class TestCostAllocationTagsDatabase:
         assert col.type.__class__.__name__ in ("JSON", "JSONB")
 
 
-@pytest.mark.xdist_group(name="test_cost_allocation_tags_collector")
 class TestCostAllocationTagsCollector:
     """Tests for allocation tags in CostMetricsCollector."""
 
@@ -157,7 +154,6 @@ class TestCostAllocationTagsCollector:
             }
 
 
-@pytest.mark.xdist_group(name="test_cost_allocation_tags_query")
 class TestCostAllocationTagsQuery:
     """Tests for querying by allocation tags."""
 

@@ -17,7 +17,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
-@pytest.mark.xdist_group(name="orchestrator_metrics_module")
 class TestOrchestratorMetricsModule:
     """Test orchestrator metrics module structure."""
 
@@ -50,7 +49,6 @@ class TestOrchestratorMetricsModule:
         assert orchestrator_parallel_tasks_histogram is not None
 
 
-@pytest.mark.xdist_group(name="orchestrator_metrics_functions")
 class TestOrchestratorMetricsFunctions:
     """Test orchestrator metrics recording functions."""
 
@@ -77,7 +75,6 @@ class TestOrchestratorMetricsFunctions:
         assert callable(record_parallel_speedup)
 
 
-@pytest.mark.xdist_group(name="ux_orchestration_metrics")
 class TestUXOrchestrationMetrics:
     """Test UX orchestration metrics recording."""
 
@@ -125,7 +122,6 @@ class TestUXOrchestrationMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="alert_orchestration_metrics")
 class TestAlertOrchestrationMetrics:
     """Test alert orchestration metrics recording."""
 
@@ -172,7 +168,6 @@ class TestAlertOrchestrationMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="parallel_speedup_metrics")
 class TestParallelSpeedupMetrics:
     """Test parallel speedup metrics."""
 
@@ -204,7 +199,6 @@ class TestParallelSpeedupMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="orchestrator_synthesis_metrics")
 class TestOrchestratorSynthesisMetrics:
     """Test synthesis metrics for orchestrators."""
 
@@ -246,7 +240,6 @@ class TestOrchestratorSynthesisMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="orchestrator_feature_flag_metrics")
 class TestOrchestratorFeatureFlagMetrics:
     """Test feature flag usage metrics for orchestrators."""
 

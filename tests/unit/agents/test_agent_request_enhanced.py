@@ -24,7 +24,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="agent_request_enhanced")
 class TestAgentRequestNewFields:
     """Tests for new AgentRequest fields."""
 
@@ -168,7 +167,6 @@ class TestAgentRequestNewFields:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="agent_request_backward_compat")
 class TestAgentRequestBackwardCompatibility:
     """Tests ensuring backward compatibility with existing 7-field usage."""
 
@@ -248,7 +246,6 @@ class TestAgentRequestBackwardCompatibility:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="agent_request_full")
 class TestAgentRequestFullUsage:
     """Tests for full AgentRequest usage with all fields."""
 

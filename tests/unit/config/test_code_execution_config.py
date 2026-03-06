@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcodeexecutionsettings")
 class TestCodeExecutionSettings:
     """Test code execution configuration settings"""
 
@@ -122,7 +121,6 @@ class TestCodeExecutionSettings:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcodeexecutionsettingsfromenv")
 class TestCodeExecutionSettingsFromEnv:
     """Test code execution settings from environment variables"""
 
@@ -172,7 +170,6 @@ class TestCodeExecutionSettingsFromEnv:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcodeexecutionsettingsvalidation")
 class TestCodeExecutionSettingsValidation:
     """Test code execution settings validation"""
 
@@ -208,7 +205,6 @@ class TestCodeExecutionSettingsValidation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcodeexecutionsettingsintegration")
 class TestCodeExecutionSettingsIntegration:
     """Test code execution settings integration with ResourceLimits"""
 
@@ -256,7 +252,6 @@ class TestCodeExecutionSettingsIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testcodeexecutionsettingsdefaults")
 class TestCodeExecutionSettingsDefaults:
     """Test code execution default settings for different environments"""
 

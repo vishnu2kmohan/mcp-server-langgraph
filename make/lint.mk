@@ -78,6 +78,11 @@ lint-pre-push:
 	@bash $$(git rev-parse --git-common-dir)/hooks/pre-push
 	@echo "Pre-push simulation complete"
 
+pre-push-parallel:  ## Run pre-push hooks in parallel lanes (~50-60% faster)
+	@echo "Running parallel pre-push hooks..."
+	@bash scripts/hooks/parallel_pre_push.sh
+	@echo "Parallel pre-push complete"
+
 lint-install:
 	@echo "Installing/reinstalling lint hooks..."
 	@$(UV_RUN) pre-commit install

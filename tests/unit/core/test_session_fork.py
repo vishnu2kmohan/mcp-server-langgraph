@@ -33,7 +33,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.sessions]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_fork_flag")
 class TestSessionForkFeatureFlag:
     """Test session fork feature flag integration."""
 
@@ -61,7 +60,6 @@ class TestSessionForkFeatureFlag:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_fork_module")
 class TestSessionForkModule:
     """Test the SessionForkManager module structure."""
 
@@ -99,7 +97,6 @@ class TestSessionForkModule:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_fork_operations")
 class TestSessionForkOperations:
     """Test session fork operations."""
 
@@ -197,7 +194,6 @@ class TestSessionForkOperations:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_fork_relationships")
 class TestSessionForkRelationships:
     """Test fork relationship tracking."""
 
@@ -278,7 +274,6 @@ class TestSessionForkRelationships:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_fork_independence")
 class TestSessionForkIndependence:
     """Test that forked sessions are independent."""
 
@@ -333,7 +328,6 @@ class TestSessionForkIndependence:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_fork_validation")
 class TestSessionForkValidation:
     """Test fork validation and error handling."""
 
@@ -402,7 +396,6 @@ class TestSessionForkValidation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_fork_info")
 class TestForkInfo:
     """Test ForkInfo data class."""
 
@@ -437,7 +430,6 @@ class TestForkInfo:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_fork_exports")
 class TestSessionForkExports:
     """Test module exports for session fork."""
 

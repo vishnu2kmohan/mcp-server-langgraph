@@ -13,7 +13,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.auth, pytest.mark.sessions, pytest.mark.privacy]
 
 
-@pytest.mark.xdist_group(name="encrypted_session")
 class TestEncryptedSessionStore:
     """Tests for EncryptedSessionStore class."""
 
@@ -136,7 +135,6 @@ class TestEncryptedSessionStore:
         assert session is None
 
 
-@pytest.mark.xdist_group(name="session_encryptor")
 class TestSessionEncryptor:
     """Tests for SessionEncryptor class."""
 
@@ -198,7 +196,6 @@ class TestSessionEncryptor:
             encryptor.decrypt(tampered)
 
 
-@pytest.mark.xdist_group(name="encrypted_session_feature_flag")
 class TestEncryptedSessionFeatureFlag:
     """Tests for encrypted session feature flag integration."""
 

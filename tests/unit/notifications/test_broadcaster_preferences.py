@@ -33,7 +33,6 @@ class MockWebSocket:
         self.sent_messages.append(data)
 
 
-@pytest.mark.xdist_group(name="test_broadcaster_preferences_integration")
 class TestBroadcasterWithPreferencesIntegration:
     """Tests for broadcaster integration with preferences."""
 
@@ -253,7 +252,6 @@ class TestBroadcasterWithPreferencesIntegration:
         assert bob_ws.sent_messages[0]["payload"]["title"] == "For Bob"
 
 
-@pytest.mark.xdist_group(name="test_notify_user_convenience_method")
 class TestNotifyUserConvenienceMethod:
     """Tests for the notify_user() convenience method."""
 

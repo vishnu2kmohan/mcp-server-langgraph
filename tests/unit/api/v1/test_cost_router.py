@@ -452,7 +452,6 @@ class TestOrganizationalDateFiltering:
             assert call_kwargs["end_date"] == "2025-01-31"
 
 
-@pytest.mark.xdist_group(name="test_cost_router_service")
 class TestCostServiceImplDateFiltering:
     """Tests for CostServiceImpl date filtering at storage level."""
 
@@ -939,7 +938,6 @@ class TestEntityTypeValidation:
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="test_cost_router_budget_storage")
 class TestBudgetLoadingFromStorage:
     """Tests for budget loading from BudgetStorage instead of hardcoded defaults."""
 

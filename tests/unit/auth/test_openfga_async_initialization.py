@@ -31,7 +31,6 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="openfga_async_init")
 class TestOpenFGAAsyncInitialization:
     """Test OpenFGA async initialization via FastAPI lifespan."""
 
@@ -125,7 +124,6 @@ class TestOpenFGAAsyncInitialization:
                 assert app.state.openfga_client is None, "app.state.openfga_client should be None when config incomplete"
 
 
-@pytest.mark.xdist_group(name="openfga_async_dependency")
 class TestGetOpenFGAClientDependency:
     """Test the async get_openfga_client dependency function."""
 
@@ -193,7 +191,6 @@ class TestGetOpenFGAClientDependency:
         assert result is None, "get_openfga_client_from_request should return None when client not configured"
 
 
-@pytest.mark.xdist_group(name="openfga_async_init_ensures")
 class TestOpenFGAAsyncInitializationEnsures:
     """Test that async initialization properly calls _ensure_initialized."""
 
@@ -232,7 +229,6 @@ class TestOpenFGAAsyncInitializationEnsures:
         client._ensure_initialized.assert_awaited_once()
 
 
-@pytest.mark.xdist_group(name="openfga_lifespan_cleanup")
 class TestOpenFGALifespanCleanup:
     """Test that OpenFGA client is properly closed during shutdown."""
 
@@ -267,7 +263,6 @@ class TestOpenFGALifespanCleanup:
         client.close.assert_awaited_once()
 
 
-@pytest.mark.xdist_group(name="openfga_backward_compat")
 class TestBackwardCompatibility:
     """Test that existing sync get_openfga_client still works for non-FastAPI callers."""
 

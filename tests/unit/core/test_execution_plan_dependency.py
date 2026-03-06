@@ -18,7 +18,6 @@ from mcp_server_langgraph.core.dependencies import (
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="execution_plan_dependency")
 class TestExecutionPlanRepositoryDI:
     """Tests for execution plan repository dependency injection."""
 

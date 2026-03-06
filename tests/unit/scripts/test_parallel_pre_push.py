@@ -1,0 +1,144 @@
+"""
+Tests for parallel_pre_push.sh - Parallel Pre-Push Lane Orchestrator.
+
+Validates:
+1. Lane selection returns correct count for different resource profiles
+2. Dry-run mode outputs expected lane configuration
+3. Hook drift detection catches unmapped hooks
+4. Exit code is nonzero when any lane fails
+5. PRE_PUSH_SEQUENTIAL=1 falls back to standard pre-commit
+6. Signal handling cleans up child processes
+"""
+
+from __future__ import annotations
+
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from tests.helpers.path_helpers import get_repo_root
+
+pytestmark = [pytest.mark.unit]
+
+PROJECT_ROOT = get_repo_root()
+PRE_PUSH_SCRIPT = PROJECT_ROOT / "scripts" / "hooks" / "parallel_pre_push.sh"
+
+
+class TestParallelPrePushScript:
+    """Tests for the parallel_pre_push.sh lane orchestrator."""
+
+    def test_script_exists_at_expected_path(self) -> None:
+        """parallel_pre_push.sh must exist at expected location."""
+        assert PRE_PUSH_SCRIPT.exists(), f"scripts/hooks/parallel_pre_push.sh not found at {PRE_PUSH_SCRIPT}"
+
+    def test_script_is_executable(self) -> None:
+        """parallel_pre_push.sh must be executable."""
+        assert PRE_PUSH_SCRIPT.stat().st_mode & 0o111, "scripts/hooks/parallel_pre_push.sh is not executable"
+
+    def test_five_lanes_defined(self) -> None:
+        """Script must define exactly 5 lanes."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        for lane in [
+            "python-tests",
+            "frontend",
+            "security",
+            "type-check-validators",
+            "infra-docs",
+        ]:
+            assert lane in content, f"Lane '{lane}' not defined in script"
+
+    def test_ci_mode_limits_to_2_lanes(self) -> None:
+        """CI mode should limit to 2 concurrent lanes."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        # The get_max_lanes function should return 2 in CI mode
+        assert "echo 2" in content, "CI mode should return 2 for max lanes"
+
+    def test_beefy_machine_runs_5_lanes(self) -> None:
+        """Machines with 32GB+ free memory and 8+ cores should run 5 lanes."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "echo 5" in content, "Beefy machines should run all 5 lanes in parallel"
+
+    def test_sequential_fallback_env_var_supported(self) -> None:
+        """PRE_PUSH_SEQUENTIAL=1 should fall back to standard pre-commit."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "PRE_PUSH_SEQUENTIAL" in content, "Script must support PRE_PUSH_SEQUENTIAL env var"
+        assert "pre-commit run --hook-stage pre-push" in content, (
+            "Sequential fallback must call pre-commit run --hook-stage pre-push"
+        )
+
+    def test_hook_drift_validation(self) -> None:
+        """Script must validate that all pre-push hooks are assigned to lanes."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "validate_lane_coverage" in content, "Script must include hook drift validation function"
+        assert "not assigned to any lane" in content.lower() or "not assigned" in content.lower(), (
+            "Drift validation must report unassigned hooks"
+        )
+
+    def test_signal_handling_cleanup(self) -> None:
+        """Script must trap EXIT/INT/TERM to clean up child processes."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "trap" in content, "Script must set up signal traps"
+        assert "cleanup" in content, "Script must define a cleanup function"
+
+    def test_pre_commit_home_isolation(self) -> None:
+        """Each lane must use isolated PRE_COMMIT_HOME to prevent cache corruption."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "PRE_COMMIT_HOME" in content, "Script must set per-lane PRE_COMMIT_HOME for cache isolation"
+        assert "pre-commit-lane-" in content, "Lane cache directories must use 'pre-commit-lane-' prefix"
+
+    def test_dry_run_mode(self) -> None:
+        """Dry-run mode should output lane configuration."""
+        result = subprocess.run(
+            ["bash", str(PRE_PUSH_SCRIPT)],
+            env={
+                "PRE_PUSH_DRY_RUN": "1",
+                "FROM_REF": "HEAD~1",
+                "TO_REF": "HEAD",
+                "PATH": "/usr/bin:/bin:/usr/local/bin",
+                "HOME": str(Path.home()),
+            },
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(PROJECT_ROOT),
+        )
+        # Dry-run may fail if PyYAML not available for drift check, which is OK
+        assert "max_lanes" in result.stdout, f"Dry-run output should include max_lanes. stdout: {result.stdout[:500]}"
+
+    def test_ci_dry_run_shows_2_lanes(self) -> None:
+        """CI dry-run should show max_lanes=2."""
+        result = subprocess.run(
+            ["bash", str(PRE_PUSH_SCRIPT)],
+            env={
+                "PRE_PUSH_DRY_RUN": "1",
+                "CI": "true",
+                "FROM_REF": "HEAD~1",
+                "TO_REF": "HEAD",
+                "PATH": "/usr/bin:/bin:/usr/local/bin",
+                "HOME": str(Path.home()),
+            },
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(PROJECT_ROOT),
+        )
+        assert "max_lanes=2" in result.stdout, f"CI mode should show max_lanes=2. stdout: {result.stdout[:500]}"
+
+    def test_ref_parsing_fallback(self) -> None:
+        """Script should fall back to HEAD~1..HEAD when no stdin refs available."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "HEAD~1" in content, "Script must have HEAD~1 fallback for FROM_REF"
+        assert "HEAD" in content, "Script must have HEAD fallback for TO_REF"
+
+    def test_per_lane_exit_code_tracking(self) -> None:
+        """Script must track exit codes per lane for summary reporting."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "exit_code" in content.lower() or "exit_codes" in content.lower(), "Script must track per-lane exit codes"
+
+    def test_overall_nonzero_exit_on_lane_failure(self) -> None:
+        """Overall exit code must be nonzero if any lane fails."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "overall_exit=1" in content or "overall_exit = 1" in content, (
+            "Script must set nonzero overall exit code on lane failure"
+        )

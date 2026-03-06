@@ -45,7 +45,6 @@ def mock_audit_broadcaster() -> MagicMock:
     return broadcaster
 
 
-@pytest.mark.xdist_group(name="audit_ws")
 class TestAuditHandler:
     """Test Audit WebSocket using WebSocketBase."""
 

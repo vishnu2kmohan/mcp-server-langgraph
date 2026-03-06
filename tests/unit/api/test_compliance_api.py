@@ -53,7 +53,6 @@ def date_range() -> dict[str, str]:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="compliance_api_summary")
 class TestComplianceSummaryAPI:
     """Test GET /api/v1/compliance/reports/summary endpoint."""
 
@@ -112,7 +111,6 @@ class TestComplianceSummaryAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="compliance_api_gdpr")
 class TestGDPRReportAPI:
     """Test GET /api/v1/compliance/reports/gdpr endpoint."""
 
@@ -154,7 +152,6 @@ class TestGDPRReportAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="compliance_api_hipaa")
 class TestHIPAAReportAPI:
     """Test GET /api/v1/compliance/reports/hipaa endpoint."""
 
@@ -196,7 +193,6 @@ class TestHIPAAReportAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="compliance_api_soc2")
 class TestSOC2ReportAPI:
     """Test GET /api/v1/compliance/reports/soc2 endpoint."""
 
@@ -239,7 +235,6 @@ class TestSOC2ReportAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="compliance_api_fedramp")
 class TestFedRAMPReportAPI:
     """Test GET /api/v1/compliance/reports/fedramp endpoint."""
 
@@ -279,7 +274,6 @@ class TestFedRAMPReportAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="compliance_api_flags")
 class TestComplianceFeatureFlag:
     """Test feature flag gating for compliance endpoints."""
 

@@ -17,7 +17,6 @@ from mcp_server_langgraph.core.feature_flags import FeatureFlags, get_feature_fl
 pytestmark = [pytest.mark.unit, pytest.mark.websocket, pytest.mark.feature_flags]
 
 
-@pytest.mark.xdist_group(name="websocket_feature_flags")
 class TestWebSocketFeatureFlags:
     """Test WebSocket feature flag definitions and defaults."""
 

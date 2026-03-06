@@ -26,7 +26,6 @@ from validate_pytest_markers import get_registered_markers, get_used_markers
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testmarkerregistration")
 @pytest.mark.requires_kubectl
 class TestMarkerRegistration:
     """Test that marker registration detection works correctly"""
@@ -148,7 +147,6 @@ class TestRegressionPrevention:
         assert "deployment" in registered, "deployment marker should exist as it's related to preview tests"
 
 
-@pytest.mark.xdist_group(name="testmarkervalidatorbehavior")
 class TestMarkerValidatorBehavior:
     """Test the behavior of the marker validator script"""
 
@@ -180,7 +178,6 @@ class TestMarkerValidatorBehavior:
             assert marker not in used, f"Built-in marker {marker} should be excluded"
 
 
-@pytest.mark.xdist_group(name="testspecificmarkercategories")
 class TestSpecificMarkerCategories:
     """Test that specific categories of markers are properly registered"""
 
@@ -236,7 +233,6 @@ class TestSpecificMarkerCategories:
             assert marker in registered, f"Environment marker '{marker}' should be registered"
 
 
-@pytest.mark.xdist_group(name="testmarkercount")
 class TestMarkerCount:
     """Test that we have the expected number of markers"""
 

@@ -23,7 +23,6 @@ from langchain_core.messages import AIMessage, HumanMessage
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_compile_time_parallel_execution")
 class TestCompileTimeParallelExecution:
     """
     Test that parallel execution strategy is determined at compile-time.
@@ -177,7 +176,6 @@ class TestCompileTimeParallelExecution:
             assert graph is not None
 
 
-@pytest.mark.xdist_group(name="test_compile_time_verification_routing")
 class TestCompileTimeVerificationRouting:
     """
     Test that verification routing is determined by graph structure, not runtime state.
@@ -326,7 +324,6 @@ class TestCompileTimeVerificationRouting:
                 pass  # Test passes if implementation is fixed
 
 
-@pytest.mark.xdist_group(name="test_ocp_compliance")
 class TestOCPCompliance:
     """
     Test that the agent graph builder follows Open/Closed Principle.

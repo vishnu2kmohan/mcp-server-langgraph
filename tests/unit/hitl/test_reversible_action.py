@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="reversible_action_basic")
 class TestReversibleActionBasic:
     """Tests for ReversibleAction basic functionality."""
 
@@ -106,7 +105,6 @@ class TestReversibleActionBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="reversible_action_execution")
 class TestReversibleActionExecution:
     """Tests for ReversibleAction execute and undo."""
 
@@ -190,7 +188,6 @@ class TestReversibleActionExecution:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="reversible_action_state")
 class TestReversibleActionState:
     """Tests for ReversibleAction state tracking."""
 
@@ -267,7 +264,6 @@ class TestReversibleActionState:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="action_state_enum")
 class TestActionStateEnum:
     """Tests for ActionState enum."""
 
@@ -311,7 +307,6 @@ class TestActionStateEnum:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="action_history_store_basic")
 class TestActionHistoryStoreBasic:
     """Tests for ActionHistoryStore basic functionality."""
 
@@ -348,7 +343,6 @@ class TestActionHistoryStoreBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="action_history_store_operations")
 class TestActionHistoryStoreOperations:
     """Tests for ActionHistoryStore operations."""
 
@@ -453,7 +447,6 @@ class TestActionHistoryStoreOperations:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="action_history_undo")
 class TestActionHistoryUndo:
     """Tests for ActionHistoryStore undo capabilities."""
 

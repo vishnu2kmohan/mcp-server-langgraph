@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_client")
 class TestLangGraphAgentClient:
     """Tests for SDK-agnostic agent client."""
 
@@ -238,7 +237,6 @@ class TestLangGraphAgentClient:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_tools")
 class TestInProcessToolServer:
     """Tests for in-process tool server."""
 
@@ -303,7 +301,6 @@ class TestInProcessToolServer:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_state")
 class TestAgentStateManager:
     """Tests for cross-session state management."""
 
@@ -365,7 +362,6 @@ class TestAgentStateManager:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_llm_integration")
 class TestLangGraphAgentClientLLMIntegration:
     """Tests for LLM factory integration in SDK client."""
 

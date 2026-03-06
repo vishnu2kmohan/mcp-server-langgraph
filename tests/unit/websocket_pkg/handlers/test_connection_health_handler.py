@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_connection_health_init")
 class TestConnectionHealthHandlerInit:
     """Tests for ConnectionHealthHandler initialization."""
 
@@ -46,7 +45,6 @@ class TestConnectionHealthHandlerInit:
         assert handler._subscriptions == set()
 
 
-@pytest.mark.xdist_group(name="websocket_connection_health_lifecycle")
 class TestConnectionHealthHandlerLifecycle:
     """Tests for ConnectionHealthHandler lifecycle hooks."""
 
@@ -94,7 +92,6 @@ class TestConnectionHealthHandlerLifecycle:
         assert handler._subscriptions == set()
 
 
-@pytest.mark.xdist_group(name="websocket_connection_health_messages")
 class TestConnectionHealthHandlerMessages:
     """Tests for ConnectionHealthHandler message handling."""
 
@@ -395,7 +392,6 @@ class TestConnectionHealthHandlerMessages:
         assert response.payload["code"] == "health_check_failed"
 
 
-@pytest.mark.xdist_group(name="websocket_connection_health_push")
 class TestConnectionHealthHandlerPush:
     """Tests for ConnectionHealthHandler push updates."""
 
@@ -473,7 +469,6 @@ class TestConnectionHealthHandlerPush:
         await handler.push_connection_update("conn-123", status)
 
 
-@pytest.mark.xdist_group(name="websocket_connection_health_protocol")
 class TestConnectionRepositoryProtocol:
     """Tests for ConnectionRepositoryProtocol."""
 
@@ -503,7 +498,6 @@ class TestConnectionRepositoryProtocol:
         assert isinstance(mock_repo, ConnectionRepositoryProtocol)
 
 
-@pytest.mark.xdist_group(name="websocket_connection_health_with_metrics")
 class TestConnectionHealthHandlerWithMetrics:
     """Tests for ConnectionHealthHandler with metrics."""
 

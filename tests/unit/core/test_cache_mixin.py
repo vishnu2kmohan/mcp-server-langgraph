@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="cache_mixin")
 class TestTieredCacheMixin:
     """Tests for TieredCacheMixin functionality."""
 
@@ -263,7 +262,6 @@ class TestTieredCacheMixin:
         assert key1 != key2
 
 
-@pytest.mark.xdist_group(name="cache_mixin_metrics")
 class TestTieredCacheMixinMetrics:
     """Tests for cache mixin metrics integration."""
 

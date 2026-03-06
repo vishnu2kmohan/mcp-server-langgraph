@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_basic")
 class TestUnifiedToolRegistryBasic:
     """Tests for UnifiedToolRegistry basic functionality."""
 
@@ -61,7 +60,6 @@ class TestUnifiedToolRegistryBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_get")
 class TestUnifiedToolRegistryGet:
     """Tests for UnifiedToolRegistry get operations."""
 
@@ -131,7 +129,6 @@ class TestUnifiedToolRegistryGet:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_unified")
 class TestUnifiedToolRegistryUnified:
     """Tests for UnifiedToolRegistry unified get operation."""
 
@@ -183,7 +180,6 @@ class TestUnifiedToolRegistryUnified:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_list")
 class TestUnifiedToolRegistryList:
     """Tests for UnifiedToolRegistry list operations."""
 
@@ -263,7 +259,6 @@ class TestUnifiedToolRegistryList:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_v7_registered_tool")
 class TestRegisteredTool:
     """Tests for RegisteredTool dataclass (v7)."""
 
@@ -318,7 +313,6 @@ class TestRegisteredTool:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_v7_builtin")
 class TestUnifiedRegistryBuiltinTools:
     """Tests for builtin tool registration (v7)."""
 
@@ -365,7 +359,6 @@ class TestUnifiedRegistryBuiltinTools:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_v7_native")
 class TestUnifiedRegistryNativeTools:
     """Tests for native tool registration (v7)."""
 
@@ -415,7 +408,6 @@ class TestUnifiedRegistryNativeTools:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_v7_mcp")
 class TestUnifiedRegistryMCPToolsV7:
     """Tests for MCP tool registration with v7 tool_id format."""
 
@@ -490,7 +482,6 @@ class TestUnifiedRegistryMCPToolsV7:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_v7_resolve")
 class TestUnifiedRegistryResolveToolIds:
     """Tests for resolve_tool_ids method (v7)."""
 
@@ -528,7 +519,6 @@ class TestUnifiedRegistryResolveToolIds:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unified_registry_v7_global")
 class TestGlobalRegistry:
     """Tests for global registry functions (v7)."""
 

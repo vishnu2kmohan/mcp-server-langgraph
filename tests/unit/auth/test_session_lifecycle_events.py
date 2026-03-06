@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="session_lifecycle_events")
 class TestSessionLifecycleEvents:
     """Test suite for session lifecycle span events."""
 

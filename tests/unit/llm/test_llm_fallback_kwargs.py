@@ -41,7 +41,6 @@ def mock_litellm_responses():
     return response
 
 
-@pytest.mark.xdist_group(name="llm_fallback")
 class TestLLMFallbackKwargs:
     """Test LLM fallback kwargs forwarding with proper xdist isolation."""
 

@@ -260,7 +260,6 @@ class TestSecurityHookRegistry:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_hooks_chaining")
 class TestHookChaining:
     """Tests for hook chaining and modifications."""
 
@@ -373,7 +372,6 @@ class TestHookChaining:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_hooks_command_patterns")
 class TestCommandAllowlistPatterns:
     """Tests for command allowlist dangerous pattern detection."""
 
@@ -549,7 +547,6 @@ class TestCommandAllowlistPatterns:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_hooks_default")
 class TestDefaultSecurityHooks:
     """Tests for default security hooks registry."""
 
@@ -596,7 +593,6 @@ class TestDefaultSecurityHooks:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_hooks_rate_limit")
 class TestRateLimitHook:
     """Tests for rate limit hook behavior."""
 
@@ -644,7 +640,6 @@ class TestRateLimitHook:
 
 @pytest.mark.unit
 @pytest.mark.sdk
-@pytest.mark.xdist_group(name="sdk_hooks_pii")
 class TestPIIDetectionHook:
     """Tests for PII detection hook."""
 

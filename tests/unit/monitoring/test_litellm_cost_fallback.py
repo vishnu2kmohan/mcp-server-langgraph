@@ -17,7 +17,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.monitoring]
 
 
-@pytest.mark.xdist_group(name="test_litellm_cost_fallback")
 class TestLiteLLMCostFallback:
     """Tests for LiteLLM cost lookup as fallback."""
 
@@ -122,7 +121,6 @@ class TestLiteLLMCostFallback:
         assert cost > Decimal("0")
 
 
-@pytest.mark.xdist_group(name="test_cost_tracker_fallback")
 class TestCostTrackerFallback:
     """Tests for cost_tracker.py using LiteLLM fallback instead of pricing.py."""
 
@@ -215,7 +213,6 @@ class TestCostTrackerFallback:
             mock_get_cost.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="test_no_deprecation_warning")
 class TestNoDeprecationWarning:
     """Tests ensuring no deprecation warnings after migration."""
 

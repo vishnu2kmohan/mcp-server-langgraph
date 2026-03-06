@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_basic")
 class TestTaskAnalyzerBasic:
     """Tests for TaskAnalyzer basic functionality."""
 
@@ -51,7 +50,6 @@ class TestTaskAnalyzerBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_complexity")
 class TestTaskAnalyzerComplexity:
     """Tests for TaskAnalyzer complexity detection."""
 
@@ -90,7 +88,6 @@ class TestTaskAnalyzerComplexity:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_exploration")
 class TestTaskAnalyzerExploration:
     """Tests for TaskAnalyzer exploration detection."""
 
@@ -127,7 +124,6 @@ class TestTaskAnalyzerExploration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_multi_step")
 class TestTaskAnalyzerMultiStep:
     """Tests for TaskAnalyzer multi-step detection."""
 
@@ -164,7 +160,6 @@ class TestTaskAnalyzerMultiStep:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_batch")
 class TestTaskAnalyzerBatch:
     """Tests for TaskAnalyzer batch processing detection."""
 
@@ -201,7 +196,6 @@ class TestTaskAnalyzerBatch:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_risk")
 class TestTaskAnalyzerRisk:
     """Tests for TaskAnalyzer risk level detection."""
 
@@ -247,7 +241,6 @@ class TestTaskAnalyzerRisk:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_tools")
 class TestTaskAnalyzerToolEstimation:
     """Tests for TaskAnalyzer tool count estimation."""
 
@@ -284,7 +277,6 @@ class TestTaskAnalyzerToolEstimation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analyzer_approval")
 class TestTaskAnalyzerApproval:
     """Tests for TaskAnalyzer approval requirement detection."""
 
@@ -321,7 +313,6 @@ class TestTaskAnalyzerApproval:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="task_analysis_dataclass")
 class TestTaskAnalysisDataclass:
     """Tests for TaskAnalysis dataclass structure."""
 

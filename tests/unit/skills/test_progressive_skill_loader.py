@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="progressive_skill_loader_basic")
 class TestProgressiveSkillLoaderBasic:
     """Tests for ProgressiveSkillLoader basic functionality."""
 
@@ -55,7 +54,6 @@ class TestProgressiveSkillLoaderBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="progressive_skill_loader_stages")
 class TestProgressiveSkillLoaderStages:
     """Tests for ProgressiveSkillLoader 4-stage loading."""
 
@@ -161,7 +159,6 @@ class TestProgressiveSkillLoaderStages:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="progressive_skill_loader_priority")
 class TestProgressiveSkillLoaderPriority:
     """Tests for ProgressiveSkillLoader skill priority."""
 
@@ -226,7 +223,6 @@ class TestProgressiveSkillLoaderPriority:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="progressive_skill_loader_scope")
 class TestProgressiveSkillLoaderScope:
     """Tests for ProgressiveSkillLoader scope resolution."""
 
@@ -288,7 +284,6 @@ class TestProgressiveSkillLoaderScope:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="loaded_skills_result")
 class TestLoadedSkillsResult:
     """Tests for LoadedSkills result dataclass."""
 
@@ -323,7 +318,6 @@ class TestLoadedSkillsResult:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="progressive_skill_loader_semantic")
 class TestProgressiveSkillLoaderSemanticSearch:
     """Tests for ProgressiveSkillLoader stages 3/4: semantic search.
 

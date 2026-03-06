@@ -674,7 +674,6 @@ class TestSessionsListCombined:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="test_sessions_router_rating")
 class TestMessageRatingEndpoint:
     """Tests for POST /api/v1/sessions/{session_id}/messages/{message_id}/rating endpoint."""
 
@@ -791,7 +790,6 @@ class TestMessageRatingEndpoint:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="test_sessions_router_rename")
 class TestSessionRenameEndpoint:
     """Tests for PATCH /api/v1/sessions/{session_id} endpoint (session rename).
 
@@ -932,7 +930,6 @@ class TestSessionRenameEndpoint:
             assert data["id"] == original_id
 
 
-@pytest.mark.xdist_group(name="test_sessions_config")
 class TestSessionConfigResponse:
     """Tests for SessionConfigResponse using settings instead of hardcoded values.
 
@@ -1028,7 +1025,6 @@ class TestSessionConfigResponse:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="test_sessions_router_archive")
 class TestSessionsArchiveEndpoint:
     """Tests for POST /api/v1/sessions/{id}/archive endpoint."""
 

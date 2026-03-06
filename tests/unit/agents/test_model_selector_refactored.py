@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="model_selector_refactor")
 class TestModelSelectorRegistry:
     """Tests for model selector's use of the model registry."""
 
@@ -94,7 +93,6 @@ class TestModelSelectorRegistry:
         assert result.model is not None
 
 
-@pytest.mark.xdist_group(name="model_selector_tier_mapping")
 class TestModelSelectorTierMapping:
     """Tests for tier mapping in model selector - now uses ModelRegistry.
 
@@ -227,7 +225,6 @@ class TestModelSelectorTierMapping:
         assert "@" in model  # Vertex AI format
 
 
-@pytest.mark.xdist_group(name="model_selector_validation")
 class TestModelSelectorValidation:
     """Tests for model selector validation and error handling."""
 

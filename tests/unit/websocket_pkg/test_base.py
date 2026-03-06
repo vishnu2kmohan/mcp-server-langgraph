@@ -50,7 +50,6 @@ class _ConcreteWebSocket:
         return getattr(self._impl, name)
 
 
-@pytest.mark.xdist_group(name="websocket_base_init")
 class TestWebSocketBaseInit:
     """Tests for WebSocketBase initialization."""
 
@@ -141,7 +140,6 @@ class TestWebSocketBaseInit:
         assert handler._heartbeat is None
 
 
-@pytest.mark.xdist_group(name="websocket_base_properties")
 class TestWebSocketBaseProperties:
     """Tests for WebSocketBase properties."""
 
@@ -211,7 +209,6 @@ class TestWebSocketBaseProperties:
         assert handler.user is None
 
 
-@pytest.mark.xdist_group(name="websocket_base_auth")
 class TestWebSocketBaseAuthentication:
     """Tests for WebSocketBase authentication."""
 
@@ -416,7 +413,6 @@ class TestWebSocketBaseAuthentication:
         assert result is None
 
 
-@pytest.mark.xdist_group(name="websocket_base_authz")
 class TestWebSocketBaseAuthorization:
     """Tests for WebSocketBase authorization."""
 
@@ -482,7 +478,6 @@ class TestWebSocketBaseAuthorization:
         mock_instance.authorize_connection.assert_called_once_with("user-123")
 
 
-@pytest.mark.xdist_group(name="websocket_base_send")
 class TestWebSocketBaseSend:
     """Tests for WebSocketBase send methods."""
 
@@ -628,7 +623,6 @@ class TestWebSocketBaseSend:
             await handler.send(message)
 
 
-@pytest.mark.xdist_group(name="websocket_base_rate_limit")
 class TestWebSocketBaseRateLimit:
     """Tests for WebSocketBase rate limiting."""
 
@@ -757,7 +751,6 @@ class TestWebSocketBaseRateLimit:
         assert result is None
 
 
-@pytest.mark.xdist_group(name="websocket_base_close")
 class TestWebSocketBaseClose:
     """Tests for WebSocketBase close methods."""
 
@@ -846,7 +839,6 @@ class TestWebSocketBaseClose:
         await handler._close_with_error(mock_ws, ValueError("Error"))
 
 
-@pytest.mark.xdist_group(name="websocket_base_lifecycle")
 class TestWebSocketBaseLifecycle:
     """Tests for WebSocketBase lifecycle hooks."""
 
@@ -920,7 +912,6 @@ class TestWebSocketBaseLifecycle:
         await handler.on_error(ValueError("Test error"))
 
 
-@pytest.mark.xdist_group(name="websocket_base_helper")
 class TestGetAuthMiddlewareFromWebsocket:
     """Tests for get_auth_middleware_from_websocket helper."""
 
@@ -947,7 +938,6 @@ class TestGetAuthMiddlewareFromWebsocket:
         assert callable(get_auth_middleware_from_websocket)
 
 
-@pytest.mark.xdist_group(name="websocket_base_run")
 class TestWebSocketBaseRun:
     """Tests for WebSocketBase run method."""
 
@@ -1119,7 +1109,6 @@ class TestWebSocketBaseRun:
         handler._heartbeat.stop.assert_called_once()
 
 
-@pytest.mark.xdist_group(name="websocket_base_message_loop")
 class TestWebSocketBaseMessageLoop:
     """Tests for WebSocketBase message loop."""
 
@@ -1327,7 +1316,6 @@ class TestWebSocketBaseMessageLoop:
         assert error_call[0][0]["payload"]["code"] == "invalid_json"
 
 
-@pytest.mark.xdist_group(name="websocket_base_token_validation")
 class TestWebSocketBaseTokenValidation:
     """Tests for WebSocketBase periodic token validation."""
 
@@ -1538,7 +1526,6 @@ class TestWebSocketBaseTokenValidation:
         assert 4010 in close_code_used
 
 
-@pytest.mark.xdist_group(name="websocket_base_protocol_version")
 class TestWebSocketBaseProtocolVersion:
     """Tests for WebSocketBase protocol version validation."""
 

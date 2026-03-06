@@ -26,7 +26,6 @@ from mcp_server_langgraph.api.v1.database_connections import (
 )
 
 
-@pytest.mark.xdist_group(name="test_database_connections_validation")
 class TestValidation:
     """Test validation helpers."""
 
@@ -99,7 +98,6 @@ class TestValidation:
         assert {"user", "project", "session"} == VALID_SCOPES
 
 
-@pytest.mark.xdist_group(name="test_database_connections_sanitize")
 class TestSanitizeError:
     """Test error sanitization."""
 
@@ -159,7 +157,6 @@ class TestSanitizeError:
         assert result == "Unable to connect - check host and port"
 
 
-@pytest.mark.xdist_group(name="test_database_connections_ports")
 class TestDefaultPorts:
     """Test default port mappings."""
 
@@ -209,7 +206,6 @@ class TestDefaultPorts:
             assert dialect in DEFAULT_PORTS, f"Missing default port for {dialect}"
 
 
-@pytest.mark.xdist_group(name="test_database_connections_models")
 class TestPydanticModels:
     """Test Pydantic model validation."""
 
@@ -406,7 +402,6 @@ class TestPydanticModels:
         assert req.host is None  # Not updated
 
 
-@pytest.mark.xdist_group(name="test_database_connections_templates")
 class TestDatabaseTemplates:
     """Test that database templates are included in connection_templates."""
 
@@ -496,7 +491,6 @@ class TestDatabaseTemplates:
         assert trino.category == "data"
 
 
-@pytest.mark.xdist_group(name="test_database_connections_router")
 class TestRouterRegistration:
     """Test that the database connections router is properly configured."""
 
@@ -588,7 +582,6 @@ class TestRouterRegistration:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="test_database_connections_egress")
 class TestEgressValidationIntegration:
     """Test egress validation wiring in create/test endpoints."""
 
@@ -734,7 +727,6 @@ def _create_test_app(
     return TestClient(app)
 
 
-@pytest.mark.xdist_group(name="test_database_connections_crud")
 class TestDatabaseConnectionsCRUD:
     """Test CRUD endpoints with mocked repository."""
 
@@ -1009,7 +1001,6 @@ class TestDatabaseConnectionsCRUD:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="test_database_connections_credential_rotation")
 class TestCredentialRotation:
     """Test credential rotation/update functionality."""
 
@@ -1174,7 +1165,6 @@ class TestCredentialRotation:
 # ============================================================================
 
 
-@pytest.mark.xdist_group(name="test_database_connections_security")
 class TestSecretPathValidation:
     """SECURITY: Test secret path traversal prevention."""
 

@@ -28,7 +28,6 @@ except ImportError:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsqlvalidatorbasic")
 class TestSQLValidatorBasic:
     """Verify that well-formed, read-only queries pass validation."""
 
@@ -123,7 +122,6 @@ class TestSQLValidatorBasic:
 
 @pytest.mark.unit
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testsqlvalidatorddl")
 class TestSQLValidatorBlockedDDL:
     """Verify that DDL statements are rejected."""
 
@@ -171,7 +169,6 @@ class TestSQLValidatorBlockedDDL:
 
 @pytest.mark.unit
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testsqlvalidatordml")
 class TestSQLValidatorBlockedDML:
     """Verify that write DML and privilege statements are rejected."""
 
@@ -222,7 +219,6 @@ class TestSQLValidatorBlockedDML:
 
 @pytest.mark.unit
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testsqlvalidatormultistatement")
 class TestSQLValidatorMultiStatement:
     """Verify that multiple statements separated by semicolons are rejected."""
 
@@ -264,7 +260,6 @@ class TestSQLValidatorMultiStatement:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsqlvalidatorparseerror")
 class TestSQLValidatorParseErrors:
     """Verify that unparseable SQL is flagged as invalid."""
 
@@ -309,7 +304,6 @@ class TestSQLValidatorParseErrors:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsqlvalidatortableallowlist")
 class TestSQLValidatorTableAllowlist:
     """Verify that table allowlist enforcement works correctly."""
 
@@ -373,7 +367,6 @@ class TestSQLValidatorTableAllowlist:
 
 @pytest.mark.unit
 @pytest.mark.security
-@pytest.mark.xdist_group(name="testsqlvalidatordialect")
 class TestSQLValidatorDialectFunctions:
     """Verify that dialect-specific dangerous functions are blocked."""
 
@@ -427,7 +420,6 @@ class TestSQLValidatorDialectFunctions:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsqlvalidationresult")
 class TestSQLValidationResult:
     """Verify the ValidationResult dataclass contract."""
 
@@ -468,7 +460,6 @@ class TestSQLValidationResult:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testsqlvalidatorconstructor")
 class TestSQLValidatorConstructor:
     """Verify constructor parameters and defaults."""
 
@@ -500,7 +491,6 @@ class TestSQLValidatorConstructor:
 
 @pytest.mark.unit
 @pytest.mark.property
-@pytest.mark.xdist_group(name="testsqlvalidatorproperties")
 class TestSQLValidatorProperties:
     """Property-based tests using Hypothesis for fuzzing the SQL validator."""
 

@@ -14,7 +14,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.auth]
 
 
-@pytest.mark.xdist_group(name="test_prometheus_auth_metrics")
 class TestPrometheusAuthMetricsDefinitions:
     """Test that all Prometheus auth metrics are properly defined."""
 
@@ -79,7 +78,6 @@ class TestPrometheusAuthMetricsDefinitions:
         assert prometheus_metrics._session_lifecycle_events_total is not None
 
 
-@pytest.mark.xdist_group(name="test_prometheus_auth_metrics_record")
 class TestPrometheusAuthMetricsRecording:
     """Test that metrics are properly recorded."""
 
@@ -197,7 +195,6 @@ class TestPrometheusAuthMetricsRecording:
         prometheus_metrics.record_session_lifecycle_event(event="session.start", reason="should_be_ignored")
 
 
-@pytest.mark.xdist_group(name="test_prometheus_auth_metrics_noop")
 class TestPrometheusAuthMetricsNoOp:
     """Test that metrics functions work gracefully when prometheus_client unavailable."""
 

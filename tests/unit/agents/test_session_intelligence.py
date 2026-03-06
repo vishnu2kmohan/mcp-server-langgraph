@@ -24,7 +24,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.agents]
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_summarize")
 class TestSessionSummarize:
     """Test session_summarize task type."""
 
@@ -168,7 +167,6 @@ class TestSessionSummarize:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_group")
 class TestSessionGroup:
     """Test session_group task type."""
 
@@ -293,7 +291,6 @@ class TestSessionGroup:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_similarity")
 class TestSessionSimilarity:
     """Test session_similarity task type."""
 
@@ -410,7 +407,6 @@ class TestSessionSimilarity:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_errors")
 class TestSessionIntelligenceErrors:
     """Test error handling for session intelligence tasks."""
 
@@ -474,7 +470,6 @@ class TestSessionIntelligenceErrors:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="session_intelligence_persona")
 class TestSessionIntelligencePersonaAccess:
     """Test persona-based access to session intelligence features."""
 

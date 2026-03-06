@@ -33,7 +33,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="mcp_bridge")
 class TestMCPBridge:
     """Test suite for MCPBridge."""
 
@@ -304,7 +303,6 @@ class TestMCPBridge:
         reset_mcp_bridge()
 
 
-@pytest.mark.xdist_group(name="mcp_client")
 class TestMCPClient:
     """Test suite for MCPClient."""
 
@@ -380,7 +378,6 @@ class TestMCPClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="mcp_protocol_2025")
 class TestMCPProtocol2025Features:
     """Test suite for MCP Protocol 2025-11-25 features."""
 
@@ -928,7 +925,6 @@ class TestMCPProtocol2025Features:
             assert len(exc_info.value.elicitations) == 1
 
 
-@pytest.mark.xdist_group(name="mcp_bridge_2025")
 class TestMCPBridge2025Features:
     """Test suite for MCPBridge MCP 2025-11-25 feature integration."""
 

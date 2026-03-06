@@ -15,7 +15,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_storage_session_models")
 @pytest.mark.unit
 class TestSessionConfigDefaults:
     """Tests for SessionConfig model using settings defaults."""
@@ -85,7 +84,6 @@ class TestSessionConfigDefaults:
         assert 0.0 <= config.temperature <= 2.0
 
 
-@pytest.mark.xdist_group(name="test_storage_session_config_execution_mode")
 @pytest.mark.unit
 class TestSessionConfigExecutionMode:
     """Tests for SessionConfig execution_mode field for bypass mode persistence."""
@@ -168,7 +166,6 @@ class TestSessionConfigExecutionMode:
         assert restored.config.execution_mode == "plan"
 
 
-@pytest.mark.xdist_group(name="test_storage_unified_models")
 @pytest.mark.unit
 class TestUnifiedSessionConfigDefaults:
     """Tests for unified storage/models.py SessionConfig using settings defaults."""
@@ -211,7 +208,6 @@ class TestUnifiedSessionConfigDefaults:
             assert config.max_tokens == 32000
 
 
-@pytest.mark.xdist_group(name="test_ai_explanation_models")
 @pytest.mark.unit
 class TestAIExplanationModelDefault:
     """Tests for AIExplanation model using settings for model_used."""

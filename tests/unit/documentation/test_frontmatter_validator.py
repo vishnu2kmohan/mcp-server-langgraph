@@ -30,7 +30,6 @@ from validators.frontmatter_validator import (
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testfrontmattervalidator")
 class TestFrontmatterValidator:
     """Test suite for FrontmatterValidator."""
 

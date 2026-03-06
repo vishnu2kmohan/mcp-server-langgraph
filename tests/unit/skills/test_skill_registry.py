@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_registry_basic")
 class TestSkillRegistryBasic:
     """Test suite for basic registry functionality"""
 
@@ -97,7 +96,6 @@ class TestSkillRegistryBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_registry_unregister")
 class TestSkillRegistryUnregister:
     """Test suite for skill unregistration"""
 
@@ -135,7 +133,6 @@ class TestSkillRegistryUnregister:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_registry_search")
 class TestSkillRegistrySearch:
     """Test suite for skill search functionality"""
 
@@ -227,7 +224,6 @@ class TestSkillRegistrySearch:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_registry_source")
 class TestSkillRegistrySource:
     """Test suite for skill source tracking"""
 
@@ -289,7 +285,6 @@ class TestSkillRegistrySource:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_registry_clear")
 class TestSkillRegistryClear:
     """Test suite for clearing the registry"""
 

@@ -15,7 +15,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="cache_close")
 @pytest.mark.unit
 class TestCacheServiceClose:
     """Tests for CacheService close/aclose methods."""

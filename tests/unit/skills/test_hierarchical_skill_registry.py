@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_skill_registry")
 class TestHierarchicalSkillRegistryBasic:
     """Tests for HierarchicalSkillRegistry basic functionality."""
 
@@ -66,7 +65,6 @@ class TestHierarchicalSkillRegistryBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_skill_registration")
 class TestHierarchicalSkillRegistration:
     """Tests for scope-based skill registration."""
 
@@ -132,7 +130,6 @@ class TestHierarchicalSkillRegistration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_skill_resolution")
 class TestHierarchicalSkillResolution:
     """Tests for scope-based skill resolution."""
 
@@ -222,7 +219,6 @@ class TestHierarchicalSkillResolution:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_skill_backward_compat")
 class TestHierarchicalSkillBackwardCompatibility:
     """Tests for backward compatibility with flat registry."""
 

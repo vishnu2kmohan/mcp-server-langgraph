@@ -22,7 +22,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="embedding_auto_detection")
 class TestEmbeddingAutoDetection:
     """Tests for embedding provider auto-detection."""
 

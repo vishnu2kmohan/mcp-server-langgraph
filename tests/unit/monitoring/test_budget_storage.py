@@ -358,7 +358,6 @@ class TestGetBudgetStorageFunction:
         _reset_budget_storage()  # Cleanup
 
 
-@pytest.mark.xdist_group(name="test_postgres_budget_storage")
 class TestPostgresBudgetStorage:
     """Test suite for PostgreSQL BudgetStorage implementation."""
 
@@ -590,7 +589,6 @@ class TestPostgresBudgetStorage:
         assert result is False
 
 
-@pytest.mark.xdist_group(name="test_budget_storage_di")
 class TestSetBudgetStorageFunction:
     """Test suite for set_budget_storage() dependency injection function."""
 
@@ -658,7 +656,6 @@ class TestSetBudgetStorageFunction:
         assert isinstance(retrieved, MemoryBudgetStorage)
 
 
-@pytest.mark.xdist_group(name="test_budget_storage_app_factory")
 class TestBudgetStorageAppFactoryIntegration:
     """Test suite for budget storage integration with app_factory."""
 

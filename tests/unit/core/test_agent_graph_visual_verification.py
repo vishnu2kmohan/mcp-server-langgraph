@@ -66,7 +66,6 @@ def agent_config_without_visual():
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agent_config_visual")
 class TestAgentConfigVisualVerification:
     """Tests for AgentConfig visual verification flag."""
 
@@ -106,7 +105,6 @@ class TestAgentConfigVisualVerification:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agent_graph_visual_node")
 class TestAgentGraphVisualVerificationNode:
     """Tests for visual verification node in agent graph."""
 
@@ -158,7 +156,6 @@ class TestAgentGraphVisualVerificationNode:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_visual_verify_execution")
 class TestVisualVerifyNodeExecution:
     """Tests for visual verification node execution behavior."""
 
@@ -229,7 +226,6 @@ class TestVisualVerifyNodeExecution:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_visual_verify_integration")
 class TestVisualVerifyAgentIntegration:
     """Tests for visual verification integration with agent loop."""
 
@@ -309,7 +305,6 @@ class TestVisualVerifyAgentIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_visual_verify_settings")
 class TestVisualVerificationSettings:
     """Tests for visual verification settings integration."""
 
@@ -356,7 +351,6 @@ class TestVisualVerificationSettings:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_visual_verify_criteria_selection")
 class TestVisualVerificationCriteriaInGraph:
     """Tests for visual verification criteria selection in agent graph."""
 
@@ -413,7 +407,6 @@ class TestVisualVerificationCriteriaInGraph:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_verify_response_visual_integration")
 class TestVerifyResponseVisualIntegration:
     """Tests for verify_response node calling visual verification."""
 
@@ -681,7 +674,6 @@ class TestVerifyResponseVisualIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_configurable_visual_weights")
 class TestConfigurableVisualVerificationWeights:
     """Tests for configurable visual verification scoring weights."""
 
@@ -843,7 +835,6 @@ class TestConfigurableVisualVerificationWeights:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_multi_url_verification")
 class TestMultiURLVerification:
     """Tests for multi-URL verification with aggregation."""
 

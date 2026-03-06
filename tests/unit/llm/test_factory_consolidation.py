@@ -25,7 +25,6 @@ from mcp_server_langgraph.llm.factory import (
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testmodeltypeenum")
 class TestModelTypeEnum:
     """Test the ModelType enum for different model purposes."""
 
@@ -49,7 +48,6 @@ class TestModelTypeEnum:
         assert ModelType.VERIFICATION.value == "verification"
 
 
-@pytest.mark.xdist_group(name="testcreatemodelfunction")
 class TestCreateModelFunction:
     """Test the consolidated create_model function."""
 
@@ -144,7 +142,6 @@ class TestCreateModelFunction:
         assert factory.provider == "google"
 
 
-@pytest.mark.xdist_group(name="llm_factory_backward_compat")
 class TestBackwardCompatibility:
     """Test that existing functions still work (backward compatibility)."""
 
@@ -190,7 +187,6 @@ class TestBackwardCompatibility:
         assert type(factory).__name__ == "LLMFactory"
 
 
-@pytest.mark.xdist_group(name="vertex_location_always_passed")
 class TestVertexLocationAlwaysPassed:
     """
     Test that vertex_location is always passed to LiteLLM for Vertex AI.
@@ -263,7 +259,6 @@ class TestVertexLocationAlwaysPassed:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="vertex_ai_env_vars")
 class TestVertexAIEnvironmentVariables:
     """Test that VERTEXAI_LOCATION env var is set correctly by _setup_environment.
 

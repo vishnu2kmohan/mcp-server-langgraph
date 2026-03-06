@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 
 
-@pytest.mark.xdist_group(name="plan_template_repository")
 class TestPlanTemplateRepositoryContract:
     """Tests for PlanTemplateRepository abstract contract."""
 
@@ -43,7 +42,6 @@ class TestPlanTemplateRepositoryContract:
             PlanTemplateRepository()  # type: ignore[abstract]
 
 
-@pytest.mark.xdist_group(name="inmemory_plan_template_repository")
 class TestInMemoryPlanTemplateRepository:
     """Tests for InMemoryPlanTemplateRepository implementation."""
 
@@ -323,7 +321,6 @@ class TestInMemoryPlanTemplateRepository:
         assert fetched.success_rate == 0.5
 
 
-@pytest.mark.xdist_group(name="plan_template_semantic_search")
 class TestPlanTemplateSemanticSearch:
     """Tests for semantic search functionality."""
 

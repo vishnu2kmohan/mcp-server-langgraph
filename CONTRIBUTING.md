@@ -204,6 +204,53 @@ uv run --frozen pytest tests/smoke/             # Phase 3: Smoke tests
 pre-commit run --all-files --hook-stage pre-push  # Phase 4
 ```
 
+#### Parallel Pre-Push (Recommended)
+
+Pre-push hooks can run in parallel lanes for ~50-60% faster execution:
+
+```bash
+# Run pre-push hooks in 5 parallel lanes
+make pre-push-parallel
+
+# Or call the script directly
+bash scripts/hooks/parallel_pre_push.sh
+
+# Dry-run to see lane configuration
+PRE_PUSH_DRY_RUN=1 bash scripts/hooks/parallel_pre_push.sh
+
+# Fall back to sequential execution
+PRE_PUSH_SEQUENTIAL=1 bash scripts/hooks/parallel_pre_push.sh
+```
+
+#### Environment Variables for Hook Tuning
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITEST_SHARD_CONCURRENCY_MAX` | 12 (local), 2 (CI) | Max concurrent frontend test shards |
+| `PRE_PUSH_SEQUENTIAL` | unset | Set to `1` to disable parallel pre-push lanes |
+| `SKIP_TRIVY` | unset | Skip Trivy scans (local only, ignored in CI) |
+| `SKIP_SEMGREP` | unset | Skip Semgrep scans (local only, ignored in CI) |
+| `SKIP_BANDIT` | unset | Skip Bandit scans (local only, ignored in CI) |
+| `SKIP_CHECKOV` | unset | Skip Checkov scans (local only, ignored in CI) |
+
+**Note**: `SKIP_*` variables are ignored when `CI=true` to prevent silent security bypass in CI.
+
+#### MyPy Daemon (dmypy)
+
+The pre-push mypy hook uses `dmypy` (MyPy daemon) locally for incremental type checking:
+- **Warm state**: ~1-3s (vs ~10-30s full check)
+- **Cold start**: ~10-30s (first run after daemon starts)
+- **CI**: Falls back to standard `mypy` (daemon doesn't persist across CI jobs)
+
+**Maintenance**:
+```bash
+# Kill dmypy daemon (after rebasing or switching branches)
+uv run --frozen dmypy kill
+
+# Or use the Makefile target to stop all daemons
+make kill-daemons
+```
+
 #### CI Parity Mode (Optional)
 
 **Run full integration tests locally to match CI exactly**:

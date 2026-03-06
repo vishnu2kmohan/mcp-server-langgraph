@@ -25,7 +25,6 @@ from tests.utils.mock_factories import (
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testmcpserverbehavioralpattern")
 class TestMCPServerBehavioralPattern:
     """Sample test class demonstrating behavioral mock pattern."""
 

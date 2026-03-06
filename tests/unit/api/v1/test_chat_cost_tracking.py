@@ -19,7 +19,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_chat_cost_tracking")
 @pytest.mark.unit
 @pytest.mark.api
 class TestChatCostTracking:

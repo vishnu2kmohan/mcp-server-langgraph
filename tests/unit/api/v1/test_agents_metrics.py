@@ -54,7 +54,6 @@ def create_agents_test_app() -> FastAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="agents_metrics_models")
 class TestAgentMetricsModels:
     """Test response models for agents metrics endpoint."""
 
@@ -177,7 +176,6 @@ class TestAgentMetricsModels:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="agents_metrics_endpoint")
 class TestAgentMetricsEndpoint:
     """Test /api/v1/agents/metrics endpoint."""
 
@@ -269,7 +267,6 @@ class TestAgentMetricsEndpoint:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="agents_metrics_errors")
 class TestAgentMetricsErrorHandling:
     """Test error handling for agents metrics endpoint."""
 
@@ -323,7 +320,6 @@ class TestAgentMetricsErrorHandling:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="agents_metrics_queries")
 class TestAgentMetricsQueries:
     """Test PromQL queries for agents metrics."""
 

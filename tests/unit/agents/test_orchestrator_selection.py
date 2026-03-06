@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 @pytest.mark.unit
 @pytest.mark.core
 @pytest.mark.config
-@pytest.mark.xdist_group(name="enable_chat_routing_setting")
 class TestEnableChatRoutingSetting:
     """Tests for enable_chat_routing setting in Settings class."""
 
@@ -71,7 +70,6 @@ class TestEnableChatRoutingSetting:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="orchestrator_selection_model")
 class TestOrchestratorSelectionModel:
     """Tests for OrchestratorSelection model in router_agent.py."""
 
@@ -155,7 +153,6 @@ class TestOrchestratorSelectionModel:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="select_orchestrator_method")
 class TestSelectOrchestratorMethod:
     """Tests for RouterAgent.select_orchestrator method."""
 
@@ -451,7 +448,6 @@ class TestSelectOrchestratorMethod:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="select_orchestrator_impl")
 class TestSelectOrchestratorImpl:
     """Tests for _select_orchestrator_impl helper function."""
 
@@ -532,7 +528,6 @@ class TestSelectOrchestratorImpl:
 @pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="swarm_streaming")
 class TestSwarmStreaming:
     """Tests for _stream_via_swarm method in ChatServiceImpl."""
 
@@ -695,7 +690,6 @@ class TestSwarmStreaming:
 @pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="task_orchestrator_streaming")
 class TestTaskOrchestratorStreaming:
     """Tests for _stream_via_task_orchestrator method in ChatServiceImpl."""
 
@@ -792,7 +786,6 @@ class TestTaskOrchestratorStreaming:
 @pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="chat_routing_dispatch")
 class TestChatRoutingDispatch:
     """Integration tests for orchestrator dispatch in create_stream."""
 
@@ -886,7 +879,6 @@ class TestChatRoutingDispatch:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="phase2_context_strategy")
 class TestContextStrategy:
     """Tests for strategy-configurable context in OrchestratorSelection (Phase 2)."""
 
@@ -979,7 +971,6 @@ class TestContextStrategy:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="phase2_resource_injection")
 class TestSwarmResourceInjection:
     """Tests for resource URI injection in swarm workers (Phase 2)."""
 
@@ -1098,7 +1089,6 @@ class TestSwarmResourceInjection:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="phase2_non_streaming")
 class TestNonStreamingOrchestration:
     """Tests for non-streaming create_completion with orchestrator dispatch (Phase 2)."""
 
@@ -1166,7 +1156,6 @@ class TestNonStreamingOrchestration:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="phase2_summarization")
 class TestConversationSummarization:
     """Tests for conversation summarization in swarm context (Phase 2)."""
 

@@ -22,7 +22,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_discovery_basic")
 class TestStudioDiscoveryBasic:
     """Tests for StudioDiscovery basic functionality."""
 
@@ -56,7 +55,6 @@ class TestStudioDiscoveryBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_discovery_scope")
 class TestStudioDiscoveryScopes:
     """Tests for scope-based discovery."""
 
@@ -136,7 +134,6 @@ class TestStudioDiscoveryScopes:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_discovery_limits")
 class TestStudioDiscoveryLimits:
     """Tests for discovery limits and boundaries."""
 
@@ -185,7 +182,6 @@ class TestStudioDiscoveryLimits:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_discovery_precedence")
 class TestStudioDiscoveryPrecedence:
     """Tests for scope precedence in discovery."""
 

@@ -57,7 +57,6 @@ def mock_execution_service() -> MagicMock:
     return service
 
 
-@pytest.mark.xdist_group(name="workflow_execution_ws")
 class TestWorkflowExecutionHandler:
     """Test Workflow Execution WebSocket using WebSocketBase."""
 

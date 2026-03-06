@@ -11,7 +11,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_execution_plan_model")
 class TestExecutionPlanModelV35Fields:
     """Test ExecutionPlanModel v35.0 field additions."""
 

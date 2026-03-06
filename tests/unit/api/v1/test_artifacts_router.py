@@ -868,7 +868,6 @@ class TestArtifactsContentSizeValidation:
             assert response.status_code == 201
 
 
-@pytest.mark.xdist_group(name="test_artifacts_protocol")
 class TestArtifactsServiceProtocol:
     """Tests for ArtifactsServiceProtocol completeness.
 

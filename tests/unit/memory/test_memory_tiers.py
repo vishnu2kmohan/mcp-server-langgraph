@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_tiers")
 class TestMemoryTierBasic:
     """Tests for MemoryTier enum basic functionality."""
 
@@ -75,7 +74,6 @@ class TestMemoryTierBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_tier_properties")
 class TestMemoryTierProperties:
     """Tests for MemoryTier tier properties."""
 

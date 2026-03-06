@@ -80,7 +80,6 @@ def mock_router_agent(mock_router_output: RouterOutput) -> AsyncMock:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="chat_router_integration")
 class TestRouterAgentIntegration:
     """Test router agent integration with chat streaming."""
 
@@ -403,7 +402,6 @@ class TestRouterAgentIntegration:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="chat_router_feature_flag")
 class TestRouterFeatureFlag:
     """Test router integration with feature flags."""
 
@@ -448,7 +446,6 @@ class TestRouterFeatureFlag:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="chat_router_schema")
 class TestRoutingEventSchema:
     """Test routing decision event schema."""
 

@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="vector_search_base")
 class TestVectorSearchProviderBase:
     """Tests for VectorSearchProvider abstract base class."""
 
@@ -72,7 +71,6 @@ class TestVectorSearchProviderBase:
         assert result.metadata == {"key": "value"}
 
 
-@pytest.mark.xdist_group(name="vector_search_inmemory")
 class TestInMemoryVectorProvider:
     """Tests for InMemoryVectorProvider (testing implementation)."""
 
@@ -243,7 +241,6 @@ class TestInMemoryVectorProvider:
         assert results[0].metadata.get("version") == "2"
 
 
-@pytest.mark.xdist_group(name="vector_search_factory")
 class TestVectorProviderFactory:
     """Tests for vector provider factory."""
 
@@ -309,7 +306,6 @@ class TestVectorProviderFactory:
         assert isinstance(provider, QdrantVectorProvider)
 
 
-@pytest.mark.xdist_group(name="vector_search_pgvector")
 class TestPgVectorProvider:
     """Tests for PgVectorProvider (PostgreSQL pgvector extension)."""
 
@@ -456,7 +452,6 @@ class TestPgVectorProvider:
             pytest.skip("pgvector dependencies not available")
 
 
-@pytest.mark.xdist_group(name="vector_search_qdrant")
 class TestQdrantVectorProvider:
     """Tests for QdrantVectorProvider (Qdrant vector database)."""
 

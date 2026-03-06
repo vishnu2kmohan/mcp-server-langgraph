@@ -16,7 +16,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.pii, pytest.mark.coverage]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tokenizer_dict_basic")
 class TestTokenizerDictBasic:
     """Test suite for tokenize_dict basic functionality."""
 
@@ -161,7 +160,6 @@ class TestTokenizerDictBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tokenizer_untokenize_dict")
 class TestTokenizerUntokenizeDict:
     """Test suite for untokenize_dict functionality."""
 
@@ -277,7 +275,6 @@ class TestTokenizerUntokenizeDict:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tokenizer_dict_roundtrip")
 class TestTokenizerDictRoundtrip:
     """Test suite for dict tokenize/untokenize roundtrip."""
 
@@ -373,7 +370,6 @@ class TestTokenizerDictRoundtrip:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tokenizer_internal_methods")
 class TestTokenizerInternalMethods:
     """Test suite for internal tokenizer methods."""
 

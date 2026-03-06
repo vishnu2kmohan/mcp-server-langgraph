@@ -30,7 +30,6 @@ def _get_inmemory_user_provider_class():
     return InMemoryUserProvider
 
 
-@pytest.mark.xdist_group(name="test_verify_password")
 class TestUserProviderVerifyPassword:
     """Test verify_password functionality across UserProvider implementations"""
 

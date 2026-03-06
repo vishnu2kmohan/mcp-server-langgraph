@@ -467,7 +467,6 @@ class TestMarketplaceAdminAuthorization:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_skill_permission_hierarchy")
 class TestSkillPermissionHierarchy:
     """Test that permission hierarchy is correctly computed by OpenFGA.
 
@@ -536,7 +535,6 @@ class TestSkillPermissionHierarchy:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_skills_api_authorization")
 class TestSkillsAPIAuthorizationMatrix:
     """Test complete authorization matrix for Skills API endpoints.
 

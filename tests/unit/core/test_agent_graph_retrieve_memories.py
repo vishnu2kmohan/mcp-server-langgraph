@@ -27,7 +27,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_memories_state")
 class TestRetrieveMemoriesNodeState:
     """Tests for AgentState memory retrieval fields."""
 
@@ -44,7 +43,6 @@ class TestRetrieveMemoriesNodeState:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_memories_graph")
 class TestRetrieveMemoriesNodeInGraph:
     """Tests for retrieve_memories node inclusion in graph."""
 
@@ -78,7 +76,6 @@ class TestRetrieveMemoriesNodeInGraph:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_memories_behavior")
 class TestRetrieveMemoriesNodeBehavior:
     """Tests for retrieve_memories node behavior."""
 
@@ -141,7 +138,6 @@ class TestRetrieveMemoriesNodeBehavior:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_memories_integration")
 class TestRetrieveMemoriesNodeIntegration:
     """Integration tests for retrieve_memories node."""
 
@@ -251,7 +247,6 @@ class TestRetrieveMemoriesNodeIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_memories_flow")
 class TestRetrieveMemoriesGraphFlow:
     """Tests for retrieve_memories node graph flow."""
 

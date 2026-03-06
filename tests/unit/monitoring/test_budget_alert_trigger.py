@@ -20,7 +20,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.monitoring]
 
 
-@pytest.mark.xdist_group(name="test_budget_alert_trigger")
 class TestBudgetAlertTriggerFunction:
     """Tests for the budget alert trigger function."""
 
@@ -114,7 +113,6 @@ class TestBudgetAlertTriggerFunction:
             _reset_budget_storage()
 
 
-@pytest.mark.xdist_group(name="test_budget_alert_trigger_broadcast")
 class TestBudgetAlertTriggerBroadcast:
     """Tests for broadcasting when thresholds are crossed."""
 
@@ -279,7 +277,6 @@ class TestBudgetAlertTriggerBroadcast:
             _reset_budget_storage()
 
 
-@pytest.mark.xdist_group(name="test_budget_alert_trigger_multi_entity")
 class TestBudgetAlertTriggerMultiEntity:
     """Tests for checking multiple entity budgets."""
 
@@ -360,7 +357,6 @@ class TestBudgetAlertTriggerMultiEntity:
             _reset_budget_storage()
 
 
-@pytest.mark.xdist_group(name="test_budget_alert_callback_integration")
 class TestBudgetAlertCallbackIntegration:
     """Tests for integration with CostTrackingCallback."""
 

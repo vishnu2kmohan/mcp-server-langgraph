@@ -19,7 +19,6 @@ import pytest
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.mark.xdist_group(name="test_workflow_title_generator")
 class TestWorkflowTitleGenerator:
     """Tests for WorkflowTitleGenerator class."""
 
@@ -152,7 +151,6 @@ class TestWorkflowTitleGenerator:
         assert len(title) > 0
 
 
-@pytest.mark.xdist_group(name="test_workflow_title_generator_llm")
 class TestWorkflowTitleGeneratorLLMFactory:
     """Tests for LLMFactory integration (SOLID compliance).
 
@@ -243,7 +241,6 @@ class TestWorkflowTitleGeneratorLLMFactory:
         assert len(title) > 0
 
 
-@pytest.mark.xdist_group(name="test_workflow_title_generator_convenience")
 class TestWorkflowTitleGeneratorConvenience:
     """Tests for convenience function and singleton pattern."""
 

@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_connections_realtime_init")
 class TestConnectionsRealtimeHandlerInit:
     """Tests for ConnectionsRealtimeHandler initialization."""
 
@@ -62,7 +61,6 @@ class TestConnectionsRealtimeHandlerInit:
         assert handler._metrics is mock_metrics
 
 
-@pytest.mark.xdist_group(name="websocket_connections_realtime_lifecycle")
 class TestConnectionsRealtimeHandlerLifecycle:
     """Tests for ConnectionsRealtimeHandler lifecycle hooks."""
 
@@ -123,7 +121,6 @@ class TestConnectionsRealtimeHandlerLifecycle:
         assert handler.subscribe_all is False
 
 
-@pytest.mark.xdist_group(name="websocket_connections_realtime_messages")
 class TestConnectionsRealtimeHandlerMessages:
     """Tests for ConnectionsRealtimeHandler message handling."""
 
@@ -360,7 +357,6 @@ class TestConnectionsRealtimeHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_connections_realtime_push")
 class TestConnectionsRealtimeHandlerPush:
     """Tests for ConnectionsRealtimeHandler push functionality."""
 
@@ -463,7 +459,6 @@ class TestConnectionsRealtimeHandlerPush:
         mock_ws.send_json.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="websocket_connections_realtime_protocol")
 class TestConnectionServiceProtocol:
     """Tests for ConnectionServiceProtocol."""
 

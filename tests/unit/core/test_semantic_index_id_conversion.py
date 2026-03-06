@@ -20,7 +20,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.core, pytest.mark.semantic_search]
 
 
-@pytest.mark.xdist_group(name="semantic_index_id_conversion")
 class TestSemanticIndexManagerIdConversion:
     """Tests for SemanticIndexManager ID conversion to valid Qdrant IDs."""
 
@@ -317,7 +316,6 @@ class TestSemanticIndexManagerIdConversion:
             assert points[0].payload.get("_original_id") == "decision-trace-12345"
 
 
-@pytest.mark.xdist_group(name="semantic_index_search_id_restoration")
 class TestSemanticIndexManagerSearchIdRestoration:
     """Tests for restoring original IDs in search results."""
 

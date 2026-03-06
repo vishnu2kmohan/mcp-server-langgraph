@@ -21,7 +21,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_adapters_vector")
 class TestVectorProviderAdapter:
     """Tests for VectorProviderAdapter that wraps VectorSearchProvider."""
 
@@ -143,7 +142,6 @@ class TestVectorProviderAdapter:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_adapters_embedding")
 class TestEmbeddingServiceAdapter:
     """Tests for EmbeddingServiceAdapter that wraps LangChain Embeddings."""
 
@@ -200,7 +198,6 @@ class TestEmbeddingServiceAdapter:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_adapters_factory")
 class TestSkillSearchToolFactory:
     """Tests for factory that creates SkillSearchTool with adapters."""
 
@@ -255,7 +252,6 @@ class TestSkillSearchToolFactory:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_adapters_pgvector")
 class TestVectorProviderAdapterPgVectorCompatibility:
     """Tests verifying VectorProviderAdapter works with PgVectorProvider.
 
@@ -342,7 +338,6 @@ class TestVectorProviderAdapterPgVectorCompatibility:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="skill_adapters_inmemory")
 class TestVectorProviderAdapterInMemoryCompatibility:
     """Tests verifying VectorProviderAdapter works with InMemoryVectorProvider.
 

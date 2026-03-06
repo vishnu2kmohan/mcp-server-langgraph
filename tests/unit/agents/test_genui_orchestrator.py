@@ -34,7 +34,6 @@ def _mock_feature_flags(enable_genui: bool = True) -> MagicMock:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="genui_orchestrator")
 class TestGenUIOrchestrator:
     """Test GenUIOrchestrator class."""
 
@@ -272,7 +271,6 @@ class TestGenUIOrchestrator:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="genui_synthesis")
 class TestGenUISynthesis:
     """Test GenUI result synthesis."""
 

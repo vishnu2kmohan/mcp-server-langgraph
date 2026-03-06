@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="human_expert_tool_basic")
 class TestHumanExpertToolBasic:
     """Tests for HumanExpertTool basic functionality."""
 
@@ -58,7 +57,6 @@ class TestHumanExpertToolBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="human_expert_tool_request")
 class TestHumanExpertToolRequest:
     """Tests for HumanExpertTool request creation."""
 
@@ -120,7 +118,6 @@ class TestHumanExpertToolRequest:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="human_expert_tool_response")
 class TestHumanExpertToolResponse:
     """Tests for HumanExpertTool response handling."""
 
@@ -182,7 +179,6 @@ class TestHumanExpertToolResponse:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="human_expert_tool_ask")
 class TestHumanExpertToolAsk:
     """Tests for HumanExpertTool.ask() method."""
 
@@ -233,7 +229,6 @@ class TestHumanExpertToolAsk:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="human_expert_tool_respond")
 class TestHumanExpertToolRespond:
     """Tests for HumanExpertTool.respond() method."""
 
@@ -294,7 +289,6 @@ class TestHumanExpertToolRespond:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="request_status_enum")
 class TestRequestStatusEnum:
     """Tests for RequestStatus enum."""
 
@@ -338,7 +332,6 @@ class TestRequestStatusEnum:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="human_expert_tool_pending")
 class TestHumanExpertToolPending:
     """Tests for HumanExpertTool pending request management."""
 

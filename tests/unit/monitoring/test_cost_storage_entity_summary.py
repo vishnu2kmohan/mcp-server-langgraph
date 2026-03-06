@@ -402,7 +402,6 @@ class TestGetCostSummaryCombinedFilters:
         assert summary.total_cost == Decimal("10.00")
 
 
-@pytest.mark.xdist_group(name="test_cost_storage_entity_summary_postgres")
 class TestPostgresCostStorageEntitySummary:
     """Tests for PostgresCostStorage.get_cost_summary with entity filters.
 
@@ -460,7 +459,6 @@ class TestPostgresCostStorageEntitySummary:
         assert "team_id" in param_names, "PostgresCostStorage.get_cost_summary should accept team_id parameter"
 
 
-@pytest.mark.xdist_group(name="test_cost_storage_entity_summary_protocol")
 class TestCostStorageProtocolEntitySummary:
     """Tests for CostStorageBackend protocol entity filter parameters."""
 

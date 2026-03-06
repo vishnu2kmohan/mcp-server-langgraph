@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_state")
 class TestSelectToolsNodeState:
     """Tests for retrieve_tools state management."""
 
@@ -57,7 +56,6 @@ class TestSelectToolsNodeState:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_graph")
 class TestSelectToolsNodeInGraph:
     """Tests for retrieve_tools node presence in graph."""
 
@@ -107,7 +105,6 @@ class TestSelectToolsNodeInGraph:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_behavior")
 class TestSelectToolsNodeBehavior:
     """Tests for retrieve_tools node behavior."""
 
@@ -160,7 +157,6 @@ class TestSelectToolsNodeBehavior:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_integration")
 class TestSelectToolsNodeIntegration:
     """Integration tests for retrieve_tools node with mocked dependencies."""
 
@@ -248,7 +244,6 @@ class TestSelectToolsNodeIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_graph_flow")
 class TestSelectToolsGraphFlow:
     """Tests for retrieve_tools node graph flow and routing."""
 
@@ -308,7 +303,6 @@ class TestSelectToolsGraphFlow:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_tools_v7")
 class TestRetrieveToolsV7ToolIds:
     """Tests for v7 tool_id support in _retrieve_tools_impl."""
 

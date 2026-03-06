@@ -37,7 +37,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.health]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testenvironmentdetection")
 class TestEnvironmentDetection:
     """Tests for environment detection logic"""
 
@@ -125,7 +124,6 @@ class TestEnvironmentDetection:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testexpecteddatabasesconfiguration")
 class TestExpectedDatabasesConfiguration:
     """Tests for expected database configuration"""
 
@@ -231,7 +229,6 @@ class TestExpectedDatabasesConfiguration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testdatabasevalidation")
 class TestDatabaseValidation:
     """Tests for database validation logic"""
 
@@ -421,7 +418,6 @@ class TestDatabaseValidation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testoverallvalidation")
 class TestOverallValidation:
     """Tests for overall validation of all databases"""
 
@@ -506,7 +502,6 @@ class TestOverallValidation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testvalidationresultserialization")
 class TestValidationResultSerialization:
     """Tests for validation result serialization"""
 
@@ -551,7 +546,6 @@ class TestValidationResultSerialization:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testconveniencefunction")
 class TestConvenienceFunction:
     """Tests for the convenience function"""
 
@@ -614,7 +608,6 @@ class TestConvenienceFunction:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testdatabasevalidationresultproperty")
 class TestDatabaseValidationResultProperty:
     """Tests for DatabaseValidationResult.is_valid property"""
 

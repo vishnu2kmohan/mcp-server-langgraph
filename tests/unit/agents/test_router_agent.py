@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="router_output")
 class TestRouterOutput:
     """Tests for RouterOutput model."""
 
@@ -296,7 +295,6 @@ class TestRouterOutput:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="router_agent_class")
 class TestRouterAgent:
     """Tests for RouterAgent class."""
 
@@ -348,7 +346,6 @@ class TestRouterAgent:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="router_agent_route")
 class TestRouterAgentRoute:
     """Tests for RouterAgent.route execution."""
 
@@ -428,7 +425,6 @@ class TestRouterAgentRoute:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="executor_critic_selection")
 class TestExecutorCriticSelection:
     """Tests for executor/critic model selection."""
 
@@ -500,7 +496,6 @@ class TestExecutorCriticSelection:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="router_output_with_templates")
 class TestRouterOutputWithTemplates:
     """Tests for RouterOutputWithTemplates model with template suggestions."""
 
@@ -582,7 +577,6 @@ class TestRouterOutputWithTemplates:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="template_suggestion")
 class TestTemplateSuggestion:
     """Tests for TemplateSuggestion model."""
 
@@ -649,7 +643,6 @@ class TestTemplateSuggestion:
 @pytest.mark.agents
 @pytest.mark.orchestrator
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="router_agent_template_suggestion")
 class TestRouterAgentTemplateSuggestion:
     """Tests for RouterAgent template suggestion functionality."""
 

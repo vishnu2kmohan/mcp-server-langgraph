@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_provider_basic")
 class TestHierarchicalCapabilityProviderBasic:
     """Tests for HierarchicalCapabilityProvider basic functionality."""
 
@@ -80,7 +79,6 @@ class TestHierarchicalCapabilityProviderBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_provider_tools")
 class TestHierarchicalCapabilityProviderTools:
     """Tests for HierarchicalCapabilityProvider tool resolution."""
 
@@ -145,7 +143,6 @@ class TestHierarchicalCapabilityProviderTools:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_provider_skills")
 class TestHierarchicalCapabilityProviderSkills:
     """Tests for HierarchicalCapabilityProvider skill resolution."""
 
@@ -188,7 +185,6 @@ class TestHierarchicalCapabilityProviderSkills:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="hierarchical_provider_memory")
 class TestHierarchicalCapabilityProviderMemory:
     """Tests for HierarchicalCapabilityProvider memory resolution."""
 

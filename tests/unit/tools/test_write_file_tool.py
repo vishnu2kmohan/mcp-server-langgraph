@@ -19,7 +19,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="write_file_tool")
 class TestWriteFileTool:
     """Test suite for write_file tool."""
 
@@ -446,7 +445,6 @@ class TestWriteFileTool:
         pass  # Will be implemented with feature flag integration
 
 
-@pytest.mark.xdist_group(name="write_file_tool_integration")
 class TestWriteFileToolIntegration:
     """Integration tests for write_file tool with OpenFGA."""
 

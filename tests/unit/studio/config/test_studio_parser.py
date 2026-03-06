@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_parser_basic")
 class TestStudioParserBasic:
     """Tests for StudioParser basic functionality."""
 
@@ -59,7 +58,6 @@ class TestStudioParserBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_parser_yaml")
 class TestStudioParserYAML:
     """Tests for YAML frontmatter parsing."""
 
@@ -189,7 +187,6 @@ class TestStudioParserYAML:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_parser_markdown")
 class TestStudioParserMarkdown:
     """Tests for Markdown body parsing."""
 
@@ -265,7 +262,6 @@ class TestStudioParserMarkdown:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_parser_errors")
 class TestStudioParserErrors:
     """Tests for parser error handling."""
 
@@ -334,7 +330,6 @@ class TestStudioParserErrors:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="studio_parser_complete")
 class TestStudioParserComplete:
     """Tests for complete STUDIO.md parsing."""
 

@@ -35,7 +35,6 @@ def sandbox_enabled_settings() -> Iterator[MagicMock]:
         yield mock_settings
 
 
-@pytest.mark.xdist_group(name="test_screenshot_tool_basic")
 class TestScreenshotToolBasic:
     def teardown_method(self) -> None:
         gc.collect()
@@ -82,7 +81,6 @@ class TestScreenshotToolBasic:
         assert "error" in result
 
 
-@pytest.mark.xdist_group(name="test_element_screenshot")
 class TestElementScreenshot:
     def teardown_method(self) -> None:
         gc.collect()

@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_selector_basic")
 class TestExecutionModeSelectorBasic:
     """Tests for ExecutionModeSelector basic functionality."""
 
@@ -54,7 +53,6 @@ class TestExecutionModeSelectorBasic:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_selector_pure_llm")
 class TestExecutionModeSelectorPureLLM:
     """Tests for PURE_LLM mode selection."""
 
@@ -90,7 +88,6 @@ class TestExecutionModeSelectorPureLLM:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_selector_tool_calling")
 class TestExecutionModeSelectorToolCalling:
     """Tests for TOOL_CALLING mode selection."""
 
@@ -141,7 +138,6 @@ class TestExecutionModeSelectorToolCalling:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_selector_react")
 class TestExecutionModeSelectorReact:
     """Tests for REACT mode selection."""
 
@@ -195,7 +191,6 @@ class TestExecutionModeSelectorReact:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_selector_programmatic")
 class TestExecutionModeSelectorProgrammatic:
     """Tests for PROGRAMMATIC mode selection."""
 
@@ -248,7 +243,6 @@ class TestExecutionModeSelectorProgrammatic:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_selector_orchestrator")
 class TestExecutionModeSelectorOrchestrator:
     """Tests for ORCHESTRATOR mode selection."""
 
@@ -301,7 +295,6 @@ class TestExecutionModeSelectorOrchestrator:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_selector_edge_cases")
 class TestExecutionModeSelectorEdgeCases:
     """Tests for edge cases and special scenarios."""
 

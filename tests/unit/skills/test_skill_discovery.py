@@ -16,7 +16,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_discovery_basic")
 class TestSkillDiscoveryBasic:
     """Test suite for basic skill discovery"""
 
@@ -65,7 +64,6 @@ class TestSkillDiscoveryBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_discovery_progressive")
 class TestSkillDiscoveryProgressive:
     """Test suite for progressive skill disclosure"""
 
@@ -135,7 +133,6 @@ class TestSkillDiscoveryProgressive:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_discovery_loading")
 class TestSkillDiscoveryLoading:
     """Test suite for skill loading functionality"""
 
@@ -223,7 +220,6 @@ class TestSkillDiscoveryLoading:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_discovery_search")
 class TestSkillDiscoverySearch:
     """Test suite for skill search functionality"""
 

@@ -31,7 +31,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="subagent_confidence")
 class TestSubagentResultConfidenceFields:
     """Test SubagentResult has confidence tracking fields."""
 
@@ -110,7 +109,6 @@ class TestSubagentResultConfidenceFields:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="subagent_confidence_validation")
 class TestSubagentResultConfidenceValidation:
     """Test SubagentResult confidence field validation."""
 
@@ -167,7 +165,6 @@ class TestSubagentResultConfidenceValidation:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="subagent_execute_confidence")
 class TestSubagentExecuteConfidence:
     """Test Subagent.execute() populates confidence in result."""
 
@@ -223,7 +220,6 @@ class TestSubagentExecuteConfidence:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="subagent_approval_trigger")
 class TestSubagentApprovalTrigger:
     """Test low confidence triggers requires_approval flag."""
 
@@ -285,7 +281,6 @@ class TestSubagentApprovalTrigger:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="subagent_confidence_threshold")
 class TestSubagentConfidenceThreshold:
     """Test confidence threshold configuration."""
 

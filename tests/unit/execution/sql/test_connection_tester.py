@@ -109,7 +109,6 @@ def _patch_create_driver(driver: AsyncMock):
     return patch.object(ConnectionTester, "_create_driver", mock_create_driver)
 
 
-@pytest.mark.xdist_group(name="test_connection_tester")
 class TestConnectionTester:
     """Test ConnectionTester.test() method."""
 
@@ -519,7 +518,6 @@ class TestConnectionTester:
         assert result.success is True
 
 
-@pytest.mark.xdist_group(name="test_connection_test_result")
 class TestConnectionTestResult:
     """Test ConnectionTestResult dataclass."""
 

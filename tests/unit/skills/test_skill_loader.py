@@ -16,7 +16,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_loader_basic")
 class TestSkillLoaderBasic:
     """Test suite for basic skill loading"""
 
@@ -120,7 +119,6 @@ class TestSkillLoaderBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_loader_secrets")
 class TestSkillLoaderSecrets:
     """Test suite for loading skill secret configurations"""
 
@@ -203,7 +201,6 @@ class TestSkillLoaderSecrets:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_loader_examples")
 class TestSkillLoaderExamples:
     """Test suite for loading skill examples"""
 
@@ -238,7 +235,6 @@ class TestSkillLoaderExamples:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_loader_file")
 class TestSkillLoaderFile:
     """Test suite for loading skills from files"""
 
@@ -303,7 +299,6 @@ class TestSkillLoaderFile:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_loader_errors")
 class TestSkillLoaderErrors:
     """Test suite for skill loader error handling"""
 
@@ -364,7 +359,6 @@ class TestSkillLoaderErrors:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_loader_discovery")
 class TestSkillLoaderDiscovery:
     """Test suite for skill discovery functionality (lines 183-197)"""
 
@@ -484,7 +478,6 @@ class TestSkillLoaderDiscovery:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_loader_metadata_nesting")
 class TestSkillLoaderMetadataNesting:
     """Test suite for loading skills with runtime fields nested under metadata.
 

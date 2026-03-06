@@ -23,7 +23,6 @@ def client():
     return TestClient(app)
 
 
-@pytest.mark.xdist_group(name="root_redirect")
 class TestRootRedirect:
     """Tests for GET / endpoint"""
 

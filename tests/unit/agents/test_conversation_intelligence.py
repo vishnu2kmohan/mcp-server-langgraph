@@ -24,7 +24,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.agents]
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="conversation_intelligence_intent")
 class TestIntentDetect:
     """Test intent_detect task type."""
 
@@ -139,7 +138,6 @@ class TestIntentDetect:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="conversation_intelligence_context")
 class TestContextOptimize:
     """Test context_optimize task type."""
 
@@ -237,7 +235,6 @@ class TestContextOptimize:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="conversation_intelligence_goal")
 class TestGoalTrack:
     """Test goal_track task type."""
 
@@ -360,7 +357,6 @@ class TestGoalTrack:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="conversation_intelligence_errors")
 class TestConversationIntelligenceErrors:
     """Test error handling for conversation intelligence tasks."""
 

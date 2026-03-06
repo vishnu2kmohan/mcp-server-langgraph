@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.programmatic_tools]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_bridge_basic")
 class TestToolBridgeBasic:
     """Test suite for basic tool bridge functionality"""
 
@@ -47,7 +46,6 @@ class TestToolBridgeBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_bridge_registration")
 class TestToolBridgeRegistration:
     """Test suite for tool registration"""
 
@@ -110,7 +108,6 @@ class TestToolBridgeRegistration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_bridge_invocation")
 class TestToolBridgeInvocation:
     """Test suite for tool invocation"""
 
@@ -175,7 +172,6 @@ class TestToolBridgeInvocation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_bridge_parallel")
 class TestToolBridgeParallel:
     """Test suite for parallel tool execution"""
 
@@ -209,7 +205,6 @@ class TestToolBridgeParallel:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_result")
 class TestToolResult:
     """Test suite for tool result model"""
 
@@ -253,7 +248,6 @@ class TestToolResult:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_sandbox_context")
 class TestSandboxContext:
     """Test suite for sandbox execution context"""
 

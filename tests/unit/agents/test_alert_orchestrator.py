@@ -20,7 +20,6 @@ from mcp_server_langgraph.core.feature_flags import feature_flags
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_feature_flags")
 class TestAlertOrchestratorFeatureFlags:
     """Test feature flags for orchestrated alert analysis."""
 
@@ -37,7 +36,6 @@ class TestAlertOrchestratorFeatureFlags:
         assert feature_flags.enable_orchestrated_alert_analysis is False
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_module")
 class TestAlertOrchestratorModule:
     """Test alert orchestrator module structure."""
 
@@ -70,7 +68,6 @@ class TestAlertOrchestratorModule:
         assert AlertAnalysisResult is not None
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_initialization")
 class TestAlertOrchestratorInitialization:
     """Test alert orchestrator initialization."""
 
@@ -102,7 +99,6 @@ class TestAlertOrchestratorInitialization:
         assert orchestrator.recommendation_service == mock_service
 
 
-@pytest.mark.xdist_group(name="alert_analysis_task")
 class TestAlertAnalysisTask:
     """Test AlertAnalysisTask data class."""
 
@@ -152,7 +148,6 @@ class TestAlertAnalysisTask:
         assert expected_types.issubset(set(ALERT_ANALYSIS_TYPES))
 
 
-@pytest.mark.xdist_group(name="alert_analysis_result")
 class TestAlertAnalysisResult:
     """Test AlertAnalysisResult data class."""
 
@@ -193,7 +188,6 @@ class TestAlertAnalysisResult:
         assert result.error == "Analysis failed"
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_execution")
 class TestAlertOrchestratorExecution:
     """Test alert orchestrator execution."""
 
@@ -289,7 +283,6 @@ class TestAlertOrchestratorExecution:
             assert remediation_start_idx < max(root_cause_end_idx, remediation_end_idx)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_synthesis")
 class TestAlertOrchestratorSynthesis:
     """Test alert orchestrator cross-service synthesis."""
 
@@ -332,7 +325,6 @@ class TestAlertOrchestratorSynthesis:
         assert isinstance(synthesis["correlation_summary"], dict)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_analysis")
 class TestAlertOrchestratorAnalysis:
     """Test orchestrated alert analysis."""
 
@@ -379,7 +371,6 @@ class TestAlertOrchestratorAnalysis:
         assert "alert_ids" in result
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_fallback")
 class TestAlertOrchestratorFallback:
     """Test alert orchestrator feature flag fallback."""
 
@@ -403,7 +394,6 @@ class TestAlertOrchestratorFallback:
         assert isinstance(orchestrator.is_enabled, bool)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_inheritance")
 class TestAlertOrchestratorInheritance:
     """Test AlertOrchestrator inherits from BaseOrchestrator."""
 
@@ -450,7 +440,6 @@ class TestAlertOrchestratorInheritance:
         assert callable(orchestrator.synthesize)
 
 
-@pytest.mark.xdist_group(name="alert_orchestrator_pattern_detection")
 class TestAlertOrchestratorPatternDetection:
     """Test alert orchestrator pattern detection."""
 

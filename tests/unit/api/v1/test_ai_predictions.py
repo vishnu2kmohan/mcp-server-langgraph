@@ -60,7 +60,6 @@ def client(test_app: FastAPI) -> TestClient:
     return TestClient(test_app)
 
 
-@pytest.mark.xdist_group(name="test_ai_predictions")
 class TestPredictionsEndpoint:
     """Tests for GET /api/v1/ai/predictions endpoint."""
 
@@ -158,7 +157,6 @@ class TestPredictionsEndpoint:
         assert response.status_code in [401, 403, 500]
 
 
-@pytest.mark.xdist_group(name="test_ai_predictions_models")
 class TestPredictionModels:
     """Tests for prediction Pydantic models."""
 

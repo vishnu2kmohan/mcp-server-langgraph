@@ -17,7 +17,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="testprotectedresource")
 class TestProtectedResourceMetadataEndpoint:
     """TDD tests for Protected Resource Metadata endpoint per RFC 9728."""
 

@@ -21,7 +21,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.websocket]
 
 
-@pytest.mark.xdist_group(name="test_budget_alerts_handler_core")
 class TestBudgetAlertsHandlerCore:
     """Core tests for BudgetAlertsHandler."""
 
@@ -62,7 +61,6 @@ class TestBudgetAlertsHandlerCore:
         assert isinstance(handler, WebSocketBase)
 
 
-@pytest.mark.xdist_group(name="test_budget_alerts_handler_subscribe")
 class TestBudgetAlertsHandlerSubscription:
     """Tests for subscription management."""
 
@@ -180,7 +178,6 @@ class TestBudgetAlertsHandlerSubscription:
         assert handler.subscribe_all is False
 
 
-@pytest.mark.xdist_group(name="test_budget_alerts_handler_push")
 class TestBudgetAlertsHandlerPush:
     """Tests for push event handling."""
 
@@ -316,7 +313,6 @@ class TestBudgetAlertsHandlerPush:
         mock_websocket.send_json.assert_called_once()
 
 
-@pytest.mark.xdist_group(name="test_budget_alerts_handler_lifecycle")
 class TestBudgetAlertsHandlerLifecycle:
     """Tests for connection lifecycle."""
 

@@ -506,7 +506,6 @@ class TestMCPToolRegistry:
         assert "github" in names
 
 
-@pytest.mark.xdist_group(name="mcp_tool_registry_integration")
 class TestMCPToolRegistryIntegration:
     """Integration tests for MCPToolRegistry with hook system."""
 

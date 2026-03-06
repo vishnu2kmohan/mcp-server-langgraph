@@ -41,7 +41,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="conversation_store_async")
 class TestConversationStoreAsync:
     """
     Tests for async conversation store operations.

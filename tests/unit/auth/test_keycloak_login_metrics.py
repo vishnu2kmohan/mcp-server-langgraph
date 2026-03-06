@@ -17,7 +17,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.auth
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="keycloak_login_metrics")
 class TestKeycloakLoginMetrics:
     """Test Keycloak login metrics instrumentation."""
 

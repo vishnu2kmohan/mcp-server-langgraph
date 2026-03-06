@@ -21,7 +21,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.agents, pytest.mark.orchestrator]
 
 
-@pytest.mark.xdist_group(name="orchestrator_cost_init")
 class TestOrchestratorCostTrackerInit:
     """Test Orchestrator initialization with CostTracker."""
 
@@ -56,7 +55,6 @@ class TestOrchestratorCostTrackerInit:
         assert orchestrator.session_id == "session-123"
 
 
-@pytest.mark.xdist_group(name="orchestrator_cost_execute")
 class TestOrchestratorCostExecute:
     """Test cost tracking during Orchestrator.execute()."""
 
@@ -157,7 +155,6 @@ class TestOrchestratorCostExecute:
             tracker.track_usage.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="orchestrator_cost_accumulation")
 class TestOrchestratorCostAccumulation:
     """Test session cost accumulation across execute() calls."""
 
@@ -233,7 +230,6 @@ class TestOrchestratorCostAccumulation:
         assert cost == Decimal("0")
 
 
-@pytest.mark.xdist_group(name="orchestrator_cost_budget")
 class TestOrchestratorCostBudget:
     """Test budget checking in Orchestrator."""
 
@@ -299,7 +295,6 @@ class TestOrchestratorCostBudget:
             await orchestrator.execute(decomposition)
 
 
-@pytest.mark.xdist_group(name="subagent_result_tokens")
 class TestSubagentResultTokenFields:
     """Test SubagentResult token tracking fields."""
 

@@ -14,7 +14,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="unit_observability_cleanup_tests")
 class TestObservabilityShutdown:
     """Test observability shutdown and cleanup"""
 

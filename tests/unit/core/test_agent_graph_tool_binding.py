@@ -21,7 +21,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_binding_config")
 class TestAgentConfigToolCalling:
     """Test AgentConfig has enable_tool_calling field."""
 
@@ -60,7 +59,6 @@ class TestAgentConfigToolCalling:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_binding_graph")
 class TestToolBindingInGraph:
     """Test that tools are bound to the model when enable_tool_calling=True."""
 
@@ -131,7 +129,6 @@ class TestToolBindingInGraph:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_binding_model")
 class TestModelToolBinding:
     """Test that the LLM model is properly bound with tools."""
 
@@ -195,7 +192,6 @@ class TestModelToolBinding:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_calling_routing")
 class TestToolCallingRouting:
     """Test that routing properly handles tool_calls from LLM."""
 
@@ -231,7 +227,6 @@ class TestToolCallingRouting:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_tool_binding_feature_flag")
 class TestToolBindingFeatureFlag:
     """Test that tool binding respects feature flags and settings."""
 
@@ -278,7 +273,6 @@ class TestToolBindingFeatureFlag:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_respond_node_tool_binding")
 class TestRespondNodeToolBinding:
     """Test that the respond node uses a tool-bound model."""
 
@@ -313,7 +307,6 @@ class TestRespondNodeToolBinding:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_dynamic_tool_binding")
 class TestDynamicToolBinding:
     """Test dynamic tool binding based on selected_tools from semantic search."""
 
@@ -446,7 +439,6 @@ class TestDynamicToolBinding:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_dynamic_tool_filtering")
 class TestDynamicToolFiltering:
     """Test that generate_response actually filters tools based on selected_tools."""
 
@@ -646,7 +638,6 @@ class TestDynamicToolFiltering:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_native_result_detection_v7")
 class TestNativeResultDetection:
     """Tests for v7 native tool result detection in _generate_response_impl."""
 

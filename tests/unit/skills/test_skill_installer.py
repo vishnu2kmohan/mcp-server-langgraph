@@ -24,7 +24,6 @@ from mcp_server_langgraph.skills.installer import (
 pytestmark = [pytest.mark.unit, pytest.mark.skills]
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_basic")
 class TestSkillInstallerBasic:
     """Test suite for basic skill installer functionality."""
 
@@ -57,7 +56,6 @@ class TestSkillInstallerBasic:
         assert installer.install_path == tmp_path / "custom-skills"
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_install")
 class TestSkillInstallerInstall:
     """Test suite for skill installation."""
 
@@ -165,7 +163,6 @@ class TestSkillInstallerInstall:
         assert "Marketplace unavailable" in result.error
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_dependencies")
 class TestSkillInstallerDependencies:
     """Test suite for dependency resolution and installation."""
 
@@ -335,7 +332,6 @@ class TestSkillInstallerDependencies:
         assert result is False
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_uninstall")
 class TestSkillInstallerUninstall:
     """Test suite for skill uninstallation."""
 
@@ -373,7 +369,6 @@ class TestSkillInstallerUninstall:
         assert result is False
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_list")
 class TestSkillInstallerList:
     """Test suite for listing installed skills."""
 
@@ -437,7 +432,6 @@ class TestSkillInstallerList:
         assert installer.is_installed("not-installed") is False
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_marketplace")
 class TestSkillInstallerMarketplace:
     """Test suite for marketplace fetch functionality (lines 150-166)."""
 
@@ -522,7 +516,6 @@ class TestSkillInstallerMarketplace:
                     await installer._fetch_skill_from_marketplace("nonexistent-skill", "anthropic")
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_exception_handling")
 class TestSkillInstallerExceptionHandling:
     """Test suite for exception handling in dependency installation (lines 238-241)."""
 
@@ -584,7 +577,6 @@ class TestSkillInstallerExceptionHandling:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_list_marketplace")
 class TestSkillInstallerListMarketplaceSkills:
     """Test suite for list_marketplace_skills() method.
 
@@ -736,7 +728,6 @@ class TestSkillInstallerListMarketplaceSkills:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_skill_installer_install_skill")
 class TestSkillInstallerInstallSkillMethod:
     """Test suite for install_skill() method.
 

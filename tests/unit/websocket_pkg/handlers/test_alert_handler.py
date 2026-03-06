@@ -20,7 +20,6 @@ pytestmark = [
 RATE_LIMITER_PATCH = "mcp_server_langgraph.websocket.rate_limiter.get_websocket_rate_limiter"
 
 
-@pytest.mark.xdist_group(name="websocket_alert_handler_init")
 class TestAlertHandlerInit:
     """Tests for AlertHandler initialization."""
 
@@ -58,7 +57,6 @@ class TestAlertHandlerInit:
         assert handler._metrics is mock_metrics
 
 
-@pytest.mark.xdist_group(name="websocket_alert_handler_lifecycle")
 class TestAlertHandlerLifecycle:
     """Tests for AlertHandler lifecycle hooks."""
 
@@ -126,7 +124,6 @@ class TestAlertHandlerLifecycle:
         mock_broadcaster.unsubscribe.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="websocket_alert_handler_messages")
 class TestAlertHandlerMessages:
     """Tests for AlertHandler message handling."""
 
@@ -317,7 +314,6 @@ class TestAlertHandlerMessages:
         assert response.payload["code"] == "unknown_message_type"
 
 
-@pytest.mark.xdist_group(name="websocket_alert_handler_push")
 class TestAlertHandlerPush:
     """Tests for AlertHandler push functionality."""
 

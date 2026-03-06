@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.think_tool]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_think_tool_basic")
 class TestThinkToolBasic:
     """Test suite for basic think tool functionality"""
 
@@ -65,7 +64,6 @@ class TestThinkToolBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_think_tool_output")
 class TestThinkToolOutput:
     """Test suite for think tool output behavior"""
 
@@ -124,7 +122,6 @@ class TestThinkToolOutput:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_think_tool_noop")
 class TestThinkToolNoOp:
     """Test suite verifying think tool has no side effects"""
 
@@ -161,7 +158,6 @@ class TestThinkToolNoOp:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_think_tool_schema")
 class TestThinkToolSchema:
     """Test suite for think tool schema"""
 
@@ -196,7 +192,6 @@ class TestThinkToolSchema:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_think_tool_use_cases")
 class TestThinkToolUseCases:
     """Test suite for think tool use case examples"""
 
@@ -254,7 +249,6 @@ class TestThinkToolUseCases:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_think_tool_structured")
 class TestStructuredThinkTool:
     """Test suite for structured think tool output"""
 

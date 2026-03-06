@@ -16,7 +16,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_store_basic")
 class TestMemoryStoreBasic:
     """Tests for MemoryStore basic functionality."""
 
@@ -56,7 +55,6 @@ class TestMemoryStoreBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_store_storage")
 class TestMemoryStoreStorage:
     """Tests for MemoryStore storage operations."""
 
@@ -128,7 +126,6 @@ class TestMemoryStoreStorage:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_store_tiers")
 class TestMemoryStoreTierRouting:
     """Tests for MemoryStore tier-based routing."""
 
@@ -172,7 +169,6 @@ class TestMemoryStoreTierRouting:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_store_retrieval")
 class TestMemoryStoreRetrieval:
     """Tests for MemoryStore retrieval operations."""
 
@@ -230,7 +226,6 @@ class TestMemoryStoreRetrieval:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="memory_store_semantic")
 class TestMemoryStoreSemanticSearch:
     """Tests for MemoryStore vector-based semantic search.
 

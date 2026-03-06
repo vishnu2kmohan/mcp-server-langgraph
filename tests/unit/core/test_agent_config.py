@@ -14,7 +14,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agent_config_creation")
 class TestAgentConfigCreation:
     """Test AgentConfig instantiation and defaults."""
 
@@ -75,7 +74,6 @@ class TestAgentConfigCreation:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agent_config_immutability")
 class TestAgentConfigImmutability:
     """Test that AgentConfig is immutable (frozen dataclass)."""
 
@@ -94,7 +92,6 @@ class TestAgentConfigImmutability:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_graph_versioning")
 class TestGraphVersioning:
     """Test graph_version property for checkpoint compatibility."""
 
@@ -153,7 +150,6 @@ class TestGraphVersioning:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_agent_config_from_settings")
 class TestAgentConfigFromSettings:
     """Test creating AgentConfig from Settings object."""
 
@@ -216,7 +212,6 @@ class TestAgentConfigFromSettings:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_topology_fields")
 class TestTopologyFields:
     """Test that topology-affecting fields are correctly identified."""
 
@@ -261,7 +256,6 @@ class TestTopologyFields:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_semantic_tool_selection_config")
 class TestSemanticToolSelectionConfig:
     """Test semantic tool selection configuration fields."""
 

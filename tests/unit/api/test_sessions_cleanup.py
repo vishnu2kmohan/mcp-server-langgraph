@@ -13,7 +13,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="sessions_cleanup")
 class TestSessionsCleanup:
     """Tests for session service cleanup functions."""
 

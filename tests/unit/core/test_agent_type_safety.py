@@ -26,7 +26,6 @@ os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="agent_type_compliance")
 @pytest.mark.timeout(120)  # Allow up to 2 minutes for mypy subprocess tests
 class TestAgentTypeCompliance:
     """Test that agent.py passes MyPy type checking"""
@@ -153,7 +152,6 @@ class TestAgentTypeCompliance:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="agent_message_handling")
 class TestAgentMessageHandling:
     """Test that message handling works correctly with the fixed types"""
 

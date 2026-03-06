@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="router_agent_ainvoke")
 class TestRouterAgentAInvoke:
     """Test suite for RouterAgent using ainvoke API."""
 

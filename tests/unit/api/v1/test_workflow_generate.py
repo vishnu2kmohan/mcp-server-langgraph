@@ -135,7 +135,6 @@ class TestGenerateWorkflowEndpoint:
         pytest.fail("POST /workflows/generate route not found")
 
 
-@pytest.mark.xdist_group(name="test_workflow_generate_integration")
 class TestGenerateWorkflowIntegration:
     """Integration-style unit tests for workflow generation."""
 

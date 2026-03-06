@@ -31,7 +31,6 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.mcp
-@pytest.mark.xdist_group(name="tool_description_model")
 class TestToolDescriptionModel:
     """Test ToolDescription data model."""
 
@@ -122,7 +121,6 @@ class TestToolDescriptionModel:
 
 @pytest.mark.unit
 @pytest.mark.mcp
-@pytest.mark.xdist_group(name="tool_description_flags")
 class TestToolDescriptionFeatureFlags:
     """Test feature flags for tool descriptions."""
 
@@ -147,7 +145,6 @@ class TestToolDescriptionFeatureFlags:
 
 @pytest.mark.unit
 @pytest.mark.mcp
-@pytest.mark.xdist_group(name="tool_description_registry")
 class TestToolDescriptionRegistry:
     """Test ToolDescriptionRegistry."""
 
@@ -213,7 +210,6 @@ class TestToolDescriptionRegistry:
 
 @pytest.mark.unit
 @pytest.mark.mcp
-@pytest.mark.xdist_group(name="tool_description_tokens")
 class TestToolDescriptionTokenSavings:
     """Test token savings estimation."""
 
@@ -259,7 +255,6 @@ class TestToolDescriptionTokenSavings:
 
 @pytest.mark.unit
 @pytest.mark.mcp
-@pytest.mark.xdist_group(name="detail_level_selector")
 class TestDetailLevelSelector:
     """Test detail level selection based on context budget."""
 

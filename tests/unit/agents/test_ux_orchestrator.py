@@ -20,7 +20,6 @@ from mcp_server_langgraph.core.feature_flags import feature_flags
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_feature_flags")
 class TestUXOrchestratorFeatureFlags:
     """Test feature flags for orchestrated AI UX."""
 
@@ -37,7 +36,6 @@ class TestUXOrchestratorFeatureFlags:
         assert feature_flags.enable_orchestrated_ai_ux is False
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_inheritance")
 class TestUXOrchestratorInheritance:
     """Test UXOrchestrator inherits from BaseOrchestrator."""
 
@@ -86,7 +84,6 @@ class TestUXOrchestratorInheritance:
         assert callable(orchestrator.synthesize)
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_module")
 class TestUXOrchestratorModule:
     """Test UX orchestrator module structure."""
 
@@ -119,7 +116,6 @@ class TestUXOrchestratorModule:
         assert UXAnalysisResult is not None
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_initialization")
 class TestUXOrchestratorInitialization:
     """Test UX orchestrator initialization."""
 
@@ -151,7 +147,6 @@ class TestUXOrchestratorInitialization:
         assert orchestrator.artifact_storage == mock_storage
 
 
-@pytest.mark.xdist_group(name="ux_analysis_task")
 class TestUXAnalysisTask:
     """Test UXAnalysisTask data class."""
 
@@ -201,7 +196,6 @@ class TestUXAnalysisTask:
         assert expected_types.issubset(set(UX_ANALYSIS_TYPES))
 
 
-@pytest.mark.xdist_group(name="ux_analysis_result")
 class TestUXAnalysisResult:
     """Test UXAnalysisResult data class."""
 
@@ -242,7 +236,6 @@ class TestUXAnalysisResult:
         assert result.error == "Analysis failed"
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_execution")
 class TestUXOrchestratorExecution:
     """Test UX orchestrator execution."""
 
@@ -343,7 +336,6 @@ class TestUXOrchestratorExecution:
         assert disclosure_start_idx < max(persona_end_idx, disclosure_end_idx)
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_synthesis")
 class TestUXOrchestratorSynthesis:
     """Test UX orchestrator cross-service synthesis."""
 
@@ -386,7 +378,6 @@ class TestUXOrchestratorSynthesis:
         assert isinstance(synthesis["cross_insights"], list)
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_composite")
 class TestUXOrchestratorCompositeAnalysis:
     """Test orchestrated composite analysis."""
 
@@ -433,7 +424,6 @@ class TestUXOrchestratorCompositeAnalysis:
         assert "session_id" in result
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_fallback")
 class TestUXOrchestratorFallback:
     """Test UX orchestrator feature flag fallback."""
 
@@ -457,7 +447,6 @@ class TestUXOrchestratorFallback:
         assert isinstance(orchestrator.is_enabled, bool)
 
 
-@pytest.mark.xdist_group(name="ux_orchestrator_metrics")
 class TestUXOrchestratorMetrics:
     """Test UX orchestrator metrics."""
 

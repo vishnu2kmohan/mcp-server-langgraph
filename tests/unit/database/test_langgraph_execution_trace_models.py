@@ -18,7 +18,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_langgraph_execution_trace_models")
 class TestLangGraphExecutionTraceModel:
     """Tests for LangGraphExecutionTrace SQLAlchemy model."""
 

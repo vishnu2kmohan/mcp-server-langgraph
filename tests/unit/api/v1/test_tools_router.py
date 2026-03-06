@@ -692,7 +692,6 @@ class TestToolsSandboxFlag:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="test_tools_router_v7")
 class TestNativeToolsIntegration:
     """Tests for v7 native LLM provider tools in the tools API."""
 

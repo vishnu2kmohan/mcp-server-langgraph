@@ -106,7 +106,6 @@ class TestHostnameHandling:
         assert "hostname" not in log_data
 
 
-@pytest.mark.xdist_group(name="json_logger_trace_context")
 class TestTraceContextEdgeCases:
     """Tests for OpenTelemetry trace context edge cases"""
 

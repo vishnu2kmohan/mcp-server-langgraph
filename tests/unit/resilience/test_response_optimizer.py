@@ -24,7 +24,6 @@ pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testresponseoptimizer")
 class TestResponseOptimizer:
     """Test ResponseOptimizer class."""
 
@@ -172,7 +171,6 @@ class TestResponseOptimizer:
         assert filtered == {}
 
 
-@pytest.mark.xdist_group(name="testglobalfunctions")
 class TestGlobalFunctions:
     """Test global convenience functions."""
 
@@ -261,7 +259,6 @@ class TestEdgeCases:
         assert "END" not in truncated
 
 
-@pytest.mark.xdist_group(name="testperformance")
 class TestPerformance:
     """Test performance characteristics."""
 
@@ -353,7 +350,6 @@ def test_extract_high_signal_parametrized(data, should_contain, should_not_conta
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="testlitellmtokencounting")
 class TestLiteLLMTokenCounting:
     """
     Test LiteLLM-based token counting for model-aware accuracy.

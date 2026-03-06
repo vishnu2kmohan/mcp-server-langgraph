@@ -208,7 +208,6 @@ class TestMetricsMiddlewareIntegration:
         assert response.json()["detail"] == "Not found"
 
 
-@pytest.mark.xdist_group(name="metrics_middleware_broadcaster")
 class TestMetricsBroadcasterWiring:
     """Tests for MetricsBroadcaster integration in metrics middleware.
 

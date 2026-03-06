@@ -32,7 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_encrypted_sessions_flag")
 class TestEncryptedSessionsFeatureFlag:
     """Test encrypted sessions feature flag integration."""
 
@@ -81,7 +80,6 @@ class TestEncryptedSessionsFeatureFlag:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_session_encryption")
 class TestSessionEncryptionModule:
     """Test the session encryption module."""
 
@@ -127,7 +125,6 @@ class TestSessionEncryptionModule:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_encrypt_decrypt")
 class TestEncryptDecrypt:
     """Test encryption and decryption operations."""
 
@@ -206,7 +203,6 @@ class TestEncryptDecrypt:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_key_management")
 class TestKeyManagement:
     """Test encryption key management."""
 
@@ -259,7 +255,6 @@ class TestKeyManagement:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_encrypted_session_store")
 class TestEncryptedSessionStore:
     """Test encrypted session storage integration."""
 
@@ -335,7 +330,6 @@ class TestEncryptedSessionStore:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_encrypted_sessions_exports")
 class TestEncryptedSessionsExports:
     """Test module exports for encrypted sessions."""
 

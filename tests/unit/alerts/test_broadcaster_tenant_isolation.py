@@ -40,7 +40,6 @@ def create_test_alert(tenant: str = "default"):
     )
 
 
-@pytest.mark.xdist_group(name="test_broadcaster_tenant")
 class TestBroadcasterTenantIsolation:
     """Tests for tenant isolation in alert broadcasting."""
 

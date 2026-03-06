@@ -14,7 +14,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="domain_proxy")
 class TestDomainProxyConfig:
     """Tests for domain proxy configuration."""
 
@@ -51,7 +50,6 @@ class TestDomainProxyConfig:
         assert config.dns_port == 5353
 
 
-@pytest.mark.xdist_group(name="domain_matcher")
 class TestDomainMatcher:
     """Tests for domain matching logic."""
 
@@ -99,7 +97,6 @@ class TestDomainMatcher:
         assert matcher.is_allowed("anything.com") is False
 
 
-@pytest.mark.xdist_group(name="domain_proxy_server")
 class TestDomainProxyServer:
     """Tests for domain proxy server."""
 
@@ -156,7 +153,6 @@ class TestDomainProxyServer:
         assert server.should_allow("evil.com") is False
 
 
-@pytest.mark.xdist_group(name="sandbox_proxy_integration")
 class TestSandboxProxyIntegration:
     """Tests for sandbox proxy integration."""
 
@@ -183,7 +179,6 @@ class TestSandboxProxyIntegration:
         assert limits.proxy_config.allowed_domains == ["*.api.com"]
 
 
-@pytest.mark.xdist_group(name="proxy_metrics")
 class TestProxyMetrics:
     """Tests for proxy metrics."""
 
@@ -206,7 +201,6 @@ class TestProxyMetrics:
         record_proxy_request(domain="evil.com", allowed=False)
 
 
-@pytest.mark.xdist_group(name="proxy_protocol")
 class TestProxyProtocolHandler:
     """Tests for HTTP CONNECT proxy protocol handling."""
 
@@ -275,7 +269,6 @@ class TestProxyProtocolHandler:
         assert b"200 Connection Established" in response
 
 
-@pytest.mark.xdist_group(name="proxy_connection")
 class TestProxyConnectionHandler:
     """Tests for proxy connection handling."""
 
@@ -344,7 +337,6 @@ class TestProxyConnectionHandler:
         assert handler.timeout == 30.0
 
 
-@pytest.mark.xdist_group(name="proxy_prometheus")
 class TestProxyPrometheusMetrics:
     """Tests for Prometheus metrics integration."""
 

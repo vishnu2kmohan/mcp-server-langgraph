@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.skills]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_model_basic")
 class TestSkillModelBasic:
     """Test suite for basic Skill model"""
 
@@ -113,7 +112,6 @@ class TestSkillModelBasic:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_sandbox_config_model")
 class TestSandboxConfigModel:
     """Test suite for SandboxConfig model"""
 
@@ -162,7 +160,6 @@ class TestSandboxConfigModel:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_secret_config")
 class TestSkillSecretConfig:
     """Test suite for skill secret configuration"""
 
@@ -217,7 +214,6 @@ class TestSkillSecretConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_metadata")
 class TestSkillMetadata:
     """Test suite for skill metadata"""
 
@@ -284,7 +280,6 @@ class TestSkillMetadata:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_compliance_fields")
 class TestSkillComplianceFields:
     """Test suite for AgentSkills.io compliance fields (Appendix B)."""
 
@@ -388,7 +383,6 @@ class TestSkillComplianceFields:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_skill_metadata_extraction")
 class TestSkillMetadataExtraction:
     """Test suite for extracting runtime fields from nested metadata.
 

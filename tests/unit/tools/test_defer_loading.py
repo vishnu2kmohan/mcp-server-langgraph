@@ -17,7 +17,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.defer_loading]
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_defer_loading_registry")
 class TestDeferLoadingRegistry:
     """Test suite for defer loading registry"""
 
@@ -106,7 +105,6 @@ class TestDeferLoadingRegistry:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_defer_loading_tools_list")
 class TestDeferLoadingToolsList:
     """Test suite for tools list filtering with defer loading"""
 
@@ -206,7 +204,6 @@ class TestDeferLoadingToolsList:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_defer_loading_discovery")
 class TestDeferLoadingDiscovery:
     """Test suite for discovering deferred tools via search"""
 
@@ -271,7 +268,6 @@ class TestDeferLoadingDiscovery:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_defer_loading_default_config")
 class TestDeferLoadingDefaultConfig:
     """Test suite for default defer loading configuration"""
 
@@ -318,7 +314,6 @@ class TestDeferLoadingDefaultConfig:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_defer_loading_feature_flag")
 class TestDeferLoadingFeatureFlag:
     """Test suite for defer loading feature flag integration"""
 

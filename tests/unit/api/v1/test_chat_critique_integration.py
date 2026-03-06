@@ -21,7 +21,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="chat_critique_integration")
 class TestChatCritiqueIntegration:
     """Tests for critique loop integration in create_stream."""
 

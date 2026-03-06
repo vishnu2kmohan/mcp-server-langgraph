@@ -57,7 +57,6 @@ def postgres_repo(mock_session):
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="audit_log_repository_tests")
 class TestInMemoryAuditLogRepository:
     """Tests for InMemoryAuditLogRepository."""
 
@@ -479,7 +478,6 @@ class TestInMemoryAuditLogRepository:
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="postgres_audit_log_repository_tests")
 class TestPostgresAuditLogRepository:
     """Tests for PostgresAuditLogRepository with mocked session."""
 
@@ -662,7 +660,6 @@ class TestPostgresAuditLogRepository:
 # ==============================================================================
 
 
-@pytest.mark.xdist_group(name="audit_log_base_tests")
 class TestAuditLogRepositoryAbstract:
     """Test the abstract base class contract."""
 

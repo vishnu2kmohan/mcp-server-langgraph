@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_capabilities")
 class TestModelCapabilities:
     """Tests for ModelCapabilities dataclass."""
 
@@ -110,7 +109,6 @@ class TestModelCapabilities:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_core")
 class TestModelRegistry:
     """Tests for ModelRegistry class."""
 
@@ -163,7 +161,6 @@ class TestModelRegistry:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_builtin")
 class TestBuiltInModels:
     """Tests for built-in model registrations."""
 
@@ -266,7 +263,6 @@ class TestBuiltInModels:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_lookup")
 class TestModelLookup:
     """Tests for model lookup functionality."""
 
@@ -381,7 +377,6 @@ class TestModelLookup:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_registration")
 class TestModelRegistration:
     """Tests for custom model registration."""
 
@@ -476,7 +471,6 @@ class TestModelRegistration:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_cost")
 class TestCostCalculation:
     """Tests for cost calculation helpers."""
 
@@ -543,7 +537,6 @@ class TestCostCalculation:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_vertex_ai")
 class TestVertexAIModels:
     """Tests for Vertex AI model registrations."""
 
@@ -580,7 +573,6 @@ class TestVertexAIModels:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_azure")
 class TestAzureModels:
     """Tests for Azure OpenAI model registrations."""
 
@@ -605,7 +597,6 @@ class TestAzureModels:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_singleton")
 class TestModelRegistrySingleton:
     """Tests for singleton pattern."""
 
@@ -637,7 +628,6 @@ class TestModelRegistrySingleton:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_feature_flags")
 class TestModelRegistryFeatureFlags:
     """Tests for model registry feature flags."""
 
@@ -661,7 +651,6 @@ class TestModelRegistryFeatureFlags:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_tier")
 class TestModelCapabilitiesTier:
     """Tests for tier field on ModelCapabilities (Phase 1 orchestration)."""
 
@@ -807,7 +796,6 @@ class TestModelCapabilitiesTier:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_json_mode")
 class TestModelCapabilitiesJsonMode:
     """Tests for supports_json_mode field on ModelCapabilities."""
 
@@ -873,7 +861,6 @@ class TestModelCapabilitiesJsonMode:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_thinking_tokens")
 class TestModelCapabilitiesThinkingTokens:
     """Tests for max_thinking_tokens field on ModelCapabilities."""
 
@@ -966,7 +953,6 @@ class TestModelCapabilitiesThinkingTokens:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_capabilities_set")
 class TestModelCapabilitiesSet:
     """Tests for capabilities aggregation property."""
 
@@ -1048,7 +1034,6 @@ class TestModelCapabilitiesSet:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_frontend")
 class TestModelRegistryFrontendIntegration:
     """Tests for frontend model list generation from ModelRegistry.
 
@@ -1334,7 +1319,6 @@ class TestModelRegistryFrontendIntegration:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_status")
 class TestModelCapabilitiesStatus:
     """Tests for status field on ModelCapabilities (lifecycle status).
 
@@ -1419,7 +1403,6 @@ class TestModelCapabilitiesStatus:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_status_builtin")
 class TestBuiltInModelStatuses:
     """Tests for correct status assignments on built-in models.
 
@@ -1650,7 +1633,6 @@ class TestBuiltInModelStatuses:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_status_filter")
 class TestModelStatusFiltering:
     """Tests for filtering models by status."""
 
@@ -1733,7 +1715,6 @@ class TestModelStatusFiltering:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_sunset_date")
 class TestModelSunsetDate:
     """Tests for sunset_date field on ModelCapabilities.
 
@@ -1835,7 +1816,6 @@ class TestModelSunsetDate:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="model_registry_thinking")
 class TestModelExtendedThinkingCapabilities:
     """
     Tests for extended thinking capabilities in ModelRegistry.
@@ -2078,7 +2058,6 @@ class TestModelExtendedThinkingCapabilities:
 
 @pytest.mark.unit
 @pytest.mark.agents
-@pytest.mark.xdist_group(name="model_registry_native_tools")
 class TestModelNativeToolCapabilities:
     """Tests for native LLM provider tool capabilities (v7).
 

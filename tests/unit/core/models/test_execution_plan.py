@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_plan_model")
 class TestExecutionPlanModel:
     """Tests for ExecutionPlan model."""
 
@@ -350,7 +349,6 @@ class TestExecutionPlanModel:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_plan_methods")
 class TestExecutionPlanMethods:
     """Tests for ExecutionPlan methods."""
 
@@ -511,7 +509,6 @@ class TestExecutionPlanMethods:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="execution_plan_factory")
 class TestExecutionPlanFactory:
     """Tests for ExecutionPlan factory methods."""
 
@@ -596,7 +593,6 @@ class TestExecutionPlanFactory:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="execution_plan_new_fields")
 class TestExecutionPlanNewFields:
     """Tests for v35.0 new fields: skills_needed, selected_tool_ids, llm_provider, kb_focus."""
 

@@ -74,14 +74,28 @@ class TestIsolationValidator(ast.NodeVisitor):
             self.generic_visit(node)
 
             # Validate test class has proper markers
+            # xdist_group is required for integration/e2e tests (shared resources)
+            # but optional for unit tests (pure mocks, no shared mutable state).
+            # See: Phase 4.2 xdist_group audit — 77% of groups are singletons
+            # with zero serialization benefit.
             if not self.has_xdist_group_marker:
-                self.violations.append(
-                    (
-                        node.lineno,
-                        "missing_xdist_group",
-                        f"Test class '{node.name}' should use @pytest.mark.xdist_group marker",
+                is_unit = "tests/unit/" in self.file_path
+                if is_unit:
+                    self.warnings.append(
+                        (
+                            node.lineno,
+                            "missing_xdist_group",
+                            f"Test class '{node.name}' has no @pytest.mark.xdist_group marker (optional for unit tests)",
+                        )
                     )
-                )
+                else:
+                    self.violations.append(
+                        (
+                            node.lineno,
+                            "missing_xdist_group",
+                            f"Test class '{node.name}' should use @pytest.mark.xdist_group marker",
+                        )
+                    )
 
             if not self.has_teardown_method or not self.has_gc_collect:
                 self.violations.append(

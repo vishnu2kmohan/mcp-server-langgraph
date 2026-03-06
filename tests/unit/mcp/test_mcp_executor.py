@@ -16,7 +16,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="mcp_executor")
 class TestMCPExecutor:
     """Test suite for MCPExecutor class."""
 

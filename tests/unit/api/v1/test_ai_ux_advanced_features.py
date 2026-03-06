@@ -82,7 +82,6 @@ def artifact_storage():
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_parallel_send")
 class TestParallelExecutionWithSendAPI:
     """Test true parallel execution using LangGraph Send API."""
 
@@ -203,7 +202,6 @@ class TestParallelExecutionWithSendAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_otel_spans")
 class TestOpenTelemetrySpansInNodes:
     """Test OpenTelemetry span instrumentation in graph nodes."""
 
@@ -365,7 +363,6 @@ class TestOpenTelemetrySpansInNodes:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_streaming")
 class TestStreamingCompositeAnalysis:
     """Test streaming endpoint for composite analysis."""
 
@@ -500,7 +497,6 @@ class TestStreamingCompositeAnalysis:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="ai_ux_service_advanced")
 class TestAIUXServiceAdvancedIntegration:
     """Test AIUXService integration with advanced features."""
 

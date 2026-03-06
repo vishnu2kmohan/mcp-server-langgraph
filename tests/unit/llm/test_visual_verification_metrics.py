@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.visual_verification
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="visual_verification_metrics")
 class TestVisualVerificationMetrics:
     """Test visual verification metrics instrumentation."""
 
@@ -200,7 +199,6 @@ class TestVisualVerificationMetricsIntegration:
 @pytest.mark.unit
 @pytest.mark.visual_verification
 @pytest.mark.metrics
-@pytest.mark.xdist_group(name="visual_verification_metrics_labels")
 class TestVisualVerificationMetricsLabels:
     """Test visual verification metrics label handling."""
 

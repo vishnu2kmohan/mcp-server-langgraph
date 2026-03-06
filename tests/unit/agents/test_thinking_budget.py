@@ -34,7 +34,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="thinking_level")
 class TestThinkingLevel:
     """Test ThinkingLevel enum."""
 
@@ -70,7 +69,6 @@ class TestThinkingLevel:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="thinking_feature_flags")
 class TestThinkingFeatureFlags:
     """Test feature flags for thinking budget."""
 
@@ -110,7 +108,6 @@ class TestThinkingFeatureFlags:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="thinking_budget_manager_basic")
 class TestThinkingBudgetManagerBasic:
     """Test ThinkingBudgetManager basic functionality."""
 
@@ -164,7 +161,6 @@ class TestThinkingBudgetManagerBasic:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="thinking_budget_hybrid")
 class TestThinkingBudgetHybridApproach:
     """Test hybrid approach - effort param for Opus, thinking_budget for others."""
 
@@ -280,7 +276,6 @@ class TestThinkingBudgetHybridApproach:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="thinking_budget_helpers")
 class TestThinkingBudgetHelpers:
     """Test helper methods."""
 

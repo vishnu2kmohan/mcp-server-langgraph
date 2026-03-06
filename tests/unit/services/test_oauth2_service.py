@@ -20,7 +20,6 @@ pytestmark = [
 ]
 
 
-@pytest.mark.xdist_group(name="testoauth2service")
 class TestOAuth2Service:
     """TDD tests for OAuth2 service."""
 

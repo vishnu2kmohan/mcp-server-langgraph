@@ -15,7 +15,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="test_hardcoded_config_audit")
 class TestNoHardcodedExampleEmails:
     """Verify that example emails are not used as production defaults."""
 
@@ -61,7 +60,6 @@ class TestNoHardcodedExampleEmails:
         )
 
 
-@pytest.mark.xdist_group(name="test_config_env_var_support")
 class TestConfigEnvironmentVariableSupport:
     """Verify that critical configs support environment variables."""
 
@@ -88,7 +86,6 @@ class TestConfigEnvironmentVariableSupport:
         assert config.from_address == "audit@mycompany.com"
 
 
-@pytest.mark.xdist_group(name="test_localhost_url_defaults")
 class TestLocalhostUrlDefaults:
     """Verify localhost URLs are properly marked as development-only defaults."""
 

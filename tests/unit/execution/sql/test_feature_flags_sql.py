@@ -13,7 +13,6 @@ from mcp_server_langgraph.core.feature_flags import FeatureFlags
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.mark.xdist_group(name="feature_flags_sql")
 class TestSQLFeatureFlags:
     """Tests for SQL execution engine feature flags."""
 

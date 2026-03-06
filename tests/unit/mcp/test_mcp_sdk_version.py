@@ -12,7 +12,6 @@ from packaging import version
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="mcp_sdk_version")
 class TestMCPSDKVersion:
     """Test MCP SDK version supports 2025-11-25 specification."""
 

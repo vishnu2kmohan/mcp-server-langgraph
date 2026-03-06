@@ -543,7 +543,6 @@ class TestSessionIntegration:
         assert len(charlie_sessions) == 1
 
 
-@pytest.mark.xdist_group(name="session_edge_cases")
 class TestSessionEdgeCases:
     """
     P2: Test session management edge cases and validation

@@ -26,7 +26,6 @@ from validate_gke_autopilot_compliance import GKEAutopilotValidator
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="testcpuparsing")
 class TestCPUParsing:
     """Test CPU string parsing to millicores"""
 
@@ -57,7 +56,6 @@ class TestCPUParsing:
         assert validator.parse_cpu(None) == 0.0
 
 
-@pytest.mark.xdist_group(name="testmemoryparsing")
 class TestMemoryParsing:
     """Test memory string parsing to MiB"""
 
@@ -93,7 +91,6 @@ class TestMemoryParsing:
         assert validator.parse_memory(None) == 0.0
 
 
-@pytest.mark.xdist_group(name="testcpuratiovalidation")
 class TestCPURatioValidation:
     """Test CPU limit/request ratio validation"""
 
@@ -160,7 +157,6 @@ class TestCPURatioValidation:
         assert len(validator.errors) == 0, "All fixed ratios should pass validation"
 
 
-@pytest.mark.xdist_group(name="testgkeautopilotconstants")
 class TestGKEAutopilotConstants:
     """Test that GKE Autopilot constants are correctly defined"""
 

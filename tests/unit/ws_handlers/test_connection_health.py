@@ -80,7 +80,6 @@ def mock_connection_repository() -> MagicMock:
     return repo
 
 
-@pytest.mark.xdist_group(name="connection_health_ws")
 class TestConnectionHealthHandler:
     """Test Connection Health WebSocket using WebSocketBase."""
 

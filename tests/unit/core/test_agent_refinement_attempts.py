@@ -17,7 +17,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.agent]
 
 
-@pytest.mark.xdist_group(name="agent_refinement")
 class TestAgentRefinementAttempts:
     """Test refinement_attempts handling in agent."""
 

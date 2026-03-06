@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="orchestration_metrics_router")
 class TestRouterMetrics:
     """Tests for router-related metrics."""
 
@@ -77,7 +76,6 @@ class TestRouterMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="orchestration_metrics_swarm")
 class TestSwarmMetrics:
     """Tests for swarm orchestration metrics."""
 
@@ -142,7 +140,6 @@ class TestSwarmMetrics:
         record_cascade_tier(tier="complex", success=False)
 
 
-@pytest.mark.xdist_group(name="orchestration_metrics_critique")
 class TestCritiqueMetrics:
     """Tests for critique loop metrics."""
 
@@ -191,7 +188,6 @@ class TestCritiqueMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="orchestration_metrics_thinking")
 class TestThinkingMetrics:
     """Tests for thinking budget metrics."""
 
@@ -223,7 +219,6 @@ class TestThinkingMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="orchestration_metrics_approval")
 class TestApprovalMetrics:
     """Tests for approval flow metrics."""
 
@@ -297,7 +292,6 @@ class TestApprovalMetrics:
         )
 
 
-@pytest.mark.xdist_group(name="orchestration_metrics_guardrails")
 class TestMetricsGuardrails:
     """Guardrail tests to ensure metrics are not double-counted."""
 
@@ -399,7 +393,6 @@ class TestMetricsGuardrails:
         # Success: cache_hit is boolean, can only be one value per call
 
 
-@pytest.mark.xdist_group(name="orchestration_metrics_tier_audit")
 class TestModelTierAudit:
     """Tests to audit model tier configuration completeness."""
 

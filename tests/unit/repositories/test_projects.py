@@ -25,7 +25,6 @@ from mcp_server_langgraph.storage.models import (
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.xdist_group(name="project_repository")
 @pytest.mark.unit
 class TestPostgresProjectRepository:
     """Unit tests for PostgresProjectRepository."""

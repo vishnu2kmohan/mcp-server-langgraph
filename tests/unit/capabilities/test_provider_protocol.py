@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="capability_provider_protocol")
 class TestCapabilityProviderProtocol:
     """Tests for CapabilityProvider protocol definition."""
 
@@ -70,7 +69,6 @@ class TestCapabilityProviderProtocol:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="capability_provider_types")
 class TestCapabilityProviderTypes:
     """Tests for CapabilityProvider supporting types."""
 
@@ -160,7 +158,6 @@ class TestCapabilityProviderTypes:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="capability_provider_impl")
 class TestCapabilityProviderImplementation:
     """Tests for implementing CapabilityProvider protocol."""
 
@@ -223,7 +220,6 @@ class TestCapabilityProviderImplementation:
 @pytest.mark.unit
 @pytest.mark.agents
 @pytest.mark.orchestrator
-@pytest.mark.xdist_group(name="resolved_capabilities")
 class TestResolvedCapabilities:
     """Tests for ResolvedCapabilities dataclass."""
 

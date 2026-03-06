@@ -18,7 +18,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="cli_studio_validate")
 class TestStudioValidateCLI:
     """Tests for studio validate CLI command."""
 
@@ -120,7 +119,6 @@ skills:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="cli_studio_validate_verbose")
 class TestStudioValidateCLIVerbose:
     """Tests for studio validate CLI verbose mode."""
 
@@ -160,7 +158,6 @@ tools:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="cli_studio_group")
 class TestStudioCLIGroup:
     """Tests for studio CLI command group."""
 

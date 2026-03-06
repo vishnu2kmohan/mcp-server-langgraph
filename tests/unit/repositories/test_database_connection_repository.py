@@ -111,7 +111,6 @@ def _make_create_data(**overrides) -> DatabaseConnectionCreateData:
     return DatabaseConnectionCreateData(**defaults)
 
 
-@pytest.mark.xdist_group(name="test_db_conn_repo")
 class TestPostgresDatabaseConnectionRepository:
     """Test PostgresDatabaseConnectionRepository CRUD operations."""
 
@@ -407,7 +406,6 @@ class TestPostgresDatabaseConnectionRepository:
         session.flush.assert_awaited_once()
 
 
-@pytest.mark.xdist_group(name="test_db_conn_repo_abc")
 class TestDatabaseConnectionRepositoryABC:
     """Test that the ABC defines the expected interface."""
 

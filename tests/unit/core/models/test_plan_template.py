@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     pass
 
 
-@pytest.mark.xdist_group(name="plan_template_model")
 class TestPlanTemplateModel:
     """Tests for PlanTemplate model."""
 
@@ -237,7 +236,6 @@ class TestPlanTemplateModel:
             )
 
 
-@pytest.mark.xdist_group(name="plan_template_methods")
 class TestPlanTemplateMethods:
     """Tests for PlanTemplate methods."""
 

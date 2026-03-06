@@ -21,7 +21,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.monitoring]
 
 
-@pytest.mark.xdist_group(name="test_budget_broadcaster_core")
 class TestBudgetAlertBroadcasterCore:
     """Core tests for BudgetAlertBroadcaster."""
 
@@ -51,7 +50,6 @@ class TestBudgetAlertBroadcasterCore:
         assert broadcaster.subscriber_count == 0
 
 
-@pytest.mark.xdist_group(name="test_budget_broadcaster_subscribe")
 class TestBudgetAlertBroadcasterSubscription:
     """Tests for subscription management."""
 
@@ -132,7 +130,6 @@ class TestBudgetAlertBroadcasterSubscription:
         assert broadcaster.subscriber_count == 0
 
 
-@pytest.mark.xdist_group(name="test_budget_broadcaster_broadcast")
 class TestBudgetAlertBroadcasterBroadcast:
     """Tests for broadcasting budget alerts."""
 
@@ -319,7 +316,6 @@ class TestBudgetAlertBroadcasterBroadcast:
         mock_connection.send_json.assert_called_once()
 
 
-@pytest.mark.xdist_group(name="test_budget_broadcaster_push")
 class TestBudgetAlertBroadcasterPushNotification:
     """Tests for push notification integration."""
 
@@ -435,7 +431,6 @@ class TestBudgetAlertBroadcasterPushNotification:
         mock_push_sender.send_budget_alert.assert_not_called()
 
 
-@pytest.mark.xdist_group(name="test_budget_broadcaster_graceful")
 class TestBudgetAlertBroadcasterGraceful:
     """Tests for graceful error handling."""
 
@@ -489,7 +484,6 @@ class TestBudgetAlertBroadcasterGraceful:
         assert broadcaster.subscriber_count == 1
 
 
-@pytest.mark.xdist_group(name="test_budget_broadcaster_singleton")
 class TestBudgetAlertBroadcasterSingleton:
     """Tests for singleton accessor."""
 

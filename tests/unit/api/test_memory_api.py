@@ -92,7 +92,6 @@ def client(mock_app: FastAPI) -> TestClient:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="memory_api_notes")
 class TestNotesAPI:
     """Test /api/v1/memory/notes endpoints."""
 
@@ -195,7 +194,6 @@ class TestNotesAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="memory_api_checkpoint")
 class TestCheckpointAPI:
     """Test /api/v1/memory/checkpoint endpoints."""
 
@@ -277,7 +275,6 @@ class TestCheckpointAPI:
 # =============================================================================
 
 
-@pytest.mark.xdist_group(name="memory_api_flags")
 class TestMemoryFeatureFlag:
     """Test feature flag gating for memory endpoints."""
 

@@ -89,7 +89,6 @@ def app_with_marketplace(mock_marketplace_registry):
     return app
 
 
-@pytest.mark.xdist_group(name="test_marketplace_admin_list")
 class TestMarketplaceAdminList:
     """Tests for listing marketplaces."""
 
@@ -125,7 +124,6 @@ class TestMarketplaceAdminList:
         assert data["marketplaces"][0]["skill_count"] == 16
 
 
-@pytest.mark.xdist_group(name="test_marketplace_admin_register")
 class TestMarketplaceAdminRegister:
     """Tests for registering new marketplaces."""
 
@@ -191,7 +189,6 @@ class TestMarketplaceAdminRegister:
         assert response.status_code == 422
 
 
-@pytest.mark.xdist_group(name="test_marketplace_admin_remove")
 class TestMarketplaceAdminRemove:
     """Tests for removing marketplaces."""
 
@@ -242,7 +239,6 @@ class TestMarketplaceAdminRemove:
         assert response.status_code == 404
 
 
-@pytest.mark.xdist_group(name="test_marketplace_admin_sync")
 class TestMarketplaceAdminSync:
     """Tests for syncing marketplaces."""
 
@@ -278,7 +274,6 @@ class TestMarketplaceAdminSync:
         assert response.status_code == 404
 
 
-@pytest.mark.xdist_group(name="test_marketplace_admin_skills")
 class TestMarketplaceAdminSkills:
     """Tests for listing skills from a marketplace."""
 
@@ -315,7 +310,6 @@ class TestMarketplaceAdminSkills:
         assert response.status_code == 404
 
 
-@pytest.mark.xdist_group(name="test_marketplace_admin_get_single")
 class TestMarketplaceAdminGetSingle:
     """Tests for getting a single marketplace."""
 

@@ -27,7 +27,6 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_skills_state")
 class TestRetrieveSkillsNodeState:
     """Tests for AgentState skills selection fields."""
 
@@ -44,7 +43,6 @@ class TestRetrieveSkillsNodeState:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_skills_graph")
 class TestRetrieveSkillsNodeInGraph:
     """Tests for retrieve_skills node inclusion in graph."""
 
@@ -78,7 +76,6 @@ class TestRetrieveSkillsNodeInGraph:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_skills_behavior")
 class TestRetrieveSkillsNodeBehavior:
     """Tests for retrieve_skills node behavior."""
 
@@ -139,7 +136,6 @@ class TestRetrieveSkillsNodeBehavior:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_skills_integration")
 class TestRetrieveSkillsNodeIntegration:
     """Integration tests for retrieve_skills node."""
 
@@ -245,7 +241,6 @@ class TestRetrieveSkillsNodeIntegration:
 
 
 @pytest.mark.unit
-@pytest.mark.xdist_group(name="test_retrieve_skills_flow")
 class TestRetrieveSkillsGraphFlow:
     """Tests for retrieve_skills node graph flow."""
 

@@ -20,7 +20,6 @@ from mcp_server_langgraph.core.feature_flags import feature_flags
 pytestmark = [pytest.mark.unit, pytest.mark.agents]
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_feature_flags")
 class TestExplanationOrchestratorFeatureFlags:
     """Test feature flags for AI explanations."""
 
@@ -37,7 +36,6 @@ class TestExplanationOrchestratorFeatureFlags:
         assert feature_flags.enable_ai_explanations is False
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_inheritance")
 class TestExplanationOrchestratorInheritance:
     """Test ExplanationOrchestrator inherits from BaseOrchestrator."""
 
@@ -93,7 +91,6 @@ class TestExplanationOrchestratorInheritance:
         assert callable(orchestrator.synthesize)
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_module")
 class TestExplanationOrchestratorModule:
     """Test explanation orchestrator module structure."""
 
@@ -146,7 +143,6 @@ class TestExplanationOrchestratorModule:
         assert expected_types == set(EXPLANATION_ANALYSIS_TYPES)
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_initialization")
 class TestExplanationOrchestratorInitialization:
     """Test explanation orchestrator initialization."""
 
@@ -194,7 +190,6 @@ class TestExplanationOrchestratorInitialization:
         assert orchestrator.cost_tracker == mock_tracker
 
 
-@pytest.mark.xdist_group(name="explanation_task")
 class TestExplanationTask:
     """Test ExplanationTask data class."""
 
@@ -273,7 +268,6 @@ class TestExplanationTask:
             assert task.task_type == task_type
 
 
-@pytest.mark.xdist_group(name="explanation_result")
 class TestExplanationResult:
     """Test ExplanationResult data class."""
 
@@ -320,7 +314,6 @@ class TestExplanationResult:
         assert result.error == "LLM call failed"
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_execution")
 class TestExplanationOrchestratorExecution:
     """Test explanation orchestrator execution."""
 
@@ -409,7 +402,6 @@ class TestExplanationOrchestratorExecution:
         assert len(execution_order) == 4
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_synthesis")
 class TestExplanationOrchestratorSynthesis:
     """Test explanation orchestrator synthesis."""
 
@@ -481,7 +473,6 @@ class TestExplanationOrchestratorSynthesis:
         assert "risk_analysis" in synthesis["failed_analyses"]
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_generate")
 class TestExplanationOrchestratorGenerateExplanation:
     """Test generate_explanation main entry point."""
 
@@ -554,7 +545,6 @@ class TestExplanationOrchestratorGenerateExplanation:
         assert isinstance(result, AIExplanation)
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_fallback")
 class TestExplanationOrchestratorFallback:
     """Test explanation orchestrator feature flag fallback."""
 
@@ -582,7 +572,6 @@ class TestExplanationOrchestratorFallback:
         assert isinstance(orchestrator.is_enabled, bool)
 
 
-@pytest.mark.xdist_group(name="explanation_orchestrator_no_llm")
 class TestExplanationOrchestratorNoLLM:
     """Test explanation orchestrator behavior when LLM is not configured."""
 
