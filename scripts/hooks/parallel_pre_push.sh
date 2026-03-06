@@ -390,13 +390,12 @@ done
 echo ""
 echo "Waiting for all lanes to complete..."
 
-# Collect results
+# Collect results (disable set -e: wait returns lane's exit code, which may be non-zero)
 overall_exit=0
 for i in "${!lane_order[@]}"; do
     name="${lane_order[$i]}"
     pid="${lane_pids[$i]}"
-    wait "$pid" 2>/dev/null
-    exit_code=$?
+    wait "$pid" 2>/dev/null && exit_code=0 || exit_code=$?
     lane_exit_codes["$name"]=$exit_code
     if [[ $exit_code -ne 0 ]]; then
         overall_exit=1
