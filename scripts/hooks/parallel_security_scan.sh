@@ -5,7 +5,7 @@
 # Runs all security scanning tools concurrently as background jobs.
 # Resource-adaptive: adjusts concurrency based on CPU/memory and environment.
 #
-# Tools: bandit, trivy (k8s, helm, helm-full), checkov, semgrep
+# Tools: bandit, trivy (k8s, helm, helm-full, terraform), semgrep
 #
 # Usage:
 #   bash scripts/hooks/parallel_security_scan.sh           # Normal run
@@ -14,7 +14,6 @@
 # Environment variables:
 #   SKIP_BANDIT=1       - Skip bandit (local only, ignored in CI)
 #   SKIP_TRIVY=1        - Skip all trivy scans (local only, ignored in CI)
-#   SKIP_CHECKOV=1      - Skip checkov (local only, ignored in CI)
 #   SKIP_SEMGREP=1      - Skip semgrep (local only, ignored in CI)
 #   SECURITY_SCAN_DRY_RUN=1 - Show config without running scans
 # =============================================================================
@@ -38,7 +37,7 @@ cpu_count=$(get_cpu_count)
 if [[ "${CI:-}" == "true" || "${GITHUB_ACTIONS:-}" == "true" ]]; then
     MAX_CONCURRENT=2  # CI: 16GB shared with other processes
     # Ignore SKIP_* env vars in CI to prevent silent security bypass
-    unset SKIP_BANDIT SKIP_TRIVY SKIP_CHECKOV SKIP_SEMGREP 2>/dev/null || true
+    unset SKIP_BANDIT SKIP_TRIVY SKIP_SEMGREP 2>/dev/null || true
 else
     MAX_CONCURRENT=$((cpu_count > 6 ? 6 : cpu_count))  # Local: up to 6
 fi
@@ -53,9 +52,8 @@ if [[ "${SECURITY_SCAN_DRY_RUN:-}" == "1" ]]; then
     echo "ci_mode=${CI:-false}"
     echo "skip_bandit=${SKIP_BANDIT:-0}"
     echo "skip_trivy=${SKIP_TRIVY:-0}"
-    echo "skip_checkov=${SKIP_CHECKOV:-0}"
     echo "skip_semgrep=${SKIP_SEMGREP:-0}"
-    echo "tools: bandit, trivy-k8s, trivy-helm, trivy-helm-full, checkov, semgrep"
+    echo "tools: bandit, trivy-k8s, trivy-helm, trivy-helm-full, trivy-terraform, semgrep"
     exit 0
 fi
 
@@ -182,21 +180,20 @@ else
     echo "  Skipped: trivy-k8s, trivy-helm, trivy-helm-full (SKIP_TRIVY=1)"
 fi
 
-# 5. Checkov
-if [[ "${SKIP_CHECKOV:-0}" != "1" ]]; then
+# 5. Trivy - Terraform IaC security scan (replaces checkov)
+if [[ "${SKIP_TRIVY:-0}" != "1" ]]; then
     wait_for_slot
-    run_tool "checkov" bash -c "
+    run_tool "trivy-terraform" bash -c "
         cd '$REPO_ROOT' && \
-        if ! command -v checkov &>/dev/null; then
-            echo 'ERROR: checkov not found'
+        if ! command -v trivy &>/dev/null; then
+            echo 'ERROR: trivy not found'
             exit 1
         fi
-        checkov -d terraform/ --framework terraform --quiet --compact \
-            --skip-check CKV_TF_1,CKV_TF_2 --output cli 2>&1
+        trivy config terraform/ --severity CRITICAL,HIGH --exit-code 1 --quiet 2>&1
     "
-    echo "  Started: checkov"
+    echo "  Started: trivy-terraform"
 else
-    echo "  Skipped: checkov (SKIP_CHECKOV=1)"
+    echo "  Skipped: trivy-terraform (SKIP_TRIVY=1)"
 fi
 
 # 6. Semgrep

@@ -793,11 +793,12 @@ jobs:
         # Savings: ~20-25 min per CI run
         include:
           - category: security
-            # Security scans unique to this job (not duplicated elsewhere)
-            hooks: bandit trivy-scan-k8s-manifests trivy-helm-scan trivy-helm-full-scan semgrep-security-scan security-tools-check checkov-terraform
+            # Security scans: use parallel-security-scan wrapper (runs bandit, trivy, semgrep concurrently)
+            # Individual hooks are at stages: [manual], so must use parallel-security-scan (stages: [pre-push])
+            hooks: parallel-security-scan security-tools-check
             needs_helm: true
             needs_trivy: true
-            needs_terraform: true  # checkov-terraform needs terraform
+            needs_terraform: true  # trivy-terraform in parallel-security-scan needs terraform
             needs_actionlint: false
             needs_node: false
           - category: deployment

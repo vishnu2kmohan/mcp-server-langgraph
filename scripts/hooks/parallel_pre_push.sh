@@ -379,13 +379,23 @@ declare -a lane_order=()
 
 start_time=$(date +%s)
 
+# Frontend shard concurrency: reduce when running in parallel with other lanes.
+# Default 12 is fine standalone, but causes OOM when Python tests (8 xdist workers)
+# run concurrently. Cap at half the standalone limit (min 2).
+FRONTEND_SHARD_MAX=${VITEST_SHARD_CONCURRENCY_MAX:-12}
+if [[ $MAX_LANES -gt 1 ]]; then
+    FRONTEND_SHARD_MAX=$(( FRONTEND_SHARD_MAX / 2 ))
+    [[ $FRONTEND_SHARD_MAX -lt 2 ]] && FRONTEND_SHARD_MAX=2
+fi
+
 # Launch lanes with concurrency limiting
 for lane_idx in 1 2 3 4 5; do
     wait_for_lane_slot
 
     case $lane_idx in
         1) run_lane "$LANE_1_NAME" "${LANE_1_HOOKS[@]}"; lane_order+=("$LANE_1_NAME") ;;
-        2) run_lane "$LANE_2_NAME" "${LANE_2_HOOKS[@]}"; lane_order+=("$LANE_2_NAME") ;;
+        2) export VITEST_SHARD_CONCURRENCY_MAX=$FRONTEND_SHARD_MAX
+           run_lane "$LANE_2_NAME" "${LANE_2_HOOKS[@]}"; lane_order+=("$LANE_2_NAME") ;;
         3) run_lane "$LANE_3_NAME" "${LANE_3_HOOKS[@]}"; lane_order+=("$LANE_3_NAME") ;;
         4) run_lane "$LANE_4_NAME" "${LANE_4_HOOKS[@]}"; lane_order+=("$LANE_4_NAME") ;;
         5) run_lane "$LANE_5_NAME" "${LANE_5_HOOKS[@]}"; lane_order+=("$LANE_5_NAME") ;;

@@ -104,9 +104,9 @@ class TestParallelSecurityScanScript:
         assert "ci_mode=true" in result.stdout
 
     def test_all_six_tools_covered(self) -> None:
-        """Script must cover all 6 security tools: bandit, 3x trivy, checkov, semgrep."""
+        """Script must cover all 6 security tools: bandit, 4x trivy (k8s, helm, helm-full, terraform), semgrep."""
         content = SECURITY_SCRIPT.read_text()
-        for tool in ["bandit", "trivy", "checkov", "semgrep"]:
+        for tool in ["bandit", "trivy-k8s", "trivy-helm", "trivy-helm-full", "trivy-terraform", "semgrep"]:
             assert tool in content, f"Script must include {tool} scan"
 
     def test_local_max_concurrent_caps_at_6(self) -> None:

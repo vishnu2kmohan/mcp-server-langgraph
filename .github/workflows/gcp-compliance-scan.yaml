@@ -63,21 +63,8 @@ jobs:
           working_directory: terraform/
           soft_fail: true
 
-      - name: Run Checkov
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: terraform/
-          framework: terraform
-          soft_fail: true
-          output_format: sarif
-          output_file_path: checkov-results.sarif
-
-      - name: Upload Checkov results
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'checkov-results.sarif'
-          category: 'terraform-compliance'
+      # NOTE: Trivy Terraform scan already runs at line 44 (aquasecurity/trivy-action@0.33.1)
+      # with broader severity scope (CRITICAL,HIGH,MEDIUM). No duplicate needed.
 
   # ============================================================================
   # Kubernetes Manifest Scan

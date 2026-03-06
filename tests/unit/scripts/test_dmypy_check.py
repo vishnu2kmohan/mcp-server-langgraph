@@ -66,3 +66,56 @@ class TestDmypyCheckScript:
         """Script should also detect GITHUB_ACTIONS env var for CI mode."""
         content = DMYPY_SCRIPT.read_text()
         assert "GITHUB_ACTIONS" in content, "Script should detect GITHUB_ACTIONS env var for CI mode"
+
+    def test_dmypy_check_does_not_pass_mypy_flags(self) -> None:
+        """dmypy check must NOT pass mypy flags via '--' (they are treated as filenames).
+
+        The dmypy check subcommand only accepts file/directory positional args.
+        Config flags (--config-file, --show-error-codes, --pretty) must be set
+        during 'dmypy start', not during 'dmypy check'.
+        """
+        content = DMYPY_SCRIPT.read_text()
+        # Find the dmypy check line(s)
+        lines = content.splitlines()
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if "dmypy check" in stripped and "dmypy start" not in stripped:
+                # Get the full command (may span multiple lines with backslash continuation)
+                full_cmd = stripped
+                j = i
+                while full_cmd.endswith("\\") and j + 1 < len(lines):
+                    j += 1
+                    full_cmd += " " + lines[j].strip()
+                # dmypy check should NOT have -- followed by mypy flags
+                assert "-- " not in full_cmd and "-- \\" not in full_cmd, (
+                    f"dmypy check must not pass mypy flags via '--'. "
+                    f"Found: {full_cmd!r}. "
+                    f"Fix: pass --config-file, --show-error-codes, --pretty to 'dmypy start' instead."
+                )
+
+    def test_dmypy_start_includes_all_mypy_flags(self) -> None:
+        """dmypy start must include all mypy flags (config, error codes, pretty)."""
+        content = DMYPY_SCRIPT.read_text()
+        # Find executable dmypy start lines (not comments or echo statements)
+        lines = content.splitlines()
+        start_cmds = []
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            # Skip comments and echo/print statements
+            if stripped.startswith("#") or stripped.startswith("echo "):
+                continue
+            if "dmypy start" in stripped:
+                full_cmd = stripped
+                j = i
+                while full_cmd.endswith("\\") and j + 1 < len(lines):
+                    j += 1
+                    full_cmd += " " + lines[j].strip()
+                start_cmds.append(full_cmd)
+        assert len(start_cmds) > 0, "Script must have executable dmypy start commands"
+        # At least one start command must include all flags
+        has_all_flags = any(
+            "--config-file=pyproject.toml" in cmd and "--show-error-codes" in cmd and "--pretty" in cmd for cmd in start_cmds
+        )
+        assert has_all_flags, (
+            f"At least one dmypy start command must include --config-file, --show-error-codes, --pretty. Found: {start_cmds}"
+        )

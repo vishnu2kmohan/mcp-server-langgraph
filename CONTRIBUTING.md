@@ -231,7 +231,6 @@ PRE_PUSH_SEQUENTIAL=1 bash scripts/hooks/parallel_pre_push.sh
 | `SKIP_TRIVY` | unset | Skip Trivy scans (local only, ignored in CI) |
 | `SKIP_SEMGREP` | unset | Skip Semgrep scans (local only, ignored in CI) |
 | `SKIP_BANDIT` | unset | Skip Bandit scans (local only, ignored in CI) |
-| `SKIP_CHECKOV` | unset | Skip Checkov scans (local only, ignored in CI) |
 
 **Note**: `SKIP_*` variables are ignored when `CI=true` to prevent silent security bypass in CI.
 

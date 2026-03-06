@@ -6,7 +6,7 @@ Consolidates:
 - trivy-scan-k8s-manifests (bare K8s manifests)
 - trivy-helm-scan (Helm charts, no subcharts)
 - trivy-helm-full-scan (Helm with subcharts via template)
-- checkov-terraform (Terraform configs)
+- trivy-terraform-scan (Terraform configs, replaces checkov)
 
 Usage:
     python scripts/security/run_security_suite.py [--all] [--scope SCOPE] [--verbose]
@@ -206,7 +206,7 @@ def run_helm_full_scan(verbose: bool = False) -> int:
 
 def run_terraform_scan(verbose: bool = False) -> int:
     """
-    Scan Terraform configurations with Checkov.
+    Scan Terraform configurations with Trivy.
 
     Returns:
         0 if scan passes, 1 if issues found, 2 if tool not available
@@ -216,15 +216,15 @@ def run_terraform_scan(verbose: bool = False) -> int:
         print("  ⏭  No terraform/ directory, skipping")
         return 0
 
-    if not check_tool_available("checkov"):
-        print("  ⚠️  checkov not installed, skipping Terraform scan")
-        print("     Install: pip install checkov")
+    if not check_tool_available("trivy"):
+        print("  ⚠️  trivy not installed, skipping Terraform scan")
+        print("     Install: brew install trivy (macOS) or see https://aquasecurity.github.io/trivy/")
         return 0
 
     print("▶ Scanning Terraform configurations...")
-    args = ["checkov", "-d", str(terraform_dir)]
+    args = ["trivy", "config", str(terraform_dir), "--severity", "CRITICAL,HIGH", "--exit-code", "1"]
     if not verbose:
-        args.extend(["--quiet", "--compact"])
+        args.append("--quiet")
 
     result = subprocess.run(args, cwd=REPO_ROOT)
     if result.returncode == 0:

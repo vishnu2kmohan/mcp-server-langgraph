@@ -1081,43 +1081,41 @@ repos:
       Regression prevention for: Deploy to GKE Staging failure (Run #19309378657)
 
       '
-  - id: checkov-terraform
-    name: Checkov Terraform Security Scan
+  - id: trivy-terraform-scan
+    name: Trivy Terraform Security Scan
     entry: >
-      bash -c 'if ! command -v checkov &> /dev/null; then
-      echo "WARNING: checkov not installed. Skipping Terraform security scan.";
-      echo "Install via: pip install checkov or brew install checkov";
+      bash -c 'if ! command -v trivy &> /dev/null; then
+      echo "WARNING: trivy not installed. Skipping Terraform security scan.";
+      echo "Install via: brew install trivy (macOS) or see https://aquasecurity.github.io/trivy/";
       exit 0;
       fi;
-      checkov -d terraform/ --framework terraform --quiet --compact \
-        --skip-check CKV_TF_1,CKV_TF_2 \
-        --output cli || (echo "Checkov found security issues in Terraform. Run: checkov -d terraform/ --framework terraform"; exit 1)'
+      trivy config terraform/ --severity CRITICAL,HIGH --exit-code 1 --quiet ||
+      (echo "Trivy found security issues in Terraform. Run: trivy config terraform/"; exit 1)'
     language: system
     files: ^terraform/.*\.tf$
     pass_filenames: false
     always_run: false
     stages:
     - manual  # Consolidated into parallel-security-scan for pre-push
-    description: 'Scans Terraform configurations for security misconfigurations using Checkov.
+    description: 'Scans Terraform configurations for security misconfigurations using Trivy.
+
+      Replaces checkov with trivy to consolidate on a single IaC scanning tool
+      (trivy is already used for K8s and Helm chart scanning).
 
       Detects issues like:
-      - IAM policy with wildcard resources (CKV_AWS_355)
-      - IAM policy without constraints (CKV_AWS_290)
+      - IAM policy with wildcard resources
       - Missing encryption configurations
       - Overly permissive security groups
 
-      Install Checkov:
-      - pip install checkov
-      - brew install checkov (macOS)
+      Install Trivy:
+      - macOS: brew install trivy
+      - Linux: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
 
-      Skipped checks:
-      - CKV_TF_1: Module source not pinned (we use version constraints)
-      - CKV_TF_2: Provider version not pinned (managed in required_providers)
-
-      If Checkov is not installed, the hook will skip scanning (not fail).
-      CI/CD environments have Checkov installed for mandatory scans.
+      If Trivy is not installed, the hook will skip scanning (not fail).
+      CI/CD environments should have Trivy installed for mandatory scans.
 
       Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      Migrated from checkov to trivy: 2026-03-06
       '
   - id: trivy-helm-scan
     name: Trivy Helm Chart Security Scan
@@ -1269,9 +1267,9 @@ repos:
     always_run: true
     stages:
     - pre-push
-    description: 'Runs all security scans (Trivy, Semgrep, Bandit, Checkov) in parallel.
+    description: 'Runs all security scans (Trivy k8s/helm/terraform, Semgrep, Bandit) in parallel.
 
-      Replaces 6 individual sequential security hooks with 1 concurrent wrapper.
+      Replaces individual sequential security hooks with 1 concurrent wrapper.
       Local (16+ cores): all scans in parallel (~45-90s vs ~2-4 min sequential).
       CI (4 vCPU): 2 concurrent scans (~30-60s improvement).
 

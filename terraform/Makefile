@@ -24,7 +24,7 @@ install-tools: ## Install required testing tools
 	@command -v terraform >/dev/null 2>&1 || { echo "$(RED)Error: terraform not found. Install from https://terraform.io$(NC)"; exit 1; }
 	@command -v tflint >/dev/null 2>&1 || { echo "Installing tflint..."; brew install tflint || curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash; }
 	@command -v tfsec >/dev/null 2>&1 || { echo "Installing tfsec..."; brew install tfsec || curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash; }
-	@command -v checkov >/dev/null 2>&1 || { echo "Installing checkov..."; pip install checkov; }
+	@command -v trivy >/dev/null 2>&1 || { echo "Installing trivy (prefer: brew install trivy)..."; brew install trivy || curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/v0.61.0/contrib/install.sh | sh -s -- -b /usr/local/bin v0.61.0; }
 	@command -v terraform-docs >/dev/null 2>&1 || { echo "Installing terraform-docs..."; brew install terraform-docs || { curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.16.0/terraform-docs-v0.16.0-$(uname)-amd64.tar.gz && tar -xzf terraform-docs.tar.gz && sudo mv terraform-docs /usr/local/bin/ && rm terraform-docs.tar.gz; }; }
 	@echo "$(GREEN)✓ All tools installed$(NC)"
 
@@ -83,12 +83,12 @@ lint: ## Run TFLint on all modules
 		exit 1; \
 	fi
 
-security: ## Run security scans (tfsec and checkov)
+security: ## Run security scans (tfsec and trivy)
 	@echo "$(YELLOW)Running security scans...$(NC)"
 	@echo "$(CYAN)Running tfsec...$(NC)"
 	@tfsec . --minimum-severity MEDIUM || { echo "$(RED)✗ tfsec found security issues$(NC)"; exit 1; }
-	@echo "$(CYAN)Running checkov...$(NC)"
-	@checkov -d . --quiet --compact --framework terraform || { echo "$(RED)✗ checkov found security issues$(NC)"; exit 1; }
+	@echo "$(CYAN)Running trivy config scan...$(NC)"
+	@trivy config . --severity CRITICAL,HIGH --exit-code 1 --quiet || { echo "$(RED)✗ trivy found security issues$(NC)"; exit 1; }
 	@echo "$(GREEN)✓ Security scans passed$(NC)"
 
 security-report: ## Generate detailed security report
@@ -97,9 +97,9 @@ security-report: ## Generate detailed security report
 	@echo "Running tfsec..."
 	@tfsec . --format json > reports/tfsec-report.json || true
 	@tfsec . --format sarif > reports/tfsec-report.sarif || true
-	@echo "Running checkov..."
-	@checkov -d . --output json > reports/checkov-report.json || true
-	@checkov -d . --output cli > reports/checkov-report.txt || true
+	@echo "Running trivy..."
+	@trivy config . --severity CRITICAL,HIGH --format json --output reports/trivy-terraform-report.json || true
+	@trivy config . --severity CRITICAL,HIGH --output reports/trivy-terraform-report.txt || true
 	@echo "$(GREEN)✓ Reports generated in ./reports/$(NC)"
 
 docs: ## Generate documentation for all modules

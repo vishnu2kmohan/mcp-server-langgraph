@@ -27,13 +27,17 @@ fi
 
 # Start daemon if not running, then incremental check
 # Handle stale lockfile: kill existing daemon first if start fails
+# NOTE: All mypy flags must be passed to 'dmypy start', NOT 'dmypy check'.
+# 'dmypy check' only accepts file/directory positional args — anything after
+# '--' is treated as a filename, causing 'can't read file' errors.
 if ! uv run --frozen dmypy status >/dev/null 2>&1; then
-    if ! uv run --frozen dmypy start -- --config-file=pyproject.toml 2>/dev/null; then
+    if ! uv run --frozen dmypy start -- \
+        --config-file=pyproject.toml --show-error-codes --pretty 2>/dev/null; then
         echo "dmypy start failed (stale lockfile?), killing and retrying..."
         uv run --frozen dmypy kill 2>/dev/null || true
-        uv run --frozen dmypy start -- --config-file=pyproject.toml
+        uv run --frozen dmypy start -- \
+            --config-file=pyproject.toml --show-error-codes --pretty
     fi
 fi
 
-uv run --frozen dmypy check src/mcp_server_langgraph -- \
-    --config-file=pyproject.toml --show-error-codes --pretty
+uv run --frozen dmypy check src/mcp_server_langgraph

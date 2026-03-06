@@ -142,3 +142,23 @@ class TestParallelPrePushScript:
         assert "overall_exit=1" in content or "overall_exit = 1" in content, (
             "Script must set nonzero overall exit code on lane failure"
         )
+
+    def test_frontend_lane_reduces_shard_concurrency(self) -> None:
+        """Frontend lane must cap shard concurrency to prevent OOM when running in parallel.
+
+        When the orchestrator runs all 5 lanes concurrently, the frontend shard runner
+        must not use its default concurrency (12) because Python tests are also consuming
+        CPU and memory. The orchestrator should set VITEST_SHARD_CONCURRENCY_MAX to a
+        reduced value for the frontend lane.
+        """
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "VITEST_SHARD_CONCURRENCY_MAX" in content, (
+            "Orchestrator must set VITEST_SHARD_CONCURRENCY_MAX for frontend lane "
+            "to prevent OOM when running concurrently with Python tests"
+        )
+
+    def test_git_index_file_isolation_per_lane(self) -> None:
+        """Each lane must use isolated GIT_INDEX_FILE to prevent index.lock contention."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "GIT_INDEX_FILE" in content, "Script must set per-lane GIT_INDEX_FILE for index isolation"
+        assert ".git-index-" in content, "Lane index files must use '.git-index-' prefix"

@@ -373,71 +373,61 @@ class TestS3BackendSecurity:
         )
 
 
-@pytest.mark.xdist_group(name="testcheckovcompliance")
-class TestCheckovCompliance:
+@pytest.mark.xdist_group(name="testtrivyterraformcompliance")
+class TestTrivyTerraformCompliance:
     """
-    Integration test: Run Checkov on Terraform modules to validate compliance.
+    Integration test: Run Trivy on Terraform modules to validate compliance.
 
-    This test runs actual Checkov scans to ensure all security controls pass.
+    This test runs actual Trivy config scans to ensure all security controls pass.
+    Replaces Checkov with Trivy to consolidate on a single IaC scanning tool.
     """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.skipif(os.system("which checkov > /dev/null 2>&1") != 0, reason="Checkov not installed (pip install checkov)")
-    def test_checkov_azure_secrets_compliance(self):
+    @pytest.mark.skipif(os.system("which trivy > /dev/null 2>&1") != 0, reason="Trivy not installed (brew install trivy)")
+    def test_trivy_azure_secrets_compliance(self):
         """
-        Run Checkov on Azure secrets module (production profile).
+        Run Trivy on Azure secrets module (production profile).
 
-        Expected to pass:
-        - CKV_AZURE_42: Purge protection enabled
-        - CKV_AZURE_189: Network ACLs deny-by-default
+        Scans for CRITICAL and HIGH severity Terraform misconfigurations.
         """
-        result = os.system(
-            "checkov -d terraform/modules/azure-secrets "
-            "--framework terraform "
-            "--quiet "
-            "--compact "
-            "--skip-check CKV_AZURE_109,CKV_AZURE_110"  # Skip non-critical checks
-        )
+        result = os.system("trivy config terraform/modules/azure-secrets --severity CRITICAL,HIGH --exit-code 1 --quiet")
 
         assert result == 0, (
-            "Checkov scan failed for Azure secrets module. Run 'checkov -d terraform/modules/azure-secrets' for details."
+            "Trivy scan failed for Azure secrets module. Run 'trivy config terraform/modules/azure-secrets' for details."
         )
 
-    @pytest.mark.skipif(os.system("which checkov > /dev/null 2>&1") != 0, reason="Checkov not installed (pip install checkov)")
-    def test_checkov_aws_secrets_compliance(self):
+    @pytest.mark.skipif(os.system("which trivy > /dev/null 2>&1") != 0, reason="Trivy not installed (brew install trivy)")
+    def test_trivy_aws_secrets_compliance(self):
         """
-        Run Checkov on AWS secrets module (production profile).
+        Run Trivy on AWS secrets module (production profile).
 
-        Expected to pass:
-        - CKV_AWS_149: CMK encryption available
+        Scans for CRITICAL and HIGH severity Terraform misconfigurations.
         """
         if not Path("terraform/modules/aws-secrets").exists():
             pytest.skip("AWS secrets module not present")
 
-        result = os.system("checkov -d terraform/modules/aws-secrets --framework terraform --quiet --compact")
+        result = os.system("trivy config terraform/modules/aws-secrets --severity CRITICAL,HIGH --exit-code 1 --quiet")
 
         assert result == 0, (
-            "Checkov scan failed for AWS secrets module. Run 'checkov -d terraform/modules/aws-secrets' for details."
+            "Trivy scan failed for AWS secrets module. Run 'trivy config terraform/modules/aws-secrets' for details."
         )
 
-    @pytest.mark.skipif(os.system("which checkov > /dev/null 2>&1") != 0, reason="Checkov not installed (pip install checkov)")
-    def test_checkov_backend_setup_compliance(self):
+    @pytest.mark.skipif(os.system("which trivy > /dev/null 2>&1") != 0, reason="Trivy not installed (brew install trivy)")
+    def test_trivy_backend_setup_compliance(self):
         """
-        Run Checkov on backend setup (Terraform state storage).
+        Run Trivy on backend setup (Terraform state storage).
 
-        Expected to pass:
-        - DynamoDB deletion protection
-        - S3 bucket security controls
+        Scans for CRITICAL and HIGH severity Terraform misconfigurations.
         """
         if not Path("terraform/backend-setup").exists():
             pytest.skip("Backend setup not present")
 
-        result = os.system("checkov -d terraform/backend-setup --framework terraform --quiet --compact")
+        result = os.system("trivy config terraform/backend-setup --severity CRITICAL,HIGH --exit-code 1 --quiet")
 
-        assert result == 0, "Checkov scan failed for backend setup. Run 'checkov -d terraform/backend-setup' for details."
+        assert result == 0, "Trivy scan failed for backend setup. Run 'trivy config terraform/backend-setup' for details."
 
 
 if __name__ == "__main__":
