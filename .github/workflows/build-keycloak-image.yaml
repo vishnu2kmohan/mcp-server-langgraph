@@ -80,7 +80,7 @@ jobs:
 
       # Authenticate to GitHub Container Registry using GITHUB_TOKEN
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.6.0
+        uses: docker/login-action@v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -92,7 +92,7 @@ jobs:
       # Generate image metadata (tags, labels)
       - name: Generate image metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-keycloak
@@ -109,7 +109,7 @@ jobs:
       # Build and push to GHCR
       - name: Build and push Keycloak image
         id: build
-        uses: docker/build-push-action@v6.18.0
+        uses: docker/build-push-action@v7.0.0
         with:
           context: .
           file: docker/Dockerfile.keycloak
@@ -149,7 +149,7 @@ jobs:
 
       # Authenticate to GHCR to pull the source image
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.6.0
+        uses: docker/login-action@v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -209,7 +209,7 @@ jobs:
 
       # Authenticate to GHCR for pulling the image
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.6.0
+        uses: docker/login-action@v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
