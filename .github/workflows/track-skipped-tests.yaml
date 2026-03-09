@@ -80,7 +80,7 @@ jobs:
         echo "without_issues=$WITHOUT_ISSUES" >> $GITHUB_OUTPUT
 
     - name: Upload reports
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: skipped-tests-report
         path: |

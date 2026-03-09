@@ -195,7 +195,7 @@ jobs:
           fi
 
       - name: Upload CIS results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: cis-benchmark-results
           path: kube-bench-results.txt
@@ -311,7 +311,7 @@ jobs:
           cat compliance-report.md
 
       - name: Upload report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: compliance-report
           path: compliance-report.md

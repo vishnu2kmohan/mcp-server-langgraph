@@ -110,7 +110,7 @@ jobs:
 
       - name: Save drift plan (text)
         if: steps.plan.outputs.drift_detected == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: drift-plan-production-txt
           path: /tmp/drift-plan.txt
@@ -118,7 +118,7 @@ jobs:
 
       - name: Save drift plan (binary)
         if: steps.plan.outputs.drift_detected == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: drift-plan-production-binary
           path: terraform/environments/gcp-prod/tfplan

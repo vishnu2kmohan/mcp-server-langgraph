@@ -32,7 +32,7 @@ jobs:
       # Cache Helm dependencies to avoid rate limiting from GitHub-hosted chart repos
       # See: https://github.com/openfga/helm-charts (redirects to GitHub Releases)
       - name: Cache Helm Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             deployments/helm/mcp-server-langgraph/charts

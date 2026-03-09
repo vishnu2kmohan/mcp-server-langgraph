@@ -95,7 +95,7 @@ jobs:
 
       - name: Download coverage HTML from CI
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.0
         with:
           name: coverage-html
           path: coverage-html/
@@ -105,7 +105,7 @@ jobs:
 
       - name: Download coverage JSON from CI
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.0
         with:
           name: coverage-json
           path: .
@@ -115,7 +115,7 @@ jobs:
 
       - name: Download test durations from CI
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.0
         with:
           name: test-durations-py3.12
           path: .
@@ -191,7 +191,7 @@ jobs:
           echo "📋 Total: $TOTAL"
 
       - name: Upload coverage HTML artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-html
           path: coverage-html/
@@ -199,7 +199,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload test output artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: test-output
           path: test-durations.txt
@@ -227,12 +227,12 @@ jobs:
         continue-on-error: true
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Download test output
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.0
         with:
           name: test-output
           path: .
@@ -305,7 +305,7 @@ jobs:
           TESTS_FAILED: ${{ needs.collect-coverage.outputs.tests_failed }}
 
       - name: Upload trends artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: trends-data
           path: trends/
@@ -406,7 +406,7 @@ jobs:
           ls -la badges/
 
       - name: Upload badges artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: badges
           path: badges/
@@ -675,7 +675,7 @@ jobs:
           echo "✅ Generated dashboard"
 
       - name: Upload dashboard artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: dashboard
           path: dashboard/
@@ -697,12 +697,12 @@ jobs:
           fetch-depth: 0  # Full git history for DORA metrics
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Download trends for flakiness analysis
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.0
         with:
           name: trends-data
           path: trends/
@@ -723,7 +723,7 @@ jobs:
           cat metrics/all-metrics.json | head -50
 
       - name: Upload metrics artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: dashboard-metrics
           path: metrics/
@@ -770,7 +770,7 @@ jobs:
           fi
 
       - name: Upload reports artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: weekly-reports
           path: reports/
@@ -802,7 +802,7 @@ jobs:
           path: gh-pages
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.0
         with:
           path: artifacts
 

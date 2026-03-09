@@ -125,7 +125,7 @@ jobs:
 
     - name: Upload integration coverage artifact
       if: always() && matrix.python-version == '3.12'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-integration-${{ matrix.label }}-py${{ matrix.python-version }}
         path: |
@@ -161,7 +161,7 @@ jobs:
         extras: 'dev'
 
     - name: Download all coverage artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8.0.0
       with:
         pattern: coverage-integration-*-py3.12
         path: coverage-reports/
@@ -205,7 +205,7 @@ jobs:
 
     - name: Upload combined coverage
       if: always()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-integration-combined
         path: |
