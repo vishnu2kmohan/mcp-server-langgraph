@@ -9,18 +9,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock the API module to prevent OOM during test loading
-vi.mock("../api", () => ({
-  useGetWorkflowSuggestionsMutation: vi.fn(() => [
-    vi.fn(),
-    { isLoading: false },
-  ]),
-  useListWorkflowExecutionsQuery: vi.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    error: null,
-  })),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetWorkflowSuggestionsMutation: vi.fn(() => [
+      vi.fn(),
+      { isLoading: false },
+    ]),
+    useListWorkflowExecutionsQuery: vi.fn(() => ({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    })),
+  };
+});
 // Import after mock
 import {
   useGetWorkflowSuggestionsMutation,

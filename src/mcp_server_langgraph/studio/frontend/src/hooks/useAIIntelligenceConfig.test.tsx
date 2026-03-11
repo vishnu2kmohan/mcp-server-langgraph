@@ -17,30 +17,36 @@ import { configureStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
 
 // Mock the API hooks
-vi.mock("../api", () => ({
-  useGetFeatureFlagsQuery: vi.fn(() => ({
-    data: {},
-    isLoading: false,
-    isError: false,
-  })),
-  useGetCurrentUserQuery: vi.fn(() => ({
-    data: null,
-    isLoading: false,
-    isError: false,
-  })),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetFeatureFlagsQuery: vi.fn(() => ({
+      data: {},
+      isLoading: false,
+      isError: false,
+    })),
+    useGetCurrentUserQuery: vi.fn(() => ({
+      data: null,
+      isLoading: false,
+      isError: false,
+    })),
+  };
+});
 // Mock the FeatureFlagContext
-vi.mock("../contexts/FeatureFlagContext", () => ({
-  useFeatureFlags: vi.fn(() => ({
-    flags: {},
-    isLoading: false,
-    isError: false,
-    isEnabled: () => false,
-  })),
-  FeatureFlagProvider: ({ children }: { children: ReactNode }) => children,
-}));
-
+vi.mock("../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlags: vi.fn(() => ({
+      flags: {},
+      isLoading: false,
+      isError: false,
+      isEnabled: () => false,
+    })),
+    FeatureFlagProvider: ({ children }: { children: ReactNode }) => children,
+  };
+});
 import { useAIIntelligenceConfig } from "./useAIIntelligenceConfig";
 import { useFeatureFlags } from "../contexts/FeatureFlagContext";
 import personaReducer from "../store/slices/personaSlice";

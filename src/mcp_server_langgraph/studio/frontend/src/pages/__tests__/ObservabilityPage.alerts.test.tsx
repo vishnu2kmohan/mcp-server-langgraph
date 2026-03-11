@@ -66,10 +66,13 @@ vi.mock("../../hooks/useTraceIntelligence", () => ({
   })),
 }));
 
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn(() => false),
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn(() => false),
+  };
+});
 // Import mocked hooks
 import {
   useListTracesQuery,
@@ -328,7 +331,7 @@ describe("ObservabilityPage - Alerts", () => {
       await waitFor(() => {
         const infoBadge = screen.getByText("info");
         expect(infoBadge).toBeInTheDocument();
-        expect(infoBadge).toHaveClass("bg-primary-2");
+        expect(infoBadge).toHaveClass("bg-primary-3");
       });
     });
   });
@@ -375,7 +378,7 @@ describe("ObservabilityPage - Alerts", () => {
           el.classList.contains("rounded-full"),
         );
         expect(stateBadge).toBeInTheDocument();
-        expect(stateBadge).toHaveClass("bg-warning-2");
+        expect(stateBadge).toHaveClass("bg-warning-3");
       });
     });
 
@@ -416,7 +419,7 @@ describe("ObservabilityPage - Alerts", () => {
           el.classList.contains("rounded-full"),
         );
         expect(stateBadge).toBeInTheDocument();
-        expect(stateBadge).toHaveClass("bg-success-2");
+        expect(stateBadge).toHaveClass("bg-success-3");
       });
     });
 

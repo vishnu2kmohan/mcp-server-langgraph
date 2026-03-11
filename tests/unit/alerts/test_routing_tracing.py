@@ -42,6 +42,14 @@ def mock_tracer(module_path: str):
 class TestRouterTracing:
     """Tests for tracing in AlertRouter."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_otel(self):
+        """Reset circuit breakers and isolate OTEL state for xdist safety."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+        return
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -94,14 +102,16 @@ class TestRouterTracing:
         )
 
         mock_store = AsyncMock(return_value=None)
-        mock_store.get_subscriptions.return_value = [
-            Subscription(
-                user_id="user-001",
-                tenant_id="acme-corp",
-                alert_types=["*"],
-                preference=NotificationPreference(channels=["email"]),
-            ),
-        ]
+        mock_store.get_subscriptions = AsyncMock(
+            side_effect=lambda *a, **kw: [
+                Subscription(
+                    user_id="user-001",
+                    tenant_id="acme-corp",
+                    alert_types=["*"],
+                    preference=NotificationPreference(channels=["email"]),
+                ),
+            ]
+        )
 
         with mock_tracer("mcp_server_langgraph.alerts.routing") as (mock_tracer_obj, mock_span):
             router = AlertRouter(
@@ -204,6 +214,14 @@ class TestRouterTracing:
 @pytest.mark.xdist_group(name="test_routing_tracing")
 class TestRoutingTracingErrorHandling:
     """Tests for error handling in routing tracing."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_otel(self):
+        """Reset circuit breakers and isolate OTEL state for xdist safety."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+        return
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""

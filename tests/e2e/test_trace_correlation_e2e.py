@@ -49,6 +49,7 @@ def client(app_with_full_api: FastAPI) -> TestClient:
     return TestClient(app_with_full_api)
 
 
+@pytest.mark.xdist_group("test_trace_chat_a_p_i_integration")
 class TestTraceChatAPIIntegration:
     """
     Tests for trace_id in Chat API responses.
@@ -124,6 +125,7 @@ class TestTraceChatAPIIntegration:
                     assert re.match(r"^[a-f0-9]{32}$", trace_id), f"trace_id should be 32 hex chars, got: {trace_id}"
 
 
+@pytest.mark.xdist_group("test_trace_observability_integration")
 class TestTraceObservabilityIntegration:
     """
     Tests for trace retrieval via Observability API.
@@ -193,6 +195,7 @@ class TestTraceObservabilityIntegration:
         assert "items" in data
 
 
+@pytest.mark.xdist_group("test_trace_end_to_end_flow")
 class TestTraceEndToEndFlow:
     """
     End-to-end tests for the complete trace correlation flow.
@@ -256,6 +259,7 @@ class TestTraceEndToEndFlow:
                 assert isinstance(trace_data["spans"], list)
 
 
+@pytest.mark.xdist_group("test_trace_metrics_aggregation")
 class TestTraceMetricsAggregation:
     """
     Tests for trace-based metrics aggregation.

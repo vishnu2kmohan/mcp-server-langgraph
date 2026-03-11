@@ -258,9 +258,11 @@ class TestKeycloakUserProvider:
         provider = KeycloakUserProvider(config=keycloak_config, sync_on_login=False)
         tokens = {"access_token": "access-token-123", "refresh_token": "refresh-token-456", "expires_in": 300}
         userinfo = {"sub": "user-id-123", "preferred_username": "alice", "email": "alice@acme.com"}
-        with patch.object(provider.client, "authenticate_user", new_callable=AsyncMock, return_value=tokens):
-            with patch.object(provider.client, "get_userinfo", new_callable=AsyncMock, return_value=userinfo):
-                with patch.object(provider.client, "get_user_by_username", new_callable=AsyncMock, return_value=keycloak_user):
+        with patch.object(provider.client, "authenticate_user", new_callable=AsyncMock, side_effect=lambda *a, **kw: tokens):
+            with patch.object(provider.client, "get_userinfo", new_callable=AsyncMock, side_effect=lambda *a, **kw: userinfo):
+                with patch.object(
+                    provider.client, "get_user_by_username", new_callable=AsyncMock, side_effect=lambda *a, **kw: keycloak_user
+                ):
                     result = await provider.authenticate("alice", "password123")
                     assert result.authorized is True
                     assert result.username == "alice"
@@ -287,9 +289,11 @@ class TestKeycloakUserProvider:
         provider = KeycloakUserProvider(config=keycloak_config, openfga_client=mock_openfga, sync_on_login=True)
         tokens = {"access_token": "token", "expires_in": 300}
         userinfo = {"sub": "user-id-123", "preferred_username": "alice"}
-        with patch.object(provider.client, "authenticate_user", new_callable=AsyncMock, return_value=tokens):
-            with patch.object(provider.client, "get_userinfo", new_callable=AsyncMock, return_value=userinfo):
-                with patch.object(provider.client, "get_user_by_username", new_callable=AsyncMock, return_value=keycloak_user):
+        with patch.object(provider.client, "authenticate_user", new_callable=AsyncMock, side_effect=lambda *a, **kw: tokens):
+            with patch.object(provider.client, "get_userinfo", new_callable=AsyncMock, side_effect=lambda *a, **kw: userinfo):
+                with patch.object(
+                    provider.client, "get_user_by_username", new_callable=AsyncMock, side_effect=lambda *a, **kw: keycloak_user
+                ):
                     result = await provider.authenticate("alice", "password123")
                     assert result.authorized is True
                     mock_openfga.write_tuples.assert_called_once()
@@ -302,9 +306,11 @@ class TestKeycloakUserProvider:
         provider = KeycloakUserProvider(config=keycloak_config, openfga_client=mock_openfga, sync_on_login=True)
         tokens = {"access_token": "token", "expires_in": 300}
         userinfo = {"sub": "user-id-123", "preferred_username": "alice"}
-        with patch.object(provider.client, "authenticate_user", new_callable=AsyncMock, return_value=tokens):
-            with patch.object(provider.client, "get_userinfo", new_callable=AsyncMock, return_value=userinfo):
-                with patch.object(provider.client, "get_user_by_username", new_callable=AsyncMock, return_value=keycloak_user):
+        with patch.object(provider.client, "authenticate_user", new_callable=AsyncMock, side_effect=lambda *a, **kw: tokens):
+            with patch.object(provider.client, "get_userinfo", new_callable=AsyncMock, side_effect=lambda *a, **kw: userinfo):
+                with patch.object(
+                    provider.client, "get_user_by_username", new_callable=AsyncMock, side_effect=lambda *a, **kw: keycloak_user
+                ):
                     result = await provider.authenticate("alice", "password123")
                     assert result.authorized is True
 
@@ -324,7 +330,9 @@ class TestKeycloakUserProvider:
     async def test_get_user_by_id(self, keycloak_config, keycloak_user):
         """Test getting user by ID"""
         provider = KeycloakUserProvider(config=keycloak_config)
-        with patch.object(provider.client, "get_user_by_username", new_callable=AsyncMock, return_value=keycloak_user):
+        with patch.object(
+            provider.client, "get_user_by_username", new_callable=AsyncMock, side_effect=lambda *a, **kw: keycloak_user
+        ):
             user = await provider.get_user_by_id(get_user_id("alice"))
             assert user is not None
             assert user.username == "alice"
@@ -334,7 +342,9 @@ class TestKeycloakUserProvider:
     async def test_get_user_by_username(self, keycloak_config, keycloak_user):
         """Test getting user by username"""
         provider = KeycloakUserProvider(config=keycloak_config)
-        with patch.object(provider.client, "get_user_by_username", new_callable=AsyncMock, return_value=keycloak_user):
+        with patch.object(
+            provider.client, "get_user_by_username", new_callable=AsyncMock, side_effect=lambda *a, **kw: keycloak_user
+        ):
             user = await provider.get_user_by_username("alice")
             assert user is not None
             assert user.username == "alice"
@@ -347,7 +357,7 @@ class TestKeycloakUserProvider:
     async def test_get_user_by_username_not_found(self, keycloak_config):
         """Test getting non-existent user"""
         provider = KeycloakUserProvider(config=keycloak_config)
-        with patch.object(provider.client, "get_user_by_username", new_callable=AsyncMock, return_value=None):
+        with patch.object(provider.client, "get_user_by_username", new_callable=AsyncMock, side_effect=lambda *a, **kw: None):
             user = await provider.get_user_by_username("nonexistent")
             assert user is None
 
@@ -366,7 +376,7 @@ class TestKeycloakUserProvider:
         """Test successful token verification"""
         provider = KeycloakUserProvider(config=keycloak_config)
         payload = {"sub": "user-id-123", "preferred_username": "alice", "email": "alice@acme.com"}
-        with patch.object(provider.client, "verify_token", return_value=payload):
+        with patch.object(provider.client, "verify_token", side_effect=lambda *a, **kw: payload):
             result = await provider.verify_token("valid-token")
             assert result.valid is True
             assert result.payload == payload
@@ -385,7 +395,7 @@ class TestKeycloakUserProvider:
         """Test successful token refresh"""
         provider = KeycloakUserProvider(config=keycloak_config)
         new_tokens = {"access_token": "new-access-token", "refresh_token": "new-refresh-token", "expires_in": 300}
-        with patch.object(provider.client, "refresh_token", return_value=new_tokens):
+        with patch.object(provider.client, "refresh_token", side_effect=lambda *a, **kw: new_tokens):
             result = await provider.refresh_token("old-refresh-token")
             assert result["success"] is True
             assert result["tokens"] == new_tokens

@@ -1,17 +1,56 @@
 /**
  * NetworkTab Tests - react-table + auto-tail
+ *
+ * Uses fireEvent instead of userEvent to avoid indefinite hangs caused by
+ * userEvent v14's async event dispatch waiting for React Router 6.4+
+ * concurrent transitions (via RouterProvider) that never settle in jsdom.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, cleanup } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
 import { NetworkTab } from "./NetworkTab";
 import type { NetworkEntry } from "../types";
 
-import { TestProvider } from "@/test-utils";
+import { TestProvider, filterMotionProps } from "@/test-utils";
 
 expect.extend(toHaveNoViolations);
+
+// Mock motion/react to prevent requestAnimationFrame hangs in jsdom.
+// motion.button elements set up animations via rAF which never resolves in jsdom.
+vi.mock("motion/react", () => ({
+  motion: {
+    button: ({
+      children,
+      ...props
+    }: React.ComponentProps<"button"> & Record<string, unknown>) => (
+      <button {...filterMotionProps(props)}>{children}</button>
+    ),
+    div: ({
+      children,
+      ...props
+    }: React.ComponentProps<"div"> & Record<string, unknown>) => (
+      <div {...filterMotionProps(props)}>{children}</div>
+    ),
+  },
+  useReducedMotion: () => false,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+}));
+
+// Mock micro-interactions since it exports motion Variants that require real motion/react
+vi.mock("@/design-system/micro-interactions", () => ({
+  buttonVariants: {},
+}));
+
+// Mock useDebouncedValue to return value synchronously.
+// The real implementation uses setTimeout(150ms) which creates pending macrotasks
+// that interact poorly with jsdom's event loop in the fork pool.
+vi.mock("../utils/performance", () => ({
+  useDebouncedValue: (value: unknown) => value,
+  useStableCallback: (callback: unknown) => callback,
+}));
 
 // =============================================================================
 // Mocks
@@ -137,50 +176,45 @@ describe("NetworkTab (react-table)", () => {
     expect(screen.getByTestId("network-empty")).toBeInTheDocument();
   });
 
-  it("filters between API and MCP entries", async () => {
-    const user = userEvent.setup();
+  it("filters between API and MCP entries", () => {
     render(
       <TestProvider>
         <NetworkTab showMCPCalls />
       </TestProvider>,
     );
 
-    await user.click(screen.getByTestId("filter-mcp"));
+    fireEvent.click(screen.getByTestId("filter-mcp"));
     expect(screen.getAllByTestId(/^network-entry-/)).toHaveLength(1);
     expect(screen.getByTestId("network-entry-req-3")).toBeInTheDocument();
   });
 
-  it("opens request details when a row is selected", async () => {
-    const user = userEvent.setup();
+  it("opens request details when a row is selected", () => {
     render(
       <TestProvider>
         <NetworkTab />
       </TestProvider>,
     );
 
-    await user.click(screen.getByTestId("network-entry-req-1"));
+    fireEvent.click(screen.getByTestId("network-entry-req-1"));
     expect(screen.getByTestId("request-details-req-1")).toBeInTheDocument();
   });
 
-  it("searches by URL with debounce", async () => {
-    const user = userEvent.setup();
+  it("searches by URL with debounce", () => {
     render(
       <TestProvider>
         <NetworkTab />
       </TestProvider>,
     );
 
-    await user.type(screen.getByTestId("network-search"), "messages");
-    await waitFor(() => {
-      expect(screen.getByTestId("network-entry-req-2")).toBeInTheDocument();
-      expect(
-        screen.queryByTestId("network-entry-req-1"),
-      ).not.toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("network-search"), {
+      target: { value: "messages" },
     });
+    // useDebouncedValue is mocked to return synchronously, so filtering is immediate
+    expect(screen.getByTestId("network-entry-req-2")).toBeInTheDocument();
+    expect(screen.queryByTestId("network-entry-req-1")).not.toBeInTheDocument();
   });
 
-  it("toggles auto-tail via the down arrow control", async () => {
-    const user = userEvent.setup();
+  it("toggles auto-tail via the down arrow control", () => {
     render(
       <TestProvider>
         <NetworkTab />
@@ -189,12 +223,11 @@ describe("NetworkTab (react-table)", () => {
 
     const toggle = screen.getByTestId("network-auto-tail");
     expect(toggle).toHaveAttribute("aria-pressed", "true");
-    await user.click(toggle);
+    fireEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("invokes recording toggle and clear controls", async () => {
-    const user = userEvent.setup();
+  it("invokes recording toggle and clear controls", () => {
     const mockToggle = vi.fn();
     const mockClear = vi.fn();
     mockUseNetworkEntries.mockReturnValue({
@@ -210,8 +243,8 @@ describe("NetworkTab (react-table)", () => {
       </TestProvider>,
     );
 
-    await user.click(screen.getByTestId("recording-toggle"));
-    await user.click(screen.getByTestId("clear-network-button"));
+    fireEvent.click(screen.getByTestId("recording-toggle"));
+    fireEvent.click(screen.getByTestId("clear-network-button"));
 
     expect(mockToggle).toHaveBeenCalled();
     expect(mockClear).toHaveBeenCalled();

@@ -114,7 +114,7 @@ class TestVectorProviderFactorySettings:
         with patch("mcp_server_langgraph.core.config.settings", mock_settings):
             with patch(
                 "mcp_server_langgraph.storage.vectors.factory.get_database_pool",
-                return_value=mock_pool,
+                side_effect=lambda *a, **kw: mock_pool,
             ):
                 provider = get_vector_provider_from_settings()
                 assert isinstance(provider, PgVectorProvider)
@@ -141,7 +141,7 @@ class TestVectorProviderFactorySettings:
         with patch("mcp_server_langgraph.core.config.settings", mock_settings):
             with patch(
                 "mcp_server_langgraph.storage.vectors.factory.get_qdrant_client",
-                return_value=mock_client,
+                side_effect=lambda *a, **kw: mock_client,
             ):
                 provider = get_vector_provider_from_settings()
                 assert isinstance(provider, QdrantVectorProvider)
@@ -180,7 +180,7 @@ class TestEmbeddingServiceSettings:
         with patch.dict("os.environ", {}, clear=False):
             with patch(
                 "mcp_server_langgraph.llm.embeddings._has_litellm_embedding_config",
-                return_value=False,
+                side_effect=lambda *a, **kw: False,
             ):
                 service = get_embedding_service()
                 assert isinstance(service, InMemoryEmbeddingService)

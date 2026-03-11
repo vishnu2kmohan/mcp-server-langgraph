@@ -489,7 +489,8 @@ describe("useOfflineQueue", () => {
     it("should merge payloads when resolved with merge", async () => {
       const serverData = { serverField: "server-value", sharedField: "server" };
 
-      mockAuthenticatedFetch.mockResolvedValue({
+      mockAuthenticatedFetch.mockReset();
+      mockAuthenticatedFetch.mockResolvedValueOnce({
         ok: false,
         status: 409,
         json: () => Promise.resolve(serverData),

@@ -40,6 +40,11 @@ def check_file(file_path: Path) -> list[tuple[int, str]]:
     excluded_files = [
         "test_pytest_xdist_environment_pollution.py",  # TDD RED tests showing pollution
         "test_environment_isolation_enforcement.py",  # Meta-test documenting patterns
+        # LGTM observability integration tests (xdist_group-isolated, real infrastructure URLs)
+        "test_heart_metrics_prometheus.py",  # Sets PROMETHEUS_URL for real Mimir
+        "test_loki_data_flow.py",  # Sets LOKI_URL for real Loki
+        "test_otel_tempo_data_flow.py",  # Sets TEMPO_URL for real Tempo
+        "test_tempo_session_traces.py",  # Sets TEMPO_URL for real Tempo
     ]
     if file_path.name in excluded_files:
         return violations

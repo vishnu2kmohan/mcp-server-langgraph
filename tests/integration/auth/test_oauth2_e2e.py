@@ -216,6 +216,7 @@ def api_session():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_o_auth2_login_flow_e2_e")
 class TestOAuth2LoginFlowE2E:
     """E2E tests for OAuth2 Authorization Code + PKCE login flow."""
 
@@ -311,6 +312,7 @@ class TestOAuth2LoginFlowE2E:
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_token_refresh_with_rotation_e2_e")
 class TestTokenRefreshWithRotationE2E:
     """E2E tests for token refresh with rotation (security hardening)."""
 
@@ -404,6 +406,7 @@ class TestTokenRefreshWithRotationE2E:
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_token_introspection_e2_e")
 class TestTokenIntrospectionE2E:
     """E2E tests for Token Introspection endpoint (RFC 7662)."""
 
@@ -489,6 +492,7 @@ class TestTokenIntrospectionE2E:
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_pushed_authorization_requests_e2_e")
 class TestPushedAuthorizationRequestsE2E:
     """E2E tests for Pushed Authorization Requests (PAR) - RFC 9126."""
 
@@ -590,6 +594,7 @@ class TestPushedAuthorizationRequestsE2E:
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_backchannel_logout_e2_e")
 class TestBackchannelLogoutE2E:
     """E2E tests for OIDC Backchannel Logout."""
 
@@ -671,6 +676,7 @@ def _security_headers_middleware_enabled() -> bool:
         return False
 
 
+@pytest.mark.xdist_group("test_security_headers_e2_e")
 class TestSecurityHeadersE2E:
     """E2E tests for security headers on auth endpoints.
 
@@ -770,6 +776,7 @@ class TestSecurityHeadersE2E:
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_full_authentication_flow_e2_e")
 class TestFullAuthenticationFlowE2E:
     """E2E tests for complete authentication workflow."""
 
@@ -863,6 +870,7 @@ class TestFullAuthenticationFlowE2E:
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_device_authorization_grant_e2_e")
 class TestDeviceAuthorizationGrantE2E:
     """E2E tests for Device Authorization Grant (RFC 8628)."""
 
@@ -930,6 +938,7 @@ class TestDeviceAuthorizationGrantE2E:
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_web_socket_permissions_e2_e")
 class TestWebSocketPermissionsE2E:
     """
     E2E tests for WebSocket permissions in /api/v1/me endpoint.

@@ -106,7 +106,7 @@ class TestSemanticBootstrapInitialization:
         mock_settings.auth_cache_warm_entries = []
 
         mock_manager = AsyncMock(return_value=None)
-        mock_manager.ensure_collection = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(side_effect=lambda *a, **kw: None)
         mock_qdrant = AsyncMock(return_value=None)
         mock_embedder = MagicMock()
 
@@ -114,15 +114,15 @@ class TestSemanticBootstrapInitialization:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "qdrant_client.AsyncQdrantClient",
-                return_value=mock_qdrant,
+                side_effect=lambda *a, **kw: mock_qdrant,
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager",
@@ -163,7 +163,7 @@ class TestSemanticBootstrapSingletonWiring:
         mock_settings.auth_cache_warm_entries = []
 
         mock_manager = AsyncMock(return_value=None)
-        mock_manager.ensure_collection = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(side_effect=lambda *a, **kw: None)
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
@@ -175,7 +175,7 @@ class TestSemanticBootstrapSingletonWiring:
             ),
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch("mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager") as mock_setter,
         ):
@@ -215,7 +215,7 @@ class TestSemanticBootstrapCacheWarming:
         ]
 
         mock_manager = AsyncMock(return_value=None)
-        mock_manager.warm_cache = AsyncMock(return_value=1)
+        mock_manager.warm_cache = AsyncMock(side_effect=lambda *a, **kw: 1)
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
@@ -227,7 +227,7 @@ class TestSemanticBootstrapCacheWarming:
             ),
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch("mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager"),
         ):
@@ -256,7 +256,7 @@ class TestSemanticBootstrapCacheWarming:
         mock_settings.auth_cache_warm_entries = []  # Empty
 
         mock_manager = AsyncMock(return_value=None)
-        mock_manager.warm_cache = AsyncMock(return_value=0)
+        mock_manager.warm_cache = AsyncMock(side_effect=lambda *a, **kw: 0)
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
@@ -268,7 +268,7 @@ class TestSemanticBootstrapCacheWarming:
             ),
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch("mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager"),
         ):
@@ -346,8 +346,8 @@ class TestSemanticBootstrapSplit:
         mock_settings.auth_cache_warm_entries = []
 
         mock_manager = AsyncMock()  # noqa: async-mock-config
-        mock_manager.ensure_collection = AsyncMock(return_value=None)
-        mock_manager.index_tools_batch = AsyncMock(return_value=None)
+        mock_manager.ensure_collection = AsyncMock(side_effect=lambda *a, **kw: None)
+        mock_manager.index_tools_batch = AsyncMock(side_effect=lambda *a, **kw: None)
 
         with (
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
@@ -359,7 +359,7 @@ class TestSemanticBootstrapSplit:
             ),
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.SemanticIndexManager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch("mcp_server_langgraph.bootstrap.semantic.set_semantic_index_manager"),
         ):
@@ -383,7 +383,7 @@ class TestSemanticBootstrapSplit:
         from mcp_server_langgraph.tools.unified_registry import RegisteredTool
 
         mock_manager = AsyncMock()  # noqa: async-mock-config
-        mock_manager.index_tools_batch = AsyncMock(return_value=None)
+        mock_manager.index_tools_batch = AsyncMock(side_effect=lambda *a, **kw: None)
 
         mock_tool = MagicMock()
         mock_tool.name = "test_tool"
@@ -408,11 +408,11 @@ class TestSemanticBootstrapSplit:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_registry,
+                side_effect=lambda: mock_registry,
             ),
         ):
             mock_ff.enable_semantic_tool_search = True
@@ -430,7 +430,7 @@ class TestSemanticBootstrapSplit:
         from mcp_server_langgraph.tools.unified_registry import RegisteredTool
 
         mock_manager = AsyncMock()  # noqa: async-mock-config
-        mock_manager.index_tools_batch = AsyncMock(return_value=None)
+        mock_manager.index_tools_batch = AsyncMock(side_effect=lambda *a, **kw: None)
 
         # Native tool (should be skipped)
         native_reg = RegisteredTool(
@@ -451,11 +451,11 @@ class TestSemanticBootstrapSplit:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_registry,
+                side_effect=lambda: mock_registry,
             ),
         ):
             mock_ff.enable_semantic_tool_search = True
@@ -496,11 +496,11 @@ class TestSemanticBootstrapSplit:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_registry,
+                side_effect=lambda: mock_registry,
             ),
         ):
             mock_ff.enable_semantic_tool_search = True
@@ -536,11 +536,11 @@ class TestSemanticBootstrapSplit:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_registry,
+                side_effect=lambda: mock_registry,
             ),
         ):
             mock_ff.enable_semantic_tool_search = True
@@ -557,7 +557,7 @@ class TestSemanticBootstrapSplit:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=None,
+                side_effect=lambda: None,
             ),
         ):
             mock_ff.enable_semantic_tool_search = True

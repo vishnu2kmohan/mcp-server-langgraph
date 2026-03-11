@@ -49,7 +49,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             result = await service._create_completion_via_litellm(
@@ -88,7 +88,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -118,7 +118,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             result = await service._create_completion_via_litellm(
@@ -149,7 +149,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -182,9 +182,9 @@ class TestChatCostTracking:
 
         with (
             patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch.object(service, "_get_current_trace_id", return_value="trace-abc123def456"),
+            patch.object(service, "_get_current_trace_id", side_effect=lambda *a, **kw: "trace-abc123def456"),
         ):
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             result = await service._create_completion_via_litellm(
@@ -215,7 +215,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -248,7 +248,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -281,7 +281,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -315,7 +315,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -349,7 +349,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(
@@ -383,7 +383,7 @@ class TestChatCostTracking:
         service = ChatServiceImpl()
 
         with patch("mcp_server_langgraph.api.v1.chat.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            mock_acompletion.return_value = mock_response
+            mock_acompletion.side_effect = lambda *a, **kw: mock_response
 
             messages = [{"role": "user", "content": "Hello"}]
             await service._create_completion_via_litellm(

@@ -77,6 +77,9 @@ describe("MCP Module Exports", () => {
         "LazyToolExplorer",
         "LazyResourceBrowser",
         "LazyPromptLibrary",
+        // Inbound JSON-RPC components (MCP 2025-11-25 server-initiated requests)
+        "LazyInboundElicitationModal",
+        "LazyInboundSamplingModal",
       ];
 
       for (const name of expectedExports) {
@@ -84,11 +87,11 @@ describe("MCP Module Exports", () => {
       }
     });
 
-    it("should have stable public API with 10 lazy exports", () => {
-      // Note: Type-only exports (10) don't appear at runtime
-      // Only the 10 lazy component exports are counted
+    it("should have stable public API with 12 lazy exports", () => {
+      // Note: Type-only exports (12) don't appear at runtime
+      // Only the 12 lazy component exports are counted
       const exportCount = Object.keys(mcpModule).length;
-      expect(exportCount).toBe(10);
+      expect(exportCount).toBe(12);
     });
   });
 });

@@ -13,7 +13,7 @@ contentType: "reference"
 Connection Templates provide pre-configured settings for connecting to popular MCP servers. Templates reduce setup time by providing default URLs, OAuth2 scopes, and configuration fields for each service.
 
 <Info>
-Connection templates are read-only. To create an actual connection from a template, use the [Connections API](/api-reference/connections) with the template's pre-filled values.
+Connection templates are read-only. To create an actual connection from a template, call `POST /api/v1/connections` with the template's pre-filled values.
 </Info>
 
 ```mermaid
@@ -411,5 +411,5 @@ HTTP Status: 422
 
 ## Related APIs
 
-- [Connections API](/api-reference/connections) - Create and manage actual connections
+- `POST /api/v1/connections` - Create and manage actual connections
 - [MCP Endpoints](/api-reference/mcp-endpoints) - Model Context Protocol operations

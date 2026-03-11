@@ -38,6 +38,12 @@ class TestStudioResourceHandlerNaming:
         assert hasattr(handler, "register_template")
         assert hasattr(handler, "register_provider")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestStudioURIScheme:
     """Verify all templates use studio:// URI scheme."""
@@ -90,6 +96,12 @@ class TestStudioURIScheme:
         assert alerts is not None, "Expected an alerts template to be registered"
         assert alerts.uriTemplate == "studio://session/{session_id}/alerts"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestStudioResourceProviders:
     """Verify resource providers correctly parse studio:// URIs."""
@@ -138,6 +150,12 @@ class TestStudioResourceProviders:
         assert result.mimeType == "application/json"
         assert "test-session-abc" in result.text
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestNoPlaygroundReferences:
     """Verify no playground:// references remain."""
@@ -168,3 +186,9 @@ class TestNoPlaygroundReferences:
             result = await provider(uri)
             # If parsing is correct, session_id should be "my-session"
             assert "my-session" in result.text, f"Provider {provider.__name__} failed to parse session_id from {uri}"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

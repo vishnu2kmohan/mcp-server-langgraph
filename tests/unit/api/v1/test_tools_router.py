@@ -233,11 +233,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -263,11 +263,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -298,11 +298,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -332,11 +332,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools?source=builtin")
@@ -360,11 +360,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools?source=mcp")
@@ -388,11 +388,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools?search=search")
@@ -419,11 +419,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools?category=search")
@@ -447,11 +447,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -487,11 +487,11 @@ class TestListUnifiedToolsEndpoint:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -529,11 +529,11 @@ class TestToolsCategoryMapping:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=calculator_tools,
+                side_effect=lambda *a, **kw: calculator_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             mock_cached_registry.get_tools = AsyncMock(return_value=[])
@@ -564,11 +564,11 @@ class TestToolsCategoryMapping:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=search_tools,
+                side_effect=lambda *a, **kw: search_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             mock_cached_registry.get_tools = AsyncMock(return_value=[])
@@ -599,11 +599,11 @@ class TestToolsCategoryMapping:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=fs_tools,
+                side_effect=lambda *a, **kw: fs_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             mock_cached_registry.get_tools = AsyncMock(return_value=[])
@@ -643,11 +643,11 @@ class TestToolsSandboxFlag:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=sandbox_tools,
+                side_effect=lambda *a, **kw: sandbox_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             mock_cached_registry.get_tools = AsyncMock(return_value=[])
@@ -671,11 +671,11 @@ class TestToolsSandboxFlag:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             mock_cached_registry.get_tools = AsyncMock(return_value=[])
@@ -713,11 +713,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -748,11 +748,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -775,11 +775,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
@@ -812,11 +812,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
@@ -843,11 +843,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
@@ -875,11 +875,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_flags,
         ):
@@ -907,11 +907,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=mock_builtin_tools,
+                side_effect=lambda *a, **kw: mock_builtin_tools,
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             mock_cached_registry.get_tools = AsyncMock(return_value=[])
@@ -938,11 +938,11 @@ class TestNativeToolsIntegration:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_all_tools",
-                return_value=[],
+                side_effect=lambda *a, **kw: [],
             ),
             patch(
                 "mcp_server_langgraph.mcp.client.cached_unified_registry.get_cached_unified_registry",
-                return_value=mock_cached_registry,
+                side_effect=lambda *a, **kw: mock_cached_registry,
             ),
         ):
             response = client.get("/api/v1/tools")
@@ -1025,7 +1025,7 @@ class TestNativeCapabilitiesEndpoint:
         )
 
         with (
-            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch.object(ModelRegistry, "get", side_effect=lambda model_id: mock_caps),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
@@ -1069,7 +1069,7 @@ class TestNativeCapabilitiesEndpoint:
         )
 
         with (
-            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch.object(ModelRegistry, "get", side_effect=lambda model_id: mock_caps),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
@@ -1107,7 +1107,7 @@ class TestNativeCapabilitiesEndpoint:
         )
 
         with (
-            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch.object(ModelRegistry, "get", side_effect=lambda model_id: mock_caps),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
@@ -1146,7 +1146,7 @@ class TestNativeCapabilitiesEndpoint:
         )
 
         with (
-            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch.object(ModelRegistry, "get", side_effect=lambda model_id: mock_caps),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
@@ -1179,7 +1179,7 @@ class TestNativeCapabilitiesEndpoint:
         )
 
         with (
-            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch.object(ModelRegistry, "get", side_effect=lambda model_id: mock_caps),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             # Master switch is OFF
@@ -1216,7 +1216,7 @@ class TestNativeCapabilitiesEndpoint:
         )
 
         with (
-            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch.object(ModelRegistry, "get", side_effect=lambda model_id: mock_caps),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = True
@@ -1258,7 +1258,7 @@ class TestNativeCapabilitiesEndpoint:
         mock_caps = self._make_caps()
 
         with (
-            patch.object(ModelRegistry, "get", return_value=mock_caps),
+            patch.object(ModelRegistry, "get", side_effect=lambda model_id: mock_caps),
             patch("mcp_server_langgraph.api.v1.tools.feature_flags") as mock_ff,
         ):
             mock_ff.native_tools_enabled = False
@@ -1268,3 +1268,9 @@ class TestNativeCapabilitiesEndpoint:
             data = response.json()
 
             assert data["model_id"] == "vertex_ai/claude-3-opus"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

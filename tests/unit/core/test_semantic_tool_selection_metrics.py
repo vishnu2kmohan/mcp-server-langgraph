@@ -108,7 +108,7 @@ class TestSearchToolsMetricsIntegration:
         )
 
         with (
-            patch.object(manager, "_check_authorization", return_value=True),
+            patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True),
             patch("mcp_server_langgraph.core.semantic_index_manager.emit_tool_search_metric") as mock_emit,
         ):
             await manager.search_tools(
@@ -158,7 +158,7 @@ class TestSearchToolsMetricsIntegration:
         manager._query_cache[cache_key] = [cached_entry]
 
         with (
-            patch.object(manager, "_check_authorization", return_value=True),
+            patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True),
             patch("mcp_server_langgraph.core.semantic_index_manager.emit_cache_hit_metric") as mock_emit,
         ):
             await manager.search_tools(

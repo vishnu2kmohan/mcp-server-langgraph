@@ -113,6 +113,7 @@ EXEMPT_FILES = [
     "test_session_data_model.py",  # Tests Pydantic model validation - pure data model tests
     "test_security_utils.py",  # Tests sanitize_for_logging() - pure function input/output
     # E2E journey tests that test OpenFGA authorization (uses seeded model with fixed user IDs)
+    "test_openfga_real_infrastructure.py",  # Real OpenFGA integration tests (IDs match sample-tuples.json)
     "test_keycloak_openfga_auth_flow.py",  # OpenFGA authorization model validation (user:admin, user:alice, etc)
     "test_openfga_seeding_flow.py",  # OpenFGA model seeding validation (tests seeded user tuples)
     "test_unified_api_authorization.py",  # Integration tests for OpenFGA unified API authorization

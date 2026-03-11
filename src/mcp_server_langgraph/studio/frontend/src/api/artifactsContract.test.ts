@@ -51,43 +51,44 @@ afterAll(() => server.close());
 // =============================================================================
 
 /**
- * Type guard for CanvasArtifact
+ * Type guard for CanvasArtifact (snake_case from API via apiJsonResponse transform)
  */
 function isCanvasArtifact(obj: unknown): obj is CanvasArtifact {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
+  // apiJsonResponse transforms camelCase to snake_case
   return (
     typeof o.id === "string" &&
-    typeof o.sessionId === "string" &&
+    typeof o.session_id === "string" &&
     typeof o.version === "number" &&
     typeof o.content === "string" &&
-    typeof o.contentType === "string" &&
+    typeof o.content_type === "string" &&
     ["code", "markdown", "json", "jsx", "mermaid", "html"].includes(
-      o.contentType as string,
+      o.content_type as string,
     ) &&
-    typeof o.createdAt === "string" &&
-    typeof o.updatedAt === "string"
+    typeof o.created_at === "string" &&
+    typeof o.updated_at === "string"
   );
 }
 
 /**
- * Type guard for ArtifactVersion
+ * Type guard for ArtifactVersion (snake_case from API via apiJsonResponse transform)
  */
 function isArtifactVersion(obj: unknown): obj is ArtifactVersion {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return (
     typeof o.id === "string" &&
-    typeof o.artifactId === "string" &&
+    typeof o.artifact_id === "string" &&
     typeof o.version === "number" &&
     typeof o.content === "string" &&
-    typeof o.contentType === "string" &&
-    typeof o.createdAt === "string"
+    typeof o.content_type === "string" &&
+    typeof o.created_at === "string"
   );
 }
 
 /**
- * Type guard for CreateArtifactResponse
+ * Type guard for CreateArtifactResponse (snake_case from API via apiJsonResponse transform)
  */
 function isCreateArtifactResponse(obj: unknown): obj is CreateArtifactResponse {
   if (typeof obj !== "object" || obj === null) return false;
@@ -95,12 +96,12 @@ function isCreateArtifactResponse(obj: unknown): obj is CreateArtifactResponse {
   return (
     typeof o.id === "string" &&
     typeof o.version === "number" &&
-    typeof o.createdAt === "string"
+    typeof o.created_at === "string"
   );
 }
 
 /**
- * Type guard for UpdateArtifactResponse
+ * Type guard for UpdateArtifactResponse (snake_case from API via apiJsonResponse transform)
  */
 function isUpdateArtifactResponse(obj: unknown): obj is UpdateArtifactResponse {
   if (typeof obj !== "object" || obj === null) return false;
@@ -108,25 +109,25 @@ function isUpdateArtifactResponse(obj: unknown): obj is UpdateArtifactResponse {
   return (
     typeof o.id === "string" &&
     typeof o.version === "number" &&
-    typeof o.updatedAt === "string"
+    typeof o.updated_at === "string"
   );
 }
 
 /**
- * Type guard for ForkArtifactResponse
+ * Type guard for ForkArtifactResponse (snake_case from API via apiJsonResponse transform)
  */
 function isForkArtifactResponse(obj: unknown): obj is ForkArtifactResponse {
   if (typeof obj !== "object" || obj === null) return false;
   const o = obj as Record<string, unknown>;
   return (
     typeof o.id === "string" &&
-    typeof o.parentId === "string" &&
+    typeof o.parent_id === "string" &&
     typeof o.version === "number"
   );
 }
 
 /**
- * Type guard for ListArtifactsResponse
+ * Type guard for ListArtifactsResponse (snake_case from API via apiJsonResponse transform)
  */
 function isListArtifactsResponse(obj: unknown): obj is ListArtifactsResponse {
   if (typeof obj !== "object" || obj === null) return false;
@@ -135,7 +136,7 @@ function isListArtifactsResponse(obj: unknown): obj is ListArtifactsResponse {
     Array.isArray(o.items) &&
     o.items.every(isCanvasArtifact) &&
     (o.cursor === null || typeof o.cursor === "string") &&
-    typeof o.hasMore === "boolean"
+    typeof o.has_more === "boolean"
   );
 }
 
@@ -190,20 +191,20 @@ describe("Artifacts API Contract Tests", () => {
       }
     });
 
-    it("should include pagination fields", async () => {
+    it("should include pagination fields (snake_case from API)", async () => {
       const response = await fetch("/api/v1/artifacts?limit=10");
       const data = await response.json();
       expect("cursor" in data).toBe(true);
-      expect("hasMore" in data).toBe(true);
+      expect("has_more" in data).toBe(true);
     });
 
     it("should handle empty results", async () => {
       const response = await fetch(
         "/api/v1/artifacts?session_id=nonexistent-session",
       );
-      const data: ListArtifactsResponse = await response.json();
+      const data = await response.json();
       expect(data.items).toHaveLength(0);
-      expect(data.hasMore).toBe(false);
+      expect(data.has_more).toBe(false);
     });
   });
 
@@ -214,16 +215,16 @@ describe("Artifacts API Contract Tests", () => {
       expect(isCanvasArtifact(data)).toBe(true);
     });
 
-    it("should include required CanvasArtifact fields", async () => {
+    it("should include required CanvasArtifact fields (snake_case from API)", async () => {
       const response = await fetch("/api/v1/artifacts/art-1");
-      const data: CanvasArtifact = await response.json();
+      const data = await response.json();
       expect(data.id).toBe("art-1");
-      expect(data.sessionId).toBeDefined();
+      expect(data.session_id).toBeDefined();
       expect(data.version).toBeGreaterThanOrEqual(1);
       expect(data.content).toBeDefined();
-      expect(data.contentType).toBeDefined();
-      expect(data.createdAt).toBeDefined();
-      expect(data.updatedAt).toBeDefined();
+      expect(data.content_type).toBeDefined();
+      expect(data.created_at).toBeDefined();
+      expect(data.updated_at).toBeDefined();
     });
 
     it("should return 404 for non-existent artifact", async () => {
@@ -267,10 +268,10 @@ describe("Artifacts API Contract Tests", () => {
         body: JSON.stringify(request),
       });
 
-      const data: CreateArtifactResponse = await response.json();
+      const data = await response.json();
       expect(typeof data.id).toBe("string");
       expect(data.version).toBe(1);
-      expect(typeof data.createdAt).toBe("string");
+      expect(typeof data.created_at).toBe("string");
     });
   });
 
@@ -303,9 +304,9 @@ describe("Artifacts API Contract Tests", () => {
         body: JSON.stringify(request),
       });
 
-      const data: UpdateArtifactResponse = await response.json();
+      const data = await response.json();
       expect(data.version).toBeGreaterThan(0);
-      expect(typeof data.updatedAt).toBe("string");
+      expect(typeof data.updated_at).toBe("string");
     });
 
     it("should return 404 for non-existent artifact", async () => {
@@ -341,15 +342,15 @@ describe("Artifacts API Contract Tests", () => {
       }
     });
 
-    it("should include version metadata", async () => {
+    it("should include version metadata (snake_case from API)", async () => {
       const response = await fetch("/api/v1/artifacts/art-1/versions");
-      const versions: ArtifactVersion[] = await response.json();
+      const versions = await response.json();
       if (versions.length > 0) {
         const version = versions[0];
-        expect(version.artifactId).toBe("art-1");
+        expect(version.artifact_id).toBe("art-1");
         expect(typeof version.version).toBe("number");
         expect(typeof version.content).toBe("string");
-        expect(typeof version.createdAt).toBe("string");
+        expect(typeof version.created_at).toBe("string");
       }
     });
 
@@ -376,7 +377,7 @@ describe("Artifacts API Contract Tests", () => {
       expect(isForkArtifactResponse(data)).toBe(true);
     });
 
-    it("should return new id with parentId reference", async () => {
+    it("should return new id with parent_id reference (snake_case from API)", async () => {
       const request: ForkArtifactRequest = {};
 
       const response = await fetch("/api/v1/artifacts/art-1/fork", {
@@ -385,9 +386,9 @@ describe("Artifacts API Contract Tests", () => {
         body: JSON.stringify(request),
       });
 
-      const data: ForkArtifactResponse = await response.json();
+      const data = await response.json();
       expect(typeof data.id).toBe("string");
-      expect(data.parentId).toBe("art-1");
+      expect(data.parent_id).toBe("art-1");
       expect(data.version).toBe(1);
     });
 
@@ -513,28 +514,29 @@ describe("Artifacts API RTK Query Hooks Contract", () => {
     expect(params.session_id).toBe("session-1");
   });
 
-  it("should define expected response type for createArtifact", () => {
-    const response: CreateArtifactResponse = {
+  it("should define expected response type for createArtifact (snake_case from API)", () => {
+    // API returns snake_case keys
+    const response = {
       id: "art-123",
       version: 1,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     };
     expect(isCreateArtifactResponse(response)).toBe(true);
   });
 
-  it("should define expected response type for updateArtifact", () => {
-    const response: UpdateArtifactResponse = {
+  it("should define expected response type for updateArtifact (snake_case from API)", () => {
+    const response = {
       id: "art-123",
       version: 2,
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     expect(isUpdateArtifactResponse(response)).toBe(true);
   });
 
-  it("should define expected response type for forkArtifact", () => {
-    const response: ForkArtifactResponse = {
+  it("should define expected response type for forkArtifact (snake_case from API)", () => {
+    const response = {
       id: "art-456",
-      parentId: "art-123",
+      parent_id: "art-123",
       version: 1,
     };
     expect(isForkArtifactResponse(response)).toBe(true);

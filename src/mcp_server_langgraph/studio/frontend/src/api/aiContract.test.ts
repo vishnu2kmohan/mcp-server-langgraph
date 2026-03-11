@@ -57,7 +57,7 @@ describe("AI API Contract", () => {
 
         expect(response.status).toBe(400);
         const data = await response.json();
-        expect(data).toHaveProperty("error");
+        expect(data).toHaveProperty("detail");
       });
     });
 
@@ -141,7 +141,7 @@ describe("AI API Contract", () => {
 
         expect(response.status).toBe(400);
         const data = await response.json();
-        expect(data).toHaveProperty("error");
+        expect(data).toHaveProperty("detail");
       });
     });
 
@@ -271,7 +271,7 @@ describe("AI API Contract", () => {
         expect(data.url).toBe(inputUrl);
       });
 
-      it("returns fetchedAt field (required, ISO 8601 date string)", async () => {
+      it("returns fetched_at field (required, ISO 8601 date string, snake_case from API)", async () => {
         const response = await fetch("/api/v1/ai/fetch-url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -279,16 +279,16 @@ describe("AI API Contract", () => {
         });
 
         const data = await response.json();
-        expect(typeof data.fetchedAt).toBe("string");
+        expect(typeof data.fetched_at).toBe("string");
         // Validate ISO 8601 format
-        expect(() => new Date(data.fetchedAt)).not.toThrow();
-        expect(new Date(data.fetchedAt).toISOString()).toBe(data.fetchedAt);
+        expect(() => new Date(data.fetched_at)).not.toThrow();
+        expect(new Date(data.fetched_at).toISOString()).toBe(data.fetched_at);
       });
     });
   });
 
   describe("Error Response Contract", () => {
-    it("400 errors return error field with message", async () => {
+    it("400 errors return detail field with message (apiErrorResponse format)", async () => {
       const response = await fetch("/api/v1/ai/interpret-command", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -297,11 +297,11 @@ describe("AI API Contract", () => {
 
       expect(response.status).toBe(400);
       const data = await response.json();
-      expect(typeof data.error).toBe("string");
-      expect(data.error.length).toBeGreaterThan(0);
+      expect(typeof data.detail).toBe("string");
+      expect(data.detail.length).toBeGreaterThan(0);
     });
 
-    it("422 errors return error field with message", async () => {
+    it("422 errors return detail field with message (apiErrorResponse format)", async () => {
       const response = await fetch("/api/v1/ai/fetch-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -310,7 +310,7 @@ describe("AI API Contract", () => {
 
       expect(response.status).toBe(422);
       const data = await response.json();
-      expect(typeof data.error).toBe("string");
+      expect(typeof data.detail).toBe("string");
     });
   });
 });

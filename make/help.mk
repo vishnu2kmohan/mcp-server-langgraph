@@ -65,7 +65,7 @@ help:
 	@echo "  make test-fast        All tests without coverage"
 	@echo "  make test-integration Integration tests in Docker"
 	@echo "  make test-frontend    Frontend tests (sharded, parallel)"
-	@echo "  make test-frontend-fast  Frontend tests (fast, 75 shards)"
+	@echo "  make test-frontend-fast  Frontend tests (fast, 110 shards)"
 	@echo "  make test-frontend-ci Frontend tests in CI mode (50 shards)"
 	@echo "  make test-frontend-scripts  Run shell tests for sharded runner"
 	@echo ""

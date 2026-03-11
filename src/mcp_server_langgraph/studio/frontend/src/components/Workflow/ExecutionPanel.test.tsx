@@ -260,25 +260,25 @@ describe("ExecutionPanel", () => {
     it("should apply correct styling for idle state", () => {
       renderWithProviders("idle");
       const badge = screen.getByText("idle");
-      expect(badge.className).toContain("bg-gray");
+      expect(badge.className).toContain("bg-neutral-2");
     });
 
     it("should apply correct styling for running state", () => {
       renderWithProviders("running");
       const badge = screen.getByText("running");
-      expect(badge.className).toContain("bg-blue");
+      expect(badge.className).toContain("bg-primary-3");
     });
 
     it("should apply correct styling for completed state", () => {
       renderWithProviders("completed");
       const badge = screen.getByText("completed");
-      expect(badge.className).toContain("bg-green");
+      expect(badge.className).toContain("bg-success-3");
     });
 
     it("should apply correct styling for error state", () => {
       renderWithProviders("error");
       const badge = screen.getByText("error");
-      expect(badge.className).toContain("bg-red");
+      expect(badge.className).toContain("bg-error-3");
     });
   });
 
@@ -385,7 +385,7 @@ describe("ExecutionPanel", () => {
       const badge = container.querySelector(
         '[data-testid="node-status-node-1"]',
       );
-      expect(badge?.className).toContain("bg-blue");
+      expect(badge?.className).toContain("bg-primary-3");
     });
 
     it("should show correct badge color for success node", () => {
@@ -401,7 +401,7 @@ describe("ExecutionPanel", () => {
       const badge = container.querySelector(
         '[data-testid="node-status-node-1"]',
       );
-      expect(badge?.className).toContain("bg-green");
+      expect(badge?.className).toContain("bg-success-3");
     });
 
     it("should show correct badge color for error node", () => {
@@ -417,7 +417,7 @@ describe("ExecutionPanel", () => {
       const badge = container.querySelector(
         '[data-testid="node-status-node-1"]',
       );
-      expect(badge?.className).toContain("bg-red");
+      expect(badge?.className).toContain("bg-error-3");
     });
   });
 

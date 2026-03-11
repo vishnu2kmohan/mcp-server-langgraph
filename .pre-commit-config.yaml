@@ -57,7 +57,7 @@ repos:
     name: MyPy Type Checking (Blocking)
     # Uses dmypy daemon locally for incremental checking (~1-3s warm vs ~10-30s cold)
     # Falls back to standard mypy in CI (daemon doesn't persist across CI jobs)
-    entry: bash scripts/hooks/dmypy_check.sh
+    entry: bash scripts/hooks/dmypy_check.sh src/mcp_server_langgraph
     language: system
     types: [python]
     pass_filenames: false
@@ -477,9 +477,15 @@ repos:
       fi &&
       REPO_ROOT=$(git rev-parse --show-toplevel) &&
       FRONTEND_DIR="src/mcp_server_langgraph/studio/frontend/src" &&
+      run_sharded() { bash "$REPO_ROOT/src/mcp_server_langgraph/studio/frontend/scripts/run-tests-sharded.sh" --parallel; } &&
+      if [ "${FORCE_FRONTEND_TESTS:-}" = "1" ]; then
+        echo "FORCE_FRONTEND_TESTS=1, running full sharded suite" &&
+        run_sharded;
+        exit $?;
+      fi &&
       if ! CHANGED=$(cd "$REPO_ROOT" && git diff --name-only @{push}.. -- "$FRONTEND_DIR/" 2>/dev/null); then
         echo "No upstream tracking branch (first push?), running full test suite" &&
-        bash "$REPO_ROOT/src/mcp_server_langgraph/studio/frontend/scripts/run-tests-sharded.sh" --parallel;
+        run_sharded;
         exit $?;
       fi &&
       CONFIG_CHANGED=$(cd "$REPO_ROOT" && git diff --name-only @{push}.. -- \
@@ -491,12 +497,21 @@ repos:
         src/mcp_server_langgraph/studio/frontend/src/test/ \
         2>/dev/null || true) &&
       if [ -z "$CHANGED" ] && [ -z "$CONFIG_CHANGED" ]; then
-        echo "No frontend changes, skipping tests"; exit 0;
+        PUSH_REF=$(cd "$REPO_ROOT" && git rev-parse --short @{push} 2>/dev/null || echo "unknown") &&
+        echo "" &&
+        echo "WARNING: No frontend changes detected between @{push} ($PUSH_REF) and HEAD." &&
+        echo "  This may happen when:" &&
+        echo "    - Running hooks manually (not during git push)" &&
+        echo "    - Frontend changes are staged but not yet committed" &&
+        echo "    - Branch is already pushed to remote" &&
+        echo "  To force full test suite: FORCE_FRONTEND_TESTS=1 pre-commit run frontend-test --hook-stage pre-push" &&
+        echo "" &&
+        exit 0;
       fi &&
       FILE_COUNT=$(echo "$CHANGED" | wc -l) &&
       if [ -n "$CONFIG_CHANGED" ] || [ "$FILE_COUNT" -gt 10 ]; then
         echo "Config files changed or many files touched ($FILE_COUNT), running full sharded suite" &&
-        bash "$REPO_ROOT/src/mcp_server_langgraph/studio/frontend/scripts/run-tests-sharded.sh" --parallel;
+        run_sharded;
       else
         echo "Running related tests for $FILE_COUNT changed file(s)..." &&
         npx vitest run --related $CHANGED;
@@ -512,10 +527,13 @@ repos:
       Added 2025-12-14 to catch test failures before CI.
       Updated 2026-03-06: Uses vitest --related for small changesets (<= 10 files),
       falls back to full sharded suite for config changes or many files.
+      Updated 2026-03-09: Warns instead of silently skipping when no changes detected.
+      Added FORCE_FRONTEND_TESTS=1 override for manual invocation.
 
       Duration: ~5-10s for --related, ~20-30s for full suite.
 
       Complements TypeScript checking with behavioral validation.
+      Override: FORCE_FRONTEND_TESTS=1 pre-commit run frontend-test --hook-stage pre-push
 
       '
   - id: frontend-test-cleanup-validation

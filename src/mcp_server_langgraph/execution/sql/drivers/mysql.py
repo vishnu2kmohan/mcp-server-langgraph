@@ -28,7 +28,7 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import aiomysql  # type: ignore[import-not-found,import-untyped]
+    import aiomysql  # type: ignore[import-not-found]
 
     _HAS_MYSQL = True
 except ImportError:
@@ -107,7 +107,7 @@ class MySQLDriver(DatabaseDriver):
                     if not isinstance(thread_id, int):
                         logger.warning("Invalid thread_id type: %s", type(thread_id))  # type: ignore[unreachable]
                         return False
-                    await cursor.execute(f"KILL QUERY {int(thread_id)}")
+                    await cursor.execute(f"KILL QUERY {int(thread_id)}")  # nosemgrep: sqlalchemy-execute-raw-query
                 logger.info("Killed MySQL query on thread_id %d", thread_id)
                 return True
             finally:

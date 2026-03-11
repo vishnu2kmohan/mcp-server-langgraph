@@ -28,6 +28,12 @@ class TestGraphBuilderImports:
 
         assert AgentConfig is not None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestGraphTopologyWithConfig:

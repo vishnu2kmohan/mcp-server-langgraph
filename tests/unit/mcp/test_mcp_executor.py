@@ -38,15 +38,15 @@ class TestMCPExecutor:
         registry = MCPToolRegistry()
 
         # Create mock session that will be returned by _create_session
-        mock_session = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
         mock_session.is_connected = True
-        mock_session.list_tools.return_value = [
+        mock_session.list_tools.side_effect = lambda *a, **kw: [
             {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
         ]
-        mock_session.call_tool.return_value = {"success": True, "image": "base64..."}
+        mock_session.call_tool.side_effect = lambda *a, **kw: {"success": True, "image": "base64..."}
 
         # Patch the _create_session method to return our mock
-        with patch.object(registry, "_create_session", return_value=mock_session):
+        with patch.object(registry, "_create_session", side_effect=lambda *a, **kw: mock_session):
             await registry.register_server(MCPServerConfig(name="playwright", command="npx", args=["playwright"]))
 
         executor = MCPExecutor(registry)
@@ -94,9 +94,9 @@ class TestMCPExecutor:
         registry = MCPToolRegistry()
 
         # Create mock that takes too long
-        mock_session = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
         mock_session.is_connected = True
-        mock_session.list_tools.return_value = [
+        mock_session.list_tools.side_effect = lambda *a, **kw: [
             {"name": "slow_tool", "description": "Slow", "inputSchema": {}},
         ]
 
@@ -106,7 +106,7 @@ class TestMCPExecutor:
 
         mock_session.call_tool.side_effect = slow_call
 
-        with patch.object(registry, "_create_session", return_value=mock_session):
+        with patch.object(registry, "_create_session", side_effect=lambda *a, **kw: mock_session):
             await registry.register_server(MCPServerConfig(name="slow", command="slow", timeout=0.1))
 
         executor = MCPExecutor(registry)
@@ -136,9 +136,9 @@ class TestMCPExecutor:
         # Track call order
         call_order: list[str] = []
 
-        mock_session = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
         mock_session.is_connected = True
-        mock_session.list_tools.return_value = [
+        mock_session.list_tools.side_effect = lambda *a, **kw: [
             {"name": "tool_a", "description": "A", "inputSchema": {}},
             {"name": "tool_b", "description": "B", "inputSchema": {}},
         ]
@@ -151,7 +151,7 @@ class TestMCPExecutor:
 
         mock_session.call_tool.side_effect = tracked_call
 
-        with patch.object(registry, "_create_session", return_value=mock_session):
+        with patch.object(registry, "_create_session", side_effect=lambda *a, **kw: mock_session):
             await registry.register_server(MCPServerConfig(name="server", command="cmd"))
 
         executor = MCPExecutor(registry)
@@ -182,9 +182,9 @@ class TestMCPExecutor:
 
         registry = MCPToolRegistry()
 
-        mock_session = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
         mock_session.is_connected = True
-        mock_session.list_tools.return_value = [
+        mock_session.list_tools.side_effect = lambda *a, **kw: [
             {"name": "good_tool", "description": "Works", "inputSchema": {}},
             {"name": "bad_tool", "description": "Fails", "inputSchema": {}},
         ]
@@ -196,7 +196,7 @@ class TestMCPExecutor:
 
         mock_session.call_tool.side_effect = mixed_call
 
-        with patch.object(registry, "_create_session", return_value=mock_session):
+        with patch.object(registry, "_create_session", side_effect=lambda *a, **kw: mock_session):
             await registry.register_server(MCPServerConfig(name="server", command="cmd"))
 
         executor = MCPExecutor(registry)
@@ -231,11 +231,11 @@ class TestMCPExecutor:
         registry = MCPToolRegistry()
 
         # Session that starts disconnected
-        mock_session = AsyncMock(return_value=None)
-        mock_session.list_tools.return_value = [
+        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session.list_tools.side_effect = lambda *a, **kw: [
             {"name": "tool", "description": "Tool", "inputSchema": {}},
         ]
-        mock_session.call_tool.return_value = {"result": "ok"}
+        mock_session.call_tool.side_effect = lambda *a, **kw: {"result": "ok"}
 
         # Track connection state
         connected = False
@@ -252,7 +252,7 @@ class TestMCPExecutor:
 
         mock_session.connect = connect
 
-        with patch.object(registry, "_create_session", return_value=mock_session):
+        with patch.object(registry, "_create_session", side_effect=lambda *a, **kw: mock_session):
             await registry.register_server(MCPServerConfig(name="server", command="cmd"))
 
         # Manually disconnect

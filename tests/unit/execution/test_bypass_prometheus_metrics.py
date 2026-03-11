@@ -36,6 +36,12 @@ class TestBypassModeActivationMetrics:
         # Should not raise even if metrics unavailable
         record_bypass_activation(user="alice")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestBypassApprovalMetrics:
@@ -76,6 +82,12 @@ class TestBypassApprovalMetrics:
             complexity="complex",
         )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestToolEscalationMetrics:
@@ -102,6 +114,12 @@ class TestToolEscalationMetrics:
         record_tool_escalation(tool="execute_python", from_level="low", to_level="medium")
         record_tool_escalation(tool="edit_file", from_level="low", to_level="medium")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestPermissionCheckMetrics:
@@ -122,6 +140,12 @@ class TestPermissionCheckMetrics:
         )
 
         record_permission_check(result="denied")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -153,6 +177,12 @@ class TestCostEstimationMetrics:
                 risk_level="low",
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestModeChangeMetrics:
@@ -181,6 +211,12 @@ class TestModeChangeMetrics:
             to_mode="plan",
             trigger="click",
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -211,3 +247,9 @@ class TestActiveSessionsMetrics:
         )
 
         decrement_active_session(mode="bypass")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

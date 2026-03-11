@@ -11,7 +11,9 @@ These tests verify that:
 Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 """
 
+import asyncio
 import gc
+from contextlib import contextmanager
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -20,6 +22,69 @@ import pytest
 from mcp_server_langgraph.llm.factory import LLMFactory
 
 pytestmark = pytest.mark.unit
+
+
+def _get_unwrapped_ainvoke():
+    """Walk the __wrapped__ chain on LLMFactory.ainvoke to get the original method.
+
+    LLMFactory.ainvoke is wrapped by 4 decorators applied at class definition:
+      @circuit_breaker  ->  @retry_with_backoff  ->  @with_timeout  ->  @with_bulkhead
+    Each uses functools.wraps, so __wrapped__ chains to the original.
+
+    Under xdist, these decorators hold references to module-level singletons
+    (circuit breaker state, bulkhead semaphores) that get contaminated by other
+    workers, causing RetryExhaustedError. Bypassing them entirely is the most
+    reliable fix.
+    """
+    func = LLMFactory.ainvoke
+    while hasattr(func, "__wrapped__"):
+        func = func.__wrapped__
+    return func
+
+
+# Cache once at import time so every test uses the same reference.
+_UNWRAPPED_AINVOKE = _get_unwrapped_ainvoke()
+
+
+@contextmanager
+def _patch_resilience_components():
+    """Patch rate limit, adaptive bulkhead, AND bypass resilience decorators.
+
+    Under xdist the four resilience decorators on ainvoke (circuit_breaker,
+    retry_with_backoff, with_timeout, with_bulkhead) hold references to
+    module-level singletons that get contaminated by other workers.  The
+    retry decorator then retries 3x on any failure and throws
+    RetryExhaustedError.
+
+    This context manager:
+    1. Patches the rate-limit token bucket and adaptive bulkhead called
+       *inside* the ainvoke body.
+    2. Replaces LLMFactory.ainvoke with the unwrapped original so the four
+       decorator layers are skipped entirely.
+    """
+    mock_rate_bucket = AsyncMock()  # noqa: async-mock-config - configured below
+    mock_rate_bucket.acquire = AsyncMock(return_value=None)
+    mock_rate_bucket.tokens = 100
+
+    mock_bulkhead = MagicMock()
+    mock_bulkhead.current_limit = 10
+    mock_bulkhead.get_error_rate = MagicMock(return_value=0.0)
+    mock_bulkhead.get_semaphore = MagicMock(return_value=asyncio.Semaphore(10))
+    mock_bulkhead.record_success = MagicMock()
+    mock_bulkhead.record_error = MagicMock()
+
+    with (
+        patch(
+            "mcp_server_langgraph.llm.factory.get_provider_token_bucket",
+            side_effect=lambda *a, **kw: mock_rate_bucket,
+        ),
+        patch(
+            "mcp_server_langgraph.llm.factory.get_provider_adaptive_bulkhead",
+            side_effect=lambda *a, **kw: mock_bulkhead,
+        ),
+        patch.object(LLMFactory, "ainvoke", _UNWRAPPED_AINVOKE),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -100,17 +165,22 @@ class TestLLMFactoryCostRecording:
             api_key="test-key",
         )
 
+        mock_collector = AsyncMock(return_value=None)
+        mock_collector.record_usage = AsyncMock(return_value=None)
+
         with (
-            patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch("mcp_server_langgraph.llm.factory.get_cost_collector") as mock_get_collector,
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                new_callable=AsyncMock,
+                side_effect=lambda *a, **kw: mock_acompletion_response,
+            ) as _mock_acompletion,
+            patch("mcp_server_langgraph.llm.factory.get_cost_collector", side_effect=lambda: mock_collector),
             patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
+            _patch_resilience_components(),
         ):
-            mock_acompletion.return_value = mock_acompletion_response
-            mock_collector = AsyncMock(return_value=None)
-            mock_collector.record_usage = AsyncMock(return_value=None)
-            mock_get_collector.return_value = mock_collector
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
+            mock_flags.use_responses_api_for_openai = False
 
             # Call ainvoke
             await factory.ainvoke(
@@ -144,21 +214,26 @@ class TestLLMFactoryCostRecording:
             api_key="test-key",
         )
 
-        with (
-            patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch("mcp_server_langgraph.llm.factory.get_cost_collector") as mock_get_collector,
-            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
-        ):
-            # Custom token counts
-            mock_acompletion_response.usage.prompt_tokens = 500
-            mock_acompletion_response.usage.completion_tokens = 250
-            mock_acompletion.return_value = mock_acompletion_response
+        # Custom token counts
+        mock_acompletion_response.usage.prompt_tokens = 500
+        mock_acompletion_response.usage.completion_tokens = 250
 
-            mock_collector = AsyncMock(return_value=None)
-            mock_collector.record_usage = AsyncMock(return_value=None)
-            mock_get_collector.return_value = mock_collector
+        mock_collector = AsyncMock(return_value=None)
+        mock_collector.record_usage = AsyncMock(return_value=None)
+
+        with (
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                new_callable=AsyncMock,
+                side_effect=lambda *a, **kw: mock_acompletion_response,
+            ) as _mock_acompletion,
+            patch("mcp_server_langgraph.llm.factory.get_cost_collector", side_effect=lambda: mock_collector),
+            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
+            _patch_resilience_components(),
+        ):
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
+            mock_flags.use_responses_api_for_openai = False
 
             await factory.ainvoke(
                 messages=[{"role": "user", "content": "Test"}],
@@ -186,19 +261,23 @@ class TestLLMFactoryCostRecording:
             api_key="test-key",
         )
 
-        with (
-            patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch("mcp_server_langgraph.llm.factory.get_cost_collector") as mock_get_collector,
-            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
-        ):
-            mock_acompletion.return_value = mock_acompletion_response
+        # Make cost recording fail
+        mock_collector = AsyncMock(return_value=None)
+        mock_collector.record_usage = AsyncMock(side_effect=Exception("Database error"))
 
-            # Make cost recording fail
-            mock_collector = AsyncMock(return_value=None)
-            mock_collector.record_usage = AsyncMock(side_effect=Exception("Database error"))
-            mock_get_collector.return_value = mock_collector
+        with (
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                new_callable=AsyncMock,
+                side_effect=lambda *a, **kw: mock_acompletion_response,
+            ),
+            patch("mcp_server_langgraph.llm.factory.get_cost_collector", side_effect=lambda: mock_collector),
+            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
+            _patch_resilience_components(),
+        ):
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
+            mock_flags.use_responses_api_for_openai = False
 
             # Call should still succeed
             result = await factory.ainvoke(
@@ -223,19 +302,23 @@ class TestLLMFactoryCostRecording:
             api_key="test-key",
         )
 
-        with (
-            patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch("mcp_server_langgraph.llm.factory.get_cost_collector") as mock_get_collector,
-            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
-        ):
-            mock_acompletion.return_value = mock_acompletion_response
-            mock_collector = AsyncMock(return_value=None)
-            mock_collector.record_usage = AsyncMock(return_value=None)
-            mock_get_collector.return_value = mock_collector
+        mock_collector = AsyncMock(return_value=None)
+        mock_collector.record_usage = AsyncMock(return_value=None)
 
+        with (
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                new_callable=AsyncMock,
+                side_effect=lambda *a, **kw: mock_acompletion_response,
+            ),
+            patch("mcp_server_langgraph.llm.factory.get_cost_collector", side_effect=lambda: mock_collector),
+            patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
+            _patch_resilience_components(),
+        ):
             # Disable cost tracking
             mock_flags.enable_cost_tracking = False
             mock_flags.enable_llm_hooks = False
+            mock_flags.use_responses_api_for_openai = False
 
             await factory.ainvoke(
                 messages=[{"role": "user", "content": "Hello"}],
@@ -259,17 +342,22 @@ class TestLLMFactoryCostRecording:
             api_key="test-key",
         )
 
+        mock_collector = AsyncMock(return_value=None)
+        mock_collector.record_usage = AsyncMock(return_value=None)
+
         with (
-            patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion,
-            patch("mcp_server_langgraph.llm.factory.get_cost_collector") as mock_get_collector,
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                new_callable=AsyncMock,
+                side_effect=lambda *a, **kw: mock_acompletion_response,
+            ),
+            patch("mcp_server_langgraph.llm.factory.get_cost_collector", side_effect=lambda: mock_collector),
             patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
+            _patch_resilience_components(),
         ):
-            mock_acompletion.return_value = mock_acompletion_response
-            mock_collector = AsyncMock(return_value=None)
-            mock_collector.record_usage = AsyncMock(return_value=None)
-            mock_get_collector.return_value = mock_collector
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
+            mock_flags.use_responses_api_for_openai = False
 
             await factory.ainvoke(
                 messages=[{"role": "user", "content": "Hello"}],
@@ -342,6 +430,7 @@ class TestLLMFactoryCostRecordingResponsesAPI:
             patch.object(factory, "_call_responses_api", new_callable=AsyncMock) as mock_responses,
             patch("mcp_server_langgraph.llm.factory.get_cost_collector") as mock_get_collector,
             patch("mcp_server_langgraph.llm.factory.feature_flags") as mock_flags,
+            _patch_resilience_components(),
         ):
             from types import SimpleNamespace
 
@@ -353,7 +442,7 @@ class TestLLMFactoryCostRecordingResponsesAPI:
 
             mock_collector = AsyncMock(return_value=None)
             mock_collector.record_usage = AsyncMock(return_value=None)
-            mock_get_collector.return_value = mock_collector
+            mock_get_collector.side_effect = lambda: mock_collector
             mock_flags.enable_cost_tracking = True
             mock_flags.enable_llm_hooks = False
             mock_flags.use_responses_api_for_openai = True

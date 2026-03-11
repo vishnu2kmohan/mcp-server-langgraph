@@ -51,10 +51,10 @@ from mcp_server_langgraph.sdk.hooks import HookResult as SDKHookResult
 
 # Module-level metrics (to avoid duplicate registration)
 _hook_metrics_initialized = False
-_hook_executions_counter = None
-_hook_duration_histogram = None
-_hook_denials_counter = None
-_hook_timeouts_counter = None
+_hook_executions_counter: Any = None
+_hook_duration_histogram: Any = None
+_hook_denials_counter: Any = None
+_hook_timeouts_counter: Any = None
 
 
 def _init_hook_metrics() -> None:

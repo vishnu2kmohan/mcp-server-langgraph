@@ -385,7 +385,8 @@ describe("App - Features - Integration", () => {
 
       const rootElement = container.querySelector(".min-h-screen");
       expect(rootElement).toHaveClass("bg-neutral-1");
-      expect(rootElement).toHaveClass();
+      // Semantic neutral classes adapt to dark mode via CSS variables
+      expect(rootElement).toHaveClass("min-h-screen");
     });
   });
 

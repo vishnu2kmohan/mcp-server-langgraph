@@ -118,6 +118,12 @@ class TestGetPreferences:
         # Should get 401 or 403
         assert response.status_code in [401, 403, 500]  # 500 if dep raises
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # ==============================================================================
 # PATCH /preferences Tests
@@ -218,6 +224,12 @@ class TestUpdatePreferences:
         assert data["default_temperature"] == 0.5
         assert data["default_max_tokens"] == 2048
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # ==============================================================================
 # DELETE /preferences Tests
@@ -255,6 +267,12 @@ class TestResetPreferences:
         data = response.json()
         assert data["theme"] == "system"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # ==============================================================================
 # Validation Tests
@@ -291,3 +309,9 @@ class TestPreferencesValidation:
 
         response = client.patch("/api/v1/preferences", json={"font_size": "large"})
         assert response.status_code == 200
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

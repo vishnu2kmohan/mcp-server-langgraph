@@ -48,6 +48,15 @@ def mock_openfga_client() -> AsyncMock:
 class TestCacheWarmingMethod:
     """Tests for cache warming method existence and behavior."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_otel(self):
+        """Isolate OTEL instruments from global state contamination in xdist workers."""
+        with (
+            patch("mcp_server_langgraph.core.semantic_index_manager.logger", MagicMock()),
+            patch("mcp_server_langgraph.core.semantic_index_manager.tracer", MagicMock()),
+        ):
+            yield
+
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -88,7 +97,7 @@ class TestCacheWarmingMethod:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             warmed_count = await manager.warm_cache(entries_to_warm)
 
@@ -124,7 +133,7 @@ class TestCacheWarmingMethod:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga,
+            side_effect=lambda *a, **kw: mock_openfga,
         ):
             warmed_count = await manager.warm_cache(entries_to_warm)
 
@@ -137,6 +146,15 @@ class TestCacheWarmingMethod:
 @pytest.mark.xdist_group(name="semantic_index_cache_warming")
 class TestCacheWarmingWithDistributedCache:
     """Tests for cache warming with distributed (Redis) cache."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_otel(self):
+        """Isolate OTEL instruments from global state contamination in xdist workers."""
+        with (
+            patch("mcp_server_langgraph.core.semantic_index_manager.logger", MagicMock()),
+            patch("mcp_server_langgraph.core.semantic_index_manager.tracer", MagicMock()),
+        ):
+            yield
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
@@ -168,7 +186,7 @@ class TestCacheWarmingWithDistributedCache:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             await manager.warm_cache(entries_to_warm)
 
@@ -179,6 +197,15 @@ class TestCacheWarmingWithDistributedCache:
 @pytest.mark.xdist_group(name="semantic_index_cache_warming")
 class TestCacheWarmingStatistics:
     """Tests for cache warming statistics."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_otel(self):
+        """Isolate OTEL instruments from global state contamination in xdist workers."""
+        with (
+            patch("mcp_server_langgraph.core.semantic_index_manager.logger", MagicMock()),
+            patch("mcp_server_langgraph.core.semantic_index_manager.tracer", MagicMock()),
+        ):
+            yield
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
@@ -208,7 +235,7 @@ class TestCacheWarmingStatistics:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             warmed_count = await manager.warm_cache(entries_to_warm)
 
@@ -258,7 +285,7 @@ class TestCacheWarmingStatistics:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga,
+            side_effect=lambda *a, **kw: mock_openfga,
         ):
             warmed_count = await manager.warm_cache(entries_to_warm)
 

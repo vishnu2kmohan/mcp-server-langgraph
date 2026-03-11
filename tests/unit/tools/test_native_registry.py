@@ -46,6 +46,12 @@ class TestNativeToolDef:
         assert defn.description == "Search the web using Anthropic's native tool"
         assert defn.fallback_builtin == "web_search"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestNativeTools:
     """Tests for NATIVE_TOOLS registry."""
@@ -90,6 +96,12 @@ class TestNativeTools:
         assert defn.provider == "anthropic"
         assert defn.fallback_builtin == "execute_python"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestBuiltinToNative:
     """Tests for BUILTIN_TO_NATIVE mapping."""
@@ -99,6 +111,12 @@ class TestBuiltinToNative:
         from mcp_server_langgraph.tools.native_registry import BUILTIN_TO_NATIVE
 
         assert BUILTIN_TO_NATIVE.get("execute_python") == "code_execution"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestGetNativeForBuiltin:
@@ -135,3 +153,9 @@ class TestGetNativeForBuiltin:
 
         defn = get_native_for_builtin("web_search", "unknown_provider")
         assert defn is None
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

@@ -36,19 +36,22 @@ const mockTemplates = [
   },
 ];
 
-vi.mock("../api", () => ({
-  useGetWorkflowTemplatesQuery: vi.fn(() => ({
-    data: mockTemplates,
-    isLoading: false,
-    error: null,
-  })),
-  api: {
-    reducerPath: "api",
-    reducer: (state = {}) => state,
-    middleware: (getDefault: () => unknown[]) => getDefault(),
-  },
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetWorkflowTemplatesQuery: vi.fn(() => ({
+      data: mockTemplates,
+      isLoading: false,
+      error: null,
+    })),
+    api: {
+      reducerPath: "api",
+      reducer: (state = {}) => state,
+      middleware: (getDefault: () => unknown[]) => getDefault(),
+    },
+  };
+});
 // Import after mock
 import { useSlashCommands } from "./useSlashCommands";
 

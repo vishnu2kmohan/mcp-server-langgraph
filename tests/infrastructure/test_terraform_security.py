@@ -6,7 +6,7 @@ Tests validate that Terraform modules follow security best practices:
 - Purge protection enabled by default
 - Network access restrictions
 - Deletion protection for state storage
-- Secure defaults that pass Checkov compliance scans
+- Secure defaults that pass Trivy IaC compliance scans
 
 TDD Approach:
 - RED: Tests fail initially (secure defaults not implemented)
@@ -380,11 +380,26 @@ class TestTrivyTerraformCompliance:
 
     This test runs actual Trivy config scans to ensure all security controls pass.
     Replaces Checkov with Trivy to consolidate on a single IaC scanning tool.
+    Uses terraform/.trivyignore for accepted risks (documented inline).
     """
+
+    TRIVYIGNORE = "terraform/.trivyignore"
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
+
+    def _trivy_cmd(self, target: str) -> str:
+        """Build trivy command with ignorefile if present."""
+        ignore = f" --ignorefile {self.TRIVYIGNORE}" if Path(self.TRIVYIGNORE).exists() else ""
+        return f"trivy config {target} --severity CRITICAL,HIGH --exit-code 1 --quiet{ignore}"
+
+    def test_trivyignore_file_exists_with_documented_risks(self):
+        """terraform/.trivyignore must exist with documented accepted risks."""
+        path = Path(self.TRIVYIGNORE)
+        assert path.exists(), f"{self.TRIVYIGNORE} not found — create it to document accepted IaC risks"
+        content = path.read_text()
+        assert "AVD-" in content, ".trivyignore should contain AVD- rule IDs"
 
     @pytest.mark.skipif(os.system("which trivy > /dev/null 2>&1") != 0, reason="Trivy not installed (brew install trivy)")
     def test_trivy_azure_secrets_compliance(self):
@@ -393,7 +408,7 @@ class TestTrivyTerraformCompliance:
 
         Scans for CRITICAL and HIGH severity Terraform misconfigurations.
         """
-        result = os.system("trivy config terraform/modules/azure-secrets --severity CRITICAL,HIGH --exit-code 1 --quiet")
+        result = os.system(self._trivy_cmd("terraform/modules/azure-secrets"))
 
         assert result == 0, (
             "Trivy scan failed for Azure secrets module. Run 'trivy config terraform/modules/azure-secrets' for details."
@@ -409,7 +424,7 @@ class TestTrivyTerraformCompliance:
         if not Path("terraform/modules/aws-secrets").exists():
             pytest.skip("AWS secrets module not present")
 
-        result = os.system("trivy config terraform/modules/aws-secrets --severity CRITICAL,HIGH --exit-code 1 --quiet")
+        result = os.system(self._trivy_cmd("terraform/modules/aws-secrets"))
 
         assert result == 0, (
             "Trivy scan failed for AWS secrets module. Run 'trivy config terraform/modules/aws-secrets' for details."
@@ -425,7 +440,7 @@ class TestTrivyTerraformCompliance:
         if not Path("terraform/backend-setup").exists():
             pytest.skip("Backend setup not present")
 
-        result = os.system("trivy config terraform/backend-setup --severity CRITICAL,HIGH --exit-code 1 --quiet")
+        result = os.system(self._trivy_cmd("terraform/backend-setup"))
 
         assert result == 0, "Trivy scan failed for backend setup. Run 'trivy config terraform/backend-setup' for details."
 

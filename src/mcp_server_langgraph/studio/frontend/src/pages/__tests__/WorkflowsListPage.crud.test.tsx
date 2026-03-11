@@ -16,16 +16,19 @@ const mockDeleteWorkflowMutation = vi.hoisted(() => vi.fn());
 const mockNavigate = vi.hoisted(() => vi.fn());
 
 // Mock RTK Query hooks
-vi.mock("../../api", () => ({
-  useListWorkflowsQuery: () => mockListWorkflowsQuery(),
-  useDeleteWorkflowMutation: () => mockDeleteWorkflowMutation(),
-  // Required for AIEmptyState used in empty state
-  useGetEmptyStateSuggestionsMutation: () => [
-    vi.fn(),
-    { isLoading: false, data: null },
-  ],
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useListWorkflowsQuery: () => mockListWorkflowsQuery(),
+    useDeleteWorkflowMutation: () => mockDeleteWorkflowMutation(),
+    // Required for AIEmptyState used in empty state
+    useGetEmptyStateSuggestionsMutation: () => [
+      vi.fn(),
+      { isLoading: false, data: null },
+    ],
+  };
+});
 // Mock react-router navigate
 vi.mock("react-router", async () => {
   const actual = await vi.importActual("react-router");

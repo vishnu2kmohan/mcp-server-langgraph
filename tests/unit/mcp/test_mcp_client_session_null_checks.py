@@ -67,7 +67,9 @@ class TestMCPClientSessionNullChecks:
         # Patch methods on the class, not the instance
         with (
             patch.object(MCPClientSession, "_send_request_stdio", new_callable=AsyncMock),
-            patch.object(MCPClientSession, "_read_response_stdio", new_callable=AsyncMock, return_value=mock_response),
+            patch.object(
+                MCPClientSession, "_read_response_stdio", new_callable=AsyncMock, side_effect=lambda *a, **kw: mock_response
+            ),
         ):
             # Call _connect_stdio directly to bypass process spawning
             with pytest.raises(ConnectionError) as exc_info:
@@ -103,7 +105,7 @@ class TestMCPClientSessionNullChecks:
 
         with (
             patch.object(session, "_send_request_stdio", new_callable=AsyncMock),
-            patch.object(session, "_read_response_stdio", new_callable=AsyncMock, return_value=mock_response),
+            patch.object(session, "_read_response_stdio", new_callable=AsyncMock, side_effect=lambda *a, **kw: mock_response),
         ):
             with pytest.raises(ConnectionError) as exc_info:
                 await session._list_tools_stdio()
@@ -139,7 +141,7 @@ class TestMCPClientSessionNullChecks:
 
         with (
             patch.object(session, "_send_request_stdio", new_callable=AsyncMock),
-            patch.object(session, "_read_response_stdio", new_callable=AsyncMock, return_value=mock_response),
+            patch.object(session, "_read_response_stdio", new_callable=AsyncMock, side_effect=lambda *a, **kw: mock_response),
         ):
             with pytest.raises(ConnectionError) as exc_info:
                 await session._call_tool_stdio("test_tool", {"arg": "value"})
@@ -177,19 +179,19 @@ class TestMCPClientSessionNullChecksHTTP:
         mock_resp = MagicMock()
         mock_resp.status = 200
         mock_resp.headers = {}
-        mock_resp.json = AsyncMock(return_value={"jsonrpc": "2.0", "id": 1, "result": None})
+        mock_resp.json = AsyncMock(side_effect=lambda *a, **kw: {"jsonrpc": "2.0", "id": 1, "result": None})
 
         # Create async context manager mock
         mock_context = MagicMock()
-        mock_context.__aenter__ = AsyncMock(return_value=mock_resp)
-        mock_context.__aexit__ = AsyncMock(return_value=None)
+        mock_context.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_resp)
+        mock_context.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
         # Mock the HTTP client - must patch aiohttp.ClientSession since _connect_http creates its own
         mock_http_client = MagicMock()
-        mock_http_client.post = MagicMock(return_value=mock_context)
-        mock_http_client.close = AsyncMock(return_value=None)
+        mock_http_client.post = MagicMock(side_effect=lambda *a, **kw: mock_context)
+        mock_http_client.close = AsyncMock(side_effect=lambda *a, **kw: None)
 
-        with patch("aiohttp.ClientSession", return_value=mock_http_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_http_client):
             with pytest.raises(ConnectionError) as exc_info:
                 await session._connect_http()
 
@@ -216,14 +218,14 @@ class TestMCPClientSessionNullChecksHTTP:
         # Create mock HTTP response context manager
         mock_resp = MagicMock()
         mock_resp.status = 200
-        mock_resp.json = AsyncMock(return_value={"jsonrpc": "2.0", "id": 1, "result": None})
+        mock_resp.json = AsyncMock(side_effect=lambda *a, **kw: {"jsonrpc": "2.0", "id": 1, "result": None})
 
         mock_context = MagicMock()
-        mock_context.__aenter__ = AsyncMock(return_value=mock_resp)
-        mock_context.__aexit__ = AsyncMock(return_value=None)
+        mock_context.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_resp)
+        mock_context.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
         mock_http_client = MagicMock()
-        mock_http_client.post = MagicMock(return_value=mock_context)
+        mock_http_client.post = MagicMock(side_effect=lambda *a, **kw: mock_context)
 
         session._http_client = mock_http_client
 
@@ -253,14 +255,14 @@ class TestMCPClientSessionNullChecksHTTP:
         # Create mock HTTP response context manager
         mock_resp = MagicMock()
         mock_resp.status = 200
-        mock_resp.json = AsyncMock(return_value={"jsonrpc": "2.0", "id": 1, "result": None})
+        mock_resp.json = AsyncMock(side_effect=lambda *a, **kw: {"jsonrpc": "2.0", "id": 1, "result": None})
 
         mock_context = MagicMock()
-        mock_context.__aenter__ = AsyncMock(return_value=mock_resp)
-        mock_context.__aexit__ = AsyncMock(return_value=None)
+        mock_context.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_resp)
+        mock_context.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
         mock_http_client = MagicMock()
-        mock_http_client.post = MagicMock(return_value=mock_context)
+        mock_http_client.post = MagicMock(side_effect=lambda *a, **kw: mock_context)
 
         session._http_client = mock_http_client
 

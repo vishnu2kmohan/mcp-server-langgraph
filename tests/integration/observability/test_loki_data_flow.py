@@ -106,6 +106,7 @@ def unique_session_id() -> str:
     return f"{worker_prefix}_loki_{timestamp}_{unique_id}"
 
 
+@pytest.mark.xdist_group("test_loki_data_flow")
 class TestLokiDataFlow:
     """
     Data flow integration tests verifying OTEL → Loki → API pipeline.
@@ -251,6 +252,7 @@ class TestLokiDataFlow:
             await logging_client.close()
 
 
+@pytest.mark.xdist_group("test_loki_attribute_naming_conventions")
 class TestLokiAttributeNamingConventions:
     """
     Tests validating OTEL semantic attribute naming in log queries.

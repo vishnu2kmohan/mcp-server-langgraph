@@ -748,7 +748,7 @@ class TestRateLimiterFactory:
 
         with patch(
             "mcp_server_langgraph.core.feature_flags.get_feature_flags",
-            return_value=mock_ff,
+            side_effect=lambda *a, **kw: mock_ff,
         ):
             with patch(
                 "mcp_server_langgraph.core.config.settings",

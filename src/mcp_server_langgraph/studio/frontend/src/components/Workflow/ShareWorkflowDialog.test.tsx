@@ -44,34 +44,37 @@ const mockUpdatePublic = vi.fn(() => ({ unwrap: mockUpdatePublicUnwrap }));
 import * as apiModule from "../../api";
 
 // Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
-vi.mock("../../api", () => ({
-  useGetWorkflowSharesQuery: vi.fn(() => ({
-    data: {
-      shares: [
-        { userId: "user-1", email: "alice@example.com", permission: "edit" },
-        { userId: "user-2", email: "bob@example.com", permission: "view" },
-      ],
-      isPublic: false,
-      shareLink: null,
-    },
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  })),
-  useAddWorkflowShareMutation: vi.fn(() => [
-    mockAddShare,
-    { isLoading: false },
-  ]),
-  useRemoveWorkflowShareMutation: vi.fn(() => [
-    mockRemoveShare,
-    { isLoading: false },
-  ]),
-  useUpdateWorkflowPublicMutation: vi.fn(() => [
-    mockUpdatePublic,
-    { isLoading: false },
-  ]),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetWorkflowSharesQuery: vi.fn(() => ({
+      data: {
+        shares: [
+          { userId: "user-1", email: "alice@example.com", permission: "edit" },
+          { userId: "user-2", email: "bob@example.com", permission: "view" },
+        ],
+        isPublic: false,
+        shareLink: null,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    })),
+    useAddWorkflowShareMutation: vi.fn(() => [
+      mockAddShare,
+      { isLoading: false },
+    ]),
+    useRemoveWorkflowShareMutation: vi.fn(() => [
+      mockRemoveShare,
+      { isLoading: false },
+    ]),
+    useUpdateWorkflowPublicMutation: vi.fn(() => [
+      mockUpdatePublic,
+      { isLoading: false },
+    ]),
+  };
+});
 const mockedUseGetWorkflowSharesQuery = vi.mocked(
   apiModule.useGetWorkflowSharesQuery,
 );
@@ -235,11 +238,9 @@ describe("ShareWorkflowDialog", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      // Click on the backdrop
-      const backdrop = document.querySelector(".bg-neutral-12\\/50");
-      if (backdrop) {
-        fireEvent.click(backdrop);
-      }
+      // Click on the backdrop (uses data-testid="dialog-backdrop")
+      const backdrop = screen.getByTestId("dialog-backdrop");
+      fireEvent.click(backdrop);
 
       expect(mockOnClose).toHaveBeenCalled();
     });

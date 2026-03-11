@@ -21,17 +21,20 @@ import {
 } from "./FeatureFlagContext";
 
 // Mock the api module
-vi.mock("../api", () => ({
-  useGetFeatureFlagsQuery: vi.fn(),
-  api: {
-    reducerPath: "api",
-    reducer: () => ({}),
-    middleware:
-      () => (next: (action: unknown) => unknown) => (action: unknown) =>
-        next(action),
-  },
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetFeatureFlagsQuery: vi.fn(),
+    api: {
+      reducerPath: "api",
+      reducer: () => ({}),
+      middleware:
+        () => (next: (action: unknown) => unknown) => (action: unknown) =>
+          next(action),
+    },
+  };
+});
 import { useGetFeatureFlagsQuery } from "../api";
 import personaReducer, {
   initialState as personaInitialState,

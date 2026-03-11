@@ -15,6 +15,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
 
 import { api } from "../api";
+import { createInitialReconnectionMetrics } from "../types/websocket-metrics";
 
 // Mock the useRealtimeSync hook
 const mockUseRealtimeSync = vi.fn();
@@ -28,14 +29,20 @@ vi.mock("../store/hooks", () => ({
   useAppDispatch: () => vi.fn(),
 }));
 
-vi.mock("../store/slices/authSlice", () => ({
-  selectIsAuthenticated: () => true,
-}));
-
-vi.mock("../utils/storage", () => ({
-  getAuthToken: () => "test-token",
-}));
-
+vi.mock("../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../store/slices/authSlice");
+  return {
+    ...actual,
+    selectIsAuthenticated: () => true,
+  };
+});
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: () => "test-token",
+  };
+});
 // Import after mocking
 import { useMCPAggregatedUpdates } from "./useMCPAggregatedUpdates";
 
@@ -83,6 +90,8 @@ describe("useMCPAggregatedUpdates", () => {
           send: vi.fn(),
           disconnect: mockDisconnect,
           reconnect: mockReconnect,
+          metrics: createInitialReconnectionMetrics(),
+          resetMetrics: vi.fn(),
         };
       },
     );
@@ -102,6 +111,8 @@ describe("useMCPAggregatedUpdates", () => {
         send: vi.fn(),
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
+        metrics: createInitialReconnectionMetrics(),
+        resetMetrics: vi.fn(),
       });
 
       const { result } = renderHook(() => useMCPAggregatedUpdates(), {
@@ -117,6 +128,8 @@ describe("useMCPAggregatedUpdates", () => {
         send: vi.fn(),
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
+        metrics: createInitialReconnectionMetrics(),
+        resetMetrics: vi.fn(),
       });
 
       const { result } = renderHook(() => useMCPAggregatedUpdates(), {
@@ -132,6 +145,8 @@ describe("useMCPAggregatedUpdates", () => {
         send: vi.fn(),
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
+        metrics: createInitialReconnectionMetrics(),
+        resetMetrics: vi.fn(),
       });
 
       const { result } = renderHook(() => useMCPAggregatedUpdates(), {
@@ -149,6 +164,8 @@ describe("useMCPAggregatedUpdates", () => {
         send: vi.fn(),
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
+        metrics: createInitialReconnectionMetrics(),
+        resetMetrics: vi.fn(),
       });
 
       const { result } = renderHook(() => useMCPAggregatedUpdates(), {
@@ -286,6 +303,8 @@ describe("useMCPAggregatedUpdates", () => {
         send: vi.fn(),
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
+        metrics: createInitialReconnectionMetrics(),
+        resetMetrics: vi.fn(),
       });
 
       const { result } = renderHook(

@@ -126,7 +126,7 @@ describe("HTMLArtifact", () => {
 
       const iframe = screen.getByTestId("html-iframe");
       // Bokeh requires scripts to run
-      const _sandbox = iframe.getAttribute("sandbox");
+      const sandbox = iframe.getAttribute("sandbox");
       expect(sandbox).toContain("allow-scripts");
     });
 
@@ -162,7 +162,7 @@ describe("HTMLArtifact", () => {
       );
 
       const iframe = screen.getByTestId("html-iframe");
-      const _sandbox = iframe.getAttribute("sandbox");
+      const sandbox = iframe.getAttribute("sandbox");
       // Should NOT include allow-same-origin for security
       expect(sandbox).not.toContain("allow-same-origin");
     });
@@ -175,7 +175,7 @@ describe("HTMLArtifact", () => {
       );
 
       const iframe = screen.getByTestId("html-iframe");
-      const _sandbox = iframe.getAttribute("sandbox");
+      const sandbox = iframe.getAttribute("sandbox");
       // Bokeh requires scripts
       expect(sandbox).toContain("allow-scripts");
     });
@@ -188,7 +188,6 @@ describe("HTMLArtifact", () => {
       );
 
       const iframe = screen.getByTestId("html-iframe");
-      const _sandbox = iframe.getAttribute("sandbox");
       // For non-Bokeh HTML, scripts should be restricted
       // Note: The sandbox attribute restricts script execution by default
       expect(iframe).toHaveAttribute("sandbox");

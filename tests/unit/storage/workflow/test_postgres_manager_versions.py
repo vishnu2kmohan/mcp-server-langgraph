@@ -136,7 +136,7 @@ class TestGetWorkflowVersions:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             result = await manager.get_workflow_versions("wf-456")
 
         assert isinstance(result, list)
@@ -166,7 +166,7 @@ class TestGetWorkflowVersions:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             result = await manager.get_workflow_versions("wf-456")
 
         version_numbers = [v.version_number for v in result]
@@ -189,7 +189,7 @@ class TestGetWorkflowVersions:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             result = await manager.get_workflow_versions("wf-new")
 
         assert result == []
@@ -216,7 +216,7 @@ class TestGetWorkflowVersions:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             result = await manager.get_workflow_versions("wf-456")
 
         assert len(result) == 1
@@ -285,7 +285,7 @@ class TestRestoreWorkflowVersion:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             await manager.restore_workflow_version(
                 workflow_id="wf-456",
                 version_id="v-1",
@@ -328,7 +328,7 @@ class TestRestoreWorkflowVersion:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             await manager.restore_workflow_version(
                 workflow_id="wf-456",
                 version_id="v-1",
@@ -356,7 +356,7 @@ class TestRestoreWorkflowVersion:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             with pytest.raises(ValueError, match="Workflow not found"):
                 await manager.restore_workflow_version(
                     workflow_id="wf-nonexistent",
@@ -389,7 +389,7 @@ class TestRestoreWorkflowVersion:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             with pytest.raises(ValueError, match="Version not found"):
                 await manager.restore_workflow_version(
                     workflow_id="wf-456",
@@ -426,7 +426,7 @@ class TestRestoreWorkflowVersion:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             await manager.restore_workflow_version(
                 workflow_id="wf-456",
                 version_id="v-1",
@@ -466,7 +466,7 @@ class TestRestoreWorkflowVersion:
         mock_session.__aenter__.return_value = mock_session
         mock_session.__aexit__.return_value = None
 
-        with patch.object(manager, "_session_maker", return_value=mock_session):
+        with patch.object(manager, "_session_maker", side_effect=lambda *a, **kw: mock_session):
             result = await manager.restore_workflow_version(
                 workflow_id="wf-456",
                 version_id="v-1",

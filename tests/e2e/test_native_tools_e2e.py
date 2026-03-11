@@ -61,6 +61,7 @@ def google_settings():
     )
 
 
+@pytest.mark.xdist_group("test_anthropic_native_web_search")
 class TestAnthropicNativeWebSearch:
     """E2E tests for Anthropic native web search."""
 
@@ -140,6 +141,7 @@ class TestAnthropicNativeWebSearch:
         print(f"Tool messages: {len(tool_messages)}")
 
 
+@pytest.mark.xdist_group("test_anthropic_native_code_execution")
 class TestAnthropicNativeCodeExecution:
     """E2E tests for Anthropic native code execution."""
 
@@ -195,7 +197,14 @@ class TestAnthropicNativeCodeExecution:
         print(f"Response type: {type(response.content)}")
         print(f"Duration: {duration_ms:.2f}ms")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_google_native_search")
 class TestGoogleNativeSearch:
     """E2E tests for Google grounded search."""
 
@@ -223,7 +232,14 @@ class TestGoogleNativeSearch:
             assert config is not None
             assert "googleSearch" in config
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_native_tool_metrics_e2_e")
 class TestNativeToolMetricsE2E:
     """E2E tests verifying metrics are recorded during real calls."""
 
@@ -254,7 +270,14 @@ class TestNativeToolMetricsE2E:
         assert len(native_configs) >= 0  # May be 0 if feature flags disabled
         assert "builtin:calculator" in remaining
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_native_tool_latency_comparison")
 class TestNativeToolLatencyComparison:
     """E2E tests comparing native vs builtin tool latency."""
 
@@ -291,7 +314,14 @@ class TestNativeToolLatencyComparison:
         assert all(lat > 0 for lat in latencies)
         assert all(lat < 60000 for lat in latencies)  # Less than 60 seconds
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_native_capabilities_a_p_i")
 class TestNativeCapabilitiesAPI:
     """E2E tests for the native-capabilities API endpoint."""
 
@@ -370,7 +400,14 @@ class TestNativeCapabilitiesAPI:
             for cap in data.get("capabilities", []):
                 assert cap["supported"] is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_tool_preference_e2_e")
 class TestToolPreferenceE2E:
     """E2E tests for tool preference (auto/native/builtin) behavior."""
 
@@ -424,7 +461,14 @@ class TestToolPreferenceE2E:
         # Everything should be in remaining
         assert len(remaining) == 2
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_fallback_chain_e2_e")
 class TestFallbackChainE2E:
     """E2E tests for native tool fallback chain."""
 
@@ -460,7 +504,14 @@ class TestFallbackChainE2E:
         assert web_search_anthropic is not None
         assert web_search_anthropic.fallback_builtin == "web_search"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_vertex_a_i_limitations_e2_e")
 class TestVertexAILimitationsE2E:
     """E2E tests verifying Vertex AI limitations are handled."""
 
@@ -494,7 +545,14 @@ class TestVertexAILimitationsE2E:
             assert caps.supports_native_web_search is True
             assert caps.supports_native_code_execution is True
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_feature_flag_integration_e2_e")
 class TestFeatureFlagIntegrationE2E:
     """E2E tests for feature flag integration with native tools."""
 
@@ -545,7 +603,14 @@ class TestFeatureFlagIntegrationE2E:
             feature_flags.anthropic_native_web_search_enabled = original_web
             feature_flags.anthropic_native_code_execution_enabled = original_code
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_native_tools_list_a_p_i_e2_e")
 class TestNativeToolsListAPIE2E:
     """E2E tests for the unified tools list API with native tools."""
 
@@ -608,7 +673,14 @@ class TestNativeToolsListAPIE2E:
         finally:
             feature_flags.native_tools_enabled = original
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_source_citations_e2_e")
 class TestSourceCitationsE2E:
     """E2E tests for source citation extraction from native tool results."""
 
@@ -780,3 +852,9 @@ class TestSourceCitationsE2E:
 
         assert len(restored.sources) == 2
         assert restored.sources[0]["title"] == "Source 1"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

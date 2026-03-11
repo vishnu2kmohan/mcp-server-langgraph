@@ -53,7 +53,7 @@ class TestQdrantValidationFunction:
             patch(
                 "mcp_server_langgraph.core.startup_validation.validate_qdrant_connection",
                 new_callable=AsyncMock,
-                return_value=mock_result,
+                side_effect=lambda *a, **kw: mock_result,
             ),
         ):
             # Enable Qdrant validation by setting a URL
@@ -79,7 +79,7 @@ class TestQdrantValidationFunction:
             patch(
                 "mcp_server_langgraph.core.startup_validation.validate_qdrant_connection",
                 new_callable=AsyncMock,
-                return_value=mock_result,
+                side_effect=lambda *a, **kw: mock_result,
             ),
         ):
             # Enable Qdrant validation by setting a URL

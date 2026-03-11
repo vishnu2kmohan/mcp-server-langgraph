@@ -109,7 +109,7 @@ class MCPClientSession:
         """
         if self.config.url:
             url_lower = self.config.url.lower()
-            if url_lower.startswith("ws://") or url_lower.startswith("wss://"):
+            if url_lower.startswith("ws://") or url_lower.startswith("wss://"):  # nosemgrep: detect-insecure-websocket
                 return MCPTransportType.WEBSOCKET
             return MCPTransportType.HTTP
         return MCPTransportType.STDIO

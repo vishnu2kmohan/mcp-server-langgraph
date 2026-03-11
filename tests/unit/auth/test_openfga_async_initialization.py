@@ -66,7 +66,7 @@ class TestOpenFGAAsyncInitialization:
             patch(
                 "mcp_server_langgraph.bootstrap.init_semantic",
                 new_callable=AsyncMock,
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
         ):
             app = create_app(settings_override=settings, skip_startup_validation=True)
@@ -113,7 +113,7 @@ class TestOpenFGAAsyncInitialization:
             patch(
                 "mcp_server_langgraph.bootstrap.init_semantic",
                 new_callable=AsyncMock,
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
         ):
             app = create_app(settings_override=settings, skip_startup_validation=True)
@@ -348,7 +348,7 @@ class TestOpenFGAAuthorizationModelAsyncFileIO:
 
         with patch(
             "mcp_server_langgraph.auth.openfga.asyncio.to_thread",
-            return_value=model_data,
+            side_effect=lambda *a, **kw: model_data,
         ) as mock_to_thread:
             _result = await OpenFGAAuthorizationModel.aget_model_definition()
 
@@ -397,7 +397,7 @@ class TestLoadSampleTuplesAsync:
 
         with patch(
             "mcp_server_langgraph.auth.openfga.asyncio.to_thread",
-            return_value=sample_tuples,
+            side_effect=lambda *a, **kw: sample_tuples,
         ) as mock_to_thread:
             _result = await aload_sample_tuples()
 

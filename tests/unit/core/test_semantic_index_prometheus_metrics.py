@@ -68,9 +68,10 @@ class TestPrometheusMetricsEmission:
         )
 
         with (
+            # Use side_effect (not return_value) for robustness under xdist
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-                return_value=mock_openfga_client,
+                side_effect=lambda: mock_openfga_client,
             ),
             patch("mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric") as mock_emit,
         ):
@@ -115,7 +116,7 @@ class TestPrometheusMetricsEmission:
         with (
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-                return_value=mock_openfga_client,
+                side_effect=lambda: mock_openfga_client,
             ),
             patch("mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric") as mock_emit,
         ):
@@ -155,7 +156,7 @@ class TestPrometheusMetricsEmission:
         with (
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-                return_value=mock_openfga_client,
+                side_effect=lambda: mock_openfga_client,
             ),
             patch("mcp_server_langgraph.core.semantic_index_manager.emit_auth_cache_metric") as mock_emit,
         ):
@@ -241,7 +242,7 @@ class TestPrometheusCacheSizeGauge:
         with (
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-                return_value=mock_openfga_client,
+                side_effect=lambda: mock_openfga_client,
             ),
             patch("mcp_server_langgraph.core.semantic_index_manager.update_cache_size_gauge") as mock_gauge,
         ):
@@ -305,7 +306,7 @@ class TestPrometheusCacheWarmingHistogram:
         with (
             patch(
                 "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-                return_value=mock_openfga_client,
+                side_effect=lambda: mock_openfga_client,
             ),
             patch("mcp_server_langgraph.core.semantic_index_manager.record_cache_warming_duration") as mock_histogram,
         ):

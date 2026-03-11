@@ -11,15 +11,18 @@ import {
   chatLoader,
   artifactLoader,
   complianceLoader,
-  filesLoader,
+  artifactsLoader,
   canvasLoaders,
 } from "./canvasLoaders";
 
 // Mock storage utility
-vi.mock("../../utils/storage", () => ({
-  getAuthToken: vi.fn(() => "mock-token"),
-}));
-
+vi.mock("../../utils/storage", async () => {
+  const actual = await vi.importActual("../../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-token"),
+  };
+});
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -597,12 +600,12 @@ describe("canvasLoaders", () => {
       expect(canvasLoaders.chat).toBe(chatLoader);
       expect(canvasLoaders.artifact).toBe(artifactLoader);
       expect(canvasLoaders.compliance).toBe(complianceLoader);
-      expect(canvasLoaders.files).toBe(filesLoader);
+      expect(canvasLoaders.artifacts).toBe(artifactsLoader);
     });
   });
 
-  describe("filesLoader", () => {
-    it("should load files successfully", async () => {
+  describe("artifactsLoader (files)", () => {
+    it("should load artifacts successfully", async () => {
       const mockArtifacts = [
         {
           id: "artifact-1",
@@ -620,7 +623,7 @@ describe("canvasLoaders", () => {
         json: () => Promise.resolve({ items: mockArtifacts, total: 1 }),
       });
 
-      const result = await filesLoader(createLoaderArgs());
+      const result = await artifactsLoader(createLoaderArgs());
 
       expect(result.artifacts).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -633,21 +636,21 @@ describe("canvasLoaders", () => {
         json: () => Promise.resolve({ detail: "Server error" }),
       });
 
-      const result = await filesLoader(createLoaderArgs());
+      const result = await artifactsLoader(createLoaderArgs());
 
       expect(result.artifacts).toEqual([]);
       expect(result.total).toBe(0);
-      expect(result.error).toBe("Failed to load files");
+      expect(result.error).toBe("Failed to load artifacts");
     });
 
     it("should handle network errors", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-      const result = await filesLoader(createLoaderArgs());
+      const result = await artifactsLoader(createLoaderArgs());
 
       expect(result.artifacts).toEqual([]);
       expect(result.total).toBe(0);
-      expect(result.error).toBe("Failed to load files");
+      expect(result.error).toBe("Failed to load artifacts");
     });
 
     it("should use items length when total not provided", async () => {
@@ -677,7 +680,7 @@ describe("canvasLoaders", () => {
         json: () => Promise.resolve({ items: mockArtifacts }), // no total
       });
 
-      const result = await filesLoader(createLoaderArgs());
+      const result = await artifactsLoader(createLoaderArgs());
 
       expect(result.artifacts).toHaveLength(2);
       expect(result.total).toBe(2); // Uses items.length as fallback

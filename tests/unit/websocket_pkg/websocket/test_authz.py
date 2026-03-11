@@ -42,7 +42,7 @@ class TestWebSocketAuthorizationMiddleware:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("admin")
 
@@ -69,7 +69,7 @@ class TestWebSocketAuthorizationMiddleware:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("bob")
 
@@ -91,7 +91,7 @@ class TestWebSocketAuthorizationMiddleware:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             await authz.authorize_connection("alice")
 
@@ -127,7 +127,7 @@ class TestAuthorizationFailClosed:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("admin")
 
@@ -147,7 +147,7 @@ class TestAuthorizationFailClosed:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=None,  # OpenFGA not configured
+            side_effect=lambda *a, **kw: None,  # OpenFGA not configured
         ):
             result = await authz.authorize_connection("admin")
 
@@ -170,7 +170,7 @@ class TestAuthorizationFailClosed:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("admin")
 
@@ -201,7 +201,7 @@ class TestSubscriptionAuthorization:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_subscription("alice", "alice_workflow")
 
@@ -228,7 +228,7 @@ class TestSubscriptionAuthorization:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_subscription("bob", "alice_workflow")
 
@@ -259,7 +259,7 @@ class TestActionAuthorization:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             # Check for 'editor' action instead of default 'viewer'
             result = await authz.authorize_action("alice", "wf_123", action_relation="editor")
@@ -287,7 +287,7 @@ class TestActionAuthorization:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_action("bob", "wf_123")  # No action_relation
 
@@ -328,7 +328,7 @@ class TestSampleTuplesValidation:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("admin")
 
@@ -351,7 +351,7 @@ class TestSampleTuplesValidation:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("bob")
 
@@ -374,7 +374,7 @@ class TestSampleTuplesValidation:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("alice")
 
@@ -398,7 +398,7 @@ class TestSampleTuplesValidation:
         for user in ["admin", "alice", "bob"]:
             with patch(
                 "mcp_server_langgraph.websocket.authz.get_openfga_client",
-                return_value=mock_client,
+                side_effect=lambda *a, **kw: mock_client,
             ):
                 result = await authz.authorize_connection(user)
                 assert result is True, f"Expected {user} to have notification access"
@@ -420,7 +420,7 @@ class TestSampleTuplesValidation:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_connection("bob")
 
@@ -443,7 +443,7 @@ class TestGetOpenFGAClient:
         mock_client = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.auth.openfga.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.get_openfga_client()
 
@@ -485,7 +485,7 @@ class TestSubscriptionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result = await authz.authorize_subscription("alice", "workflow1")
 
@@ -505,7 +505,7 @@ class TestSubscriptionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result = await authz.authorize_subscription("alice", "workflow1")
 
@@ -528,7 +528,7 @@ class TestSubscriptionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_subscription("alice", "workflow1")
 
@@ -551,7 +551,7 @@ class TestSubscriptionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_subscription("alice", "workflow1")
 
@@ -580,7 +580,7 @@ class TestActionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result = await authz.authorize_action("alice", "workflow1")
 
@@ -600,7 +600,7 @@ class TestActionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result = await authz.authorize_action("alice", "workflow1")
 
@@ -623,7 +623,7 @@ class TestActionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_action("alice", "workflow1")
 
@@ -646,7 +646,7 @@ class TestActionFailScenarios:
 
         with patch(
             "mcp_server_langgraph.websocket.authz.get_openfga_client",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await authz.authorize_action("alice", "workflow1")
 

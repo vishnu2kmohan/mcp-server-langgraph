@@ -154,7 +154,7 @@ class TestSessionTitleGeneratorLLMFactory:
         # Patch at the source module
         with patch(
             "mcp_server_langgraph.llm.factory.create_llm_from_config",
-            return_value=mock_factory,
+            side_effect=lambda *a, **kw: mock_factory,
         ) as mock_create:
             generator = SessionTitleGenerator(enable_llm=True)
             title = await generator.generate("Some message that needs a title")

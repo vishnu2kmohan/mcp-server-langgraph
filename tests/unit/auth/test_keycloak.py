@@ -532,10 +532,12 @@ class TestKeycloakClient:
             "enabled": True,
             "emailVerified": True,
         }
-        with patch.object(client, "get_admin_token", return_value="admin-token"):
-            with patch.object(client, "_get_user_realm_roles", return_value=["user", "premium"]):
-                with patch.object(client, "_get_user_client_roles", return_value={"test-client": ["executor"]}):
-                    with patch.object(client, "_get_user_groups", return_value=["/acme"]):
+        with patch.object(client, "get_admin_token", side_effect=lambda *a, **kw: "admin-token"):
+            with patch.object(client, "_get_user_realm_roles", side_effect=lambda *a, **kw: ["user", "premium"]):
+                with patch.object(
+                    client, "_get_user_client_roles", side_effect=lambda *a, **kw: {"test-client": ["executor"]}
+                ):
+                    with patch.object(client, "_get_user_groups", side_effect=lambda *a, **kw: ["/acme"]):
                         with patch("httpx.AsyncClient") as mock_client:
                             mock_response = MagicMock()
                             mock_response.json.return_value = [user_data]
@@ -552,7 +554,7 @@ class TestKeycloakClient:
     async def test_get_user_by_username_not_found(self, keycloak_config):
         """Test getting non-existent user"""
         client = KeycloakClient(keycloak_config)
-        with patch.object(client, "get_admin_token", return_value="admin-token"):
+        with patch.object(client, "get_admin_token", side_effect=lambda *a, **kw: "admin-token"):
             with patch("httpx.AsyncClient") as mock_client:
                 mock_response = MagicMock()
                 mock_response.json.return_value = []

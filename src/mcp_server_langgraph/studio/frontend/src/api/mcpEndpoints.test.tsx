@@ -250,10 +250,11 @@ describe("MCP RTK Query Endpoints", () => {
       }).unwrap();
 
       // Verify response structure (handler includes tool name in message)
+      // Note: invokeMcpTool has no transformResponse, so response is snake_case from apiJsonResponse
       expect(response.content).toHaveLength(1);
       expect(response.content[0].type).toBe("text");
       expect(response.content[0].text).toContain("executed successfully");
-      expect(response.isError).toBe(false);
+      expect(response.is_error).toBe(false);
     });
 
     it("handles tool execution error", async () => {

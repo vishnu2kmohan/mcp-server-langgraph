@@ -153,3 +153,9 @@ class TestMCPModelsOutputFormat:
         chat_input = ChatInput.model_validate(data)
         assert chat_input.output_format is not None
         assert chat_input.output_format["schema"]["type"] == "boolean"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

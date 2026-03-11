@@ -126,10 +126,13 @@ vi.mock("../../hooks/useMCPWebSocket", () => ({
 }));
 
 // Mock persona selector
-vi.mock("../../store/slices/personaSlice", () => ({
-  selectPersona: vi.fn(),
-}));
-
+vi.mock("../../store/slices/personaSlice", async () => {
+  const actual = await vi.importActual("../../store/slices/personaSlice");
+  return {
+    ...actual,
+    selectPersona: vi.fn(),
+  };
+});
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();

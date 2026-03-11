@@ -73,6 +73,7 @@ def extract_ff_flags_from_docker_compose(file_path: Path) -> dict[str, str]:
 # =============================================================================
 
 
+@pytest.mark.xdist_group("test_feature_flag_synchronization")
 @pytest.mark.e2e
 @pytest.mark.config
 class TestFeatureFlagSynchronization:
@@ -187,7 +188,14 @@ class TestFeatureFlagSynchronization:
         missing = [flag for flag in ui_flags if flag not in docker_flags]
         assert not missing, f"UI enhancement flags missing from docker-compose.test.yml: {missing}"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_feature_flag_consistency")
 @pytest.mark.e2e
 @pytest.mark.config
 class TestFeatureFlagConsistency:
@@ -245,3 +253,9 @@ class TestFeatureFlagConsistency:
                 mismatched.append(f"{flag}: .env.test={env_val}, docker-compose={docker_val}")
 
         assert not mismatched, "Feature flag values differ between files:\n" + "\n".join(mismatched)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

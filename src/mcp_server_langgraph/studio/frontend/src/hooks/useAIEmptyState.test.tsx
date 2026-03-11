@@ -25,14 +25,17 @@ import sessionReducer from "../store/slices/sessionSlice";
 import { api } from "../api";
 
 // Mock feature flag - default to enabled
-vi.mock("../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn((flagName: string) => {
-    // Default: ai_empty_state is enabled
-    if (flagName === "ai_empty_state") return true;
-    return false;
-  }),
-}));
-
+vi.mock("../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn((flagName: string) => {
+      // Default: ai_empty_state is enabled
+      if (flagName === "ai_empty_state") return true;
+      return false;
+    }),
+  };
+});
 const AI_ENDPOINT = "/api/v1/ai/empty-state/suggestions";
 
 // Track request body for assertions

@@ -98,32 +98,30 @@ function SessionHeaderWithModelSelector({
   };
 
   return (
-    <TestProvider>
-      <div
-        data-testid="session-header"
-        className="flex items-center justify-between px-4 py-2 border-b"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <h2
-            className="text-sm font-medium truncate"
-            data-testid="session-title"
-          >
-            {title}
-          </h2>
-          <HeaderModelSelector
-            selectedModel={selectedModel}
-            availableModels={availableModels}
-            thinkingLevel={thinkingLevel}
-            onModelChange={onModelChange}
-            onThinkingLevelChange={onThinkingLevelChange}
-            compact
-          />
-        </div>
-        <button onClick={handleSend} data-testid="send-button">
-          Send
-        </button>
+    <div
+      data-testid="session-header"
+      className="flex items-center justify-between px-4 py-2 border-b"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <h2
+          className="text-sm font-medium truncate"
+          data-testid="session-title"
+        >
+          {title}
+        </h2>
+        <HeaderModelSelector
+          selectedModel={selectedModel}
+          availableModels={availableModels}
+          thinkingLevel={thinkingLevel}
+          onModelChange={onModelChange}
+          onThinkingLevelChange={onThinkingLevelChange}
+          compact
+        />
       </div>
-    </TestProvider>
+      <button onClick={handleSend} data-testid="send-button">
+        Send
+      </button>
+    </div>
   );
 }
 
@@ -275,11 +273,13 @@ describe("HeaderModelSelector Integration", () => {
 
       // Rerender with updated model
       rerender(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // GPT-4o should now be displayed
@@ -389,11 +389,13 @@ describe("HeaderModelSelector Integration", () => {
       await user.click(screen.getByRole("option", { name: /GPT-4o/ }));
 
       rerender(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Thinking level should now be hidden
@@ -425,11 +427,13 @@ describe("HeaderModelSelector Integration", () => {
       await user.click(screen.getByRole("option", { name: /Claude Sonnet 4/ }));
 
       rerender(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // Thinking level should now be visible
@@ -470,14 +474,16 @@ describe("HeaderModelSelector Integration", () => {
       await user.click(screen.getByRole("option", { name: /Claude Sonnet 4/ }));
 
       rerender(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          thinkingLevel={thinkingLevel}
-          onModelChange={onModelChange}
-          onThinkingLevelChange={onThinkingLevelChange}
-          onSendMessage={onSendMessage}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            thinkingLevel={thinkingLevel}
+            onModelChange={onModelChange}
+            onThinkingLevelChange={onThinkingLevelChange}
+            onSendMessage={onSendMessage}
+          />
+        </TestProvider>,
       );
 
       // Step 3: Open dropdown again and set thinking level to high
@@ -485,14 +491,16 @@ describe("HeaderModelSelector Integration", () => {
       await user.click(screen.getByRole("radio", { name: /High/i }));
 
       rerender(
-        <SessionHeaderWithModelSelector
-          {...defaultProps}
-          selectedModel={selectedModel}
-          thinkingLevel={thinkingLevel}
-          onModelChange={onModelChange}
-          onThinkingLevelChange={onThinkingLevelChange}
-          onSendMessage={onSendMessage}
-        />,
+        <TestProvider>
+          <SessionHeaderWithModelSelector
+            {...defaultProps}
+            selectedModel={selectedModel}
+            thinkingLevel={thinkingLevel}
+            onModelChange={onModelChange}
+            onThinkingLevelChange={onThinkingLevelChange}
+            onSendMessage={onSendMessage}
+          />
+        </TestProvider>,
       );
 
       // Close dropdown by clicking outside

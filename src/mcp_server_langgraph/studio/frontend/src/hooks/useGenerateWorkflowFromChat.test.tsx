@@ -19,10 +19,13 @@ vi.mock("react-router", async () => {
 });
 
 // Mock the RTK Query API
-vi.mock("../api", () => ({
-  useGenerateWorkflowFromChatMutation: vi.fn(),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGenerateWorkflowFromChatMutation: vi.fn(),
+  };
+});
 import { useGenerateWorkflowFromChatMutation } from "../api";
 import { useGenerateWorkflowFromChat } from "./useGenerateWorkflowFromChat";
 

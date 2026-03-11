@@ -169,6 +169,7 @@ class MockEmbeddingService:
         return vector
 
 
+@pytest.mark.xdist_group("test_skill_search_qdrant_integration")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSkillSearchQdrantIntegration:
     """Integration tests for SkillSearchTool with real Qdrant."""
@@ -385,6 +386,7 @@ class TestSkillSearchQdrantIntegration:
         assert count.count == 1
 
 
+@pytest.mark.xdist_group("test_vector_provider_adapter_qdrant")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestVectorProviderAdapterQdrant:
     """Tests for VectorProviderAdapter with real Qdrant operations."""
@@ -429,3 +431,9 @@ class TestVectorProviderAdapterQdrant:
         assert "score" in results[0]
         assert "metadata" in results[0]
         assert results[0]["id"] == "doc-001"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

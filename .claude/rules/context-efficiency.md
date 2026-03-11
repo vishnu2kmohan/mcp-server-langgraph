@@ -42,6 +42,45 @@ npx vitest run              # WRONG
 npm test -- --pool=threads  # WRONG for full suite
 ```
 
+## Long-Running Command Output Capture (CRITICAL)
+
+When running hooks, test suites, or any long-running command manually, **always
+use `tee`** to capture full output to a file. Never pipe directly through `tail`
+alone — it discards errors from the beginning of the output.
+
+```bash
+# CORRECT: tee captures everything, then tail the log
+pre-commit run --all-files 2>&1 | tee /tmp/precommit.log
+tail -60 /tmp/precommit.log  # or: Read /tmp/precommit.log
+
+# CORRECT: tee + tail in pipeline for live summary + full capture
+pytest -n auto 2>&1 | tee /tmp/pytest.log | tail -80
+
+# WRONG: tail alone discards errors from early output
+pre-commit run --all-files 2>&1 | tail -60
+```
+
+**Non-blocking batch collection**: When running hooks or tests manually to
+validate before commit/push, use **non-failure-exit** mode to collect ALL
+issues in a single pass rather than stopping at the first failure:
+
+```bash
+# CORRECT: Collect all issues (pytest continues past failures)
+uv run --frozen pytest -n auto 2>&1 | tee /tmp/pytest.log
+
+# CORRECT: pre-commit runs all hooks even if one fails (default behavior)
+pre-commit run --all-files 2>&1 | tee /tmp/precommit.log
+
+# WRONG: -x stops at first failure — misses other issues
+uv run --frozen pytest -x 2>&1 | tee /tmp/pytest.log
+```
+
+**Log file convention**: `/tmp/{tool}-{stage}.log` (e.g., `/tmp/precommit-push.log`,
+`/tmp/vitest-sharded.log`). Use `Read` tool on the log file to inspect specific
+error sections after the run completes.
+
+---
+
 ## Bulk Operations (Project-Specific)
 
 - **192 scripts** in `scripts/` - check `scripts/SCRIPT_INVENTORY.md` before creating new ones

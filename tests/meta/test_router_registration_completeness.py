@@ -178,6 +178,7 @@ def parse_router_inclusions(router_py_path: Path) -> list[RouterInclusion]:
     return inclusions
 
 
+@pytest.mark.xdist_group("test_router_registration_completeness")
 @pytest.mark.meta
 @pytest.mark.unit
 class TestRouterRegistrationCompleteness:
@@ -281,3 +282,9 @@ class TestRouterRegistrationCompleteness:
 
         # We expect no more than 100 routers (sanity upper bound)
         assert len(inclusions) <= 100, f"{len(inclusions)} routers included. This seems excessive - consider consolidating."
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

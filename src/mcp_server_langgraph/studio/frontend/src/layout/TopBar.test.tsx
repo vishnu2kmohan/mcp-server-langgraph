@@ -243,7 +243,7 @@ describe("TopBar", () => {
       );
 
       const badge = screen.getByTestId("review-approval-button");
-      expect(badge).toHaveClass("bg-warning-2");
+      expect(badge).toHaveClass("bg-warning-3");
     });
 
     it("should have accessible aria-label for approvals badge", () => {

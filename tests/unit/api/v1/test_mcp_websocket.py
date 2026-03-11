@@ -201,7 +201,7 @@ class TestMCPWebSocketToolsHandler:
             handler,
             "execute_tool",
             new_callable=AsyncMock,
-            return_value=[{"type": "text", "text": "Tool result"}],
+            side_effect=lambda *a, **kw: [{"type": "text", "text": "Tool result"}],
         ):
             message = {
                 "jsonrpc": "2.0",
@@ -590,7 +590,7 @@ class TestMCPWebSocketAuthentication:
             handler,
             "_execute_with_agent",
             new_callable=AsyncMock,
-            return_value=[{"type": "text", "text": "Agent result"}],
+            side_effect=lambda *a, **kw: [{"type": "text", "text": "Agent result"}],
         ) as mock_execute:
             await handler.execute_tool("langgraph-run", {"query": "test"})
 
@@ -1127,7 +1127,7 @@ class TestMCPWebSocketAgentIntegration:
             handler,
             "_execute_with_agent",
             new_callable=AsyncMock,
-            return_value=[{"type": "text", "text": "Result"}],
+            side_effect=lambda *a, **kw: [{"type": "text", "text": "Result"}],
         ) as mock_execute:
             await handler.execute_tool(
                 "langgraph-run",
@@ -1168,7 +1168,7 @@ class TestMCPWebSocketKeycloakIntegration:
 
         with patch(
             "mcp_server_langgraph.api.v1.mcp_websocket.get_token_validator",
-            return_value=mock_validator,
+            side_effect=lambda *a, **kw: mock_validator,
         ):
             result = await validate_websocket_token("valid-jwt-token")
 
@@ -1192,7 +1192,7 @@ class TestMCPWebSocketKeycloakIntegration:
 
         with patch(
             "mcp_server_langgraph.api.v1.mcp_websocket.get_token_validator",
-            return_value=mock_validator,
+            side_effect=lambda *a, **kw: mock_validator,
         ):
             result = await validate_websocket_token("expired-token")
 
@@ -1214,7 +1214,7 @@ class TestMCPWebSocketKeycloakIntegration:
 
         with patch(
             "mcp_server_langgraph.api.v1.mcp_websocket.get_token_validator",
-            return_value=mock_validator,
+            side_effect=lambda *a, **kw: mock_validator,
         ):
             result = await validate_websocket_token("invalid-token")
 
@@ -1240,11 +1240,11 @@ class TestMCPWebSocketOpenFGAIntegration:
         mock_openfga = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
         mock_check_result = MagicMock()
         mock_check_result.allowed = True
-        mock_openfga.check = AsyncMock(return_value=mock_check_result)
+        mock_openfga.check = AsyncMock(side_effect=lambda *a, **kw: mock_check_result)
 
         with patch(
             "mcp_server_langgraph.api.v1.mcp_websocket.get_openfga_client",
-            return_value=mock_openfga,
+            side_effect=lambda: mock_openfga,
         ):
             result = await check_mcp_permission(
                 user_id="user:alice",
@@ -1265,11 +1265,13 @@ class TestMCPWebSocketOpenFGAIntegration:
         from mcp_server_langgraph.api.v1.mcp_websocket import check_mcp_permission
 
         mock_openfga = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
-        mock_openfga.check = AsyncMock(return_value=False)
+        mock_check_result = MagicMock()
+        mock_check_result.allowed = False
+        mock_openfga.check = AsyncMock(side_effect=lambda *a, **kw: mock_check_result)
 
         with patch(
             "mcp_server_langgraph.api.v1.mcp_websocket.get_openfga_client",
-            return_value=mock_openfga,
+            side_effect=lambda: mock_openfga,
         ):
             result = await check_mcp_permission(
                 user_id="user:eve",
@@ -1290,7 +1292,7 @@ class TestMCPWebSocketOpenFGAIntegration:
 
         with patch(
             "mcp_server_langgraph.api.v1.mcp_websocket.get_openfga_client",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             # Default is fail-open when OpenFGA is not configured
             result = await check_mcp_permission(
@@ -1386,13 +1388,15 @@ class TestMCPWebSocketMCPBridgeIntegration:
 
         # Mock the MCPBridge
         mock_bridge = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
-        mock_bridge.send_chat_message = AsyncMock(return_value=MagicMock(content="Agent response from MCPBridge"))
+        mock_bridge.send_chat_message = AsyncMock(
+            side_effect=lambda *a, **kw: MagicMock(content="Agent response from MCPBridge")
+        )
         mock_bridge.is_configured = True
 
         # Patch where message_handler imports get_mcp_bridge from
         with patch(
             "mcp_server_langgraph.api.v1.mcp_bridge.get_mcp_bridge",
-            return_value=mock_bridge,
+            side_effect=lambda *a, **kw: mock_bridge,
         ):
             result = await handler.execute_tool(
                 "langgraph-run",
@@ -1422,7 +1426,7 @@ class TestMCPWebSocketMCPBridgeIntegration:
         # Patch where message_handler imports get_mcp_bridge from
         with patch(
             "mcp_server_langgraph.api.v1.mcp_bridge.get_mcp_bridge",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result = await handler.execute_tool(
                 "langgraph-run",
@@ -1455,7 +1459,7 @@ class TestMCPWebSocketMCPBridgeIntegration:
         # Patch where message_handler imports get_mcp_bridge from
         with patch(
             "mcp_server_langgraph.api.v1.mcp_bridge.get_mcp_bridge",
-            return_value=mock_bridge,
+            side_effect=lambda *a, **kw: mock_bridge,
         ):
             result = await handler.execute_tool(
                 "langgraph-run",
@@ -1561,7 +1565,7 @@ class TestMCPWebSocketStreamingFlow:
         # Patch where message_handler imports get_mcp_bridge from
         with patch(
             "mcp_server_langgraph.api.v1.mcp_bridge.get_mcp_bridge",
-            return_value=mock_bridge,
+            side_effect=lambda *a, **kw: mock_bridge,
         ):
             chunks = []
             async for chunk in handler.execute_tool_streaming(
@@ -1771,7 +1775,7 @@ class TestMCPWebSocketFullIntegration:
             handler,
             "_execute_with_agent",
             new_callable=AsyncMock,
-            return_value=[{"type": "text", "text": "Result"}],
+            side_effect=lambda *a, **kw: [{"type": "text", "text": "Result"}],
         ):
             result = await handler.execute_tool("langgraph-run", {"query": "test"})
             assert len(result) > 0
@@ -2433,7 +2437,7 @@ class TestMCPWebSocketLifespan:
 
         with patch(
             "mcp_server_langgraph.mcp.websocket.get_mcp_lifecycle_manager",
-            return_value=mock_manager,
+            side_effect=lambda *a, **kw: mock_manager,
         ):
             async with mcp_websocket_lifespan(mock_app):
                 # Should have called startup on the manager

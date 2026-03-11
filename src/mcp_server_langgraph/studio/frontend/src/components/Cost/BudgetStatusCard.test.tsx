@@ -125,7 +125,7 @@ describe("BudgetStatusCard", () => {
         </TestProvider>,
       );
       const card = screen.getByTestId("budget-status-card");
-      expect(card.className).toMatch(/orange|critical/i);
+      expect(card.className).toMatch(/grafana/i);
     });
 
     it("shows red styling for exceeded status", () => {

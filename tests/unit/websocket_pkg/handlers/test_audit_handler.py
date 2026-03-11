@@ -35,7 +35,7 @@ class TestAuditHandlerInit:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         assert handler._broadcaster is mock_broadcaster
@@ -59,7 +59,7 @@ class TestAuditHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -81,7 +81,7 @@ class TestAuditHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -109,7 +109,7 @@ class TestAuditHandlerMessages:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -142,7 +142,7 @@ class TestAuditHandlerMessages:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -167,7 +167,7 @@ class TestAuditHandlerMessages:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="invalid", id="msg-3")
@@ -194,7 +194,7 @@ class TestAuditHandlerPush:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -217,7 +217,7 @@ class TestAuditHandlerPush:
         config = WebSocketConfig(endpoint_name="audit")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AuditHandler(config=config, broadcaster=mock_broadcaster)
 
         # No websocket set

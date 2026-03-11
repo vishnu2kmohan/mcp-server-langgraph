@@ -232,7 +232,7 @@ describe("useMCPWebSocket", () => {
           method: "initialize",
           params: expect.objectContaining({
             protocolVersion: "2025-11-25",
-            capabilities: {},
+            capabilities: { elicitation: {}, sampling: {} },
             clientInfo: { name: "studio-frontend", version: "1.0.0" },
           }),
         }),

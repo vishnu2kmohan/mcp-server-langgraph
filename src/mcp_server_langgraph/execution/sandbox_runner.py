@@ -62,7 +62,9 @@ class SandboxRunner:
             sandbox = self._docker_sandbox()
             # Use /bin/bash -lc to allow basic shell features (within allowlist enforced by caller)
             wrapped_command = f"bash -lc {repr(command)}"
-            result: ExecutionResult = sandbox.execute(wrapped_command, is_shell_command=True, timeout_seconds=timeout)
+            result: ExecutionResult = sandbox.execute(  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
+                wrapped_command, is_shell_command=True, timeout_seconds=timeout
+            )
         else:
             raise SandboxError(f"Sandbox backend {self.backend} not implemented for bash commands")
 

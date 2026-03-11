@@ -34,66 +34,62 @@ import {
 } from "./AgentApprovalDialog";
 import type { AIExplanationCamelCase } from "../../types/hitl";
 
-// Mock the API module for HITL Intelligence hooks
-vi.mock("../../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            risk_assess: {
-              risk_score: 0.72,
-              risk_level: "medium",
-              risk_factors: [
-                {
-                  factor: "external_api_access",
-                  weight: 0.3,
-                  description: "Sends data to external service",
-                },
-                {
-                  factor: "data_sensitivity",
-                  weight: 0.25,
-                  description: "Contains user data",
-                },
-              ],
-              mitigations: [
-                "Review data before sending",
-                "Use staging API first",
-              ],
-              recommendation: "review",
-              explanation:
-                "This action involves sending data to an external API with moderate risk.",
-            },
-            decision_history: {
-              similar_decisions: [
-                {
-                  request_id: "req-prev-001",
-                  action_type: "external_api",
-                  decision: "approved",
-                  decided_by: "admin",
-                  decided_at: "2024-01-10T10:00:00Z",
-                  reasoning: "Data was verified before sending",
-                },
-                {
-                  request_id: "req-prev-002",
-                  action_type: "external_api",
-                  decision: "rejected",
-                  decided_by: "security-admin",
-                  decided_at: "2024-01-08T14:00:00Z",
-                  reasoning: "Scope too broad",
-                },
-              ],
-              approval_rate: 0.67,
-              total_similar: 6,
-              suggested_action: "review",
-            },
-          },
-        }),
-    })),
-    { isLoading: false },
-  ]),
+// Mock the hooks barrel to prevent loading the entire 107-module dependency tree.
+// The component only needs useRiskAssessment and useDecisionHistory from ../../hooks.
+// Loading the full barrel pulls in the 5132-line API module via transitive imports,
+// causing OOM (>8GB) in Vitest fork workers.
+vi.mock("../../hooks", () => ({
+  useRiskAssessment: vi.fn(() => ({
+    riskScore: 0.72,
+    riskLevel: "medium",
+    riskFactors: [
+      {
+        factor: "external_api_access",
+        weight: 0.3,
+        description: "Sends data to external service",
+      },
+      {
+        factor: "data_sensitivity",
+        weight: 0.25,
+        description: "Contains user data",
+      },
+    ],
+    mitigations: ["Review data before sending", "Use staging API first"],
+    recommendation: "review",
+    explanation:
+      "This action involves sending data to an external API with moderate risk.",
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useDecisionHistory: vi.fn(() => ({
+    similarDecisions: [
+      {
+        request_id: "req-prev-001",
+        action_type: "external_api",
+        decision: "approved",
+        decided_by: "admin",
+        decided_at: "2024-01-10T10:00:00Z",
+        reasoning: "Data was verified before sending",
+      },
+      {
+        request_id: "req-prev-002",
+        action_type: "external_api",
+        decision: "rejected",
+        decided_by: "security-admin",
+        decided_at: "2024-01-08T14:00:00Z",
+        reasoning: "Scope too broad",
+      },
+    ],
+    approvalRate: 0.67,
+    totalSimilar: 6,
+    averageDecisionTimeMs: null,
+    suggestedAction: "review",
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
 }));
-
 // Create test store for Redux provider
 const createTestStore = () =>
   configureStore({
@@ -400,7 +396,7 @@ describe("AgentApprovalDialog", () => {
       render(<AgentApprovalDialog {...defaultProps} onApprove={onApprove} />);
 
       await user.type(
-        screen.getByTestId("reason-input"),
+        screen.getByTestId("approval-reason"),
         "Approved after review",
       );
       await user.click(screen.getByTestId("approve-button"));
@@ -456,7 +452,7 @@ describe("AgentApprovalDialog", () => {
       const user = userEvent.setup();
       render(<AgentApprovalDialog {...defaultProps} onReject={onReject} />);
 
-      await user.type(screen.getByTestId("reason-input"), "Too risky");
+      await user.type(screen.getByTestId("approval-reason"), "Too risky");
       await user.click(screen.getByTestId("reject-button"));
 
       await waitFor(() => {
@@ -789,7 +785,7 @@ describe("AgentApprovalDialog", () => {
 
         await waitFor(() => {
           expect(
-            screen.getByTestId("risk-assessment-panel"),
+            screen.getByTestId("hitl-risk-assessment"),
           ).toBeInTheDocument();
         });
       });
@@ -822,10 +818,11 @@ describe("AgentApprovalDialog", () => {
         );
 
         await waitFor(() => {
+          // Component renders factor.description (falling back to factor.factor)
           expect(
-            screen.getByText(/external.*api.*access/i),
+            screen.getByText(/sends data to external service/i),
           ).toBeInTheDocument();
-          expect(screen.getByText(/data.*sensitivity/i)).toBeInTheDocument();
+          expect(screen.getByText(/contains user data/i)).toBeInTheDocument();
         });
       });
 
@@ -855,7 +852,7 @@ describe("AgentApprovalDialog", () => {
         render(<AgentApprovalDialog {...defaultProps} />);
 
         expect(
-          screen.queryByTestId("risk-assessment-panel"),
+          screen.queryByTestId("hitl-risk-assessment"),
         ).not.toBeInTheDocument();
       });
     });
@@ -868,7 +865,7 @@ describe("AgentApprovalDialog", () => {
 
         await waitFor(() => {
           expect(
-            screen.getByTestId("decision-history-panel"),
+            screen.getByTestId("hitl-decision-history"),
           ).toBeInTheDocument();
         });
       });
@@ -879,7 +876,8 @@ describe("AgentApprovalDialog", () => {
         );
 
         await waitFor(() => {
-          expect(screen.getByText(/similar.*decisions/i)).toBeInTheDocument();
+          // "Similar Decisions" heading + "6 similar decisions found" text
+          expect(screen.getAllByText(/similar/i).length).toBeGreaterThan(0);
         });
       });
 
@@ -918,7 +916,7 @@ describe("AgentApprovalDialog", () => {
         render(<AgentApprovalDialog {...defaultProps} />);
 
         expect(
-          screen.queryByTestId("decision-history-panel"),
+          screen.queryByTestId("hitl-decision-history"),
         ).not.toBeInTheDocument();
       });
     });
@@ -942,10 +940,10 @@ describe("AgentApprovalDialog", () => {
 
         // Should render without AI panels
         expect(
-          screen.queryByTestId("risk-assessment-panel"),
+          screen.queryByTestId("hitl-risk-assessment"),
         ).not.toBeInTheDocument();
         expect(
-          screen.queryByTestId("decision-history-panel"),
+          screen.queryByTestId("hitl-decision-history"),
         ).not.toBeInTheDocument();
       });
     });

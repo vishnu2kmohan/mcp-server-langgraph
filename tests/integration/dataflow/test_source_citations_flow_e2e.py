@@ -44,6 +44,7 @@ def enable_source_citations():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_anthropic_web_search_sources")
 class TestAnthropicWebSearchSources:
     """
     E2E tests for extracting sources from Anthropic native web search.
@@ -133,6 +134,7 @@ class TestAnthropicWebSearchSources:
         assert sources[0].snippet is None
 
 
+@pytest.mark.xdist_group("test_google_grounding_metadata")
 class TestGoogleGroundingMetadata:
     """
     E2E tests for extracting sources from Google grounding metadata.
@@ -198,6 +200,7 @@ class TestGoogleGroundingMetadata:
         assert sources[0].snippet == "Vertex AI is Google's platform"
 
 
+@pytest.mark.xdist_group("test_open_a_i_responses_a_p_i")
 class TestOpenAIResponsesAPI:
     """
     E2E tests for extracting sources from OpenAI Responses API.
@@ -256,6 +259,7 @@ class TestOpenAIResponsesAPI:
         assert sources[0].title == "OpenAI Documentation"
 
 
+@pytest.mark.xdist_group("test_tool_message_extraction")
 class TestToolMessageExtraction:
     """
     E2E tests for extracting sources from ToolMessage (builtin tools).
@@ -325,6 +329,7 @@ class TestToolMessageExtraction:
         assert len(sources) == 0
 
 
+@pytest.mark.xdist_group("test_knowledge_base_sources")
 class TestKnowledgeBaseSources:
     """
     E2E tests for extracting sources from KB context.
@@ -388,6 +393,7 @@ class TestKnowledgeBaseSources:
         assert sources[1].url == "kb://docs/architecture.md"
 
 
+@pytest.mark.xdist_group("test_source_collection_and_deduplication")
 class TestSourceCollectionAndDeduplication:
     """
     E2E tests for collecting and deduplicating sources.
@@ -507,6 +513,7 @@ class TestSourceCollectionAndDeduplication:
         assert sorted_sources[3].title == "No Score"  # None (last)
 
 
+@pytest.mark.xdist_group("test_source_citation_model")
 class TestSourceCitationModel:
     """
     E2E tests for SourceCitation model functionality.

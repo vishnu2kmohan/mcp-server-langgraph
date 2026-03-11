@@ -91,6 +91,12 @@ class TestUserScopedConnection:
         )
         assert result is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestProjectScopedConnection:
     """Tests for project-scoped connections (project members can use)."""
@@ -169,6 +175,12 @@ class TestProjectScopedConnection:
         )
         assert result is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSessionScopedConnection:
     """Tests for session-scoped connections (ephemeral, session-only)."""
@@ -222,6 +234,12 @@ class TestSessionScopedConnection:
             openfga_client=mock_openfga_client,
         )
         assert result is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestEdgeCases:
@@ -285,3 +303,9 @@ class TestEdgeCases:
             openfga_client=mock_openfga_client,
         )
         assert result is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

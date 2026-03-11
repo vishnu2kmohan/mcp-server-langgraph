@@ -9,6 +9,7 @@ Tests for:
 """
 
 import gc
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -149,6 +150,14 @@ def test_client(monkeypatch):
     """Create test client with proper environment."""
     monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-32-chars-long1234")
     monkeypatch.setenv("ENVIRONMENT", "test")
+
+    # Mock _create_embeddings to avoid ImportError when embedding provider
+    # packages (langchain-google-vertexai, sentence-transformers) are not
+    # installed. Health probe tests don't exercise embedding logic.
+    monkeypatch.setattr(
+        "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
+        lambda *args, **kwargs: MagicMock(),
+    )
 
     from mcp_server_langgraph.app import create_app
 

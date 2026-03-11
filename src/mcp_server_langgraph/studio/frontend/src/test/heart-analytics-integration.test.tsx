@@ -11,11 +11,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import React from "react";
 import { waitFor, cleanup } from "@testing-library/react";
 import { renderHook, act } from "@testing-library/react";
 import { useHeartDashboard } from "../hooks/useHeartDashboard";
 import { HeartAggregator } from "../analytics";
 import { recordSignal, getMetricsSummary } from "../analytics/gsm";
+import { TestProvider } from "../test-utils";
 
 // =============================================================================
 // Test Setup
@@ -40,6 +42,11 @@ describe("HEART Analytics Integration", () => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
+
+  // Wrapper that provides Router + Redux store context for hooks
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <TestProvider>{children}</TestProvider>
+  );
 
   // ===========================================================================
   // useHeartDashboard Integration
@@ -71,7 +78,7 @@ describe("HEART Analytics Integration", () => {
         json: () => Promise.resolve(mockData),
       });
 
-      const { result } = renderHook(() => useHeartDashboard());
+      const { result } = renderHook(() => useHeartDashboard(), { wrapper });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -91,7 +98,7 @@ describe("HEART Analytics Integration", () => {
           }),
       });
 
-      const { result } = renderHook(() => useHeartDashboard());
+      const { result } = renderHook(() => useHeartDashboard(), { wrapper });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -119,7 +126,7 @@ describe("HEART Analytics Integration", () => {
           }),
       });
 
-      const { result } = renderHook(() => useHeartDashboard());
+      const { result } = renderHook(() => useHeartDashboard(), { wrapper });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
       fetchSpy.mockClear();
@@ -310,7 +317,7 @@ describe("HEART Analytics Integration", () => {
         json: () => Promise.resolve(mockDashboardData),
       });
 
-      const { result } = renderHook(() => useHeartDashboard());
+      const { result } = renderHook(() => useHeartDashboard(), { wrapper });
 
       // Initially loading
       expect(result.current.loading).toBe(true);
@@ -336,7 +343,7 @@ describe("HEART Analytics Integration", () => {
     it("handles API errors gracefully", async () => {
       fetchSpy.mockRejectedValueOnce(new Error("Network timeout"));
 
-      const { result } = renderHook(() => useHeartDashboard());
+      const { result } = renderHook(() => useHeartDashboard(), { wrapper });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 

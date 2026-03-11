@@ -53,6 +53,7 @@ def tracer_provider():
     return TracerProvider()
 
 
+@pytest.mark.xdist_group("test_j_s_o_n_logger_performance")
 class TestJSONLoggerPerformance:
     """Performance benchmarks for JSON logging."""
 

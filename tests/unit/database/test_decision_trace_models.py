@@ -173,7 +173,7 @@ class TestDecisionTrace:
         assert result["workflow_id"] == "workflow-789"
         assert result["project_id"] == "project:backend"
         assert result["organization_id"] == "org:acme"
-        assert result["user_id"] == "user:alice"
+        assert result["user_id"] == get_user_id("alice")
         assert result["decision_type"] == "tool_selection"
         assert result["decision_stage"] == "action"
         assert result["query_text"] == "Calculate the sum"

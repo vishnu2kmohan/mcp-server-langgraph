@@ -33,7 +33,7 @@ class TestMCPWebSocketHandlerInit:
         """GIVEN no config WHEN creating handler THEN uses default config."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         assert handler.config.endpoint_name == "mcp"
@@ -54,7 +54,7 @@ class TestMCPWebSocketHandlerInit:
             rate_limit_per_minute=300,
         )
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler(config=config)
 
         assert handler.config.endpoint_name == "custom-mcp"
@@ -65,7 +65,7 @@ class TestMCPWebSocketHandlerInit:
         """GIVEN session_id WHEN creating handler THEN uses session_id."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler(session_id="custom-session-123")
 
         assert handler.session_id == "custom-session-123"
@@ -75,7 +75,7 @@ class TestMCPWebSocketHandlerInit:
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
         import uuid
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         # Verify it's a valid UUID
@@ -101,7 +101,7 @@ class TestMCPWebSocketHandlerLifecycle:
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
         from mcp_server_langgraph.websocket.types import AuthUser
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         user = AuthUser(id="user-123", username="testuser")
@@ -122,7 +122,7 @@ class TestMCPWebSocketHandlerLifecycle:
         """GIVEN no user WHEN on_connect called THEN creates MCPMessageHandler."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         with patch("mcp_server_langgraph.mcp.message_handler.AuthenticatedMCPHandler") as mock_handler:
@@ -135,7 +135,7 @@ class TestMCPWebSocketHandlerLifecycle:
         """GIVEN connected WHEN on_disconnect called THEN clears state."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         handler._mcp_handler = MagicMock()
@@ -161,7 +161,7 @@ class TestMCPWebSocketHandlerMessages:
         """GIVEN valid JSON-RPC message WHEN handle_message called THEN routes to handler."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -186,7 +186,7 @@ class TestMCPWebSocketHandlerMessages:
         """GIVEN invalid JSON-RPC version WHEN handle_message called THEN returns error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         jsonrpc_message = {"jsonrpc": "1.0", "id": 1, "method": "test"}
@@ -202,7 +202,7 @@ class TestMCPWebSocketHandlerMessages:
         """GIVEN message without method WHEN handle_message called THEN returns error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         jsonrpc_message = {"jsonrpc": "2.0", "id": 1}
@@ -218,7 +218,7 @@ class TestMCPWebSocketHandlerMessages:
         """GIVEN response message WHEN handle_message called THEN routes to handler."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -237,7 +237,7 @@ class TestMCPWebSocketHandlerMessages:
         """GIVEN error response message WHEN handle_message called THEN routes to handler."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -256,7 +256,7 @@ class TestMCPWebSocketHandlerMessages:
         """GIVEN no handler WHEN handle_message called THEN creates handler."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         handler._mcp_handler = None
@@ -277,7 +277,7 @@ class TestMCPWebSocketHandlerMessages:
         """GIVEN handler exception WHEN handle_message called THEN returns error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         mock_mcp_handler = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -304,7 +304,7 @@ class TestMCPWebSocketHandlerValidation:
         """GIVEN valid message WHEN _validate_jsonrpc called THEN returns None."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         message = {"jsonrpc": "2.0", "id": 1, "method": "test"}
@@ -316,7 +316,7 @@ class TestMCPWebSocketHandlerValidation:
         """GIVEN invalid version WHEN _validate_jsonrpc called THEN returns error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         message = {"jsonrpc": "1.0", "id": 1, "method": "test"}
@@ -329,7 +329,7 @@ class TestMCPWebSocketHandlerValidation:
         """GIVEN missing version WHEN _validate_jsonrpc called THEN returns error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         message = {"id": 1, "method": "test"}
@@ -342,7 +342,7 @@ class TestMCPWebSocketHandlerValidation:
         """GIVEN missing method WHEN _validate_jsonrpc called THEN returns error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         message = {"jsonrpc": "2.0", "id": 1}
@@ -355,7 +355,7 @@ class TestMCPWebSocketHandlerValidation:
         """GIVEN message with result WHEN _validate_jsonrpc called THEN returns None."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         message = {"jsonrpc": "2.0", "id": 1, "result": {}}
@@ -367,7 +367,7 @@ class TestMCPWebSocketHandlerValidation:
         """GIVEN message with error WHEN _validate_jsonrpc called THEN returns None."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         message = {"jsonrpc": "2.0", "id": 1, "error": {"code": -1, "message": "Error"}}
@@ -387,7 +387,7 @@ class TestMCPWebSocketHandlerError:
         """GIVEN error params WHEN _error_response called THEN returns formatted error."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         result = handler._error_response(123, -32600, "Invalid request")
@@ -401,7 +401,7 @@ class TestMCPWebSocketHandlerError:
         """GIVEN null id WHEN _error_response called THEN returns error with null id."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         result = handler._error_response(None, -32700, "Parse error")
@@ -422,7 +422,7 @@ class TestMCPWebSocketHandlerNotification:
         """GIVEN websocket WHEN _send_notification called THEN sends."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -438,7 +438,7 @@ class TestMCPWebSocketHandlerNotification:
         """GIVEN no websocket WHEN _send_notification called THEN does not send."""
         from mcp_server_langgraph.websocket.handlers.mcp import MCPWebSocketHandler
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPWebSocketHandler()
 
         # No websocket

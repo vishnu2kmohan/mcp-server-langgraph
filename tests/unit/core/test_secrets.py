@@ -202,7 +202,7 @@ class TestAWSSecretsManagerProvider:
         provider = AWSSecretsManagerProvider(region="us-west-2")
 
         mock_client = MagicMock()
-        with patch("boto3.client", return_value=mock_client) as mock_boto3:
+        with patch("boto3.client", side_effect=lambda *a, **kw: mock_client) as mock_boto3:
             client = provider._get_client()
             mock_boto3.assert_called_once_with("secretsmanager", region_name="us-west-2")
             assert client is mock_client
@@ -216,7 +216,7 @@ class TestAWSSecretsManagerProvider:
         provider = AWSSecretsManagerProvider()
 
         mock_client = MagicMock()
-        with patch("boto3.client", return_value=mock_client) as mock_boto3:
+        with patch("boto3.client", side_effect=lambda *a, **kw: mock_client) as mock_boto3:
             client1 = provider._get_client()
             client2 = provider._get_client()
             assert client1 is client2
@@ -233,7 +233,7 @@ class TestAWSSecretsManagerProvider:
         mock_client = MagicMock()
         mock_client.exceptions.ResourceExistsException = Exception
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.set_secret("test-secret", "secret-value")
 
             mock_client.create_secret.assert_called_once_with(Name="test-secret", SecretString="secret-value")
@@ -254,7 +254,7 @@ class TestAWSSecretsManagerProvider:
         mock_client.exceptions.ResourceExistsException = ResourceExistsException
         mock_client.create_secret.side_effect = ResourceExistsException()
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.set_secret("existing-secret", "new-value")
 
             mock_client.put_secret_value.assert_called_once_with(SecretId="existing-secret", SecretString="new-value")
@@ -270,7 +270,7 @@ class TestAWSSecretsManagerProvider:
         mock_client = MagicMock()
         mock_client.get_secret_value.return_value = {"SecretString": "retrieved-value"}
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             result = await provider.get_secret("my-secret")
 
             assert result == "retrieved-value"
@@ -292,7 +292,7 @@ class TestAWSSecretsManagerProvider:
         mock_client.exceptions.ResourceNotFoundException = ResourceNotFoundException
         mock_client.get_secret_value.side_effect = ResourceNotFoundException()
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             result = await provider.get_secret("nonexistent")
             assert result is None
 
@@ -306,7 +306,7 @@ class TestAWSSecretsManagerProvider:
 
         mock_client = MagicMock()
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.delete_secret("delete-me")
 
             mock_client.delete_secret.assert_called_once_with(SecretId="delete-me", ForceDeleteWithoutRecovery=True)
@@ -327,7 +327,7 @@ class TestAWSSecretsManagerProvider:
         mock_client.exceptions.ResourceNotFoundException = ResourceNotFoundException
         mock_client.delete_secret.side_effect = ResourceNotFoundException()
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             # Should not raise
             await provider.delete_secret("nonexistent")
 
@@ -423,7 +423,7 @@ class TestAzureKeyVaultProvider:
 
         mock_client = MagicMock()
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.set_secret("my_secret", "my-value")
 
             mock_client.set_secret.assert_called_once_with("my-secret", "my-value")
@@ -441,7 +441,7 @@ class TestAzureKeyVaultProvider:
         mock_secret.value = "azure-secret-value"
         mock_client.get_secret.return_value = mock_secret
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             result = await provider.get_secret("my-secret")
 
             assert result == "azure-secret-value"
@@ -461,7 +461,7 @@ class TestAzureKeyVaultProvider:
 
         mock_client.get_secret.side_effect = ResourceNotFoundError("Not found")
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             result = await provider.get_secret("nonexistent")
             assert result is None
 
@@ -477,7 +477,7 @@ class TestAzureKeyVaultProvider:
         mock_poller = MagicMock()
         mock_client.begin_delete_secret.return_value = mock_poller
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.delete_secret("delete_me")
 
             mock_client.begin_delete_secret.assert_called_once_with("delete-me")
@@ -578,7 +578,7 @@ class TestGCPSecretManagerProvider:
 
         mock_client = MagicMock()
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.set_secret("my-secret", "my-value")
 
             # Verify create_secret was called
@@ -608,7 +608,7 @@ class TestGCPSecretManagerProvider:
 
         mock_client.create_secret.side_effect = AlreadyExists("Already exists")
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.set_secret("existing-secret", "new-value")
 
             # add_secret_version should still be called
@@ -627,7 +627,7 @@ class TestGCPSecretManagerProvider:
         mock_response.payload.data = b"gcp-secret-value"
         mock_client.access_secret_version.return_value = mock_response
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             result = await provider.get_secret("my-secret")
 
             assert result == "gcp-secret-value"
@@ -647,7 +647,7 @@ class TestGCPSecretManagerProvider:
 
         mock_client.access_secret_version.side_effect = NotFound("Not found")
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             result = await provider.get_secret("nonexistent")
             assert result is None
 
@@ -661,7 +661,7 @@ class TestGCPSecretManagerProvider:
 
         mock_client = MagicMock()
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await provider.delete_secret("my-secret")
 
             mock_client.delete_secret.assert_called_once()
@@ -682,7 +682,7 @@ class TestGCPSecretManagerProvider:
 
         mock_client.delete_secret.side_effect = NotFound("Not found")
 
-        with patch.object(provider, "_get_client", return_value=mock_client):
+        with patch.object(provider, "_get_client", side_effect=lambda *a, **kw: mock_client):
             # Should not raise
             await provider.delete_secret("nonexistent")
 

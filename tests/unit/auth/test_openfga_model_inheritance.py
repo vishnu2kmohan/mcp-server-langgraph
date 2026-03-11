@@ -143,6 +143,12 @@ class TestModelLoading:
         assert system_type is not None, "system type should exist in model"
         assert "relations" in system_type
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAITypeInheritance:
     """
@@ -209,6 +215,12 @@ class TestAITypeInheritance:
         assert "admin" in relations, "ai type must have 'admin' relation"
         assert "viewer" in relations, "ai type must have 'viewer' relation"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSystemTypeInheritance:
     """
@@ -269,6 +281,12 @@ class TestSystemTypeInheritance:
         assert "developer" in relations, "system type must have 'developer' relation"
         assert "user" in relations, "system type must have 'user' relation"
         assert "viewer" in relations, "system type must have 'viewer' relation"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestInheritanceGapDetection:
@@ -355,6 +373,12 @@ class TestInheritanceGapDetection:
         # viewer is computed from admin transitively (admin → editor → viewer)
         is_computed = relation_is_computed_from(mock_type_transitive, "viewer", "admin")
         assert is_computed, "Should detect transitive inheritance"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestMonotonicChainInvariants:
@@ -515,6 +539,12 @@ class TestMonotonicChainInvariants:
             is_reachable = relation_is_computed_from(type_def, lower_relation, top_relation)
             assert is_reachable, f"{type_name}.{lower_relation} should be transitively reachable from {top_relation}"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestRoleTypeRemoval:
     """
@@ -546,6 +576,12 @@ class TestRoleTypeRemoval:
             "The role#assignee relation is unused for permissions. "
             "See OpenFGA Audit Resolution Plan Phase 0 Task 0.3."
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestExpectedHierarchyPatterns:
@@ -629,3 +665,9 @@ class TestExpectedHierarchyPatterns:
         if "owner" in relations and "viewer" in relations:
             is_computed = relation_is_computed_from(type_def, "viewer", "owner")
             assert is_computed, f"{type_name}.viewer should be computed from owner (transitively)"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

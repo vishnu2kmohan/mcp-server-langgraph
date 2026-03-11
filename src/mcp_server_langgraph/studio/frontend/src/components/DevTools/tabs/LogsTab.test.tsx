@@ -1,9 +1,22 @@
 /**
- * LogsTab Tests - react-table layout, auto-tail, service discovery
+ * LogsTab Tests - OTELDataTable layout, auto-tail, service discovery
+ *
+ * Updated to match the current LogsTab implementation:
+ * - FilterDropdown options use role="option" (not role="button")
+ * - "Jump to trace" link is inside expanded row content (requires clicking row first)
+ * - The trace button text is the traceId, not "Jump to Trace"
  */
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, cleanup } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  cleanup,
+  waitFor,
+} from "@testing-library/react";
+import { Provider } from "react-redux";
+import { createTestStore } from "@/test-utils";
 
 import { LogsTab } from "./LogsTab";
 import { DevToolsTimelineProvider } from "../context/DevToolsTimelineProvider";
@@ -16,20 +29,26 @@ const mockServicesHook = vi
   .fn()
   .mockReturnValue({ data: ["api-gateway", "worker"] });
 
-vi.mock("../../api", () => ({
-  useListDevtoolsServicesQuery: () => mockServicesHook(),
-}));
-
+vi.mock("../../../api", async () => {
+  const actual = await vi.importActual("../../../api");
+  return {
+    ...actual,
+    useListDevtoolsServicesQuery: () => mockServicesHook(),
+  };
+});
 function renderWithProvider(
   ui: React.ReactElement,
   providerProps?: Partial<
     React.ComponentProps<typeof DevToolsTimelineProvider>
   >,
 ) {
+  const store = createTestStore();
   return render(
-    <DevToolsTimelineProvider {...providerProps}>
-      {ui}
-    </DevToolsTimelineProvider>,
+    <Provider store={store}>
+      <DevToolsTimelineProvider {...providerProps}>
+        {ui}
+      </DevToolsTimelineProvider>
+    </Provider>,
   );
 }
 
@@ -70,7 +89,7 @@ const mockLogs = [
 // Tests
 // =============================================================================
 
-describe("LogsTab (react-table + service discovery)", () => {
+describe("LogsTab (OTELDataTable + service discovery)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -101,18 +120,22 @@ describe("LogsTab (react-table + service discovery)", () => {
     expect(screen.getByText(/connection timeout/i)).toBeInTheDocument();
     expect(screen.queryByText(/request received/i)).not.toBeInTheDocument();
 
+    // Open the Level filter dropdown
     fireEvent.click(screen.getByRole("button", { name: /level/i }));
-    fireEvent.click(screen.getByRole("button", { name: /error/i }));
+    // FilterDropdown options use role="option" (not role="button")
+    fireEvent.click(screen.getByRole("option", { name: /error/i }));
     expect(screen.getByText(/connection timeout/i)).toBeInTheDocument();
   });
 
   it("merges discovered services into the filter dropdown", () => {
     renderWithProvider(<LogsTab logs={mockLogs.slice(0, 1)} />);
 
+    // Open the Service filter dropdown
     fireEvent.click(screen.getByRole("button", { name: /service/i }));
-    expect(screen.getByRole("button", { name: /worker/i })).toBeInTheDocument();
+    // FilterDropdown options use role="option"
+    expect(screen.getByRole("option", { name: /worker/i })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /api-gateway/i }),
+      screen.getByRole("option", { name: /api-gateway/i }),
     ).toBeInTheDocument();
   });
 
@@ -124,15 +147,26 @@ describe("LogsTab (react-table + service discovery)", () => {
     expect(toggle).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("invokes onJumpToTrace when Jump to Trace is clicked", () => {
+  it("invokes onJumpToTrace when trace link is clicked in expanded row", async () => {
     const onJumpToTrace = vi.fn();
     renderWithProvider(
       <LogsTab logs={mockLogs} onJumpToTrace={onJumpToTrace} />,
     );
 
-    fireEvent.click(
-      screen.getAllByRole("button", { name: /jump to trace/i })[0],
-    );
+    // First click a row to expand it (the trace link is inside expanded row content)
+    const logText = screen.getByText(/request received/i);
+    const row = logText.closest("tr");
+    expect(row).toBeTruthy();
+    fireEvent.click(row!);
+
+    // Wait for expanded row to appear, then click the trace link button
+    await waitFor(() => {
+      // The trace button shows the traceId as text
+      const traceButton = screen.getByRole("button", { name: /abc123/i });
+      expect(traceButton).toBeInTheDocument();
+      fireEvent.click(traceButton);
+    });
+
     expect(onJumpToTrace).toHaveBeenCalledWith("abc123");
   });
 

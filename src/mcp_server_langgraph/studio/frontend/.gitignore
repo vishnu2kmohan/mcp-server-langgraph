@@ -13,5 +13,8 @@ coverage/
 *storybook.log
 storybook-static
 
+# Shard test logs (preserved for post-mortem analysis of failed runs)
+.vitest-shard-logs/
+
 # Heap snapshots (security-sensitive, may contain in-memory secrets)
 *.heapsnapshot

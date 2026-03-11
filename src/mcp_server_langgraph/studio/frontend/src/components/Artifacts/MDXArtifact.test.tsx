@@ -332,7 +332,7 @@ describe("MDXArtifact", () => {
           </CardGroup>
         </TestProvider>,
       );
-      const grid = container.querySelector('[style*="repeat(3"]');
+      const grid = container.querySelector('[style*="--cols: 3"]');
       expect(grid).toBeInTheDocument();
     });
   });

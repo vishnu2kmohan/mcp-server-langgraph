@@ -282,3 +282,9 @@ class TestK8sCRDConversionScript:
 
         # Check for header comment
         assert "# Converted from K8s PrometheusRule CRD" in content or "# Source:" in content
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

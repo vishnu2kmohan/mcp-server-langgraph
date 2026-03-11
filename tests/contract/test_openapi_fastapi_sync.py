@@ -75,6 +75,7 @@ def normalize_path(path: str) -> str:
     return re.sub(r"\{[^}]+\}", "{id}", path)
 
 
+@pytest.mark.xdist_group("test_open_a_p_i_fast_a_p_i_sync")
 @pytest.mark.contract
 class TestOpenAPIFastAPISync:
     """
@@ -227,6 +228,7 @@ class TestOpenAPIFastAPISync:
             )
 
 
+@pytest.mark.xdist_group("test_open_a_p_i_c_i_integration")
 @pytest.mark.contract
 class TestOpenAPICIIntegration:
     """

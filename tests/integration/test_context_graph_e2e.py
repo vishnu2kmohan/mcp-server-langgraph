@@ -43,6 +43,7 @@ def context_graph_feature_flags():
         yield mock_flags
 
 
+@pytest.mark.xdist_group("test_context_graph_integration")
 class TestContextGraphIntegration:
     """Integration tests for context graph components."""
 
@@ -291,6 +292,7 @@ class TestContextGraphIntegration:
         assert trace_id is None
 
 
+@pytest.mark.xdist_group("test_context_graph_repository")
 class TestContextGraphRepository:
     """Integration tests for DecisionTraceRepository."""
 
@@ -342,6 +344,7 @@ class TestContextGraphRepository:
         mock_session.commit.assert_called_once()
 
 
+@pytest.mark.xdist_group("test_context_graph_g_d_p_r_integration")
 class TestContextGraphGDPRIntegration:
     """Integration tests for GDPR compliance with context graphs."""
 
@@ -408,6 +411,7 @@ class TestContextGraphGDPRIntegration:
         mock_repo.delete_by_user.assert_called_once_with("user-001")
 
 
+@pytest.mark.xdist_group("test_context_graph_retention_scheduler")
 class TestContextGraphRetentionScheduler:
     """Integration tests for decision trace retention scheduler."""
 

@@ -237,7 +237,7 @@ class TestAIUXServiceTieredCacheViaMixin:
         # Patch before instantiation
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 
@@ -256,7 +256,7 @@ class TestAIUXServiceTieredCacheViaMixin:
 
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 
@@ -293,7 +293,7 @@ class TestAIUXServiceSWRViaMixin:
 
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 
@@ -324,7 +324,7 @@ class TestAIUXServiceSWRViaMixin:
 
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 
@@ -351,7 +351,7 @@ class TestAIUXServiceSWRViaMixin:
 
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 
@@ -396,7 +396,7 @@ class TestAIUXServiceCacheInvalidationViaMixin:
 
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 
@@ -417,7 +417,7 @@ class TestAIUXServiceCacheInvalidationViaMixin:
 
         with patch(
             "mcp_server_langgraph.core.cache.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 
@@ -466,7 +466,7 @@ class TestAIUXServiceBackwardCompatibility:
 
         with patch(
             "mcp_server_langgraph.core.cache_mixin.get_cache",
-            return_value=mock_cache_service,
+            side_effect=lambda *a, **kw: mock_cache_service,
         ):
             service = AIUXService(settings=mock_settings)
 

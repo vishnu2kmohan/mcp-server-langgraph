@@ -14,13 +14,16 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 // Mock storage
 const mockGetAuthToken = vi.fn();
 const _mockGetRefreshToken = vi.fn();
-vi.mock("./storage", () => ({
-  getAuthToken: () => mockGetAuthToken(),
-  STORAGE_KEYS: {
-    REFRESH_TOKEN: "refresh_token",
-  },
-}));
-
+vi.mock("./storage", async () => {
+  const actual = await vi.importActual("./storage");
+  return {
+    ...actual,
+    getAuthToken: () => mockGetAuthToken(),
+    STORAGE_KEYS: {
+      REFRESH_TOKEN: "refresh_token",
+    },
+  };
+});
 // Mock authenticatedFetch's refreshAccessToken
 const mockRefreshAccessToken = vi.fn();
 vi.mock("./authenticatedFetch", () => ({

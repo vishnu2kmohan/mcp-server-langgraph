@@ -90,3 +90,9 @@ class TestSDKFeatureFlags:
             assert "description" in properties[flag_name], f"Missing description for {flag_name}"
             # Description should mention Claude Agent SDK
             assert "SDK" in properties[flag_name]["description"], f"Description for {flag_name} should mention SDK"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

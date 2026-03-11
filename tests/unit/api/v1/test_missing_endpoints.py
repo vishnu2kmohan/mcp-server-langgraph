@@ -10,13 +10,20 @@ Following TDD: tests written FIRST, implementation follows.
 from __future__ import annotations
 
 import gc
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 pytestmark = [pytest.mark.unit, pytest.mark.api]
+
+
+@pytest.fixture(autouse=True)
+def _isolate_ai_logger():
+    """Isolate AI router logger from OTEL state contamination in xdist workers."""
+    with patch("mcp_server_langgraph.api.v1.ai.logger", MagicMock()):
+        yield
 
 
 @pytest.mark.unit

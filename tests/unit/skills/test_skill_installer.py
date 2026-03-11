@@ -76,11 +76,13 @@ class TestSkillInstallerInstall:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={
-                "name": "test-skill",
-                "description": "A test skill",
-                "content": "# Test Skill\n\nInstructions here.",
-            },
+            side_effect=lambda *a, **kw: (
+                {
+                    "name": "test-skill",
+                    "description": "A test skill",
+                    "content": "# Test Skill\n\nInstructions here.",
+                }
+            ),
         ):
             result = await installer.install("test-skill", source="anthropic")
 
@@ -112,11 +114,13 @@ class TestSkillInstallerInstall:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={
-                "name": "web-research",
-                "description": "Research topics on the web",
-                "content": skill_content,
-            },
+            side_effect=lambda *a, **kw: (
+                {
+                    "name": "web-research",
+                    "description": "Research topics on the web",
+                    "content": skill_content,
+                }
+            ),
         ):
             result = await installer.install("web-research", source="anthropic")
 
@@ -137,7 +141,7 @@ class TestSkillInstallerInstall:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={"name": "my-skill", "content": "# Skill"},
+            side_effect=lambda *a, **kw: {"name": "my-skill", "content": "# Skill"},
         ):
             result = await installer.install("my-skill")
 
@@ -761,12 +765,14 @@ class TestSkillInstallerInstallSkillMethod:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={
-                "name": "test-skill",
-                "description": "A test skill",
-                "content": "---\nname: test-skill\nversion: 1.0.0\n---\n# Test Skill",
-                "version": "1.0.0",
-            },
+            side_effect=lambda *a, **kw: (
+                {
+                    "name": "test-skill",
+                    "description": "A test skill",
+                    "content": "---\nname: test-skill\nversion: 1.0.0\n---\n# Test Skill",
+                    "version": "1.0.0",
+                }
+            ),
         ):
             result = await installer.install_skill("test-skill")
 
@@ -786,11 +792,13 @@ class TestSkillInstallerInstallSkillMethod:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={
-                "name": "versioned-skill",
-                "content": "---\nname: versioned-skill\nversion: 2.0.0\n---\n# Skill",
-                "version": "2.0.0",
-            },
+            side_effect=lambda *a, **kw: (
+                {
+                    "name": "versioned-skill",
+                    "content": "---\nname: versioned-skill\nversion: 2.0.0\n---\n# Skill",
+                    "version": "2.0.0",
+                }
+            ),
         ):
             result = await installer.install_skill("versioned-skill", version="2.0.0")
 
@@ -809,10 +817,12 @@ class TestSkillInstallerInstallSkillMethod:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={
-                "name": "enterprise-skill",
-                "content": "# Enterprise Skill",
-            },
+            side_effect=lambda *a, **kw: (
+                {
+                    "name": "enterprise-skill",
+                    "content": "# Enterprise Skill",
+                }
+            ),
         ) as mock_fetch:
             await installer.install_skill("enterprise-skill", marketplace="enterprise")
 
@@ -832,10 +842,12 @@ class TestSkillInstallerInstallSkillMethod:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={
-                "name": "result-skill",
-                "content": "# Result Skill",
-            },
+            side_effect=lambda *a, **kw: (
+                {
+                    "name": "result-skill",
+                    "content": "# Result Skill",
+                }
+            ),
         ):
             result = await installer.install_skill("result-skill")
 
@@ -856,11 +868,13 @@ class TestSkillInstallerInstallSkillMethod:
             installer,
             "_fetch_skill_from_marketplace",
             new_callable=AsyncMock,
-            return_value={
-                "name": "tracked-skill",
-                "content": "---\nname: tracked-skill\nversion: 1.5.0\n---\n# Tracked Skill",
-                "version": "1.5.0",
-            },
+            side_effect=lambda *a, **kw: (
+                {
+                    "name": "tracked-skill",
+                    "content": "---\nname: tracked-skill\nversion: 1.5.0\n---\n# Tracked Skill",
+                    "version": "1.5.0",
+                }
+            ),
         ):
             with patch("mcp_server_langgraph.skills.auto_update.get_auto_update_scheduler") as mock_get_scheduler:
                 mock_scheduler = MagicMock()

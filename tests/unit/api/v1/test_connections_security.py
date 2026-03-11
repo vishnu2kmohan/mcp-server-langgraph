@@ -248,6 +248,12 @@ class TestMCPConnectionToResponseConversion:
         assert response.resource_count == 3
         assert response.prompt_count == 2
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestConnectionEndpointReturnTypes:
     """Tests for endpoint return type annotations (must return ConnectionResponse)."""
@@ -281,6 +287,12 @@ class TestConnectionEndpointReturnTypes:
         assert return_annotation == ConnectionResponse, (
             f"SECURITY: update_connection must return ConnectionResponse, got {return_annotation}"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestConnectionEndpointSecurity:
@@ -329,3 +341,9 @@ class TestConnectionEndpointSecurity:
 
         # THEN env should not be a key
         assert "env" not in data
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

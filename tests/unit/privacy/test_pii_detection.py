@@ -384,7 +384,7 @@ class TestPIIDetectionFeatureFlag:
 
         with patch(
             "mcp_server_langgraph.privacy.detectors.is_feature_enabled",
-            return_value=False,
+            side_effect=lambda *args: False,
         ):
             text = "Contact: test@example.com"
             detections = detect_pii(text)

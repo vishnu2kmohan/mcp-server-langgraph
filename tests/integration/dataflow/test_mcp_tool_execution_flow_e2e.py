@@ -97,6 +97,7 @@ def mock_executor(mock_mcp_session):
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_m_c_p_tool_definition_flow")
 class TestMCPToolDefinitionFlow:
     """
     E2E tests for MCP tool definition and registry.
@@ -168,6 +169,7 @@ class TestMCPToolDefinitionFlow:
         assert "required" in defn.input_schema
 
 
+@pytest.mark.xdist_group("test_m_c_p_tool_proxy_flow")
 class TestMCPToolProxyFlow:
     """
     E2E tests for MCP tool proxy creation and execution.
@@ -257,6 +259,7 @@ class TestMCPToolProxyFlow:
         assert result == "Execution result"
 
 
+@pytest.mark.xdist_group("test_m_c_p_executor_flow")
 class TestMCPExecutorFlow:
     """
     E2E tests for MCP executor routing and execution.
@@ -385,6 +388,7 @@ class TestMCPExecutorFlow:
             )
 
 
+@pytest.mark.xdist_group("test_m_c_p_tool_result_flow")
 class TestMCPToolResultFlow:
     """
     E2E tests for MCP tool result handling.
@@ -490,6 +494,7 @@ class TestMCPToolResultFlow:
         assert "error" in result.lower() or "failed" in result.lower()
 
 
+@pytest.mark.xdist_group("test_m_c_p_batch_execution_flow")
 class TestMCPBatchExecutionFlow:
     """
     E2E tests for batch MCP tool execution.

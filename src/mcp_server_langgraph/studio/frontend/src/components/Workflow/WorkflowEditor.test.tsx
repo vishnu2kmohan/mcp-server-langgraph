@@ -26,12 +26,15 @@ vi.mock("../../hooks/useWorkflowValidation", () => ({
   useWorkflowValidation: vi.fn(),
 }));
 
-vi.mock("../../api", () => ({
-  useGetWorkflowQuery: vi.fn(),
-  useUpdateWorkflowMutation: vi.fn(),
-  useGetFeatureFlagsQuery: vi.fn(),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetWorkflowQuery: vi.fn(),
+    useUpdateWorkflowMutation: vi.fn(),
+    useGetFeatureFlagsQuery: vi.fn(),
+  };
+});
 // Mock WorkflowCanvas as it has complex dependencies
 vi.mock("./WorkflowCanvas", () => ({
   WorkflowCanvas: () => <div data-testid="workflow-canvas">WorkflowCanvas</div>,

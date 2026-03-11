@@ -24,13 +24,16 @@ import { clearSuggestionCache } from "../../hooks/useAIEmptyState";
 import { TestProvider } from "@/test-utils";
 
 // Mock feature flag - default to enabled for AI empty state
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn((flagName: string) => {
-    if (flagName === "ai_empty_state") return true;
-    return false;
-  }),
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn((flagName: string) => {
+      if (flagName === "ai_empty_state") return true;
+      return false;
+    }),
+  };
+});
 const AI_ENDPOINT = "/api/v1/ai/empty-state/suggestions";
 
 // Create wrapper with Redux store including RTK Query API

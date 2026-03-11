@@ -93,7 +93,7 @@ class TestBudgetAlertTriggerFunction:
             with patch(
                 "mcp_server_langgraph.monitoring.litellm_cost_callback.get_current_spend_for_entity",
                 new_callable=AsyncMock,
-                return_value=Decimal("850.00"),
+                side_effect=lambda *a, **kw: Decimal("850.00"),
             ):
                 with patch("mcp_server_langgraph.monitoring.cost_budget.get_budget_alert_broadcaster") as mock_get_broadcaster:
                     mock_broadcaster = MagicMock()
@@ -152,7 +152,7 @@ class TestBudgetAlertTriggerBroadcast:
             with patch(
                 "mcp_server_langgraph.monitoring.litellm_cost_callback.get_current_spend_for_entity",
                 new_callable=AsyncMock,
-                return_value=Decimal("850.00"),  # 85% - above warning
+                side_effect=lambda *a, **kw: Decimal("850.00"),  # 85% - above warning
             ):
                 with patch("mcp_server_langgraph.monitoring.cost_budget.get_budget_alert_broadcaster") as mock_get_broadcaster:
                     mock_broadcaster = MagicMock()
@@ -205,7 +205,7 @@ class TestBudgetAlertTriggerBroadcast:
             with patch(
                 "mcp_server_langgraph.monitoring.litellm_cost_callback.get_current_spend_for_entity",
                 new_callable=AsyncMock,
-                return_value=Decimal("1000.00"),  # 100% - at critical
+                side_effect=lambda *a, **kw: Decimal("1000.00"),  # 100% - at critical
             ):
                 with patch("mcp_server_langgraph.monitoring.cost_budget.get_budget_alert_broadcaster") as mock_get_broadcaster:
                     mock_broadcaster = MagicMock()
@@ -257,7 +257,7 @@ class TestBudgetAlertTriggerBroadcast:
             with patch(
                 "mcp_server_langgraph.monitoring.litellm_cost_callback.get_current_spend_for_entity",
                 new_callable=AsyncMock,
-                return_value=Decimal("500.00"),  # 50% - below warning
+                side_effect=lambda *a, **kw: Decimal("500.00"),  # 50% - below warning
             ):
                 with patch("mcp_server_langgraph.monitoring.cost_budget.get_budget_alert_broadcaster") as mock_get_broadcaster:
                     mock_broadcaster = MagicMock()

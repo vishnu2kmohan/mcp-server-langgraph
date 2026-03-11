@@ -11,6 +11,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+import mcp_server_langgraph.api.v1.memory as memory_module
+import mcp_server_langgraph.skills as skills_module
 from mcp_server_langgraph.api.v1.references import references_router
 from mcp_server_langgraph.storage.models import MCPConnection
 
@@ -20,8 +22,9 @@ pytestmark = pytest.mark.unit
 @pytest.fixture
 def mock_feature_flags():
     """Mock feature flags with markdown references enabled."""
-    with patch("mcp_server_langgraph.api.v1.references.feature_flags") as mock_flags:
-        mock_flags.enable_markdown_references = True
+    mock_flags = MagicMock()
+    mock_flags.enable_markdown_references = True
+    with patch("mcp_server_langgraph.api.v1.references.feature_flags", mock_flags):
         yield mock_flags
 
 
@@ -86,15 +89,15 @@ def app(mock_feature_flags, mock_user, mock_auth_middleware, mock_connection_rep
     # Patch auth middleware getter
     with patch(
         "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-        return_value=mock_auth_middleware,
+        side_effect=lambda *a, **kw: mock_auth_middleware,
     ):
         with patch(
             "mcp_server_langgraph.api.v1.references.require_reference_viewer_global",
-            return_value=mock_user,
+            side_effect=lambda *a, **kw: mock_user,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.references.get_connection_repository",
-                return_value=mock_connection_repo,
+                side_effect=lambda *a, **kw: mock_connection_repo,
             ):
                 yield app
 
@@ -121,7 +124,7 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
             result = await resolve_references(
                 body=ResolveRequest(references=[]),
@@ -151,7 +154,7 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
             result = await resolve_references(
                 body=ResolveRequest(references=[ReferenceRequest(type="tool", qualifier="filesystem", id="read_file")]),
@@ -183,7 +186,7 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
             result = await resolve_references(
                 body=ResolveRequest(references=[ReferenceRequest(type="tool", qualifier="missing_server", id="some_tool")]),
@@ -218,7 +221,7 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await resolve_references(
                 body=ResolveRequest(references=[ReferenceRequest(type="tool", qualifier="filesystem", id="read_file")]),
@@ -254,11 +257,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
-            with patch(
-                "mcp_server_langgraph.skills.SkillDiscovery",
-                return_value=mock_discovery,
+            with patch.object(
+                skills_module,
+                "SkillDiscovery",
+                side_effect=lambda *a, **kw: mock_discovery,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(
@@ -293,11 +297,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
-            with patch(
-                "mcp_server_langgraph.skills.SkillDiscovery",
-                return_value=mock_discovery,
+            with patch.object(
+                skills_module,
+                "SkillDiscovery",
+                side_effect=lambda *a, **kw: mock_discovery,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(
@@ -334,7 +339,7 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await resolve_references(
                 body=ResolveRequest(references=[ReferenceRequest(type="artifact", qualifier="chart-123", id="chart-123")]),
@@ -375,11 +380,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
-            with patch(
-                "mcp_server_langgraph.skills.SkillDiscovery",
-                return_value=mock_discovery,
+            with patch.object(
+                skills_module,
+                "SkillDiscovery",
+                side_effect=lambda *a, **kw: mock_discovery,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(
@@ -455,11 +461,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
-            with patch(
-                "mcp_server_langgraph.api.v1.memory.get_notes_manager",
-                return_value=mock_manager,
+            with patch.object(
+                memory_module,
+                "get_notes_manager",
+                side_effect=lambda *a, **kw: mock_manager,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(references=[ReferenceRequest(type="memory", qualifier="note", id="note-abc123")]),
@@ -493,11 +500,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
-            with patch(
-                "mcp_server_langgraph.api.v1.memory.get_notes_manager",
-                return_value=mock_manager,
+            with patch.object(
+                memory_module,
+                "get_notes_manager",
+                side_effect=lambda *a, **kw: mock_manager,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(references=[ReferenceRequest(type="memory", qualifier="note", id="nonexistent")]),
@@ -540,11 +548,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
-            with patch(
-                "mcp_server_langgraph.api.v1.memory.get_notes_manager",
-                return_value=mock_manager,
+            with patch.object(
+                memory_module,
+                "get_notes_manager",
+                side_effect=lambda *a, **kw: mock_manager,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(references=[ReferenceRequest(type="memory", qualifier="note", id="note-abc123")]),
@@ -583,11 +592,11 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-                return_value=mock_repo,
+                side_effect=lambda *a, **kw: mock_repo,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(references=[ReferenceRequest(type="plan", qualifier="plan", id="plan-xyz789")]),
@@ -621,11 +630,11 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-                return_value=mock_repo,
+                side_effect=lambda *a, **kw: mock_repo,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(references=[ReferenceRequest(type="plan", qualifier="plan", id="nonexistent")]),
@@ -662,11 +671,11 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-                return_value=mock_repo,
+                side_effect=lambda *a, **kw: mock_repo,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(references=[ReferenceRequest(type="plan", qualifier="plan", id="plan-xyz789")]),
@@ -702,11 +711,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
-            with patch(
-                "mcp_server_langgraph.skills.SkillDiscovery",
-                return_value=mock_discovery,
+            with patch.object(
+                skills_module,
+                "SkillDiscovery",
+                side_effect=lambda *a, **kw: mock_discovery,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(
@@ -755,11 +765,12 @@ class TestReferencesResolver:
         request = MagicMock()
         with patch(
             "mcp_server_langgraph.api.v1.references.get_auth_middleware_from_request",
-            return_value=mock_auth_middleware,
+            side_effect=lambda *a, **kw: mock_auth_middleware,
         ):
-            with patch(
-                "mcp_server_langgraph.skills.SkillDiscovery",
-                return_value=mock_discovery,
+            with patch.object(
+                skills_module,
+                "SkillDiscovery",
+                side_effect=lambda *a, **kw: mock_discovery,
             ):
                 result = await resolve_references(
                     body=ResolveRequest(
@@ -779,3 +790,9 @@ class TestReferencesResolver:
         # Verify get_skill was called with just the skill name (without version)
         mock_discovery.get_skill.assert_called_with("analyzer")
         assert result.resolved[0].status == "valid"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

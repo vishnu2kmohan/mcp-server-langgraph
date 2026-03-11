@@ -222,7 +222,10 @@ def run_terraform_scan(verbose: bool = False) -> int:
         return 0
 
     print("▶ Scanning Terraform configurations...")
+    ignorefile = terraform_dir / ".trivyignore"
     args = ["trivy", "config", str(terraform_dir), "--severity", "CRITICAL,HIGH", "--exit-code", "1"]
+    if ignorefile.exists():
+        args.extend(["--ignorefile", str(ignorefile)])
     if not verbose:
         args.append("--quiet")
 

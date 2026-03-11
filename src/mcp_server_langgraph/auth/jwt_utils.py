@@ -72,7 +72,7 @@ def decode_jwt_token(token: str, options: dict[str, Any] | None = None) -> dict[
         return None
 
     default_options = {
-        "verify_signature": False,  # We're just extracting claims
+        "verify_signature": False,  # nosemgrep: unverified-jwt-decode — extracting claims only
         "verify_exp": True,  # Still check expiration
         "verify_aud": False,  # Audience varies
     }

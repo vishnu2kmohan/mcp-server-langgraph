@@ -399,12 +399,14 @@ class TestPostgresBudgetStorage:
         from mcp_server_langgraph.monitoring.budget_storage import PostgresBudgetStorage
 
         # Mock the session maker
-        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None)))
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session.execute = AsyncMock(
+            side_effect=lambda *a, **kw: MagicMock(scalar_one_or_none=MagicMock(side_effect=lambda *a2, **kw2: None))
+        )
+        mock_session.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_session)
+        mock_session.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
-        mock_session_maker = MagicMock(return_value=mock_session)
+        mock_session_maker = MagicMock(side_effect=lambda: mock_session)
 
         storage = PostgresBudgetStorage(session_maker=mock_session_maker)
 
@@ -435,14 +437,14 @@ class TestPostgresBudgetStorage:
 
         # Mock the session
         mock_result = MagicMock()
-        mock_result.scalar_one_or_none = MagicMock(return_value=mock_record)
+        mock_result.scalar_one_or_none = MagicMock(side_effect=lambda *a, **kw: mock_record)
 
-        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session.execute = AsyncMock(side_effect=lambda *a, **kw: mock_result)
+        mock_session.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_session)
+        mock_session.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
-        mock_session_maker = MagicMock(return_value=mock_session)
+        mock_session_maker = MagicMock(side_effect=lambda: mock_session)
 
         storage = PostgresBudgetStorage(session_maker=mock_session_maker)
 
@@ -466,13 +468,13 @@ class TestPostgresBudgetStorage:
         from mcp_server_langgraph.monitoring.cost_budget import Budget
 
         # Mock the session
-        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.merge = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.commit = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session.merge = AsyncMock(side_effect=lambda *a, **kw: None)
+        mock_session.commit = AsyncMock(side_effect=lambda *a, **kw: None)
+        mock_session.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_session)
+        mock_session.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
-        mock_session_maker = MagicMock(return_value=mock_session)
+        mock_session_maker = MagicMock(side_effect=lambda: mock_session)
 
         storage = PostgresBudgetStorage(session_maker=mock_session_maker)
 
@@ -514,14 +516,16 @@ class TestPostgresBudgetStorage:
 
         # Mock session result
         mock_result = MagicMock()
-        mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=mock_records)))
+        mock_result.scalars = MagicMock(
+            side_effect=lambda *a, **kw: MagicMock(all=MagicMock(side_effect=lambda *a2, **kw2: mock_records))
+        )
 
-        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session.execute = AsyncMock(side_effect=lambda *a, **kw: mock_result)
+        mock_session.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_session)
+        mock_session.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
-        mock_session_maker = MagicMock(return_value=mock_session)
+        mock_session_maker = MagicMock(side_effect=lambda: mock_session)
 
         storage = PostgresBudgetStorage(session_maker=mock_session_maker)
 
@@ -544,16 +548,16 @@ class TestPostgresBudgetStorage:
         mock_record = MagicMock(spec=BudgetRecord)
 
         mock_result = MagicMock()
-        mock_result.scalar_one_or_none = MagicMock(return_value=mock_record)
+        mock_result.scalar_one_or_none = MagicMock(side_effect=lambda *a, **kw: mock_record)
 
-        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.delete = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.commit = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session.execute = AsyncMock(side_effect=lambda *a, **kw: mock_result)
+        mock_session.delete = AsyncMock(side_effect=lambda *a, **kw: None)
+        mock_session.commit = AsyncMock(side_effect=lambda *a, **kw: None)
+        mock_session.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_session)
+        mock_session.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
-        mock_session_maker = MagicMock(return_value=mock_session)
+        mock_session_maker = MagicMock(side_effect=lambda: mock_session)
 
         storage = PostgresBudgetStorage(session_maker=mock_session_maker)
 
@@ -573,14 +577,14 @@ class TestPostgresBudgetStorage:
         from mcp_server_langgraph.monitoring.budget_storage import PostgresBudgetStorage
 
         mock_result = MagicMock()
-        mock_result.scalar_one_or_none = MagicMock(return_value=None)
+        mock_result.scalar_one_or_none = MagicMock(side_effect=lambda *a, **kw: None)
 
-        mock_session = AsyncMock(return_value=None)  # noqa: async-mock-config
-        mock_session.execute = AsyncMock(return_value=mock_result)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
+        mock_session = AsyncMock()  # noqa: async-mock-config
+        mock_session.execute = AsyncMock(side_effect=lambda *a, **kw: mock_result)
+        mock_session.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_session)
+        mock_session.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: None)
 
-        mock_session_maker = MagicMock(return_value=mock_session)
+        mock_session_maker = MagicMock(side_effect=lambda: mock_session)
 
         storage = PostgresBudgetStorage(session_maker=mock_session_maker)
 

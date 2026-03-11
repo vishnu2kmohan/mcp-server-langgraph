@@ -57,6 +57,12 @@ class TestThinkingBudgetUpdateRequestModel:
         assert request.default_level is None
         assert request.enabled is None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestUpdateThinkingBudget:
     """Tests for the PATCH endpoint handler."""
@@ -125,3 +131,9 @@ class TestUpdateThinkingBudget:
 
             assert result.current_config is not None
             assert result.current_config.default_level == "high"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

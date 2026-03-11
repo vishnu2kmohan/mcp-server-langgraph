@@ -23,7 +23,6 @@ Tokens are added to denylist on logout for immediate invalidation (OWASP best pr
 """
 
 import gc
-import os
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -38,7 +37,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.api]
 # under xdist parallel execution because the middleware is a global module-level variable
 # that can be polluted by other workers. Despite 4 defensive layers in _create_test_app_with_user,
 # xdist worker scheduling is non-deterministic and can still cause race conditions.
-_XDIST_AUTH_MIDDLEWARE_UNSTABLE = os.getenv("PYTEST_XDIST_WORKER") is not None
 
 
 # NOTE: Auth and database singletons are reset by the central
@@ -235,11 +233,6 @@ class TestGetCurrentUser:
         assert data["email"] == "alice@example.com"
         assert "developer" in data["roles"]
 
-    @pytest.mark.xfail(
-        _XDIST_AUTH_MIDDLEWARE_UNSTABLE,
-        reason="Auth middleware singleton can be polluted by other xdist workers",
-        strict=False,  # Allow to pass when middleware is properly initialized
-    )
     def test_get_me_returns_401_without_auth(self):
         """Should return 401 when no authorization header."""
         # Create app with unauthenticated user (raises 401)
@@ -249,11 +242,6 @@ class TestGetCurrentUser:
         response = client.get("/me")
         assert response.status_code == 401
 
-    @pytest.mark.xfail(
-        _XDIST_AUTH_MIDDLEWARE_UNSTABLE,
-        reason="Auth middleware singleton can be polluted by other xdist workers",
-        strict=False,  # Allow to pass when middleware is properly initialized
-    )
     def test_get_me_returns_401_with_invalid_token(self):
         """Should return 401 for invalid token."""
         # Create app with unauthenticated user (raises 401)
@@ -393,11 +381,6 @@ class TestLogoutWithDenylist:
         reset_singleton_dependencies()
         gc.collect()
 
-    @pytest.mark.xfail(
-        _XDIST_AUTH_MIDDLEWARE_UNSTABLE,
-        reason="Dependency override for token denylist can be polluted by other xdist workers",
-        strict=False,
-    )
     def test_logout_adds_token_to_denylist(self):
         """Should add token JTI to denylist on logout."""
         import jwt

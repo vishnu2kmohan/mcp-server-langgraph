@@ -133,7 +133,7 @@ class TestDeferLoadingToolsList:
             # Mock feature flag as enabled
             with patch(
                 "mcp_server_langgraph.tools.defer_loading.is_feature_enabled",
-                return_value=True,
+                side_effect=lambda *a, **kw: True,
             ):
                 visible_tools = get_visible_tools()
                 tool_names = [t.name for t in visible_tools]
@@ -343,7 +343,7 @@ class TestDeferLoadingFeatureFlag:
             # Mock feature flag as disabled
             with patch(
                 "mcp_server_langgraph.tools.defer_loading.is_feature_enabled",
-                return_value=False,
+                side_effect=lambda *a, **kw: False,
             ):
                 visible_tools = get_visible_tools()
                 tool_names = [t.name for t in visible_tools]
@@ -377,7 +377,7 @@ class TestDeferLoadingFeatureFlag:
             # Mock feature flag as enabled
             with patch(
                 "mcp_server_langgraph.tools.defer_loading.is_feature_enabled",
-                return_value=True,
+                side_effect=lambda *a, **kw: True,
             ):
                 visible_tools = get_visible_tools()
                 tool_names = [t.name for t in visible_tools]

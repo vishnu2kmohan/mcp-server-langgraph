@@ -18,8 +18,6 @@ import { server } from "../mocks/server";
 import { AnalyticsDashboardPage } from "./AnalyticsDashboardPage";
 import personaReducer from "../store/slices/personaSlice";
 
-import { TestProvider } from "@/test-utils";
-
 // Mock useAIMetricsInsights to avoid additional API calls in tests
 // Use dimension/metric names that don't conflict with HEART dimension card labels
 vi.mock("../hooks/useAIMetricsInsights", () => ({
@@ -145,11 +143,9 @@ describe("AnalyticsDashboardPage", () => {
   describe("rendering", () => {
     it("renders the page title", async () => {
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       expect(
@@ -159,11 +155,9 @@ describe("AnalyticsDashboardPage", () => {
 
     it("renders all 5 HEART dimension cards", async () => {
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
@@ -182,11 +176,9 @@ describe("AnalyticsDashboardPage", () => {
 
     it("shows overall health score", async () => {
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
@@ -201,11 +193,9 @@ describe("AnalyticsDashboardPage", () => {
 
     it("renders AI Insights panel (Phase 6.6)", async () => {
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
@@ -226,11 +216,9 @@ describe("AnalyticsDashboardPage", () => {
     it("shows loading state initially", async () => {
       // Test that loading is shown before data is fetched
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       // Initially shows loading
@@ -259,11 +247,9 @@ describe("AnalyticsDashboardPage", () => {
       );
 
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       // Wait for loading to complete
@@ -289,11 +275,9 @@ describe("AnalyticsDashboardPage", () => {
       );
 
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -305,11 +289,9 @@ describe("AnalyticsDashboardPage", () => {
   describe("time range selection", () => {
     it("renders time range selector", async () => {
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       expect(
@@ -321,11 +303,9 @@ describe("AnalyticsDashboardPage", () => {
   describe("accessibility", () => {
     it("has main landmark", async () => {
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       expect(screen.getByRole("main")).toBeInTheDocument();
@@ -353,11 +333,9 @@ describe("AnalyticsDashboardPage", () => {
       );
 
       render(
-        <TestProvider>
-          <TestWrapper>
-            <AnalyticsDashboardPage />
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper>
+          <AnalyticsDashboardPage />
+        </TestWrapper>,
       );
 
       // Wait for loading to complete

@@ -265,7 +265,7 @@ class ConnectionTester:
             return driver_cls(project=project), None  # type: ignore[call-arg]
 
         if dialect == "mysql":
-            import aiomysql  # type: ignore[import-not-found,import-untyped]
+            import aiomysql  # type: ignore[import-not-found]
 
             pool = await aiomysql.create_pool(
                 host=credentials.get("host") or "localhost",
@@ -281,7 +281,7 @@ class ConnectionTester:
             return driver_cls(pool=pool), pool  # type: ignore[call-arg]
 
         if dialect == "redshift":
-            import redshift_connector  # type: ignore[import-not-found,import-untyped]
+            import redshift_connector  # type: ignore[import-not-found]
 
             # Run sync connector in thread executor to avoid blocking event loop
             conn = await asyncio.to_thread(
@@ -296,7 +296,7 @@ class ConnectionTester:
             return driver_cls(connection=conn), conn  # type: ignore[call-arg]
 
         if dialect == "snowflake":
-            import snowflake.connector  # type: ignore[import-not-found,import-untyped]
+            import snowflake.connector  # type: ignore[import-not-found]
 
             # Run sync connector in thread executor to avoid blocking event loop
             conn = await asyncio.to_thread(
@@ -311,7 +311,7 @@ class ConnectionTester:
             return driver_cls(connection=conn), conn  # type: ignore[call-arg]
 
         if dialect == "clickhouse":
-            import asynch  # type: ignore[import-not-found,import-untyped]
+            import asynch  # type: ignore[import-not-found]
 
             client = await asynch.connect(
                 host=credentials.get("host") or "localhost",
@@ -324,7 +324,7 @@ class ConnectionTester:
             return driver_cls(client=client), client  # type: ignore[call-arg]
 
         if dialect == "trino":
-            from trino.dbapi import connect as trino_connect  # type: ignore[import-not-found,import-untyped]
+            from trino.dbapi import connect as trino_connect  # type: ignore[import-not-found]
 
             # Run sync connector in thread executor to avoid blocking event loop
             conn = await asyncio.to_thread(

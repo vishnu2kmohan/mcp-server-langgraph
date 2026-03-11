@@ -104,6 +104,12 @@ class TestChatModelFactoryProviderSelection:
 
             mock_create.assert_called_once()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestChatModelFactoryVertexAI:
@@ -145,6 +151,12 @@ class TestChatModelFactoryVertexAI:
 
             mock_adapter.assert_called_once()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestChatModelFactoryFallback:
@@ -183,6 +195,12 @@ class TestChatModelFactoryFallback:
             create_chat_model_from_config(mock_settings)
 
             mock_adapter.assert_called_once()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -226,3 +244,9 @@ class TestChatModelFactoryStreaming:
             # Check enable_streaming argument
             args = mock_create.call_args
             assert args[0][2] is False  # enable_streaming
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

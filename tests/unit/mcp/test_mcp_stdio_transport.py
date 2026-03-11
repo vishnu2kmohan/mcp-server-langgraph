@@ -71,7 +71,7 @@ class TestMCPSTDIOTransportConnect:
         )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process) as mock_exec:
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process) as mock_exec:
             await session.connect()
 
             mock_exec.assert_called_once()
@@ -124,7 +124,7 @@ class TestMCPSTDIOTransportConnect:
         )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
 
         # Check that initialize request was sent
@@ -179,7 +179,7 @@ class TestMCPSTDIOTransportConnect:
         )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
 
         # Check that initialized notification was sent (second write)
@@ -233,7 +233,7 @@ class TestMCPSTDIOTransportConnect:
         )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
 
         # Verify server info is stored
@@ -308,7 +308,7 @@ class TestMCPSTDIOTransportListTools:
         response_iter = iter(responses)
         mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
             await session.list_tools()
 
@@ -379,7 +379,7 @@ class TestMCPSTDIOTransportListTools:
         response_iter = iter(responses)
         mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
             tools = await session.list_tools()
 
@@ -447,7 +447,7 @@ class TestMCPSTDIOTransportCallTool:
         response_iter = iter(responses)
         mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
             await session.call_tool("screenshot", {"url": "https://example.com"})
 
@@ -510,7 +510,7 @@ class TestMCPSTDIOTransportCallTool:
         response_iter = iter(responses)
         mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
             result = await session.call_tool("screenshot", {"url": "https://example.com"})
 
@@ -570,7 +570,7 @@ class TestMCPSTDIOTransportCallTool:
         response_iter = iter(responses)
         mock_process.stdout.readline = AsyncMock(side_effect=lambda: next(response_iter).encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
             result = await session.call_tool("click", {"selector": ".missing"})
 
@@ -624,7 +624,7 @@ class TestMCPSTDIOTransportDisconnect:
         )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
             assert session.is_connected is True
 
@@ -671,7 +671,7 @@ class TestMCPSTDIOTransportDisconnect:
         )
         mock_process.stdout.readline = AsyncMock(return_value=init_response.encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             await session.connect()
             assert session.server_info is not None
 
@@ -749,7 +749,7 @@ class TestMCPSTDIOTransportErrorHandling:
         )
         mock_process.stdout.readline = AsyncMock(return_value=error_response.encode())
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+        with patch("asyncio.create_subprocess_exec", side_effect=lambda *a, **kw: mock_process):
             with pytest.raises(ConnectionError, match="Initialize failed"):
                 await session.connect()
 

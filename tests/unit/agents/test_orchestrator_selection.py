@@ -1528,7 +1528,7 @@ class TestLangGraphPatternIntegration:
 
         with patch(
             "mcp_server_langgraph.patterns.supervisor.Supervisor",
-            return_value=mock_supervisor,
+            side_effect=lambda *a, **kw: mock_supervisor,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", MagicMock())
@@ -1585,7 +1585,7 @@ class TestLangGraphPatternIntegration:
 
         with patch(
             "mcp_server_langgraph.patterns.supervisor.Supervisor",
-            return_value=mock_supervisor,
+            side_effect=lambda *a, **kw: mock_supervisor,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", MagicMock())
@@ -1634,7 +1634,7 @@ class TestLangGraphPatternIntegration:
 
         with patch(
             "mcp_server_langgraph.patterns.supervisor.Supervisor",
-            return_value=mock_supervisor,
+            side_effect=lambda *a, **kw: mock_supervisor,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", MagicMock())
@@ -1733,7 +1733,7 @@ class TestLangGraphDispatch:
         messages = [{"role": "user", "content": "Complex analysis task"}]
 
         # Mock _load_and_merge_history to return messages unchanged
-        async def mock_load_history(self, session_id, msgs):
+        async def mock_load_history(self, session_id, msgs, **kwargs):
             return msgs
 
         # Mock _inject_resource_context to return messages unchanged
@@ -1815,7 +1815,7 @@ class TestLangGraphHierarchical:
 
         with patch(
             "mcp_server_langgraph.patterns.hierarchical.HierarchicalCoordinator",
-            return_value=mock_hierarchical,
+            side_effect=lambda *a, **kw: mock_hierarchical,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", MagicMock())
@@ -1878,7 +1878,7 @@ class TestProductionWorkers:
 
         with patch(
             "mcp_server_langgraph.patterns.supervisor.Supervisor",
-            return_value=mock_supervisor,
+            side_effect=lambda *a, **kw: mock_supervisor,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", mock_llm_factory)
@@ -2150,7 +2150,7 @@ class TestLLMFactoryWorkerIntegration:
 
         with patch(
             "mcp_server_langgraph.patterns.hierarchical.HierarchicalCoordinator",
-            return_value=mock_coordinator,
+            side_effect=lambda *a, **kw: mock_coordinator,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", mock_llm_factory)
@@ -2221,7 +2221,7 @@ class TestLLMFactoryWorkerIntegrationProduction:
 
         with patch(
             "mcp_server_langgraph.patterns.supervisor.Supervisor",
-            return_value=mock_supervisor,
+            side_effect=lambda *a, **kw: mock_supervisor,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", mock_llm_factory)
@@ -2286,7 +2286,7 @@ class TestLLMFactoryWorkerIntegrationProduction:
 
         with patch(
             "mcp_server_langgraph.patterns.hierarchical.HierarchicalCoordinator",
-            return_value=mock_coordinator,
+            side_effect=lambda *a, **kw: mock_coordinator,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", mock_llm_factory)
@@ -2454,7 +2454,7 @@ class TestLLMFactoryWorkerIntegrationProduction:
 
         with patch(
             "mcp_server_langgraph.patterns.supervisor.Supervisor",
-            return_value=mock_supervisor,
+            side_effect=lambda *a, **kw: mock_supervisor,
         ):
             service = ChatServiceImpl.__new__(ChatServiceImpl)
             object.__setattr__(service, "_llm_factory", mock_llm_factory)
@@ -2469,3 +2469,9 @@ class TestLLMFactoryWorkerIntegrationProduction:
                 events.append(event)
 
             assert len(events) >= 1
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

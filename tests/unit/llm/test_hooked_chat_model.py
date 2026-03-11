@@ -83,6 +83,12 @@ class TestHookedChatModelMessageFormatting:
         assert isinstance(rebuilt[1], HumanMessage)
         assert isinstance(rebuilt[2], AIMessage)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestHookedChatModelBeforeModelHook:
@@ -236,6 +242,12 @@ class TestHookedChatModelBeforeModelHook:
         assert isinstance(messages_sent[0], HumanMessage)
         assert messages_sent[0].content == "Modified input"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestHookedChatModelAfterModelHook:
@@ -278,6 +290,12 @@ class TestHookedChatModelAfterModelHook:
                     result = await model._agenerate([HumanMessage(content="Hello")])
 
         assert result.generations[0].text == "Transformed output"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -346,6 +364,12 @@ class TestHookedChatModelResilience:
                     mock_bulkhead.return_value.record_error.assert_called_once()
                     mock_bulkhead.return_value.record_success.assert_not_called()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestHookedChatModelBindTools:
@@ -378,6 +402,12 @@ class TestHookedChatModelBindTools:
         assert bound_model.inner is mock_bound_inner
         assert bound_model.hook_dispatcher is mock_dispatcher
         assert bound_model.model_name == "test-model"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -417,6 +447,12 @@ class TestHookedChatModelNativeTools:
         assert "tools" in call_kwargs
         assert call_kwargs["tools"] == native_configs
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestHookedChatModelLlmType:
@@ -432,3 +468,9 @@ class TestHookedChatModelLlmType:
         model = HookedChatModel(inner=mock_inner, model_name="test", provider="test")
 
         assert model._llm_type == "hooked_anthropic"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

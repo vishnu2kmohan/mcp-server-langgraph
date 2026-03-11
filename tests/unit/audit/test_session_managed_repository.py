@@ -80,7 +80,7 @@ class TestSessionManagedAuditRepositoryCreate:
 
         with patch(
             "mcp_server_langgraph.database.session.get_session_maker",
-            return_value=mock_session_maker,
+            side_effect=lambda *a, **kw: mock_session_maker,
         ):
             await repo.create(event)
 
@@ -114,7 +114,7 @@ class TestSessionManagedAuditRepositoryCreate:
 
         with patch(
             "mcp_server_langgraph.database.session.get_session_maker",
-            return_value=mock_session_maker,
+            side_effect=lambda *a, **kw: mock_session_maker,
         ):
             await repo.create(event)
 
@@ -148,7 +148,7 @@ class TestSessionManagedAuditRepositoryCreate:
 
         with patch(
             "mcp_server_langgraph.database.session.get_session_maker",
-            return_value=mock_session_maker,
+            side_effect=lambda *a, **kw: mock_session_maker,
         ):
             await repo.bulk_create(events)
 
@@ -190,7 +190,7 @@ class TestSessionManagedAuditRepositoryQuery:
 
         with patch(
             "mcp_server_langgraph.database.session.get_session_maker",
-            return_value=mock_session_maker,
+            side_effect=lambda *a, **kw: mock_session_maker,
         ):
             result = await repo.query_by_regulation(Regulation.GDPR)
 
@@ -222,7 +222,7 @@ class TestSessionManagedAuditRepositoryQuery:
 
         with patch(
             "mcp_server_langgraph.database.session.get_session_maker",
-            return_value=mock_session_maker,
+            side_effect=lambda *a, **kw: mock_session_maker,
         ):
             result = await repo.query_by_category(AuditEventCategory.AUTHENTICATION)
 

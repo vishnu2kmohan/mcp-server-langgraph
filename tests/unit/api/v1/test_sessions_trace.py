@@ -139,7 +139,7 @@ class TestSessionTraceEndpoint:
 
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service",
-            return_value=mock_session_service,
+            side_effect=lambda *a, **kw: mock_session_service,
         ):
             app = self._create_app(mock_tempo)
             client = TestClient(app)
@@ -172,7 +172,7 @@ class TestSessionTraceEndpoint:
 
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service",
-            return_value=mock_session_service,
+            side_effect=lambda *a, **kw: mock_session_service,
         ):
             app = self._create_app(mock_tempo)
             client = TestClient(app)
@@ -196,7 +196,7 @@ class TestSessionTraceEndpoint:
 
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service",
-            return_value=mock_session_service,
+            side_effect=lambda *a, **kw: mock_session_service,
         ):
             app = self._create_app(mock_tempo)
             client = TestClient(app)
@@ -217,7 +217,7 @@ class TestSessionTraceEndpoint:
 
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service",
-            return_value=mock_session_service,
+            side_effect=lambda *a, **kw: mock_session_service,
         ):
             app = self._create_app(mock_tempo)
             client = TestClient(app)
@@ -233,7 +233,7 @@ class TestSessionTraceEndpoint:
 
         with patch(
             "mcp_server_langgraph.api.v1.sessions.get_session_service",
-            return_value=mock_session_service,
+            side_effect=lambda *a, **kw: mock_session_service,
         ):
             app = self._create_app(mock_tempo)
             client = TestClient(app)

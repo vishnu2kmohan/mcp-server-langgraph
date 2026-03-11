@@ -37,11 +37,14 @@ const mockLocalStorageImpl = {
 const _mockLogout = vi.fn();
 const _mockSetTokens = vi.fn();
 
-vi.mock("../store/slices/authSlice", () => ({
-  logout: () => ({ type: "auth/logout" }),
-  setTokens: (payload: unknown) => ({ type: "auth/setTokens", payload }),
-}));
-
+vi.mock("../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../store/slices/authSlice");
+  return {
+    ...actual,
+    logout: () => ({ type: "auth/logout" }),
+    setTokens: (payload: unknown) => ({ type: "auth/setTokens", payload }),
+  };
+});
 // Mock fetch for testing
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);

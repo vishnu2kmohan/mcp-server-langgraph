@@ -91,7 +91,7 @@ class TestWaitForKeycloakOidc:
             patch.object(seed_openfga, "OPENFGA_OIDC_CLIENT_ID", "openfga-client"),
             patch.object(seed_openfga, "OPENFGA_OIDC_CLIENT_SECRET", "secret"),
             patch.object(seed_openfga, "KEYCLOAK_REALM", "default"),
-            patch("httpx.post", return_value=mock_response),
+            patch("httpx.post", side_effect=lambda *a, **kw: mock_response),
         ):
             result = seed_openfga.wait_for_keycloak_oidc()
 
@@ -274,6 +274,12 @@ class TestWaitForKeycloakOidc:
         expected_url = "http://keycloak:8080/realms/test-realm/protocol/openid-connect/token"
         assert captured_url == expected_url
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestMainIntegration:
     """Tests for main() function integration with wait_for_keycloak_oidc()."""
@@ -321,10 +327,16 @@ class TestMainIntegration:
             return True
 
         with (
-            patch.object(seed_openfga, "wait_for_keycloak_oidc", return_value=False),
+            patch.object(seed_openfga, "wait_for_keycloak_oidc", side_effect=lambda: False),
             patch.object(seed_openfga, "wait_for_openfga", side_effect=mock_openfga),
         ):
             result = seed_openfga.main()
 
         assert result == 1
         assert openfga_called is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

@@ -139,12 +139,16 @@ class MemorySafetyChecker(ast.NodeVisitor):
         if not self.current_class:
             return
 
-        # Check if class uses mocks but missing xdist_group
+        # Check if class uses mocks but missing xdist_group or teardown
         if self.class_uses_mocks:
             has_xdist_group = "xdist_group" in self.current_class_decorators
             has_teardown = "teardown_method" in self.current_class_methods
+            is_unit = "tests/unit/" in self.file_path
 
-            if not has_xdist_group:
+            # xdist_group is only required for non-unit tests (shared resources).
+            # Unit tests use pure mocks — grouping adds serialization overhead
+            # with no isolation benefit. (Phase 4.2: 77% singleton groups.)
+            if not has_xdist_group and not is_unit:
                 self.violations.append(
                     Violation(
                         file_path=self.file_path,
@@ -155,6 +159,8 @@ class MemorySafetyChecker(ast.NodeVisitor):
                     )
                 )
 
+            # gc.collect() prevents mock circular reference accumulation
+            # regardless of test type — required for ALL mock-using tests.
             if not has_teardown:
                 self.violations.append(
                     Violation(

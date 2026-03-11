@@ -304,11 +304,7 @@ describe("MCP Full Flow Integration", () => {
         </Provider>
       );
 
-      render(
-        <TestProvider>
-          <TestComponent />
-        </TestProvider>,
-      );
+      render(<TestComponent />);
 
       // Should show loading initially or component
       await waitFor(() => {

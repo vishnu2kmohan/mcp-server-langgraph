@@ -93,6 +93,7 @@ def extract_datasource_uids(dashboard: dict[str, Any]) -> list[tuple[str, str]]:
     return uids
 
 
+@pytest.mark.xdist_group("test_dashboard_datasource_consistency")
 class TestDashboardDatasourceConsistency:
     """Validate that dashboards use correct datasource UIDs."""
 
@@ -191,3 +192,9 @@ class TestDashboardDatasourceConsistency:
         assert total_mimir_refs >= 20, (
             f"Only found {total_mimir_refs} 'mimir' datasource references. This seems low - is the detection logic working?"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

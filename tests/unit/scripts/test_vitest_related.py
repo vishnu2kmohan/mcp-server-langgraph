@@ -102,3 +102,9 @@ class TestVitestRelatedHook:
         files_pattern = hook.get("files", "")
         assert "frontend" in files_pattern, "Hook must filter for frontend source files"
         assert "ts" in files_pattern, "Hook must filter for TypeScript files (ts/tsx in regex pattern)"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

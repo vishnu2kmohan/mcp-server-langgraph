@@ -370,6 +370,14 @@ class TestNonStreamingEndpointKBFocus:
 
         service = ChatServiceImpl(llm_factory=mock_factory)
 
+        # Mock the internal litellm call to prevent real API connections
+        # (create_completion uses litellm.acompletion, not llm_factory)
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock(message=MagicMock(content="Hello response"))]
+        service._create_completion_via_litellm = AsyncMock(
+            return_value={"choices": [{"message": {"content": "Hello response", "role": "assistant"}}]}
+        )
+
         # Spy on the method to capture kwargs
         kb_focus_received = None
         original_create_completion = service.create_completion
@@ -407,6 +415,11 @@ class TestNonStreamingEndpointKBFocus:
         mock_factory.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
 
         service = ChatServiceImpl(llm_factory=mock_factory)
+
+        # Mock the internal litellm call to prevent real API connections
+        service._create_completion_via_litellm = AsyncMock(
+            return_value={"choices": [{"message": {"content": "Response", "role": "assistant"}}]}
+        )
 
         messages = [{"role": "user", "content": "Hi"}]
 
@@ -482,7 +495,7 @@ class TestNonStreamingEndpointKBFocus:
         mock_user.is_authenticated = True
         mock_user.id = "user-123"
 
-        with patch("mcp_server_langgraph.api.v1.chat.get_chat_service", return_value=mock_service):
+        with patch("mcp_server_langgraph.api.v1.chat.get_chat_service", side_effect=lambda: mock_service):
             # Call the endpoint handler - result unused, we verify via captured_kwargs
             await create_completion(request, mock_user)
 

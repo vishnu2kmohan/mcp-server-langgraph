@@ -67,22 +67,25 @@ vi.mock("./useRealtimeSync", () => ({
 }));
 
 // Mock storage module (including exports needed by authSlice)
-vi.mock("../utils/storage", () => ({
-  getAuthToken: vi.fn(() => "mock-token"),
-  STORAGE_KEYS: {
-    AUTH_STATE: "mcp_auth_state",
-    PREFERENCES: "mcp_preferences",
-    SESSION_HISTORY: "mcp_session_history",
-  },
-  storage: {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn(),
-    clear: vi.fn(),
-  },
-  clearAuthTokens: vi.fn(),
-}));
-
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-token"),
+    STORAGE_KEYS: {
+      AUTH_STATE: "mcp_auth_state",
+      PREFERENCES: "mcp_preferences",
+      SESSION_HISTORY: "mcp_session_history",
+    },
+    storage: {
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+    },
+    clearAuthTokens: vi.fn(),
+  };
+});
 // Mock toast
 const mockToastError = vi.fn();
 const mockToastWarning = vi.fn();

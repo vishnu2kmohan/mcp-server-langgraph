@@ -66,6 +66,12 @@ class TestStudioAppName:
         assert batch.app_name == "studio"
         assert batch.task_success.tasks_started == 10
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestEventBatchStudioAppName:
     """Verify EventBatch also uses studio app_name."""
@@ -103,3 +109,9 @@ class TestEventBatchStudioAppName:
                 events=[],
             )
         assert "app_name" in str(exc_info.value)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

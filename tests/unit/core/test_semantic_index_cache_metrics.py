@@ -98,7 +98,7 @@ class TestAuthorizationCacheMetrics:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda: mock_openfga_client,
         ):
             # First call - miss
             await manager._check_authorization(
@@ -133,7 +133,7 @@ class TestAuthorizationCacheMetrics:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda: mock_openfga_client,
         ):
             # Different users = different cache keys = all misses
             await manager._check_authorization(
@@ -202,7 +202,7 @@ class TestAuthorizationCacheSizeLimits:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda: mock_openfga_client,
         ):
             # Fill cache with 3 entries
             await manager._check_authorization(user_id="user:alice", relation="viewer", object_type="tool_index")
@@ -230,7 +230,7 @@ class TestAuthorizationCacheSizeLimits:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda: mock_openfga_client,
         ):
             await manager._check_authorization(user_id="user:alice", relation="viewer", object_type="tool_index")
             await manager._check_authorization(user_id="user:bob", relation="viewer", object_type="tool_index")
@@ -303,7 +303,7 @@ class TestAuthorizationCacheStatsExtended:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda: mock_openfga_client,
         ):
             # 1 miss (first call)
             await manager._check_authorization(user_id="user:alice", relation="viewer", object_type="tool_index")

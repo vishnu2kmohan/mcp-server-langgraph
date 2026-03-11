@@ -79,7 +79,7 @@ describe("CodePreviewToggle", () => {
 
   describe("Mode Switching", () => {
     it("calls onModeChange with 'preview' when Preview is clicked", async () => {
-      const _user = userEvent.setup();
+      const user = userEvent.setup();
       const onModeChange = vi.fn();
       render(
         <TestProvider>
@@ -93,7 +93,7 @@ describe("CodePreviewToggle", () => {
     });
 
     it("calls onModeChange with 'code' when Code is clicked", async () => {
-      const _user = userEvent.setup();
+      const user = userEvent.setup();
       const onModeChange = vi.fn();
       render(
         <TestProvider>
@@ -107,7 +107,7 @@ describe("CodePreviewToggle", () => {
     });
 
     it("does not call onModeChange when clicking already active mode", async () => {
-      const _user = userEvent.setup();
+      const user = userEvent.setup();
       const onModeChange = vi.fn();
       render(
         <TestProvider>
@@ -219,7 +219,7 @@ describe("CodePreviewToggle", () => {
     });
 
     it("supports keyboard navigation", async () => {
-      const _user = userEvent.setup();
+      const user = userEvent.setup();
       const onModeChange = vi.fn();
       render(
         <TestProvider>

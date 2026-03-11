@@ -33,7 +33,7 @@ describe("Button Variants", () => {
       it("primary variant should include brand-primary background", () => {
         const classes = buttonVariants({ variant: "primary" });
         expect(classes).toContain("bg-brand-primary");
-        expect(classes).toContain("text-neutral-12");
+        expect(classes).toContain("text-white");
         expect(classes).toContain("hover:bg-primary-10");
       });
 
@@ -54,14 +54,14 @@ describe("Button Variants", () => {
       it("danger variant should include error colors", () => {
         const classes = buttonVariants({ variant: "danger" });
         expect(classes).toContain("bg-error-9");
-        expect(classes).toContain("text-neutral-12");
+        expect(classes).toContain("text-white");
         expect(classes).toContain("hover:bg-error-10");
       });
 
       it("success variant should include success colors", () => {
         const classes = buttonVariants({ variant: "success" });
         expect(classes).toContain("bg-success-9");
-        expect(classes).toContain("text-neutral-12");
+        expect(classes).toContain("text-white");
         expect(classes).toContain("hover:bg-success-10");
       });
 
@@ -159,7 +159,7 @@ describe("Button Variants", () => {
       );
       const button = screen.getByRole("button", { name: /click me/i });
       expect(button).toHaveClass("bg-brand-primary");
-      expect(button).toHaveClass("text-neutral-12");
+      expect(button).toHaveClass("text-white");
     });
 
     it("should render with secondary variant classes", () => {
@@ -181,7 +181,7 @@ describe("Button Variants", () => {
       );
       const button = screen.getByRole("button", { name: /delete/i });
       expect(button).toHaveClass("bg-error-9");
-      expect(button).toHaveClass("text-neutral-12");
+      expect(button).toHaveClass("text-white");
     });
 
     it("should render with ghost variant classes", () => {

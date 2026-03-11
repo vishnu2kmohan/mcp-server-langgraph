@@ -15,10 +15,13 @@ import { ConnectedChatInputForm } from "./ConnectedChatInputForm";
 // Mock Feature Flag Context
 // =============================================================================
 const mockIsEnabled = vi.fn();
-vi.mock("../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: (flagName: string) => mockIsEnabled(flagName),
-}));
-
+vi.mock("../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: (flagName: string) => mockIsEnabled(flagName),
+  };
+});
 // =============================================================================
 // Mock Redux Store
 // =============================================================================
@@ -34,26 +37,41 @@ vi.mock("../store/slices/uiSlice", () => ({
 }));
 
 // Mock TelemetryContext
-vi.mock("../contexts/TelemetryContext", () => ({
-  useSessionTelemetry: () => ({
-    trackExecutionModeChange: vi.fn(),
-    trackBypassApproval: vi.fn(),
-    trackSessionCreation: vi.fn(),
-    trackRevalidation: vi.fn(),
-    trackSync: vi.fn(),
-    trackArtifactSave: vi.fn(),
-    trackArtifactDelete: vi.fn(),
-    trackSuggestionAction: vi.fn(),
-    trackCanvasAction: vi.fn(),
-    getMetrics: vi.fn(),
-    getHistory: vi.fn(),
-    reset: vi.fn(),
-  }),
-  TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-}));
-
+vi.mock("../contexts/TelemetryContext", async () => {
+  const actual = await vi.importActual("../contexts/TelemetryContext");
+  return {
+    ...actual,
+    useSessionTelemetry: () => ({
+      trackExecutionModeChange: vi.fn(),
+      trackBypassApproval: vi.fn(),
+      trackSessionCreation: vi.fn(),
+      trackRevalidation: vi.fn(),
+      trackSync: vi.fn(),
+      trackArtifactSave: vi.fn(),
+      trackArtifactDelete: vi.fn(),
+      trackSuggestionAction: vi.fn(),
+      trackCanvasAction: vi.fn(),
+      getMetrics: vi.fn(),
+      getHistory: vi.fn(),
+      reset: vi.fn(),
+    }),
+    TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+    useWebVitals: () => ({
+      start: vi.fn(),
+      stop: vi.fn(),
+      getMetrics: () => ({ fcp: null, lcp: null, cls: null, inp: null }),
+    }),
+    useTelemetry: () => ({
+      sessionTelemetry: {
+        trackSessionCreation: vi.fn(),
+        getMetrics: () => ({}),
+      },
+      webVitals: { start: vi.fn(), stop: vi.fn(), getMetrics: () => ({}) },
+    }),
+  };
+});
 // Mock useCheckBypassPermissionQuery from API (RTK Query)
 vi.mock("../api", async () => {
   const actual = await vi.importActual("../api");
@@ -383,8 +401,8 @@ describe("ConnectedChatInputForm - Tool Selection", () => {
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // Should show loading indicator
-      expect(screen.getByTestId("tool-selector-loading")).toBeInTheDocument();
+      // ChatInput renders tools-loading (not tool-selector-loading from ToolSelector)
+      expect(screen.getByTestId("tools-loading")).toBeInTheDocument();
 
       // Reset
       mockUseAvailableToolsReturn.isLoading = false;

@@ -1,14 +1,11 @@
 /**
- * ConsoleTab Tests - react-table layout + auto-tail
+ * ConsoleTab Tests - OTELDataTable layout + auto-tail
+ *
+ * Updated to match OTELDataTable rendering (no per-row data-testid attributes).
+ * Rows are queried via role="row" and text content.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  render,
-  screen,
-  within,
-  cleanup,
-  waitFor,
-} from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 
@@ -93,7 +90,7 @@ vi.mock("../context/DevToolsTimelineProvider", () => ({
 // Tests
 // =============================================================================
 
-describe("ConsoleTab (react-table)", () => {
+describe("ConsoleTab (OTELDataTable)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockReturnValue = {
@@ -120,18 +117,23 @@ describe("ConsoleTab (react-table)", () => {
 
     expect(screen.getByTestId("console-tab")).toBeInTheDocument();
     expect(screen.getByText("Level")).toBeInTheDocument();
-    expect(screen.getAllByTestId(/^console-entry-/)).toHaveLength(5);
+    // OTELDataTable renders rows via role="row" (header row + 5 data rows)
+    const allRows = screen.getAllByRole("row");
+    // Subtract 1 for the header row
+    expect(allRows.length - 1).toBe(5);
     expect(screen.getAllByTestId("human-timestamp").length).toBeGreaterThan(0);
   });
 
   it("filters by level and shows empty state when no matches", () => {
-    // Filter to info → only info rows remain
+    // Filter to info - only info rows remain
     render(
       <TestProvider>
         <ConsoleTab filter="info" onFilterChange={() => {}} />
       </TestProvider>,
     );
-    expect(screen.getAllByTestId(/^console-entry-/)).toHaveLength(2);
+    // 2 info entries + 1 header row = 3 rows total
+    const allRows = screen.getAllByRole("row");
+    expect(allRows.length - 1).toBe(2);
     expect(
       screen.queryByText("Connection retry in 5s"),
     ).not.toBeInTheDocument();
@@ -158,11 +160,17 @@ describe("ConsoleTab (react-table)", () => {
       </TestProvider>,
     );
 
-    const errorRow = screen.getByTestId("console-entry-entry-3");
-    await user.click(within(errorRow).getByTestId("expand-button"));
+    // OTELDataTable rows are clickable for expansion (no expand-button testid).
+    // Find the error row by its message text and click it.
+    const errorText = screen.getByText("Failed to fetch data");
+    const errorRow = errorText.closest("tr");
+    expect(errorRow).toBeTruthy();
+    await user.click(errorRow!);
 
-    expect(screen.getByTestId("expanded-data-entry-3")).toBeInTheDocument();
-    expect(screen.getByTestId("stack-trace-entry-3")).toBeInTheDocument();
+    // Stack trace should appear after expansion
+    await waitFor(() => {
+      expect(screen.getByTestId("stack-trace-entry-3")).toBeInTheDocument();
+    });
   });
 
   it("supports search filtering", async () => {
@@ -197,18 +205,9 @@ describe("ConsoleTab (react-table)", () => {
     expect(toggle).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("shows copy control on hover", async () => {
-    const user = userEvent.setup();
-    render(
-      <TestProvider>
-        <ConsoleTab filter="all" onFilterChange={() => {}} />
-      </TestProvider>,
-    );
-
-    const firstRow = screen.getByTestId("console-entry-entry-1");
-    await user.hover(firstRow);
-    expect(within(firstRow).getByTestId("copy-button")).toBeInTheDocument();
-  });
+  // Copy button on hover no longer exists in OTELDataTable rows.
+  // Copy is available inside expanded row content.
+  it.todo("shows copy control inside expanded row content");
 
   it("has no obvious accessibility violations", async () => {
     const { container } = render(

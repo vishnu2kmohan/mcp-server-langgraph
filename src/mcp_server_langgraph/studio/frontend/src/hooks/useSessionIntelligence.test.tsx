@@ -17,10 +17,16 @@ import React from "react";
 
 // Mock the API module - use flushPromises pattern for clean async handling
 const mockAnalyzeFn = vi.fn();
-vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [mockAnalyzeFn, { isLoading: false }]),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useStudioAnalyzeMutation: vi.fn(() => [
+      mockAnalyzeFn,
+      { isLoading: false },
+    ]),
+  };
+});
 // Setup default mock behavior
 function setupDefaultMock() {
   mockAnalyzeFn.mockImplementation(() => ({
@@ -362,7 +368,7 @@ describe("useSessionSimilarity", () => {
       result.current.similarSessions.length > 0
     ) {
       expect(result.current.similarSessions[0]).toHaveProperty(
-        "similarity_score",
+        "similarityScore",
       );
     }
   });

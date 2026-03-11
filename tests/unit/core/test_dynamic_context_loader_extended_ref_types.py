@@ -120,7 +120,7 @@ class TestDynamicContextLoaderExtendedTypes:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
         ):
             from mcp_server_langgraph.core.dynamic_context_loader import (
@@ -166,7 +166,7 @@ class TestDynamicContextLoaderExtendedTypes:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
         ):
             from mcp_server_langgraph.core.dynamic_context_loader import (
@@ -212,7 +212,7 @@ class TestDynamicContextLoaderExtendedTypes:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
         ):
             from mcp_server_langgraph.core.dynamic_context_loader import (
@@ -266,7 +266,7 @@ class TestSemanticSearchRefTypeFiltering:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
         ):
             from mcp_server_langgraph.core.dynamic_context_loader import (
@@ -330,7 +330,7 @@ class TestSemanticSearchRefTypeFiltering:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
         ):
             from mcp_server_langgraph.core.dynamic_context_loader import (

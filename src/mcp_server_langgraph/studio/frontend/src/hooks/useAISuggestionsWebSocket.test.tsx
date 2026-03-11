@@ -27,16 +27,22 @@ vi.mock("../store/hooks", () => ({
   useAppDispatch: () => vi.fn(),
 }));
 
-vi.mock("../store/slices/authSlice", () => ({
-  selectIsAuthenticated: () => true,
-  selectWebSocketPermissions: () => ({ ai_suggestions: true }),
-  logout: () => ({ type: "auth/logout" }),
-}));
-
-vi.mock("../utils/storage", () => ({
-  getAuthToken: () => "test-token",
-}));
-
+vi.mock("../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../store/slices/authSlice");
+  return {
+    ...actual,
+    selectIsAuthenticated: () => true,
+    selectWebSocketPermissions: () => ({ ai_suggestions: true }),
+    logout: () => ({ type: "auth/logout" }),
+  };
+});
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: () => "test-token",
+  };
+});
 // Import after mocking
 import { useAISuggestionsWebSocket } from "./useAISuggestionsWebSocket";
 

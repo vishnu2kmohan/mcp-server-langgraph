@@ -99,11 +99,11 @@ class TestStreamingMessagePersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=mock_chat_service,
+                side_effect=lambda *a, **kw: mock_chat_service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -163,11 +163,11 @@ class TestStreamingMessagePersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=mock_chat_service,
+                side_effect=lambda *a, **kw: mock_chat_service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -220,11 +220,11 @@ class TestStreamingMessagePersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=mock_chat_service,
+                side_effect=lambda *a, **kw: mock_chat_service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -291,11 +291,11 @@ class TestStreamingMessagePersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=service,
+                side_effect=lambda *a, **kw: service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -352,11 +352,11 @@ class TestStreamingMessagePersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=failing_service,
+                side_effect=lambda *a, **kw: failing_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=mock_chat_service,
+                side_effect=lambda *a, **kw: mock_chat_service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -412,11 +412,11 @@ class TestStreamingMessagePersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=mock_chat_service,
+                side_effect=lambda *a, **kw: mock_chat_service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -481,11 +481,11 @@ class TestStreamingMessagePersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=service,
+                side_effect=lambda *a, **kw: service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -657,11 +657,11 @@ class TestThinkingContentPersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=service,
+                side_effect=lambda *a, **kw: service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -727,11 +727,11 @@ class TestThinkingContentPersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=service,
+                side_effect=lambda *a, **kw: service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -799,11 +799,11 @@ class TestThinkingContentPersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=service,
+                side_effect=lambda *a, **kw: service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",
@@ -870,11 +870,11 @@ class TestThinkingContentPersistence:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.sessions.get_session_service",
-                return_value=mock_session_service,
+                side_effect=lambda *a, **kw: mock_session_service,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.chat.get_chat_service",
-                return_value=service,
+                side_effect=lambda *a, **kw: service,
             ),
             patch(
                 "mcp_server_langgraph.execution.bypass_audit.log_bypass_audit_event",

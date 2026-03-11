@@ -33,6 +33,8 @@ export interface SelectionCardProps<T = void> {
   ariaLabel?: string;
   /** Optional additional className */
   className?: string;
+  /** Optional data-testid for testing */
+  "data-testid"?: string;
 }
 
 export function SelectionCard<T = void>({
@@ -45,6 +47,7 @@ export function SelectionCard<T = void>({
   badge,
   ariaLabel,
   className = "",
+  "data-testid": dataTestId,
 }: SelectionCardProps<T>) {
   const handleClick = () => {
     if (value !== undefined) {
@@ -65,6 +68,7 @@ export function SelectionCard<T = void>({
       onClick={handleClick}
       aria-label={ariaLabel}
       aria-pressed={selected}
+      data-testid={dataTestId}
     >
       <div
         className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${

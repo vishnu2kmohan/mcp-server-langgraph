@@ -50,10 +50,13 @@ vi.mock("../../hooks/useTraceIntelligence", () => ({
   useTraceAnomaly: vi.fn(() => mockTraceAnomaly),
 }));
 
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn(() => false),
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn(() => false),
+  };
+});
 import { useFeatureFlag } from "../../contexts/FeatureFlagContext";
 import {
   useTraceSummary,

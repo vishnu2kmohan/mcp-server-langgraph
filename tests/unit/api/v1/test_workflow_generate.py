@@ -109,6 +109,12 @@ class TestGenerateWorkflowModels:
                 suggestions=[],
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestGenerateWorkflowEndpoint:
     """Tests for POST /workflows/generate endpoint."""
@@ -133,6 +139,12 @@ class TestGenerateWorkflowEndpoint:
                 assert route.status_code == status.HTTP_201_CREATED
                 return
         pytest.fail("POST /workflows/generate route not found")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestGenerateWorkflowIntegration:

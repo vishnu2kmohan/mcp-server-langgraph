@@ -63,6 +63,12 @@ class TestNativeToolHandlerShouldUseNative:
                 handler = NativeToolHandler(model_name="claude-sonnet-4-20250514")
                 assert handler.should_use_native("web_search", "auto") is True
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestNativeToolHandlerGetNativeConfigs:
@@ -88,6 +94,12 @@ class TestNativeToolHandlerGetNativeConfigs:
                 assert len(native_configs) == 1
                 assert native_configs[0]["type"] == "web_search_20250305"
                 assert remaining == ["builtin:calculator"]
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -149,6 +161,12 @@ class TestParseNativeResults:
         assert results[0].name == "web_search"
         assert "Test Result" in results[0].content
         assert "https://example.com" in results[0].content
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -245,6 +263,12 @@ class TestNativeToolHandlerGetConfigForTool:
                 "container": {"type": "auto"},
             }
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestNativeToolHandlerOpenAIGating:
@@ -303,6 +327,12 @@ class TestNativeToolHandlerOpenAIGating:
 
                 handler = NativeToolHandler(model_name="gpt-5.2")
                 assert handler.should_use_native("code_execution", "auto") is True
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -381,6 +411,12 @@ class TestNativeToolHandlerMCPPrefixPreservation:
                 assert len(native_configs) == 1
                 # calculator goes to remaining
                 assert "calculator" in remaining
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -466,6 +502,12 @@ class TestParseNativeResultsOpenAI:
         assert len(tool_messages) == 1
         assert tool_messages[0].name == "web_search"
         assert "[Nested Result]" in tool_messages[0].content
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -617,3 +659,9 @@ class TestNativeToolHandlerEdgeCases:
                 assert native_configs == []
                 # The tool is left in remaining for fallback handling
                 assert "native:web_search" in remaining
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

@@ -234,8 +234,10 @@ class TestGetRunnableConfig:
 
         with patch("mcp_server_langgraph.core.agent.LANGSMITH_AVAILABLE", True):
             with patch("mcp_server_langgraph.core.agent.langsmith_config", mock_config):
-                with patch("mcp_server_langgraph.core.agent.get_run_tags", return_value=["test"]):
-                    with patch("mcp_server_langgraph.core.agent.get_run_metadata", return_value={"user": "alice"}):
+                with patch("mcp_server_langgraph.core.agent.get_run_tags", side_effect=lambda *a, **kw: ["test"]):
+                    with patch(
+                        "mcp_server_langgraph.core.agent.get_run_metadata", side_effect=lambda *a, **kw: {"user": "alice"}
+                    ):
                         from mcp_server_langgraph.core.agent import _get_runnable_config
 
                         result = _get_runnable_config(user_id="alice", request_id="req-123")

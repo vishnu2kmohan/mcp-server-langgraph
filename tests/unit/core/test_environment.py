@@ -92,3 +92,9 @@ class TestIsDeveloperMode:
         # Should not raise, should return False
         result = is_developer_mode(settings=mock_settings)
         assert result is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

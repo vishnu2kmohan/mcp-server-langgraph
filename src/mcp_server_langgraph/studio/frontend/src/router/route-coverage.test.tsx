@@ -169,25 +169,11 @@ describe("Route Coverage", () => {
         expect(definedRoutes).toContain("/studio/observability");
       });
 
-      it("/studio/mcp route should exist", () => {
-        const mcpItem = NAV_ITEMS.find((item) => item.id === "mcp");
-        expect(mcpItem).toBeDefined();
-        expect(mcpItem?.path).toBe("/studio/mcp");
-        expect(definedRoutes).toContain("/studio/mcp");
-      });
-
       it("/studio/cost route should exist", () => {
         const costItem = NAV_ITEMS.find((item) => item.id === "cost");
         expect(costItem).toBeDefined();
         expect(costItem?.path).toBe("/studio/cost");
         expect(definedRoutes).toContain("/studio/cost");
-      });
-
-      it("/studio/files route should exist", () => {
-        const filesItem = NAV_ITEMS.find((item) => item.id === "files");
-        expect(filesItem).toBeDefined();
-        expect(filesItem?.path).toBe("/studio/files");
-        expect(definedRoutes).toContain("/studio/files");
       });
 
       it("/studio/admin route should exist", () => {

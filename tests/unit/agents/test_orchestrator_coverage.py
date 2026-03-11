@@ -114,10 +114,12 @@ class TestOrchestratorExecute:
             orchestrator.coordinator,
             "execute_all",
             new_callable=AsyncMock,
-            return_value=[
-                SubagentResult(task_id="sub-1", success=True, output="output1"),
-                SubagentResult(task_id="sub-2", success=True, output="output2"),
-            ],
+            side_effect=lambda *a, **kw: (
+                [
+                    SubagentResult(task_id="sub-1", success=True, output="output1"),
+                    SubagentResult(task_id="sub-2", success=True, output="output2"),
+                ]
+            ),
         ):
             results = await orchestrator.execute(decomposition)
 
@@ -144,9 +146,11 @@ class TestOrchestratorExecute:
             orchestrator.coordinator,
             "execute_all",
             new_callable=AsyncMock,
-            return_value=[
-                SubagentResult(task_id="sub-1", success=True, output="result data"),
-            ],
+            side_effect=lambda *a, **kw: (
+                [
+                    SubagentResult(task_id="sub-1", success=True, output="result data"),
+                ]
+            ),
         ):
             await orchestrator.execute(decomposition)
 
@@ -173,9 +177,11 @@ class TestOrchestratorExecute:
             orchestrator.coordinator,
             "execute_all",
             new_callable=AsyncMock,
-            return_value=[
-                SubagentResult(task_id="sub-1", success=False, error="failed"),
-            ],
+            side_effect=lambda *a, **kw: (
+                [
+                    SubagentResult(task_id="sub-1", success=False, error="failed"),
+                ]
+            ),
         ):
             await orchestrator.execute(decomposition)
 
@@ -208,9 +214,11 @@ class TestOrchestratorExecute:
             orchestrator.coordinator,
             "execute_all",
             new_callable=AsyncMock,
-            return_value=[
-                SubagentResult(task_id="sub-1", success=True, output="output"),
-            ],
+            side_effect=lambda *a, **kw: (
+                [
+                    SubagentResult(task_id="sub-1", success=True, output="output"),
+                ]
+            ),
         ):
             await orchestrator.execute(decomposition)
 

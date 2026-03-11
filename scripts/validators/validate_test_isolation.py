@@ -35,8 +35,28 @@ class TestIsolationValidator(ast.NodeVisitor):
         self.has_xdist_group_marker = False
         self.has_teardown_method = False
         self.has_gc_collect = False
+        self.has_module_xdist_group = False
         self.fixture_cleanups = set()
         self.dependency_overrides = []
+
+    def visit_Module(self, node):
+        """Check for module-level pytestmark with xdist_group."""
+        for stmt in node.body:
+            if isinstance(stmt, ast.Assign):
+                for target in stmt.targets:
+                    if isinstance(target, ast.Name) and target.id == "pytestmark":
+                        self.has_module_xdist_group = self._value_contains_xdist_group(stmt.value)
+        self.generic_visit(node)
+
+    def _value_contains_xdist_group(self, node) -> bool:
+        """Check if an assignment value contains xdist_group marker."""
+        # pytestmark = pytest.mark.xdist_group(...)
+        if isinstance(node, ast.Call) and self._is_xdist_group_marker(node):
+            return True
+        # pytestmark = [pytest.mark.xdist_group(...), ...]
+        if isinstance(node, ast.List):
+            return any(isinstance(elt, ast.Call) and self._is_xdist_group_marker(elt) for elt in node.elts)
+        return False
 
     def visit_ClassDef(self, node):
         """Visit class definitions to check for Test classes"""
@@ -78,14 +98,16 @@ class TestIsolationValidator(ast.NodeVisitor):
             # but optional for unit tests (pure mocks, no shared mutable state).
             # See: Phase 4.2 xdist_group audit — 77% of groups are singletons
             # with zero serialization benefit.
-            if not self.has_xdist_group_marker:
+            if not self.has_xdist_group_marker and not self.has_module_xdist_group:
                 is_unit = "tests/unit/" in self.file_path
                 if is_unit:
+                    # Unit tests use pure mocks — xdist_group adds serialization
+                    # overhead with no isolation benefit (Phase 4.2: 77% singleton).
                     self.warnings.append(
                         (
                             node.lineno,
                             "missing_xdist_group",
-                            f"Test class '{node.name}' has no @pytest.mark.xdist_group marker (optional for unit tests)",
+                            f"Test class '{node.name}' has no @pytest.mark.xdist_group marker",
                         )
                     )
                 else:
@@ -98,6 +120,9 @@ class TestIsolationValidator(ast.NodeVisitor):
                     )
 
             if not self.has_teardown_method or not self.has_gc_collect:
+                # gc.collect() prevents mock circular reference accumulation
+                # regardless of test type — the 217GB VIRT OOM was caused by
+                # AsyncMock/MagicMock objects leaking across xdist workers.
                 self.violations.append(
                     (
                         node.lineno,
@@ -160,14 +185,24 @@ class TestIsolationValidator(ast.NodeVisitor):
                 # Check for xdist_group marker
                 has_xdist_marker = any(self._is_xdist_group_marker(dec) for dec in node.decorator_list)
 
-                if not has_xdist_marker:
-                    self.violations.append(
-                        (
-                            node.lineno,
-                            "missing_xdist_marker",
-                            f"Function '{node.name}' uses AsyncMock/MagicMock but lacks @pytest.mark.xdist_group marker",
+                if not has_xdist_marker and not self.has_module_xdist_group:
+                    is_unit = "tests/unit/" in self.file_path
+                    if is_unit:
+                        self.warnings.append(
+                            (
+                                node.lineno,
+                                "missing_xdist_marker",
+                                f"Function '{node.name}' uses AsyncMock/MagicMock but lacks @pytest.mark.xdist_group marker",
+                            )
                         )
-                    )
+                    else:
+                        self.violations.append(
+                            (
+                                node.lineno,
+                                "missing_xdist_marker",
+                                f"Function '{node.name}' uses AsyncMock/MagicMock but lacks @pytest.mark.xdist_group marker",
+                            )
+                        )
 
         # Check for async dependency override patterns
         for stmt in ast.walk(node):
@@ -177,6 +212,9 @@ class TestIsolationValidator(ast.NodeVisitor):
 
         self.generic_visit(node)
         self.current_function = old_function
+
+    # async def uses AsyncFunctionDef in the AST — delegate to the same logic.
+    visit_AsyncFunctionDef = visit_FunctionDef
 
     def _is_xdist_group_marker(self, node) -> bool:
         """Check if node is @pytest.mark.xdist_group marker"""

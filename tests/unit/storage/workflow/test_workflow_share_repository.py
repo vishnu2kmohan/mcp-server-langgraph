@@ -74,6 +74,12 @@ class TestWorkflowShareModels:
         assert share.permission == "view"
         assert share.created_at is not None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestWorkflowShareSQLAlchemyModel:
     """Tests for WorkflowShareModel SQLAlchemy model."""
@@ -102,6 +108,12 @@ class TestWorkflowShareSQLAlchemyModel:
         assert "created_at" in columns
         assert "created_by" in columns
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestWorkflowModelSharingFields:
     """Tests for sharing fields on WorkflowModel."""
@@ -123,6 +135,12 @@ class TestWorkflowModelSharingFields:
 
         columns = {c.name for c in WorkflowModel.__table__.columns}
         assert "share_link" in columns
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestInMemoryWorkflowShareRepository:
@@ -322,6 +340,12 @@ class TestInMemoryWorkflowShareRepository:
         assert len(shares) == 1
         assert shares[0].permission == "edit"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestPublicWorkflowOperations:
     """Tests for public workflow visibility operations."""
@@ -410,6 +434,12 @@ class TestPublicWorkflowOperations:
         # THEN should return None
         assert workflow_id is None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestWorkflowShareRepositoryProtocol:
     """Tests for WorkflowShareRepositoryProtocol interface."""
@@ -429,6 +459,12 @@ class TestWorkflowShareRepositoryProtocol:
         assert hasattr(WorkflowShareRepositoryProtocol, "list_shared_with_user")
         assert hasattr(WorkflowShareRepositoryProtocol, "update_workflow_public")
         assert hasattr(WorkflowShareRepositoryProtocol, "get_by_share_link")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestPostgresWorkflowShareRepositoryStructure:

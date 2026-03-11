@@ -14,6 +14,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from mcp_server_langgraph.core.feature_flags import feature_flags
+
 pytestmark = [pytest.mark.unit, pytest.mark.agentic_memory]
 
 
@@ -62,9 +64,14 @@ def memory_app(mock_notes_manager, mock_checkpoint_manager):
     set_notes_manager(mock_notes_manager)
     set_checkpoint_manager(mock_checkpoint_manager)
 
+    # Enable agentic memory feature flag (required by endpoints)
+    original_flag = feature_flags.enable_agentic_memory
+    feature_flags.enable_agentic_memory = True
+
     yield app
 
     # Cleanup
+    feature_flags.enable_agentic_memory = original_flag
     set_notes_manager(None)
     set_checkpoint_manager(None)
 

@@ -15,11 +15,14 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 
 // Mock the API hooks
-vi.mock("../../api", () => ({
-  useGetWorkflowVersionsQuery: vi.fn(),
-  useRestoreWorkflowVersionMutation: vi.fn(),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetWorkflowVersionsQuery: vi.fn(),
+    useRestoreWorkflowVersionMutation: vi.fn(),
+  };
+});
 import {
   useGetWorkflowVersionsQuery,
   useRestoreWorkflowVersionMutation,

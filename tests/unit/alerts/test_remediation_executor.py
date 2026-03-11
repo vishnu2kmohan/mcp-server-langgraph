@@ -238,7 +238,7 @@ class TestRemediationExecutor:
             raise TimeoutError()
 
         # Also mock validate_command to allow the command
-        with patch.object(executor, "validate_command", return_value=True):
+        with patch.object(executor, "validate_command", side_effect=lambda *a, **kw: True):
             with patch.object(executor, "_run_command", side_effect=slow_command):
                 result = await executor.execute(remediation)
 

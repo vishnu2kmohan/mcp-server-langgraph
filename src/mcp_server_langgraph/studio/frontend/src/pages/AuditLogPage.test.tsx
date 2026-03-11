@@ -19,15 +19,17 @@ import {
   cleanup,
 } from "@testing-library/react";
 import { AuditLogPage } from "./AuditLogPage";
-import { TestRouter } from "../test-utils";
 
 // Mock the RTK Query hook
 const mockRefetch = vi.fn();
 
-vi.mock("../api", () => ({
-  useListAuditLogsQuery: vi.fn(),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useListAuditLogsQuery: vi.fn(),
+  };
+});
 import { useListAuditLogsQuery } from "../api";
 
 import { TestProvider } from "@/test-utils";
@@ -96,9 +98,7 @@ describe("AuditLogPage", () => {
     it("should render page title", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -108,9 +108,7 @@ describe("AuditLogPage", () => {
     it("should render page description", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -122,9 +120,7 @@ describe("AuditLogPage", () => {
     it("should render export button", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -136,9 +132,7 @@ describe("AuditLogPage", () => {
     it("should render refresh button", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -152,9 +146,7 @@ describe("AuditLogPage", () => {
     it("should render action filter input", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -166,9 +158,7 @@ describe("AuditLogPage", () => {
     it("should render user filter input", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -180,9 +170,7 @@ describe("AuditLogPage", () => {
     it("should filter logs by action", async () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -200,9 +188,7 @@ describe("AuditLogPage", () => {
     it("should filter logs by user", async () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -220,9 +206,7 @@ describe("AuditLogPage", () => {
     it("should show count of filtered results", async () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -241,9 +225,7 @@ describe("AuditLogPage", () => {
     it("should render log entries after loading", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -255,9 +237,7 @@ describe("AuditLogPage", () => {
     it("should display action badges", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -269,9 +249,7 @@ describe("AuditLogPage", () => {
     it("should display resource type and ID", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -282,9 +260,7 @@ describe("AuditLogPage", () => {
     it("should display IP addresses", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -297,9 +273,7 @@ describe("AuditLogPage", () => {
     it("should expand log details on click", async () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -316,9 +290,7 @@ describe("AuditLogPage", () => {
     it("should collapse log details on second click", async () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -342,9 +314,7 @@ describe("AuditLogPage", () => {
     it("should call refetch when refresh button is clicked", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -383,9 +353,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -414,9 +382,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -435,9 +401,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -454,9 +418,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -477,9 +439,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -488,43 +448,37 @@ describe("AuditLogPage", () => {
   });
 
   describe("Action Color Coding", () => {
-    it("should color delete actions red", () => {
+    it("should color delete actions with error variant", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
       const deleteAction = screen.getByText("api_key.delete");
-      expect(deleteAction.className).toMatch(/red/i);
+      expect(deleteAction.className).toMatch(/error/i);
     });
 
-    it("should color create actions green", () => {
+    it("should color create actions with success variant", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
       const createAction = screen.getByText("workflow.create");
-      expect(createAction.className).toMatch(/green/i);
+      expect(createAction.className).toMatch(/success/i);
     });
 
-    it("should color login actions blue", () => {
+    it("should color login actions with primary variant", () => {
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
       const loginAction = screen.getByText("user.login");
-      expect(loginAction.className).toMatch(/blue/i);
+      expect(loginAction.className).toMatch(/primary/i);
     });
   });
 
@@ -544,9 +498,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -568,9 +520,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -593,9 +543,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -613,9 +561,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -638,9 +584,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 
@@ -671,9 +615,7 @@ describe("AuditLogPage", () => {
 
       render(
         <TestProvider>
-          <TestRouter>
-            <AuditLogPage />
-          </TestRouter>
+          <AuditLogPage />
         </TestProvider>,
       );
 

@@ -113,7 +113,7 @@ class TestTimestreamCostStorageStore:
         mock_client = MagicMock()
         mock_client.write_records = MagicMock(return_value={"RecordsIngested": {"Total": 1}})
 
-        with patch.object(TimestreamCostStorage, "_get_write_client", return_value=mock_client):
+        with patch.object(TimestreamCostStorage, "_get_write_client", side_effect=lambda *a, **kw: mock_client):
             storage = TimestreamCostStorage(
                 region="us-west-2",
                 database="cost_metrics",
@@ -153,7 +153,7 @@ class TestTimestreamCostStorageStore:
         mock_client = MagicMock()
         mock_client.write_records = MagicMock(return_value={"RecordsIngested": {"Total": 1}})
 
-        with patch.object(TimestreamCostStorage, "_get_write_client", return_value=mock_client):
+        with patch.object(TimestreamCostStorage, "_get_write_client", side_effect=lambda *a, **kw: mock_client):
             storage = TimestreamCostStorage(
                 region="us-west-2",
                 database="test",
@@ -312,7 +312,7 @@ class TestADXCostStorageStore:
 
         # Mock the client to avoid import error
         mock_client = MagicMock()
-        with patch.object(ADXCostStorage, "_get_client", return_value=mock_client):
+        with patch.object(ADXCostStorage, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await storage.store(record)
 
             # After store, record count should increment
@@ -428,7 +428,7 @@ class TestBigQueryCostStorageStore:
         # Mock the client to avoid import error
         mock_client = MagicMock()
         mock_client.insert_rows_json = MagicMock(return_value=[])
-        with patch.object(BigQueryCostStorage, "_get_client", return_value=mock_client):
+        with patch.object(BigQueryCostStorage, "_get_client", side_effect=lambda *a, **kw: mock_client):
             await storage.store(record)
 
             # After store, record count should increment
@@ -449,6 +449,8 @@ class TestBigQueryCostStorageClient:
         WHEN getting client
         THEN it should raise ImportError with helpful message
         """
+        import sys
+
         from mcp_server_langgraph.monitoring.cost_storage_gcp import (
             BigQueryCostStorage,
         )
@@ -459,10 +461,27 @@ class TestBigQueryCostStorageClient:
             table="test",
         )
 
-        with patch.dict("sys.modules", {"google.cloud.bigquery": None}):
-            storage._client = None
-            with pytest.raises(ImportError, match="google-cloud-bigquery is required"):
-                storage._get_client()
+        # Save and remove the bigquery attribute from google.cloud module
+        google_cloud = sys.modules.get("google.cloud")
+        had_bigquery = hasattr(google_cloud, "bigquery") if google_cloud else False
+        saved_bigquery = getattr(google_cloud, "bigquery", None) if google_cloud else None
+
+        try:
+            # Remove bigquery from google.cloud so 'from google.cloud import bigquery' fails
+            if google_cloud and had_bigquery:
+                delattr(google_cloud, "bigquery")
+
+            with patch.dict(
+                "sys.modules",
+                {"google.cloud.bigquery": None},
+            ):
+                storage._client = None
+                with pytest.raises(ImportError, match="google-cloud-bigquery is required"):
+                    storage._get_client()
+        finally:
+            # Restore the bigquery attribute
+            if google_cloud and had_bigquery:
+                google_cloud.bigquery = saved_bigquery  # type: ignore[attr-defined]
 
 
 # ==============================================================================
@@ -533,7 +552,7 @@ class TestCostStorageFactory:
         )
 
         with patch.dict("os.environ", {}, clear=True):
-            with patch("os.environ.get", return_value="postgres"):
+            with patch("os.environ.get", side_effect=lambda *a, **kw: "postgres"):
                 backend = get_backend_type()
 
         assert backend == CostStorageBackendType.POSTGRES

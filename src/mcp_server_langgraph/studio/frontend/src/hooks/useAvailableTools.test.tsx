@@ -23,10 +23,13 @@ import { useAvailableTools } from "./useAvailableTools";
 import type { UnifiedToolCamelCase } from "../types/tools";
 
 // Mock the RTK Query endpoint
-vi.mock("../api", () => ({
-  useListUnifiedToolsQuery: vi.fn(),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useListUnifiedToolsQuery: vi.fn(),
+  };
+});
 import { useListUnifiedToolsQuery } from "../api";
 
 const mockUseListUnifiedToolsQuery = useListUnifiedToolsQuery as ReturnType<

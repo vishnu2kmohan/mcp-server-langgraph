@@ -97,11 +97,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             result = write_file.invoke({"file_path": str(file_path), "content": content})
@@ -125,11 +125,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             result = write_file.invoke({"file_path": str(existing_file), "content": new_content})
@@ -151,11 +151,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             write_file.invoke(
@@ -184,7 +184,7 @@ class TestWriteFileTool:
 
         with patch(
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-            return_value=temp_workspace,
+            side_effect=lambda: temp_workspace,
         ):
             result = write_file.invoke({"file_path": str(malicious_path), "content": "malicious"})
 
@@ -205,7 +205,7 @@ class TestWriteFileTool:
 
         with patch(
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-            return_value=temp_workspace,
+            side_effect=lambda: temp_workspace,
         ):
             result = write_file.invoke({"file_path": outside_path, "content": "should not be written"})
 
@@ -225,7 +225,7 @@ class TestWriteFileTool:
 
         with patch(
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-            return_value=temp_workspace,
+            side_effect=lambda: temp_workspace,
         ):
             result = write_file.invoke({"file_path": str(file_path), "content": large_content})
 
@@ -249,7 +249,7 @@ class TestWriteFileTool:
         for dangerous_path in dangerous_paths:
             with patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ):
                 result = write_file.invoke({"file_path": dangerous_path, "content": "malicious"})
 
@@ -275,11 +275,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             # Note: create_backup parameter doesn't exist yet - this test defines expected behavior
@@ -316,11 +316,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             for ext in safe_extensions:
@@ -341,7 +341,7 @@ class TestWriteFileTool:
 
         with patch(
             "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-            return_value=temp_workspace,
+            side_effect=lambda: temp_workspace,
         ):
             for ext in dangerous_extensions:
                 file_path = temp_workspace / f"script{ext}"
@@ -367,11 +367,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             write_file.invoke({"file_path": str(file_path), "content": ""})
@@ -393,11 +393,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             write_file.invoke({"file_path": str(file_path), "content": unicode_content})
@@ -419,11 +419,11 @@ class TestWriteFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.write_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             write_file.invoke({"file_path": str(file_path), "content": content})
@@ -435,14 +435,14 @@ class TestWriteFileTool:
     # =========================================================================
 
     @pytest.mark.unit
-    @pytest.mark.xfail(strict=True, reason="Feature flag integration not yet implemented")
+    @pytest.mark.xfail(strict=True, reason="Pending feature flag integration")
     def test_write_file_respects_feature_flag(self, temp_workspace: Path):
         """GIVEN the write_file feature flag is disabled
         WHEN write_file is called
         THEN it raises FeatureDisabledError"""
         # This test verifies the feature flag integration
         # Actual behavior depends on how the tool is registered
-        pass  # Will be implemented with feature flag integration
+        pytest.fail("Not yet implemented")
 
 
 class TestWriteFileToolIntegration:

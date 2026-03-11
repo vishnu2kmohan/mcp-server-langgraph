@@ -253,7 +253,9 @@ describe("ConnectionTemplateSelector", () => {
       const githubCard = screen.getByTestId("template-card-github");
       fireEvent.click(githubCard);
 
-      expect(githubCard).toHaveClass("selected");
+      // Selected template gets primary border and background
+      expect(githubCard).toHaveClass("border-primary-9");
+      expect(githubCard).toHaveClass("bg-primary-1");
     });
   });
 
@@ -313,8 +315,9 @@ describe("ConnectionTemplateSelector", () => {
       );
 
       await waitFor(() => {
-        const allButton = screen.getByRole("button", { name: /all/i });
-        expect(allButton).toHaveClass("active");
+        const allButton = screen.getByRole("button", { name: /^all$/i });
+        // Active filter uses primary variant (bg-brand-primary)
+        expect(allButton).toHaveClass("bg-brand-primary");
       });
     });
   });

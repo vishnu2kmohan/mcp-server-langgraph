@@ -57,6 +57,12 @@ class TestIsValidSubPersona:
         assert is_valid_sub_persona("developer", "unknown-persona") is False
         assert is_valid_sub_persona("user", "unknown-persona") is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestGetSubPersonasForBase:
     """Tests for getting valid sub-personas for a base persona."""
@@ -97,6 +103,12 @@ class TestGetSubPersonasForBase:
         subs = get_sub_personas_for_base("unknown")
         assert subs == []
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestPersonaPreferencesUpdate:
     """Tests for persona preferences update model."""
@@ -122,3 +134,9 @@ class TestPersonaPreferencesUpdate:
         update = PersonaPreferencesUpdate(feature_flags={"focus_mode": True, "canvas_shortcuts": False})
         assert update.feature_flags["focus_mode"] is True
         assert update.feature_flags["canvas_shortcuts"] is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

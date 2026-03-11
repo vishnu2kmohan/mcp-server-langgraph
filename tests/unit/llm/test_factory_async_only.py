@@ -12,6 +12,7 @@ Following memory safety patterns for pytest-xdist (see CLAUDE.md).
 
 import asyncio
 import gc
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,6 +21,39 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 
 # Module-level pytestmark for test organization
 pytestmark = pytest.mark.unit
+
+
+@contextmanager
+def _patch_resilience_components():
+    """Patch rate limit and adaptive bulkhead to prevent xdist singleton contamination.
+
+    Under xdist, the rate limit token bucket and adaptive bulkhead are module-level
+    singletons that can be exhausted/contaminated by other tests on the same worker.
+    The @retry_with_backoff(max_attempts=3) decorator on ainvoke then retries 3x
+    on failure, causing RetryExhaustedError instead of the test's expected behavior.
+    """
+    mock_rate_bucket = AsyncMock()  # noqa: async-mock-config - configured below
+    mock_rate_bucket.acquire = AsyncMock(return_value=None)
+    mock_rate_bucket.tokens = 100
+
+    mock_bulkhead = MagicMock()
+    mock_bulkhead.current_limit = 10
+    mock_bulkhead.get_error_rate = MagicMock(return_value=0.0)
+    mock_bulkhead.get_semaphore = MagicMock(return_value=asyncio.Semaphore(10))
+    mock_bulkhead.record_success = MagicMock()
+    mock_bulkhead.record_error = MagicMock()
+
+    with (
+        patch(
+            "mcp_server_langgraph.llm.factory.get_provider_token_bucket",
+            side_effect=lambda *a, **kw: mock_rate_bucket,
+        ),
+        patch(
+            "mcp_server_langgraph.llm.factory.get_provider_adaptive_bulkhead",
+            side_effect=lambda *a, **kw: mock_bulkhead,
+        ),
+    ):
+        yield
 
 
 @pytest.mark.unit
@@ -98,14 +132,22 @@ class TestLLMFactoryAsyncAPI:
         pollute singleton state. Reset before each test to ensure clean state.
         """
         from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+        from mcp_server_langgraph.monitoring.cost_storage_factory import (
+            reset_cost_storage_backend,
+        )
 
         reset_singleton_dependencies()
+        reset_cost_storage_backend()
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+        from mcp_server_langgraph.monitoring.cost_storage_factory import (
+            reset_cost_storage_backend,
+        )
 
         reset_singleton_dependencies()
+        reset_cost_storage_backend()
         gc.collect()
 
     async def test_ainvoke_method_exists_and_is_async(self):
@@ -148,9 +190,12 @@ class TestLLMFactoryAsyncAPI:
             """Async factory function that returns fresh mock response."""
             return create_mock_response()
 
-        with patch(
-            "mcp_server_langgraph.llm.factory.acompletion",
-            side_effect=mock_acompletion,
+        with (
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                side_effect=mock_acompletion,
+            ),
+            _patch_resilience_components(),
         ):
             factory = LLMFactory(
                 provider="openai",
@@ -195,9 +240,12 @@ class TestLLMFactoryAsyncAPI:
             call_tracker["kwargs"] = kwargs
             return create_mock_response()
 
-        with patch(
-            "mcp_server_langgraph.llm.factory.acompletion",
-            side_effect=mock_acompletion,
+        with (
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                side_effect=mock_acompletion,
+            ),
+            _patch_resilience_components(),
         ):
             # Dict-formatted messages (already in LiteLLM format)
             messages = [{"role": "user", "content": "Hello"}]
@@ -254,9 +302,12 @@ class TestLLMFactoryAsyncAPI:
 
         # Use AsyncMock with side_effect for async function
         mock_acompletion = AsyncMock(side_effect=acompletion_side_effect)
-        with patch(
-            "mcp_server_langgraph.llm.factory.acompletion",
-            new=mock_acompletion,
+        with (
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                new=mock_acompletion,
+            ),
+            _patch_resilience_components(),
         ):
             messages = [HumanMessage(content="Hello")]
             result = await factory.ainvoke(messages)
@@ -300,9 +351,12 @@ class TestLLMFactoryAsyncAPI:
 
         # Verify it's the decorated version by checking the function still works
         # (decorated functions maintain their coroutine nature)
-        with patch(
-            "mcp_server_langgraph.llm.factory.acompletion",
-            side_effect=mock_acompletion,
+        with (
+            patch(
+                "mcp_server_langgraph.llm.factory.acompletion",
+                side_effect=mock_acompletion,
+            ),
+            _patch_resilience_components(),
         ):
             result = await factory.ainvoke([{"role": "user", "content": "test"}])
             assert result is not None

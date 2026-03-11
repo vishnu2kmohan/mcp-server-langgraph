@@ -178,7 +178,7 @@ export function InteractiveSVGArtifact({
     if (!sanitizedSvg) return;
 
     const svgElement = document.createElement("div");
-    svgElement.innerHTML = sanitizedSvg;
+    svgElement.innerHTML = sanitizedSvg; // nosemgrep: insecure-document-method
     const svgNode = svgElement.querySelector("svg");
     if (!svgNode) return;
 

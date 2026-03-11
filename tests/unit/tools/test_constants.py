@@ -36,6 +36,12 @@ class TestToolCategoryMap:
             assert tool_name in TOOL_CATEGORY_MAP, f"{tool_name} should be in TOOL_CATEGORY_MAP"
             assert TOOL_CATEGORY_MAP[tool_name] == expected_category
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSandboxRequiredTools:
     """Tests for SANDBOX_REQUIRED_TOOLS."""
@@ -55,6 +61,12 @@ class TestSandboxRequiredTools:
 
         for tool_name in risky_tools:
             assert tool_name in SANDBOX_REQUIRED_TOOLS, f"{tool_name} should require sandbox"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestHelperFunctions:
@@ -90,3 +102,9 @@ class TestHelperFunctions:
         assert tool_requires_sandbox("execute_python") is True
         assert tool_requires_sandbox("calculator") is False
         assert tool_requires_sandbox("web_search") is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

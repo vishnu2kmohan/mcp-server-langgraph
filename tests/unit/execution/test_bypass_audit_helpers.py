@@ -189,6 +189,12 @@ class TestCreateBypassAuditEvent:
         # THEN: Details should be empty dict
         assert event.details == {}
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 @pytest.mark.asyncio
@@ -281,6 +287,12 @@ class TestLogBypassAuditEvent:
         assert event.details["risk_level"] == "medium"
         assert event.details["complexity"] == "complicated"
         assert event.details["original_risk_level"] == "low"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -426,3 +438,9 @@ class TestLogBypassAuditEventPrometheusMetrics:
         mock_activation.assert_not_called()
         mock_approval.assert_not_called()
         mock_rejection.assert_not_called()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

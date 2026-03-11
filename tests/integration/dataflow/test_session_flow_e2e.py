@@ -98,6 +98,7 @@ def create_test_message():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_session_data_flow_e2_e")
 class TestSessionDataFlowE2E:
     """
     E2E tests verifying the complete session data flow.
@@ -320,6 +321,7 @@ class TestSessionDataFlowE2E:
         assert await repository.get(unique_session_id) is None
 
 
+@pytest.mark.xdist_group("test_session_workflow_association")
 class TestSessionWorkflowAssociation:
     """
     E2E tests for session-workflow associations.
@@ -410,6 +412,7 @@ class TestSessionWorkflowAssociation:
         assert all(s.workflow_id == unique_workflow_id for s in summaries)
 
 
+@pytest.mark.xdist_group("test_session_message_history")
 class TestSessionMessageHistory:
     """
     E2E tests for session message history retrieval.
@@ -522,6 +525,7 @@ class TestSessionMessageHistory:
         assert messages is None
 
 
+@pytest.mark.xdist_group("test_session_config_flow")
 class TestSessionConfigFlow:
     """
     E2E tests for session configuration handling.

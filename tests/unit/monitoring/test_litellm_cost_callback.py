@@ -95,7 +95,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
@@ -149,7 +149,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act - should not raise
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
@@ -189,7 +189,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
@@ -232,7 +232,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
@@ -284,7 +284,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act - should not raise AttributeError
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
@@ -332,7 +332,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act - should not raise AttributeError
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
@@ -377,7 +377,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)
@@ -426,7 +426,7 @@ class TestCostTrackingCallback:
         mock_collector = AsyncMock(return_value=None)  # noqa: async-mock-config
         with patch(
             "mcp_server_langgraph.monitoring.cost_tracker.get_cost_collector",
-            return_value=mock_collector,
+            side_effect=lambda *a, **kw: mock_collector,
         ):
             # Act
             await callback.async_log_success_event(kwargs, response_obj, start_time, end_time)

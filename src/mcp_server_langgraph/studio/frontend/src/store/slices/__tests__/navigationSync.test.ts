@@ -38,7 +38,6 @@ const EXPECTED_ADMIN_ITEMS = [
   "workflows",
   // AI & Data
   "agents",
-  "mcp",
   "vectors",
   "connections",
   "artifacts",
@@ -63,7 +62,6 @@ const EXPECTED_DEVELOPER_ITEMS = [
   "chat",
   "workflows",
   "agents",
-  "mcp",
   "vectors",
   "connections",
   "observability",
@@ -96,7 +94,6 @@ describe("Navigation Item Sync Validation", () => {
 
     it("should define expected AI & Data items", () => {
       expect(ALL_NAV_ITEM_IDS).toContain("agents");
-      expect(ALL_NAV_ITEM_IDS).toContain("mcp");
       expect(ALL_NAV_ITEM_IDS).toContain("vectors");
       expect(ALL_NAV_ITEM_IDS).toContain("connections");
       expect(ALL_NAV_ITEM_IDS).toContain("artifacts");

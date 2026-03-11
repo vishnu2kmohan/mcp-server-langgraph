@@ -168,7 +168,7 @@ class TestValidateValidWorkflow:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -213,7 +213,7 @@ class TestValidateValidWorkflow:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -267,7 +267,7 @@ class TestValidateInvalidWorkflow:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -312,7 +312,7 @@ class TestValidateInvalidWorkflow:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -365,7 +365,7 @@ class TestValidateWorkflowNotFound:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -416,7 +416,7 @@ class TestValidateUsesCentralizedValidator:
         with (
             patch(
                 "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-                return_value=mock_flags_obj,
+                side_effect=lambda *a, **kw: mock_flags_obj,
             ),
             patch("mcp_server_langgraph.api.v1.workflows.WorkflowValidator") as mock_validator_cls,
         ):

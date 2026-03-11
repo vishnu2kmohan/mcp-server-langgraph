@@ -18,70 +18,75 @@ import type { ReactNode } from "react";
 // Will implement these hooks
 import { useRiskAssessment, useDecisionHistory } from "./useHITLIntelligence";
 
-// Mock the API module
-vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            risk_assess: {
-              risk_score: 0.35,
-              risk_level: "medium",
-              risk_factors: [
-                {
-                  factor: "file_deletion",
-                  weight: 0.4,
-                  description: "Operation deletes files",
-                },
-                {
-                  factor: "production_environment",
-                  weight: 0.3,
-                  description: "Targets production environment",
-                },
-              ],
-              mitigations: [
-                "Create backup before deletion",
-                "Verify file paths are correct",
-              ],
-              recommendation: "approve_with_caution",
-              explanation:
-                "This action has moderate risk due to file deletion in production.",
-            },
-            decision_history: {
-              similar_decisions: [
-                {
-                  request_id: "req-001",
-                  action_type: "file_delete",
-                  decision: "approved",
-                  decided_by: "admin",
-                  decided_at: "2024-01-15T10:30:00Z",
-                  reasoning: "Required for cleanup",
-                },
-                {
-                  request_id: "req-002",
-                  action_type: "file_delete",
-                  decision: "rejected",
-                  decided_by: "security-admin",
-                  decided_at: "2024-01-10T14:20:00Z",
-                  reasoning: "Path too broad",
-                },
-              ],
-              approval_rate: 0.67,
-              total_similar: 3,
-              average_decision_time_ms: 15000,
-              suggested_action: "approve",
-            },
+// Mock the API barrel directly — never vi.importActual("../api") (5,132-line barrel causes OOM)
+// CRITICAL: Hoist mock references outside the factory to prevent infinite render loops.
+// RTK Query hooks return stable references; our mock must do the same.
+vi.mock("../api", () => {
+  const mockTrigger = vi.fn(() => ({
+    unwrap: () =>
+      Promise.resolve({
+        analyses: {
+          risk_assess: {
+            risk_score: 0.35,
+            risk_level: "medium",
+            risk_factors: [
+              {
+                factor: "file_deletion",
+                weight: 0.4,
+                description: "Operation deletes files",
+              },
+              {
+                factor: "production_environment",
+                weight: 0.3,
+                description: "Targets production environment",
+              },
+            ],
+            mitigations: [
+              "Create backup before deletion",
+              "Verify file paths are correct",
+            ],
+            recommendation: "approve_with_caution",
+            explanation:
+              "This action has moderate risk due to file deletion in production.",
           },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.002",
-        }),
-    })),
+          decision_history: {
+            similar_decisions: [
+              {
+                request_id: "req-001",
+                action_type: "file_delete",
+                decision: "approved",
+                decided_by: "admin",
+                decided_at: "2024-01-15T10:30:00Z",
+                reasoning: "Required for cleanup",
+              },
+              {
+                request_id: "req-002",
+                action_type: "file_delete",
+                decision: "rejected",
+                decided_by: "security-admin",
+                decided_at: "2024-01-10T14:20:00Z",
+                reasoning: "Path too broad",
+              },
+            ],
+            approval_rate: 0.67,
+            total_similar: 3,
+            average_decision_time_ms: 15000,
+            suggested_action: "approve",
+          },
+        },
+        cross_insights: [],
+        failed_analyses: [],
+        total_cost: "0.002",
+      }),
+  }));
+  const mockReturn: [typeof mockTrigger, { isLoading: boolean }] = [
+    mockTrigger,
     { isLoading: false },
-  ]),
-}));
-
+  ];
+  return {
+    useStudioAnalyzeMutation: vi.fn(() => mockReturn),
+  };
+});
 // Create test store
 const createTestStore = () =>
   configureStore({

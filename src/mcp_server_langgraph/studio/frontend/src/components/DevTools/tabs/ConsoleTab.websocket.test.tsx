@@ -170,25 +170,20 @@ describe("ConsoleTab WebSocket Integration", () => {
         </TestProvider>,
       );
 
-      // Check order by finding all entries and verifying sequence
-      const entries = screen.getAllByTestId(/^console-entry-/);
-      expect(entries).toHaveLength(3);
+      // Check order by finding all data rows (role="row" excluding header)
+      // OTELDataTable renders rows without data-testid; use role="row" and text content
+      const allRows = screen.getAllByRole("row");
+      // First row is the header; data rows follow
+      const dataRows = allRows.slice(1);
+      expect(dataRows).toHaveLength(3);
 
+      // Verify order by checking text content of each row
       // First: ws-entry-1 (earliest timestamp)
-      expect(entries[0]).toHaveAttribute(
-        "data-testid",
-        "console-entry-ws-entry-1",
-      );
+      expect(dataRows[0]).toHaveTextContent("WebSocket message received");
       // Second: local-middle (middle timestamp)
-      expect(entries[1]).toHaveAttribute(
-        "data-testid",
-        "console-entry-local-middle",
-      );
+      expect(dataRows[1]).toHaveTextContent("Middle message");
       // Third: ws-entry-2 (latest timestamp)
-      expect(entries[2]).toHaveAttribute(
-        "data-testid",
-        "console-entry-ws-entry-2",
-      );
+      expect(dataRows[2]).toHaveTextContent("Connection error");
     });
 
     it("should update count to include external entries", () => {
@@ -250,8 +245,9 @@ describe("ConsoleTab WebSocket Integration", () => {
       );
 
       // Should show only 2 entries (deduplicated by ID)
-      const entries = screen.getAllByTestId(/^console-entry-/);
-      expect(entries).toHaveLength(2);
+      // OTELDataTable rows queried via role="row" (minus 1 for header)
+      const allRows = screen.getAllByRole("row");
+      expect(allRows.length - 1).toBe(2);
     });
 
     it("should handle empty external entries", () => {

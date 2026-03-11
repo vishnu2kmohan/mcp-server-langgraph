@@ -102,6 +102,12 @@ class TestPushSubscription:
         )
         assert sub.is_expired()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # InMemoryPushSubscriptionStore Tests
@@ -311,6 +317,12 @@ class TestInMemoryPushSubscriptionStore:
         assert result is not None
         assert result.user_id == "user-002"  # Should be updated to new user
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Protocol Compliance Tests
@@ -324,3 +336,9 @@ class TestPushSubscriptionStoreProtocol:
         """Verify the store implements the protocol interface."""
         store = InMemoryPushSubscriptionStore()
         assert isinstance(store, PushSubscriptionStore)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

@@ -202,6 +202,7 @@ def extract_backend_endpoints(api_v1_path: Path) -> set[str]:
     return endpoints
 
 
+@pytest.mark.xdist_group("test_frontend_backend_a_p_i_parity")
 @pytest.mark.meta
 @pytest.mark.unit
 class TestFrontendBackendAPIParity:
@@ -334,3 +335,9 @@ class TestFrontendBackendAPIParity:
             f"that don't exist in OpenAPI schema. Examples: {list(stale)[:5]}. "
             f"Regenerate OpenAPI schema with 'make openapi' and frontend types with 'npm run generate:api'."
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

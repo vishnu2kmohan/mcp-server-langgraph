@@ -468,7 +468,8 @@ describe("RemediationApprovalDialog", () => {
         </TestProvider>,
       );
 
-      expect(screen.getByTestId("rejection-reason-select")).toBeInTheDocument();
+      // RadioGroup renders a <fieldset> with role="radiogroup" (data-testid not passed through)
+      expect(screen.getByRole("radiogroup")).toBeInTheDocument();
     });
 
     it("should have all rejection reason options", () => {
@@ -478,7 +479,7 @@ describe("RemediationApprovalDialog", () => {
         </TestProvider>,
       );
 
-      const select = screen.getByTestId("rejection-reason-select");
+      const select = screen.getByRole("radiogroup");
       expect(select).toBeInTheDocument();
 
       // Check for key options

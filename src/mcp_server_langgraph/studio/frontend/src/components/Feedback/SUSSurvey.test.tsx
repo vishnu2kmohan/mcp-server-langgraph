@@ -279,7 +279,7 @@ describe("SUSSurvey", () => {
 
       const radioGroups = screen.getAllByRole("radiogroup");
       radioGroups.forEach((group) => {
-        expect(group).toHaveAttribute("aria-labelledby");
+        expect(group).toHaveAttribute("aria-label");
       });
     });
   });

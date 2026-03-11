@@ -38,7 +38,7 @@ class TestWithCircuitBreaker:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             async_op = AsyncMock(return_value="result")()
             result = await with_circuit_breaker("test_service", async_op)
@@ -55,7 +55,7 @@ class TestWithCircuitBreaker:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             async_op = AsyncMock(return_value=None)()  # noqa: async-mock-config
             result = await with_circuit_breaker(
@@ -78,7 +78,7 @@ class TestWithCircuitBreaker:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             async_op = AsyncMock(return_value=None)()  # noqa: async-mock-config
             result = await with_circuit_breaker(
@@ -103,7 +103,7 @@ class TestWithCircuitBreaker:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             async_op = AsyncMock(return_value=None)()  # noqa: async-mock-config
             result = await with_circuit_breaker(
@@ -124,7 +124,7 @@ class TestWithCircuitBreaker:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             async_op = AsyncMock(return_value=None)()  # noqa: async-mock-config
             result = await with_circuit_breaker(
@@ -146,7 +146,7 @@ class TestWithCircuitBreaker:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             async_op = AsyncMock(return_value=None)()  # noqa: async-mock-config
 
@@ -163,7 +163,7 @@ class TestWithCircuitBreaker:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             with patch("mcp_server_langgraph.websocket.resilience.logger") as mock_logger:
                 async_op = AsyncMock(return_value=None)()  # noqa: async-mock-config
@@ -193,7 +193,7 @@ class TestGetCircuitBreakerState:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             state = get_circuit_breaker_state("test_service")
 
@@ -208,7 +208,7 @@ class TestGetCircuitBreakerState:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             state = get_circuit_breaker_state("test_service")
 
@@ -223,7 +223,7 @@ class TestGetCircuitBreakerState:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             state = get_circuit_breaker_state("test_service")
 
@@ -249,7 +249,7 @@ class TestIsCircuitOpen:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             result = is_circuit_open("test_service")
 
@@ -264,7 +264,7 @@ class TestIsCircuitOpen:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             result = is_circuit_open("test_service")
 
@@ -279,7 +279,7 @@ class TestIsCircuitOpen:
 
         with patch(
             "mcp_server_langgraph.websocket.resilience.get_circuit_breaker",
-            return_value=mock_breaker,
+            side_effect=lambda *a, **kw: mock_breaker,
         ):
             result = is_circuit_open("test_service")
 

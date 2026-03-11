@@ -381,7 +381,7 @@ class TestMiddlewareAsyncMethodsCoverage:
 
         with patch(
             "mcp_server_langgraph.privacy.middleware.is_feature_enabled",
-            return_value=True,
+            side_effect=lambda *a, **kw: True,
         ):
             request = {
                 "method": "tools/call",
@@ -405,7 +405,7 @@ class TestMiddlewareAsyncMethodsCoverage:
 
         with patch(
             "mcp_server_langgraph.privacy.middleware.is_feature_enabled",
-            return_value=False,
+            side_effect=lambda *a, **kw: False,
         ):
             request = {
                 "method": "tools/call",
@@ -428,7 +428,7 @@ class TestMiddlewareAsyncMethodsCoverage:
 
         with patch(
             "mcp_server_langgraph.privacy.middleware.is_feature_enabled",
-            return_value=True,
+            side_effect=lambda *a, **kw: True,
         ):
             request = {"method": "tools/list", "params": {}}
             processed, context = await middleware.process_request(request)
@@ -606,7 +606,7 @@ class TestMiddlewareIntegrationCoverage:
 
         with patch(
             "mcp_server_langgraph.privacy.middleware.is_feature_enabled",
-            return_value=True,
+            side_effect=lambda *a, **kw: True,
         ):
             # Request with multiple PII types
             request = {

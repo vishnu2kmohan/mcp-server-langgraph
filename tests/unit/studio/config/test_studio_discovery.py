@@ -90,7 +90,7 @@ class TestStudioDiscoveryScopes:
 
         discovery = StudioDiscovery()
         # Mock home directory to use tmp_path
-        with patch.object(Path, "home", return_value=tmp_path):
+        with patch.object(Path, "home", side_effect=lambda *a, **kw: tmp_path):
             results = discovery.discover(tmp_path, include_user=True)
 
         _scopes = [scope for scope, _ in results]

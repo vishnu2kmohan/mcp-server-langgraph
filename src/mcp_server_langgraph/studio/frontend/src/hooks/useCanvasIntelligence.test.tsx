@@ -19,99 +19,103 @@ import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
 
 // Mock the API module - single mock at top level to avoid memory leaks
-vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            artifact_suggest_type: {
-              suggested_type: "mermaid",
-              confidence: 0.95,
-              alternatives: [
-                { type: "code", confidence: 0.3 },
-                { type: "markdown", confidence: 0.1 },
-              ],
-              reason:
-                "Content contains flowchart syntax with graph TB declaration",
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useStudioAnalyzeMutation: vi.fn(() => [
+      vi.fn(() => ({
+        unwrap: () =>
+          Promise.resolve({
+            analyses: {
+              artifact_suggest_type: {
+                suggested_type: "mermaid",
+                confidence: 0.95,
+                alternatives: [
+                  { type: "code", confidence: 0.3 },
+                  { type: "markdown", confidence: 0.1 },
+                ],
+                reason:
+                  "Content contains flowchart syntax with graph TB declaration",
+              },
+              code_analyze: {
+                complexity: 8,
+                quality_score: 0.85,
+                issues: [
+                  {
+                    type: "unused_variable",
+                    message: "Variable 'temp' is declared but never used",
+                    line: 15,
+                    severity: "warning",
+                  },
+                ],
+                suggestions: [
+                  {
+                    type: "refactor",
+                    description:
+                      "Extract repeated logic into a helper function",
+                    priority: "medium",
+                  },
+                ],
+                language: "typescript",
+                lines_of_code: 120,
+              },
+              diff_explain: {
+                summary:
+                  "Added authentication middleware and updated error handling",
+                changes: [
+                  {
+                    type: "addition",
+                    description: "New JWT validation middleware",
+                    impact: "high",
+                  },
+                  {
+                    type: "modification",
+                    description: "Improved error response formatting",
+                    impact: "medium",
+                  },
+                ],
+                breaking_changes: false,
+                affected_areas: ["auth", "error-handling"],
+              },
+              diagram_analyze: {
+                diagram_type: "flowchart",
+                is_valid: true,
+                node_count: 8,
+                edge_count: 10,
+                complexity_score: 0.6,
+                issues: [],
+                suggestions: [
+                  {
+                    type: "simplify",
+                    description: "Consider splitting this into two diagrams",
+                  },
+                ],
+              },
+              diagram_to_code: {
+                code: `async function loginFlow(user, password) {
+    const isValid = await validateCredentials(user, password);
+    if (!isValid) {
+      throw new Error("Invalid credentials");
+    }
+    const token = await generateToken(user);
+    return { success: true, token };
+  }`,
+                language: "typescript",
+                confidence: 0.88,
+                explanation:
+                  "Generated TypeScript function based on the login flowchart with validation and token generation steps",
+              },
             },
-            code_analyze: {
-              complexity: 8,
-              quality_score: 0.85,
-              issues: [
-                {
-                  type: "unused_variable",
-                  message: "Variable 'temp' is declared but never used",
-                  line: 15,
-                  severity: "warning",
-                },
-              ],
-              suggestions: [
-                {
-                  type: "refactor",
-                  description: "Extract repeated logic into a helper function",
-                  priority: "medium",
-                },
-              ],
-              language: "typescript",
-              lines_of_code: 120,
-            },
-            diff_explain: {
-              summary:
-                "Added authentication middleware and updated error handling",
-              changes: [
-                {
-                  type: "addition",
-                  description: "New JWT validation middleware",
-                  impact: "high",
-                },
-                {
-                  type: "modification",
-                  description: "Improved error response formatting",
-                  impact: "medium",
-                },
-              ],
-              breaking_changes: false,
-              affected_areas: ["auth", "error-handling"],
-            },
-            diagram_analyze: {
-              diagram_type: "flowchart",
-              is_valid: true,
-              node_count: 8,
-              edge_count: 10,
-              complexity_score: 0.6,
-              issues: [],
-              suggestions: [
-                {
-                  type: "simplify",
-                  description: "Consider splitting this into two diagrams",
-                },
-              ],
-            },
-            diagram_to_code: {
-              code: `async function loginFlow(user, password) {
-  const isValid = await validateCredentials(user, password);
-  if (!isValid) {
-    throw new Error("Invalid credentials");
-  }
-  const token = await generateToken(user);
-  return { success: true, token };
-}`,
-              language: "typescript",
-              confidence: 0.88,
-              explanation:
-                "Generated TypeScript function based on the login flowchart with validation and token generation steps",
-            },
-          },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.002",
-        }),
-    })),
-    { isLoading: false },
-  ]),
-}));
-
+            cross_insights: [],
+            failed_analyses: [],
+            total_cost: "0.002",
+          }),
+      })),
+      { isLoading: false },
+    ]),
+  };
+});
 // =============================================================================
 // Test Utilities
 // =============================================================================

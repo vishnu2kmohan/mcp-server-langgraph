@@ -147,14 +147,18 @@ class TestParallelPrePushScript:
         """Frontend lane must cap shard concurrency to prevent OOM when running in parallel.
 
         When the orchestrator runs all 5 lanes concurrently, the frontend shard runner
-        must not use its default concurrency (12) because Python tests are also consuming
+        must not use its default concurrency (8) because Python tests are also consuming
         CPU and memory. The orchestrator should set VITEST_SHARD_CONCURRENCY_MAX to a
-        reduced value for the frontend lane.
+        reduced value (1/6 of standalone, min 2) for the frontend lane.
         """
         content = PRE_PUSH_SCRIPT.read_text()
         assert "VITEST_SHARD_CONCURRENCY_MAX" in content, (
             "Orchestrator must set VITEST_SHARD_CONCURRENCY_MAX for frontend lane "
             "to prevent OOM when running concurrently with Python tests"
+        )
+        assert "/ 6" in content or "/6" in content, (
+            "Frontend shard concurrency must be reduced to 1/6 of standalone limit "
+            "when running in parallel (12/6=2 shards fits within memory budget)"
         )
 
     def test_git_index_file_isolation_per_lane(self) -> None:
@@ -162,3 +166,9 @@ class TestParallelPrePushScript:
         content = PRE_PUSH_SCRIPT.read_text()
         assert "GIT_INDEX_FILE" in content, "Script must set per-lane GIT_INDEX_FILE for index isolation"
         assert ".git-index-" in content, "Lane index files must use '.git-index-' prefix"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

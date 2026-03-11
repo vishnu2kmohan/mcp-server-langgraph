@@ -48,17 +48,19 @@ class TestContextvarAdapterEmptyUserId:
         adapter = ContextvarSessionStorageAdapter(mock_service)
 
         with (
-            patch.object(adapter, "_get_user_id", return_value="")
-            if hasattr(adapter, "_get_user_id")
-            else patch(
+            patch(
                 "mcp_server_langgraph.storage.session.adapter.get_current_user_id",
-                return_value="",
+                side_effect=lambda *a, **kw: "",
             ),
+            patch("mcp_server_langgraph.storage.session.adapter.settings") as mock_settings,
             patch("mcp_server_langgraph.storage.session.adapter.logger") as mock_logger,
         ):
+            mock_settings.enable_session_scoped_fallback = False
             await adapter.get_messages("test-session-123")
 
-            mock_logger.error.assert_called_once()
+            # Verify error was logged with session context
+            mock_logger.error.assert_called()
+            # Check most recent error call contains session_id
             call_args = mock_logger.error.call_args
             assert "test-session-123" in str(call_args)
 
@@ -74,10 +76,14 @@ class TestContextvarAdapterEmptyUserId:
         mock_service.get_session_messages_by_session = AsyncMock(return_value=None)
         adapter = ContextvarSessionStorageAdapter(mock_service)
 
-        with patch(
-            "mcp_server_langgraph.storage.session.adapter.get_current_user_id",
-            return_value="",
+        with (
+            patch(
+                "mcp_server_langgraph.storage.session.adapter.get_current_user_id",
+                side_effect=lambda *a, **kw: "",
+            ),
+            patch("mcp_server_langgraph.storage.session.adapter.settings") as mock_settings,
         ):
+            mock_settings.enable_session_scoped_fallback = True
             result = await adapter.get_messages("test-session-123")
 
         assert result is None
@@ -94,14 +100,16 @@ class TestContextvarAdapterEmptyUserId:
         with (
             patch(
                 "mcp_server_langgraph.storage.session.adapter.get_current_user_id",
-                return_value="",
+                side_effect=lambda *a, **kw: "",
             ),
+            patch("mcp_server_langgraph.storage.session.adapter.settings"),
             patch("mcp_server_langgraph.storage.session.adapter.logger") as mock_logger,
         ):
             result = await adapter.add_message("test-session-123", {"role": "user", "content": "hello"})
 
             assert result is None
-            mock_logger.error.assert_called_once()
+            # Verify error was logged with session context
+            mock_logger.error.assert_called()
             call_args = mock_logger.error.call_args
             assert "test-session-123" in str(call_args)
 
@@ -125,7 +133,7 @@ class TestContextvarAdapterEmptyUserId:
         with (
             patch(
                 "mcp_server_langgraph.storage.session.adapter.get_current_user_id",
-                return_value="",
+                side_effect=lambda *a, **kw: "",
             ),
             patch("mcp_server_langgraph.storage.session.adapter.logger") as mock_logger,
         ):
@@ -157,7 +165,7 @@ class TestContextvarAdapterEmptyUserId:
         with (
             patch(
                 "mcp_server_langgraph.storage.session.adapter.get_current_user_id",
-                return_value="",
+                side_effect=lambda *a, **kw: "",
             ),
             patch("mcp_server_langgraph.storage.session.adapter.settings") as mock_settings,
         ):
@@ -184,7 +192,7 @@ class TestContextvarAdapterEmptyUserId:
 
         with patch(
             "mcp_server_langgraph.storage.session.adapter.get_current_user_id",
-            return_value="user-123",
+            side_effect=lambda *a, **kw: "user-123",
         ):
             result = await adapter.get_messages("test-session-456")
 

@@ -24,18 +24,21 @@ vi.mock("react-router", async () => {
 const mockGetAuthToken = vi.fn();
 const mockSetAuthTokens = vi.fn();
 const mockClearAuthTokens = vi.fn();
-vi.mock("./storage", () => ({
-  getAuthToken: () => mockGetAuthToken(),
-  setAuthTokens: (...args: unknown[]) => mockSetAuthTokens(...args),
-  clearAuthTokens: () => mockClearAuthTokens(),
-  storage: {
-    get: vi.fn(),
-  },
-  STORAGE_KEYS: {
-    REFRESH_TOKEN: "refresh_token",
-  },
-}));
-
+vi.mock("./storage", async () => {
+  const actual = await vi.importActual("./storage");
+  return {
+    ...actual,
+    getAuthToken: () => mockGetAuthToken(),
+    setAuthTokens: (...args: unknown[]) => mockSetAuthTokens(...args),
+    clearAuthTokens: () => mockClearAuthTokens(),
+    storage: {
+      get: vi.fn(),
+    },
+    STORAGE_KEYS: {
+      REFRESH_TOKEN: "refresh_token",
+    },
+  };
+});
 // Mock intendedRoute
 const mockSetIntendedRoute = vi.fn();
 vi.mock("./intendedRoute", () => ({

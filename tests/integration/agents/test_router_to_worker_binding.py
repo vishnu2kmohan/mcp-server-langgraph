@@ -16,6 +16,7 @@ import pytest
 pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="router_worker")]
 
 
+@pytest.mark.xdist_group("test_router_output_fields")
 @pytest.mark.integration
 class TestRouterOutputFields:
     """Tests for enhanced RouterOutput fields."""
@@ -102,6 +103,7 @@ class TestRouterOutputFields:
         assert output.routing_rationale == "Simple query requiring no tools"
 
 
+@pytest.mark.xdist_group("test_agent_request_fields")
 @pytest.mark.integration
 class TestAgentRequestFields:
     """Tests for enhanced AgentRequest capability fields."""
@@ -162,6 +164,7 @@ class TestAgentRequestFields:
         assert request.merge_strategy == "union"
 
 
+@pytest.mark.xdist_group("test_router_to_worker_flow")
 @pytest.mark.integration
 class TestRouterToWorkerFlow:
     """Tests for router-to-worker tool binding flow."""
@@ -230,6 +233,7 @@ class TestRouterToWorkerFlow:
         assert request.scope == CapabilityScope.PROJECT
 
 
+@pytest.mark.xdist_group("test_tool_binding_flow")
 @pytest.mark.integration
 class TestToolBindingFlow:
     """Tests for actual tool binding in WorkerAgent."""
@@ -297,6 +301,7 @@ class TestToolBindingFlow:
         assert isinstance(worker.capability_provider, HierarchicalCapabilityProvider)
 
 
+@pytest.mark.xdist_group("test_merge_strategy_integration")
 @pytest.mark.integration
 class TestMergeStrategyIntegration:
     """Tests for merge strategy in router-worker flow."""
@@ -355,6 +360,7 @@ class TestMergeStrategyIntegration:
         assert "file_reader" not in result
 
 
+@pytest.mark.xdist_group("test_execution_mode_selector")
 @pytest.mark.integration
 class TestExecutionModeSelector:
     """Tests for execution mode selection."""

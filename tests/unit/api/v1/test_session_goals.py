@@ -19,6 +19,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+import mcp_server_langgraph.api.v1.sessions as sessions_module
+
 
 pytestmark = [
     pytest.mark.unit,
@@ -103,6 +105,7 @@ def test_app(
     from mcp_server_langgraph.auth.middleware import get_current_user
     from mcp_server_langgraph.core.dependencies import (
         get_audit_log_repository,
+        get_db_session,
         get_session_goal_repository,
     )
 
@@ -115,6 +118,9 @@ def test_app(
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_session_goal_repository] = lambda: mock_goal_repository
     app.dependency_overrides[get_audit_log_repository] = lambda: mock_audit_repository
+    # Safety net: also override get_db_session to prevent real DB connections
+    # if the above overrides fail to match under xdist function identity issues
+    app.dependency_overrides[get_db_session] = lambda: MagicMock()
 
     yield app
 
@@ -158,10 +164,10 @@ class TestSetSessionGoalEndpoint:
         session_id = sample_session["id"]
         timestamp = 1705123456789
 
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = MagicMock(**sample_session)
-            mock_get_service.return_value = mock_service
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: MagicMock(**sample_session))
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 f"/api/v1/sessions/{session_id}/goal",
@@ -180,10 +186,10 @@ class TestSetSessionGoalEndpoint:
         WHEN POST request is made
         THEN response should be 404 Not Found
         """
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = None
-            mock_get_service.return_value = mock_service
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: None)
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 "/api/v1/sessions/nonexistent-session/goal",
@@ -226,10 +232,10 @@ class TestSetSessionGoalEndpoint:
         """
         session_id = sample_session["id"]
 
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = MagicMock(**sample_session)
-            mock_get_service.return_value = mock_service
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: MagicMock(**sample_session))
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 f"/api/v1/sessions/{session_id}/goal",
@@ -259,10 +265,10 @@ class TestCompleteSessionGoalEndpoint:
         session_id = sample_session["id"]
         completed_at = 1705127056789
 
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = MagicMock(**sample_session)
-            mock_get_service.return_value = mock_service
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: MagicMock(**sample_session))
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 f"/api/v1/sessions/{session_id}/goal/complete",
@@ -287,10 +293,10 @@ class TestCompleteSessionGoalEndpoint:
         """
         session_id = sample_session["id"]
 
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = MagicMock(**sample_session)
-            mock_get_service.return_value = mock_service
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: MagicMock(**sample_session))
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 f"/api/v1/sessions/{session_id}/goal/complete",
@@ -315,10 +321,10 @@ class TestCompleteSessionGoalEndpoint:
         """
         session_id = sample_session["id"]
 
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = MagicMock(**sample_session)
-            mock_get_service.return_value = mock_service
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: MagicMock(**sample_session))
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 f"/api/v1/sessions/{session_id}/goal/complete",
@@ -341,10 +347,10 @@ class TestCompleteSessionGoalEndpoint:
         WHEN POST request is made
         THEN response should be 404 Not Found
         """
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
-            mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = None
-            mock_get_service.return_value = mock_service
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
+            mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: None)
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 "/api/v1/sessions/nonexistent-session/goal/complete",
@@ -365,10 +371,10 @@ class TestCompleteSessionGoalEndpoint:
         """
         session_id = sample_session["id"]
 
-        with patch("mcp_server_langgraph.api.v1.sessions.get_session_service") as mock_get_service:
+        with patch.object(sessions_module, "get_session_service") as mock_get_service:
             mock_service = AsyncMock(return_value=None)
-            mock_service.get_session.return_value = MagicMock(**sample_session)
-            mock_get_service.return_value = mock_service
+            mock_service.get_session = AsyncMock(side_effect=lambda *a, **kw: MagicMock(**sample_session))
+            mock_get_service.side_effect = lambda: mock_service
 
             response = client.post(
                 f"/api/v1/sessions/{session_id}/goal/complete",

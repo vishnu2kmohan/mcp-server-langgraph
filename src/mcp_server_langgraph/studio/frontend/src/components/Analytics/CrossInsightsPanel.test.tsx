@@ -26,10 +26,13 @@ import type {
 } from "../../hooks/useBatchCompositeAnalysis";
 
 // Mock feature flag context
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn().mockReturnValue(true),
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn().mockReturnValue(true),
+  };
+});
 // Create a minimal store for tests
 const createTestStore = () => {
   return configureStore({

@@ -98,10 +98,13 @@ vi.mock("../../store/hooks", () => ({
 }));
 
 // Mock storage utility
-vi.mock("../../utils/storage", () => ({
-  getAuthToken: () => "test-token",
-}));
-
+vi.mock("../../utils/storage", async () => {
+  const actual = await vi.importActual("../../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: () => "test-token",
+  };
+});
 // =============================================================================
 // Import fixtures AFTER mocks
 // =============================================================================

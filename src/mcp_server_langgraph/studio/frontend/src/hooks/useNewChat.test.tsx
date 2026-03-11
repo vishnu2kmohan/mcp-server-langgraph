@@ -29,12 +29,27 @@ vi.mock("../utils/intendedRoute", () => ({
 
 // Mock telemetry context
 const mockTrackSessionCreation = vi.fn();
-vi.mock("../contexts/TelemetryContext", () => ({
-  useSessionTelemetry: () => ({
-    trackSessionCreation: mockTrackSessionCreation,
-  }),
-}));
-
+vi.mock("../contexts/TelemetryContext", async () => {
+  const actual = await vi.importActual("../contexts/TelemetryContext");
+  return {
+    ...actual,
+    useSessionTelemetry: () => ({
+      trackSessionCreation: mockTrackSessionCreation,
+    }),
+    useWebVitals: () => ({
+      start: vi.fn(),
+      stop: vi.fn(),
+      getMetrics: () => ({ fcp: null, lcp: null, cls: null, inp: null }),
+    }),
+    useTelemetry: () => ({
+      sessionTelemetry: {
+        trackSessionCreation: vi.fn(),
+        getMetrics: () => ({}),
+      },
+      webVitals: { start: vi.fn(), stop: vi.fn(), getMetrics: () => ({}) },
+    }),
+  };
+});
 import { useNewChat } from "./useNewChat";
 
 describe("useNewChat", () => {

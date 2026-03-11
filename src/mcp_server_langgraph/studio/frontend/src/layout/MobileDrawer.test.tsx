@@ -52,16 +52,19 @@ vi.mock("react-router", async () => {
 });
 
 // Mock feature flag context
-vi.mock("../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn((flag: string) => {
-    if (flag === "mobile_drawer") return true;
-    return false;
-  }),
-  FeatureFlagProvider: ({ children }: { children: ReactNode }) => (
-    <>{children}</>
-  ),
-}));
-
+vi.mock("../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn((flag: string) => {
+      if (flag === "mobile_drawer") return true;
+      return false;
+    }),
+    FeatureFlagProvider: ({ children }: { children: ReactNode }) => (
+      <>{children}</>
+    ),
+  };
+});
 // Mock useNavPrediction hook
 vi.mock("../hooks/useUXIntelligence", () => ({
   useNavPrediction: vi.fn(() => ({

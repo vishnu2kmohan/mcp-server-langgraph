@@ -43,7 +43,7 @@ class TestDeferLoadingMCPIntegration:
             # Mock feature flag as enabled
             with patch(
                 "mcp_server_langgraph.mcp.server_streamable.is_defer_loading_enabled",
-                return_value=True,
+                side_effect=lambda *a, **kw: True,
             ):
                 with patch("mcp_server_langgraph.mcp.server_streamable.is_tool_deferred") as mock_is_deferred:
                     mock_is_deferred.side_effect = lambda name: name in _DEFERRED_TOOLS
@@ -94,7 +94,7 @@ class TestDeferLoadingMCPIntegration:
             # Mock feature flag as disabled
             with patch(
                 "mcp_server_langgraph.mcp.server_streamable.is_defer_loading_enabled",
-                return_value=False,
+                side_effect=lambda *a, **kw: False,
             ):
                 from mcp_server_langgraph.mcp.server_streamable import (
                     filter_deferred_tools,

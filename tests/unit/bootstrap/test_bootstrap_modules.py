@@ -51,6 +51,12 @@ class TestBootstrapModuleImports:
         assert http is not None
         assert hasattr(http, "init_http_client")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestObservabilityBootstrap:
@@ -74,6 +80,12 @@ class TestObservabilityBootstrap:
 
         state = TelemetryState()
         assert hasattr(state, "logger")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -260,7 +272,7 @@ class TestBootstrapLifecycle:
         with patch(
             "mcp_server_langgraph.bootstrap.init_semantic",
             new_callable=AsyncMock,
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result = await bootstrap_all(settings)
             await result.cleanup()
@@ -345,7 +357,7 @@ class TestBootstrapStreamingSettingsWiring:
             patch(
                 "mcp_server_langgraph.bootstrap.init_semantic",
                 new_callable=AsyncMock,
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
         ):
             state = await bootstrap_all(settings)
@@ -393,7 +405,7 @@ class TestBootstrapStreamingSettingsWiring:
             patch(
                 "mcp_server_langgraph.bootstrap.init_semantic",
                 new_callable=AsyncMock,
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
         ):
             state = await bootstrap_all(settings)
@@ -427,7 +439,7 @@ class TestBootstrapStreamingSettingsWiring:
             patch(
                 "mcp_server_langgraph.bootstrap.init_semantic",
                 new_callable=AsyncMock,
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
         ):
             state = await bootstrap_all(settings)
@@ -463,7 +475,7 @@ class TestBootstrapStreamingSettingsWiring:
             patch(
                 "mcp_server_langgraph.bootstrap.init_semantic",
                 new_callable=AsyncMock,
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
         ):
             state = await bootstrap_all(settings)
@@ -544,7 +556,19 @@ class TestSkillsBootstrap:
         # Disable skills marketplace
         settings = Settings()
 
-        with patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=False):
+        mock_ff = MagicMock()
+        mock_ff.enable_semantic_skill_search = False
+
+        with (
+            patch(
+                "mcp_server_langgraph.skills.auto_update.is_auto_update_enabled",
+                side_effect=lambda *a, **kw: False,
+            ),
+            patch(
+                "mcp_server_langgraph.core.feature_flags.feature_flags",
+                mock_ff,
+            ),
+        ):
             result = await init_skills(settings)
 
         # Scheduler should be None when disabled
@@ -558,16 +582,28 @@ class TestSkillsBootstrap:
 
         settings = Settings()
 
-        with patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=True):
-            with patch("mcp_server_langgraph.skills.auto_update.AutoUpdateScheduler") as mock_scheduler_class:
-                mock_scheduler = MagicMock()
-                mock_scheduler.start = AsyncMock(return_value=None)
-                mock_scheduler_class.return_value = mock_scheduler
+        mock_ff = MagicMock()
+        mock_ff.enable_semantic_skill_search = False
 
-                result = await init_skills(settings)
+        with (
+            patch(
+                "mcp_server_langgraph.skills.auto_update.is_auto_update_enabled",
+                side_effect=lambda *a, **kw: True,
+            ),
+            patch("mcp_server_langgraph.skills.auto_update.AutoUpdateScheduler") as mock_scheduler_class,
+            patch(
+                "mcp_server_langgraph.core.feature_flags.feature_flags",
+                mock_ff,
+            ),
+        ):
+            mock_scheduler = MagicMock()
+            mock_scheduler.start = AsyncMock(return_value=None)
+            mock_scheduler_class.return_value = mock_scheduler
 
-                assert result.auto_update_scheduler is mock_scheduler
-                mock_scheduler.start.assert_called_once()
+            result = await init_skills(settings)
+
+            assert result.auto_update_scheduler is mock_scheduler
+            mock_scheduler.start.assert_called_once()
 
 
 @pytest.mark.unit
@@ -595,11 +631,14 @@ class TestBootstrapSkillsIntegration:
         settings = Settings()
 
         with (
-            patch("mcp_server_langgraph.skills.auto_update.is_auto_update_enabled", return_value=False),
+            patch(
+                "mcp_server_langgraph.skills.auto_update.is_auto_update_enabled",
+                side_effect=lambda *a, **kw: False,
+            ),
             patch(
                 "mcp_server_langgraph.bootstrap.init_semantic",
                 new_callable=AsyncMock,
-                return_value=None,
+                side_effect=lambda *a, **kw: None,
             ),
         ):
             state = await bootstrap_all(settings)

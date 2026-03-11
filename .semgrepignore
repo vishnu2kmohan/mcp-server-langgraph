@@ -1,0 +1,62 @@
+# Semgrep Ignore Rules
+# Replaces the default .semgrepignore template; includes standard exclusions
+# plus project-specific patterns.
+
+# ============================================================================
+# Standard exclusions (from semgrep default template)
+# ============================================================================
+node_modules/
+build/
+dist/
+vendor/
+.env/
+.venv/
+.tox/
+*.min.js
+.npm/
+.yarn/
+.semgrep
+.semgrep_logs/
+
+# ============================================================================
+# Test files and test infrastructure
+# ============================================================================
+# Top-level test directories
+test/
+tests/
+
+# Test files within src/ (co-located tests)
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+
+# Test mocks and fixtures
+src/mcp_server_langgraph/studio/frontend/src/mocks/
+
+# ============================================================================
+# Non-production files
+# ============================================================================
+# Environment templates (not runtime configuration)
+.env.example
+*.env.example
+
+# Frontend dev/build scripts (not user-facing code)
+# These use child_process for legitimate tooling (ripgrep, find)
+src/mcp_server_langgraph/studio/frontend/scripts/
+
+# ============================================================================
+# Scanned by dedicated tools (avoid duplicate scanning)
+# ============================================================================
+# Terraform: scanned by trivy with terraform/.trivyignore
+terraform/
+
+# Alembic migrations: DDL operations use raw SQL by design
+alembic/
+
+# GitHub Actions: scanned by actionlint
+.github/
+
+# Kubernetes manifests: scanned by trivy
+deployments/

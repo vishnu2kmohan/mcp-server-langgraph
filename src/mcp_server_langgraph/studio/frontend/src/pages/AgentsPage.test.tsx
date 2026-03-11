@@ -35,21 +35,24 @@ const mockUpdateThinkingBudget = vi.fn().mockReturnValue({
   unwrap: vi.fn().mockResolvedValue({}),
 });
 
-vi.mock("../api", () => ({
-  useGetAgentConfigQuery: vi.fn(),
-  useUpdateThinkingBudgetMutation: () => [
-    mockUpdateThinkingBudget,
-    { isLoading: false },
-  ],
-  // Mock for AgentMetricsCard (added to AgentsPage)
-  useGetAgentMetricsQuery: () => ({
-    data: null,
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  }),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetAgentConfigQuery: vi.fn(),
+    useUpdateThinkingBudgetMutation: () => [
+      mockUpdateThinkingBudget,
+      { isLoading: false },
+    ],
+    // Mock for AgentMetricsCard (added to AgentsPage)
+    useGetAgentMetricsQuery: () => ({
+      data: null,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    }),
+  };
+});
 import { useGetAgentConfigQuery } from "../api";
 
 // Cast to vi.Mock for type safety

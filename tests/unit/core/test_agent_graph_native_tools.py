@@ -54,6 +54,12 @@ class TestGenerateResponseImplSelectedToolIds:
             assert len(result["messages"]) == 1
             assert isinstance(result["messages"][0], AIMessage)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestGenerateResponseImplToolSelectionMode:
@@ -92,6 +98,12 @@ class TestGenerateResponseImplToolSelectionMode:
             mock_model.ainvoke.assert_called_once()
             call_kwargs = mock_model.ainvoke.call_args[1] if mock_model.ainvoke.call_args[1] else {}
             assert "native_tools" not in call_kwargs or call_kwargs.get("native_tools") is None
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -138,6 +150,12 @@ class TestGenerateResponseImplKbFocus:
                     tool_list = call_args[0]
                     # web_search should have been filtered out
                     assert "web_search" not in tool_list
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -225,6 +243,12 @@ class TestGenerateResponseImplVerificationRouting:
             # Should route to end when verification disabled
             assert result["next_action"] == "end"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestGenerateResponseImplNativeConfigsObservability:
@@ -278,6 +302,12 @@ class TestGenerateResponseImplNativeConfigsObservability:
                 # Should include _native_configs_used for observability
                 if "_native_configs_used" in result:
                     assert isinstance(result["_native_configs_used"], list)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -343,3 +373,9 @@ class TestGenerateResponseImplAutoDerivation:
 
                     # Verify model was invoked
                     assert mock_model.ainvoke.called
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

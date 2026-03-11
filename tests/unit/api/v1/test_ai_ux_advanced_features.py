@@ -17,6 +17,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import AIMessage
 
+import mcp_server_langgraph.api.v1.ai_ux_graph as ai_ux_graph_module
+
 pytestmark = pytest.mark.unit
 
 # =============================================================================
@@ -224,9 +226,9 @@ class TestOpenTelemetrySpansInNodes:
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
+        mock_llm_factory.ainvoke = AsyncMock(side_effect=lambda *a, **kw: AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
-        with patch("mcp_server_langgraph.api.v1.ai_ux_graph.tracer") as mock_tracer:
+        with patch.object(ai_ux_graph_module, "tracer") as mock_tracer:
             mock_span = MagicMock()
             mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
             mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
@@ -263,11 +265,11 @@ class TestOpenTelemetrySpansInNodes:
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
+        mock_llm_factory.ainvoke = AsyncMock(side_effect=lambda *a, **kw: AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         span_names: list[str] = []
 
-        with patch("mcp_server_langgraph.api.v1.ai_ux_graph.tracer") as mock_tracer:
+        with patch.object(ai_ux_graph_module, "tracer") as mock_tracer:
 
             def capture_span_name(name: str, **kwargs: Any) -> MagicMock:
                 span_names.append(name)
@@ -311,11 +313,11 @@ class TestOpenTelemetrySpansInNodes:
             create_ux_analysis_graph,
         )
 
-        mock_llm_factory.ainvoke = AsyncMock(return_value=AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
+        mock_llm_factory.ainvoke = AsyncMock(side_effect=lambda *a, **kw: AIMessage(content=SAMPLE_PERSONA_LLM_RESPONSE))
 
         recorded_attributes: list[dict[str, Any]] = []
 
-        with patch("mcp_server_langgraph.api.v1.ai_ux_graph.tracer") as mock_tracer:
+        with patch.object(ai_ux_graph_module, "tracer") as mock_tracer:
             mock_span = MagicMock()
 
             def capture_attributes(attrs: dict[str, Any]) -> None:

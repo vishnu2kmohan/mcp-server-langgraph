@@ -135,7 +135,7 @@ class TestFeaturesEndpointWithMockedFlags:
             "mcp_websocket": False,
         }
 
-        with patch("mcp_server_langgraph.api.v1.features.get_feature_flags", return_value=mock_flags):
+        with patch("mcp_server_langgraph.api.v1.features.get_feature_flags", side_effect=lambda *a, **kw: mock_flags):
             client = TestClient(test_app)
             response = client.get("/api/v1/features")
             data = response.json()
@@ -165,7 +165,7 @@ class TestFeaturesEndpointWithMockedFlags:
             "mcp_websocket": True,
         }
 
-        with patch("mcp_server_langgraph.api.v1.features.get_feature_flags", return_value=mock_flags):
+        with patch("mcp_server_langgraph.api.v1.features.get_feature_flags", side_effect=lambda *a, **kw: mock_flags):
             client = TestClient(test_app)
             response = client.get("/api/v1/features?role=admin")
             data = response.json()

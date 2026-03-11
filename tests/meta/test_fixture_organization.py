@@ -156,6 +156,10 @@ def test_no_duplicate_autouse_fixtures():
     # cleanup: Common fixture name for per-test cleanup, intentionally duplicated per-file
     # clear_cache: Cache clearing between tests, per-module scoping
     # skip_if_keycloak_unavailable: Conditional skip for keycloak-dependent tests
+    # _isolate_otel: Per-class OTEL instrument isolation for xdist; each file patches
+    #                different module-level tracers/counters that can't be centralized.
+    # _isolate_singletons: Per-class singleton reset for xdist; each file resets
+    #                      different singletons (fallback chains, schedulers, etc.)
     allowed_duplicates = {
         "setup_auth",
         "teardown_gc",
@@ -163,6 +167,8 @@ def test_no_duplicate_autouse_fixtures():
         "clear_cache",
         "skip_if_keycloak_unavailable",
         "skip_if_websocket_unavailable",
+        "_isolate_otel",
+        "_isolate_singletons",
     }
 
     for fixture_name, locations in autouse_fixtures.items():
@@ -173,7 +179,12 @@ def test_no_duplicate_autouse_fixtures():
             # Allow duplicate fixtures if they're all in conftest.py files
             non_conftest = [loc for loc in locations if not loc[0].endswith("conftest.py")]
             if non_conftest:
-                duplicates[fixture_name] = locations
+                # Deduplicate by file: multiple class-scoped autouse fixtures
+                # in the SAME file are valid (each class gets its own isolation).
+                # Only flag duplicates across DIFFERENT files.
+                unique_files = {loc[0] for loc in non_conftest}
+                if len(unique_files) > 1:
+                    duplicates[fixture_name] = locations
 
     # Build error message
     if duplicates:

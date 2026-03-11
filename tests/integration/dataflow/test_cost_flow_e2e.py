@@ -76,6 +76,7 @@ def mock_acompletion_response():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_cost_data_flow_e2_e")
 class TestCostDataFlowE2E:
     """
     E2E tests verifying the complete cost data flow.
@@ -293,6 +294,7 @@ class TestCostDataFlowE2E:
             assert record.completion_tokens == 75
 
 
+@pytest.mark.xdist_group("test_cost_data_flow_with_feature_flags")
 class TestCostDataFlowWithFeatureFlags:
     """
     Tests for cost data flow with various feature flag configurations.
@@ -374,6 +376,7 @@ class TestCostDataFlowWithFeatureFlags:
             assert len(our_records) == 0, f"Expected 0 records when cost tracking disabled, but found {len(our_records)}"
 
 
+@pytest.mark.xdist_group("test_responses_a_p_i_cost_flow")
 class TestResponsesAPICostFlow:
     """
     E2E tests for OpenAI Responses API cost flow.

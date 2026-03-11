@@ -276,14 +276,14 @@ describe("Session Goal API", () => {
       const timestamp = Date.now();
 
       const response = await setGoal({
-        session_id: "session-123",
+        sessionId: "session-123",
         goal: "Complete the data analysis",
-        set_at: timestamp,
+        setAt: timestamp,
       }).unwrap();
 
-      expect(response.session_id).toBe("session-123");
+      expect(response.sessionId).toBe("session-123");
       expect(response.goal).toBe("Complete the data analysis");
-      expect(response.set_at).toBe(timestamp);
+      expect(response.setAt).toBe(timestamp);
     });
 
     it("provides isSuccess state after mutation", async () => {
@@ -294,9 +294,9 @@ describe("Session Goal API", () => {
       const [setGoal] = result.current;
 
       await setGoal({
-        session_id: "session-123",
+        sessionId: "session-123",
         goal: "Test goal",
-        set_at: Date.now(),
+        setAt: Date.now(),
       }).unwrap();
 
       // After successful request
@@ -314,15 +314,15 @@ describe("Session Goal API", () => {
       const completedAt = Date.now();
 
       const response = await completeGoal({
-        session_id: "session-123",
+        sessionId: "session-123",
         goal: "Complete the data analysis",
         achieved: true,
-        completed_at: completedAt,
+        completedAt: completedAt,
       }).unwrap();
 
-      expect(response.session_id).toBe("session-123");
+      expect(response.sessionId).toBe("session-123");
       expect(response.achieved).toBe(true);
-      expect(response.completed_at).toBe(completedAt);
+      expect(response.completedAt).toBe(completedAt);
     });
 
     it("completes session goal with achieved=partial", async () => {
@@ -333,11 +333,11 @@ describe("Session Goal API", () => {
       const [completeGoal] = result.current;
 
       const response = await completeGoal({
-        session_id: "session-123",
+        sessionId: "session-123",
         goal: "Complete the data analysis",
         achieved: "partial",
         feedback: "Completed 80% of the analysis",
-        completed_at: Date.now(),
+        completedAt: Date.now(),
       }).unwrap();
 
       expect(response.achieved).toBe("partial");
@@ -352,11 +352,11 @@ describe("Session Goal API", () => {
       const [completeGoal] = result.current;
 
       const response = await completeGoal({
-        session_id: "session-123",
+        sessionId: "session-123",
         goal: "Complete the data analysis",
         achieved: false,
         feedback: "Could not complete due to data issues",
-        completed_at: Date.now(),
+        completedAt: Date.now(),
       }).unwrap();
 
       expect(response.achieved).toBe(false);
@@ -367,7 +367,7 @@ describe("Session Goal API", () => {
   describe("useGetSessionGoalHistoryQuery", () => {
     it("fetches goal history successfully", async () => {
       const { result } = renderHook(
-        () => useGetSessionGoalHistoryQuery({ session_id: "session-123" }),
+        () => useGetSessionGoalHistoryQuery({ sessionId: "session-123" }),
         { wrapper },
       );
 
@@ -375,12 +375,12 @@ describe("Session Goal API", () => {
 
       expect(result.current.data?.goals).toHaveLength(3);
       expect(result.current.data?.total).toBe(3);
-      expect(result.current.data?.session_id).toBe("session-123");
+      expect(result.current.data?.sessionId).toBe("session-123");
     });
 
     it("returns goals with correct structure", async () => {
       const { result } = renderHook(
-        () => useGetSessionGoalHistoryQuery({ session_id: "session-123" }),
+        () => useGetSessionGoalHistoryQuery({ sessionId: "session-123" }),
         { wrapper },
       );
 
@@ -391,13 +391,13 @@ describe("Session Goal API", () => {
       expect(goal).toHaveProperty("goal");
       expect(goal).toHaveProperty("achieved");
       expect(goal).toHaveProperty("feedback");
-      expect(goal).toHaveProperty("set_at");
-      expect(goal).toHaveProperty("completed_at");
+      expect(goal).toHaveProperty("setAt");
+      expect(goal).toHaveProperty("completedAt");
     });
 
     it("supports different achievement statuses", async () => {
       const { result } = renderHook(
-        () => useGetSessionGoalHistoryQuery({ session_id: "session-123" }),
+        () => useGetSessionGoalHistoryQuery({ sessionId: "session-123" }),
         { wrapper },
       );
 
@@ -413,7 +413,7 @@ describe("Session Goal API", () => {
       const { result } = renderHook(
         () =>
           useGetSessionGoalHistoryQuery({
-            session_id: "session-123",
+            sessionId: "session-123",
             limit: 2,
             offset: 1,
           }),
@@ -519,9 +519,9 @@ describe("Error Response Handling", () => {
 
       await expect(
         setGoal({
-          session_id: "nonexistent-session",
+          sessionId: "nonexistent-session",
           goal: "Test goal",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap(),
       ).rejects.toMatchObject({
         status: 404,
@@ -546,9 +546,9 @@ describe("Error Response Handling", () => {
 
       await expect(
         setGoal({
-          session_id: "session-123",
+          sessionId: "session-123",
           goal: "",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap(),
       ).rejects.toMatchObject({
         status: 400,
@@ -573,10 +573,10 @@ describe("Error Response Handling", () => {
 
       await expect(
         completeGoal({
-          session_id: "nonexistent-session",
+          sessionId: "nonexistent-session",
           goal: "Test goal",
           achieved: true,
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap(),
       ).rejects.toMatchObject({
         status: 404,
@@ -601,9 +601,9 @@ describe("Error Response Handling", () => {
 
       await expect(
         setGoal({
-          session_id: "session-123",
+          sessionId: "session-123",
           goal: "Duplicate goal",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap(),
       ).rejects.toMatchObject({
         status: 409,
@@ -641,9 +641,9 @@ describe("Error Response Handling", () => {
 
       await expect(
         setGoal({
-          session_id: "session-123",
+          sessionId: "session-123",
           goal: "Test goal",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap(),
       ).rejects.toBeDefined();
     });

@@ -215,7 +215,7 @@ class TestEmbeddingServiceFactory:
         with patch.dict("os.environ", {}, clear=False):
             with patch(
                 "mcp_server_langgraph.llm.embeddings._has_litellm_embedding_config",
-                return_value=False,
+                side_effect=lambda *a, **kw: False,
             ):
                 service = get_embedding_service()
                 assert isinstance(service, InMemoryEmbeddingService)
@@ -229,11 +229,11 @@ class TestEmbeddingServiceFactory:
 
         with patch(
             "mcp_server_langgraph.llm.embeddings._has_litellm_embedding_config",
-            return_value=True,
+            side_effect=lambda *a, **kw: True,
         ):
             with patch(
                 "mcp_server_langgraph.llm.embeddings._get_default_embedding_model",
-                return_value="text-embedding-3-small",
+                side_effect=lambda *a, **kw: "text-embedding-3-small",
             ):
                 service = get_embedding_service()
                 assert isinstance(service, LiteLLMEmbeddingService)

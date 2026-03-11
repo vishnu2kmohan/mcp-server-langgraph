@@ -14,11 +14,30 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="observability_shutdown")
 class TestObservabilityShutdown:
-    """Test observability shutdown and cleanup"""
+    """Test observability shutdown and cleanup.
+
+    IMPORTANT: This test class calls real shutdown_observability() which destroys
+    OTEL providers. It MUST be in its own xdist_group to prevent contaminating
+    other tests on the same worker. The teardown re-initializes OTEL to restore
+    a clean state.
+    """
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Re-initialize OTEL and force GC after each test."""
+        from mcp_server_langgraph.core.config import Settings
+
+        if not is_initialized():
+            init_observability(
+                settings=Settings(
+                    log_format="text",
+                    enable_file_logging=False,
+                    langsmith_tracing=False,
+                    observability_backend="opentelemetry",
+                ),
+                enable_file_logging=False,
+            )
         gc.collect()
 
     def test_shutdown_flushes_tracer_spans(self):

@@ -51,6 +51,12 @@ class TestSessionCreateRequestContract:
         # THEN name should be accessible
         assert request.name == "My New Session"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSessionResponseContract:
     """Tests for SessionResponse model contract."""
@@ -144,6 +150,12 @@ class TestSessionResponseContract:
 
             # THEN it should succeed with correct status
             assert response.status.value == status_value  # type: ignore[union-attr]
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestMessageResponseContract:
@@ -386,6 +398,12 @@ class TestMessageResponseContract:
         assert not hasattr(response, "thinking_content") or response.thinking_content is None
         assert not hasattr(response, "thinking_tokens") or response.thinking_tokens is None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSessionServiceContract:
     """Tests for session service response contract."""
@@ -534,6 +552,12 @@ class TestSessionResponseSerialization:
         # THEN 'message_id' should be in output
         assert "message_id" in data
         assert data["message_id"] == "msg-456"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestSessionConfigResponseContract:

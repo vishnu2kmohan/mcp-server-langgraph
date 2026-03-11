@@ -14,34 +14,37 @@ import { VersionDiff } from "./VersionDiff";
 import type { ArtifactVersion } from "../types/artifacts";
 
 // Mock the API module for AI features
-vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            diff_explain: {
-              summary: "Added authentication middleware",
-              changes: [
-                {
-                  type: "addition",
-                  description: "New feature",
-                  impact: "medium",
-                },
-              ],
-              breaking_changes: false,
-              affected_areas: ["auth"],
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useStudioAnalyzeMutation: vi.fn(() => [
+      vi.fn(() => ({
+        unwrap: () =>
+          Promise.resolve({
+            analyses: {
+              diff_explain: {
+                summary: "Added authentication middleware",
+                changes: [
+                  {
+                    type: "addition",
+                    description: "New feature",
+                    impact: "medium",
+                  },
+                ],
+                breaking_changes: false,
+                affected_areas: ["auth"],
+              },
             },
-          },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.001",
-        }),
-    })),
-    { isLoading: false },
-  ]),
-}));
-
+            cross_insights: [],
+            failed_analyses: [],
+            total_cost: "0.001",
+          }),
+      })),
+      { isLoading: false },
+    ]),
+  };
+});
 // Create test store
 const createTestStore = () =>
   configureStore({

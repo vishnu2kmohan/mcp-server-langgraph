@@ -3,7 +3,7 @@ purpose: Reference guide for writing tests with pytest, vitest, and Hypothesis
 priority: high
 category: testing
 test-count: 437+
-last-updated: 2026-02-05
+last-updated: 2026-03-10
 ---
 
 # Testing Patterns Context
@@ -204,26 +204,33 @@ beforeEach(() => {
 });
 ```
 
-### AnimatePresence Mock
+### Motion/React Mock (OOM-Safe)
 
 ```typescript
-vi.mock("motion/react", async () => {
-  const actual = await vi.importActual("motion/react");
-  return {
-    ...actual,
-    useReducedMotion: vi.fn(() => false),
-    AnimatePresence: ({ children }) => <>{children}</>,
-  };
-});
+// CORRECT: Mock without vi.importActual (avoids loading heavy module tree)
+import { filterMotionProps } from "@/test-utils";
+
+vi.mock("motion/react", () => ({
+  motion: {
+    button: ({ children, ...props }: React.ComponentProps<"button"> & Record<string, unknown>) => (
+      <button {...filterMotionProps(props)}>{children}</button>
+    ),
+    div: ({ children, ...props }: React.ComponentProps<"div"> & Record<string, unknown>) => (
+      <div {...filterMotionProps(props)}>{children}</div>
+    ),
+  },
+  useReducedMotion: () => false,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// WRONG: vi.importActual pulls in full motion/react module tree
+// vi.mock("motion/react", async () => {
+//   const actual = await vi.importActual("motion/react"); // OOM risk!
+//   return { ...actual, useReducedMotion: vi.fn(() => false) };
+// });
 ```
 
-### Reduced Motion Testing (WCAG 2.2 AA)
-
-```typescript
-const mockUseReducedMotion = vi.fn();
-// When reduced motion preferred: variants=undefined, layout=false
-// When not preferred: variants=defined, layout=true
-```
+Only mock the motion elements your component actually uses (button, div, etc.).
 
 ---
 
@@ -333,6 +340,18 @@ finally:
 | advanced | Edge cases, accessibility |
 
 **Target**: 200-400 lines, 10-25 tests per file
+
+## Frontend OOM/Hang Prevention
+
+| Trap | Symptom | Fix |
+|------|---------|-----|
+| `vi.importActual("../../api")` | OOM >8GB in fork worker | Mock barrel directly with only needed exports |
+| `vi.importActual("../../hooks")` | OOM (transitively loads api) | Mock only the hooks your component imports |
+| `userEvent` + timer hooks + `RouterProvider` | Test hangs indefinitely | Use `fireEvent` + mock `useDebouncedValue` |
+| `motion.button` without mock | `userEvent.click()` hangs (rAF) | Mock `motion/react` with `filterMotionProps` |
+| Test file >1,000 lines | OOM in sharded runs | Split into `.core.test.tsx`, `.features.test.tsx` |
+
+**Timer hook mocking**: Always mock `useDebouncedValue`, `useThrottledCallback`, and similar timer-based hooks to return values synchronously in tests.
 
 ---
 

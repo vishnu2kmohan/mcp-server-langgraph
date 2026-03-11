@@ -9,10 +9,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 // Mock the RTK Query API
-vi.mock("../api", () => ({
-  useValidateWorkflowMutation: vi.fn(),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useValidateWorkflowMutation: vi.fn(),
+  };
+});
 // Mock the debounce hook
 vi.mock("./useDebounce", () => ({
   useDebouncedCallback: vi.fn((callback, _delay) => {

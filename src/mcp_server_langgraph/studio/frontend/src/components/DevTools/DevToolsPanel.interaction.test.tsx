@@ -92,36 +92,39 @@ vi.mock("../../hooks/useAlertWebSocket", () => ({
   }),
 }));
 
-vi.mock("../../api", () => ({
-  useListTracesQuery: () => ({
-    data: { items: [] },
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  }),
-  useGetTraceQuery: () => ({
-    data: null,
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  }),
-  useGetMetricsQuery: () => ({
-    data: null,
-    isLoading: false,
-    error: null,
-  }),
-  useListAlertsQuery: () => ({
-    data: { items: [] },
-    isLoading: false,
-    error: null,
-  }),
-  useListLogsQuery: () => ({
-    data: { items: [] },
-    isLoading: false,
-    error: null,
-  }),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useListTracesQuery: () => ({
+      data: { items: [] },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    }),
+    useGetTraceQuery: () => ({
+      data: null,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    }),
+    useGetMetricsQuery: () => ({
+      data: null,
+      isLoading: false,
+      error: null,
+    }),
+    useListAlertsQuery: () => ({
+      data: { items: [] },
+      isLoading: false,
+      error: null,
+    }),
+    useListLogsQuery: () => ({
+      data: { items: [] },
+      isLoading: false,
+      error: null,
+    }),
+  };
+});
 // =============================================================================
 // Test Utilities
 // =============================================================================

@@ -193,7 +193,7 @@ class TestWebhookClientDelivery:
 
         with patch(
             "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
+            side_effect=lambda *a, **kw: mock_http_manager,
         ):
             client = WebhookClient(config)
 
@@ -232,7 +232,7 @@ class TestWebhookClientDelivery:
 
         with patch(
             "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
+            side_effect=lambda *a, **kw: mock_http_manager,
         ):
             client = WebhookClient(config)
 
@@ -285,7 +285,7 @@ class TestWebhookClientDelivery:
         with (
             patch(
                 "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-                return_value=mock_http_manager,
+                side_effect=lambda *a, **kw: mock_http_manager,
             ),
             patch(
                 "mcp_server_langgraph.mcp.webhook_client._async_sleep",
@@ -330,7 +330,7 @@ class TestWebhookClientDelivery:
 
         with patch(
             "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
+            side_effect=lambda *a, **kw: mock_http_manager,
         ):
             client = WebhookClient(config)
 
@@ -372,7 +372,7 @@ class TestWebhookClientDelivery:
         with (
             patch(
                 "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-                return_value=mock_http_manager,
+                side_effect=lambda *a, **kw: mock_http_manager,
             ),
             patch(
                 "mcp_server_langgraph.mcp.webhook_client._async_sleep",
@@ -416,7 +416,7 @@ class TestCreateWebhookCallback:
 
         with patch(
             "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
+            side_effect=lambda *a, **kw: mock_http_manager,
         ):
             callback = create_webhook_callback(
                 webhook_url="https://example.com/webhook",
@@ -454,7 +454,7 @@ class TestCreateWebhookCallback:
 
         with patch(
             "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-            return_value=mock_http_manager,
+            side_effect=lambda *a, **kw: mock_http_manager,
         ):
             callback = create_webhook_callback(
                 webhook_url="https://example.com/webhook",
@@ -492,7 +492,7 @@ class TestCreateWebhookCallback:
         with (
             patch(
                 "mcp_server_langgraph.mcp.webhook_client.get_http_client_manager",
-                return_value=mock_http_manager,
+                side_effect=lambda *a, **kw: mock_http_manager,
             ),
             patch(
                 "mcp_server_langgraph.mcp.webhook_client._async_sleep",

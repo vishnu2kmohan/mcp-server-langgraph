@@ -17,6 +17,7 @@ import pytest
 pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="studio_loading")]
 
 
+@pytest.mark.xdist_group("test_studio_config_models")
 @pytest.mark.integration
 class TestStudioConfigModels:
     """Tests for StudioConfig Pydantic models."""
@@ -75,6 +76,7 @@ class TestStudioConfigModels:
         assert "code_review" in config.skills.enabled
 
 
+@pytest.mark.xdist_group("test_studio_parser")
 @pytest.mark.integration
 class TestStudioParser:
     """Tests for STUDIO.md parser."""
@@ -158,6 +160,7 @@ Follow these guidelines when working on this project.
         assert "Important Instructions" in config.instructions
 
 
+@pytest.mark.xdist_group("test_studio_discovery")
 @pytest.mark.integration
 class TestStudioDiscovery:
     """Tests for STUDIO.md file discovery."""
@@ -205,6 +208,7 @@ class TestStudioDiscovery:
                 assert isinstance(path, Path)
 
 
+@pytest.mark.xdist_group("test_studio_loader")
 @pytest.mark.integration
 class TestStudioLoader:
     """Tests for STUDIO.md loader."""
@@ -256,6 +260,7 @@ tools:
             assert config is not None
 
 
+@pytest.mark.xdist_group("test_studio_storage")
 @pytest.mark.integration
 class TestStudioStorage:
     """Tests for STUDIO.md configuration storage."""
@@ -352,6 +357,7 @@ class TestStudioStorage:
         assert has_changed is True
 
 
+@pytest.mark.xdist_group("test_end_to_end_studio_loading")
 @pytest.mark.integration
 class TestEndToEndStudioLoading:
     """End-to-end integration tests for STUDIO.md loading."""

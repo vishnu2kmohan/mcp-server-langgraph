@@ -38,50 +38,53 @@ const mockStartOAuth = vi.fn(() =>
   createUnwrappable({ authorization_url: "https://github.com/oauth" }),
 );
 
-vi.mock("../../api", () => ({
-  useCreateConnectionMutation: () => [
-    mockCreateConnection,
-    { isLoading: false },
-  ],
-  useTestConnectionMutation: () => [mockTestConnection, { isLoading: false }],
-  useStartOAuth2FlowMutation: () => [mockStartOAuth, { isLoading: false }],
-  useListConnectionTemplatesQuery: () => ({
-    data: {
-      templates: [
-        {
-          id: "github",
-          name: "GitHub",
-          description: "Access GitHub repositories",
-          icon: "github",
-          auth_type: "oauth2",
-          default_url: "https://api.github.com",
-          category: "development",
-          oauth2_scopes: ["repo", "user"],
-          config_fields: [],
-          keywords: ["github", "pr"],
-          popularity: 95,
-          documentation_url: "https://docs.github.com/",
-        },
-        {
-          id: "slack",
-          name: "Slack",
-          description: "Access Slack channels",
-          icon: "slack",
-          auth_type: "oauth2",
-          default_url: "https://slack.com/api",
-          category: "communication",
-          oauth2_scopes: ["chat:write"],
-          config_fields: [],
-          keywords: ["slack", "message"],
-          popularity: 90,
-          documentation_url: "https://api.slack.com/",
-        },
-      ],
-    },
-    isLoading: false,
-  }),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useCreateConnectionMutation: () => [
+      mockCreateConnection,
+      { isLoading: false },
+    ],
+    useTestConnectionMutation: () => [mockTestConnection, { isLoading: false }],
+    useStartOAuth2FlowMutation: () => [mockStartOAuth, { isLoading: false }],
+    useListConnectionTemplatesQuery: () => ({
+      data: {
+        templates: [
+          {
+            id: "github",
+            name: "GitHub",
+            description: "Access GitHub repositories",
+            icon: "github",
+            auth_type: "oauth2",
+            default_url: "https://api.github.com",
+            category: "development",
+            oauth2_scopes: ["repo", "user"],
+            config_fields: [],
+            keywords: ["github", "pr"],
+            popularity: 95,
+            documentation_url: "https://docs.github.com/",
+          },
+          {
+            id: "slack",
+            name: "Slack",
+            description: "Access Slack channels",
+            icon: "slack",
+            auth_type: "oauth2",
+            default_url: "https://slack.com/api",
+            category: "communication",
+            oauth2_scopes: ["chat:write"],
+            config_fields: [],
+            keywords: ["slack", "message"],
+            popularity: 90,
+            documentation_url: "https://api.slack.com/",
+          },
+        ],
+      },
+      isLoading: false,
+    }),
+  };
+});
 // Mock useMotionSafeVariants hook
 vi.mock("../../hooks/useMotionSafe", () => ({
   useMotionSafeVariants: (variants: Record<string, unknown>) => variants,

@@ -61,11 +61,11 @@ class TestStartupToolIndexing:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_registry,
+                side_effect=lambda *a, **kw: mock_registry,
             ),
             patch(
                 "mcp_server_langgraph.tools.semantic_index.ToolIndexEntry.from_langchain_tool",
@@ -94,7 +94,7 @@ class TestStartupToolIndexing:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
         ):
             mock_ff.enable_semantic_tool_search = False
@@ -128,11 +128,11 @@ class TestStartupToolIndexing:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_registry,
+                side_effect=lambda *a, **kw: mock_registry,
             ),
             patch(
                 "mcp_server_langgraph.tools.semantic_index.ToolIndexEntry.from_langchain_tool",
@@ -225,11 +225,11 @@ class TestStartupIndexingMetrics:
             patch("mcp_server_langgraph.bootstrap.semantic.feature_flags") as mock_ff,
             patch(
                 "mcp_server_langgraph.bootstrap.semantic.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_registry,
+                side_effect=lambda *a, **kw: mock_registry,
             ),
             patch(
                 "mcp_server_langgraph.tools.semantic_index.ToolIndexEntry.from_langchain_tool",

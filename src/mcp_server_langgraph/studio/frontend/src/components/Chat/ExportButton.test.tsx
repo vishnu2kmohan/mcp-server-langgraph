@@ -34,10 +34,13 @@ const mockRevokeObjectURL = vi.fn();
 const mockExportSession = vi.fn();
 const mockUnwrap = vi.fn();
 
-vi.mock("../../api", () => ({
-  useExportSessionMutation: () => [mockExportSession, { isLoading: false }],
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useExportSessionMutation: () => [mockExportSession, { isLoading: false }],
+  };
+});
 // Create a minimal store for tests
 const createTestStore = () => {
   return configureStore({

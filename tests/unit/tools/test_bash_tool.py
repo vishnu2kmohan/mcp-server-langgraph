@@ -255,11 +255,11 @@ class TestBashToolExecution:
 
         mock_result = self._create_mock_runner_result(stdout="hello")
         mock_runner = MagicMock()
-        mock_runner.run_bash.return_value = mock_result
+        mock_runner.run_bash.side_effect = lambda *a, **kw: mock_result
 
         with (
             patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", return_value=mock_runner),
+            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", side_effect=lambda: mock_runner),
         ):
             mock_flags.enable_bash_tool = True
 
@@ -275,11 +275,11 @@ class TestBashToolExecution:
 
         mock_result = self._create_mock_runner_result(stdout="/home/user/project")
         mock_runner = MagicMock()
-        mock_runner.run_bash.return_value = mock_result
+        mock_runner.run_bash.side_effect = lambda *a, **kw: mock_result
 
         with (
             patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", return_value=mock_runner),
+            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", side_effect=lambda: mock_runner),
         ):
             mock_flags.enable_bash_tool = True
 
@@ -306,11 +306,11 @@ class TestBashToolExecution:
 
         mock_result = self._create_mock_runner_result(stdout="fast")
         mock_runner = MagicMock()
-        mock_runner.run_bash.return_value = mock_result
+        mock_runner.run_bash.side_effect = lambda *a, **kw: mock_result
 
         with (
             patch("mcp_server_langgraph.tools.bash_tools.feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", return_value=mock_runner),
+            patch("mcp_server_langgraph.tools.bash_tools.get_sandbox_runner", side_effect=lambda: mock_runner),
         ):
             mock_flags.enable_bash_tool = True
 

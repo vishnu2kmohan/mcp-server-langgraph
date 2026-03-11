@@ -18,17 +18,20 @@ import personaReducer from "../store/slices/personaSlice";
 import { storage } from "../utils/storage";
 
 // Mock storage
-vi.mock("../utils/storage", () => ({
-  storage: {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn(),
-  },
-  STORAGE_KEYS: {
-    LAST_VISIT: "langgraph_last_visit",
-  },
-}));
-
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    storage: {
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn(),
+    },
+    STORAGE_KEYS: {
+      LAST_VISIT: "langgraph_last_visit",
+    },
+  };
+});
 // Mock GSM
 vi.mock("../analytics/gsm", () => ({
   recordSignal: vi.fn(),

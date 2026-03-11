@@ -22,7 +22,6 @@ import {
   createTestStore,
   createWrapper,
 } from "./SessionNav.fixtures";
-import { TestProvider } from "@/test-utils";
 
 // Mock navigate and other react-router hooks
 vi.mock("react-router", async () => {
@@ -294,11 +293,9 @@ describe("SessionNav Inline Editing", () => {
   it("should enable inline editing when enableEdit prop is true", () => {
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableEdit />
+      </Wrapper>,
     );
 
     // Should show session names that can be edited
@@ -310,11 +307,9 @@ describe("SessionNav Inline Editing", () => {
     const user = userEvent.setup();
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={vi.fn()} />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={vi.fn()} />
+      </Wrapper>,
     );
 
     // WHEN: User single-clicks on a session (not the current one)
@@ -336,11 +331,9 @@ describe("SessionNav Inline Editing", () => {
     const mockRename = vi.fn();
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={mockRename} />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={mockRename} />
+      </Wrapper>,
     );
 
     // WHEN: User double-clicks on a session
@@ -360,11 +353,9 @@ describe("SessionNav Inline Editing", () => {
     const user = userEvent.setup();
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={vi.fn()} />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={vi.fn()} />
+      </Wrapper>,
     );
 
     // WHEN: User double-clicks on a session
@@ -392,11 +383,9 @@ describe("SessionNav Inline Editing", () => {
     const mockRename = vi.fn();
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={mockRename} />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={mockRename} />
+      </Wrapper>,
     );
 
     // Enter edit mode via double-click
@@ -420,11 +409,9 @@ describe("SessionNav Inline Editing", () => {
     const mockRename = vi.fn();
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableEdit onRenameSession={mockRename} />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableEdit onRenameSession={mockRename} />
+      </Wrapper>,
     );
 
     // Enter edit mode via double-click
@@ -447,11 +434,9 @@ describe("SessionNav Inline Editing", () => {
     const _user = userEvent.setup();
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableContextMenu />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableContextMenu />
+      </Wrapper>,
     );
 
     const sessionButton = screen.getByText("Today's Chat");

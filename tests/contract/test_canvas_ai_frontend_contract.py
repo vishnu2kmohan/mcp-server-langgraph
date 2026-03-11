@@ -119,6 +119,7 @@ def get_canvas_request_model_fields() -> set[str]:
     return fields
 
 
+@pytest.mark.xdist_group("test_canvas_a_i_frontend_backend_contract")
 @pytest.mark.contract
 class TestCanvasAIFrontendBackendContract:
     """
@@ -296,6 +297,7 @@ class TestCanvasAIFrontendBackendContract:
             )
 
 
+@pytest.mark.xdist_group("test_canvas_a_p_i_endpoint_contract")
 @pytest.mark.contract
 class TestCanvasAPIEndpointContract:
     """
@@ -386,6 +388,7 @@ def get_canvas_response_model_fields() -> set[str]:
     return fields
 
 
+@pytest.mark.xdist_group("test_canvas_response_schema_contract")
 @pytest.mark.contract
 class TestCanvasResponseSchemaContract:
     """

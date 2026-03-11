@@ -187,17 +187,33 @@ vi.mock("../hooks/useAISuggestionsWebSocket", () => ({
   })),
 }));
 
-vi.mock("../contexts/TelemetryContext", () => ({
-  TelemetryProvider: ({ children }: { children: React.ReactNode }) => children,
-  useSessionTelemetry: () => ({
-    trackSessionCreation: vi.fn(),
-    trackRevalidation: vi.fn(),
-    trackSync: vi.fn(),
-    trackBypassApproval: vi.fn(),
-    getMetrics: () => ({}),
-  }),
-}));
-
+vi.mock("../contexts/TelemetryContext", async () => {
+  const actual = await vi.importActual("../contexts/TelemetryContext");
+  return {
+    ...actual,
+    TelemetryProvider: ({ children }: { children: React.ReactNode }) =>
+      children,
+    useSessionTelemetry: () => ({
+      trackSessionCreation: vi.fn(),
+      trackRevalidation: vi.fn(),
+      trackSync: vi.fn(),
+      trackBypassApproval: vi.fn(),
+      getMetrics: () => ({}),
+    }),
+    useWebVitals: () => ({
+      start: vi.fn(),
+      stop: vi.fn(),
+      getMetrics: () => ({ fcp: null, lcp: null, cls: null, inp: null }),
+    }),
+    useTelemetry: () => ({
+      sessionTelemetry: {
+        trackSessionCreation: vi.fn(),
+        getMetrics: () => ({}),
+      },
+      webVitals: { start: vi.fn(), stop: vi.fn(), getMetrics: () => ({}) },
+    }),
+  };
+});
 // =============================================================================
 // Test Data
 // =============================================================================

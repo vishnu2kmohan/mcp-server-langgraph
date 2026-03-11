@@ -28,16 +28,22 @@ vi.mock("../store/hooks", () => ({
   useAppDispatch: () => vi.fn(),
 }));
 
-vi.mock("../store/slices/authSlice", () => ({
-  selectIsAuthenticated: () => true,
-  selectWebSocketPermissions: () => ({ budget_alerts: true }),
-  logout: () => ({ type: "auth/logout" }),
-}));
-
-vi.mock("../utils/storage", () => ({
-  getAuthToken: () => "test-token",
-}));
-
+vi.mock("../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../store/slices/authSlice");
+  return {
+    ...actual,
+    selectIsAuthenticated: () => true,
+    selectWebSocketPermissions: () => ({ budget_alerts: true }),
+    logout: () => ({ type: "auth/logout" }),
+  };
+});
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: () => "test-token",
+  };
+});
 // Import after mocking
 import { useBudgetAlertsWebSocket } from "./useBudgetAlertsWebSocket";
 import type { BudgetAlert as _BudgetAlert } from "./useBudgetAlertsWebSocket";

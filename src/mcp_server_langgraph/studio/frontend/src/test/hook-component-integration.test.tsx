@@ -464,11 +464,9 @@ describe("useProgressiveDisclosure Integration", () => {
     }
 
     render(
-      <TestProvider>
-        <TestWrapper store={store}>
-          <DisclosureIntegration />
-        </TestWrapper>
-      </TestProvider>,
+      <TestWrapper store={store}>
+        <DisclosureIntegration />
+      </TestWrapper>,
     );
 
     // Initial level is beginner

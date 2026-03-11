@@ -14,8 +14,6 @@ import { PermissionGuard } from "./PermissionGuard";
 import personaReducer from "../../store/slices/personaSlice";
 import authReducer from "../../store/slices/authSlice";
 
-import { TestProvider } from "@/test-utils";
-
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -131,13 +129,11 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "developer" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["sessions:read"]}>
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["sessions:read"]}>
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -151,13 +147,11 @@ describe("PermissionGuard", () => {
       });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["compliance:view"]}>
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["compliance:view"]}>
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -168,16 +162,14 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "user" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard
-              requiredPermissions={["admin:access"]}
-              fallbackPath="/unauthorized"
-            >
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["admin:access"]}
+            fallbackPath="/unauthorized"
+          >
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
@@ -191,16 +183,14 @@ describe("PermissionGuard", () => {
       });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard
-              requiredPermissions={["sessions:view", "admin:access"]}
-              fallbackPath="/unauthorized"
-            >
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["sessions:view", "admin:access"]}
+            fallbackPath="/unauthorized"
+          >
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       // Should redirect because admin:access fails
@@ -212,16 +202,14 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "developer" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard
-              requiredPermissions={["sessions:read", "admin:access"]}
-              requireAll={false}
-            >
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["sessions:read", "admin:access"]}
+            requireAll={false}
+          >
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       // Should render because sessions:read passes (developer has read access)
@@ -235,13 +223,11 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "admin" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["super:secret:permission"]}>
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["super:secret:permission"]}>
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -251,13 +237,11 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "admin" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["admin:access"]}>
-              <div data-testid="protected-content">Admin Panel</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["admin:access"]}>
+            <div data-testid="protected-content">Admin Panel</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -269,13 +253,11 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "developer" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["compliance:read"]}>
-              <div data-testid="protected-content">Compliance Dashboard</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["compliance:read"]}>
+            <div data-testid="protected-content">Compliance Dashboard</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -285,16 +267,14 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "developer" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard
-              requiredPermissions={["admin:access"]}
-              fallbackPath="/unauthorized"
-            >
-              <div data-testid="protected-content">Admin Panel</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["admin:access"]}
+            fallbackPath="/unauthorized"
+          >
+            <div data-testid="protected-content">Admin Panel</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
@@ -309,16 +289,14 @@ describe("PermissionGuard", () => {
       });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard
-              requiredPermissions={["sessions:read"]}
-              loadingComponent={<div data-testid="loading">Loading...</div>}
-            >
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["sessions:read"]}
+            loadingComponent={<div data-testid="loading">Loading...</div>}
+          >
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("loading")).toBeInTheDocument();
@@ -331,13 +309,11 @@ describe("PermissionGuard", () => {
       });
 
       const { container } = render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["sessions:read"]}>
-              <div data-testid="protected-content">Protected Content</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["sessions:read"]}>
+            <div data-testid="protected-content">Protected Content</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(
@@ -355,13 +331,11 @@ describe("PermissionGuard", () => {
       });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["audit:view"]}>
-              <div data-testid="protected-content">Audit Log</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["audit:view"]}>
+            <div data-testid="protected-content">Audit Log</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -374,16 +348,14 @@ describe("PermissionGuard", () => {
       });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard
-              requiredPermissions={["compliance:view"]}
-              fallbackPath="/unauthorized"
-            >
-              <div data-testid="protected-content">Compliance Dashboard</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard
+            requiredPermissions={["compliance:view"]}
+            fallbackPath="/unauthorized"
+          >
+            <div data-testid="protected-content">Compliance Dashboard</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("unauthorized-page")).toBeInTheDocument();
@@ -423,13 +395,11 @@ describe("PermissionGuard", () => {
       const store = createTestStore({ persona: "user" });
 
       render(
-        <TestProvider>
-          <TestWrapper store={store}>
-            <PermissionGuard requiredPermissions={["admin:access"]}>
-              <div data-testid="protected-content">Admin Panel</div>
-            </PermissionGuard>
-          </TestWrapper>
-        </TestProvider>,
+        <TestWrapper store={store}>
+          <PermissionGuard requiredPermissions={["admin:access"]}>
+            <div data-testid="protected-content">Admin Panel</div>
+          </PermissionGuard>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("fallback-page")).toBeInTheDocument();

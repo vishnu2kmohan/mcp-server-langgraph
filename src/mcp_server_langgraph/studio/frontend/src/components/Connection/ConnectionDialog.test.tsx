@@ -34,17 +34,20 @@ const mockUpdateConnection = vi.fn().mockReturnValue({
     .mockResolvedValue({ id: "conn-1", name: "Updated Connection" }),
 });
 
-vi.mock("../../api", () => ({
-  useCreateConnectionMutation: () => [
-    mockCreateConnection,
-    { isLoading: false },
-  ],
-  useUpdateConnectionMutation: () => [
-    mockUpdateConnection,
-    { isLoading: false },
-  ],
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useCreateConnectionMutation: () => [
+      mockCreateConnection,
+      { isLoading: false },
+    ],
+    useUpdateConnectionMutation: () => [
+      mockUpdateConnection,
+      { isLoading: false },
+    ],
+  };
+});
 describe("ConnectionDialog", () => {
   const mockOnClose = vi.fn();
   const mockOnSuccess = vi.fn();

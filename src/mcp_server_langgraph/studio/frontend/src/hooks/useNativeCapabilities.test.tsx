@@ -24,10 +24,13 @@ import { useNativeCapabilities } from "./useNativeCapabilities";
 import type { NativeToolCapabilityCamelCase } from "../types/tools";
 
 // Mock the RTK Query endpoint
-vi.mock("../api", () => ({
-  useGetNativeCapabilitiesQuery: vi.fn(),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetNativeCapabilitiesQuery: vi.fn(),
+  };
+});
 import { useGetNativeCapabilitiesQuery } from "../api";
 
 const mockUseGetNativeCapabilitiesQuery =

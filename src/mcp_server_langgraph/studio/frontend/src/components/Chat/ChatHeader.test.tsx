@@ -12,13 +12,16 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ChatHeader } from "./ChatHeader";
 
 // Mock the RTK Query API hooks used by SaveAsWorkflowButton
-vi.mock("../../api", () => ({
-  useBootstrapWorkflowMutation: () => [
-    vi.fn(),
-    { isLoading: false, isSuccess: false, data: null, error: null },
-  ],
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useBootstrapWorkflowMutation: () => [
+      vi.fn(),
+      { isLoading: false, isSuccess: false, data: null, error: null },
+    ],
+  };
+});
 // Create a minimal store for tests
 const createTestStore = () => {
   return configureStore({

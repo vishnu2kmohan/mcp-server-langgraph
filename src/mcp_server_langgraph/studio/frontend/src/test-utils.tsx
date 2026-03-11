@@ -362,6 +362,7 @@ import complianceReducer from "./store/slices/complianceSlice";
 import helpReducer from "./store/slices/helpSlice";
 import alertReducer from "./store/slices/alertSlice";
 import { TelemetryProvider } from "./contexts/TelemetryContext";
+import { PersonaProvider } from "./persona/PersonaContext";
 
 import { Input, Textarea } from "@/components/UI";
 
@@ -503,7 +504,9 @@ export function TestProvider({
   return (
     <TelemetryProvider>
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <PersonaProvider>
+          <RouterProvider router={router} />
+        </PersonaProvider>
       </Provider>
     </TelemetryProvider>
   );

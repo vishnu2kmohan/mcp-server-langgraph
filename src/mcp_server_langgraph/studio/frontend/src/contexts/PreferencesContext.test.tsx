@@ -71,7 +71,7 @@ describe("PreferencesContext", () => {
         expect(result.current.isInitialized).toBe(true);
       });
 
-      expect(result.current.preferences.general.theme).toBe("system");
+      expect(result.current.preferences.general.theme).toBe("dark");
       expect(result.current.preferences.general.autoScroll).toBe(true);
       expect(result.current.preferences.accessibility.reducedMotion).toBe(
         false,
@@ -528,7 +528,7 @@ describe("PreferencesContext", () => {
         result.current.resetToDefaults();
       });
 
-      expect(result.current.preferences.general.theme).toBe("system");
+      expect(result.current.preferences.general.theme).toBe("dark");
       expect(result.current.preferences.accessibility.reducedMotion).toBe(
         false,
       );
@@ -596,30 +596,16 @@ describe("useTheme hook", () => {
     const { result } = renderHook(() => useTheme(), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.theme).toBe("system");
+      expect(result.current.theme).toBe("dark");
     });
   });
 
-  it("should return effective theme based on system preference", async () => {
-    // Mock system preference
-    Object.defineProperty(window, "matchMedia", {
-      writable: true,
-      value: vi.fn().mockImplementation((query: string) => ({
-        matches: query === "(prefers-color-scheme: dark)",
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })),
-    });
-
+  it("should return effective theme based on current theme setting", async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useTheme(), { wrapper });
 
     await waitFor(() => {
+      // Default theme is now "dark", so effectiveTheme is "dark"
       expect(result.current.effectiveTheme).toBe("dark");
     });
   });

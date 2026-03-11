@@ -293,7 +293,7 @@ class TestConnectionsServiceSingleton:
         # Patch in core.dependencies where get_connection_repository is defined
         with patch(
             "mcp_server_langgraph.core.dependencies.get_connection_repository",
-            return_value=mock_repo,
+            side_effect=lambda *a, **kw: mock_repo,
         ):
             service = get_websocket_connections_service(owner_id="test-owner")
 
@@ -319,7 +319,7 @@ class TestConnectionsServiceSingleton:
         # Patch in core.dependencies where get_connection_repository is defined
         with patch(
             "mcp_server_langgraph.core.dependencies.get_connection_repository",
-            return_value=mock_repo,
+            side_effect=lambda *a, **kw: mock_repo,
         ):
             # First call creates instance
             service1 = get_websocket_connections_service()

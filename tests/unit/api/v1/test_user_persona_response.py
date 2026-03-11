@@ -47,6 +47,12 @@ class TestComputePersona:
         """Developer should take priority over user."""
         assert compute_persona(["developer", "viewer"]) == "developer"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestGetVisibleModulesForPersona:
     """Tests for get_visible_modules_for_persona function."""
@@ -89,6 +95,12 @@ class TestGetVisibleModulesForPersona:
         assert "compliance" in modules
         assert "help" in modules
         assert "chat" not in modules  # Auditor doesn't need chat
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestUserInfoResponseModel:
@@ -150,6 +162,12 @@ class TestUserInfoResponseModel:
         assert response.feature_flags["focus_mode"] is True
         assert response.feature_flags["canvas_shortcuts"] is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestPersonaVisibleModulesMapping:
     """Tests for PERSONA_VISIBLE_MODULES constant."""
@@ -174,6 +192,12 @@ class TestPersonaVisibleModulesMapping:
         """Help module should be available to all personas."""
         for persona, modules in PERSONA_VISIBLE_MODULES.items():
             assert "help" in modules, f"Help missing for {persona}"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestVisibleModulesNormalization:
@@ -257,6 +281,12 @@ class TestVisibleModulesNormalization:
             is_known = module_id in self.FRONTEND_NAV_ITEM_IDS or module_id in allowed_extra_ids
             assert is_known, f"Module ID '{module_id}' not in frontend NAV_ITEMS: {self.FRONTEND_NAV_ITEM_IDS}"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestPersonaJourneyModules:
     """Tests for persona journey organization.
@@ -305,3 +335,9 @@ class TestPersonaJourneyModules:
         assert "admin" not in modules
         assert "audit" not in modules
         assert "mcp" not in modules
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

@@ -118,36 +118,39 @@ const {
 });
 
 // Mock RTK Query hooks
-vi.mock("../api", () => ({
-  useListConnectionsQuery: vi.fn(() => ({
-    data: { items: mockConnections, total: 3, cursor: null },
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    isSuccess: true,
-    error: null,
-    refetch: mockRefetch,
-  })),
-  useTestConnectionMutation: () => [mockTestConnection, { isLoading: false }],
-  useDeleteConnectionMutation: () => [
-    mockDeleteConnection,
-    { isLoading: false },
-  ],
-  useCreateConnectionMutation: () => [
-    mockCreateConnection,
-    { isLoading: false },
-  ],
-  useListConnectionTemplatesQuery: () => ({
-    data: { templates: [] },
-    isLoading: false,
-    error: null,
-  }),
-  useUpdateConnectionMutation: () => [
-    mockUpdateConnection,
-    { isLoading: false },
-  ],
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useListConnectionsQuery: vi.fn(() => ({
+      data: { items: mockConnections, total: 3, cursor: null },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      isSuccess: true,
+      error: null,
+      refetch: mockRefetch,
+    })),
+    useTestConnectionMutation: () => [mockTestConnection, { isLoading: false }],
+    useDeleteConnectionMutation: () => [
+      mockDeleteConnection,
+      { isLoading: false },
+    ],
+    useCreateConnectionMutation: () => [
+      mockCreateConnection,
+      { isLoading: false },
+    ],
+    useListConnectionTemplatesQuery: () => ({
+      data: { templates: [] },
+      isLoading: false,
+      error: null,
+    }),
+    useUpdateConnectionMutation: () => [
+      mockUpdateConnection,
+      { isLoading: false },
+    ],
+  };
+});
 vi.mock("../hooks/useConnectionsRealtimeWebSocket", () => ({
   useConnectionsRealtimeWebSocket: () => mockUseConnectionsRealtimeWebSocket(),
 }));

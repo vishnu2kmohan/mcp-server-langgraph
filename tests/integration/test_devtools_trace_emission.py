@@ -38,6 +38,7 @@ def teardown_module() -> None:
     gc.collect()
 
 
+@pytest.mark.xdist_group("test_session_propagating_span_processor_integration")
 class TestSessionPropagatingSpanProcessorIntegration:
     """
     Integration tests for SessionPropagatingSpanProcessor in the observability stack.
@@ -118,6 +119,7 @@ class TestSessionPropagatingSpanProcessorIntegration:
         processor.shutdown()
 
 
+@pytest.mark.xdist_group("test_telemetry_module_integration")
 class TestTelemetryModuleIntegration:
     """
     Tests for SessionPropagatingSpanProcessor integration in the telemetry module.
@@ -174,6 +176,7 @@ class TestTelemetryModuleIntegration:
         )
 
 
+@pytest.mark.xdist_group("test_processor_behavior_with_mocks")
 class TestProcessorBehaviorWithMocks:
     """
     Tests for processor behavior using mocks to avoid global OTEL state issues.
@@ -272,6 +275,7 @@ class TestProcessorBehaviorWithMocks:
             processor.on_start(child_span, parent_context=None)
 
 
+@pytest.mark.xdist_group("test_broadcasting_integration")
 class TestBroadcastingIntegration:
     """
     Tests for integration between SessionPropagatingSpanProcessor and BroadcastingSpanProcessor.

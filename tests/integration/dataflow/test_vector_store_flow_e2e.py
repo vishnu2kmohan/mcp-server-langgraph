@@ -116,6 +116,7 @@ def create_tool_entry():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_embedding_generation_flow")
 class TestEmbeddingGenerationFlow:
     """
     E2E tests for embedding generation.
@@ -185,6 +186,7 @@ class TestEmbeddingGenerationFlow:
         assert embeddings[1] != embeddings[2]
 
 
+@pytest.mark.xdist_group("test_semantic_index_manager_flow")
 class TestSemanticIndexManagerFlow:
     """
     E2E tests for semantic index manager storage operations.
@@ -276,6 +278,7 @@ class TestSemanticIndexManagerFlow:
         assert mock_qdrant_client.upsert.called
 
 
+@pytest.mark.xdist_group("test_semantic_search_flow")
 class TestSemanticSearchFlow:
     """
     E2E tests for semantic search operations.
@@ -386,6 +389,7 @@ class TestSemanticSearchFlow:
         assert call_args is not None
 
 
+@pytest.mark.xdist_group("test_search_result_caching")
 class TestSearchResultCaching:
     """
     E2E tests for search result caching.
@@ -450,6 +454,7 @@ class TestSearchResultCaching:
         assert mock_qdrant_client.query_points.call_count >= 1
 
 
+@pytest.mark.xdist_group("test_multi_tenant_isolation")
 class TestMultiTenantIsolation:
     """
     E2E tests for multi-tenant data isolation in vector store.

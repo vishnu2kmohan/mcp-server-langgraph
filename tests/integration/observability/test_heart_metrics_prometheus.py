@@ -94,6 +94,7 @@ def prometheus_available() -> bool:
         return False
 
 
+@pytest.mark.xdist_group("test_prometheus_metrics_client_integration")
 class TestPrometheusMetricsClientIntegration:
     """Integration tests for Prometheus metrics client."""
 
@@ -280,6 +281,7 @@ class TestHeartMetricsServiceIntegration:
             # This validates the feature flag gating
 
 
+@pytest.mark.xdist_group("test_heart_metrics_dimension_queries")
 class TestHeartMetricsDimensionQueries:
     """Integration tests for HEART dimension-specific queries."""
 

@@ -754,7 +754,7 @@ class TestStreamingEndpointIntegration:
         with patch.object(
             handler,
             "execute_tool",
-            return_value=[{"type": "text", "text": "Result"}],
+            side_effect=lambda *a, **kw: [{"type": "text", "text": "Result"}],
         ):
             response = await handler.handle(message)
 
@@ -793,7 +793,7 @@ class TestStreamingEndpointIntegration:
         with patch.object(
             handler,
             "execute_tool",
-            return_value=[{"type": "text", "text": "Fallback result"}],
+            side_effect=lambda *a, **kw: [{"type": "text", "text": "Fallback result"}],
         ):
             response = await handler.handle(message)
 

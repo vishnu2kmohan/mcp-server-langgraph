@@ -70,7 +70,7 @@ class TestWebSocketBaseInit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -93,7 +93,7 @@ class TestWebSocketBaseInit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config, metrics=mock_metrics)
 
@@ -113,7 +113,7 @@ class TestWebSocketBaseInit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -133,7 +133,7 @@ class TestWebSocketBaseInit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -164,7 +164,7 @@ class TestWebSocketBaseProperties:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -183,7 +183,7 @@ class TestWebSocketBaseProperties:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -202,7 +202,7 @@ class TestWebSocketBaseProperties:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -230,7 +230,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -255,7 +255,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -271,7 +271,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await handler._authenticate(mock_ws)
 
@@ -295,7 +295,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -311,7 +311,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await handler._authenticate(mock_ws)
 
@@ -334,7 +334,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -360,7 +360,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -376,7 +376,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await handler._authenticate(mock_ws)
 
@@ -396,7 +396,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -406,7 +406,7 @@ class TestWebSocketBaseAuthentication:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result = await handler._authenticate(mock_ws)
 
@@ -434,7 +434,7 @@ class TestWebSocketBaseAuthorization:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -461,7 +461,7 @@ class TestWebSocketBaseAuthorization:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -499,7 +499,7 @@ class TestWebSocketBaseSend:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -525,7 +525,7 @@ class TestWebSocketBaseSend:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -554,7 +554,7 @@ class TestWebSocketBaseSend:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -589,7 +589,7 @@ class TestWebSocketBaseSend:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -613,7 +613,7 @@ class TestWebSocketBaseSend:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -644,7 +644,7 @@ class TestWebSocketBaseRateLimit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             handler = TestHandler(config)
             handler._rate_limiter = None
@@ -668,7 +668,7 @@ class TestWebSocketBaseRateLimit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=mock_limiter,
+            side_effect=lambda *a, **kw: mock_limiter,
         ):
             handler = TestHandler(config)
 
@@ -692,7 +692,7 @@ class TestWebSocketBaseRateLimit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=mock_limiter,
+            side_effect=lambda *a, **kw: mock_limiter,
         ):
             handler = TestHandler(config)
             handler._user = AuthUser(id="user-123", username="testuser")
@@ -718,7 +718,7 @@ class TestWebSocketBaseRateLimit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=mock_limiter,
+            side_effect=lambda *a, **kw: mock_limiter,
         ):
             handler = TestHandler(config)
             handler._user = AuthUser(id="user-123", username="testuser")
@@ -741,7 +741,7 @@ class TestWebSocketBaseRateLimit:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             handler = TestHandler(config)
             handler._rate_limiter = None
@@ -773,7 +773,7 @@ class TestWebSocketBaseClose:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -801,7 +801,7 @@ class TestWebSocketBaseClose:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -828,7 +828,7 @@ class TestWebSocketBaseClose:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -860,7 +860,7 @@ class TestWebSocketBaseLifecycle:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -883,7 +883,7 @@ class TestWebSocketBaseLifecycle:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -904,7 +904,7 @@ class TestWebSocketBaseLifecycle:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -928,7 +928,7 @@ class TestGetAuthMiddlewareFromWebsocket:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=mock_middleware,
+            side_effect=lambda *a, **kw: mock_middleware,
         ):
             # The function delegates, but we're patching itself here
             # Let's patch the actual import
@@ -959,7 +959,7 @@ class TestWebSocketBaseRun:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -989,7 +989,7 @@ class TestWebSocketBaseRun:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1021,7 +1021,7 @@ class TestWebSocketBaseRun:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1058,7 +1058,7 @@ class TestWebSocketBaseRun:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1087,7 +1087,7 @@ class TestWebSocketBaseRun:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1130,7 +1130,7 @@ class TestWebSocketBaseMessageLoop:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1170,7 +1170,7 @@ class TestWebSocketBaseMessageLoop:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1212,7 +1212,7 @@ class TestWebSocketBaseMessageLoop:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=mock_limiter,
+            side_effect=lambda *a, **kw: mock_limiter,
         ):
             handler = TestHandler(config)
             handler._user = MagicMock()
@@ -1253,7 +1253,7 @@ class TestWebSocketBaseMessageLoop:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=mock_limiter,
+            side_effect=lambda *a, **kw: mock_limiter,
         ):
             handler = TestHandler(config)
             handler._user = AuthUser(id="user-123", username="testuser")
@@ -1292,7 +1292,7 @@ class TestWebSocketBaseMessageLoop:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1337,7 +1337,7 @@ class TestWebSocketBaseTokenValidation:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1353,7 +1353,7 @@ class TestWebSocketBaseTokenValidation:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await handler._authenticate(mock_ws)
 
@@ -1378,7 +1378,7 @@ class TestWebSocketBaseTokenValidation:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1413,7 +1413,7 @@ class TestWebSocketBaseTokenValidation:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1435,11 +1435,11 @@ class TestWebSocketBaseTokenValidation:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             with patch(
                 "mcp_server_langgraph.websocket.token_validation.is_token_expired",
-                return_value=False,
+                side_effect=lambda *a, **kw: False,
             ):
                 await handler.run(mock_ws)
 
@@ -1469,7 +1469,7 @@ class TestWebSocketBaseTokenValidation:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1514,7 +1514,7 @@ class TestWebSocketBaseTokenValidation:
 
         with patch(
             "mcp_server_langgraph.websocket.base.get_auth_middleware_from_websocket",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             with patch(
                 "mcp_server_langgraph.websocket.base.is_token_expired",
@@ -1551,7 +1551,7 @@ class TestWebSocketBaseProtocolVersion:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1573,7 +1573,7 @@ class TestWebSocketBaseProtocolVersion:
         # Patch validate_protocol_version to return invalid
         with patch(
             "mcp_server_langgraph.websocket.base.validate_protocol_version",
-            return_value=(False, "Major version mismatch"),
+            side_effect=lambda *a, **kw: (False, "Major version mismatch"),
         ):
             await handler.run(mock_ws)
 
@@ -1600,7 +1600,7 @@ class TestWebSocketBaseProtocolVersion:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config, metrics=mock_metrics)
 
@@ -1613,7 +1613,7 @@ class TestWebSocketBaseProtocolVersion:
 
         with patch(
             "mcp_server_langgraph.websocket.base.validate_protocol_version",
-            return_value=(False, "Major version mismatch"),
+            side_effect=lambda *a, **kw: (False, "Major version mismatch"),
         ):
             await handler.run(mock_ws)
 
@@ -1640,7 +1640,7 @@ class TestWebSocketBaseProtocolVersion:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 
@@ -1656,7 +1656,7 @@ class TestWebSocketBaseProtocolVersion:
 
         with patch(
             "mcp_server_langgraph.websocket.base.validate_protocol_version",
-            return_value=(True, ""),
+            side_effect=lambda *a, **kw: (True, ""),
         ):
             await handler.run(mock_ws)
 
@@ -1686,7 +1686,7 @@ class TestWebSocketBaseProtocolVersion:
 
         with patch(
             RATE_LIMITER_PATCH,
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             handler = TestHandler(config)
 

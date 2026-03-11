@@ -15,15 +15,18 @@ import type { ChatMessage } from "./MessageBubble";
 
 // Mock the feature flag context
 const mockIsEnabled = vi.fn();
-vi.mock("../contexts/FeatureFlagContext", () => ({
-  useFeatureFlags: () => ({
-    isEnabled: mockIsEnabled,
-    isLoading: false,
-    isError: false,
-    flags: {},
-  }),
-}));
-
+vi.mock("../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlags: () => ({
+      isEnabled: mockIsEnabled,
+      isLoading: false,
+      isError: false,
+      flags: {},
+    }),
+  };
+});
 // Track which message list component is rendered
 const mockMessageList = vi.fn();
 const mockUnifiedMessageList = vi.fn();

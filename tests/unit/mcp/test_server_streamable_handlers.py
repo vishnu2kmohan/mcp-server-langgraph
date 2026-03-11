@@ -131,7 +131,8 @@ class TestHandleChatMethod:
             mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
             with patch(
-                "mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Hello, how can I help you?"
+                "mcp_server_langgraph.mcp.server_streamable.format_response",
+                side_effect=lambda *a, **kw: "Hello, how can I help you?",
             ):
                 with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
                     result = await server._handle_chat(
@@ -181,7 +182,10 @@ class TestHandleChatMethod:
             mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
             mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
-            with patch("mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Continued conversation"):
+            with patch(
+                "mcp_server_langgraph.mcp.server_streamable.format_response",
+                side_effect=lambda *a, **kw: "Continued conversation",
+            ):
                 with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
                     await server._handle_chat(
                         arguments={
@@ -538,7 +542,7 @@ class TestOpenFGATupleSeeding:
             mock_openfga = MagicMock()
             mock_openfga.write_tuples = AsyncMock(return_value=None)
 
-            with patch("mcp_server_langgraph.mcp.server_streamable.OpenFGAClient", return_value=mock_openfga):
+            with patch("mcp_server_langgraph.mcp.server_streamable.OpenFGAClient", side_effect=lambda *a, **kw: mock_openfga):
                 with patch("mcp_server_langgraph.mcp.server_streamable.create_auth_middleware") as mock_auth_factory:
                     mock_auth = MagicMock()
                     mock_auth.verify_token = AsyncMock(
@@ -570,7 +574,7 @@ class TestOpenFGATupleSeeding:
             mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
             mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=None)
 
-            with patch("mcp_server_langgraph.mcp.server_streamable.format_response", return_value="Response"):
+            with patch("mcp_server_langgraph.mcp.server_streamable.format_response", side_effect=lambda *a, **kw: "Response"):
                 with patch("mcp_server_langgraph.mcp.server_streamable.metrics"):
                     await server._handle_chat(
                         arguments={"message": "Hello", "thread_id": "new-conv", "token": "test", "user_id": "alice"},

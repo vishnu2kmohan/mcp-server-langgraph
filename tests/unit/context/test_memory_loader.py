@@ -280,7 +280,7 @@ class TestMemoryProgressiveLoaderLoad:
         loader = MemoryProgressiveLoader()
 
         # Mock memory retrieval
-        with patch.object(loader, "_retrieve_from_tier", return_value=[]):
+        with patch.object(loader, "_retrieve_from_tier", side_effect=lambda *a, **kw: []):
             result = await loader.load(query="Find auth info", session_id="sess-123")
 
         assert isinstance(result, LoadedMemory)
@@ -326,8 +326,8 @@ class TestMemoryProgressiveLoaderLoad:
         # Create many test entries
         test_entries = [MemoryEntry(id=f"{i}", content=f"Memory {i}", tier="session") for i in range(10)]
 
-        with patch.object(loader, "_retrieve_from_tier", return_value=test_entries):
-            with patch.object(loader, "_score_relevance", return_value=0.5):
+        with patch.object(loader, "_retrieve_from_tier", side_effect=lambda *a, **kw: test_entries):
+            with patch.object(loader, "_score_relevance", side_effect=lambda *a, **kw: 0.5):
                 result = await loader.load(query="test", session_id="sess-123")
 
         assert len(result.entries) <= 2
@@ -345,8 +345,8 @@ class TestMemoryProgressiveLoaderLoad:
         # Create entries with known content size
         test_entries = [MemoryEntry(id=f"{i}", content="x" * 200, tier="session") for i in range(5)]
 
-        with patch.object(loader, "_retrieve_from_tier", return_value=test_entries):
-            with patch.object(loader, "_score_relevance", return_value=0.5):
+        with patch.object(loader, "_retrieve_from_tier", side_effect=lambda *a, **kw: test_entries):
+            with patch.object(loader, "_score_relevance", side_effect=lambda *a, **kw: 0.5):
                 result = await loader.load(query="test", session_id="sess-123")
 
         # Should truncate based on token limit
@@ -372,7 +372,7 @@ class TestMemoryProgressiveLoaderLoad:
                 return 0.9
             return 0.1
 
-        with patch.object(loader, "_retrieve_from_tier", return_value=test_entries):
+        with patch.object(loader, "_retrieve_from_tier", side_effect=lambda *a, **kw: test_entries):
             with patch.object(loader, "_score_relevance", side_effect=mock_score):
                 result = await loader.load(query="test", session_id="sess-123")
 
@@ -398,7 +398,7 @@ class TestMemoryProgressiveLoaderLoad:
             return []
 
         with patch.object(loader, "_retrieve_from_tier", side_effect=mock_retrieve):
-            with patch.object(loader, "_score_relevance", return_value=0.5):
+            with patch.object(loader, "_score_relevance", side_effect=lambda *a, **kw: 0.5):
                 result = await loader.load(query="test", session_id="sess-123")
 
         assert "working" in result.tiers_loaded

@@ -148,7 +148,7 @@ class TestOrchestratorCostExecute:
             mock_flags.enable_cost_tracking = False
             mock_flags.enable_multi_agent_orchestration = True
 
-            with patch.object(orchestrator.coordinator, "execute_all", return_value=[]):
+            with patch.object(orchestrator.coordinator, "execute_all", side_effect=lambda *a, **kw: []):
                 await orchestrator.execute(decomposition)
 
             # Cost tracking should not be called when disabled

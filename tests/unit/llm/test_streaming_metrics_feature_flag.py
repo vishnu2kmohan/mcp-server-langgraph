@@ -80,7 +80,7 @@ class TestStreamingMetricsWhenDisabled:
         from mcp_server_langgraph.llm import streaming_metrics
 
         # Mock the feature flag check
-        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", return_value=False):
+        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", side_effect=lambda *a, **kw: False):
             # This should not raise and should be a no-op
             streaming_metrics.record_ttfc(model="gpt-4", ttfc_seconds=0.5, provider="openai")
 
@@ -92,7 +92,7 @@ class TestStreamingMetricsWhenDisabled:
         """
         from mcp_server_langgraph.llm import streaming_metrics
 
-        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", return_value=False):
+        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", side_effect=lambda *a, **kw: False):
             streaming_metrics.record_inter_chunk_latency(model="gpt-4", latency_seconds=0.05, provider="openai")
 
     def test_record_streaming_duration_noop_when_disabled(self) -> None:
@@ -103,7 +103,7 @@ class TestStreamingMetricsWhenDisabled:
         """
         from mcp_server_langgraph.llm import streaming_metrics
 
-        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", return_value=False):
+        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", side_effect=lambda *a, **kw: False):
             streaming_metrics.record_streaming_duration(
                 model="gpt-4", duration_seconds=5.0, provider="openai", status="success"
             )
@@ -116,7 +116,7 @@ class TestStreamingMetricsWhenDisabled:
         """
         from mcp_server_langgraph.llm import streaming_metrics
 
-        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", return_value=False):
+        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", side_effect=lambda *a, **kw: False):
             streaming_metrics.record_chunk_count(model="gpt-4", count=100, provider="openai")
 
 
@@ -140,7 +140,7 @@ class TestStreamingMetricsContextFeatureFlag:
         from mcp_server_langgraph.llm.streaming_metrics import StreamingMetricsContext
         from mcp_server_langgraph.llm import streaming_metrics
 
-        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", return_value=False):
+        with patch.object(streaming_metrics, "_is_streaming_metrics_enabled", side_effect=lambda *a, **kw: False):
             ctx = StreamingMetricsContext(model="gpt-4", provider="openai")
             ctx.start()
             ctx.record_first_chunk()

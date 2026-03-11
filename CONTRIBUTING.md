@@ -226,7 +226,7 @@ PRE_PUSH_SEQUENTIAL=1 bash scripts/hooks/parallel_pre_push.sh
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITEST_SHARD_CONCURRENCY_MAX` | 12 (local), 2 (CI) | Max concurrent frontend test shards |
+| `VITEST_SHARD_CONCURRENCY_MAX` | 8 (local), 2 (CI) | Max concurrent frontend test shards |
 | `PRE_PUSH_SEQUENTIAL` | unset | Set to `1` to disable parallel pre-push lanes |
 | `SKIP_TRIVY` | unset | Skip Trivy scans (local only, ignored in CI) |
 | `SKIP_SEMGREP` | unset | Skip Semgrep scans (local only, ignored in CI) |

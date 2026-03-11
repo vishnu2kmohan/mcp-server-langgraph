@@ -19,21 +19,32 @@ vi.mock("./useRealtimeSync", () => ({
   useRealtimeSync: (options: unknown) => mockUseRealtimeSync(options),
 }));
 
-// Mock auth
+// Mock auth - useAppSelector is called with selectIsAuthenticated (returns boolean)
+// and selectWebSocketPermissions (returns permissions object).
+// Since vi.mock is hoisted, we use a call-counting approach: first call returns
+// isAuthenticated, second call returns wsPermissions.
+const mockUseAppSelector = vi.fn();
 vi.mock("../store/hooks", () => ({
-  useAppSelector: () => true,
+  useAppSelector: (...args: unknown[]) => mockUseAppSelector(...args),
   useAppDispatch: () => vi.fn(),
 }));
 
-vi.mock("../store/slices/authSlice", () => ({
-  selectIsAuthenticated: () => true,
-  logout: () => ({ type: "auth/logout" }),
-}));
-
-vi.mock("../utils/storage", () => ({
-  getAuthToken: () => "test-token",
-}));
-
+vi.mock("../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../store/slices/authSlice");
+  return {
+    ...actual,
+    selectIsAuthenticated: () => true,
+    selectWebSocketPermissions: () => ({ orchestrator_status: true }),
+    logout: () => ({ type: "auth/logout" }),
+  };
+});
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: () => "test-token",
+  };
+});
 // Mock WebSocket URL builders
 vi.mock("../utils/websocket", () => ({
   buildWebSocketUrl: () => "ws://localhost/test",
@@ -96,6 +107,23 @@ describe("useAIOrchestratorStatus", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     capturedCallbacks.onMessage = null;
+
+    // Configure useAppSelector to return correct values per selector.
+    // The hook calls useAppSelector with selectIsAuthenticated and
+    // selectWebSocketPermissions. We pass the selector a mock state
+    // so it returns the expected value for each.
+    const mockAuthState = {
+      auth: {
+        user: {
+          websocketPermissions: { orchestrator_status: true },
+        },
+      },
+    };
+    mockUseAppSelector.mockImplementation(
+      (selector: (state: unknown) => unknown) => {
+        return selector(mockAuthState);
+      },
+    );
 
     // Default mock that captures callbacks
     mockUseRealtimeSync.mockImplementation(

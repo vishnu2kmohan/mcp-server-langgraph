@@ -23,17 +23,20 @@ import { storage } from "../utils/storage";
 import { api } from "../api";
 
 // Mock storage
-vi.mock("../utils/storage", () => ({
-  storage: {
-    get: vi.fn(),
-    set: vi.fn(() => true),
-    remove: vi.fn(),
-  },
-  STORAGE_KEYS: {
-    PREFERENCES: "mcp_user_preferences",
-  },
-}));
-
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    storage: {
+      get: vi.fn(),
+      set: vi.fn(() => true),
+      remove: vi.fn(),
+    },
+    STORAGE_KEYS: {
+      PREFERENCES: "mcp_user_preferences",
+    },
+  };
+});
 // Create a minimal store for testing
 const createTestStore = () =>
   configureStore({
@@ -188,17 +191,17 @@ describe("PreferencesContext HITL Support", () => {
       });
     });
 
-    // Wait for debounced storage call (500ms + buffer)
+    // Wait for debounced storage call with updated value (500ms + buffer)
     await waitFor(
       () => {
-        expect(storage.set).toHaveBeenCalled();
+        const calls = vi.mocked(storage.set).mock.calls;
+        const lastCall = calls[calls.length - 1];
+        expect(lastCall).toBeDefined();
+        expect(lastCall[1]).toHaveProperty("hitl");
+        expect(lastCall[1].hitl.enabled).toBe(false);
       },
-      { timeout: 1000 },
+      { timeout: 1500 },
     );
-
-    const lastCall = vi.mocked(storage.set).mock.calls.slice(-1)[0];
-    expect(lastCall[1]).toHaveProperty("hitl");
-    expect(lastCall[1].hitl.enabled).toBe(false);
   });
 
   it("should load HITL preferences from storage on mount", async () => {

@@ -21,10 +21,13 @@ import type { ReactNode } from "react";
 import { useKBStatus } from "./useKBStatus";
 
 // Mock the RTK Query endpoint
-vi.mock("../api", () => ({
-  useGetKBStatusQuery: vi.fn(),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetKBStatusQuery: vi.fn(),
+  };
+});
 import { useGetKBStatusQuery } from "../api";
 
 const mockUseGetKBStatusQuery = useGetKBStatusQuery as ReturnType<typeof vi.fn>;

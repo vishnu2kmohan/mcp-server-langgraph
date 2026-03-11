@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2026-01-13
-**Total ADRs**: 101
+**Last Updated**: 2026-03-06
+**Total ADRs**: 104
 
 ## Overview
 
@@ -51,7 +51,6 @@ Each ADR follows this structure:
 | ADR | Title | Status | Date |
 |-----|-------|--------|------|
 | [ADR-0083](adr-0083-confidence-based-hitl-system.md) | 83. Confidence-Based Human-in-the-Loop (HITL) System | Accepted | 2025-12-21 |
-| [ADR-0090](adr-0090-agent-orchestration-architecture.md) | 90. Agent Orchestration Architecture | Implemented | 2026-01-03 |
 
 ### Architecture & Multi-Agent Systems
 
@@ -75,7 +74,8 @@ Each ADR follows this structure:
 | [ADR-0039](adr-0039-openfga-permission-inheritance.md) | 39. OpenFGA Permission Inheritance for Service Principals | Accepted | 2025-01-28 |
 | [ADR-0068](adr-0068-gateway-level-authentication.md) | Gateway-Level Authentication with Traefik ForwardAuth | Unknown | Unknown |
 | [ADR-0070](adr-0070-openfga-oidc-authentication.md) | OpenFGA OIDC Authentication Migration | Accepted | 2025-12-15 |
-| [ADR-0087](adr-0087-grafana-two-tier-authentication.md) | 87. Grafana Two-Tier Authentication Architecture | Accepted | 2025-12-31 |
+| [ADR-0086](adr-0086-security-audit-keycloak-openfga.md) | Security Audit - Keycloak and OpenFGA Hardening | Accepted | 2025-12-29 |
+| [ADR-0103](adr-0103-websocket-authentication-requirement.md) | WebSocket Authentication Requirement | Unknown | Unknown |
 
 ### Core Architecture
 
@@ -102,6 +102,13 @@ Each ADR follows this structure:
 | [ADR-0061](adr-0061-fastapi-web-framework.md) | 61. FastAPI as Web Framework | Accepted | 2025-11-29 |
 | [ADR-0069](adr-0069-mcp-2025-11-25-upgrade.md) | MCP Specification Upgrade to 2025-11-25 | Accepted | Unknown |
 | [ADR-0072](adr-0072-bootstrap-phase-architecture.md) | Bootstrap Phase Architecture | Accepted | Unknown |
+| [ADR-0087](adr-0087-grafana-two-tier-authentication.md) | 87. Grafana Two-Tier Authentication Architecture | Accepted | 2025-12-31 |
+| [ADR-0089](adr-0089-prompt-architecture-centralization.md) | Prompt Architecture Centralization | Unknown | Unknown |
+| [ADR-0090](adr-0090-agent-orchestration-architecture.md) | Agent Orchestration Architecture | Unknown | Unknown |
+| [ADR-0092](adr-0092-hierarchical-capability-architecture.md) | Hierarchical Capability Architecture | Unknown | Unknown |
+| [ADR-0102](adr-0102-enhanced-model-selector.md) | Enhanced Model Selector Architecture | Unknown | Unknown |
+| [ADR-0106](adr-0106-native-llm-provider-tools.md) | 106. Native LLM Provider Tools Integration | Accepted | 2026-01-20 |
+| [ADR-0107](adr-0107-secrets-provider-selection.md) | 107. Secrets Provider Selection for Database Connection Credentials | Accepted | 2026-02-07 |
 
 ### Data & Storage
 
@@ -154,7 +161,17 @@ Each ADR follows this structure:
 | [ADR-0076](adr-0076-sandpack-jsdom-27-mock.md) | Sandpack Mock for jsdom 27 Compatibility | Accepted | Unknown |
 | [ADR-0085](adr-0085-feature-flag-consolidation.md) | Feature Flag Consolidation (Sprint Block 5) | Accepted | 2025-12-27 |
 | [ADR-0088](adr-0088-frontend-hook-selection-guidance.md) | Frontend Hook Selection Guidance | Accepted | 2026-01-02 |
-| [ADR-0089](adr-0089-prompt-architecture-centralization.md) | Prompt Architecture Centralization | Implemented | 2026-01-03 |
+| [ADR-0091](adr-0091-api-response-transformation-strategy.md) | API Response Transformation Strategy | Unknown | Unknown |
+| [ADR-0093](adr-0093-chat-input-unification.md) | Chat Input Component Unification | Unknown | Unknown |
+| [ADR-0094](adr-0094-kb-focus-mode.md) | Knowledge Base Focus Mode | Unknown | Unknown |
+| [ADR-0095](adr-0095-multi-tenant-vector-search-isolation.md) | Multi-Tenant Vector Search Isolation | Unknown | Unknown |
+| [ADR-0097](adr-0097-nan-safety-api-response-models.md) | NaN Safety in API Response Models | Unknown | Unknown |
+| [ADR-0098](adr-0098-mimir-alerting-fallback.md) | Mimir Direct Query with Alerting Fallback Chain | Unknown | Unknown |
+| [ADR-0099](adr-0099-semantic-tool-selection.md) | Semantic Tool Selection for Dynamic Capability Discovery | Unknown | Unknown |
+| [ADR-0100](adr-0100-frontend-ai-native-integration.md) | Frontend AI-Native Integration Consolidation | Unknown | Unknown |
+| [ADR-0101](adr-0101-context-graphs.md) | Context Graphs for Decision Trace Capture | Unknown | Unknown |
+| [ADR-0104](adr-0104-message-rendering-consolidation.md) | Message Rendering Consolidation | Proposed | Unknown |
+| [ADR-0105](adr-0105-orchestrator-selection.md) | 105. Orchestrator Selection for Router Agent | Accepted | 2026-01-22 |
 
 ### Performance & Resilience
 
@@ -185,6 +202,7 @@ Each ADR follows this structure:
 | [ADR-0048](adr-0048-postgres-storage-integration-tests.md) | 48. PostgreSQL Storage Integration Tests | Accepted | 2025-11-06 |
 | [ADR-0049](adr-0049-pytest-fixture-consolidation.md) | Pytest Fixture Consolidation and Organization | Accepted | 2025-11-07 |
 | [ADR-0052](adr-0052-pytest-xdist-isolation-strategy.md) | Pytest-xdist Isolation Strategy | Accepted | 2025-01-11 |
+| [ADR-0096](adr-0096-alert-consolidation-and-quality.md) | Alert Consolidation and Quality Standards | Unknown | Unknown |
 
 ## Creating a New ADR
 

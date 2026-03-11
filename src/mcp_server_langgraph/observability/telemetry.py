@@ -1071,15 +1071,77 @@ def get_logger() -> Any:
 
 
 # Module-level exports with lazy initialization
-# These will raise RuntimeError if accessed before init_observability()
-tracer = type("LazyTracer", (), {"__getattr__": lambda self, name: getattr(get_tracer(), name)})()
+#
+# These proxies delegate to the corresponding get_*() functions on each
+# attribute access.  Under pytest-xdist, another test in the same worker
+# may shut down the OTEL provider, making the underlying object stale.
+# Each proxy catches exceptions and falls back to a no-op / stdlib
+# equivalent so that stale state never crashes the application or tests.
 
-meter = type("LazyMeter", (), {"__getattr__": lambda self, name: getattr(get_meter(), name)})()
 
-logger = type("LazyLogger", (), {"__getattr__": lambda self, name: getattr(get_logger(), name)})()
+def _safe_tracer_getattr(self: object, name: str) -> Any:
+    """Get tracer attribute with no-op fallback on OTEL shutdown."""
+    try:
+        return getattr(get_tracer(), name)
+    except Exception:
+        from opentelemetry.trace import get_tracer as get_noop_tracer
+
+        return getattr(get_noop_tracer(__name__), name)
+
+
+def _safe_meter_getattr(self: object, name: str) -> Any:
+    """Get meter attribute with no-op fallback on OTEL shutdown."""
+    try:
+        return getattr(get_meter(), name)
+    except Exception:
+        from opentelemetry.metrics import get_meter as get_noop_meter
+
+        return getattr(get_noop_meter(__name__), name)
+
+
+def _safe_logger_getattr(self: object, name: str) -> Any:
+    """Get logger attribute with fallback to stdlib logger on OTEL shutdown."""
+    try:
+        return getattr(get_logger(), name)
+    except Exception:
+        return getattr(logging.getLogger("mcp-server-langgraph-fallback"), name)
+
+
+class _NoOpProxy:
+    """No-op proxy that supports chained attribute access and calls.
+
+    Returns itself for any attribute access and accepts any call signature,
+    so patterns like ``metrics.successful_calls.add(1, {...})`` work safely
+    when the OTEL provider is shut down or not yet initialized.
+    """
+
+    def __call__(self, *args: Any, **kwargs: Any) -> None:
+        return None
+
+    def __getattr__(self, _name: str) -> "_NoOpProxy":
+        return self
+
+
+_NOOP_PROXY = _NoOpProxy()
+
+
+def _safe_config_getattr(self: object, name: str) -> Any:
+    """Get config attribute with no-op fallback on OTEL shutdown."""
+    try:
+        return getattr(get_config(), name)
+    except Exception:
+        # Return a chainable no-op proxy so metrics.xxx.add() doesn't crash
+        return _NOOP_PROXY
+
+
+tracer = type("LazyTracer", (), {"__getattr__": _safe_tracer_getattr})()
+
+meter = type("LazyMeter", (), {"__getattr__": _safe_meter_getattr})()
+
+logger = type("LazyLogger", (), {"__getattr__": _safe_logger_getattr})()
 
 # Alias for backward compatibility - provides access to both config and metric instruments
-config = type("LazyConfig", (), {"__getattr__": lambda self, name: getattr(get_config(), name)})()
+config = type("LazyConfig", (), {"__getattr__": _safe_config_getattr})()
 
 metrics = config  # metrics is an alias for config
 

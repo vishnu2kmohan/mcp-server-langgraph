@@ -32,7 +32,7 @@ describe("MCP API Contract Tests", () => {
       expect(Array.isArray(data.resources)).toBe(true);
     });
 
-    it("should return resources with required MCP fields", async () => {
+    it("should return resources with required MCP fields (snake_case from API)", async () => {
       const response = await fetch("/api/v1/mcp/resources");
       expect(response.ok).toBe(true);
 
@@ -41,15 +41,15 @@ describe("MCP API Contract Tests", () => {
       expect(data.resources.length).toBeGreaterThan(0);
       const resource = data.resources[0];
 
-      // Required MCP resource fields
+      // Required MCP resource fields (snake_case from apiJsonResponse transform)
       expect(resource).toHaveProperty("uri");
       expect(resource).toHaveProperty("name");
-      expect(resource).toHaveProperty("mimeType");
+      expect(resource).toHaveProperty("mime_type");
 
       // Type validation
       expect(typeof resource.uri).toBe("string");
       expect(typeof resource.name).toBe("string");
-      expect(typeof resource.mimeType).toBe("string");
+      expect(typeof resource.mime_type).toBe("string");
     });
   });
 
@@ -69,7 +69,7 @@ describe("MCP API Contract Tests", () => {
       const content = data.contents[0];
       expect(content).toHaveProperty("uri");
       expect(content).toHaveProperty("text");
-      expect(content).toHaveProperty("mimeType");
+      expect(content).toHaveProperty("mime_type");
     });
 
     it("should return 400 when uri is missing", async () => {
@@ -111,15 +111,15 @@ describe("MCP API Contract Tests", () => {
       expect(data.tools.length).toBeGreaterThan(0);
       const tool = data.tools[0];
 
-      // Required MCP tool fields
+      // Required MCP tool fields (snake_case from apiJsonResponse transform)
       expect(tool).toHaveProperty("name");
       expect(tool).toHaveProperty("description");
-      expect(tool).toHaveProperty("inputSchema");
+      expect(tool).toHaveProperty("input_schema");
 
       // Type validation
       expect(typeof tool.name).toBe("string");
       expect(typeof tool.description).toBe("string");
-      expect(typeof tool.inputSchema).toBe("object");
+      expect(typeof tool.input_schema).toBe("object");
     });
   });
 
@@ -139,9 +139,9 @@ describe("MCP API Contract Tests", () => {
       const data = await response.json();
 
       expect(data).toHaveProperty("content");
-      expect(data).toHaveProperty("isError");
+      expect(data).toHaveProperty("is_error");
       expect(Array.isArray(data.content)).toBe(true);
-      expect(typeof data.isError).toBe("boolean");
+      expect(typeof data.is_error).toBe("boolean");
     });
 
     it("should return 404 for unknown tool", async () => {
@@ -178,7 +178,7 @@ describe("MCP API Contract Tests", () => {
       expect(data).toHaveProperty("role");
       expect(data).toHaveProperty("content");
       expect(data).toHaveProperty("model");
-      expect(data).toHaveProperty("stopReason");
+      expect(data).toHaveProperty("stop_reason");
 
       expect(data.role).toBe("assistant");
       expect(typeof data.content).toBe("object");
@@ -325,15 +325,15 @@ describe("MCP API Contract Tests", () => {
       expect(data.tasks.length).toBeGreaterThan(0);
       const task = data.tasks[0];
 
-      // Required task fields
+      // Required task fields (snake_case from apiJsonResponse transform)
       expect(task).toHaveProperty("id");
       expect(task).toHaveProperty("status");
-      expect(task).toHaveProperty("createdAt");
+      expect(task).toHaveProperty("created_at");
 
       // Type validation
       expect(typeof task.id).toBe("string");
       expect(typeof task.status).toBe("string");
-      expect(typeof task.createdAt).toBe("string");
+      expect(typeof task.created_at).toBe("string");
 
       // Status should be one of valid values
       expect([
@@ -381,7 +381,7 @@ describe("MCP API Contract Tests", () => {
       expect(data).toHaveProperty("id");
       expect(data).toHaveProperty("status");
       expect(data.status).toBe("cancelled");
-      expect(data).toHaveProperty("updatedAt");
+      expect(data).toHaveProperty("updated_at");
     });
 
     it("should return 404 for unknown task", async () => {

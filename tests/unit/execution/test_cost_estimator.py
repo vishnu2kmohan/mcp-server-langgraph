@@ -91,6 +91,12 @@ class TestTokenEstimates:
         )
         assert estimate == other_estimate
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestCostEstimation:
@@ -165,6 +171,12 @@ class TestCostEstimation:
         )
         assert deep_thinking_cost > no_thinking_cost
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestTokenEstimatesConstants:
@@ -188,6 +200,12 @@ class TestTokenEstimatesConstants:
         assert "light" in THINKING_TOKENS
         assert "medium" in THINKING_TOKENS
         assert "deep" in THINKING_TOKENS
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -267,6 +285,12 @@ class TestConfidenceIntervals:
 
         # Complex should have wider bounds than simple
         assert CONFIDENCE_MULTIPLIERS["complex"]["upper"] > CONFIDENCE_MULTIPLIERS["simple"]["upper"]
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -352,3 +376,9 @@ class TestCritiqueRounds:
 
         # 5 rounds should at least double the cost
         assert high_critique["estimated_cost"] >= base["estimated_cost"] * Decimal("1.5")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

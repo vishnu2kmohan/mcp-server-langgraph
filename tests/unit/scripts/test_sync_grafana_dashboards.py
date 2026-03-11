@@ -53,6 +53,12 @@ class TestSyncGrafanaDashboardsHelp:
         assert result.returncode == 1
         assert "Unknown option" in result.stderr or "Unknown option" in result.stdout
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSyncGrafanaDashboardsWithTempDirs:
     """Test sync functionality with temporary directories."""
@@ -293,6 +299,12 @@ class TestSyncGrafanaDashboardsWithTempDirs:
         assert dest_folder.exists()
         assert (dest_folder / "test.json").exists()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestDashboardUIDUniqueness:
     """Tests to prevent duplicate dashboard UIDs."""
@@ -336,6 +348,12 @@ class TestDashboardUIDUniqueness:
                 "Each dashboard must have a unique UID. Remove duplicate files or "
                 "change UIDs to be unique."
             )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestDocumentationDashboardPaths:
@@ -469,6 +487,12 @@ class TestDocumentationDashboardPaths:
                 "Update the documentation to reference correct dashboard paths with folder structure."
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAlertDashboardURLConsistency:
     """Tests to ensure alert dashboard URLs use consistent patterns."""
@@ -526,6 +550,12 @@ class TestAlertDashboardURLConsistency:
                 "This allows environment-specific configuration via Alertmanager templates."
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSyncGrafanaDashboardsIntegration:
     """Integration tests using actual project directories."""
@@ -555,3 +585,9 @@ class TestSyncGrafanaDashboardsIntegration:
             f"Output: {result.stdout}\n"
             f"Stderr: {result.stderr}"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

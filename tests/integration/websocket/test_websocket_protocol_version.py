@@ -69,6 +69,7 @@ def protocol_version_app() -> FastAPI:
     return app
 
 
+@pytest.mark.xdist_group("test_protocol_version_required")
 class TestProtocolVersionRequired:
     """Integration tests for WebSocket endpoints with protocol version required."""
 
@@ -196,6 +197,7 @@ class TestProtocolVersionRequired:
             assert response["type"] == "echo_response"
 
 
+@pytest.mark.xdist_group("test_protocol_version_optional")
 class TestProtocolVersionOptional:
     """Integration tests for WebSocket endpoints with protocol version optional."""
 
@@ -231,6 +233,7 @@ class TestProtocolVersionOptional:
             assert response["type"] == "echo_response"
 
 
+@pytest.mark.xdist_group("test_protocol_version_error_details")
 class TestProtocolVersionErrorDetails:
     """Integration tests for protocol version error message details."""
 

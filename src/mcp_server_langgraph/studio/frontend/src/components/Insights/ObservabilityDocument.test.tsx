@@ -62,12 +62,15 @@ const mockUseGetMetricsQuery = vi.fn().mockReturnValue({
   refetch: vi.fn(),
 });
 
-vi.mock("../../api", () => ({
-  useListTracesQuery: (...args: unknown[]) => mockUseListTracesQuery(...args),
-  useListLogsQuery: (...args: unknown[]) => mockUseListLogsQuery(...args),
-  useGetMetricsQuery: (...args: unknown[]) => mockUseGetMetricsQuery(...args),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useListTracesQuery: (...args: unknown[]) => mockUseListTracesQuery(...args),
+    useListLogsQuery: (...args: unknown[]) => mockUseListLogsQuery(...args),
+    useGetMetricsQuery: (...args: unknown[]) => mockUseGetMetricsQuery(...args),
+  };
+});
 // Create test store
 const createTestStore = () => {
   return configureStore({

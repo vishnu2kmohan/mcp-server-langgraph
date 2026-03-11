@@ -204,6 +204,12 @@ class TestK8sCRDConversion:
             content = load_yaml_file(f)
             assert is_k8s_crd_format(content), f"Expected K8s CRD format for {f}"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAlertConsolidation:
     """Tests for alert consolidation to canonical location."""
@@ -341,6 +347,12 @@ class TestAlertConsolidation:
                 + "\n\nRun consolidation script to move these to monitoring/prometheus/rules/"
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAlertCoverageReport:
     """Tests for alert coverage report mechanism."""
@@ -471,6 +483,12 @@ class TestAlertCoverageReport:
             if len(alerts) <= 5:
                 for a in alerts:
                     print(f"    - {a}")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestDashboardAlertLinking:
@@ -694,6 +712,12 @@ class TestDashboardAlertLinking:
                 f"Top 15 alerts needing dashboard_url:\n" + "\n".join(f"  {x}" for x in alerts_needing_dashboard[:15])
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAlertQuality:
     """Tests for alert quality and best practices."""
@@ -843,6 +867,12 @@ class TestAlertQuality:
                 f"  Missing runbook: {len(alerts_without_runbook)}\n\n"
                 f"Top 15 warning alerts needing runbook_url:\n" + "\n".join(f"  {x}" for x in alerts_without_runbook[:15])
             )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestRunbookFileExistence:
@@ -1022,3 +1052,9 @@ class TestRunbookFileExistence:
                 f"\n⚠️  {len(runbook_anchor_issues)} alerts have missing runbook anchors "
                 f"(allowed: {known_missing_anchors}):\n" + "\n".join(f"  - {x}" for x in runbook_anchor_issues[:10])
             )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

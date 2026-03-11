@@ -32,7 +32,7 @@ def is_token_expired(token: str) -> bool:
     try:
         # Decode without verification to extract claims
         # (signature was already verified at connection time)
-        payload = jwt.decode(token, options={"verify_signature": False})
+        payload = jwt.decode(token, options={"verify_signature": False})  # nosemgrep: unverified-jwt-decode
         exp = payload.get("exp")
         if exp is None:
             logger.warning("Token missing exp claim, treating as expired")
@@ -67,7 +67,7 @@ def is_token_expiring_soon(token: str, buffer_seconds: int = 300) -> bool:
         False otherwise.
     """
     try:
-        payload = jwt.decode(token, options={"verify_signature": False})
+        payload = jwt.decode(token, options={"verify_signature": False})  # nosemgrep: unverified-jwt-decode
         exp = payload.get("exp")
         if exp is None:
             return True
@@ -96,7 +96,7 @@ def get_token_expiration(token: str) -> datetime | None:
         or missing exp claim.
     """
     try:
-        payload = jwt.decode(token, options={"verify_signature": False})
+        payload = jwt.decode(token, options={"verify_signature": False})  # nosemgrep: unverified-jwt-decode
         exp = payload.get("exp")
         if exp is None:
             return None

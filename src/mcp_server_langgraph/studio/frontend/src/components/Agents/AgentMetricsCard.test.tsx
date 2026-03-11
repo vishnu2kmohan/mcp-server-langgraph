@@ -22,10 +22,13 @@ import type { AgentMetricsResponseCamelCase } from "../../types/api";
 
 // Mock the API hook
 const mockRefetch = vi.fn();
-vi.mock("../../api", () => ({
-  useGetAgentMetricsQuery: vi.fn(),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetAgentMetricsQuery: vi.fn(),
+  };
+});
 import { useGetAgentMetricsQuery } from "../../api";
 const mockUseGetAgentMetricsQuery = useGetAgentMetricsQuery as ReturnType<
   typeof vi.fn

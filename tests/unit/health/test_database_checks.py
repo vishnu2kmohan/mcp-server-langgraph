@@ -297,7 +297,7 @@ class TestDatabaseValidation:
         mock_postgres_conn.fetchval = AsyncMock(return_value=None)  # Database doesn't exist
         mock_postgres_conn.close = AsyncMock(return_value=None)
 
-        with patch("asyncpg.connect", return_value=mock_postgres_conn):
+        with patch("asyncpg.connect", side_effect=lambda *a, **kw: mock_postgres_conn):
             result = await validator.validate_database(db_info)
 
             assert not result.is_valid
@@ -445,7 +445,7 @@ class TestOverallValidation:
             warnings=[],
         )
 
-        with patch.object(validator, "validate_database", return_value=mock_result):
+        with patch.object(validator, "validate_database", side_effect=lambda *a, **kw: mock_result):
             result = await validator.validate()
 
             assert result.is_valid

@@ -24,10 +24,13 @@ vi.mock("../context/DevToolsTimelineProvider", () => ({
 }));
 
 // Mock API hooks
-vi.mock("../../../api", () => ({
-  useListDevtoolsServicesQuery: () => ({ data: [] }),
-}));
-
+vi.mock("../../../api", async () => {
+  const actual = await vi.importActual("../../../api");
+  return {
+    ...actual,
+    useListDevtoolsServicesQuery: () => ({ data: [] }),
+  };
+});
 // Mock UI components
 vi.mock("@/components/UI", () => ({
   Button: ({ children, ...props }: { children: React.ReactNode }) => (
@@ -161,9 +164,10 @@ describe("TracesTab Animation Integration", () => {
 
     render(<TracesTab isLoading={true} />);
 
-    // Loading state should be rendered with shimmer skeleton
+    // Loading state renders with data-testid="traces-tab" (same testid for all states)
     // Animation variants are verified in the design system tests
-    expect(screen.getByTestId("traces-loading")).toBeInTheDocument();
+    expect(screen.getByTestId("traces-tab")).toBeInTheDocument();
+    expect(screen.getByText("Loading traces...")).toBeInTheDocument();
   });
 
   it("should render trace list with listItemVariants", async () => {
@@ -358,10 +362,13 @@ describe("StateTab Animation Integration", () => {
 // =============================================================================
 
 // Mock auth state
-vi.mock("../../../store/slices/authSlice", () => ({
-  selectUser: () => ({ id: "test-user", name: "Test User" }),
-}));
-
+vi.mock("../../../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../../../store/slices/authSlice");
+  return {
+    ...actual,
+    selectUser: () => ({ id: "test-user", name: "Test User" }),
+  };
+});
 // Mock DevToolsAI hook with insights for testing card animations
 vi.mock("../hooks/useDevToolsAI", () => ({
   useDevToolsAI: () => ({

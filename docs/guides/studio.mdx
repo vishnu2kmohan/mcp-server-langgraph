@@ -277,6 +277,7 @@ Design AI agent workflows through an intuitive drag-and-drop interface.
 #### Simple Q&A Bot
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart LR
     Start([Start]) --> Agent[QA Agent]
     Agent --> End([End])
@@ -293,6 +294,7 @@ flowchart LR
 #### Multi-Agent Pipeline
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart LR
     Start([Start]) --> Classifier[Intent Classifier]
     Classifier --> |"question"| QA[QA Agent]
@@ -315,6 +317,7 @@ flowchart LR
 #### Human-in-the-Loop Review
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 flowchart LR
     Start([Start]) --> Draft[Draft Agent]
     Draft --> Review{Human Review}

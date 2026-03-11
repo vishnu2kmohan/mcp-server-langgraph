@@ -78,7 +78,7 @@ class TestSearchKnowledgeBase:
         """Test search when Qdrant is properly configured"""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             # Patch the import inside the function
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as mock_loader_class:
@@ -100,7 +100,7 @@ class TestSearchKnowledgeBase:
         """Test search handles Qdrant connection errors gracefully"""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as mock_loader_class:
                 # Simulate connection error
@@ -119,7 +119,7 @@ class TestSearchKnowledgeBase:
         """Test search handles Qdrant query errors"""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as mock_loader_class:
                 # Mock client that raises on query
@@ -403,7 +403,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         """Tool returns setup instructions when Qdrant not configured."""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(False, "Qdrant not configured"),
+            side_effect=lambda *a, **kw: (False, "Qdrant not configured"),
         ):
             result = await search_knowledge_base.ainvoke({"query": "test"})
             assert "not configured" in result.lower()
@@ -413,7 +413,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         """Shows GOOGLE_API_KEY guidance for google provider."""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(False, "GOOGLE_API_KEY=your-api-key"),
+            side_effect=lambda *a, **kw: (False, "GOOGLE_API_KEY=your-api-key"),
         ):
             result = await search_knowledge_base.ainvoke({"query": "test"})
             assert "GOOGLE_API_KEY" in result
@@ -423,7 +423,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         """Shows OPENAI_API_KEY guidance for openai provider."""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(False, "OPENAI_API_KEY=your-api-key"),
+            side_effect=lambda *a, **kw: (False, "OPENAI_API_KEY=your-api-key"),
         ):
             result = await search_knowledge_base.ainvoke({"query": "test"})
             assert "OPENAI_API_KEY" in result
@@ -436,7 +436,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         ]
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as MockLoaderClass:
                 instance = MagicMock()
@@ -462,7 +462,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         ]
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as MockLoaderClass:
                 instance = MagicMock()
@@ -486,7 +486,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         mock_refs = [MagicMock(ref_id="doc1", ref_type="doc", summary="Test", relevance_score=0.9)]
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as MockLoaderClass:
                 with patch("mcp_server_langgraph.tools.search_tools.logger") as mock_logger:
@@ -506,7 +506,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         """Error returns brief message, logs full exception."""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as MockLoaderClass:
                 with patch("mcp_server_langgraph.tools.search_tools.logger") as mock_logger:
@@ -525,7 +525,7 @@ class TestSearchKnowledgeBaseSemanticSearch:
         """Empty results return a friendly message."""
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as MockLoaderClass:
                 instance = MagicMock()
@@ -553,7 +553,7 @@ class TestExploreKnowledgeIteratively:
 
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(False, "Qdrant not configured"),
+            side_effect=lambda *a, **kw: (False, "Qdrant not configured"),
         ):
             result = await explore_knowledge_iteratively.ainvoke({"initial_query": "test"})
             assert "not configured" in result.lower()
@@ -569,7 +569,7 @@ class TestExploreKnowledgeIteratively:
         ]
         with patch(
             "mcp_server_langgraph.tools.search_tools._validate_semantic_search_config",
-            return_value=(True, None),
+            side_effect=lambda *a, **kw: (True, None),
         ):
             with patch("mcp_server_langgraph.core.dynamic_context_loader.DynamicContextLoader") as MockLoader:
                 instance = MockLoader.return_value

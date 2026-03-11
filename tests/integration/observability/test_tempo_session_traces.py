@@ -115,6 +115,7 @@ def mock_session_service():
     return mock_service
 
 
+@pytest.mark.xdist_group("test_tempo_trace_retrieval_integration")
 class TestTempoTraceRetrievalIntegration:
     """Integration tests for Tempo trace retrieval."""
 
@@ -186,6 +187,7 @@ class TestTempoTraceRetrievalIntegration:
             await client.close()
 
 
+@pytest.mark.xdist_group("test_session_trace_endpoint_integration")
 class TestSessionTraceEndpointIntegration:
     """Integration tests for the sessions trace endpoint."""
 
@@ -299,6 +301,7 @@ class TestSessionTraceEndpointIntegration:
         assert response.end_time is None
 
 
+@pytest.mark.xdist_group("test_session_trace_security_integration")
 class TestSessionTraceSecurityIntegration:
     """Integration tests for session trace security validation."""
 
@@ -326,6 +329,7 @@ class TestSessionTraceSecurityIntegration:
             assert session is None
 
 
+@pytest.mark.xdist_group("test_span_thinking_object_integration")
 class TestSpanThinkingObjectIntegration:
     """Integration tests for span thinking object format (Pattern 12).
 

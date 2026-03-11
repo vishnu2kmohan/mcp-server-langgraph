@@ -299,7 +299,7 @@ class TestSecretValidation:
         "overlay,expected_prefix",
         [
             ("deployments/overlays/stg-gke", "stg-"),
-            ("deployments/overlays/prod-gke", "production-"),
+            ("deployments/overlays/prod-gke", "prod-"),
         ],
     )
     def test_primary_app_secret_names_match_external_secrets(self, overlay, expected_prefix):
@@ -347,7 +347,7 @@ class TestSecretValidation:
         "overlay,expected_prefix",
         [
             ("deployments/overlays/stg-gke", "stg-"),
-            ("deployments/overlays/prod-gke", "production-"),
+            ("deployments/overlays/prod-gke", "prod-"),
         ],
     )
     def test_all_external_secret_data_mappings_exist(self, overlay, expected_prefix):
@@ -452,7 +452,7 @@ class TestKustomizePrefixConsistency:
         "overlay,expected_prefix",
         [
             ("deployments/overlays/stg-gke", "stg-"),
-            ("deployments/overlays/prod-gke", "production-"),
+            ("deployments/overlays/prod-gke", "prod-"),
         ],
     )
     def test_patch_files_use_prefixed_secret_names(self, overlay, expected_prefix):

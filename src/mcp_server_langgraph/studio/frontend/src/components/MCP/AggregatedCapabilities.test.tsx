@@ -131,60 +131,65 @@ const mockServers = {
 
 // Mock the API with filter support
 // API hooks accept serverName?: string (not an object)
-vi.mock("../../api", () => ({
-  useListAggregatedToolsQuery: vi.fn((serverName?: string) => {
-    const tools = serverName
-      ? mockAggregatedTools.tools.filter((t) => t.serverName === serverName)
-      : mockAggregatedTools.tools;
-    return {
-      data: { tools, totalCount: tools.length },
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useListAggregatedToolsQuery: vi.fn((serverName?: string) => {
+      const tools = serverName
+        ? mockAggregatedTools.tools.filter((t) => t.serverName === serverName)
+        : mockAggregatedTools.tools;
+      return {
+        data: { tools, totalCount: tools.length },
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      };
+    }),
+    useListAggregatedResourcesQuery: vi.fn((serverName?: string) => {
+      const resources = serverName
+        ? mockAggregatedResources.resources.filter(
+            (r) => r.serverName === serverName,
+          )
+        : mockAggregatedResources.resources;
+      return {
+        data: { resources, totalCount: resources.length },
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      };
+    }),
+    useListAggregatedPromptsQuery: vi.fn((serverName?: string) => {
+      const prompts = serverName
+        ? mockAggregatedPrompts.prompts.filter(
+            (p) => p.serverName === serverName,
+          )
+        : mockAggregatedPrompts.prompts;
+      return {
+        data: { prompts, totalCount: prompts.length },
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      };
+    }),
+    useListAggregatedServersQuery: vi.fn(() => ({
+      data: mockServers,
       isLoading: false,
       error: null,
       refetch: vi.fn(),
-    };
-  }),
-  useListAggregatedResourcesQuery: vi.fn((serverName?: string) => {
-    const resources = serverName
-      ? mockAggregatedResources.resources.filter(
-          (r) => r.serverName === serverName,
-        )
-      : mockAggregatedResources.resources;
-    return {
-      data: { resources, totalCount: resources.length },
+    })),
+    useGetServerCapabilitiesQuery: vi.fn(() => ({
+      data: {
+        serverName: "github",
+        toolCount: 2,
+        resourceCount: 1,
+        promptCount: 0,
+      },
       isLoading: false,
       error: null,
-      refetch: vi.fn(),
-    };
-  }),
-  useListAggregatedPromptsQuery: vi.fn((serverName?: string) => {
-    const prompts = serverName
-      ? mockAggregatedPrompts.prompts.filter((p) => p.serverName === serverName)
-      : mockAggregatedPrompts.prompts;
-    return {
-      data: { prompts, totalCount: prompts.length },
-      isLoading: false,
-      error: null,
-      refetch: vi.fn(),
-    };
-  }),
-  useListAggregatedServersQuery: vi.fn(() => ({
-    data: mockServers,
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  })),
-  useGetServerCapabilitiesQuery: vi.fn(() => ({
-    data: {
-      serverName: "github",
-      toolCount: 2,
-      resourceCount: 1,
-      promptCount: 0,
-    },
-    isLoading: false,
-    error: null,
-  })),
-}));
-
+    })),
+  };
+});
 // Mock the useMCPAggregatedUpdates hook to avoid Redux auth dependencies
 vi.mock("../../hooks", async () => {
   const actual = await vi.importActual("../../hooks");

@@ -277,10 +277,14 @@ it("renders", () => {
 import { render } from "@testing-library/react";
 import { MyComponent } from "./MyComponent";
 
-vi.mock("../../store/slices/authSlice", () => ({
-  selectUser: vi.fn(),
-}));
+vi.mock("../../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../../store/slices/authSlice");
+  return {
+    ...actual,
+    selectUser: vi.fn(),
 
+  };
+});
 it("renders", () => {
   render(<MyComponent />);
 });

@@ -460,7 +460,7 @@ class TestHandleChat:
             "thread_id": "existing_conv",
             "response_format": "detailed",
         }
-        with patch("mcp_server_langgraph.mcp.handlers.chat.format_response", return_value="Response"):
+        with patch("mcp_server_langgraph.mcp.handlers.chat.format_response", side_effect=lambda *a, **kw: "Response"):
             result = await server._handle_chat(arguments, span, get_user_id("alice"))
             assert isinstance(result, list)
             mock_auth_middleware.authorize.assert_called_with(
@@ -680,7 +680,7 @@ class TestMCPServerMain:
             ),
             patch(
                 "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
-                return_value=mock_server,
+                side_effect=lambda *a, **kw: mock_server,
             ),
         ):
             from mcp_server_langgraph.mcp.server_stdio import main
@@ -727,7 +727,7 @@ class TestMCPServerMain:
             ),
             patch(
                 "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
-                return_value=mock_server,
+                side_effect=lambda *a, **kw: mock_server,
             ),
         ):
             from mcp_server_langgraph.mcp.server_stdio import main
@@ -766,7 +766,7 @@ class TestMCPServerMain:
             ),
             patch(
                 "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
-                return_value=mock_server,
+                side_effect=lambda *a, **kw: mock_server,
             ),
         ):
             from mcp_server_langgraph.mcp.server_stdio import main
@@ -801,7 +801,7 @@ class TestMCPServerMain:
             ),
             patch(
                 "mcp_server_langgraph.mcp.server_stdio.MCPAgentServer",
-                return_value=mock_server,
+                side_effect=lambda *a, **kw: mock_server,
             ),
         ):
             from mcp_server_langgraph.mcp.server_stdio import main

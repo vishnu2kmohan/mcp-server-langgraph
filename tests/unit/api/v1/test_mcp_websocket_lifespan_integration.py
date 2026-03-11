@@ -184,7 +184,7 @@ class TestMCPWebSocketAppStateIntegration:
         app = create_app(settings_override=test_settings, skip_startup_validation=True)
 
         with (
-            patch("mcp_server_langgraph.app.bootstrap_all", new_callable=AsyncMock, return_value=mock_state),
+            patch("mcp_server_langgraph.app.bootstrap_all", new_callable=AsyncMock, side_effect=lambda *a, **kw: mock_state),
             patch("mcp_server_langgraph.tools.unified_registry.sync_mcp_tools", new_callable=AsyncMock),
             patch("mcp_server_langgraph.bootstrap.semantic.index_all_tools", new_callable=AsyncMock),
         ):
@@ -225,7 +225,7 @@ class TestMCPWebSocketAppStateIntegration:
         app = create_app(settings_override=test_settings, skip_startup_validation=True)
 
         with (
-            patch("mcp_server_langgraph.app.bootstrap_all", new_callable=AsyncMock, return_value=mock_state),
+            patch("mcp_server_langgraph.app.bootstrap_all", new_callable=AsyncMock, side_effect=lambda *a, **kw: mock_state),
             patch("mcp_server_langgraph.tools.unified_registry.sync_mcp_tools", new_callable=AsyncMock),
             patch("mcp_server_langgraph.bootstrap.semantic.index_all_tools", new_callable=AsyncMock),
         ):
@@ -285,7 +285,7 @@ class TestMCPWebSocketCleanupTaskBehavior:
         with patch(
             "mcp_server_langgraph.mcp.websocket.lifecycle.cleanup_idle_connections",
             new_callable=AsyncMock,
-            return_value=0,
+            side_effect=lambda *a, **kw: 0,
         ) as mock_cleanup:
             await manager.startup()
 

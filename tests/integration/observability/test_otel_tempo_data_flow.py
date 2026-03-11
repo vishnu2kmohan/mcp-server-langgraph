@@ -118,6 +118,7 @@ def unique_session_id() -> str:
     return f"{worker_prefix}_dataflow_{timestamp}_{unique_id}"
 
 
+@pytest.mark.xdist_group("test_o_t_e_l_tempo_data_flow")
 class TestOTELTempoDataFlow:
     """
     Data flow integration tests verifying OTEL → Tempo → API pipeline.
@@ -292,6 +293,7 @@ class TestOTELTempoDataFlow:
             await logging_client.close()
 
 
+@pytest.mark.xdist_group("test_attribute_naming_conventions")
 class TestAttributeNamingConventions:
     """
     Tests validating OTEL semantic attribute naming conventions.
@@ -453,6 +455,7 @@ class TestAttributeNamingConventions:
                     )
 
 
+@pytest.mark.xdist_group("test_full_o_t_e_l_pipeline")
 class TestFullOTELPipeline:
     """
     Full end-to-end OTEL pipeline integration tests.

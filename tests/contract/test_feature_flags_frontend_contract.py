@@ -90,6 +90,7 @@ FRONTEND_REQUIRED_FLAGS = {
 }
 
 
+@pytest.mark.xdist_group("test_feature_flags_frontend_contract")
 @pytest.mark.contract
 class TestFeatureFlagsFrontendContract:
     """Contract tests for feature flag exposure to frontend."""
@@ -269,3 +270,9 @@ class TestFeatureFlagsFrontendContract:
             f"Fix: In get_ui_features_for_role(), use short names like:\n"
             f'  "skills_marketplace": self.enable_skills_marketplace'
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

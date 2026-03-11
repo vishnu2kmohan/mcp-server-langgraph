@@ -14,7 +14,6 @@ Tests cover:
 """
 
 import gc
-import os
 from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -72,27 +71,20 @@ def sample_budget():
 
 
 @pytest.fixture
-def reset_singletons():
+def reset_singletons(monkeypatch):
     """Reset cost storage singleton before/after tests."""
     from mcp_server_langgraph.monitoring.cost_storage_factory import (
         reset_cost_storage_backend,
     )
     from mcp_server_langgraph.monitoring.cost_tracker import _reset_cost_collector
 
-    # Use memory backend for unit tests
-    original_backend = os.environ.get("COST_STORAGE_BACKEND")
-    os.environ["COST_STORAGE_BACKEND"] = "memory"
+    # Use memory backend for unit tests (monkeypatch auto-restores on teardown)
+    monkeypatch.setenv("COST_STORAGE_BACKEND", "memory")
 
     reset_cost_storage_backend()
     _reset_cost_collector()
 
     yield
-
-    # Restore
-    if original_backend:
-        os.environ["COST_STORAGE_BACKEND"] = original_backend
-    else:
-        os.environ.pop("COST_STORAGE_BACKEND", None)
 
     reset_cost_storage_backend()
     _reset_cost_collector()
@@ -214,7 +206,7 @@ def test_calculate_cost_with_unknown_model_raises_key_error():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cost_metrics_collector_records_usage(sample_token_usage):
+async def test_cost_metrics_collector_records_usage(sample_token_usage, reset_singletons):
     """Test CostMetricsCollector records token usage."""
     from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -231,7 +223,7 @@ async def test_cost_metrics_collector_records_usage(sample_token_usage):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cost_metrics_collector_calculates_cost_automatically():
+async def test_cost_metrics_collector_calculates_cost_automatically(reset_singletons):
     """Test collector automatically calculates cost if not provided."""
     from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -256,7 +248,7 @@ async def test_cost_metrics_collector_calculates_cost_automatically():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cost_metrics_collector_increments_prometheus_counters():
+async def test_cost_metrics_collector_increments_prometheus_counters(reset_singletons):
     """Test collector updates Prometheus metrics."""
     from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -611,7 +603,7 @@ class TestBudgetMonitor:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_end_to_end_cost_tracking_flow():
+async def test_end_to_end_cost_tracking_flow(reset_singletons):
     """Test complete flow: record usage → aggregate → check budget."""
     from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor
     from mcp_server_langgraph.monitoring.cost_tracker import CostAggregator, CostMetricsCollector
@@ -654,7 +646,7 @@ async def test_end_to_end_cost_tracking_flow():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cost_tracker_handles_concurrent_writes():
+async def test_cost_tracker_handles_concurrent_writes(reset_singletons):
     """Test CostMetricsCollector handles concurrent usage recording."""
     import asyncio
 
@@ -787,7 +779,7 @@ class TestCostMetricsCollectorExtended:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_get_records_filters_by_user(self):
+    async def test_collector_get_records_filters_by_user(self, reset_singletons):
         """Test get_records filters by user_id."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -820,7 +812,7 @@ class TestCostMetricsCollectorExtended:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_get_records_filters_by_model(self):
+    async def test_collector_get_records_filters_by_model(self, reset_singletons):
         """Test get_records filters by model."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -851,7 +843,7 @@ class TestCostMetricsCollectorExtended:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_get_total_cost_with_user_filter(self):
+    async def test_collector_get_total_cost_with_user_filter(self, reset_singletons):
         """Test get_total_cost filters by user."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -883,7 +875,7 @@ class TestCostMetricsCollectorExtended:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_get_latest_record_returns_none_when_empty(self):
+    async def test_collector_get_latest_record_returns_none_when_empty(self, reset_singletons):
         """Test get_latest_record returns None for empty collector."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -893,7 +885,7 @@ class TestCostMetricsCollectorExtended:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_cleanup_old_records_in_memory(self):
+    async def test_collector_cleanup_old_records_in_memory(self, reset_singletons):
         """Test cleanup_old_records removes old in-memory records."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -931,7 +923,7 @@ class TestCostMetricsCollectorExtended:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_collector_record_usage_with_feature_and_metadata(self):
+    async def test_collector_record_usage_with_feature_and_metadata(self, reset_singletons):
         """Test record_usage stores feature and metadata correctly."""
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
@@ -960,7 +952,7 @@ class TestCostMetricsCollectorExtended:
 
 
 @pytest.mark.unit
-def test_get_cost_collector_returns_singleton():
+def test_get_cost_collector_returns_singleton(reset_singletons):
     """Test get_cost_collector returns the same instance."""
     from mcp_server_langgraph.monitoring.cost_tracker import get_cost_collector
 
@@ -984,7 +976,7 @@ class TestTimePeriodFiltering:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_filter_by_day_returns_last_24_hours(self) -> None:
+    async def test_filter_by_day_returns_last_24_hours(self, reset_singletons) -> None:
         """
         GIVEN records from different time periods
         WHEN get_records is called with period="day"
@@ -1027,7 +1019,7 @@ class TestTimePeriodFiltering:
         assert records[0].session_id == "sess2"
 
     @pytest.mark.asyncio
-    async def test_filter_by_week_returns_last_7_days(self) -> None:
+    async def test_filter_by_week_returns_last_7_days(self, reset_singletons) -> None:
         """
         GIVEN records from different time periods
         WHEN get_records is called with period="week"
@@ -1067,7 +1059,7 @@ class TestTimePeriodFiltering:
         assert records[0].session_id == "recent_session"
 
     @pytest.mark.asyncio
-    async def test_filter_by_month_returns_last_30_days(self) -> None:
+    async def test_filter_by_month_returns_last_30_days(self, reset_singletons) -> None:
         """
         GIVEN records from different time periods
         WHEN get_records is called with period="month"

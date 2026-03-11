@@ -21,6 +21,17 @@ import pytest
 pytestmark = [pytest.mark.unit]
 
 
+def _sync_to_thread(func, /, *args, **kwargs):
+    """Synchronous replacement for asyncio.to_thread.
+
+    Under xdist, asyncio.to_thread can be contaminated by leaked patches from
+    test_connection_tester.py (patches with plain MagicMock) or
+    test_skill_search_adapters.py (patches with AsyncMock(return_value=[0.1, 0.2])).
+    This causes it to return MagicMock instead of calling the actual function.
+    """
+    return func(*args, **kwargs)
+
+
 @pytest.mark.xdist_group(name="semantic_embedding_caching")
 class TestEmbeddingCaching:
     """Tests for embedding result caching in SemanticIndexManager."""
@@ -66,7 +77,15 @@ class TestEmbeddingCaching:
         cached_embedding = [0.5] * 384
         manager._embedding_cache[embedding_cache_key] = cached_embedding
 
-        with patch.object(manager, "_check_authorization", return_value=True):
+        with (
+            patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True),
+            # Defend against asyncio.to_thread contamination from xdist
+            patch(
+                "asyncio.to_thread",
+                new_callable=AsyncMock,
+                side_effect=_sync_to_thread,
+            ),
+        ):
             # First search - should use cached embedding
             await manager.search_tools(
                 query=query,
@@ -91,7 +110,9 @@ class TestEmbeddingCaching:
 
         expected_embedding = [0.2] * 384
         mock_embedder = MagicMock()
-        mock_embedder.embed_query = MagicMock(return_value=expected_embedding)
+        # Use side_effect (not return_value) for robustness under xdist —
+        # side_effect produces the return value dynamically on each call
+        mock_embedder.embed_query = MagicMock(side_effect=lambda text: expected_embedding)
 
         mock_point = MagicMock()
         mock_point.id = "tool:test"
@@ -116,7 +137,17 @@ class TestEmbeddingCaching:
 
         query = "test query for caching"
 
-        with patch.object(manager, "_check_authorization", return_value=True):
+        with (
+            patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True),
+            # Belt-and-suspenders: patch asyncio.to_thread to call functions directly.
+            # Under xdist, asyncio.to_thread can be contaminated by leaked patches
+            # from test_connection_tester.py or test_skill_search_adapters.py.
+            patch(
+                "asyncio.to_thread",
+                new_callable=AsyncMock,
+                side_effect=_sync_to_thread,
+            ),
+        ):
             await manager.search_tools(
                 query=query,
                 user_id="user:test",
@@ -285,7 +316,15 @@ class TestEmbeddingCacheMetrics:
 
         initial_stats = manager.get_embedding_cache_stats()
 
-        with patch.object(manager, "_check_authorization", return_value=True):
+        with (
+            patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True),
+            # Defend against asyncio.to_thread contamination from xdist
+            patch(
+                "asyncio.to_thread",
+                new_callable=AsyncMock,
+                side_effect=_sync_to_thread,
+            ),
+        ):
             await manager.search_tools(query=query, user_id="user:test", limit=10)
 
         final_stats = manager.get_embedding_cache_stats()

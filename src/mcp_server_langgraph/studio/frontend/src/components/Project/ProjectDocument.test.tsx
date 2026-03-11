@@ -14,39 +14,42 @@ import projectReducer from "../../store/slices/projectSlice";
 import uiReducer from "../../store/slices/uiSlice";
 
 // Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
-vi.mock("../../api", () => ({
-  useGetProjectQuery: (id: string | undefined) => {
-    if (!id) {
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetProjectQuery: (id: string | undefined) => {
+      if (!id) {
+        return {
+          data: undefined,
+          isLoading: false,
+          isError: false,
+          error: undefined,
+          refetch: vi.fn(),
+        };
+      }
       return {
-        data: undefined,
+        data: {
+          id,
+          name: `Test Project ${id}`,
+          description: "A test project",
+          status: "active",
+          ownerId: "user-123",
+          ownerName: "Test User",
+          sessionCount: 5,
+          workflowCount: 3,
+          connectionCount: 2,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
         isLoading: false,
         isError: false,
         error: undefined,
         refetch: vi.fn(),
       };
-    }
-    return {
-      data: {
-        id,
-        name: `Test Project ${id}`,
-        description: "A test project",
-        status: "active",
-        ownerId: "user-123",
-        ownerName: "Test User",
-        sessionCount: 5,
-        workflowCount: 3,
-        connectionCount: 2,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: vi.fn(),
-    };
-  },
-}));
-
+    },
+  };
+});
 // Create test store
 const createTestStore = () => {
   return configureStore({

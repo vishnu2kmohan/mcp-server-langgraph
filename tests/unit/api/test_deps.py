@@ -48,6 +48,12 @@ class TestDepsModuleImports:
 
         assert callable(get_audit_service)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestGetSettings:
@@ -212,3 +218,9 @@ class TestDepsCacheManagement:
 
         # Cache should be empty
         assert get_settings.cache_info().currsize == 0
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

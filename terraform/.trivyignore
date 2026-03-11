@@ -1,0 +1,75 @@
+# Trivy IaC Security Scan - Accepted Risks
+# ==========================================
+# Each entry documents why a finding is accepted rather than fixed.
+# Review periodically and remove entries when underlying configs are hardened.
+
+# --- Public subnets (by design) ---
+# Public subnets require map_public_ip_on_launch=true for NAT gateways,
+# load balancers, and bastion hosts. Private subnets do NOT have this set.
+AVD-AWS-0164
+
+# --- Egress rules (by design) ---
+# EKS nodes and VPC endpoints require outbound internet access for:
+# - Container image pulls (ECR, DockerHub, GCR)
+# - AWS API calls, CloudWatch logging, Kubernetes API
+# - Helm chart downloads, OS package updates
+# Restricting egress to specific IPs would break Kubernetes functionality.
+AVD-AWS-0104
+
+# --- IAM wildcarded resources (by design) ---
+# Cluster Autoscaler and Karpenter require broad EC2/ASG permissions to
+# discover and manage nodes across all ASGs/node pools. This is the
+# standard IAM policy recommended by the upstream projects.
+# VPC Flow Logs require CloudWatch Logs access across log groups.
+# See: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md
+# See: https://karpenter.sh/docs/getting-started/migrating-from-cas/
+AVD-AWS-0057
+
+# --- GCP IAP SSH firewall (by design) ---
+# 35.235.240.0/20 is Google's Identity-Aware Proxy range, not arbitrary
+# public internet. IAP provides authenticated, audited SSH access.
+# See: https://cloud.google.com/iap/docs/using-tcp-forwarding
+AVD-GCP-0027
+
+# --- GKE Autopilot legacy metadata endpoints ---
+# GKE Autopilot manages node configuration including metadata endpoints.
+# The cluster resource itself doesn't expose a metadata config block;
+# Google disables legacy endpoints on Autopilot by default.
+AVD-GCP-0048
+
+# --- GKE master authorized networks ---
+# Dev/staging clusters intentionally allow broad access for development.
+# Production clusters should enable master authorized networks (tracked
+# separately in the infrastructure hardening backlog).
+AVD-GCP-0061
+
+# --- EKS public cluster access (variable-controlled) ---
+# var.cluster_endpoint_public_access defaults to true for dev/staging
+# to allow kubectl access without VPN. Production environments should
+# set this to false (enforced via tfvars, not module defaults).
+AVD-AWS-0040
+
+# --- EKS public access CIDRs (variable-controlled) ---
+# var.cluster_endpoint_public_access_cidrs is configurable per environment.
+# Dev uses 0.0.0.0/0 for convenience; production restricts to VPN CIDRs.
+AVD-AWS-0041
+
+# --- S3 bucket encryption ---
+# State bucket uses AES256 (SSE-S3) which is encrypted at rest.
+# Trivy flags this because it's not using a customer-managed KMS key (CMK).
+# SSE-S3 is acceptable for Terraform state; CMK adds key rotation complexity
+# without meaningful security benefit for this use case.
+AVD-AWS-0088
+AVD-AWS-0132
+
+# --- CloudSQL TLS (variable-controlled) ---
+# var.ssl_mode is configurable per environment. Dev allows non-TLS for
+# local testing; staging/production should enforce TLS via tfvars.
+AVD-GCP-0015
+
+# --- ElastiCache encryption (variable-controlled) ---
+# var.at_rest_encryption_enabled and var.transit_encryption_enabled are
+# configurable per environment. Dev may disable for performance testing;
+# production should enable both (enforced via tfvars).
+AVD-AWS-0045
+AVD-AWS-0051

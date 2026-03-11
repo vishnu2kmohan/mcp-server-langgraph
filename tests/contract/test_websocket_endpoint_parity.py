@@ -117,6 +117,7 @@ def normalize_ws_path(path: str) -> str:
     return result
 
 
+@pytest.mark.xdist_group("test_web_socket_endpoint_parity")
 class TestWebSocketEndpointParity:
     """Validate that frontend WebSocket endpoints have backend implementations."""
 
@@ -179,7 +180,14 @@ class TestWebSocketEndpointParity:
             f"Add @ws_router.websocket('/devtools') handler to ws_router.py"
         )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_web_socket_endpoint_documentation")
 class TestWebSocketEndpointDocumentation:
     """Validate WebSocket endpoints are properly documented."""
 
@@ -207,6 +215,12 @@ class TestWebSocketEndpointDocumentation:
             # This is informational - internal endpoints may not need frontend constants
             pass  # Consider adding pytest.warns() if you want to track these
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 def extract_backend_auth_requirements(ws_router_path: Path) -> dict[str, bool]:
     """
@@ -230,6 +244,7 @@ def extract_backend_auth_requirements(ws_router_path: Path) -> dict[str, bool]:
     return results
 
 
+@pytest.mark.xdist_group("test_web_socket_authentication_contract")
 class TestWebSocketAuthenticationContract:
     """Validate that backend require_auth settings are correctly documented."""
 
@@ -295,6 +310,12 @@ class TestWebSocketAuthenticationContract:
                     f"{endpoint} should allow anonymous connections (require_auth=False). "
                     f"Current setting: require_auth={auth_requirements[endpoint]}"
                 )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 def get_sample_tuples_path() -> Path:
@@ -365,6 +386,7 @@ def extract_tuple_objects(tuples: list[dict]) -> set[str]:
     return objects
 
 
+@pytest.mark.xdist_group("test_web_socket_authorization_tuple_parity")
 class TestWebSocketAuthorizationTupleParity:
     """
     Validate that WebSocket endpoints with authorization requirements
@@ -471,3 +493,9 @@ class TestWebSocketAuthorizationTupleParity:
             "Missing tuples for cost:budget WebSocket endpoint.\n"
             "Add tuples for admin, alice, bob to config/openfga/sample-tuples.json"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

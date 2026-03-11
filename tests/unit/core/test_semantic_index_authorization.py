@@ -75,7 +75,7 @@ class TestToolIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_tools(
                 query="calculate",
@@ -125,7 +125,7 @@ class TestToolIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_tools(
                 query="calculate",
@@ -173,7 +173,7 @@ class TestToolIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_tools(
                 query="admin",
@@ -210,7 +210,7 @@ class TestSkillIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_skills(
                 query="code review",
@@ -256,7 +256,7 @@ class TestSkillIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_skills(
                 query="code review",
@@ -312,7 +312,7 @@ class TestMemoryIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_memories(
                 query="preferences",
@@ -341,7 +341,7 @@ class TestMemoryIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_memories(
                 query="preferences",
@@ -389,7 +389,7 @@ class TestMemoryIndexAuthorization:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_memories(
                 query="preferences",
@@ -431,7 +431,7 @@ class TestTenantIsolation:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_tools(
                 query="calculate",
@@ -480,7 +480,7 @@ class TestTenantIsolation:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_tools(
                 query="calculate",
@@ -519,7 +519,7 @@ class TestAuthorizationFailClosed:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_tools(
                 query="calculate",

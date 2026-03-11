@@ -266,7 +266,7 @@ class TestCreateStreamLoadsHistory:
 
         # Mock a smaller token limit to force truncation
         # Default model limit is 325000, which is too high for this test
-        with patch.object(service, "_get_model_aware_history_limit", return_value=8000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 8000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_message,
@@ -440,7 +440,7 @@ class TestClientHistoryFallback:
         # Client sends history (would only be used if stored fails)
         new_messages = [{"role": "user", "content": "New question"}]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -472,7 +472,7 @@ class TestClientHistoryFallback:
         # New message has same content "ok" but different ID
         new_messages = [{"id": "msg-3", "role": "user", "content": "ok"}]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -504,7 +504,7 @@ class TestClientHistoryFallback:
         # Same ID as existing message (e.g., streaming endpoint already persisted it)
         new_messages = [{"id": "msg-3", "role": "user", "content": "How are you?"}]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -536,7 +536,7 @@ class TestClientHistoryFallback:
         # Client sends message with 'id' key matching stored 'message_id'
         new_messages = [{"id": "msg-1", "role": "user", "content": "Hello"}]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -572,7 +572,7 @@ class TestClientHistoryFallback:
         # Frontend sends same message WITHOUT an ID (optimistic send)
         new_messages = [{"role": "user", "content": "Hello world"}]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -621,7 +621,7 @@ class TestServerSideHistoryEnforcement:
             {"role": "user", "content": "New question"},
         ]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -654,7 +654,7 @@ class TestServerSideHistoryEnforcement:
             {"role": "user", "content": "New question"},
         ]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -681,7 +681,7 @@ class TestServerSideHistoryEnforcement:
         # Client sends 60 messages (exceeds MAX_CLIENT_HISTORY_MESSAGES=50)
         new_messages = [{"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"} for i in range(60)]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,
@@ -709,7 +709,7 @@ class TestServerSideHistoryEnforcement:
 
         new_messages = [{"role": "user", "content": "Normal message"}]
 
-        with patch.object(service, "_get_model_aware_history_limit", return_value=100000):
+        with patch.object(service, "_get_model_aware_history_limit", side_effect=lambda *a, **kw: 100000):
             result = await service._load_and_merge_history(
                 session_id="test-session",
                 new_messages=new_messages,

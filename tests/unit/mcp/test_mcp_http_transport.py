@@ -20,6 +20,141 @@ MCP_PROTOCOL_VERSION = "2025-11-25"
 pytestmark = pytest.mark.unit
 
 
+def _make_http_response(
+    *,
+    status: int = 200,
+    json_data: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
+    text: str = "",
+) -> MagicMock:
+    """Create a properly-configured aiohttp response mock.
+
+    Returns a fresh MagicMock that works as an async context manager with
+    concrete integer ``status``, avoiding auto-generated MagicMock attributes
+    that cause ``TypeError: '>=' not supported between instances of
+    'AsyncMock' and 'int'`` under xdist parallel execution.
+    """
+    mock = MagicMock()
+    mock.status = status
+    mock.headers = headers if headers is not None else {}
+    mock.json = AsyncMock(return_value=json_data if json_data is not None else {})
+    mock.text = AsyncMock(return_value=text)
+    mock.__aenter__ = AsyncMock(return_value=mock)
+    mock.__aexit__ = AsyncMock(return_value=None)
+    return mock
+
+
+def _make_init_json(
+    *,
+    server_name: str = "test-http",
+    server_version: str = "1.0",
+    capabilities: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a standard MCP initialize JSON-RPC response body."""
+    return {
+        "jsonrpc": "2.0",
+        "id": "init-id",
+        "result": {
+            "protocolVersion": MCP_PROTOCOL_VERSION,
+            "capabilities": capabilities if capabilities is not None else {"tools": {}},
+            "serverInfo": {"name": server_name, "version": server_version},
+        },
+    }
+
+
+def _make_init_response(
+    *,
+    session_id: str | None = "session-123",
+    server_name: str = "test-http",
+    server_version: str = "1.0",
+    capabilities: dict[str, Any] | None = None,
+) -> MagicMock:
+    """Create a mock aiohttp response for the MCP ``initialize`` handshake."""
+    headers = {"MCP-Session-Id": session_id} if session_id else {}
+    return _make_http_response(
+        status=200,
+        json_data=_make_init_json(
+            server_name=server_name,
+            server_version=server_version,
+            capabilities=capabilities,
+        ),
+        headers=headers,
+    )
+
+
+def _make_notification_response() -> MagicMock:
+    """Create a mock aiohttp response for the ``notifications/initialized`` POST."""
+    return _make_http_response(status=200)
+
+
+def _make_tools_list_response() -> MagicMock:
+    """Create a mock aiohttp response for ``tools/list``."""
+    return _make_http_response(
+        status=200,
+        json_data={
+            "jsonrpc": "2.0",
+            "id": "tools-id",
+            "result": {
+                "tools": [
+                    {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
+                ],
+            },
+        },
+    )
+
+
+def _make_tools_call_response() -> MagicMock:
+    """Create a mock aiohttp response for ``tools/call``."""
+    return _make_http_response(
+        status=200,
+        json_data={
+            "jsonrpc": "2.0",
+            "id": "call-id",
+            "result": {
+                "content": [{"type": "text", "text": "Screenshot saved"}],
+                "isError": False,
+            },
+        },
+    )
+
+
+def _route_post(*args: Any, **kwargs: Any) -> MagicMock:
+    """Default POST router: dispatch by ``method`` field in the JSON body.
+
+    Always returns a *fresh* mock so that each ``async with`` block gets its
+    own context-manager instance with a concrete ``.status`` integer.
+
+    Accepts the same signature as ``aiohttp.ClientSession.post(url, *, json=, headers=)``.
+    """
+    json_body = kwargs.get("json") or {}
+    method = json_body.get("method")
+    if method == "initialize":
+        return _make_init_response()
+    if method == "notifications/initialized":
+        return _make_notification_response()
+    if method == "tools/list":
+        return _make_tools_list_response()
+    if method == "tools/call":
+        return _make_tools_call_response()
+    # Fallback: return a generic 200 response
+    return _make_http_response(status=200)
+
+
+def _make_http_client(
+    *,
+    side_effect: Any = None,
+) -> MagicMock:
+    """Create a mock ``aiohttp.ClientSession`` with routed ``post()``.
+
+    By default, ``post()`` dispatches to ``_route_post`` so each call gets a
+    *fresh* response mock, preventing xdist cross-test mock leakage.
+    """
+    mock_client = MagicMock()
+    mock_client.post = MagicMock(side_effect=side_effect if side_effect is not None else _route_post)
+    mock_client.close = AsyncMock(return_value=None)
+    return mock_client
+
+
 @pytest.mark.xdist_group(name="mcp_http_transport")
 class TestMCPHTTPTransportConnect:
     """Test suite for HTTP transport connection."""
@@ -44,31 +179,9 @@ class TestMCPHTTPTransportConnect:
 
         session = MCPClientSession(config)
 
-        # Mock HTTP response (must be async context manager for aiohttp)
-        mock_response = MagicMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(
-            return_value={
-                "jsonrpc": "2.0",
-                "id": "init-id",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test-http", "version": "1.0"},
-                },
-            }
-        )
-        mock_response.headers = {"MCP-Session-Id": "session-123"}
-        # Make response an async context manager
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
+        mock_client = _make_http_client()
 
-        # Mock the HTTP client - post() returns async context manager
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             await session.connect()
 
         mock_client.post.assert_called()
@@ -92,29 +205,9 @@ class TestMCPHTTPTransportConnect:
 
         session = MCPClientSession(config)
 
-        # Mock HTTP response (must be async context manager)
-        mock_response = MagicMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(
-            return_value={
-                "jsonrpc": "2.0",
-                "id": "init-id",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test-http", "version": "1.0"},
-                },
-            }
-        )
-        mock_response.headers = {}
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
+        mock_client = _make_http_client()
 
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             await session.connect()
 
         # Check headers on first call (initialize request)
@@ -140,29 +233,16 @@ class TestMCPHTTPTransportConnect:
 
         session = MCPClientSession(config)
 
-        # Mock HTTP response with session ID (must be async context manager)
-        mock_response = MagicMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(
-            return_value={
-                "jsonrpc": "2.0",
-                "id": "init-id",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "test-http", "version": "1.0"},
-                },
-            }
-        )
-        mock_response.headers = {"MCP-Session-Id": "session-abc123"}
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
+        # Use a custom init response with a specific session ID
+        def route_with_session_id(*args, **kwargs):
+            method = kwargs.get("json", {}).get("method")
+            if method == "initialize":
+                return _make_init_response(session_id="session-abc123")
+            return _route_post(*args, **kwargs)
 
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock(return_value=None)
+        mock_client = _make_http_client(side_effect=route_with_session_id)
 
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             await session.connect()
 
         assert session._session_id == "session-abc123"
@@ -183,31 +263,23 @@ class TestMCPHTTPTransportConnect:
 
         session = MCPClientSession(config)
 
-        mock_response = MagicMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(
-            return_value={
-                "jsonrpc": "2.0",
-                "id": "init-id",
-                "result": {
-                    "protocolVersion": MCP_PROTOCOL_VERSION,
-                    "capabilities": {
+        # Use a custom init response with specific capabilities
+        def route_with_capabilities(*args, **kwargs):
+            method = kwargs.get("json", {}).get("method")
+            if method == "initialize":
+                return _make_init_response(
+                    server_name="playwright-http",
+                    server_version="2.0",
+                    capabilities={
                         "tools": {"listChanged": True},
                         "resources": {"subscribe": False},
                     },
-                    "serverInfo": {"name": "playwright-http", "version": "2.0"},
-                },
-            }
-        )
-        mock_response.headers = {}
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
+                )
+            return _route_post(*args, **kwargs)
 
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock(return_value=None)
+        mock_client = _make_http_client(side_effect=route_with_capabilities)
 
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             await session.connect()
 
         assert session.server_info is not None
@@ -245,23 +317,11 @@ class TestMCPHTTPTransportToolOperations:
 
         def track_request(*args, **kwargs):
             requests_sent.append(kwargs)
-            method = kwargs.get("json", {}).get("method")
-            if method == "initialize":
-                return _make_init_response()
-            if method == "notifications/initialized":
-                # Return a simple response for notification
-                mock = MagicMock()
-                mock.status = 200
-                mock.__aenter__ = AsyncMock(return_value=mock)
-                mock.__aexit__ = AsyncMock(return_value=None)
-                return mock
-            return _make_tools_list_response()
+            return _route_post(**kwargs)
 
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(side_effect=track_request)
-        mock_client.close = AsyncMock(return_value=None)
+        mock_client = _make_http_client(side_effect=track_request)
 
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             await session.connect()
             await session.list_tools()
 
@@ -292,25 +352,11 @@ class TestMCPHTTPTransportToolOperations:
 
         def track_request(*args, **kwargs):
             requests_sent.append(kwargs)
-            method = kwargs.get("json", {}).get("method")
-            if method == "initialize":
-                return _make_init_response()
-            if method == "notifications/initialized":
-                # Return a simple response for notification
-                mock = MagicMock()
-                mock.status = 200
-                mock.__aenter__ = AsyncMock(return_value=mock)
-                mock.__aexit__ = AsyncMock(return_value=None)
-                return mock
-            if method == "tools/call":
-                return _make_tools_call_response()
-            return _make_tools_list_response()
+            return _route_post(**kwargs)
 
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(side_effect=track_request)
-        mock_client.close = AsyncMock(return_value=None)
+        mock_client = _make_http_client(side_effect=track_request)
 
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             await session.connect()
             await session.call_tool("screenshot", {"url": "https://example.com"})
 
@@ -345,17 +391,19 @@ class TestMCPHTTPTransportErrorHandling:
 
         session = MCPClientSession(config)
 
-        mock_response = MagicMock()
-        mock_response.status = 500
-        mock_response.text = AsyncMock(return_value="Internal Server Error")
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
+        # The initialize POST must return an error response
+        def route_error(*args, **kwargs):
+            method = kwargs.get("json", {}).get("method")
+            if method == "initialize":
+                return _make_http_response(
+                    status=500,
+                    text="Internal Server Error",
+                )
+            return _route_post(*args, **kwargs)
 
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock(return_value=None)
+        mock_client = _make_http_client(side_effect=route_error)
 
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             with pytest.raises(ConnectionError, match="HTTP error|status"):
                 await session.connect()
 
@@ -375,86 +423,26 @@ class TestMCPHTTPTransportErrorHandling:
 
         session = MCPClientSession(config)
 
-        mock_response = MagicMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(
-            return_value={
-                "jsonrpc": "2.0",
-                "id": "init-id",
-                "error": {
-                    "code": -32600,
-                    "message": "Invalid Request",
-                },
-            }
-        )
-        mock_response.headers = {}
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
+        # The initialize POST returns HTTP 200 but a JSON-RPC error body
+        def route_protocol_error(*args, **kwargs):
+            method = kwargs.get("json", {}).get("method")
+            if method == "initialize":
+                return _make_http_response(
+                    status=200,
+                    json_data={
+                        "jsonrpc": "2.0",
+                        "id": "init-id",
+                        "error": {
+                            "code": -32600,
+                            "message": "Invalid Request",
+                        },
+                    },
+                    headers={},
+                )
+            return _route_post(*args, **kwargs)
 
-        mock_client = MagicMock()
-        mock_client.post = MagicMock(return_value=mock_response)
-        mock_client.close = AsyncMock(return_value=None)
+        mock_client = _make_http_client(side_effect=route_protocol_error)
 
-        with patch("aiohttp.ClientSession", return_value=mock_client):
+        with patch("aiohttp.ClientSession", side_effect=lambda *a, **kw: mock_client):
             with pytest.raises(ConnectionError, match="Initialize failed"):
                 await session.connect()
-
-
-# Helper functions for creating mock responses (must be async context managers)
-def _make_init_response():
-    mock = MagicMock()
-    mock.status = 200
-    mock.json = AsyncMock(
-        return_value={
-            "jsonrpc": "2.0",
-            "id": "init-id",
-            "result": {
-                "protocolVersion": MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "test-http", "version": "1.0"},
-            },
-        }
-    )
-    mock.headers = {"MCP-Session-Id": "session-123"}
-    mock.__aenter__ = AsyncMock(return_value=mock)
-    mock.__aexit__ = AsyncMock(return_value=None)
-    return mock
-
-
-def _make_tools_list_response():
-    mock = MagicMock()
-    mock.status = 200
-    mock.json = AsyncMock(
-        return_value={
-            "jsonrpc": "2.0",
-            "id": "tools-id",
-            "result": {
-                "tools": [
-                    {"name": "screenshot", "description": "Take screenshot", "inputSchema": {}},
-                ],
-            },
-        }
-    )
-    mock.headers = {}
-    mock.__aenter__ = AsyncMock(return_value=mock)
-    mock.__aexit__ = AsyncMock(return_value=None)
-    return mock
-
-
-def _make_tools_call_response():
-    mock = MagicMock()
-    mock.status = 200
-    mock.json = AsyncMock(
-        return_value={
-            "jsonrpc": "2.0",
-            "id": "call-id",
-            "result": {
-                "content": [{"type": "text", "text": "Screenshot saved"}],
-                "isError": False,
-            },
-        }
-    )
-    mock.headers = {}
-    mock.__aenter__ = AsyncMock(return_value=mock)
-    mock.__aexit__ = AsyncMock(return_value=None)
-    return mock

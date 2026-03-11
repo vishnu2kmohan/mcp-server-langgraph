@@ -273,7 +273,7 @@ class TestRedisSessionStore:
     @pytest.fixture
     def store(self, mock_redis):
         """Create Redis session store with mocked client"""
-        with patch("redis.asyncio.from_url", return_value=mock_redis):
+        with patch("redis.asyncio.from_url", side_effect=lambda *a, **kw: mock_redis):
             store = RedisSessionStore(redis_url="redis://localhost:6379/0", default_ttl_seconds=3600)
             return store
 

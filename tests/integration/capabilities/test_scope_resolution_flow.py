@@ -16,6 +16,7 @@ import pytest
 pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="scope_resolution")]
 
 
+@pytest.mark.xdist_group("test_scope_resolution_basic")
 @pytest.mark.integration
 class TestScopeResolutionBasic:
     """Basic integration tests for scope resolution."""
@@ -65,6 +66,7 @@ class TestScopeResolutionBasic:
         assert has_higher_precedence(CapabilityScope.TASK, CapabilityScope.SESSION)
 
 
+@pytest.mark.xdist_group("test_capability_provider_flow")
 @pytest.mark.integration
 class TestCapabilityProviderFlow:
     """Integration tests for CapabilityProvider resolution flow."""
@@ -131,6 +133,7 @@ class TestCapabilityProviderFlow:
             assert isinstance(skills, list)
 
 
+@pytest.mark.xdist_group("test_scope_inheritance")
 @pytest.mark.integration
 class TestScopeInheritance:
     """Integration tests for scope inheritance behavior."""
@@ -179,6 +182,7 @@ class TestScopeInheritance:
         assert scopes_by_precedence[-1] == CapabilityScope.ENTERPRISE
 
 
+@pytest.mark.xdist_group("test_merge_strategies")
 @pytest.mark.integration
 class TestMergeStrategies:
     """Integration tests for capability merge strategies."""
@@ -252,6 +256,7 @@ class TestMergeStrategies:
         assert set(result) == {"tool_a", "tool_b"}
 
 
+@pytest.mark.xdist_group("test_end_to_end_scope_resolution")
 @pytest.mark.integration
 class TestEndToEndScopeResolution:
     """End-to-end integration tests for scope resolution."""

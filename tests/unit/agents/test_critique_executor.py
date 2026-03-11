@@ -71,6 +71,22 @@ class TestCritiqueResult:
 class TestCritiqueExecutor:
     """Tests for CritiqueExecutor multi-pass loop."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_otel(self):
+        """Isolate OTEL instruments from global state contamination in xdist workers.
+
+        Module-level OTEL instruments (tracer, counters, histograms) can become stale
+        when another test in the same worker shuts down the meter/tracer provider.
+        Patching them ensures tests don't depend on global OTEL lifecycle.
+        """
+        with (
+            patch("mcp_server_langgraph.agents.critique_executor.tracer", MagicMock()),
+            patch("mcp_server_langgraph.agents.critique_executor.critique_rounds_counter", MagicMock()),
+            patch("mcp_server_langgraph.agents.critique_executor.critique_latency_histogram", MagicMock()),
+            patch("mcp_server_langgraph.agents.critique_executor.critique_approval_counter", MagicMock()),
+        ):
+            yield
+
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -329,6 +345,17 @@ class TestCritiqueExecutor:
 @pytest.mark.xdist_group(name="critique_executor")
 class TestCritiqueExecutorMetrics:
     """Tests for OTEL metrics emission."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_otel(self):
+        """Isolate OTEL instruments from global state contamination in xdist workers."""
+        with (
+            patch("mcp_server_langgraph.agents.critique_executor.tracer", MagicMock()),
+            patch("mcp_server_langgraph.agents.critique_executor.critique_rounds_counter", MagicMock()),
+            patch("mcp_server_langgraph.agents.critique_executor.critique_latency_histogram", MagicMock()),
+            patch("mcp_server_langgraph.agents.critique_executor.critique_approval_counter", MagicMock()),
+        ):
+            yield
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""

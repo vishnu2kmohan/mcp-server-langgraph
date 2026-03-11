@@ -88,7 +88,7 @@ security: ## Run security scans (tfsec and trivy)
 	@echo "$(CYAN)Running tfsec...$(NC)"
 	@tfsec . --minimum-severity MEDIUM || { echo "$(RED)✗ tfsec found security issues$(NC)"; exit 1; }
 	@echo "$(CYAN)Running trivy config scan...$(NC)"
-	@trivy config . --severity CRITICAL,HIGH --exit-code 1 --quiet || { echo "$(RED)✗ trivy found security issues$(NC)"; exit 1; }
+	@trivy config . --severity CRITICAL,HIGH --exit-code 1 --quiet --ignorefile .trivyignore || { echo "$(RED)✗ trivy found security issues$(NC)"; exit 1; }
 	@echo "$(GREEN)✓ Security scans passed$(NC)"
 
 security-report: ## Generate detailed security report
@@ -98,8 +98,8 @@ security-report: ## Generate detailed security report
 	@tfsec . --format json > reports/tfsec-report.json || true
 	@tfsec . --format sarif > reports/tfsec-report.sarif || true
 	@echo "Running trivy..."
-	@trivy config . --severity CRITICAL,HIGH --format json --output reports/trivy-terraform-report.json || true
-	@trivy config . --severity CRITICAL,HIGH --output reports/trivy-terraform-report.txt || true
+	@trivy config . --severity CRITICAL,HIGH --format json --output reports/trivy-terraform-report.json --ignorefile .trivyignore || true
+	@trivy config . --severity CRITICAL,HIGH --output reports/trivy-terraform-report.txt --ignorefile .trivyignore || true
 	@echo "$(GREEN)✓ Reports generated in ./reports/$(NC)"
 
 docs: ## Generate documentation for all modules

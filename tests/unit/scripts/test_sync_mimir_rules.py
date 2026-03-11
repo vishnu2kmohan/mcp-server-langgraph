@@ -110,6 +110,12 @@ class TestAlertRuleUniqueness:
             duplicate_msg = "\n".join(f"  Alert '{name}': {files}" for name, files in duplicates.items())
             pytest.fail(f"Found {len(duplicates)} duplicate alert names in Mimir rules:\n{duplicate_msg}")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAlertRuleSync:
     """Tests to ensure canonical rules are synced to Mimir."""
@@ -221,6 +227,12 @@ class TestAlertRuleSync:
                 + "\n\nRun: ./scripts/sync-mimir-rules.sh"
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAlertRuleFormat:
     """Tests to validate alert rule format and content."""
@@ -293,6 +305,12 @@ class TestAlertRuleFormat:
                 + ("\n  ..." if len(missing_labels) > 20 else "")
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSyncMimirRulesScript:
     """Tests for the sync-mimir-rules.sh script."""
@@ -334,6 +352,12 @@ class TestSyncMimirRulesScript:
             f"Output: {result.stdout}\n"
             f"Stderr: {result.stderr}"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestSyncMimirRulesWithTempDirs:
@@ -446,3 +470,9 @@ class TestSyncMimirRulesWithTempDirs:
 
         assert result.returncode == 1
         assert "out of sync" in result.stdout.lower()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

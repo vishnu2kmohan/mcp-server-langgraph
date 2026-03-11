@@ -53,23 +53,38 @@ function filterMotionProps<T extends Record<string, unknown>>(props: T): T {
 // =============================================================================
 const mockTrackBypassApproval = vi.fn();
 
-vi.mock("../contexts/TelemetryContext", () => ({
-  useSessionTelemetry: () => ({
-    trackExecutionModeChange: vi.fn(),
-    trackBypassApproval: mockTrackBypassApproval,
-    trackSessionCreation: vi.fn(),
-    trackRevalidation: vi.fn(),
-    trackSync: vi.fn(),
-    trackArtifactSave: vi.fn(),
-    trackArtifactDelete: vi.fn(),
-    trackSuggestionAction: vi.fn(),
-    trackCanvasAction: vi.fn(),
-    getMetrics: vi.fn(),
-    getHistory: vi.fn(),
-    reset: vi.fn(),
-  }),
-}));
-
+vi.mock("../contexts/TelemetryContext", async () => {
+  const actual = await vi.importActual("../contexts/TelemetryContext");
+  return {
+    ...actual,
+    useSessionTelemetry: () => ({
+      trackExecutionModeChange: vi.fn(),
+      trackBypassApproval: mockTrackBypassApproval,
+      trackSessionCreation: vi.fn(),
+      trackRevalidation: vi.fn(),
+      trackSync: vi.fn(),
+      trackArtifactSave: vi.fn(),
+      trackArtifactDelete: vi.fn(),
+      trackSuggestionAction: vi.fn(),
+      trackCanvasAction: vi.fn(),
+      getMetrics: vi.fn(),
+      getHistory: vi.fn(),
+      reset: vi.fn(),
+    }),
+    useWebVitals: () => ({
+      start: vi.fn(),
+      stop: vi.fn(),
+      getMetrics: () => ({ fcp: null, lcp: null, cls: null, inp: null }),
+    }),
+    useTelemetry: () => ({
+      sessionTelemetry: {
+        trackSessionCreation: vi.fn(),
+        getMetrics: () => ({}),
+      },
+      webVitals: { start: vi.fn(), stop: vi.fn(), getMetrics: () => ({}) },
+    }),
+  };
+});
 // Mock motion/react to avoid animation issues in tests
 vi.mock("motion/react", () => ({
   motion: {

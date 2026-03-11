@@ -121,7 +121,7 @@ class TestListPendingPlans:
         # Patch the get_plan_repo and get_current_user
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_pending_plans(current_user=mock_user)
 
@@ -152,7 +152,7 @@ class TestListPendingPlans:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_pending_plans(current_user=mock_user)
 
@@ -177,7 +177,7 @@ class TestGetPlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await get_plan(plan_id=sample_pending_plan.plan_id, current_user=mock_user)
 
@@ -192,7 +192,7 @@ class TestGetPlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
                 await get_plan(plan_id="nonexistent", current_user=mock_user)
@@ -216,7 +216,7 @@ class TestApprovePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await approve_plan(
                 plan_id=sample_pending_plan.plan_id,
@@ -236,7 +236,7 @@ class TestApprovePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
                 await approve_plan(
@@ -269,7 +269,7 @@ class TestApprovePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
                 await approve_plan(
@@ -302,7 +302,7 @@ class TestRejectPlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await reject_plan(
                 plan_id=sample_pending_plan.plan_id,
@@ -329,7 +329,7 @@ class TestRejectPlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
                 await reject_plan(
@@ -368,7 +368,7 @@ class TestRejectPlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
                 await reject_plan(
@@ -412,7 +412,7 @@ class TestListBySession:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_session_plans(session_id="session-456", current_user=mock_user)
 
@@ -476,11 +476,11 @@ class TestSaveAsTemplate:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_template_repo",
-                return_value=template_repo,
+                side_effect=lambda: template_repo,
             ):
                 result = await save_as_template(
                     plan_id=sample_approved_plan.plan_id,
@@ -514,11 +514,11 @@ class TestSaveAsTemplate:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_template_repo",
-                return_value=template_repo,
+                side_effect=lambda: template_repo,
             ):
                 with pytest.raises(HTTPException) as exc_info:
                     await save_as_template(
@@ -554,11 +554,11 @@ class TestSaveAsTemplate:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_template_repo",
-                return_value=template_repo,
+                side_effect=lambda: template_repo,
             ):
                 with pytest.raises(HTTPException) as exc_info:
                     await save_as_template(
@@ -591,11 +591,11 @@ class TestSaveAsTemplate:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_template_repo",
-                return_value=template_repo,
+                side_effect=lambda: template_repo,
             ):
                 result = await save_as_template(
                     plan_id=sample_approved_plan.plan_id,
@@ -630,11 +630,11 @@ class TestSaveAsTemplate:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with patch(
                 "mcp_server_langgraph.api.v1.execution_plans.get_template_repo",
-                return_value=template_repo,
+                side_effect=lambda: template_repo,
             ):
                 result = await save_as_template(
                     plan_id=sample_approved_plan.plan_id,
@@ -666,7 +666,7 @@ class TestUpdatePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await update_plan(
                 plan_id=sample_pending_plan.plan_id,
@@ -693,7 +693,7 @@ class TestUpdatePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await update_plan(
                 plan_id=modified_plan.plan_id,
@@ -721,7 +721,7 @@ class TestUpdatePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
                 await update_plan(
@@ -748,7 +748,7 @@ class TestUpdatePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await update_plan(
                 plan_id=sample_pending_plan.plan_id,
@@ -786,7 +786,7 @@ class TestUpdatePlan:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             with pytest.raises(HTTPException) as exc_info:
                 await update_plan(
@@ -834,7 +834,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_all_plans(admin_user=mock_user)
 
@@ -863,7 +863,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_all_plans(admin_user=mock_user, limit=3)
 
@@ -891,7 +891,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_all_plans(admin_user=mock_user, offset=2)
 
@@ -919,7 +919,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             # Request limit > 1000, should be capped internally
             result = await list_all_plans(admin_user=mock_user, limit=2000)
@@ -948,7 +948,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             # Request offset > 100000, should be capped and return empty
             result = await list_all_plans(admin_user=mock_user, offset=200000)
@@ -977,7 +977,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             # Negative limit should be clamped to 0, returning empty list
             result = await list_all_plans(admin_user=mock_user, limit=-1)
@@ -1007,7 +1007,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             # Negative offset should be clamped to 0, starting from beginning
             result = await list_all_plans(admin_user=mock_user, offset=-10)
@@ -1022,7 +1022,7 @@ class TestAdminListAll:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_all_plans(admin_user=mock_user)
 
@@ -1402,7 +1402,7 @@ class TestAdminListAllUsesAdminResponse:
 
         with patch(
             "mcp_server_langgraph.api.v1.execution_plans.get_plan_repo",
-            return_value=mock_repo,
+            side_effect=lambda: mock_repo,
         ):
             result = await list_all_plans(admin_user=mock_user)
 

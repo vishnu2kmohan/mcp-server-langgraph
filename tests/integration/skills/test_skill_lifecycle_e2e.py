@@ -190,6 +190,7 @@ def skill_search_tool(
     )
 
 
+@pytest.mark.xdist_group("test_skill_lifecycle_e2_e")
 class TestSkillLifecycleE2E:
     """E2E tests for complete skill lifecycle."""
 

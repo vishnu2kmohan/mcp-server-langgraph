@@ -35,18 +35,18 @@ describe("Cost/lazy exports", () => {
 });
 
 describe("Cost/index exports", () => {
-  it("exports OrganizationCostDashboard", async () => {
-    const { OrganizationCostDashboard } = await import("./index");
-    expect(OrganizationCostDashboard).toBeDefined();
+  it("exports LazyOrganizationCostDashboard", async () => {
+    const { LazyOrganizationCostDashboard } = await import("./index");
+    expect(LazyOrganizationCostDashboard).toBeDefined();
   });
 
-  it("exports BudgetStatusCard", async () => {
-    const { BudgetStatusCard } = await import("./index");
-    expect(BudgetStatusCard).toBeDefined();
+  it("exports LazyBudgetStatusCard", async () => {
+    const { LazyBudgetStatusCard } = await import("./index");
+    expect(LazyBudgetStatusCard).toBeDefined();
   });
 
-  it("exports BudgetForecastChart", async () => {
-    const { BudgetForecastChart } = await import("./index");
-    expect(BudgetForecastChart).toBeDefined();
+  it("exports LazyBudgetForecastChart", async () => {
+    const { LazyBudgetForecastChart } = await import("./index");
+    expect(LazyBudgetForecastChart).toBeDefined();
   });
 });

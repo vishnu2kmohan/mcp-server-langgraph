@@ -470,7 +470,7 @@ class TestPostgresDriver:
 
     async def test_cancel_with_mock_pool(self):
         mock_pool = AsyncMock()  # noqa: async-mock-config
-        mock_pool.fetchval = AsyncMock(return_value=True)
+        mock_pool.fetchval = AsyncMock(side_effect=lambda *a, **kw: True)
 
         driver = PostgresDriver(pool=mock_pool)
         # Simulate an active query PID
@@ -483,11 +483,11 @@ class TestPostgresDriver:
     async def test_execute_with_mock_connection(self):
         mock_record = {"id": 1, "name": "alice"}
         mock_conn = AsyncMock()  # noqa: async-mock-config
-        mock_conn.fetch = AsyncMock(return_value=[mock_record])
-        mock_conn.get_server_pid = MagicMock(return_value=42)
+        mock_conn.fetch = AsyncMock(side_effect=lambda *a, **kw: [mock_record])
+        mock_conn.get_server_pid = MagicMock(side_effect=lambda *a, **kw: 42)
 
         mock_pool = AsyncMock()  # noqa: async-mock-config
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
+        mock_pool.acquire = AsyncMock(side_effect=lambda *a, **kw: mock_conn)
 
         driver = PostgresDriver(pool=mock_pool)
         await driver.connect()
@@ -499,11 +499,11 @@ class TestPostgresDriver:
     async def test_execute_with_params(self):
         mock_record = {"id": 1}
         mock_conn = AsyncMock()  # noqa: async-mock-config
-        mock_conn.fetch = AsyncMock(return_value=[mock_record])
-        mock_conn.get_server_pid = MagicMock(return_value=42)
+        mock_conn.fetch = AsyncMock(side_effect=lambda *a, **kw: [mock_record])
+        mock_conn.get_server_pid = MagicMock(side_effect=lambda *a, **kw: 42)
 
         mock_pool = AsyncMock()  # noqa: async-mock-config
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
+        mock_pool.acquire = AsyncMock(side_effect=lambda *a, **kw: mock_conn)
 
         driver = PostgresDriver(pool=mock_pool)
         await driver.connect()
@@ -518,11 +518,11 @@ class TestPostgresDriver:
 
     async def test_is_healthy_after_connect(self):
         mock_conn = AsyncMock()  # noqa: async-mock-config
-        mock_conn.is_closed = MagicMock(return_value=False)
-        mock_conn.get_server_pid = MagicMock(return_value=42)
+        mock_conn.is_closed = MagicMock(side_effect=lambda *a, **kw: False)
+        mock_conn.get_server_pid = MagicMock(side_effect=lambda *a, **kw: 42)
 
         mock_pool = AsyncMock()  # noqa: async-mock-config
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
+        mock_pool.acquire = AsyncMock(side_effect=lambda *a, **kw: mock_conn)
 
         driver = PostgresDriver(pool=mock_pool)
         await driver.connect()
@@ -530,9 +530,9 @@ class TestPostgresDriver:
 
     async def test_close_releases_to_pool(self):
         mock_conn = AsyncMock()  # noqa: async-mock-config
-        mock_conn.get_server_pid = MagicMock(return_value=42)
+        mock_conn.get_server_pid = MagicMock(side_effect=lambda *a, **kw: 42)
         mock_pool = AsyncMock()  # noqa: async-mock-config
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
+        mock_pool.acquire = AsyncMock(side_effect=lambda *a, **kw: mock_conn)
         mock_pool.release = AsyncMock()  # noqa: async-mock-config
 
         driver = PostgresDriver(pool=mock_pool)
@@ -651,7 +651,7 @@ class TestSnowflakeDriver:
         mock_cancel_cursor.close = MagicMock()
 
         mock_conn = MagicMock()
-        mock_conn.cursor = MagicMock(return_value=mock_cancel_cursor)
+        mock_conn.cursor = MagicMock(side_effect=lambda *a, **kw: mock_cancel_cursor)
 
         driver = SnowflakeDriver(connection=mock_conn)
         driver._healthy = True
@@ -677,7 +677,7 @@ class TestSnowflakeDriver:
     @pytest.mark.skipif(not _HAS_SNOWFLAKE_DRIVER, reason="Snowflake driver not available")
     async def test_connect_validates_connection(self, mock_snowflake_module):
         mock_conn = MagicMock()
-        mock_conn.is_closed = MagicMock(return_value=False)
+        mock_conn.is_closed = MagicMock(side_effect=lambda *a, **kw: False)
 
         driver = SnowflakeDriver(connection=mock_conn)
         await driver.connect()
@@ -879,12 +879,12 @@ class TestMySQLDriver:
     async def test_cancel_with_mock_connection(self):
         mock_cancel_conn = AsyncMock()  # noqa: async-mock-config
         mock_cancel_cursor = AsyncMock()  # noqa: async-mock-config
-        mock_cancel_conn.cursor = MagicMock(return_value=mock_cancel_cursor)
-        mock_cancel_cursor.__aenter__ = AsyncMock(return_value=mock_cancel_cursor)
-        mock_cancel_cursor.__aexit__ = AsyncMock(return_value=False)
+        mock_cancel_conn.cursor = MagicMock(side_effect=lambda *a, **kw: mock_cancel_cursor)
+        mock_cancel_cursor.__aenter__ = AsyncMock(side_effect=lambda *a, **kw: mock_cancel_cursor)
+        mock_cancel_cursor.__aexit__ = AsyncMock(side_effect=lambda *a, **kw: False)
 
         mock_pool = AsyncMock()  # noqa: async-mock-config
-        mock_pool.acquire = AsyncMock(return_value=mock_cancel_conn)
+        mock_pool.acquire = AsyncMock(side_effect=lambda *a, **kw: mock_cancel_conn)
         mock_pool.release = MagicMock()
 
         driver = MySQLDriver(pool=mock_pool)
@@ -897,7 +897,7 @@ class TestMySQLDriver:
     async def test_close_releases_to_pool(self):
         mock_conn = AsyncMock()  # noqa: async-mock-config
         mock_pool = AsyncMock()  # noqa: async-mock-config
-        mock_pool.acquire = AsyncMock(return_value=mock_conn)
+        mock_pool.acquire = AsyncMock(side_effect=lambda *a, **kw: mock_conn)
         mock_pool.release = MagicMock()
 
         driver = MySQLDriver(pool=mock_pool)

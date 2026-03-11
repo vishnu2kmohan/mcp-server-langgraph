@@ -100,8 +100,8 @@ class TestMDXParsing:
         errors = []
 
         for doc_file in all_files:
-            # Skip template files
-            if ".mintlify/templates" in str(doc_file):
+            # Skip template files and node_modules (third-party dependencies)
+            if ".mintlify/templates" in str(doc_file) or "node_modules" in str(doc_file):
                 continue
 
             content = doc_file.read_text()

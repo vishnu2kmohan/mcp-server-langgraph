@@ -38,6 +38,12 @@ class TestSQLTranspilerBasic:
         ast2 = transpiler.parse_cached("SELECT 1", "postgres")
         assert ast1 is ast2  # Same cached object
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSQLTranspilerValidation:
     @pytest.fixture
@@ -62,6 +68,12 @@ class TestSQLTranspilerValidation:
         )
         # COPY is blocked in snowflake dialect
         assert not result.is_valid
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestSQLTranspilerDialectPairs:
@@ -125,6 +137,12 @@ class TestSQLTranspilerDialectPairs:
         )
         assert result
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestSQLTranspilerRevalidation:
     @pytest.fixture
@@ -151,3 +169,9 @@ class TestSQLTranspilerRevalidation:
             assert not result.is_valid
         except SQLTranspileError:
             pass  # Also acceptable - transpilation itself rejected it
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

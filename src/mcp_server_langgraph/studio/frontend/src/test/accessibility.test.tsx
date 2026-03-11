@@ -28,15 +28,18 @@ const createTestStore = () => {
 };
 
 // Mock the API hook
-vi.mock("../api", () => ({
-  useSubmitFeedbackMutation: vi.fn(() => [
-    vi
-      .fn()
-      .mockReturnValue({ unwrap: () => Promise.resolve({ success: true }) }),
-    { isLoading: false, isSuccess: false },
-  ]),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useSubmitFeedbackMutation: vi.fn(() => [
+      vi
+        .fn()
+        .mockReturnValue({ unwrap: () => Promise.resolve({ success: true }) }),
+      { isLoading: false, isSuccess: false },
+    ]),
+  };
+});
 const renderWithStore = (component: React.ReactNode) => {
   const store = createTestStore();
   return {

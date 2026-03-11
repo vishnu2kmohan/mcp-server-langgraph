@@ -82,7 +82,7 @@ class TestBootstrapCacheWarming:
 
         with patch(
             "mcp_server_langgraph.bootstrap.security.get_semantic_index_manager",
-            return_value=mock_manager,
+            side_effect=lambda *a, **kw: mock_manager,
         ):
             from mcp_server_langgraph.bootstrap.security import warm_semantic_cache
 
@@ -106,7 +106,7 @@ class TestBootstrapCacheWarming:
 
         with patch(
             "mcp_server_langgraph.bootstrap.security.get_semantic_index_manager",
-            return_value=mock_manager,
+            side_effect=lambda *a, **kw: mock_manager,
         ):
             from mcp_server_langgraph.bootstrap.security import warm_semantic_cache
 

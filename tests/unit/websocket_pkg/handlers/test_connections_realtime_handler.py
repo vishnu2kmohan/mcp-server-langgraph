@@ -37,7 +37,7 @@ class TestConnectionsRealtimeHandlerInit:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         assert handler._connection_service is mock_service
@@ -55,7 +55,7 @@ class TestConnectionsRealtimeHandlerInit:
         mock_service = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
@@ -83,7 +83,7 @@ class TestConnectionsRealtimeHandlerLifecycle:
             {"id": "conn-2", "name": "Connection 2", "status": "unhealthy"},
         ]
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -109,7 +109,7 @@ class TestConnectionsRealtimeHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         handler.subscriptions = {"conn-1", "conn-2"}
@@ -144,7 +144,7 @@ class TestConnectionsRealtimeHandlerMessages:
             "status": "healthy",
         }
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={"connection_id": "conn-1"})
@@ -167,7 +167,7 @@ class TestConnectionsRealtimeHandlerMessages:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={})
@@ -189,7 +189,7 @@ class TestConnectionsRealtimeHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_connection.return_value = None
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={"connection_id": "nonexistent"})
@@ -211,7 +211,7 @@ class TestConnectionsRealtimeHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_connection.side_effect = Exception("Database error")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={"connection_id": "conn-1"})
@@ -232,7 +232,7 @@ class TestConnectionsRealtimeHandlerMessages:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_all", id="msg-1")
@@ -253,7 +253,7 @@ class TestConnectionsRealtimeHandlerMessages:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         handler.subscriptions = {"conn-1", "conn-2"}
@@ -282,7 +282,7 @@ class TestConnectionsRealtimeHandlerMessages:
             "last_checked": "2024-01-01T00:00:00Z",
         }
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="request_health_check", id="msg-1", payload={"connection_id": "conn-1"})
@@ -303,7 +303,7 @@ class TestConnectionsRealtimeHandlerMessages:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="request_health_check", id="msg-1", payload={})
@@ -325,7 +325,7 @@ class TestConnectionsRealtimeHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_connection_health.side_effect = Exception("Service unavailable")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="request_health_check", id="msg-1", payload={"connection_id": "conn-1"})
@@ -346,7 +346,7 @@ class TestConnectionsRealtimeHandlerMessages:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         message = MessageEnvelope(type="invalid", id="msg-1")
@@ -375,7 +375,7 @@ class TestConnectionsRealtimeHandlerPush:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -398,7 +398,7 @@ class TestConnectionsRealtimeHandlerPush:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -421,7 +421,7 @@ class TestConnectionsRealtimeHandlerPush:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -446,7 +446,7 @@ class TestConnectionsRealtimeHandlerPush:
         config = WebSocketConfig(endpoint_name="connections-realtime")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionsRealtimeHandler(config=config, connection_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config

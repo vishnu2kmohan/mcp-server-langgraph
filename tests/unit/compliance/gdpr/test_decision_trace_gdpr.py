@@ -91,7 +91,7 @@ class TestDataExportServiceDecisionTraces:
 
         service = DataExportService()
 
-        with patch.object(service, "_get_decision_trace_repository", return_value=mock_repo):
+        with patch.object(service, "_get_decision_trace_repository", side_effect=lambda *a, **kw: mock_repo):
             traces = await service._get_user_decision_traces("user:alice")
 
         assert len(traces) == 1
@@ -129,7 +129,7 @@ class TestDataDeletionServiceDecisionTraces:
 
         service = DataDeletionService()
 
-        with patch.object(service, "_get_decision_trace_repository", return_value=mock_repo):
+        with patch.object(service, "_get_decision_trace_repository", side_effect=lambda *a, **kw: mock_repo):
             count = await service._delete_decision_traces("user:alice")
 
         assert count == 5

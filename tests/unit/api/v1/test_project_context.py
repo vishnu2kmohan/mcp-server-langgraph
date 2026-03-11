@@ -136,6 +136,12 @@ class TestGetContext:
         assert data["exists"] is False
         assert data["content"] == ""
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # ==============================================================================
 # PUT /context Tests
@@ -193,6 +199,12 @@ class TestUpdateContext:
 
         assert response.status_code == 422
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # ==============================================================================
 # DELETE /context Tests
@@ -217,6 +229,12 @@ class TestDeleteContext:
 
         assert response.status_code == 404
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # ==============================================================================
 # Response Format Tests
@@ -238,3 +256,9 @@ class TestContextResponse:
         assert "path" in data
         assert "exists" in data
         assert "last_modified" in data
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

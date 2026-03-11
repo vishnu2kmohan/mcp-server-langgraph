@@ -62,7 +62,7 @@ class TestRouterOutputNewFields:
             confidence=0.9,
         )
 
-        assert output.skills_needed == []
+        assert output.skills_needed is None
 
     def test_router_output_has_execution_mode_field(self) -> None:
         """Test RouterOutput has execution_mode field."""
@@ -209,7 +209,7 @@ class TestRouterOutputBackwardCompatibility:
         )
 
         # New fields should have defaults that match current behavior
-        assert output.skills_needed == []
+        assert output.skills_needed is None
         assert output.execution_mode == "tool_calling"
         assert output.routing_rationale == ""
 
@@ -223,7 +223,7 @@ class TestRouterOutputBackwardCompatibility:
         assert hasattr(DEFAULT_ROUTER_OUTPUT, "routing_rationale")
 
         # Defaults should be backward-compatible
-        assert DEFAULT_ROUTER_OUTPUT.skills_needed == []
+        assert DEFAULT_ROUTER_OUTPUT.skills_needed is None
         assert DEFAULT_ROUTER_OUTPUT.execution_mode == "tool_calling"
         assert DEFAULT_ROUTER_OUTPUT.routing_rationale == ""
 
@@ -332,6 +332,6 @@ class TestRouterOutputJsonParsing:
         output = RouterOutput.model_validate_json(json_str)
 
         # Should use defaults
-        assert output.skills_needed == []
+        assert output.skills_needed is None
         assert output.execution_mode == "tool_calling"
         assert output.routing_rationale == ""

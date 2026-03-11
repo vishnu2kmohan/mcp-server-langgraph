@@ -952,7 +952,7 @@ async def logout(
     # (Token was already verified by auth middleware before reaching this endpoint)
     try:
         # Decode without verification - we just need the claims
-        payload = jwt.decode(access_token, options={"verify_signature": False})
+        payload = jwt.decode(access_token, options={"verify_signature": False})  # nosemgrep: unverified-jwt-decode
         jti = payload.get("jti")
         exp = payload.get("exp")
 

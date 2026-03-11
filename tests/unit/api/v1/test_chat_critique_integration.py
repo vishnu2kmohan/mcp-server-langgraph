@@ -96,7 +96,7 @@ class TestChatCritiqueIntegration:
             ),
             patch(
                 "mcp_server_langgraph.agents.router_agent.select_executor_critic",
-                return_value=("gemini-3-flash", "claude-haiku"),
+                side_effect=lambda *a, **kw: ("gemini-3-flash", "claude-haiku"),
             ),
         ):
             events = []
@@ -302,7 +302,7 @@ class TestChatCritiqueIntegration:
             ),
             patch(
                 "mcp_server_langgraph.agents.router_agent.select_executor_critic",
-                return_value=("vertex_ai/gemini-3-pro-preview", "vertex_ai/claude-sonnet-4-5@20250929"),
+                side_effect=lambda *a, **kw: ("vertex_ai/gemini-3-pro-preview", "vertex_ai/claude-sonnet-4-5@20250929"),
             ),
         ):
             events = []

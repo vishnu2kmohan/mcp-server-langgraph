@@ -57,7 +57,7 @@ class TestAdminAuditLogsEndpoint:
         # other tests may have set DATABASE_URL.
         self._session_maker_patcher = patch(
             "mcp_server_langgraph.database.session.get_session_maker",
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         )
         self._session_maker_patcher.start()
 
@@ -292,7 +292,7 @@ class TestAuditLogResponseModels:
         # Patch get_session_maker at the source to prevent ANY database connection attempts
         self._session_maker_patcher = patch(
             "mcp_server_langgraph.database.session.get_session_maker",
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         )
         self._session_maker_patcher.start()
 

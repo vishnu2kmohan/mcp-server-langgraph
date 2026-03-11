@@ -35,7 +35,7 @@ class TestAlertHandlerInit:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         assert handler._broadcaster is mock_broadcaster
@@ -51,7 +51,7 @@ class TestAlertHandlerInit:
         mock_broadcaster = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
@@ -73,7 +73,7 @@ class TestAlertHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         user = AuthUser(id="user-123", username="testuser")
@@ -92,7 +92,7 @@ class TestAlertHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -114,7 +114,7 @@ class TestAlertHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         handler._subscribed = False
@@ -140,7 +140,7 @@ class TestAlertHandlerMessages:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -165,7 +165,7 @@ class TestAlertHandlerMessages:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -189,7 +189,7 @@ class TestAlertHandlerMessages:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -214,7 +214,7 @@ class TestAlertHandlerMessages:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         handler._subscribed = False
@@ -239,7 +239,7 @@ class TestAlertHandlerMessages:
             {"id": "alert-2", "message": "Another alert"},
         ]
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="get_recent", id="msg-3", payload={"limit": 5})
@@ -262,7 +262,7 @@ class TestAlertHandlerMessages:
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_broadcaster.get_recent_alerts.return_value = []
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="get_recent", id="msg-4")
@@ -282,7 +282,7 @@ class TestAlertHandlerMessages:
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_broadcaster.get_recent_alerts.side_effect = Exception("Database error")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="get_recent", id="msg-5")
@@ -302,7 +302,7 @@ class TestAlertHandlerMessages:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="unknown_type", id="msg-6")
@@ -330,7 +330,7 @@ class TestAlertHandlerPush:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -354,7 +354,7 @@ class TestAlertHandlerPush:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -375,7 +375,7 @@ class TestAlertHandlerPush:
         config = WebSocketConfig(endpoint_name="alerts")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AlertHandler(config=config, broadcaster=mock_broadcaster)
 
         handler._subscribed = True

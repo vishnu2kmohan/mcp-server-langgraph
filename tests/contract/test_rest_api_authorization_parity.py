@@ -110,6 +110,7 @@ def extract_dynamic_authz_resources(dependencies_path: Path) -> list[tuple[str, 
     return results
 
 
+@pytest.mark.xdist_group("test_rest_api_authorization_tuple_parity")
 class TestRestApiAuthorizationTupleParity:
     """
     Validate that REST API endpoints with static authorization requirements
@@ -251,7 +252,14 @@ class TestRestApiAuthorizationTupleParity:
         # Alice (as compliance-officer sub-persona) should have access
         assert "user:alice" in users, "Alice (compliance-officer) should have compliance access"  # Safe: OpenFGA sample tuples
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_rest_api_dynamic_resources")
 class TestRestApiDynamicResources:
     """Validate dynamic resource authorization patterns."""
 
@@ -298,3 +306,9 @@ class TestRestApiDynamicResources:
         skill_tuples = [t for t in tuples if t.get("object", "").startswith("skill:")]
 
         assert len(skill_tuples) >= 1, f"Expected at least 1 skill tuple, found {len(skill_tuples)}"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

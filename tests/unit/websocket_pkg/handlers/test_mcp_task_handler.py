@@ -57,7 +57,7 @@ class TestMCPTaskWebSocketHandlerInit:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         assert handler._mcp_service is mock_service
@@ -74,7 +74,7 @@ class TestMCPTaskWebSocketHandlerInit:
         mock_service = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
@@ -102,7 +102,7 @@ class TestMCPTaskWebSocketHandlerLifecycle:
             MockTask("task-2", "pending"),
         ]
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -128,7 +128,7 @@ class TestMCPTaskWebSocketHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         handler.subscriptions = {"task-1", "task-2"}
@@ -157,7 +157,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_task.return_value = MockTask("task-1", "running")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={"task_id": "task-1"})
@@ -180,7 +180,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={})
@@ -202,7 +202,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_task.return_value = None
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={"task_id": "nonexistent"})
@@ -224,7 +224,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_task.side_effect = Exception("Database error")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={"task_id": "task-1"})
@@ -245,7 +245,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         handler.subscriptions = {"task-1", "task-2"}
@@ -273,7 +273,7 @@ class TestMCPTaskWebSocketHandlerMessages:
             MockTask("task-2", "running"),
         ]
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         message = MessageEnvelope(type="refresh", id="msg-1")
@@ -296,7 +296,7 @@ class TestMCPTaskWebSocketHandlerMessages:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         message = MessageEnvelope(type="invalid", id="msg-1")
@@ -324,7 +324,7 @@ class TestMCPTaskWebSocketHandlerConversion:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         task = MockTask("task-123", "running")
@@ -348,7 +348,7 @@ class TestMCPTaskWebSocketHandlerConversion:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         task = MockTask("task-123")
@@ -377,7 +377,7 @@ class TestMCPTaskWebSocketHandlerPush:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -400,7 +400,7 @@ class TestMCPTaskWebSocketHandlerPush:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -423,7 +423,7 @@ class TestMCPTaskWebSocketHandlerPush:
         config = WebSocketConfig(endpoint_name="mcp-tasks")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = MCPTaskWebSocketHandler(config=config, mcp_service=mock_service)
 
         handler.subscriptions.add("task-1")

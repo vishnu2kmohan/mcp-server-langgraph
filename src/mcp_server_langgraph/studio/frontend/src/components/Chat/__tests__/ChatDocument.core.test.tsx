@@ -80,10 +80,13 @@ const mockUseFeatureFlag = vi.fn((flag: string) => {
   return false;
 });
 
-vi.mock("../../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: (flag: string) => mockUseFeatureFlag(flag),
-}));
-
+vi.mock("../../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: (flag: string) => mockUseFeatureFlag(flag),
+  };
+});
 // Mock useFollowUpSuggestions hook
 const mockSuggestions = [
   {

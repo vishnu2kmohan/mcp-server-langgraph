@@ -25,10 +25,13 @@ import { api } from "../api";
 
 // Mock feature flag hook
 const mockUseFeatureFlag = vi.fn();
-vi.mock("../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: (flag: string) => mockUseFeatureFlag(flag),
-}));
-
+vi.mock("../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: (flag: string) => mockUseFeatureFlag(flag),
+  };
+});
 // Mock useAgentRequestWebSocket - uses camelCase per ADR-0091
 const mockWebSocketReturn = {
   pendingApprovals: [] as Array<{
@@ -63,19 +66,22 @@ vi.mock("./useAgentRequestWebSocket", () => ({
 }));
 
 // Mock storage
-vi.mock("../utils/storage", () => ({
-  storage: {
-    get: vi.fn(),
-    set: vi.fn(),
-    remove: vi.fn(),
-    clear: vi.fn(),
-  },
-  getAuthToken: vi.fn(() => "test-token"),
-  STORAGE_KEYS: {
-    AUTH_TOKEN: "auth_token",
-  },
-}));
-
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    storage: {
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
+    },
+    getAuthToken: vi.fn(() => "test-token"),
+    STORAGE_KEYS: {
+      AUTH_TOKEN: "auth_token",
+    },
+  };
+});
 // Import hook after mocks
 import { useHITLDialogs } from "./useHITLDialogs";
 

@@ -24,82 +24,93 @@ import {
 } from "./useUXIntelligence";
 
 // Mock the API module
-vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            nav_prediction: {
-              predicted_items: [
-                { id: "chat", score: 0.95, reason: "Most recently used" },
-                {
-                  id: "agents",
-                  score: 0.75,
-                  reason: "Frequently accessed after chat",
-                },
-                {
-                  id: "observability",
-                  score: 0.6,
-                  reason: "Matches current workflow",
-                },
-              ],
-              current_context: "debugging_session",
-              confidence: 0.85,
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useStudioAnalyzeMutation: vi.fn(() => [
+      vi.fn(() => ({
+        unwrap: () =>
+          Promise.resolve({
+            analyses: {
+              nav_prediction: {
+                predicted_items: [
+                  { id: "chat", score: 0.95, reason: "Most recently used" },
+                  {
+                    id: "agents",
+                    score: 0.75,
+                    reason: "Frequently accessed after chat",
+                  },
+                  {
+                    id: "observability",
+                    score: 0.6,
+                    reason: "Matches current workflow",
+                  },
+                ],
+                current_context: "debugging_session",
+                confidence: 0.85,
+              },
+              contextual_help: {
+                help_topics: [
+                  {
+                    id: "agent-approval",
+                    title: "How Agent Approvals Work",
+                    summary: "Understand the HITL approval workflow",
+                    relevance: 0.92,
+                  },
+                  {
+                    id: "risk-assessment",
+                    title: "Understanding Risk Scores",
+                    summary: "Learn how risk is calculated",
+                    relevance: 0.78,
+                  },
+                ],
+                quick_actions: [
+                  {
+                    label: "View pending approvals",
+                    action: "navigate:/admin",
+                  },
+                  { label: "Check audit log", action: "navigate:/audit" },
+                ],
+                suggested_reading: ["docs/hitl-workflow.md"],
+              },
+              learning_path: {
+                current_level: "intermediate",
+                progress_percentage: 65,
+                next_steps: [
+                  {
+                    id: "step-1",
+                    title: "Configure custom agents",
+                    description:
+                      "Learn to create and configure your own agents",
+                    estimated_time_min: 15,
+                    priority: "high",
+                  },
+                  {
+                    id: "step-2",
+                    title: "Set up monitoring alerts",
+                    description: "Configure alerts for agent failures",
+                    estimated_time_min: 10,
+                    priority: "medium",
+                  },
+                ],
+                completed_items: [
+                  "basic-chat",
+                  "first-agent",
+                  "mcp-connections",
+                ],
+                recommended_features: ["batch-approvals", "audit-export"],
+              },
             },
-            contextual_help: {
-              help_topics: [
-                {
-                  id: "agent-approval",
-                  title: "How Agent Approvals Work",
-                  summary: "Understand the HITL approval workflow",
-                  relevance: 0.92,
-                },
-                {
-                  id: "risk-assessment",
-                  title: "Understanding Risk Scores",
-                  summary: "Learn how risk is calculated",
-                  relevance: 0.78,
-                },
-              ],
-              quick_actions: [
-                { label: "View pending approvals", action: "navigate:/admin" },
-                { label: "Check audit log", action: "navigate:/audit" },
-              ],
-              suggested_reading: ["docs/hitl-workflow.md"],
-            },
-            learning_path: {
-              current_level: "intermediate",
-              progress_percentage: 65,
-              next_steps: [
-                {
-                  id: "step-1",
-                  title: "Configure custom agents",
-                  description: "Learn to create and configure your own agents",
-                  estimated_time_min: 15,
-                  priority: "high",
-                },
-                {
-                  id: "step-2",
-                  title: "Set up monitoring alerts",
-                  description: "Configure alerts for agent failures",
-                  estimated_time_min: 10,
-                  priority: "medium",
-                },
-              ],
-              completed_items: ["basic-chat", "first-agent", "mcp-connections"],
-              recommended_features: ["batch-approvals", "audit-export"],
-            },
-          },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.002",
-        }),
-    })),
-    { isLoading: false },
-  ]),
-}));
-
+            cross_insights: [],
+            failed_analyses: [],
+            total_cost: "0.002",
+          }),
+      })),
+      { isLoading: false },
+    ]),
+  };
+});
 // Create test store
 const createTestStore = () =>
   configureStore({

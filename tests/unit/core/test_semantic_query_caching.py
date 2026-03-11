@@ -63,7 +63,7 @@ class TestQueryResultCaching:
         manager._query_cache[cache_key] = [cached_entry]
 
         # Search should return cached result without querying Qdrant
-        with patch.object(manager, "_check_authorization", return_value=True):
+        with patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True):
             results = await manager.search_tools(
                 query="test query",
                 user_id="user:test",
@@ -106,7 +106,7 @@ class TestQueryResultCaching:
             vector_size=384,
         )
 
-        with patch.object(manager, "_check_authorization", return_value=True):
+        with patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True):
             # First search - cache miss
             results = await manager.search_tools(
                 query="test query",
@@ -220,7 +220,7 @@ class TestQueryCacheMetrics:
         # Get initial stats
         initial_stats = manager.get_query_cache_stats()
 
-        with patch.object(manager, "_check_authorization", return_value=True):
+        with patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True):
             await manager.search_tools(query="test", user_id="user:test", limit=10)
 
         # Check hit was recorded

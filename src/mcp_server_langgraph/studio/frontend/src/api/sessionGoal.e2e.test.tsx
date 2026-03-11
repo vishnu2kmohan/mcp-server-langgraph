@@ -243,16 +243,16 @@ describe("Session Goal E2E Flow", () => {
       let setGoalResponse: Awaited<ReturnType<typeof setGoal>["unwrap"]>;
       await act(async () => {
         setGoalResponse = await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: goalText,
-          set_at: setAt,
+          setAt: setAt,
         }).unwrap();
       });
 
       // Verify goal was set
-      expect(setGoalResponse!.session_id).toBe(sessionId);
+      expect(setGoalResponse!.sessionId).toBe(sessionId);
       expect(setGoalResponse!.goal).toBe(goalText);
-      expect(setGoalResponse!.set_at).toBe(setAt);
+      expect(setGoalResponse!.setAt).toBe(setAt);
 
       // Verify stored in mock backend
       expect(sessionGoalStore.has(sessionId)).toBe(true);
@@ -272,20 +272,20 @@ describe("Session Goal E2E Flow", () => {
       >;
       await act(async () => {
         completeGoalResponse = await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: goalText,
           achieved: true,
           feedback: "All tests passing!",
-          completed_at: completedAt,
+          completedAt: completedAt,
         }).unwrap();
       });
 
       // Verify completion response
-      expect(completeGoalResponse!.session_id).toBe(sessionId);
+      expect(completeGoalResponse!.sessionId).toBe(sessionId);
       expect(completeGoalResponse!.achieved).toBe(true);
       expect(completeGoalResponse!.feedback).toBe("All tests passing!");
-      expect(completeGoalResponse!.set_at).toBe(setAt);
-      expect(completeGoalResponse!.completed_at).toBe(completedAt);
+      expect(completeGoalResponse!.setAt).toBe(setAt);
+      expect(completeGoalResponse!.completedAt).toBe(completedAt);
 
       // Verify stored completion in mock backend
       const storedGoals = sessionGoalStore.get(sessionId);
@@ -306,9 +306,9 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Implement all features",
-          set_at: setAt,
+          setAt: setAt,
         }).unwrap();
       });
 
@@ -323,11 +323,11 @@ describe("Session Goal E2E Flow", () => {
       let response: Awaited<ReturnType<typeof completeGoal>["unwrap"]>;
       await act(async () => {
         response = await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Implement all features",
           achieved: "partial",
           feedback: "Completed 80% of planned features",
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap();
       });
 
@@ -348,9 +348,9 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Complete the impossible task",
-          set_at: setAt,
+          setAt: setAt,
         }).unwrap();
       });
 
@@ -365,11 +365,11 @@ describe("Session Goal E2E Flow", () => {
       let response: Awaited<ReturnType<typeof completeGoal>["unwrap"]>;
       await act(async () => {
         response = await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Complete the impossible task",
           achieved: false,
           feedback: "Blocked by external dependencies",
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap();
       });
 
@@ -391,10 +391,10 @@ describe("Session Goal E2E Flow", () => {
       // Try to complete a goal that was never set
       await expect(
         completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Never set goal",
           achieved: true,
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap(),
       ).rejects.toMatchObject({
         status: 404,
@@ -416,9 +416,9 @@ describe("Session Goal E2E Flow", () => {
 
       await expect(
         setGoal({
-          session_id: "test-session",
+          sessionId: "test-session",
           goal: "Test goal",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap(),
       ).rejects.toBeDefined();
     });
@@ -438,17 +438,17 @@ describe("Session Goal E2E Flow", () => {
       // Set goals for both sessions
       await act(async () => {
         await setGoal({
-          session_id: session1,
+          sessionId: session1,
           goal: "Session 1 goal",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap();
       });
 
       await act(async () => {
         await setGoal({
-          session_id: session2,
+          sessionId: session2,
           goal: "Session 2 goal",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap();
       });
 
@@ -466,10 +466,10 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await completeGoal({
-          session_id: session1,
+          sessionId: session1,
           goal: "Session 1 goal",
           achieved: true,
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap();
       });
 
@@ -510,9 +510,9 @@ describe("Session Goal E2E Flow", () => {
       let promise: ReturnType<typeof setGoal>;
       act(() => {
         promise = setGoal({
-          session_id: "loading-test",
+          sessionId: "loading-test",
           goal: "Test loading",
-          set_at: Date.now(),
+          setAt: Date.now(),
         });
       });
 
@@ -544,9 +544,9 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: goalText,
-          set_at: setAt,
+          setAt: setAt,
         }).unwrap();
       });
 
@@ -559,10 +559,10 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: goalText,
           achieved: true,
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap();
       });
 
@@ -579,8 +579,8 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await deleteGoal({
-          session_id: sessionId,
-          goal_id: goalId,
+          sessionId: sessionId,
+          goalId: goalId,
         }).unwrap();
       });
 
@@ -600,9 +600,9 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Some goal",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap();
       });
 
@@ -614,8 +614,8 @@ describe("Session Goal E2E Flow", () => {
 
       await expect(
         deleteGoal({
-          session_id: sessionId,
-          goal_id: "nonexistent-goal-id",
+          sessionId: sessionId,
+          goalId: "nonexistent-goal-id",
         }).unwrap(),
       ).rejects.toMatchObject({
         status: 404,
@@ -632,8 +632,8 @@ describe("Session Goal E2E Flow", () => {
       await act(async () => {
         await expect(
           deleteGoal({
-            session_id: "nonexistent-session",
-            goal_id: "goal-1",
+            sessionId: "nonexistent-session",
+            goalId: "goal-1",
           }).unwrap(),
         ).rejects.toMatchObject({
           status: 404,
@@ -659,36 +659,36 @@ describe("Session Goal E2E Flow", () => {
       // Goal 1
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal 1",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap();
       });
 
       await act(async () => {
         await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal 1",
           achieved: true,
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap();
       });
 
       // Goal 2
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal 2",
-          set_at: Date.now() + 1000,
+          setAt: Date.now() + 1000,
         }).unwrap();
       });
 
       await act(async () => {
         await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal 2",
           achieved: true,
-          completed_at: Date.now() + 1000,
+          completedAt: Date.now() + 1000,
         }).unwrap();
       });
 
@@ -704,8 +704,8 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await deleteGoal({
-          session_id: sessionId,
-          goal_id: goal1Id,
+          sessionId: sessionId,
+          goalId: goal1Id,
         }).unwrap();
       });
 
@@ -713,7 +713,7 @@ describe("Session Goal E2E Flow", () => {
       const { result } = renderHook(
         () =>
           useGetSessionGoalHistoryQuery({
-            session_id: sessionId,
+            sessionId: sessionId,
             limit: 50,
             offset: 0,
           }),
@@ -740,9 +740,9 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal to delete",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap();
       });
 
@@ -766,8 +766,8 @@ describe("Session Goal E2E Flow", () => {
       let promise: ReturnType<typeof deleteGoal>;
       act(() => {
         promise = deleteGoal({
-          session_id: sessionId,
-          goal_id: goalId,
+          sessionId: sessionId,
+          goalId: goalId,
         });
       });
 
@@ -795,9 +795,9 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal to optimistically delete",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap();
       });
 
@@ -810,10 +810,10 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal to optimistically delete",
           achieved: true,
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap();
       });
 
@@ -848,7 +848,7 @@ describe("Session Goal E2E Flow", () => {
       const historyHook = renderHook(
         () =>
           useGetSessionGoalHistoryQuery({
-            session_id: sessionId,
+            sessionId: sessionId,
             limit: 50,
             offset: 0,
           }),
@@ -871,8 +871,8 @@ describe("Session Goal E2E Flow", () => {
       // Start the delete - it will optimistically update immediately
       act(() => {
         void deleteGoal({
-          session_id: sessionId,
-          goal_id: goalId,
+          sessionId: sessionId,
+          goalId: goalId,
         });
       });
 
@@ -898,9 +898,9 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await setGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal that will fail to delete",
-          set_at: Date.now(),
+          setAt: Date.now(),
         }).unwrap();
       });
 
@@ -913,10 +913,10 @@ describe("Session Goal E2E Flow", () => {
 
       await act(async () => {
         await completeGoal({
-          session_id: sessionId,
+          sessionId: sessionId,
           goal: "Goal that will fail to delete",
           achieved: true,
-          completed_at: Date.now(),
+          completedAt: Date.now(),
         }).unwrap();
       });
 
@@ -934,7 +934,7 @@ describe("Session Goal E2E Flow", () => {
       const historyHook = renderHook(
         () =>
           useGetSessionGoalHistoryQuery({
-            session_id: sessionId,
+            sessionId: sessionId,
             limit: 50,
             offset: 0,
           }),
@@ -957,8 +957,8 @@ describe("Session Goal E2E Flow", () => {
       await act(async () => {
         try {
           await deleteGoal({
-            session_id: sessionId,
-            goal_id: goalId,
+            sessionId: sessionId,
+            goalId: goalId,
           }).unwrap();
         } catch {
           // Expected to fail

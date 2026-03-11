@@ -38,6 +38,7 @@ import { memoryMonitor } from "./memoryMonitor";
 import {
   clearStorageMocks,
   clearAllMocks,
+  clearTimers,
   logIsolationWarningIfDirty,
 } from "./testIsolation";
 import { MemoryTrendReporter } from "./memoryTrendReporter";
@@ -199,6 +200,13 @@ afterEach(() => {
 
   // Clear all mock call history - prevents assertion pollution
   clearAllMocks();
+
+  // Restore real timers if fake timers were left active by a test.
+  // Previously omitted to avoid interfering with tests that use fake timers
+  // throughout their lifecycle, but this caused timer leakage when tests
+  // failed mid-execution before their own afterEach could run.
+  // With restartWorkersAfter=1, this only affects intra-file isolation.
+  clearTimers();
 
   // Log isolation warnings in CI if state is dirty (helps debug flaky tests)
   logIsolationWarningIfDirty();

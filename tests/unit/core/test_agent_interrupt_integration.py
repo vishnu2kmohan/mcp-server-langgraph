@@ -5,6 +5,8 @@ Verifies that the agent graph properly checks for interrupts
 during execution using the InterruptController.
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.core.interrupt import (
@@ -27,6 +29,7 @@ class TestAgentInterruptIntegration:
     def teardown_method(self) -> None:
         """Clean up after each test."""
         reset_interrupt_controller()
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_agent_state_includes_session_id(self) -> None:

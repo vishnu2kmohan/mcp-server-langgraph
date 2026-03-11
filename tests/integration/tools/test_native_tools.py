@@ -47,6 +47,7 @@ def mock_model_registry():
         yield MockRegistry
 
 
+@pytest.mark.xdist_group("test_native_tool_registration")
 class TestNativeToolRegistration:
     """Tests for native tool registration in UnifiedToolRegistry."""
 
@@ -108,6 +109,7 @@ class TestNativeToolRegistration:
         assert tool.source == "native"
 
 
+@pytest.mark.xdist_group("test_native_tool_handler")
 class TestNativeToolHandler:
     """Tests for NativeToolHandler functionality."""
 
@@ -153,6 +155,7 @@ class TestNativeToolHandler:
         assert "mcp:github:create_issue" in remaining
 
 
+@pytest.mark.xdist_group("test_native_result_parsing")
 class TestNativeResultParsing:
     """Tests for parsing native tool results from AIMessage."""
 
@@ -225,6 +228,7 @@ class TestNativeResultParsing:
         assert tool_messages[0].name == "code_execution"
 
 
+@pytest.mark.xdist_group("test_native_tool_feature_flags")
 class TestNativeToolFeatureFlags:
     """Tests for feature flag integration with native tools."""
 
@@ -260,6 +264,7 @@ class TestNativeToolFeatureFlags:
             assert result is False
 
 
+@pytest.mark.xdist_group("test_native_tool_integration_flow")
 class TestNativeToolIntegrationFlow:
     """End-to-end integration tests for native tool flow."""
 

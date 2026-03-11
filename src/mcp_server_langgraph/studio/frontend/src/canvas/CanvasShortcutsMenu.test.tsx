@@ -229,8 +229,12 @@ describe("CanvasShortcutsMenu", () => {
       // Open menu first
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
-      // Now set loading state
-      rerender(<CanvasShortcutsMenu onAction={onAction} isLoading={true} />);
+      // Now set loading state (must keep TestProvider wrapper)
+      rerender(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} isLoading={true} />
+        </TestProvider>,
+      );
 
       const reviewButton = screen.getByTestId("shortcut-review");
       expect(reviewButton).toBeDisabled();
@@ -248,8 +252,12 @@ describe("CanvasShortcutsMenu", () => {
       // Open menu first
       await user.click(screen.getByTestId("canvas-shortcuts-trigger"));
 
-      // Now set loading state
-      rerender(<CanvasShortcutsMenu onAction={onAction} isLoading={true} />);
+      // Now set loading state (must keep TestProvider wrapper)
+      rerender(
+        <TestProvider>
+          <CanvasShortcutsMenu onAction={onAction} isLoading={true} />
+        </TestProvider>,
+      );
 
       // Try to click action
       await user.click(screen.getByTestId("shortcut-review"));

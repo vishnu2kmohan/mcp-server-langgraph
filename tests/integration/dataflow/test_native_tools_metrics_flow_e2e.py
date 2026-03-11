@@ -47,6 +47,7 @@ def fresh_aggregator():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_native_tool_metrics_recording")
 class TestNativeToolMetricsRecording:
     """
     E2E tests for native tool metrics recording.
@@ -226,6 +227,7 @@ class TestNativeToolMetricsRecording:
         assert tool_data["native"]["fallback_count"] == 1
 
 
+@pytest.mark.xdist_group("test_metrics_aggregator_comparison")
 class TestMetricsAggregatorComparison:
     """
     E2E tests for native vs builtin tool comparison metrics.
@@ -354,6 +356,7 @@ class TestMetricsAggregatorComparison:
         assert summary["builtin_errors"] == 0
 
 
+@pytest.mark.xdist_group("test_metrics_aggregator_reset")
 class TestMetricsAggregatorReset:
     """
     E2E tests for metrics aggregator reset functionality.
@@ -401,6 +404,7 @@ class TestMetricsAggregatorReset:
         assert data["summary"]["native_selections"] == 0
 
 
+@pytest.mark.xdist_group("test_global_metrics_functions")
 class TestGlobalMetricsFunctions:
     """
     E2E tests for global metrics recording functions.

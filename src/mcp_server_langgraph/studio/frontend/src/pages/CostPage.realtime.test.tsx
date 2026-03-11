@@ -13,42 +13,52 @@ import { configureStore } from "@reduxjs/toolkit";
 import { CostPage } from "./CostPage";
 
 // Mock RTK Query hooks - camelCase per ADR-0091 Phase 6 (RTK Query transforms)
-vi.mock("../api", () => ({
-  useGetCostSummaryQuery: vi.fn(() => ({
-    data: {
-      totalCost: 125.5,
-      totalTokens: 50000,
-    },
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  })),
-  useGetCostByModelQuery: vi.fn(() => ({
-    data: [
-      { model: "gpt-4", cost: 100.0, requests: 50 },
-      { model: "claude-3", cost: 25.5, requests: 25 },
-    ],
-    isLoading: false,
-    refetch: vi.fn(),
-  })),
-  useGetCostHistoryQuery: vi.fn(() => ({
-    data: [
-      { date: "2024-01-01", cost: 10.0 },
-      { date: "2024-01-02", cost: 15.0 },
-    ],
-    isLoading: false,
-    refetch: vi.fn(),
-  })),
-  useGetBudgetStatusQuery: vi.fn(() => ({
-    data: null,
-    isLoading: false,
-  })),
-  useGetCostForecastQuery: vi.fn(() => ({
-    data: null,
-    isLoading: false,
-  })),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetCostSummaryQuery: vi.fn(() => ({
+      data: {
+        totalCost: 125.5,
+        totalTokens: 50000,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })),
+    useGetCostByModelQuery: vi.fn(() => ({
+      data: [
+        { model: "gpt-4", cost: 100.0, requests: 50 },
+        { model: "claude-3", cost: 25.5, requests: 25 },
+      ],
+      isLoading: false,
+      refetch: vi.fn(),
+    })),
+    useGetCostHistoryQuery: vi.fn(() => ({
+      data: [
+        { date: "2024-01-01", cost: 10.0 },
+        { date: "2024-01-02", cost: 15.0 },
+      ],
+      isLoading: false,
+      refetch: vi.fn(),
+    })),
+    useGetBudgetStatusQuery: vi.fn(() => ({
+      data: null,
+      isLoading: false,
+    })),
+    useGetCostForecastQuery: vi.fn(() => ({
+      data: null,
+      isLoading: false,
+    })),
+    useGetToolMetricsComparisonQuery: vi.fn(() => ({
+      data: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    })),
+  };
+});
 // Mock useCostTrackingWebSocket
 const mockSubscribeSession = vi.fn();
 const mockSubscribeUser = vi.fn();

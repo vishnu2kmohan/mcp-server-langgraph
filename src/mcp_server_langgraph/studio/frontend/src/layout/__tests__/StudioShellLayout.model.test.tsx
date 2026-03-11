@@ -125,20 +125,24 @@ vi.mock(
   "../../hooks/useAgentRequestWebSocket",
   () => mockImplementations.useAgentRequestWebSocket,
 );
-vi.mock("../../api", () => ({
-  ...mockImplementations.api,
-  useGetAvailableModelsQuery: () => ({
-    data: mockModelAPIState.isError ? undefined : mockModelAPIState.models,
-    isLoading: mockModelAPIState.isLoading,
-    isError: mockModelAPIState.isError,
-  }),
-  useGetServerConfigQuery: () => ({
-    data: mockModelAPIState.isServerConfigLoading
-      ? undefined
-      : mockModelAPIState.serverConfig,
-    isLoading: mockModelAPIState.isServerConfigLoading,
-  }),
-}));
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    ...mockImplementations.api,
+    useGetAvailableModelsQuery: () => ({
+      data: mockModelAPIState.isError ? undefined : mockModelAPIState.models,
+      isLoading: mockModelAPIState.isLoading,
+      isError: mockModelAPIState.isError,
+    }),
+    useGetServerConfigQuery: () => ({
+      data: mockModelAPIState.isServerConfigLoading
+        ? undefined
+        : mockModelAPIState.serverConfig,
+      isLoading: mockModelAPIState.isServerConfigLoading,
+    }),
+  };
+});
 vi.mock(
   "../../hooks/usePersonaRouting",
   () => mockImplementations.usePersonaRouting,

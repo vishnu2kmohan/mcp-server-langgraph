@@ -19,6 +19,7 @@ import pytest
 pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="test_tool_selection_flow")]
 
 
+@pytest.mark.xdist_group("test_tool_selection_modes")
 class TestToolSelectionModes:
     """Tests for tool selection mode handling."""
 
@@ -58,6 +59,7 @@ class TestToolSelectionModes:
         assert state["tool_selection_mode"] == "auto"
 
 
+@pytest.mark.xdist_group("test_tool_preference")
 class TestToolPreference:
     """Tests for tool preference (native vs builtin) handling."""
 
@@ -94,6 +96,7 @@ class TestToolPreference:
         assert state["tool_preference"] == "builtin"
 
 
+@pytest.mark.xdist_group("test_retrieve_tools_integration")
 class TestRetrieveToolsIntegration:
     """Integration tests for retrieve_tools node."""
 
@@ -178,6 +181,7 @@ class TestRetrieveToolsIntegration:
         assert selected is None or selected == [], f"Expected None or empty, got {selected}"
 
 
+@pytest.mark.xdist_group("test_tool_id_formats")
 class TestToolIdFormats:
     """Tests for tool_id format consistency."""
 
@@ -243,6 +247,7 @@ class TestToolIdFormats:
         assert tool.tool_id == "native:web_search"
 
 
+@pytest.mark.xdist_group("test_state_propagation")
 class TestStatePropagation:
     """Tests for tool control state propagation."""
 

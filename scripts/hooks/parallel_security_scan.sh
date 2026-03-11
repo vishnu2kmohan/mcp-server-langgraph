@@ -189,7 +189,8 @@ if [[ "${SKIP_TRIVY:-0}" != "1" ]]; then
             echo 'ERROR: trivy not found'
             exit 1
         fi
-        trivy config terraform/ --severity CRITICAL,HIGH --exit-code 1 --quiet 2>&1
+        trivy config terraform/ --severity CRITICAL,HIGH --exit-code 1 --quiet \
+            --ignorefile terraform/.trivyignore 2>&1
     "
     echo "  Started: trivy-terraform"
 else

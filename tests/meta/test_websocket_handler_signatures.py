@@ -119,6 +119,7 @@ def extract_method_signature(
     return None
 
 
+@pytest.mark.xdist_group("test_web_socket_handler_signatures")
 @pytest.mark.meta
 class TestWebSocketHandlerSignatures:
     """Validate that all WebSocket handlers implement correct method signatures."""
@@ -264,3 +265,9 @@ class TestWebSocketHandlerSignatures:
         assert len(handlers) <= 50, (
             f"{len(handlers)} handlers found. This seems excessive - consider consolidating if growing beyond 50."
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

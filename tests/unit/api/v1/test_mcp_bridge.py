@@ -292,7 +292,7 @@ class TestMCPBridge:
 
         reset_mcp_bridge()
 
-        with patch("os.getenv", return_value="http://localhost:8001"):
+        with patch("os.getenv", side_effect=lambda *a, **kw: "http://localhost:8001"):
             bridge = get_mcp_bridge()
 
         assert bridge is not None

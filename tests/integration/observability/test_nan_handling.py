@@ -467,6 +467,7 @@ class TestHighPriorityNaNValidation:
         assert "Infinity" not in json_str
 
 
+@pytest.mark.xdist_group("test_na_n_edge_cases")
 @pytest.mark.integration
 @pytest.mark.observability
 class TestNaNEdgeCases:

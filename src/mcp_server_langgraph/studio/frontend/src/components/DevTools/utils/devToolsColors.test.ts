@@ -65,10 +65,12 @@ describe("DevTools Color Utilities", () => {
       expect(STATUS_TEXT_COLORS.info).toMatch(/text-primary-/);
     });
 
-    it("should include dark mode variants for all colors", () => {
-      Object.values(STATUS_TEXT_COLORS).forEach((colorClass) => {
-        expect(colorClass).toMatch(/dark:/);
-      });
+    it("should include dark mode variants for non-neutral colors", () => {
+      // Neutral is a single class without dark: prefix (adapts via CSS variables)
+      expect(STATUS_TEXT_COLORS.success).toMatch(/dark:/);
+      expect(STATUS_TEXT_COLORS.warning).toMatch(/dark:/);
+      expect(STATUS_TEXT_COLORS.error).toMatch(/dark:/);
+      expect(STATUS_TEXT_COLORS.info).toMatch(/dark:/);
     });
   });
 
@@ -93,10 +95,9 @@ describe("DevTools Color Utilities", () => {
       expect(STATUS_BG_COLORS.info).toMatch(/bg-primary-/);
     });
 
-    it("should include dark mode variants", () => {
-      Object.values(STATUS_BG_COLORS).forEach((colorClass) => {
-        expect(colorClass).toMatch(/dark:/);
-      });
+    it("should include dark mode variants where applicable", () => {
+      // warning uses dark: prefix; others use Radix semantic tokens that adapt automatically
+      expect(STATUS_BG_COLORS.warning).toMatch(/dark:/);
     });
   });
 
@@ -118,10 +119,11 @@ describe("DevTools Color Utilities", () => {
       expect(LEVEL_BADGE_STYLES.debug).toMatch(/bg-neutral-/);
     });
 
-    it("should include dark mode variants", () => {
-      Object.values(LEVEL_BADGE_STYLES).forEach((style) => {
-        expect(style).toMatch(/dark:/);
-      });
+    it("should include dark mode variants for non-debug levels", () => {
+      // debug uses neutral classes without dark: prefix (Radix tokens adapt automatically)
+      expect(LEVEL_BADGE_STYLES.info).toMatch(/dark:/);
+      expect(LEVEL_BADGE_STYLES.warning).toMatch(/dark:/);
+      expect(LEVEL_BADGE_STYLES.error).toMatch(/dark:/);
     });
 
     it("should include both background and text colors", () => {
@@ -154,10 +156,13 @@ describe("DevTools Color Utilities", () => {
       expect(HTTP_METHOD_COLORS.PUT).toMatch(/text-warning-/);
     });
 
-    it("should include dark mode variants", () => {
-      Object.values(HTTP_METHOD_COLORS).forEach((color) => {
-        expect(color).toMatch(/dark:/);
-      });
+    it("should include dark mode variants for non-default methods", () => {
+      // DEFAULT uses neutral class without dark: prefix
+      expect(HTTP_METHOD_COLORS.GET).toMatch(/dark:/);
+      expect(HTTP_METHOD_COLORS.POST).toMatch(/dark:/);
+      expect(HTTP_METHOD_COLORS.PUT).toMatch(/dark:/);
+      expect(HTTP_METHOD_COLORS.DELETE).toMatch(/dark:/);
+      expect(HTTP_METHOD_COLORS.PATCH).toMatch(/dark:/);
     });
   });
 
@@ -441,17 +446,22 @@ describe("WCAG 2.2 Accessibility Compliance", () => {
   });
 
   describe("Dark Mode Support", () => {
-    it("should have consistent dark mode pattern (dark:*-400 for text)", () => {
-      // Dark mode text should use lighter shades (400) for readability on dark backgrounds
-      Object.values(STATUS_TEXT_COLORS).forEach((color) => {
-        // Extract dark mode class
+    it("should have dark mode variants for semantic status colors", () => {
+      // Non-neutral colors should have dark: variants
+      const colorsWithDark = [
+        STATUS_TEXT_COLORS.success,
+        STATUS_TEXT_COLORS.warning,
+        STATUS_TEXT_COLORS.error,
+        STATUS_TEXT_COLORS.info,
+      ];
+      colorsWithDark.forEach((color) => {
         const darkClass = color.match(/dark:([\w-]+)/)?.[1];
         expect(darkClass).toBeDefined();
       });
     });
 
-    it("should have lighter shades in dark mode than light mode", () => {
-      // Light mode uses 600, dark mode should use 400 (lighter for dark backgrounds)
+    it("should have lighter Radix scale shades in dark mode than light mode", () => {
+      // Light mode uses scale 10, dark mode uses scale 7 (lower = lighter in Radix)
       const lightShade =
         STATUS_TEXT_COLORS.success.match(/text-success-(\d+)/)?.[1];
       const darkShade = STATUS_TEXT_COLORS.success.match(

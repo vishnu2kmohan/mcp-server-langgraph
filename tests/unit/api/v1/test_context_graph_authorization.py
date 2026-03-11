@@ -263,7 +263,7 @@ class TestContextGraphPrecedentSearchAuthorization:
             patch("mcp_server_langgraph.api.v1.context_graph.feature_flags", mock_flags),
             patch(
                 "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
-                return_value=mock_manager,
+                side_effect=lambda *a, **kw: mock_manager,
             ),
         ):
             await search_precedents(

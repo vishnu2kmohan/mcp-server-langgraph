@@ -14,7 +14,6 @@ GREEN Phase: Tests pass after security fixes are applied
 import gc
 import hashlib
 import inspect
-import os
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -25,7 +24,6 @@ from tests.helpers.async_mock_helpers import configured_async_mock
 pytestmark = pytest.mark.unit
 
 # xdist can cause mock issues with async connection mocks
-_XDIST_ASYNC_MOCK_UNSTABLE = os.getenv("PYTEST_XDIST_WORKER") is not None
 
 
 @pytest.mark.unit
@@ -163,11 +161,6 @@ class TestSQLInjectionPrevention:
         )
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(
-        _XDIST_ASYNC_MOCK_UNSTABLE,
-        reason="AsyncMock context manager can have race conditions under xdist",
-        strict=False,  # Allow to pass if timing is good
-    )
     async def test_malicious_sql_values_are_safely_escaped(self):
         """
         Test that malicious SQL values are properly parameterized.

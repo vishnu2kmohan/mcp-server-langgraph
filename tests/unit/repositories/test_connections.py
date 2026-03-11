@@ -679,6 +679,7 @@ class TestConnectionRepository:
         transport: str = "streamable_http",
         auth_type: str = "none",
         status: str = "disconnected",
+        scope: str = "user",
         api_key_secret_id: str | None = None,
         oauth2_token_secret_id: str | None = None,
         oauth2_token_expires_at: datetime | None = None,
@@ -698,6 +699,7 @@ class TestConnectionRepository:
         model.env = env
         model.auth_type = auth_type
         model.status = status
+        model.scope = scope
         model.api_key_secret_id = api_key_secret_id
         model.oauth2_client_id = None
         model.oauth2_client_secret_id = None

@@ -980,11 +980,11 @@ class TestCachedUnifiedRegistrySemanticReindex:
         with (
             patch(
                 "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
-                return_value=mock_semantic_manager,
+                side_effect=lambda *a, **kw: mock_semantic_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_tool_registry,
+                side_effect=lambda *a, **kw: mock_tool_registry,
             ),
         ):
             mock_config = MagicMock()
@@ -1036,11 +1036,11 @@ class TestCachedUnifiedRegistrySemanticReindex:
         with (
             patch(
                 "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
-                return_value=mock_semantic_manager,
+                side_effect=lambda *a, **kw: mock_semantic_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_tool_registry,
+                side_effect=lambda *a, **kw: mock_tool_registry,
             ),
         ):
             mock_config = MagicMock()
@@ -1088,11 +1088,11 @@ class TestCachedUnifiedRegistrySemanticReindex:
         with (
             patch(
                 "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
-                return_value=mock_semantic_manager,
+                side_effect=lambda *a, **kw: mock_semantic_manager,
             ),
             patch(
                 "mcp_server_langgraph.tools.unified_registry.get_tool_registry",
-                return_value=mock_tool_registry,
+                side_effect=lambda *a, **kw: mock_tool_registry,
             ),
         ):
             mock_config = MagicMock()
@@ -1125,7 +1125,7 @@ class TestCachedUnifiedRegistrySemanticReindex:
 
         with patch(
             "mcp_server_langgraph.core.dependencies.get_semantic_index_manager",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             mock_config = MagicMock()
             mock_config.name = TEST_SERVER_NAME

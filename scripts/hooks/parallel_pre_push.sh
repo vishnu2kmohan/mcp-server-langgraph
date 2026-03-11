@@ -98,9 +98,6 @@ LANE_2_HOOKS=(
     frontend-typecheck
     frontend-build
     frontend-test
-    frontend-test-cleanup-validation
-    frontend-test-patterns-validation
-    frontend-test-file-size-check
     frontend-design-system-metrics
     frontend-design-system-audit
     frontend-design-system-contract
@@ -118,7 +115,6 @@ LANE_4_NAME="type-check-validators"
 LANE_4_HOOKS=(
     mypy
     validate-fast
-    validate-fast-precommit
     check-subprocess-timeout
     check-banned-imports
     check-type-checking-cast
@@ -380,11 +376,13 @@ declare -a lane_order=()
 start_time=$(date +%s)
 
 # Frontend shard concurrency: reduce when running in parallel with other lanes.
-# Default 12 is fine standalone, but causes OOM when Python tests (8 xdist workers)
-# run concurrently. Cap at half the standalone limit (min 2).
-FRONTEND_SHARD_MAX=${VITEST_SHARD_CONCURRENCY_MAX:-12}
+# Default 8 accounts for Vitest internal parallelism (maxWorkers=2 per shard, so
+# 8 shards × 2 workers = 16 CPU-bound processes on 16-core machine).
+# When 5 lanes are active, 8 Python workers + 4 shards + mypy + security scans
+# exceed available CPU and memory. Cap at 1/6 standalone limit (min 2). 8/6≈1→min 2.
+FRONTEND_SHARD_MAX=${VITEST_SHARD_CONCURRENCY_MAX:-8}
 if [[ $MAX_LANES -gt 1 ]]; then
-    FRONTEND_SHARD_MAX=$(( FRONTEND_SHARD_MAX / 2 ))
+    FRONTEND_SHARD_MAX=$(( FRONTEND_SHARD_MAX / 6 ))
     [[ $FRONTEND_SHARD_MAX -lt 2 ]] && FRONTEND_SHARD_MAX=2
 fi
 

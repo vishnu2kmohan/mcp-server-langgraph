@@ -52,22 +52,25 @@ const mockIdentityProviders = {
   has_enterprise_sso: true,
 };
 
-vi.mock("../api", () => ({
-  useGetFeatureFlagsQuery: vi.fn(() => ({ data: {} })),
-  useGetIdentityProvidersQuery: vi.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    error: undefined,
-  })),
-  api: {
-    reducerPath: "api",
-    reducer: (state = {}) => state,
-    middleware:
-      () => (next: (action: unknown) => unknown) => (action: unknown) =>
-        next(action),
-  },
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetFeatureFlagsQuery: vi.fn(() => ({ data: {} })),
+    useGetIdentityProvidersQuery: vi.fn(() => ({
+      data: undefined,
+      isLoading: false,
+      error: undefined,
+    })),
+    api: {
+      reducerPath: "api",
+      reducer: (state = {}) => state,
+      middleware:
+        () => (next: (action: unknown) => unknown) => (action: unknown) =>
+          next(action),
+    },
+  };
+});
 const mockedUseGetIdentityProvidersQuery = vi.mocked(
   (
     apiModule as {

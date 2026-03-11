@@ -16,77 +16,84 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
 
-// Mock the API module - single mock at top level to avoid memory leaks
-vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            trace_summarize: {
-              summary:
-                "Agent completed 5-step workflow in 2.3s with 2 tool calls",
-              total_duration_ms: 2300,
-              step_count: 5,
-              tool_call_count: 2,
-              success: true,
-              key_actions: [
-                "Retrieved data",
-                "Processed request",
-                "Generated response",
-              ],
-            },
-            trace_anomaly: {
-              anomalies: [
-                {
-                  type: "slow_step",
-                  step_name: "database_query",
-                  severity: "warning",
-                  message: "Step took 1.5s, 3x slower than average",
-                  suggested_fix: "Consider adding index or caching",
-                },
-              ],
-              bottlenecks: [
-                {
-                  step_name: "database_query",
-                  duration_ms: 1500,
-                  percentage_of_total: 65,
-                },
-              ],
-              health_score: 0.72,
-              optimization_suggestions: [
-                "Consider parallel execution for independent steps",
-              ],
-            },
-            cost_project: {
-              current_cost: 0.0023,
-              projected_cost: 0.015,
-              cost_breakdown: {
-                input_tokens: 0.001,
-                output_tokens: 0.0013,
-              },
-              budget_remaining: 4.985,
-              budget_percentage_used: 0.3,
-              estimated_remaining_messages: 320,
-            },
-            token_predict: {
-              current_tokens: 4500,
-              projected_tokens: 8200,
-              context_utilization: 0.45,
-              optimization_available: true,
-              optimization_savings: 1200,
-              recommended_action: "Consider summarizing older messages",
-            },
+// Mock the API barrel directly — never vi.importActual("../api") (5,132-line barrel causes OOM)
+// CRITICAL: Hoist mock references outside the factory to prevent infinite render loops.
+// RTK Query hooks return stable references; our mock must do the same.
+// If vi.fn() is created inside the factory's return, each useStudioAnalyzeMutation() call
+// returns a NEW function → useCallback dep changes → useEffect fires → setState → re-render → OOM.
+vi.mock("../api", () => {
+  const mockTrigger = vi.fn(() => ({
+    unwrap: () =>
+      Promise.resolve({
+        analyses: {
+          trace_summarize: {
+            summary:
+              "Agent completed 5-step workflow in 2.3s with 2 tool calls",
+            total_duration_ms: 2300,
+            step_count: 5,
+            tool_call_count: 2,
+            success: true,
+            key_actions: [
+              "Retrieved data",
+              "Processed request",
+              "Generated response",
+            ],
           },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.002",
-        }),
-    })),
+          trace_anomaly: {
+            anomalies: [
+              {
+                type: "slow_step",
+                step_name: "database_query",
+                severity: "warning",
+                message: "Step took 1.5s, 3x slower than average",
+                suggested_fix: "Consider adding index or caching",
+              },
+            ],
+            bottlenecks: [
+              {
+                step_name: "database_query",
+                duration_ms: 1500,
+                percentage_of_total: 65,
+              },
+            ],
+            health_score: 0.72,
+            optimization_suggestions: [
+              "Consider parallel execution for independent steps",
+            ],
+          },
+          cost_project: {
+            current_cost: 0.0023,
+            projected_cost: 0.015,
+            cost_breakdown: {
+              input_tokens: 0.001,
+              output_tokens: 0.0013,
+            },
+            budget_remaining: 4.985,
+            budget_percentage_used: 0.3,
+            estimated_remaining_messages: 320,
+          },
+          token_predict: {
+            current_tokens: 4500,
+            projected_tokens: 8200,
+            context_utilization: 0.45,
+            optimization_available: true,
+            optimization_savings: 1200,
+            recommended_action: "Consider summarizing older messages",
+          },
+        },
+        cross_insights: [],
+        failed_analyses: [],
+        total_cost: "0.002",
+      }),
+  }));
+  const mockReturn: [typeof mockTrigger, { isLoading: boolean }] = [
+    mockTrigger,
     { isLoading: false },
-  ]),
-}));
-
+  ];
+  return {
+    useStudioAnalyzeMutation: vi.fn(() => mockReturn),
+  };
+});
 // =============================================================================
 // Test Utilities
 // =============================================================================

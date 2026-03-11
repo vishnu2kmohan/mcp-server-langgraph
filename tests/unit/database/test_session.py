@@ -67,12 +67,12 @@ class TestGetEngine:
 
         with patch(
             "mcp_server_langgraph.database.session.create_async_engine",
-            return_value=mock_engine,
+            side_effect=lambda *a, **kw: mock_engine,
         ) as mock_create:
             result = get_engine("postgresql+asyncpg://user:pass@localhost/testdb")
 
             # Use 'is' for identity comparison to avoid xdist MagicMock comparison issues
-            assert result is mock_create.return_value
+            assert result is mock_engine
             mock_create.assert_called_once()
 
             # Verify call arguments
@@ -90,12 +90,12 @@ class TestGetEngine:
 
         with patch(
             "mcp_server_langgraph.database.session.create_async_engine",
-            return_value=mock_engine,
+            side_effect=lambda *a, **kw: mock_engine,
         ) as mock_create:
             result = get_engine("postgresql+asyncpg://localhost/testdb", echo=True)
 
-            # Use mock_create.return_value for identity check to avoid xdist isolation issues
-            assert result is mock_create.return_value
+            # Use mock_engine for identity check (side_effect lambda returns mock_engine directly)
+            assert result is mock_engine
             call_args = mock_create.call_args
             assert call_args[1]["echo"] is True
 
@@ -105,7 +105,7 @@ class TestGetEngine:
 
         with patch(
             "mcp_server_langgraph.database.session.create_async_engine",
-            return_value=mock_engine,
+            side_effect=lambda *a, **kw: mock_engine,
         ) as mock_create:
             # First call creates engine
             result1 = get_engine("postgresql+asyncpg://localhost/testdb")
@@ -132,17 +132,17 @@ class TestGetSessionMaker:
         with (
             patch(
                 "mcp_server_langgraph.database.session.create_async_engine",
-                return_value=mock_engine,
+                side_effect=lambda *a, **kw: mock_engine,
             ),
             patch(
                 "mcp_server_langgraph.database.session.async_sessionmaker",
-                return_value=mock_session_maker,
+                side_effect=lambda *a, **kw: mock_session_maker,
             ) as mock_sm_class,
         ):
             result = get_session_maker("postgresql+asyncpg://localhost/testdb")
 
-            # Use 'is' with return_value for identity check to avoid xdist MagicMock comparison issues
-            assert result is mock_sm_class.return_value
+            # Use mock_session_maker for identity check (side_effect lambda returns it directly)
+            assert result is mock_session_maker
             mock_sm_class.assert_called_once()
 
             # Verify session maker configuration
@@ -159,11 +159,11 @@ class TestGetSessionMaker:
         with (
             patch(
                 "mcp_server_langgraph.database.session.create_async_engine",
-                return_value=mock_engine,
+                side_effect=lambda *a, **kw: mock_engine,
             ),
             patch(
                 "mcp_server_langgraph.database.session.async_sessionmaker",
-                return_value=mock_session_maker,
+                side_effect=lambda *a, **kw: mock_session_maker,
             ) as mock_sm_class,
         ):
             result1 = get_session_maker("postgresql+asyncpg://localhost/testdb")
@@ -197,11 +197,11 @@ class TestGetAsyncSession:
         with (
             patch(
                 "mcp_server_langgraph.database.session.create_async_engine",
-                return_value=mock_engine,
+                side_effect=lambda *a, **kw: mock_engine,
             ),
             patch(
                 "mcp_server_langgraph.database.session.async_sessionmaker",
-                return_value=mock_session_maker,
+                side_effect=lambda *a, **kw: mock_session_maker,
             ),
         ):
             async with get_async_session("postgresql+asyncpg://localhost/testdb") as session:
@@ -226,11 +226,11 @@ class TestGetAsyncSession:
         with (
             patch(
                 "mcp_server_langgraph.database.session.create_async_engine",
-                return_value=mock_engine,
+                side_effect=lambda *a, **kw: mock_engine,
             ),
             patch(
                 "mcp_server_langgraph.database.session.async_sessionmaker",
-                return_value=mock_session_maker,
+                side_effect=lambda *a, **kw: mock_session_maker,
             ),
         ):
             with pytest.raises(ValueError, match="Test error"):

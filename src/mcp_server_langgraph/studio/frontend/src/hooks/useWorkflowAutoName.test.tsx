@@ -21,18 +21,21 @@ import workflowReducer from "../store/slices/workflowSlice";
 
 // Mock the API mutation
 const mockGenerateWorkflowTitle = vi.fn();
-vi.mock("../api", () => ({
-  useGenerateWorkflowTitleMutation: () => [
-    mockGenerateWorkflowTitle,
-    {
-      isLoading: false,
-      isSuccess: false,
-      data: undefined,
-      error: undefined,
-    },
-  ],
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGenerateWorkflowTitleMutation: () => [
+      mockGenerateWorkflowTitle,
+      {
+        isLoading: false,
+        isSuccess: false,
+        data: undefined,
+        error: undefined,
+      },
+    ],
+  };
+});
 // Create test store
 const createTestStore = () =>
   configureStore({

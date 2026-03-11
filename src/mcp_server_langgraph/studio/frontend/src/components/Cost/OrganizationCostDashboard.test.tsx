@@ -16,12 +16,15 @@ import { configureStore } from "@reduxjs/toolkit";
 import { OrganizationCostDashboard } from "./OrganizationCostDashboard";
 
 // Mock RTK Query hooks
-vi.mock("../../api", () => ({
-  useGetCostByOrganizationQuery: vi.fn(),
-  useGetCostByProjectQuery: vi.fn(),
-  useGetCostByTeamQuery: vi.fn(),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetCostByOrganizationQuery: vi.fn(),
+    useGetCostByProjectQuery: vi.fn(),
+    useGetCostByTeamQuery: vi.fn(),
+  };
+});
 import * as apiModule from "../../api";
 
 // Mock data uses camelCase (ADR-0091 Phase 6) - matches RTK Query transformResponse output

@@ -84,6 +84,12 @@ class TestDataAccessPolicy:
         errors = policy.validate_query(ast)
         assert not errors
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestRowLimitEnforcer:
     def test_adds_limit_when_none(self):
@@ -129,3 +135,9 @@ class TestRowLimitEnforcer:
         sql = result.sql()
         # Should wrap in subquery with outer LIMIT 100
         assert "100" in sql
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

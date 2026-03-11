@@ -187,10 +187,12 @@ class TestContextvarStorageAdapter:
     @pytest.mark.asyncio
     async def test_adapter_returns_none_without_user_context(self) -> None:
         """
-        GIVEN adapter with no user_id in contextvar
+        GIVEN adapter with no user_id in contextvar and fallback disabled
         WHEN calling get_messages
         THEN should return None (unauthorized)
         """
+        from unittest.mock import patch
+
         from mcp_server_langgraph.storage.session.adapter import (
             ContextvarSessionStorageAdapter,
             _current_user_id,
@@ -203,7 +205,9 @@ class TestContextvarStorageAdapter:
             mock_service = AsyncMock(return_value=None)
             adapter = ContextvarSessionStorageAdapter(session_service=mock_service)
 
-            result = await adapter.get_messages("session-123")
+            with patch("mcp_server_langgraph.storage.session.adapter.settings") as mock_settings:
+                mock_settings.enable_session_scoped_fallback = False
+                result = await adapter.get_messages("session-123")
 
             assert result is None
             mock_service.get_session_messages.assert_not_called()

@@ -456,7 +456,7 @@ class TestValidateWebSocketAuth:
 
         with patch(
             "mcp_server_langgraph.auth.middleware.get_auth_middleware",
-            return_value=mock_global_auth,
+            side_effect=lambda *a, **kw: mock_global_auth,
         ):
             result = await validate_websocket_auth(mock_ws)
 
@@ -504,7 +504,7 @@ class TestValidateWebSocketToken:
 
         with patch(
             "mcp_server_langgraph.auth.middleware.get_auth_middleware",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await validate_websocket_token("valid-token")
 
@@ -525,7 +525,7 @@ class TestValidateWebSocketToken:
 
         with patch(
             "mcp_server_langgraph.auth.middleware.get_auth_middleware",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await validate_websocket_token("invalid-token")
 
@@ -539,7 +539,7 @@ class TestValidateWebSocketToken:
 
         with patch(
             "mcp_server_langgraph.auth.middleware.get_auth_middleware",
-            return_value=mock_auth,
+            side_effect=lambda *a, **kw: mock_auth,
         ):
             result = await validate_websocket_token("some-token")
 
@@ -560,7 +560,7 @@ class TestDeprecatedGetAuthMiddleware:
 
         with patch(
             "mcp_server_langgraph.auth.middleware.get_auth_middleware",
-            return_value=MagicMock(),
+            side_effect=lambda *a, **kw: MagicMock(),
         ):
             with pytest.warns(DeprecationWarning, match="get_auth_middleware"):
                 get_auth_middleware()

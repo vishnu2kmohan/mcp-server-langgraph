@@ -21,6 +21,7 @@ FRONTEND_NAV_ITEM_IDS = {
     "projects",
     "chat",
     "workflows",
+    "artifacts",
     # AI & Data
     "agents",
     "mcp",
@@ -46,9 +47,13 @@ DEPRECATED_MODULE_IDS = {
     "flows",  # Renamed to "workflows"
     "costs",  # Renamed to "cost"
     "metrics",  # Renamed to "observability"
+    "mcp",  # Renamed to "connections"
+    "traces",  # Merged into "observability"
+    "files",  # Renamed to "artifacts"
 }
 
 
+@pytest.mark.xdist_group("test_user_me_frontend_contract")
 @pytest.mark.contract
 class TestUserMeFrontendContract:
     """
@@ -111,13 +116,14 @@ class TestUserMeFrontendContract:
         admin_modules = set(PERSONA_VISIBLE_MODULES.get("admin", []))
 
         # Core modules every admin should have
+        # Uses normalized IDs: "connections" (was "mcp"), "observability" (was "traces")
         required_admin_modules = {
             "projects",
             "chat",
             "workflows",
             "agents",
-            "mcp",
-            "traces",
+            "connections",
+            "observability",
             "cost",
             "admin",
             "settings",
@@ -145,8 +151,8 @@ class TestUserMeFrontendContract:
         """Alice Builder (developer) should have development modules."""
         alice_modules = set(PERSONA_VISIBLE_MODULES.get("alice-builder", []))
 
-        # Developer should have these
-        required_dev_modules = {"chat", "workflows", "agents", "mcp"}
+        # Developer should have these (uses normalized "connections" instead of deprecated "mcp")
+        required_dev_modules = {"chat", "workflows", "agents", "connections"}
         missing = required_dev_modules - alice_modules
         assert not missing, f"Alice Builder is missing required modules: {missing}"
 
@@ -168,3 +174,9 @@ class TestUserMeFrontendContract:
             for module_id in modules:
                 assert module_id not in seen, f"Persona '{persona}' has duplicate module ID '{module_id}'"
                 seen.add(module_id)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

@@ -78,13 +78,16 @@ vi.mock("../utils/sessionTelemetry", () => ({
 }));
 
 // Mock the API module for RTK Query hooks (used by AIEmptyState)
-vi.mock("../api", () => ({
-  useGetEmptyStateSuggestionsMutation: () => [
-    vi.fn(),
-    { isLoading: false, data: null },
-  ],
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetEmptyStateSuggestionsMutation: () => [
+      vi.fn(),
+      { isLoading: false, data: null },
+    ],
+  };
+});
 // Sample test artifacts
 const createTestArtifact = (
   overrides: Partial<CanvasArtifact> = {},

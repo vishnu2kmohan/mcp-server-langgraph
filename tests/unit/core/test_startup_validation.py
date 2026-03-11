@@ -34,7 +34,7 @@ class TestQdrantValidation:
 
         with patch(
             "qdrant_client.QdrantClient",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await validate_qdrant_connection(
                 url="http://localhost:6333",
@@ -56,7 +56,7 @@ class TestQdrantValidation:
 
         with patch(
             "qdrant_client.QdrantClient",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await validate_qdrant_connection(
                 url="http://localhost:6333",
@@ -79,7 +79,7 @@ class TestQdrantValidation:
 
         with patch(
             "qdrant_client.QdrantClient",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await validate_qdrant_connection(
                 url="http://localhost:6333",
@@ -111,7 +111,7 @@ class TestQdrantBootstrap:
 
         with patch(
             "qdrant_client.QdrantClient",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await bootstrap_qdrant_collection(
                 url="http://localhost:6333",
@@ -134,7 +134,7 @@ class TestQdrantBootstrap:
 
         with patch(
             "qdrant_client.QdrantClient",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await bootstrap_qdrant_collection(
                 url="http://localhost:6333",
@@ -157,7 +157,7 @@ class TestQdrantBootstrap:
 
         with patch(
             "qdrant_client.QdrantClient",
-            return_value=mock_client,
+            side_effect=lambda *a, **kw: mock_client,
         ):
             result = await bootstrap_qdrant_collection(
                 url="http://localhost:6333",

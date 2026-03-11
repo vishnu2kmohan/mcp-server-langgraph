@@ -37,7 +37,7 @@ class TestNotificationHandlerInit:
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         assert handler._broadcaster is mock_broadcaster
@@ -54,7 +54,7 @@ class TestNotificationHandlerInit:
         mock_broadcaster = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
@@ -78,7 +78,7 @@ class TestNotificationHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -102,7 +102,7 @@ class TestNotificationHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         # No websocket set
@@ -125,7 +125,7 @@ class TestNotificationHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -147,7 +147,7 @@ class TestNotificationHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         # No websocket set
@@ -176,7 +176,7 @@ class TestNotificationHandlerMessages:
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="ack", id="msg-1")
@@ -196,7 +196,7 @@ class TestNotificationHandlerMessages:
         config = WebSocketConfig(endpoint_name="notifications")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = NotificationWebSocketHandler(config=config, broadcaster=mock_broadcaster)
 
         handler._user = AuthUser(id="user-123", username="user-123")

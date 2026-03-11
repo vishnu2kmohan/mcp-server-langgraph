@@ -109,7 +109,8 @@ describe("TemplateSelector", () => {
       const chip = screen.getByRole("button", { name: /code review/i });
       fireEvent.click(chip);
 
-      expect(chip).toHaveClass("ring-2");
+      // Selected chip sets aria-pressed="true" for selection state
+      expect(chip).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should show template preview when chip is clicked", () => {

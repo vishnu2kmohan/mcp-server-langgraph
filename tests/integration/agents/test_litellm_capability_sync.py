@@ -20,6 +20,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.xdist_group("test_lite_l_l_m_model_cost_access")
 @pytest.mark.integration
 class TestLiteLLMModelCostAccess:
     """Integration tests for accessing LiteLLM's model_cost data."""
@@ -100,6 +101,7 @@ class TestLiteLLMModelCostAccess:
         assert found_reasoning_model, "Should find at least one o-series model with supports_reasoning=True"
 
 
+@pytest.mark.xdist_group("test_lite_l_l_m_supports_reasoning_function")
 @pytest.mark.integration
 class TestLiteLLMSupportsReasoningFunction:
     """Integration tests for litellm.supports_reasoning() function."""
@@ -162,6 +164,7 @@ class TestLiteLLMSupportsReasoningFunction:
         assert result is True, "gemini-2.5-flash should support reasoning per Google docs"
 
 
+@pytest.mark.xdist_group("test_lite_l_l_m_model_sync_integration")
 @pytest.mark.integration
 class TestLiteLLMModelSyncIntegration:
     """Integration tests for LiteLLMModelSync with real data."""
@@ -234,6 +237,7 @@ class TestLiteLLMModelSyncIntegration:
                 assert not normalized.startswith(("openai/", "anthropic/", "google/", "azure/"))
 
 
+@pytest.mark.xdist_group("test_lite_l_l_m_capability_accuracy")
 @pytest.mark.integration
 class TestLiteLLMCapabilityAccuracy:
     """Integration tests to document LiteLLM capability accuracy.
@@ -315,6 +319,7 @@ class TestLiteLLMCapabilityAccuracy:
         assert post_sync_thinking is True, "Registry should maintain correct gemini-3-flash capability even after sync"
 
 
+@pytest.mark.xdist_group("test_alternative_model_id_lookup")
 @pytest.mark.integration
 class TestAlternativeModelIdLookup:
     """Integration tests for alternative model ID lookup with real data."""

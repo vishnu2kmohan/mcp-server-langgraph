@@ -222,7 +222,9 @@ class TestCompactionWithReordering:
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Summary: Previous discussion about project setup."))
 
-        with patch("mcp_server_langgraph.core.context_manager.create_summarization_model", return_value=mock_llm):
+        with patch(
+            "mcp_server_langgraph.core.context_manager.create_summarization_model", side_effect=lambda *a, **kw: mock_llm
+        ):
             with patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags:
                 mock_flags.enable_lost_in_middle_mitigation = True
                 mock_flags.context_compaction_threshold_percentage = 0.5

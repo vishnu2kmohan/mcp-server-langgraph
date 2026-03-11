@@ -49,6 +49,12 @@ class TestLiteLLMModelSyncExists:
         assert hasattr(sync, "update_registry")
         assert callable(sync.update_registry)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMModelSyncGetModels:
     """Test getting model list from LiteLLM."""
@@ -89,6 +95,12 @@ class TestLiteLLMModelSyncGetModels:
         models = sync.get_litellm_models()
 
         assert "gpt-4" in models
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestLiteLLMModelSyncPricing:
@@ -147,6 +159,12 @@ class TestLiteLLMModelSyncPricing:
         # Should return 0 without raising
         assert count == 0
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMModelSyncUpdateRegistry:
     """Test updating ModelRegistry from LiteLLM data."""
@@ -197,6 +215,12 @@ class TestLiteLLMModelSyncUpdateRegistry:
 
         assert isinstance(updated, int)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMModelSyncFeatureFlag:
     """Test feature flag for LiteLLM model sync."""
@@ -221,6 +245,12 @@ class TestLiteLLMModelSyncFeatureFlag:
 
         flags = FeatureFlags(enable_litellm_model_sync=True)
         assert flags.enable_litellm_model_sync is True
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestLiteLLMModelSyncScheduler:
@@ -282,6 +312,12 @@ class TestLiteLLMModelSyncScheduler:
             except asyncio.CancelledError:
                 pass
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMModelSyncInterval:
     """Test sync interval configuration."""
@@ -297,6 +333,12 @@ class TestLiteLLMModelSyncInterval:
         from mcp_server_langgraph.agents.litellm_model_sync import SYNC_INTERVAL_SECONDS
 
         assert SYNC_INTERVAL_SECONDS == 86400
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestLiteLLMModelSyncPricingConversion:
@@ -324,6 +366,12 @@ class TestLiteLLMModelSyncPricingConversion:
         per_1m = sync._convert_to_per_1m(0.0)
         assert per_1m == 0.0
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMModelSyncModelMapping:
     """Test mapping between LiteLLM model IDs and ModelRegistry model IDs."""
@@ -347,6 +395,12 @@ class TestLiteLLMModelSyncModelMapping:
 
         # Version suffixes should be preserved
         assert sync._normalize_model_id("claude-opus-4-5-20251101") == "claude-opus-4-5-20251101"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestLiteLLMModelSyncLogging:
@@ -381,6 +435,12 @@ class TestLiteLLMModelSyncLogging:
         # Error should be logged
         mock_logger.error.called or mock_logger.warning.called
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # LiteLLM Sync Prometheus Metrics Tests (TDD - Sprint 2)
@@ -401,6 +461,12 @@ class TestLiteLLMSyncPrometheusMetricsModule:
         from mcp_server_langgraph.agents.litellm_prometheus_metrics import _init_metrics
 
         assert callable(_init_metrics)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestLiteLLMSyncPrometheusMetricsDefinitions:
@@ -467,6 +533,12 @@ class TestLiteLLMSyncPrometheusMetricsDefinitions:
 
         assert _litellm_sync_errors_total is not None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMSyncPrometheusMetricsRecording:
     """Test recording functions for LiteLLM sync metrics."""
@@ -531,6 +603,12 @@ class TestLiteLLMSyncPrometheusMetricsRecording:
         # Should not raise
         record_models_updated(count=5)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMSyncPrometheusMetricsLabels:
     """Test that metrics have correct labels."""
@@ -563,6 +641,12 @@ class TestLiteLLMSyncPrometheusMetricsLabels:
         record_sync_failure(error_type="parse_error", duration_seconds=0.2)
         record_sync_failure(error_type="timeout", duration_seconds=30.0)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMSyncPrometheusMetricsLazyInit:
     """Test lazy initialization of metrics."""
@@ -583,6 +667,12 @@ class TestLiteLLMSyncPrometheusMetricsLazyInit:
 
         assert result1 == result2
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMSyncPrometheusMetricsGracefulDegradation:
     """Test graceful degradation when prometheus_client not available."""
@@ -602,6 +692,12 @@ class TestLiteLLMSyncPrometheusMetricsGracefulDegradation:
             record_models_updated(count=0)
         except Exception as e:
             pytest.fail(f"Record functions raised an exception: {e}")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # =============================================================================
@@ -683,6 +779,12 @@ class TestLiteLLMModelSyncCapabilities:
         count = sync.sync_capabilities()
         assert count == 0
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMModelSyncCapabilityMapping:
     """Test model ID mapping for capability sync."""
@@ -709,6 +811,12 @@ class TestLiteLLMModelSyncCapabilityMapping:
 
         result = sync._normalize_model_id("vertex_ai/gemini-3-flash")
         assert result == "gemini-3-flash"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestLiteLLMModelSyncUpdateRegistryWithCapabilities:
@@ -738,6 +846,12 @@ class TestLiteLLMModelSyncUpdateRegistryWithCapabilities:
 
         # Restore
         sync.sync_capabilities = original_sync_caps
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestLiteLLMSupportsReasoningFunction:
@@ -772,6 +886,12 @@ class TestLiteLLMSupportsReasoningFunction:
         result = litellm.supports_reasoning("gpt-4")
         assert result is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLiteLLMModelSyncAlternativeIds:
     """Test alternative model ID lookups for capability sync."""
@@ -803,3 +923,9 @@ class TestLiteLLMModelSyncAlternativeIds:
         alts = sync._get_alternative_model_ids("some-model")
 
         assert isinstance(alts, list)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

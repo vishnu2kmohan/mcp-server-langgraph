@@ -17,6 +17,8 @@ import { render, screen, within, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
+import { Provider } from "react-redux";
+import { createTestStore } from "@/test-utils";
 import { SessionList } from "./SessionList";
 import { PreferencesProvider } from "../../contexts/PreferencesContext";
 import { STORAGE_KEYS } from "../../utils/storage";
@@ -87,7 +89,12 @@ const renderWithProvider = (
       }),
     );
   }
-  return render(<PreferencesProvider>{ui}</PreferencesProvider>);
+  const store = createTestStore();
+  return render(
+    <Provider store={store}>
+      <PreferencesProvider>{ui}</PreferencesProvider>
+    </Provider>,
+  );
 };
 
 describe("SessionList", () => {
@@ -178,7 +185,9 @@ describe("SessionList", () => {
     it("should show create session prompt in empty state", () => {
       renderWithProvider(<SessionList sessions={[]} />);
 
-      expect(screen.getByText(/start a new conversation/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/start a conversation to see your sessions here/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -205,7 +214,7 @@ describe("SessionList", () => {
       const searchInput = screen.getByPlaceholderText(/search sessions/i);
       await user.type(searchInput, "nonexistent");
 
-      expect(screen.getByText(/no sessions found/i)).toBeInTheDocument();
+      expect(screen.getByText(/no sessions matching/i)).toBeInTheDocument();
     });
 
     it("should clear search when clear button is clicked", async () => {

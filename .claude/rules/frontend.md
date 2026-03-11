@@ -45,6 +45,21 @@ className="bg-neutral-2 text-neutral-11 border-neutral-6"
 className="bg-gray-100 text-gray-900 border-gray-300"
 ```
 
+### Radix Scale Step Conventions
+
+When using semantic color tokens, use **step 3** for subtle backgrounds
+(success, error, primary status), not step 2:
+
+| Usage | Correct | Wrong |
+|-------|---------|-------|
+| Status background | `bg-success-3` | `bg-success-2` |
+| Error background | `bg-error-3` | `bg-error-2` |
+| Selected state | `bg-primary-3` | `bg-primary-2` |
+| Border (status) | `border-success-9` | `border-success-7` |
+| Text (on status bg) | `text-success-11` | `text-success-9` |
+
+Step 2 is for very subtle hover states. Step 3 is the standard subtle background.
+
 ### WebSocket Type Guards
 ```typescript
 function isAlertMessage(data: unknown): data is AlertMessage {
@@ -54,10 +69,64 @@ function isAlertMessage(data: unknown): data is AlertMessage {
 
 ## Testing Rules
 
-- Use `data-testid` for E2E selectors
+- Use `data-testid` for E2E selectors (pattern: `{scope}-{element}[-{modifier}]`)
 - Mock WebSocket with `vi.mock()`
-- Use `userEvent` over `fireEvent`
 - Test accessibility with `jest-axe`
+- Prefer `userEvent` for form/keyboard tests; use `fireEvent` for components
+  with timers (`useDebouncedValue`) or `motion.button` elements (see tests.md Rule 6)
+
+### Required Test File Structure (MANDATORY)
+
+Every `.tsx` test file MUST include cleanup teardown. Every `.ts`/`.tsx` test
+file MUST NOT have unused imports or variables (prefix with `_` if needed for
+setup side-effects).
+
+```typescript
+// REQUIRED in every .tsx test file
+import { afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+  vi.restoreAllMocks();
+});
+```
+
+**Before generating test code**, verify:
+- No unused imports (remove or prefix with `_`)
+- No unused variables (remove or prefix with `_`)
+- `afterEach` block with `cleanup()` + `vi.clearAllMocks()` + `vi.restoreAllMocks()`
+- Run through Prettier formatting mentally (consistent quotes, trailing commas)
+
+### OOM/Hang Prevention (CRITICAL)
+
+| Trap | Symptom | Fix |
+|------|---------|-----|
+| `vi.importActual("../../api")` | OOM >8GB in fork worker | Mock barrel directly: `vi.mock("../../api", () => ({...}))` |
+| `vi.importActual("../../hooks")` | OOM >8GB (transitively loads api) | Mock only the hooks your component imports |
+| RTK Query mock returns new refs | Infinite render → OOM | Hoist mock trigger in `vi.mock` factory body (see below) |
+| `userEvent` + timer hooks + `RouterProvider` | Test hangs indefinitely | Use `fireEvent` + mock `useDebouncedValue` |
+| `motion.button` without mock | `userEvent.click()` hangs (rAF) | Add `vi.mock("motion/react", ...)` with `filterMotionProps` |
+| Test file >1,000 lines | OOM in sharded runs | Split into `.core.test.tsx`, `.features.test.tsx` |
+
+**Never `vi.importActual` on heavy barrels** (`src/api/index.ts` = 5,132 lines,
+`src/hooks/index.ts` = 107 re-exports). Read the component source to find which
+named imports it uses, then mock only those.
+
+**RTK Query mock stability**: When mocking RTK Query mutation/query hooks,
+hoist the trigger function OUTSIDE the return object to prevent infinite
+render loops. Each `useXxxMutation()` call must return the SAME function
+reference (RTK Query does this via internal refs):
+```typescript
+vi.mock("../api", () => {
+  const mockTrigger = vi.fn(() => ({
+    unwrap: () => Promise.resolve({ /* mock data */ }),
+  }));
+  const mockReturn = [mockTrigger, { isLoading: false }] as const;
+  return { useMyMutation: vi.fn(() => mockReturn) };
+});
+```
 
 ## Animation Choice
 
@@ -153,19 +222,6 @@ Use semantic tokens, NOT raw values:
 | `z-dropdown` | `z-50` | Dropdown menus |
 | `z-modal` | `z-60` | Modal dialogs |
 | `z-toast` | `z-75` | Toast notifications |
-
-### Test ID Conventions
-
-```tsx
-// Pattern: {scope}-{element}[-{modifier}]
-data-testid="chat-input-form"
-data-testid="model-selector-button"
-data-testid={`file-card-${file.id}`}  // Dynamic
-
-// WRONG
-data-testid="button-1"      // Not semantic
-data-testid="fileUploadBtn" // Not kebab-case
-```
 
 ### Import Patterns
 

@@ -66,7 +66,7 @@ class TestSemanticSearchTenantIsolation:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch("mcp_server_langgraph.core.dynamic_context_loader.settings") as mock_settings,
         ):
@@ -132,7 +132,7 @@ class TestSemanticSearchTenantIsolation:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch("mcp_server_langgraph.core.dynamic_context_loader.settings") as mock_settings,
         ):
@@ -196,7 +196,7 @@ class TestSemanticSearchTenantIsolation:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch("mcp_server_langgraph.core.dynamic_context_loader.settings") as mock_settings,
         ):
@@ -270,7 +270,7 @@ class TestSemanticSearchBackwardCompatibility:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch("mcp_server_langgraph.core.dynamic_context_loader.settings") as mock_settings,
         ):
@@ -336,7 +336,7 @@ class TestSemanticSearchBackwardCompatibility:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch("mcp_server_langgraph.core.dynamic_context_loader.settings") as mock_settings,
         ):
@@ -411,7 +411,7 @@ class TestLoadContextImplTenantIsolation:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch("mcp_server_langgraph.core.dynamic_context_loader.settings") as mock_settings,
         ):
@@ -472,7 +472,7 @@ class TestLoadContextImplTenantIsolation:
             ),
             patch(
                 "mcp_server_langgraph.core.dynamic_context_loader._create_embeddings",
-                return_value=mock_embedder,
+                side_effect=lambda *a, **kw: mock_embedder,
             ),
             patch("mcp_server_langgraph.core.dynamic_context_loader.settings") as mock_settings,
         ):

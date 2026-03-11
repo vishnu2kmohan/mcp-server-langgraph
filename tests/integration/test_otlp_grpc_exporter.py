@@ -23,6 +23,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.xdist_group("test_g_r_p_c_exporter_selection")
 class TestGRPCExporterSelection:
     """
     Integration tests for gRPC exporter selection.

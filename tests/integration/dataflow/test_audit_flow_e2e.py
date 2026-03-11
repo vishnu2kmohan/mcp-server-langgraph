@@ -93,6 +93,7 @@ def create_audit_event():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_audit_data_flow_e2_e")
 class TestAuditDataFlowE2E:
     """
     E2E tests verifying the complete audit data flow.
@@ -250,6 +251,7 @@ class TestAuditDataFlowE2E:
         assert all(e.actor.actor_id == unique_actor_id for e in events)
 
 
+@pytest.mark.xdist_group("test_audit_broadcaster_flow")
 class TestAuditBroadcasterFlow:
     """
     E2E tests for audit event broadcasting (WebSocket real-time).
@@ -451,6 +453,7 @@ class TestAuditSchedulerIntegration:
                 await state.cleanup()
 
 
+@pytest.mark.xdist_group("test_audit_a_p_i_integration")
 class TestAuditAPIIntegration:
     """
     E2E tests for Audit API endpoints via repository.

@@ -31,7 +31,7 @@ def mock_session_service() -> MagicMock:
     """Mock session service for ownership checks."""
     service = MagicMock()
     service.get_session = AsyncMock(
-        return_value={
+        side_effect=lambda *a, **kw: {
             "id": "session-123",
             "name": "Test Session",
             "user_id": "test-user-123",
@@ -52,7 +52,7 @@ def mock_goal_repository() -> MagicMock:
 def mock_audit_repository() -> MagicMock:
     """Mock audit log repository."""
     repo = MagicMock()
-    repo.log_event = AsyncMock(return_value=None)
+    repo.log_event = AsyncMock(side_effect=lambda *a, **kw: None)
     return repo
 
 
@@ -104,7 +104,7 @@ class TestSetGoalEndpointWithRepository:
         """Verify set_goal endpoint calls repository.create_goal."""
         # Setup mock return value
         mock_goal_repository.create_goal = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "id": "goal-uuid-123",
                 "session_id": "session-123",
                 "user_id": "test-user-123",
@@ -143,7 +143,7 @@ class TestSetGoalEndpointWithRepository:
     ) -> None:
         """Verify endpoint returns data from repository."""
         mock_goal_repository.create_goal = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "id": "goal-uuid-123",
                 "session_id": "session-123",
                 "user_id": "test-user-123",
@@ -170,6 +170,12 @@ class TestSetGoalEndpointWithRepository:
         assert data["goal"] == "Finish project"
         assert data["set_at"] == 1705123456789
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestCompleteGoalEndpointWithRepository:
@@ -183,7 +189,7 @@ class TestCompleteGoalEndpointWithRepository:
     ) -> None:
         """Verify complete_goal endpoint calls repository.complete_goal."""
         mock_goal_repository.complete_goal = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "id": "goal-uuid-123",
                 "session_id": "session-123",
                 "user_id": "test-user-123",
@@ -225,7 +231,7 @@ class TestCompleteGoalEndpointWithRepository:
     ) -> None:
         """Verify partial achievement is passed to repository."""
         mock_goal_repository.complete_goal = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "id": "goal-uuid-123",
                 "session_id": "session-123",
                 "user_id": "test-user-123",
@@ -262,7 +268,7 @@ class TestCompleteGoalEndpointWithRepository:
         actual_set_at = 1705100000000  # Different from stub calculation
 
         mock_goal_repository.complete_goal = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "id": "goal-uuid-123",
                 "session_id": "session-123",
                 "user_id": "test-user-123",
@@ -289,6 +295,12 @@ class TestCompleteGoalEndpointWithRepository:
         # Should use repository's set_at, not stub calculation
         assert data["set_at"] == actual_set_at
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestGetGoalHistoryEndpointWithRepository:
@@ -302,7 +314,7 @@ class TestGetGoalHistoryEndpointWithRepository:
     ) -> None:
         """Verify get_goal_history endpoint calls repository."""
         mock_goal_repository.get_goals_by_session = AsyncMock(
-            return_value=[
+            side_effect=lambda *a, **kw: [
                 {
                     "id": "goal-1",
                     "session_id": "session-123",
@@ -325,7 +337,7 @@ class TestGetGoalHistoryEndpointWithRepository:
                 },
             ]
         )
-        mock_goal_repository.count_goals_by_session = AsyncMock(return_value=2)
+        mock_goal_repository.count_goals_by_session = AsyncMock(side_effect=lambda *a, **kw: 2)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/sessions/session-123/goals?limit=10&offset=0")
@@ -352,7 +364,7 @@ class TestGetGoalHistoryEndpointWithRepository:
     ) -> None:
         """Verify endpoint returns goals from repository."""
         mock_goal_repository.get_goals_by_session = AsyncMock(
-            return_value=[
+            side_effect=lambda *a, **kw: [
                 {
                     "id": "goal-1",
                     "session_id": "session-123",
@@ -365,7 +377,7 @@ class TestGetGoalHistoryEndpointWithRepository:
                 },
             ]
         )
-        mock_goal_repository.count_goals_by_session = AsyncMock(return_value=1)
+        mock_goal_repository.count_goals_by_session = AsyncMock(side_effect=lambda *a, **kw: 1)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/sessions/session-123/goals")
@@ -401,8 +413,8 @@ class TestGetGoalHistoryEndpointWithRepository:
             }
             for i in range(2)
         ]
-        mock_goal_repository.get_goals_by_session = AsyncMock(return_value=goals)
-        mock_goal_repository.count_goals_by_session = AsyncMock(return_value=10)
+        mock_goal_repository.get_goals_by_session = AsyncMock(side_effect=lambda *a, **kw: goals)
+        mock_goal_repository.count_goals_by_session = AsyncMock(side_effect=lambda *a, **kw: 10)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/sessions/session-123/goals?limit=2")
@@ -421,8 +433,8 @@ class TestGetGoalHistoryEndpointWithRepository:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify endpoint handles empty goal history."""
-        mock_goal_repository.get_goals_by_session = AsyncMock(return_value=[])
-        mock_goal_repository.count_goals_by_session = AsyncMock(return_value=0)
+        mock_goal_repository.get_goals_by_session = AsyncMock(side_effect=lambda *a, **kw: [])
+        mock_goal_repository.count_goals_by_session = AsyncMock(side_effect=lambda *a, **kw: 0)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/sessions/session-123/goals")
@@ -432,6 +444,12 @@ class TestGetGoalHistoryEndpointWithRepository:
 
         assert data["goals"] == []
         assert data["total"] == 0
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -446,7 +464,7 @@ class TestSessionOwnershipValidation:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify 404 is returned if session doesn't exist."""
-        mock_session_service.get_session = AsyncMock(return_value=None)
+        mock_session_service.get_session = AsyncMock(side_effect=lambda *a, **kw: None)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
@@ -470,7 +488,7 @@ class TestSessionOwnershipValidation:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify 404 is returned if session doesn't exist for complete."""
-        mock_session_service.get_session = AsyncMock(return_value=None)
+        mock_session_service.get_session = AsyncMock(side_effect=lambda *a, **kw: None)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
@@ -495,7 +513,7 @@ class TestSessionOwnershipValidation:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify 404 is returned if session doesn't exist for history."""
-        mock_session_service.get_session = AsyncMock(return_value=None)
+        mock_session_service.get_session = AsyncMock(side_effect=lambda *a, **kw: None)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/sessions/nonexistent/goals")
@@ -504,6 +522,12 @@ class TestSessionOwnershipValidation:
 
         # Repository should NOT be called
         mock_goal_repository.get_goals_by_session.assert_not_called()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -518,7 +542,7 @@ class TestGetCurrentGoalEndpoint:
     ) -> None:
         """Verify get_current_goal returns 200 with current goal."""
         mock_goal_repository.get_current_goal = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "id": "goal-123",
                 "session_id": "session-123",
                 "user_id": "test-user-123",
@@ -548,7 +572,7 @@ class TestGetCurrentGoalEndpoint:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify get_current_goal calls repository with correct params."""
-        mock_goal_repository.get_current_goal = AsyncMock(return_value=None)
+        mock_goal_repository.get_current_goal = AsyncMock(side_effect=lambda *a, **kw: None)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             await client.get("/api/v1/sessions/session-123/goal/current")
@@ -565,7 +589,7 @@ class TestGetCurrentGoalEndpoint:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify get_current_goal returns null goal when none active."""
-        mock_goal_repository.get_current_goal = AsyncMock(return_value=None)
+        mock_goal_repository.get_current_goal = AsyncMock(side_effect=lambda *a, **kw: None)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/sessions/session-123/goal/current")
@@ -582,13 +606,19 @@ class TestGetCurrentGoalEndpoint:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify 404 is returned if session doesn't exist."""
-        mock_session_service.get_session = AsyncMock(return_value=None)
+        mock_session_service.get_session = AsyncMock(side_effect=lambda *a, **kw: None)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/sessions/nonexistent/goal/current")
 
         assert response.status_code == 404
         mock_goal_repository.get_current_goal.assert_not_called()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -602,7 +632,7 @@ class TestDeleteGoalEndpoint:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify delete_goal returns 204 No Content on success."""
-        mock_goal_repository.delete_goal = AsyncMock(return_value=True)
+        mock_goal_repository.delete_goal = AsyncMock(side_effect=lambda *a, **kw: True)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.delete("/api/v1/sessions/session-123/goals/goal-456")
@@ -616,7 +646,7 @@ class TestDeleteGoalEndpoint:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify delete_goal calls repository with correct params."""
-        mock_goal_repository.delete_goal = AsyncMock(return_value=True)
+        mock_goal_repository.delete_goal = AsyncMock(side_effect=lambda *a, **kw: True)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             await client.delete("/api/v1/sessions/session-123/goals/goal-456")
@@ -633,7 +663,7 @@ class TestDeleteGoalEndpoint:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify delete_goal returns 404 when goal not found."""
-        mock_goal_repository.delete_goal = AsyncMock(return_value=False)
+        mock_goal_repository.delete_goal = AsyncMock(side_effect=lambda *a, **kw: False)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.delete("/api/v1/sessions/session-123/goals/nonexistent")
@@ -648,10 +678,16 @@ class TestDeleteGoalEndpoint:
         mock_goal_repository: MagicMock,
     ) -> None:
         """Verify 404 is returned if session doesn't exist."""
-        mock_session_service.get_session = AsyncMock(return_value=None)
+        mock_session_service.get_session = AsyncMock(side_effect=lambda *a, **kw: None)
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.delete("/api/v1/sessions/nonexistent/goals/goal-456")
 
         assert response.status_code == 404
         mock_goal_repository.delete_goal.assert_not_called()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

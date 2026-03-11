@@ -550,6 +550,7 @@ export function useRealtimeSync(
     // Validate WebSocket URL protocol to prevent DOMException
     // WebSocket URLs must start with ws:// or wss://
     if (!currentUrl.startsWith("ws://") && !currentUrl.startsWith("wss://")) {
+      // nosemgrep: detect-insecure-websocket
       const error = new Error(
         `Invalid WebSocket URL: "${currentUrl}". URL must start with ws:// or wss://`,
       );

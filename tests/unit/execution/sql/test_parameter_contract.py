@@ -291,7 +291,10 @@ class TestParameterContractValidateParamCount:
 
     def test_unused_params_logs_warning(self, contract, caplog):
         sql = "SELECT * FROM users WHERE id = :id"
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(
+            logging.WARNING,
+            logger="mcp_server_langgraph.execution.sql.parameter_contract",
+        ):
             contract.validate_param_count(sql, {"id": 1, "extra": "unused"})
         assert "Unused parameters" in caplog.text
 

@@ -19,7 +19,6 @@ import {
   createTestStore,
   createWrapper,
 } from "./SessionNav.fixtures";
-import { TestProvider } from "@/test-utils";
 
 // Mock navigate and other react-router hooks
 vi.mock("react-router", async () => {
@@ -178,11 +177,9 @@ describe("SessionNav Similar Sessions Integration", () => {
   it("should render SimilarSessionsPanel when enableSimilarSessions is true", () => {
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableSimilarSessions userId="test-user" />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
     );
 
     // Should render the SimilarSessionsPanel with heading
@@ -192,11 +189,9 @@ describe("SessionNav Similar Sessions Integration", () => {
   it("should not render SimilarSessionsPanel when enableSimilarSessions is false", () => {
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableSimilarSessions={false} />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableSimilarSessions={false} />
+      </Wrapper>,
     );
 
     // Should not show similar sessions
@@ -206,11 +201,9 @@ describe("SessionNav Similar Sessions Integration", () => {
   it("should display similar sessions from hook data", () => {
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableSimilarSessions userId="test-user" />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
     );
 
     // Should show similarity scores (from mock: 85% and 72%)
@@ -221,11 +214,9 @@ describe("SessionNav Similar Sessions Integration", () => {
   it("should display common topics as badges", () => {
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableSimilarSessions userId="test-user" />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
     );
 
     // Should show common topics from mock data
@@ -238,11 +229,9 @@ describe("SessionNav Similar Sessions Integration", () => {
     const user = userEvent.setup();
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableSimilarSessions userId="test-user" />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableSimilarSessions userId="test-user" />
+      </Wrapper>,
     );
 
     // Click on a similar session
@@ -260,15 +249,13 @@ describe("SessionNav Similar Sessions Integration", () => {
     };
 
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav
-            enableSimilarSessions
-            userId="test-user"
-            similarSessionNames={sessionNames}
-          />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav
+          enableSimilarSessions
+          userId="test-user"
+          similarSessionNames={sessionNames}
+        />
+      </Wrapper>,
     );
 
     // Should display custom session names instead of IDs
@@ -305,11 +292,9 @@ describe("SessionNav Archive/Restore", () => {
       // GIVEN: SessionNav component
       const Wrapper = createWrapper(store);
       render(
-        <TestProvider>
-          <Wrapper>
-            <SessionNav />
-          </Wrapper>
-        </TestProvider>,
+        <Wrapper>
+          <SessionNav />
+        </Wrapper>,
       );
 
       // THEN: Should show both toggle buttons with correct data-testids
@@ -321,11 +306,9 @@ describe("SessionNav Archive/Restore", () => {
       // GIVEN: SessionNav with default (active) view
       const Wrapper = createWrapper(store);
       render(
-        <TestProvider>
-          <Wrapper>
-            <SessionNav />
-          </Wrapper>
-        </TestProvider>,
+        <Wrapper>
+          <SessionNav />
+        </Wrapper>,
       );
 
       // THEN: Active toggle should have highlighted style (bg-primary-3)
@@ -341,11 +324,9 @@ describe("SessionNav Archive/Restore", () => {
       // GIVEN: SessionNav with sessions available
       const Wrapper = createWrapper(store);
       render(
-        <TestProvider>
-          <Wrapper>
-            <SessionNav />
-          </Wrapper>
-        </TestProvider>,
+        <Wrapper>
+          <SessionNav />
+        </Wrapper>,
       );
 
       // THEN: Sessions are displayed (not empty state)
@@ -359,11 +340,9 @@ describe("SessionNav Archive/Restore", () => {
       const user = userEvent.setup();
       const Wrapper = createWrapper(store);
       render(
-        <TestProvider>
-          <Wrapper>
-            <SessionNav />
-          </Wrapper>
-        </TestProvider>,
+        <Wrapper>
+          <SessionNav />
+        </Wrapper>,
       );
 
       // WHEN: User clicks the Archived toggle
@@ -379,11 +358,9 @@ describe("SessionNav Archive/Restore", () => {
       const user = userEvent.setup();
       const Wrapper = createWrapper(store);
       render(
-        <TestProvider>
-          <Wrapper>
-            <SessionNav />
-          </Wrapper>
-        </TestProvider>,
+        <Wrapper>
+          <SessionNav />
+        </Wrapper>,
       );
 
       // WHEN: User clicks the Active toggle
@@ -404,11 +381,9 @@ describe("SessionNav Archive/Restore", () => {
       // GIVEN: SessionNav with context menu enabled
       const Wrapper = createWrapper(store);
       render(
-        <TestProvider>
-          <Wrapper>
-            <SessionNav enableContextMenu />
-          </Wrapper>
-        </TestProvider>,
+        <Wrapper>
+          <SessionNav enableContextMenu />
+        </Wrapper>,
       );
 
       // The context menu items are built but not visible until right-click
@@ -422,11 +397,9 @@ describe("SessionNav Archive/Restore", () => {
       // This test verifies the component has proper handlers wired up
       const Wrapper = createWrapper(store);
       render(
-        <TestProvider>
-          <Wrapper>
-            <SessionNav enableContextMenu />
-          </Wrapper>
-        </TestProvider>,
+        <Wrapper>
+          <SessionNav enableContextMenu />
+        </Wrapper>,
       );
 
       // Verify sessions are rendered with context menu capability
@@ -458,11 +431,9 @@ describe("SessionNav Hover Details", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableHover />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableHover />
+      </Wrapper>,
     );
 
     // Hover over the session button (not the div - Tooltip attaches to button)
@@ -481,11 +452,9 @@ describe("SessionNav Hover Details", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableHover />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableHover />
+      </Wrapper>,
     );
 
     const sessionButton = screen.getByRole("button", { name: "Today's Chat" });
@@ -504,14 +473,12 @@ describe("SessionNav Hover Details", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav
-            enableHover
-            sessionMetadata={{ "session-1": { messageCount: 5 } }}
-          />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav
+          enableHover
+          sessionMetadata={{ "session-1": { messageCount: 5 } }}
+        />
+      </Wrapper>,
     );
 
     const sessionButton = screen.getByRole("button", { name: "Today's Chat" });
@@ -529,19 +496,17 @@ describe("SessionNav Hover Details", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav
-            enableHover
-            sessionMetadata={{
-              "session-1": {
-                messageCount: 5,
-                firstMessage: "Hello, how can I help you today?",
-              },
-            }}
-          />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav
+          enableHover
+          sessionMetadata={{
+            "session-1": {
+              messageCount: 5,
+              firstMessage: "Hello, how can I help you today?",
+            },
+          }}
+        />
+      </Wrapper>,
     );
 
     const sessionButton = screen.getByRole("button", { name: "Today's Chat" });
@@ -561,19 +526,17 @@ describe("SessionNav Hover Details", () => {
       "This is a very long message that should be truncated when displayed in the hover tooltip because we do not want to show too much content in a small tooltip";
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav
-            enableHover
-            sessionMetadata={{
-              "session-1": {
-                messageCount: 5,
-                firstMessage: longMessage,
-              },
-            }}
-          />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav
+          enableHover
+          sessionMetadata={{
+            "session-1": {
+              messageCount: 5,
+              firstMessage: longMessage,
+            },
+          }}
+        />
+      </Wrapper>,
     );
 
     const sessionButton = screen.getByRole("button", { name: "Today's Chat" });
@@ -593,11 +556,9 @@ describe("SessionNav Hover Details", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableHover />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableHover />
+      </Wrapper>,
     );
 
     const sessionButton = screen.getByRole("button", { name: "Today's Chat" });
@@ -620,11 +581,9 @@ describe("SessionNav Hover Details", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const Wrapper = createWrapper(store);
     render(
-      <TestProvider>
-        <Wrapper>
-          <SessionNav enableHover={false} />
-        </Wrapper>
-      </TestProvider>,
+      <Wrapper>
+        <SessionNav enableHover={false} />
+      </Wrapper>,
     );
 
     const sessionButton = screen.getByRole("button", { name: "Today's Chat" });

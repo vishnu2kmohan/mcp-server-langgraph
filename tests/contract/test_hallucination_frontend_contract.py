@@ -75,6 +75,7 @@ COMPONENT_CATEGORY_IDS = frozenset(
 # =============================================================================
 
 
+@pytest.mark.xdist_group("test_hallucination_category_contract")
 class TestHallucinationCategoryContract:
     """Verify HallucinationCategory enum matches frontend type."""
 
@@ -107,7 +108,14 @@ class TestHallucinationCategoryContract:
         assert HallucinationCategory.MADE_UP_SOURCE.value == "made_up_source"
         assert HallucinationCategory.OTHER.value == "other"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_severity_contract")
 class TestSeverityContract:
     """Verify Severity enum matches frontend type."""
 
@@ -126,7 +134,14 @@ class TestSeverityContract:
             f"Severity count mismatch! Backend: {backend_count}, Frontend: {frontend_count}, Expected: 3"
         )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_hallucination_report_request_contract")
 class TestHallucinationReportRequestContract:
     """Verify HallucinationReportRequest fields match frontend interface."""
 
@@ -158,7 +173,14 @@ class TestHallucinationReportRequestContract:
         default_severity = HallucinationReportRequest.model_fields["severity"].default
         assert default_severity == Severity.MEDIUM, f"Default severity should be 'medium', got: {default_severity}"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_field_name_conventions")
 class TestFieldNameConventions:
     """Verify field naming follows snake_case convention (ADR-0091)."""
 
@@ -172,7 +194,14 @@ class TestFieldNameConventions:
             has_camel = any(c.isupper() and i > 0 and field_name[i - 1].islower() for i, c in enumerate(field_name))
             assert not has_camel, f"Field {field_name} appears to be camelCase"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_category_descriptions")
 class TestCategoryDescriptions:
     """Verify category descriptions are defined for UI display."""
 
@@ -192,3 +221,9 @@ class TestCategoryDescriptions:
         # Verify all backend categories have expected UI labels defined
         for category in HallucinationCategory:
             assert category.value in expected_labels, f"Missing UI label for category: {category.value}"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

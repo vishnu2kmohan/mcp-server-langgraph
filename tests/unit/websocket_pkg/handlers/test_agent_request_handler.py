@@ -35,7 +35,7 @@ class TestAgentRequestHandlerInit:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         assert handler._broadcaster is mock_broadcaster
@@ -50,7 +50,7 @@ class TestAgentRequestHandlerInit:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster, session_id="sess-123")
 
         assert handler._session_id == "sess-123"
@@ -72,7 +72,7 @@ class TestAgentRequestHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster, session_id="sess-123")
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -95,7 +95,7 @@ class TestAgentRequestHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -125,7 +125,7 @@ class TestAgentRequestHandlerMessages:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="subscribe", id="msg-1")
@@ -144,7 +144,7 @@ class TestAgentRequestHandlerMessages:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="subscribe", id="msg-1", payload={"session_id": "new-session"})
@@ -163,7 +163,7 @@ class TestAgentRequestHandlerMessages:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         handler._subscribed = True
@@ -184,7 +184,7 @@ class TestAgentRequestHandlerMessages:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         message = MessageEnvelope(type="invalid", id="msg-3")
@@ -211,7 +211,7 @@ class TestAgentRequestHandlerPush:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -235,7 +235,7 @@ class TestAgentRequestHandlerPush:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -255,7 +255,7 @@ class TestAgentRequestHandlerPush:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -278,7 +278,7 @@ class TestAgentRequestHandlerPush:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -307,7 +307,7 @@ class TestAgentRequestHandlerPush:
         config = WebSocketConfig(endpoint_name="agent-request")
         mock_broadcaster = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = AgentRequestHandler(config=config, broadcaster=mock_broadcaster)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config

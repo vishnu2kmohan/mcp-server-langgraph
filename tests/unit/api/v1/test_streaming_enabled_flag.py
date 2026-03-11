@@ -93,7 +93,7 @@ class TestStreamingDisabledBehavior:
             with patch.object(
                 handler,
                 "execute_tool",
-                return_value=[{"type": "text", "text": "Non-streaming result"}],
+                side_effect=lambda *a, **kw: [{"type": "text", "text": "Non-streaming result"}],
             ):
                 message = {
                     "jsonrpc": "2.0",
@@ -257,21 +257,26 @@ class TestMetricsEndpointWithStreamingDisabled:
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
         from mcp_server_langgraph.api.v1.mcp_websocket import mcp_websocket_router
+        from mcp_server_langgraph.mcp.websocket.config import (
+            is_streaming_enabled,
+            set_streaming_enabled,
+        )
 
         app = FastAPI()
         app.include_router(mcp_websocket_router, prefix="/api/v1")
 
-        # Patch the package namespace where the endpoint imports from
-        # The endpoint does: from mcp_server_langgraph.mcp.websocket import is_streaming_enabled
-        with patch(
-            "mcp_server_langgraph.mcp.websocket.is_streaming_enabled",
-            return_value=False,
-        ):
+        # Directly set the config value (more reliable than patching under xdist)
+        original = is_streaming_enabled()
+        set_streaming_enabled(False)
+        try:
             client = TestClient(app)
             response = client.get("/api/v1/mcp/metrics/streams")
 
+            assert response.status_code == 200
             data = response.json()
 
             # Should include streaming_enabled status
             assert "streaming_enabled" in data
             assert data["streaming_enabled"] is False
+        finally:
+            set_streaming_enabled(original)

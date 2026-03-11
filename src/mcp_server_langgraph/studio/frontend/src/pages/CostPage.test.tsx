@@ -77,84 +77,91 @@ const mockForecastData = {
 // Import the mocked module for type-safe mocking
 import * as apiModule from "../api";
 
-vi.mock("../api", () => ({
-  useGetCostSummaryQuery: vi.fn(() => ({
-    data: mockSummaryData,
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-    refetch: mockRefetch,
-  })),
-  useGetCostByModelQuery: vi.fn(() => ({
-    data: mockModelData,
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-    refetch: mockRefetch,
-  })),
-  useGetCostHistoryQuery: vi.fn(() => ({
-    data: mockHistoryData,
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-    refetch: mockRefetch,
-  })),
-  useGetBudgetStatusQuery: vi.fn(() => ({
-    data: mockBudgetStatusData,
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-  })),
-  useGetCostForecastQuery: vi.fn(() => ({
-    data: mockForecastData,
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-  })),
-  // Organizational cost hooks used by OrganizationCostDashboard
-  useGetCostByOrganizationQuery: vi.fn(() => ({
-    data: [],
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-    refetch: mockRefetch,
-  })),
-  useGetCostByProjectQuery: vi.fn(() => ({
-    data: [],
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-    refetch: mockRefetch,
-  })),
-  useGetCostByTeamQuery: vi.fn(() => ({
-    data: [],
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-    refetch: mockRefetch,
-  })),
-  // Tool metrics comparison hook used by NativeToolComparison
-  useGetToolMetricsComparisonQuery: vi.fn(() => ({
-    data: {
-      comparison: [],
-      summary: { totalNativeCost: 0, totalBuiltinCost: 0, potentialSavings: 0 },
-    },
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-    error: null,
-    refetch: mockRefetch,
-  })),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetCostSummaryQuery: vi.fn(() => ({
+      data: mockSummaryData,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })),
+    useGetCostByModelQuery: vi.fn(() => ({
+      data: mockModelData,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })),
+    useGetCostHistoryQuery: vi.fn(() => ({
+      data: mockHistoryData,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })),
+    useGetBudgetStatusQuery: vi.fn(() => ({
+      data: mockBudgetStatusData,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    })),
+    useGetCostForecastQuery: vi.fn(() => ({
+      data: mockForecastData,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    })),
+    // Organizational cost hooks used by OrganizationCostDashboard
+    useGetCostByOrganizationQuery: vi.fn(() => ({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })),
+    useGetCostByProjectQuery: vi.fn(() => ({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })),
+    useGetCostByTeamQuery: vi.fn(() => ({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })),
+    // Tool metrics comparison hook used by NativeToolComparison
+    useGetToolMetricsComparisonQuery: vi.fn(() => ({
+      data: {
+        comparison: [],
+        summary: {
+          totalNativeCost: 0,
+          totalBuiltinCost: 0,
+          potentialSavings: 0,
+        },
+      },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })),
+  };
+});
 const mockedUseGetCostSummaryQuery = vi.mocked(
   apiModule.useGetCostSummaryQuery,
 );

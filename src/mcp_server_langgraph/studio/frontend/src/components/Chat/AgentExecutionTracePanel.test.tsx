@@ -17,57 +17,47 @@ import { configureStore } from "@reduxjs/toolkit";
 import { AgentExecutionTracePanel } from "./AgentExecutionTracePanel";
 import type { AgentExecutionTrace } from "../../types/chat";
 
-// Mock the API module for AI features
-vi.mock("../../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            trace_summarize: {
-              summary:
-                "Agent completed 5-step workflow in 2.3s with 2 tool calls",
-              total_duration_ms: 2300,
-              step_count: 5,
-              tool_call_count: 2,
-              success: true,
-              key_actions: [
-                "Retrieved data",
-                "Processed request",
-                "Generated response",
-              ],
-            },
-            trace_anomaly: {
-              anomalies: [
-                {
-                  type: "slow_step",
-                  step_name: "database_query",
-                  severity: "warning",
-                  message: "Step took 1.5s, 3x slower than average",
-                },
-              ],
-              bottlenecks: [
-                {
-                  step_name: "database_query",
-                  duration_ms: 1500,
-                  percentage_of_total: 65,
-                },
-              ],
-              health_score: 0.72,
-              optimization_suggestions: [
-                "Consider parallel execution for independent steps",
-              ],
-            },
-          },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.001",
-        }),
-    })),
-    { isLoading: false },
-  ]),
+// Mock the hooks barrel to prevent loading the entire 107-module dependency tree.
+// The component only needs useTraceSummary and useTraceAnomaly from ../../hooks.
+// Loading the full barrel pulls in the 5132-line API module via transitive imports,
+// causing OOM (>8GB) in Vitest fork workers.
+vi.mock("../../hooks", () => ({
+  useTraceSummary: vi.fn(() => ({
+    summary: "Agent completed 5-step workflow in 2.3s with 2 tool calls",
+    totalDurationMs: 2300,
+    stepCount: 5,
+    toolCallCount: 2,
+    success: true,
+    keyActions: ["Retrieved data", "Processed request", "Generated response"],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useTraceAnomaly: vi.fn(() => ({
+    anomalies: [
+      {
+        type: "slow_step",
+        stepName: "database_query",
+        severity: "warning",
+        message: "Step took 1.5s, 3x slower than average",
+      },
+    ],
+    bottlenecks: [
+      {
+        stepName: "database_query",
+        durationMs: 1500,
+        percentageOfTotal: 65,
+      },
+    ],
+    healthScore: 0.72,
+    optimizationSuggestions: [
+      "Consider parallel execution for independent steps",
+    ],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
 }));
-
 // Create test store
 const createTestStore = () =>
   configureStore({
@@ -435,7 +425,8 @@ describe("AgentExecutionTracePanel", () => {
         expect(
           screen.getByTestId("ai-bottleneck-indicator"),
         ).toBeInTheDocument();
-        expect(screen.getByText(/database_query/)).toBeInTheDocument();
+        // database_query appears in both bottleneck and anomaly sections
+        expect(screen.getAllByText(/database_query/).length).toBeGreaterThan(0);
         expect(screen.getByText(/65%/)).toBeInTheDocument();
       });
 

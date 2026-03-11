@@ -12,7 +12,7 @@ import canvasReducer from "../../store/slices/canvasSlice";
 import personaReducer from "../../store/slices/personaSlice";
 import sessionReducer from "../../store/slices/sessionSlice";
 import type { ReactNode } from "react";
-import type { Session } from "../../types";
+import type { SessionCamelCase as Session } from "../../types";
 
 export const mockNavigate = vi.fn();
 export const mockSetSearchParams = vi.fn();
@@ -22,25 +22,25 @@ export const mockSessions: Session[] = [
   {
     id: "session-1",
     name: "Today's Chat",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    project_id: "project-1",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    projectId: "project-1",
     status: "active",
   },
   {
     id: "session-2",
     name: "Yesterday's Chat",
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    project_id: "project-1",
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    projectId: "project-1",
     status: "active",
   },
   {
     id: "session-3",
     name: "Older Chat",
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    project_id: "project-1",
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    projectId: "project-1",
     status: "active",
   },
 ];

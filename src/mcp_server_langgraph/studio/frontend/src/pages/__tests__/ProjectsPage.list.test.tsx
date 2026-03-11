@@ -16,17 +16,20 @@ const mockCreateProjectMutation = vi.hoisted(() => vi.fn());
 const mockDeleteProjectMutation = vi.hoisted(() => vi.fn());
 
 // Mock RTK Query hooks
-vi.mock("../../api", () => ({
-  useListProjectsQuery: () => mockListProjectsQuery(),
-  useCreateProjectMutation: () => mockCreateProjectMutation(),
-  useDeleteProjectMutation: () => mockDeleteProjectMutation(),
-  // Required for AIEmptyState used in empty state
-  useGetEmptyStateSuggestionsMutation: () => [
-    vi.fn(),
-    { isLoading: false, data: null },
-  ],
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useListProjectsQuery: () => mockListProjectsQuery(),
+    useCreateProjectMutation: () => mockCreateProjectMutation(),
+    useDeleteProjectMutation: () => mockDeleteProjectMutation(),
+    // Required for AIEmptyState used in empty state
+    useGetEmptyStateSuggestionsMutation: () => [
+      vi.fn(),
+      { isLoading: false, data: null },
+    ],
+  };
+});
 // =============================================================================
 // Imports (after mocks)
 // =============================================================================

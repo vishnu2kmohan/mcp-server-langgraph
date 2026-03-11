@@ -346,3 +346,9 @@ class TestWebSocketServices:
         """WebSocketServices should have NOTIFICATIONS service name."""
         assert hasattr(WebSocketServices, "NOTIFICATIONS")
         assert WebSocketServices.NOTIFICATIONS == "websocket_notifications"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

@@ -38,13 +38,16 @@ const mockGetNodeConfigHelp = vi.fn().mockReturnValue({
     }),
 });
 
-vi.mock("../../api", () => ({
-  useGetNodeConfigHelpMutation: vi.fn(() => [
-    mockGetNodeConfigHelp,
-    { isLoading: false },
-  ]),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetNodeConfigHelpMutation: vi.fn(() => [
+      mockGetNodeConfigHelp,
+      { isLoading: false },
+    ]),
+  };
+});
 // Import the mocked function for test manipulation
 import { useGetNodeConfigHelpMutation } from "../../api";
 const mockUseGetNodeConfigHelpMutation = vi.mocked(

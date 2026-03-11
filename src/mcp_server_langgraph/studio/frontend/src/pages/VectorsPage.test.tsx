@@ -26,8 +26,8 @@ import { VectorsPage } from "./VectorsPage";
 
 // Mock data - camelCase per ADR-0091 Phase 6 (RTK Query transforms)
 const mockCollections = [
-  { name: "documents", vectorsCount: 100 },
-  { name: "images", vectorsCount: 50 },
+  { name: "documents", vectors_count: 100 },
+  { name: "images", vectors_count: 50 },
 ];
 
 const mockSearchResults = [
@@ -41,31 +41,34 @@ const mockRefetch = vi.fn();
 // Mock RTK Query hooks
 import * as apiModule from "../api";
 
-vi.mock("../api", () => ({
-  useListVectorCollectionsQuery: vi.fn(() => ({
-    data: [],
-    isLoading: false,
-    isFetching: false,
-    error: null,
-    refetch: vi.fn(),
-  })),
-  useCreateVectorCollectionMutation: vi.fn(() => [
-    vi.fn().mockReturnValue({ unwrap: () => Promise.resolve({}) }),
-    { isLoading: false },
-  ]),
-  useDeleteVectorCollectionMutation: vi.fn(() => [
-    vi.fn().mockReturnValue({ unwrap: () => Promise.resolve({}) }),
-  ]),
-  useSearchVectorsTextMutation: vi.fn(() => [
-    vi.fn().mockReturnValue({ unwrap: () => Promise.resolve([]) }),
-    { isLoading: false },
-  ]),
-  useUpsertVectorTextMutation: vi.fn(() => [
-    vi.fn().mockReturnValue({ unwrap: () => Promise.resolve({}) }),
-    { isLoading: false },
-  ]),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useListVectorCollectionsQuery: vi.fn(() => ({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      error: null,
+      refetch: vi.fn(),
+    })),
+    useCreateVectorCollectionMutation: vi.fn(() => [
+      vi.fn().mockReturnValue({ unwrap: () => Promise.resolve({}) }),
+      { isLoading: false },
+    ]),
+    useDeleteVectorCollectionMutation: vi.fn(() => [
+      vi.fn().mockReturnValue({ unwrap: () => Promise.resolve({}) }),
+    ]),
+    useSearchVectorsTextMutation: vi.fn(() => [
+      vi.fn().mockReturnValue({ unwrap: () => Promise.resolve([]) }),
+      { isLoading: false },
+    ]),
+    useUpsertVectorTextMutation: vi.fn(() => [
+      vi.fn().mockReturnValue({ unwrap: () => Promise.resolve({}) }),
+      { isLoading: false },
+    ]),
+  };
+});
 const mockedUseListVectorCollectionsQuery = vi.mocked(
   apiModule.useListVectorCollectionsQuery,
 );
@@ -263,7 +266,7 @@ describe("VectorsPage", () => {
 
     it("should display collection details", () => {
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectorsCount: 100 }],
+        data: [{ name: "documents", vectors_count: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,
@@ -354,7 +357,7 @@ describe("VectorsPage", () => {
   describe("Delete Collection", () => {
     it("should have delete button for each collection", () => {
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectorsCount: 100 }],
+        data: [{ name: "documents", vectors_count: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,
@@ -367,7 +370,7 @@ describe("VectorsPage", () => {
 
     it("should show confirmation dialog before deleting", async () => {
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectorsCount: 100 }],
+        data: [{ name: "documents", vectors_count: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,
@@ -392,7 +395,7 @@ describe("VectorsPage", () => {
       });
 
       mockedUseListVectorCollectionsQuery.mockReturnValue({
-        data: [{ name: "documents", vectorsCount: 100 }],
+        data: [{ name: "documents", vectors_count: 100 }],
         isLoading: false,
         isFetching: false,
         error: null,

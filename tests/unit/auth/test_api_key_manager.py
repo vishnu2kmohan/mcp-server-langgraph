@@ -270,7 +270,7 @@ class TestAPIKeyValidation:
         api_key = "mcpkey_live_expiredkey"
 
         # Mock bcrypt to avoid CPU-intensive hashing (we're testing expiration, not crypto)
-        with patch("mcp_server_langgraph.auth.api_keys.bcrypt.checkpw", return_value=True):
+        with patch("mcp_server_langgraph.auth.api_keys.bcrypt.checkpw", side_effect=lambda *a, **kw: True):
             # CRITICAL FIX: Use side_effect to simulate pagination termination
             # First call returns user with expired key, second call returns [] to terminate loop
             mock_keycloak_client.search_users.side_effect = [

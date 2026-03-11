@@ -17,10 +17,13 @@ import { ConnectedChatInputForm } from "./ConnectedChatInputForm";
 // Mock Feature Flag Context
 // =============================================================================
 const mockIsEnabled = vi.fn();
-vi.mock("../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: (flagName: string) => mockIsEnabled(flagName),
-}));
-
+vi.mock("../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: (flagName: string) => mockIsEnabled(flagName),
+  };
+});
 // =============================================================================
 // Mock Redux Store (for submitOnEnter selector and dispatch)
 // =============================================================================
@@ -45,26 +48,41 @@ vi.mock("../store/slices/uiSlice", () => ({
 }));
 
 // Mock TelemetryContext
-vi.mock("../contexts/TelemetryContext", () => ({
-  useSessionTelemetry: () => ({
-    trackExecutionModeChange: vi.fn(),
-    trackBypassApproval: vi.fn(),
-    trackSessionCreation: vi.fn(),
-    trackRevalidation: vi.fn(),
-    trackSync: vi.fn(),
-    trackArtifactSave: vi.fn(),
-    trackArtifactDelete: vi.fn(),
-    trackSuggestionAction: vi.fn(),
-    trackCanvasAction: vi.fn(),
-    getMetrics: vi.fn(),
-    getHistory: vi.fn(),
-    reset: vi.fn(),
-  }),
-  TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-}));
-
+vi.mock("../contexts/TelemetryContext", async () => {
+  const actual = await vi.importActual("../contexts/TelemetryContext");
+  return {
+    ...actual,
+    useSessionTelemetry: () => ({
+      trackExecutionModeChange: vi.fn(),
+      trackBypassApproval: vi.fn(),
+      trackSessionCreation: vi.fn(),
+      trackRevalidation: vi.fn(),
+      trackSync: vi.fn(),
+      trackArtifactSave: vi.fn(),
+      trackArtifactDelete: vi.fn(),
+      trackSuggestionAction: vi.fn(),
+      trackCanvasAction: vi.fn(),
+      getMetrics: vi.fn(),
+      getHistory: vi.fn(),
+      reset: vi.fn(),
+    }),
+    TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+    useWebVitals: () => ({
+      start: vi.fn(),
+      stop: vi.fn(),
+      getMetrics: () => ({ fcp: null, lcp: null, cls: null, inp: null }),
+    }),
+    useTelemetry: () => ({
+      sessionTelemetry: {
+        trackSessionCreation: vi.fn(),
+        getMetrics: () => ({}),
+      },
+      webVitals: { start: vi.fn(), stop: vi.fn(), getMetrics: () => ({}) },
+    }),
+  };
+});
 // Mock useCheckBypassPermissionQuery from API (RTK Query)
 vi.mock("../api", async () => {
   const actual = await vi.importActual("../api");
@@ -357,26 +375,28 @@ describe("ConnectedChatInputForm - Features", () => {
       mockSubmitOnEnter.current = true;
     });
 
-    it("should render RichTextInput when feature flag is enabled", () => {
+    it("should render ChatInput when feature flag is enabled", () => {
       mockIsEnabled.mockImplementation(
         (flagName: string) => flagName === "rich_text_chat_input",
       );
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // Pill container with RichTextInput should be present
-      expect(screen.getByTestId("pill-container")).toBeInTheDocument();
-      expect(screen.getByTestId("rich-text-input")).toBeInTheDocument();
+      // ChatInput (consolidated component) renders with data-testid="chat-input-form"
+      // (pill-container/rich-text-input testids were in the old ChatInputForm component)
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
 
-    it("should render plain textarea when feature flag is disabled", () => {
+    it("should render ChatInput when feature flag is disabled", () => {
       mockIsEnabled.mockImplementation(() => false);
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // Legacy input wrapper should be present, not pill container
-      expect(screen.getByTestId("input-wrapper")).toBeInTheDocument();
-      expect(screen.queryByTestId("pill-container")).not.toBeInTheDocument();
+      // ChatInput (consolidated component) always renders chat-input-form
+      // (input-wrapper/pill-container testids were in the old ChatInputForm component)
+      expect(screen.getByTestId("chat-input-form")).toBeInTheDocument();
+      expect(screen.getByRole("textbox")).toBeInTheDocument();
     });
 
     it("should pass submitOnEnter=true from uiSlice (ChatGPT style)", () => {
@@ -420,20 +440,16 @@ describe("ConnectedChatInputForm - Features", () => {
     });
 
     it("should preserve file upload integration in RichText mode", async () => {
-      const user = userEvent.setup();
       mockIsEnabled.mockImplementation(
         (flagName: string) => flagName === "rich_text_chat_input",
       );
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // AttachmentMenu button (+ button) should be accessible in RichText mode
-      const attachmentMenuButton = screen.getByTestId("attachment-menu-button");
-      expect(attachmentMenuButton).toBeInTheDocument();
-
-      // Clicking should open menu with file upload option
-      await user.click(attachmentMenuButton);
-      expect(screen.getByText("Upload file")).toBeInTheDocument();
+      // ChatInput renders a simple "Attach file" button (not an AttachmentMenu dropdown).
+      // The button directly triggers the hidden file input via click.
+      const attachButton = screen.getByRole("button", { name: /attach file/i });
+      expect(attachButton).toBeInTheDocument();
     });
 
     it("should preserve slash commands in RichText mode", () => {
@@ -447,13 +463,19 @@ describe("ConnectedChatInputForm - Features", () => {
       expect(screen.getByTestId("slash-command-menu")).toBeInTheDocument();
     });
 
-    it("should call useFeatureFlag with correct flag name", () => {
+    it("should call useFeatureFlag with correct flag names", () => {
       mockIsEnabled.mockImplementation(() => false);
 
       render(<ConnectedChatInputForm {...defaultProps} />);
 
-      // Feature flag should be checked
-      expect(mockIsEnabled).toHaveBeenCalledWith("rich_text_chat_input");
+      // ConnectedChatInputForm checks these feature flags (not "rich_text_chat_input"):
+      // kb_focus, ai_suggestions_websocket, manual_tool_selection,
+      // execution_mode_toggle, preferences_menu, connector_suggestions
+      expect(mockIsEnabled).toHaveBeenCalledWith("kb_focus");
+      expect(mockIsEnabled).toHaveBeenCalledWith("connector_suggestions");
+      expect(mockIsEnabled).toHaveBeenCalledWith("manual_tool_selection");
+      expect(mockIsEnabled).toHaveBeenCalledWith("execution_mode_toggle");
+      expect(mockIsEnabled).toHaveBeenCalledWith("preferences_menu");
     });
   });
 

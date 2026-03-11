@@ -223,7 +223,7 @@ class TestSemanticIndexManagerToolSearch:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_tools(query="math operations", user_id="user:alice", limit=10)
 
@@ -246,7 +246,7 @@ class TestSemanticIndexManagerToolSearch:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             await manager.search_tools(query="test", user_id="user:alice", limit=5, min_score=0.8)
 
@@ -268,7 +268,7 @@ class TestSemanticIndexManagerToolSearch:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             await manager.search_tools(query="test", user_id="user:alice", limit=5, category="math")
 
@@ -290,7 +290,7 @@ class TestSemanticIndexManagerToolSearch:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             await manager.search_tools(query="test", user_id="user:alice", limit=5, tenant_id="tenant-abc")
 
@@ -366,7 +366,7 @@ class TestSemanticIndexManagerSkillIndexing:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_skills(query="review my code", user_id="user:alice", limit=5)
 
@@ -440,7 +440,7 @@ class TestSemanticIndexManagerMemoryIndexing:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             results = await manager.search_memories(
                 query="what are my preferences",

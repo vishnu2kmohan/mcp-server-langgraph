@@ -88,6 +88,15 @@ def sample_range_query_response():
 class TestPrometheusClient:
     """Test suite for PrometheusClient with memory safety pattern."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_circuit_breaker(self):
+        """Reset circuit breaker state to prevent cross-test contamination in xdist."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+        yield
+        reset_all_circuit_breakers()
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -249,6 +258,15 @@ def test_query_result_get_average_returns_none_when_empty():
 class TestPrometheusQueries:
     """Test suite for Prometheus query methods."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_circuit_breaker(self):
+        """Reset circuit breaker state to prevent cross-test contamination in xdist."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+        yield
+        reset_all_circuit_breakers()
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -384,6 +402,15 @@ class TestPrometheusQueries:
 @pytest.mark.xdist_group(name="prometheus_sla_tests")
 class TestPrometheusSLAQueries:
     """Test suite for SLA-specific query methods."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_circuit_breaker(self):
+        """Reset circuit breaker state to prevent cross-test contamination in xdist."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+        yield
+        reset_all_circuit_breakers()
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""

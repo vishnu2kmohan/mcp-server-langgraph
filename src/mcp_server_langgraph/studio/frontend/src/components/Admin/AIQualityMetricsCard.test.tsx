@@ -15,10 +15,13 @@ import { AIQualityMetricsCard } from "./AIQualityMetricsCard";
 // Mock RTK Query hook
 const mockUseGetFeedbackSummaryQuery = vi.fn();
 
-vi.mock("../../api", () => ({
-  useGetFeedbackSummaryQuery: () => mockUseGetFeedbackSummaryQuery(),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetFeedbackSummaryQuery: () => mockUseGetFeedbackSummaryQuery(),
+  };
+});
 // Create minimal store for Provider
 function createTestStore() {
   return configureStore({

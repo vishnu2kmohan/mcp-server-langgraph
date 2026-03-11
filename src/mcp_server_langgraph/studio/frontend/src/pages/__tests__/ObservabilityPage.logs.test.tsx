@@ -66,10 +66,13 @@ vi.mock("../../hooks/useTraceIntelligence", () => ({
   })),
 }));
 
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn(() => false),
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn(() => false),
+  };
+});
 // Import mocked hooks
 import {
   useListTracesQuery,
@@ -222,7 +225,7 @@ describe("ObservabilityPage - Logs", () => {
       await waitFor(() => {
         const warnBadge = screen.getByText("warn");
         expect(warnBadge).toBeInTheDocument();
-        expect(warnBadge).toHaveClass("bg-warning-2");
+        expect(warnBadge).toHaveClass("bg-warning-3");
       });
     });
 

@@ -27,7 +27,7 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import asynch  # type: ignore[import-not-found,import-untyped]  # noqa: F401
+    import asynch  # type: ignore[import-not-found]  # noqa: F401
 
     _HAS_CLICKHOUSE = True
 except ImportError:
@@ -115,7 +115,7 @@ class ClickHouseDriver(DatabaseDriver):
             # generated internally via uuid.uuid4(), but we validate defensively.
             uuid.UUID(query_id)  # Raises ValueError if not a valid UUID
             cursor = self._client.cursor()
-            await cursor.execute(f"KILL QUERY WHERE query_id = '{query_id}'")
+            await cursor.execute(f"KILL QUERY WHERE query_id = '{query_id}'")  # nosemgrep: sqlalchemy-execute-raw-query
             logger.info("Cancelled ClickHouse query %s", query_id)
             return True
         except Exception:

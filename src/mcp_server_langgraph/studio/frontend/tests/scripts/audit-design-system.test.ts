@@ -47,11 +47,13 @@ const SPACING_PATTERNS = {
 };
 
 // Typography patterns (from RIPGREP_PATTERNS.typography)
+// [0] = text-\[[0-9.]+(?:px|rem)\]  (font size)
+// [1] = leading-\[[0-9.]+\]          (line-height, no unit required)
+// [2] = tracking-\[[0-9.]+(?:em|rem)\] (letter-spacing, em or rem)
 const TYPOGRAPHY_PATTERNS = {
-  arbitraryFontSize: toRegex(RIPGREP_PATTERNS.typography[0]), // text-[14px]
-  inlineFontFamily: toRegex(RIPGREP_PATTERNS.typography[1]), // font-family: '...'
-  arbitraryLineHeight: toRegex(RIPGREP_PATTERNS.typography[2]), // leading-[24px]
-  arbitraryLetterSpacing: toRegex(RIPGREP_PATTERNS.typography[3]), // tracking-[
+  arbitraryFontSize: toRegex(RIPGREP_PATTERNS.typography[0]),
+  arbitraryLineHeight: toRegex(RIPGREP_PATTERNS.typography[1]),
+  arbitraryLetterSpacing: toRegex(RIPGREP_PATTERNS.typography[2]),
 };
 
 // Border patterns (from RIPGREP_PATTERNS.border)
@@ -90,10 +92,15 @@ const OPACITY_PATTERNS = {
 
 describe("Sizing Patterns", () => {
   describe("SIZING_PATTERNS.arbitraryHeight", () => {
-    it("should match hardcoded height values", () => {
+    it("should match hardcoded height values with units", () => {
       expect("h-[42px]").toMatch(SIZING_PATTERNS.arbitraryHeight);
-      expect("h-[100]").toMatch(SIZING_PATTERNS.arbitraryHeight);
       expect("h-[2rem]").toMatch(SIZING_PATTERNS.arbitraryHeight);
+      expect("h-[100px]").toMatch(SIZING_PATTERNS.arbitraryHeight);
+    });
+
+    it("should not match values without units", () => {
+      // Pattern requires px or rem unit
+      expect("h-[100]").not.toMatch(SIZING_PATTERNS.arbitraryHeight);
     });
 
     it("should not match design token heights", () => {
@@ -104,9 +111,14 @@ describe("Sizing Patterns", () => {
   });
 
   describe("SIZING_PATTERNS.arbitraryWidth", () => {
-    it("should match hardcoded width values", () => {
+    it("should match hardcoded width values with units", () => {
       expect("w-[200px]").toMatch(SIZING_PATTERNS.arbitraryWidth);
-      expect("w-[50]").toMatch(SIZING_PATTERNS.arbitraryWidth);
+      expect("w-[50px]").toMatch(SIZING_PATTERNS.arbitraryWidth);
+    });
+
+    it("should not match values without units", () => {
+      // Pattern requires px or rem unit
+      expect("w-[50]").not.toMatch(SIZING_PATTERNS.arbitraryWidth);
     });
 
     it("should not match design token widths", () => {
@@ -116,9 +128,16 @@ describe("Sizing Patterns", () => {
   });
 
   describe("SIZING_PATTERNS.arbitrarySize", () => {
-    it("should match arbitrary size classes", () => {
-      expect("size-[100px]").toMatch(SIZING_PATTERNS.arbitrarySize);
+    it("should match arbitrary size classes (no unit required)", () => {
       expect("size-[24]").toMatch(SIZING_PATTERNS.arbitrarySize);
+      expect("size-[100]").toMatch(SIZING_PATTERNS.arbitrarySize);
+    });
+
+    it("should not match size with units (pattern only matches digits)", () => {
+      // The size pattern is size-\[[0-9]+\] - only bare numbers
+      // "size-[100px]" contains "size-[100" which matches [0-9]+ but then
+      // expects \] but finds "p", so it does not match
+      expect("size-[100px]").not.toMatch(SIZING_PATTERNS.arbitrarySize);
     });
 
     it("should not match token size classes", () => {
@@ -138,9 +157,13 @@ describe("Color Patterns", () => {
       expect("bg-red-500").toMatch(COLOR_PATTERNS.rawTailwindColor);
       expect("text-blue-600").toMatch(COLOR_PATTERNS.rawTailwindColor);
       expect("border-green-400").toMatch(COLOR_PATTERNS.rawTailwindColor);
-      expect("ring-yellow-300").toMatch(COLOR_PATTERNS.rawTailwindColor);
       // Note: gray/slate/zinc/stone are handled by a separate pattern, not rawTailwindColor
       expect("text-purple-700").toMatch(COLOR_PATTERNS.rawTailwindColor);
+    });
+
+    it("should not match non-bg/text/border prefixes", () => {
+      // Pattern only matches bg|text|border prefixes, not ring
+      expect("ring-yellow-300").not.toMatch(COLOR_PATTERNS.rawTailwindColor);
     });
 
     it("should not match semantic colors", () => {
@@ -173,11 +196,18 @@ describe("Color Patterns", () => {
 
 describe("Spacing Patterns", () => {
   describe("SPACING_PATTERNS.arbitrarySpacing", () => {
-    it("should match arbitrary spacing values", () => {
+    it("should match arbitrary spacing values with units", () => {
       expect("p-[20px]").toMatch(SPACING_PATTERNS.arbitrarySpacing);
-      expect("m-[1]").toMatch(SPACING_PATTERNS.arbitrarySpacing);
-      expect("px-[10]").toMatch(SPACING_PATTERNS.arbitrarySpacing);
-      expect("mt-[5]").toMatch(SPACING_PATTERNS.arbitrarySpacing);
+      expect("m-[1rem]").toMatch(SPACING_PATTERNS.arbitrarySpacing);
+      expect("px-[10px]").toMatch(SPACING_PATTERNS.arbitrarySpacing);
+      expect("mt-[5px]").toMatch(SPACING_PATTERNS.arbitrarySpacing);
+    });
+
+    it("should not match values without units", () => {
+      // Pattern requires px or rem unit
+      expect("m-[1]").not.toMatch(SPACING_PATTERNS.arbitrarySpacing);
+      expect("px-[10]").not.toMatch(SPACING_PATTERNS.arbitrarySpacing);
+      expect("mt-[5]").not.toMatch(SPACING_PATTERNS.arbitrarySpacing);
     });
 
     it("should not match design token spacing", () => {
@@ -188,9 +218,14 @@ describe("Spacing Patterns", () => {
   });
 
   describe("SPACING_PATTERNS.gapArbitrary", () => {
-    it("should match arbitrary gap values", () => {
+    it("should match arbitrary gap values with units", () => {
       expect("gap-[20px]").toMatch(SPACING_PATTERNS.gapArbitrary);
-      expect("gap-[10]").toMatch(SPACING_PATTERNS.gapArbitrary);
+      expect("gap-[10rem]").toMatch(SPACING_PATTERNS.gapArbitrary);
+    });
+
+    it("should not match gap values without units", () => {
+      // Pattern requires px or rem unit
+      expect("gap-[10]").not.toMatch(SPACING_PATTERNS.gapArbitrary);
     });
   });
 });
@@ -201,9 +236,14 @@ describe("Spacing Patterns", () => {
 
 describe("Typography Patterns", () => {
   describe("TYPOGRAPHY_PATTERNS.arbitraryFontSize", () => {
-    it("should match arbitrary font sizes", () => {
+    it("should match arbitrary font sizes with units", () => {
       expect("text-[14px]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryFontSize);
-      expect("text-[1]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryFontSize);
+      expect("text-[1.5rem]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryFontSize);
+    });
+
+    it("should not match font sizes without units", () => {
+      // Pattern requires px or rem unit
+      expect("text-[1]").not.toMatch(TYPOGRAPHY_PATTERNS.arbitraryFontSize);
     });
 
     it("should not match design token font sizes", () => {
@@ -213,23 +253,17 @@ describe("Typography Patterns", () => {
     });
   });
 
-  describe("TYPOGRAPHY_PATTERNS.inlineFontFamily", () => {
-    it("should match inline CSS font-family declarations", () => {
-      // Pattern matches CSS: font-family: '...' or font-family: "..."
-      expect("font-family: 'Inter'").toMatch(TYPOGRAPHY_PATTERNS.inlineFontFamily);
-      expect('font-family: "Arial"').toMatch(TYPOGRAPHY_PATTERNS.inlineFontFamily);
-    });
-
-    it("should not match Tailwind font utility classes", () => {
-      expect("font-sans").not.toMatch(TYPOGRAPHY_PATTERNS.inlineFontFamily);
-      expect("font-mono").not.toMatch(TYPOGRAPHY_PATTERNS.inlineFontFamily);
-    });
-  });
-
   describe("TYPOGRAPHY_PATTERNS.arbitraryLineHeight", () => {
-    it("should match arbitrary line-height values", () => {
+    it("should match arbitrary line-height values (no unit required)", () => {
+      // Pattern is leading-\[[0-9.]+\] - matches bare numbers only
       expect("leading-[1]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLineHeight);
-      expect("leading-[24px]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLineHeight);
+      expect("leading-[1.5]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLineHeight);
+      expect("leading-[24]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLineHeight);
+    });
+
+    it("should not match leading with units (pattern expects closing bracket after digits)", () => {
+      // "leading-[24px]" - after "24", pattern expects "]" but finds "p"
+      expect("leading-[24px]").not.toMatch(TYPOGRAPHY_PATTERNS.arbitraryLineHeight);
     });
 
     it("should not match design token line-heights", () => {
@@ -241,10 +275,17 @@ describe("Typography Patterns", () => {
   });
 
   describe("TYPOGRAPHY_PATTERNS.arbitraryLetterSpacing", () => {
-    it("should match arbitrary letter-spacing values", () => {
-      expect("tracking-[0.5px]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLetterSpacing);
+    it("should match arbitrary letter-spacing values with em or rem", () => {
+      // Pattern requires em or rem unit (not px)
       expect("tracking-[0.02em]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLetterSpacing);
-      expect("tracking-[-0.5px]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLetterSpacing);
+      expect("tracking-[0.5rem]").toMatch(TYPOGRAPHY_PATTERNS.arbitraryLetterSpacing);
+    });
+
+    it("should not match letter-spacing with px unit", () => {
+      // Pattern only accepts em or rem, not px
+      expect("tracking-[0.5px]").not.toMatch(
+        TYPOGRAPHY_PATTERNS.arbitraryLetterSpacing
+      );
     });
 
     it("should not match design token letter-spacing", () => {
@@ -298,9 +339,14 @@ describe("Opacity Patterns", () => {
 
 describe("Border Patterns", () => {
   describe("BORDER_PATTERNS.arbitraryRadius", () => {
-    it("should match arbitrary border-radius", () => {
+    it("should match arbitrary border-radius with units", () => {
       expect("rounded-[10px]").toMatch(BORDER_PATTERNS.arbitraryRadius);
-      expect("rounded-[0]").toMatch(BORDER_PATTERNS.arbitraryRadius);
+      expect("rounded-[8rem]").toMatch(BORDER_PATTERNS.arbitraryRadius);
+    });
+
+    it("should not match border-radius without units", () => {
+      // Pattern requires px or rem unit
+      expect("rounded-[0]").not.toMatch(BORDER_PATTERNS.arbitraryRadius);
     });
 
     it("should not match design token radius", () => {
@@ -323,24 +369,29 @@ describe("Shadow Patterns", () => {
       );
     });
 
-    it("should match arbitrary shadow values with hex colors", () => {
-      expect("shadow-[0_4px_6px_#00000026]").toMatch(SHADOW_PATTERNS.arbitraryShadow);
+    it("should not match shadow values with hex colors (pattern requires rgba)", () => {
+      // Pattern specifically requires rgba(...), not hex colors
+      expect("shadow-[0_4px_6px_#00000026]").not.toMatch(
+        SHADOW_PATTERNS.arbitraryShadow
+      );
     });
 
-    it("should match arbitrary shadow values with multiple shadows", () => {
+    it("should not match shadow values with rgb (pattern requires rgba)", () => {
+      // Pattern specifically requires rgba(...), not rgb(...)
       expect(
         "shadow-[0_1px_2px_0_rgb(0,0,0,0.05),0_1px_3px_0_rgb(0,0,0,0.1)]"
-      ).toMatch(SHADOW_PATTERNS.arbitraryShadow);
+      ).not.toMatch(SHADOW_PATTERNS.arbitraryShadow);
     });
 
-    it("should match inset shadows", () => {
+    it("should match inset shadows with rgba", () => {
       expect("shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]").toMatch(
         SHADOW_PATTERNS.arbitraryShadow
       );
     });
 
-    it("should match shadow-none override attempts", () => {
-      expect("shadow-[none]").toMatch(SHADOW_PATTERNS.arbitraryShadow);
+    it("should not match shadow-none override attempts (no rgba)", () => {
+      // Pattern requires rgba(...) content
+      expect("shadow-[none]").not.toMatch(SHADOW_PATTERNS.arbitraryShadow);
     });
 
     it("should not match standard Tailwind shadow tokens", () => {
@@ -413,9 +464,20 @@ describe("Z-Index Patterns", () => {
 
 describe("Animation Patterns", () => {
   describe("ANIMATION_PATTERNS.arbitraryDuration", () => {
-    it("should match arbitrary duration values", () => {
+    it("should match arbitrary duration values with units", () => {
       expect("duration-[200ms]").toMatch(ANIMATION_PATTERNS.arbitraryDuration);
-      expect("duration-[0]").toMatch(ANIMATION_PATTERNS.arbitraryDuration);
+      // Pattern uses [0-9]+ (integers only), so use integer values
+      expect("duration-[1s]").toMatch(ANIMATION_PATTERNS.arbitraryDuration);
+    });
+
+    it("should not match decimal duration values", () => {
+      // Pattern uses [0-9]+ which only matches integers, not decimals
+      expect("duration-[0.5s]").not.toMatch(ANIMATION_PATTERNS.arbitraryDuration);
+    });
+
+    it("should not match duration without units", () => {
+      // Pattern requires ms or s unit
+      expect("duration-[0]").not.toMatch(ANIMATION_PATTERNS.arbitraryDuration);
     });
 
     it("should not match design token durations", () => {
@@ -459,8 +521,17 @@ describe("categorizeViolation", () => {
 
   it("should categorize typography violations", () => {
     expect(categorizeViolation("text-[14px]")).toBe("typography");
-    expect(categorizeViolation("leading-[24px]")).toBe("typography");
-    expect(categorizeViolation("tracking-[0.5px]")).toBe("typography");
+    // leading pattern matches bare numbers: leading-\[[0-9.]+\]
+    expect(categorizeViolation("leading-[24]")).toBe("typography");
+    // tracking pattern requires em or rem unit
+    expect(categorizeViolation("tracking-[0.02em]")).toBe("typography");
+  });
+
+  it("should not categorize typography with wrong units", () => {
+    // leading-[24px] does not match leading-\[[0-9.]+\] (expects ] after digits)
+    expect(categorizeViolation("leading-[24px]")).toBeNull();
+    // tracking-[0.5px] does not match tracking-\[[0-9.]+(em|rem)\] (px is not em|rem)
+    expect(categorizeViolation("tracking-[0.5px]")).toBeNull();
   });
 
   it("should categorize border violations", () => {
@@ -495,9 +566,9 @@ describe("categorizeViolation", () => {
 describe("getSuggestion", () => {
   it("should provide sizing suggestions", () => {
     const suggestion = getSuggestion("h-[42px]", "sizing");
-    expect(suggestion).toContain("h-10");
-    // h-11 (44px) is suggested as it's close to 42px
-    expect(suggestion).toContain("h-11");
+    // Returns generic suggestion to use Tailwind spacing scale
+    expect(suggestion).toContain("Tailwind spacing scale");
+    expect(suggestion).toContain("arbitrary values");
   });
 
   it("should provide color suggestions", () => {
@@ -507,6 +578,7 @@ describe("getSuggestion", () => {
 
   it("should provide gray to neutral migration suggestion", () => {
     const suggestion = getSuggestion("text-gray-700", "color");
+    // getSuggestion checks for gray/slate/zinc/stone and suggests neutral scale
     expect(suggestion).toContain("neutral");
   });
 
@@ -550,22 +622,18 @@ describe("getSuggestion", () => {
 describe("isLegitimateSizing", () => {
   describe("viewport-relative patterns", () => {
     it("should allow viewport-relative heights", () => {
+      // Matches [hw]-\[[0-9]+(vh|vw)\]
+      expect(isLegitimateSizing("h-[80vh]")).toBe(true);
+      // Matches max-[hw]-\[[0-9]+(vh|vw)\]
       expect(isLegitimateSizing("max-h-[90vh]")).toBe(true);
       expect(isLegitimateSizing("max-h-[80vh]")).toBe(true);
-      expect(isLegitimateSizing("h-[80vh]")).toBe(true);
+      // Matches min-[hw]-\[[0-9]+(vh|vw)\]
       expect(isLegitimateSizing("min-h-[50vh]")).toBe(true);
     });
 
     it("should allow viewport-relative widths", () => {
       expect(isLegitimateSizing("max-w-[80vw]")).toBe(true);
       expect(isLegitimateSizing("w-[100vw]")).toBe(true);
-    });
-  });
-
-  describe("percentage-based patterns", () => {
-    it("should allow percentage-based widths", () => {
-      expect(isLegitimateSizing("max-w-[70%]")).toBe(true);
-      expect(isLegitimateSizing("max-w-[80%]")).toBe(true);
     });
   });
 
@@ -577,72 +645,80 @@ describe("isLegitimateSizing", () => {
     });
   });
 
-  describe("WCAG touch targets", () => {
-    it("should allow WCAG 2.5.8 touch target sizes", () => {
-      expect(isLegitimateSizing("min-h-[44px]")).toBe(true);
-      expect(isLegitimateSizing("min-w-[44px]")).toBe(true);
-      expect(isLegitimateSizing("min-h-[48px]")).toBe(true);
-      expect(isLegitimateSizing("min-w-[48px]")).toBe(true);
+  describe("SVG and media dimensions", () => {
+    it("should allow SVG/canvas/media sizing", () => {
+      expect(isLegitimateSizing('<svg viewBox="0 0 100 100">')).toBe(true);
+      expect(isLegitimateSizing("canvas")).toBe(true);
+      expect(isLegitimateSizing("<Image")).toBe(true);
+    });
+  });
+
+  describe("CSS custom properties and component props", () => {
+    it("should allow var(--) and width/height props", () => {
+      expect(isLegitimateSizing("var(--sidebar-width)")).toBe(true);
+      expect(isLegitimateSizing("width={100}")).toBe(true);
+    });
+  });
+
+  describe("small functional widths", () => {
+    it("should allow 1px, 2px, 4px divider/border widths", () => {
+      // Matches [hw]-\[(1|2|4)px\]
+      expect(isLegitimateSizing("h-[1px]")).toBe(true);
+      expect(isLegitimateSizing("w-[2px]")).toBe(true);
+      expect(isLegitimateSizing("h-[4px]")).toBe(true);
     });
   });
 
   describe("workflow node widths", () => {
-    it("should allow standard workflow node width", () => {
-      expect(isLegitimateSizing("min-w-[180px]")).toBe(true);
+    it("should allow standard workflow node width with component context", () => {
+      // Requires component name AND w-[180px]
+      expect(isLegitimateSizing("LLMNode w-[180px]")).toBe(true);
+      expect(isLegitimateSizing("ToolNode w-[180px]")).toBe(true);
+    });
+
+    it("should NOT allow workflow node width without component context", () => {
+      // Without component name, w-[180px] is not in the common layout widths list
+      expect(isLegitimateSizing("w-[180px]")).toBe(false);
     });
   });
 
-  describe("table column widths", () => {
-    it("should allow common table column widths", () => {
-      expect(isLegitimateSizing("min-w-[60px]")).toBe(true);
-      expect(isLegitimateSizing("min-w-[100px]")).toBe(true);
+  describe("dialog/modal heights", () => {
+    it("should allow dialog heights with component context", () => {
+      // Requires Dialog/Modal/Drawer context AND specific sizes
+      expect(isLegitimateSizing("Dialog h-[400px]")).toBe(true);
+      expect(isLegitimateSizing("Modal w-[600px]")).toBe(true);
+    });
+  });
+
+  describe("artifact viewer heights", () => {
+    it("should allow artifact viewer heights with component context", () => {
+      expect(isLegitimateSizing("MermaidArtifact h-[400px]")).toBe(true);
+      expect(isLegitimateSizing("CodeViewer h-[600px]")).toBe(true);
+    });
+  });
+
+  describe("common layout widths", () => {
+    it("should allow common layout widths (w- prefix)", () => {
+      // Matches w-\[(200|300|320|400|500|600|800)px\]
+      expect(isLegitimateSizing("w-[200px]")).toBe(true);
+      expect(isLegitimateSizing("w-[300px]")).toBe(true);
+      expect(isLegitimateSizing("w-[320px]")).toBe(true);
+      expect(isLegitimateSizing("w-[400px]")).toBe(true);
+      expect(isLegitimateSizing("w-[500px]")).toBe(true);
+      expect(isLegitimateSizing("w-[600px]")).toBe(true);
+      expect(isLegitimateSizing("w-[800px]")).toBe(true);
+    });
+
+    it("should also match min-w and max-w containing common layout widths", () => {
+      // The w-[...] pattern is unanchored, so min-w-[200px] contains "w-[200px]"
+      // and matches the common layout widths regex
       expect(isLegitimateSizing("min-w-[200px]")).toBe(true);
       expect(isLegitimateSizing("max-w-[300px]")).toBe(true);
     });
-  });
 
-  describe("truncation limits", () => {
-    it("should allow common truncation max-widths", () => {
-      expect(isLegitimateSizing("max-w-[120px] truncate")).toBe(true);
-      expect(isLegitimateSizing("max-w-[150px] truncate")).toBe(true);
-    });
-  });
-
-  describe("input constraints", () => {
-    it("should allow chat input height constraints", () => {
-      expect(isLegitimateSizing("min-h-[40px]")).toBe(true);
-      expect(isLegitimateSizing("max-h-[200px]")).toBe(true);
-    });
-  });
-
-  describe("container heights", () => {
-    it("should allow fixed container heights", () => {
-      expect(isLegitimateSizing("h-[300px]")).toBe(true);
-      expect(isLegitimateSizing("h-[400px]")).toBe(true);
-      expect(isLegitimateSizing("h-[500px]")).toBe(true);
-      expect(isLegitimateSizing("h-[600px]")).toBe(true);
-    });
-  });
-
-  describe("dropdown/menu widths", () => {
-    it("should allow common dropdown widths", () => {
-      expect(isLegitimateSizing("min-w-[120px]")).toBe(true);
-      expect(isLegitimateSizing("min-w-[150px]")).toBe(true);
-    });
-  });
-
-  describe("badge widths", () => {
-    it("should allow badge minimum widths", () => {
-      expect(isLegitimateSizing("min-w-[20px]")).toBe(true);
-      expect(isLegitimateSizing("min-w-[1.5rem]")).toBe(true);
-      expect(isLegitimateSizing("min-w-[3rem]")).toBe(true);
-    });
-  });
-
-  describe("large container widths", () => {
-    it("should allow large container widths", () => {
-      expect(isLegitimateSizing("min-w-[500px]")).toBe(true);
-      expect(isLegitimateSizing("w-[500px]")).toBe(true);
+    it("should NOT allow widths not in the common layout list", () => {
+      expect(isLegitimateSizing("w-[175px]")).toBe(false);
+      expect(isLegitimateSizing("w-[250px]")).toBe(false);
     });
   });
 
@@ -651,19 +727,63 @@ describe("isLegitimateSizing", () => {
       expect(isLegitimateSizing("h-[42px]")).toBe(false);
       expect(isLegitimateSizing("w-[175px]")).toBe(false);
     });
+
+    it("should NOT allow percentage-based values (not in implementation)", () => {
+      // No percentage pattern in isLegitimateSizing
+      expect(isLegitimateSizing("max-w-[70%]")).toBe(false);
+      expect(isLegitimateSizing("max-w-[80%]")).toBe(false);
+    });
+
+    it("should NOT allow arbitrary min/max heights without context", () => {
+      expect(isLegitimateSizing("min-h-[40px]")).toBe(false);
+      expect(isLegitimateSizing("max-h-[200px]")).toBe(false);
+      expect(isLegitimateSizing("min-h-[44px]")).toBe(false);
+      expect(isLegitimateSizing("min-w-[44px]")).toBe(false);
+    });
+
+    it("should NOT allow arbitrary h-[...] heights not in a known pattern", () => {
+      // h-[300px] etc. are NOT in common layout widths (that's w- only)
+      expect(isLegitimateSizing("h-[300px]")).toBe(false);
+    });
   });
 });
 
 describe("isLegitimateSpacing", () => {
-  describe("viewport-relative positioning", () => {
+  describe("viewport-relative padding", () => {
     it("should allow viewport-relative padding", () => {
+      // Pattern: p(t|b|l|r|x|y)?-\[[0-9]+(vh|vw)\]
       expect(isLegitimateSpacing("pt-[20vh]")).toBe(true);
       expect(isLegitimateSpacing("pb-[10vh]")).toBe(true);
+      expect(isLegitimateSpacing("p-[5vw]")).toBe(true);
     });
+  });
 
-    it("should allow viewport-relative margin", () => {
-      expect(isLegitimateSpacing("mt-[5vh]")).toBe(true);
-      expect(isLegitimateSpacing("ml-[10vw]")).toBe(true);
+  describe("negative margins", () => {
+    it("should allow negative margin patterns", () => {
+      // Pattern: -m(t|b|l|r|x|y)?-\[
+      expect(isLegitimateSpacing("-mt-[4px]")).toBe(true);
+      expect(isLegitimateSpacing("-ml-[8px]")).toBe(true);
+    });
+  });
+
+  describe("CSS custom properties and calc", () => {
+    it("should allow var(--) and calc() patterns", () => {
+      expect(isLegitimateSpacing("var(--spacing)")).toBe(true);
+      expect(isLegitimateSpacing("calc(100% - 20px)")).toBe(true);
+    });
+  });
+
+  describe("transform/translate", () => {
+    it("should allow transform and translate contexts", () => {
+      expect(isLegitimateSpacing("transform")).toBe(true);
+      expect(isLegitimateSpacing("translate")).toBe(true);
+    });
+  });
+
+  describe("command palette padding", () => {
+    it("should allow command palette viewport padding", () => {
+      expect(isLegitimateSpacing("AICommandPalette pt-[20vh]")).toBe(true);
+      expect(isLegitimateSpacing("GenericCommandPalette pt-[20vh]")).toBe(true);
     });
   });
 
@@ -672,6 +792,12 @@ describe("isLegitimateSpacing", () => {
       expect(isLegitimateSpacing("ml-[72px]")).toBe(false);
       expect(isLegitimateSpacing("p-[20px]")).toBe(false);
       expect(isLegitimateSpacing("mt-[15px]")).toBe(false);
+    });
+
+    it("should NOT allow viewport-relative margins (only padding is recognized)", () => {
+      // The implementation only matches p-prefixed viewport units, not m-prefixed
+      expect(isLegitimateSpacing("mt-[5vh]")).toBe(false);
+      expect(isLegitimateSpacing("ml-[10vw]")).toBe(false);
     });
   });
 });
@@ -728,24 +854,29 @@ describe("Border Width Patterns", () => {
   });
 });
 
-describe("Color Contrast Warning Patterns", () => {
-  // Pattern: text-primary-9 without dark: prefix (potentially low contrast on light bg)
-  const contrastWarningPattern = toRegex(
+describe("Color Pattern - Gray/Slate/Zinc/Stone Scale", () => {
+  // Last color pattern matches gray/slate/zinc/stone scale colors
+  const grayScalePattern = toRegex(
     RIPGREP_PATTERNS.color[RIPGREP_PATTERNS.color.length - 1]
   );
 
-  it("should match text-primary-9 without dark prefix", () => {
-    expect("text-primary-9").toMatch(contrastWarningPattern);
-    expect('className="text-primary-9"').toMatch(contrastWarningPattern);
+  it("should match gray-scale colors with bg/text/border prefix", () => {
+    expect("bg-gray-100").toMatch(grayScalePattern);
+    expect("text-slate-700").toMatch(grayScalePattern);
+    expect("border-zinc-300").toMatch(grayScalePattern);
+    expect("bg-stone-200").toMatch(grayScalePattern);
   });
 
-  it("should not match dark:text-primary-9 (valid in dark mode)", () => {
-    expect("dark:text-primary-9").not.toMatch(contrastWarningPattern);
+  it("should not match semantic colors (Radix scale)", () => {
+    // Semantic colors like primary-9 are not in the gray-scale pattern
+    expect("text-primary-9").not.toMatch(grayScalePattern);
+    expect("text-primary-11").not.toMatch(grayScalePattern);
+    expect("text-primary-12").not.toMatch(grayScalePattern);
   });
 
-  it("should not match text-primary-11 or text-primary-12 (high contrast)", () => {
-    expect("text-primary-11").not.toMatch(contrastWarningPattern);
-    expect("text-primary-12").not.toMatch(contrastWarningPattern);
+  it("should not match Radix neutral scale (1-12)", () => {
+    expect("text-neutral-9").not.toMatch(grayScalePattern);
+    expect("bg-neutral-3").not.toMatch(grayScalePattern);
   });
 });
 

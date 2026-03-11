@@ -55,6 +55,12 @@ class TestInferTemplateFromToolName:
         assert infer_template_from_tool_name("GITHUB:list_prs") == "github"
         assert infer_template_from_tool_name("GitHub:list_prs") == "github"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAuthRequiredInfo:
     """Tests for AuthRequiredInfo dataclass."""
@@ -85,6 +91,12 @@ class TestAuthRequiredInfo:
         assert info.connection_id == "conn-123"
         assert info.retry_message_id == "msg-456"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestCheckToolAuthRequired:
     """Tests for check_tool_auth_required function."""
@@ -113,6 +125,12 @@ class TestCheckToolAuthRequired:
         result = await check_tool_auth_required("github:list_prs")
         assert result is None  # Placeholder behavior
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestEmitAuthRequiredEvent:
     """Tests for emit_auth_required_event function."""
@@ -122,7 +140,7 @@ class TestEmitAuthRequiredEvent:
         """Test that auth_required event is emitted correctly."""
         mock_dispatch = mocker.patch(
             "langchain_core.callbacks.manager.adispatch_custom_event",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         )
 
         auth_info = AuthRequiredInfo(
@@ -150,7 +168,7 @@ class TestEmitAuthRequiredEvent:
         """Test that retry_message_id falls back to auth_info value."""
         mock_dispatch = mocker.patch(
             "langchain_core.callbacks.manager.adispatch_custom_event",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         )
 
         auth_info = AuthRequiredInfo(
@@ -165,6 +183,12 @@ class TestEmitAuthRequiredEvent:
 
         call_args = mock_dispatch.call_args[0][1]
         assert call_args["retry_message_id"] == "original-msg"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestCheckAndEmitIfAuthRequired:
@@ -182,3 +206,9 @@ class TestCheckAndEmitIfAuthRequired:
         # Currently all known tools return False (placeholder)
         result = await check_and_emit_if_auth_required("github:list_prs")
         assert result is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

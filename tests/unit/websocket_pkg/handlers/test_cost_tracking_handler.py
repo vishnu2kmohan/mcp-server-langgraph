@@ -37,7 +37,7 @@ class TestCostTrackingHandlerInit:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         assert handler._cost_service is mock_service
@@ -55,7 +55,7 @@ class TestCostTrackingHandlerInit:
         mock_service = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
@@ -79,7 +79,7 @@ class TestCostTrackingHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         user = AuthUser(id="user-123", username="testuser")
@@ -98,7 +98,7 @@ class TestCostTrackingHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         handler.subscribed_sessions = {"session-1", "session-2"}
@@ -133,7 +133,7 @@ class TestCostTrackingHandlerMessages:
             "session_id": "session-1",
         }
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_session", id="msg-1", payload={"session_id": "session-1"})
@@ -156,7 +156,7 @@ class TestCostTrackingHandlerMessages:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_session", id="msg-1", payload={})
@@ -178,7 +178,7 @@ class TestCostTrackingHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_session_cost.side_effect = Exception("Database error")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_session", id="msg-1", payload={"session_id": "session-1"})
@@ -205,7 +205,7 @@ class TestCostTrackingHandlerMessages:
             "remaining": 54.50,
         }
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_user", id="msg-1", payload={"user_id": "user-1"})
@@ -228,7 +228,7 @@ class TestCostTrackingHandlerMessages:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_user", id="msg-1", payload={})
@@ -250,7 +250,7 @@ class TestCostTrackingHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_user_budget.side_effect = Exception("User not found")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_user", id="msg-1", payload={"user_id": "user-1"})
@@ -271,7 +271,7 @@ class TestCostTrackingHandlerMessages:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         handler.subscribed_sessions = {"session-1", "session-2"}
@@ -295,7 +295,7 @@ class TestCostTrackingHandlerMessages:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         handler.subscribed_users = {"user-1", "user-2"}
@@ -319,7 +319,7 @@ class TestCostTrackingHandlerMessages:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         message = MessageEnvelope(type="invalid", id="msg-1")
@@ -348,7 +348,7 @@ class TestCostTrackingHandlerPush:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -370,7 +370,7 @@ class TestCostTrackingHandlerPush:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -392,7 +392,7 @@ class TestCostTrackingHandlerPush:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -414,7 +414,7 @@ class TestCostTrackingHandlerPush:
         config = WebSocketConfig(endpoint_name="cost-tracking")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = CostTrackingHandler(config=config, cost_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config

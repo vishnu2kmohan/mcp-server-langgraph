@@ -32,20 +32,23 @@ const mockBootstrapWorkflow = vi.fn(() => ({
 // Import the mocked module
 import * as apiModule from "../../api";
 
-vi.mock("../../api", () => ({
-  useBootstrapWorkflowMutation: vi.fn(() => [
-    mockBootstrapWorkflow,
-    { isLoading: false },
-  ]),
-  api: {
-    reducerPath: "api",
-    reducer: (state = {}) => state,
-    middleware:
-      () => (next: (action: unknown) => unknown) => (action: unknown) =>
-        next(action),
-  },
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useBootstrapWorkflowMutation: vi.fn(() => [
+      mockBootstrapWorkflow,
+      { isLoading: false },
+    ]),
+    api: {
+      reducerPath: "api",
+      reducer: (state = {}) => state,
+      middleware:
+        () => (next: (action: unknown) => unknown) => (action: unknown) =>
+          next(action),
+    },
+  };
+});
 const mockedUseBootstrapWorkflowMutation = vi.mocked(
   apiModule.useBootstrapWorkflowMutation,
 );

@@ -11,7 +11,14 @@ import {
   useMotionSafeVariants,
 } from "./useMotionSafe";
 
-// Note: motion/react is globally mocked in src/test/setup.ts with proper prop filtering
+// Mock motion/react with useReducedMotion as vi.fn()
+vi.mock("motion/react", async () => {
+  const actual = await vi.importActual("motion/react");
+  return {
+    ...actual,
+    useReducedMotion: vi.fn(() => false),
+  };
+});
 
 import { useReducedMotion } from "motion/react";
 

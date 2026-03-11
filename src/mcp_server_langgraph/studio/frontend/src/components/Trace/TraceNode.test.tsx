@@ -86,7 +86,7 @@ describe("TraceNode", () => {
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector(".bg-success-2");
+      const nodeDiv = container.querySelector(".bg-success-3");
       expect(nodeDiv).toBeInTheDocument();
     });
 
@@ -102,7 +102,7 @@ describe("TraceNode", () => {
 
       const { container } = renderWithReactFlow(<TraceNode {...props} />);
 
-      const nodeDiv = container.querySelector(".bg-error-2");
+      const nodeDiv = container.querySelector(".bg-error-3");
       expect(nodeDiv).toBeInTheDocument();
     });
 

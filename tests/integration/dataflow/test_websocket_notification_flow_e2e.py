@@ -91,6 +91,7 @@ def create_notification_preferences():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_notification_broadcaster_flow")
 class TestNotificationBroadcasterFlow:
     """
     E2E tests for notification broadcaster core operations.
@@ -191,6 +192,7 @@ class TestNotificationBroadcasterFlow:
             assert call_args["payload"]["title"] == "System Update"
 
 
+@pytest.mark.xdist_group("test_notification_targeted_delivery")
 class TestNotificationTargetedDelivery:
     """
     E2E tests for targeted notification delivery.
@@ -285,6 +287,7 @@ class TestNotificationTargetedDelivery:
         assert call_args["payload"]["action"]["url"] == "/workflows/123"
 
 
+@pytest.mark.xdist_group("test_notification_preferences_flow")
 class TestNotificationPreferencesFlow:
     """
     E2E tests for notification preferences filtering.
@@ -441,6 +444,7 @@ class TestNotificationPreferencesFlow:
         assert call_args["payload"]["type"] == "error"
 
 
+@pytest.mark.xdist_group("test_notification_message_format")
 class TestNotificationMessageFormat:
     """
     E2E tests for notification message format.
@@ -531,6 +535,7 @@ class TestNotificationMessageFormat:
             mock_websocket_connection.send_json.assert_called_once()
 
 
+@pytest.mark.xdist_group("test_notification_connection_lifecycle")
 class TestNotificationConnectionLifecycle:
     """
     E2E tests for WebSocket connection lifecycle.
@@ -622,6 +627,7 @@ class TestNotificationConnectionLifecycle:
             conn.send_json.assert_called_once()
 
 
+@pytest.mark.xdist_group("test_preferences_repository")
 class TestPreferencesRepository:
     """
     E2E tests for preferences repository operations.

@@ -270,7 +270,7 @@ class TestOpenFGAClientOIDCTokenAcquisition:
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
             current_time = time.time()
-            with patch("time.time", return_value=current_time):
+            with patch("time.time", side_effect=lambda *a, **kw: current_time):
                 _token = await client._get_oidc_access_token()
 
             # Verify token cached (_token captured for debugging, main assertion is on client state)

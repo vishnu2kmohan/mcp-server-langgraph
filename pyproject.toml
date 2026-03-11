@@ -472,6 +472,12 @@ ignore = [
     # N-series (naming): 404 violations - will fix in separate PR
 ]
 
+# Prevent --fix from auto-removing assignments with side effects
+# F841: Ruff removes `x = expr()` when x appears unused, but the call may have
+# side effects (e.g., pytest fixtures, userEvent.setup(), sandbox creation).
+# Report the violation but never auto-fix it.
+unfixable = ["F841"]
+
 [tool.ruff.lint.isort]
 # Use black-compatible isort settings
 force-single-line = false
@@ -1034,6 +1040,7 @@ markers = [
     "budget: Budget checking and alert broadcasting tests (thresholds, WebSocket)",
     "native_tools: Native LLM provider tools tests (metrics, fallback, comparison)",
     "source_citations: Source citation extraction tests (Anthropic, Google, OpenAI, ToolMessage)",
+    "preview: Preview environment deployment tests",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)

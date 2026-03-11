@@ -97,7 +97,7 @@ class TestListMarketplaceSkills:
         with patch(
             "mcp_server_langgraph.api.v1.skills.list_skills_from_marketplace",
             new_callable=AsyncMock,
-            return_value=mock_skills,
+            side_effect=lambda *a, **kw: mock_skills,
         ):
             response = client.get("/admin/skills/list?marketplace=anthropic")
 
@@ -124,7 +124,7 @@ class TestListMarketplaceSkills:
         with patch(
             "mcp_server_langgraph.api.v1.skills.list_skills_from_marketplace",
             new_callable=AsyncMock,
-            return_value=mock_skills,
+            side_effect=lambda *a, **kw: mock_skills,
         ):
             response = client.get("/admin/skills/list?marketplace=anthropic&search=web")
 
@@ -150,7 +150,7 @@ class TestListMarketplaceSkills:
         with patch(
             "mcp_server_langgraph.api.v1.skills.list_skills_from_marketplace",
             new_callable=AsyncMock,
-            return_value=mock_skills,
+            side_effect=lambda *a, **kw: mock_skills,
         ):
             response = client.get("/admin/skills/list?marketplace=anthropic&tags=code")
 
@@ -182,7 +182,7 @@ class TestListMarketplaceSkills:
         with patch(
             "mcp_server_langgraph.api.v1.skills.list_skills_from_marketplace",
             new_callable=AsyncMock,
-            return_value=mock_skills,
+            side_effect=lambda *a, **kw: mock_skills,
         ) as mock_list:
             response = client.get("/admin/skills/list")
 
@@ -221,7 +221,7 @@ class TestInstallSkill:
         with patch(
             "mcp_server_langgraph.api.v1.skills.install_skill",
             new_callable=AsyncMock,
-            return_value=mock_result,
+            side_effect=lambda *a, **kw: mock_result,
         ):
             response = client.post(
                 "/admin/skills/install",
@@ -251,7 +251,7 @@ class TestInstallSkill:
         with patch(
             "mcp_server_langgraph.api.v1.skills.install_skill",
             new_callable=AsyncMock,
-            return_value=mock_result,
+            side_effect=lambda *a, **kw: mock_result,
         ):
             response = client.post(
                 "/admin/skills/install",
@@ -280,7 +280,7 @@ class TestInstallSkill:
         with patch(
             "mcp_server_langgraph.api.v1.skills.install_skill",
             new_callable=AsyncMock,
-            return_value=mock_result,
+            side_effect=lambda *a, **kw: mock_result,
         ):
             response = client.post(
                 "/admin/skills/install",
@@ -321,7 +321,7 @@ class TestInstallSkill:
         with patch(
             "mcp_server_langgraph.api.v1.skills.install_skill",
             new_callable=AsyncMock,
-            return_value=mock_result,
+            side_effect=lambda *a, **kw: mock_result,
         ) as mock_install:
             response = client.post(
                 "/admin/skills/install",
@@ -354,7 +354,7 @@ class TestListInstalledSkills:
         with patch(
             "mcp_server_langgraph.api.v1.skills.list_installed_skills",
             new_callable=AsyncMock,
-            return_value=mock_installed,
+            side_effect=lambda *a, **kw: mock_installed,
         ):
             response = client.get("/admin/skills/installed")
 
@@ -372,7 +372,7 @@ class TestListInstalledSkills:
         with patch(
             "mcp_server_langgraph.api.v1.skills.list_installed_skills",
             new_callable=AsyncMock,
-            return_value=[],
+            side_effect=lambda *a, **kw: [],
         ):
             response = client.get("/admin/skills/installed")
 
@@ -401,7 +401,7 @@ class TestUninstallSkill:
         with patch(
             "mcp_server_langgraph.api.v1.skills.uninstall_skill",
             new_callable=AsyncMock,
-            return_value=True,
+            side_effect=lambda *a, **kw: True,
         ):
             response = client.delete("/admin/skills/web-research")
 
@@ -418,7 +418,7 @@ class TestUninstallSkill:
         with patch(
             "mcp_server_langgraph.api.v1.skills.uninstall_skill",
             new_callable=AsyncMock,
-            return_value=False,
+            side_effect=lambda *a, **kw: False,
         ):
             response = client.delete("/admin/skills/nonexistent-skill")
 
@@ -460,12 +460,12 @@ class TestCheckSkillUpdates:
             ),
         ]
 
-        mock_scheduler = AsyncMock(return_value=None)
-        mock_scheduler.check_updates_available = AsyncMock(return_value=mock_updates)
+        mock_scheduler = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_scheduler.check_updates_available = AsyncMock(side_effect=lambda *a, **kw: mock_updates)
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
-            return_value=mock_scheduler,
+            side_effect=lambda *a, **kw: mock_scheduler,
         ):
             response = client.get("/admin/skills/updates")
 
@@ -483,12 +483,12 @@ class TestCheckSkillUpdates:
         client: TestClient,
     ) -> None:
         """Test checking for updates returns empty list when no updates available."""
-        mock_scheduler = AsyncMock(return_value=None)
-        mock_scheduler.check_updates_available = AsyncMock(return_value=[])
+        mock_scheduler = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_scheduler.check_updates_available = AsyncMock(side_effect=lambda *a, **kw: [])
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
-            return_value=mock_scheduler,
+            side_effect=lambda *a, **kw: mock_scheduler,
         ):
             response = client.get("/admin/skills/updates")
 
@@ -502,12 +502,12 @@ class TestCheckSkillUpdates:
         client: TestClient,
     ) -> None:
         """Test that scheduler errors are handled gracefully."""
-        mock_scheduler = AsyncMock(return_value=None)
+        mock_scheduler = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_scheduler.check_updates_available = AsyncMock(side_effect=RuntimeError("Scheduler unavailable"))
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
-            return_value=mock_scheduler,
+            side_effect=lambda *a, **kw: mock_scheduler,
         ):
             response = client.get("/admin/skills/updates")
 
@@ -538,12 +538,12 @@ class TestApplySkillUpdates:
             {"skill_name": "code-review", "success": True, "version": "2.1.0"},
         ]
 
-        mock_scheduler = AsyncMock(return_value=None)
-        mock_scheduler.apply_updates = AsyncMock(return_value=mock_results)
+        mock_scheduler = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_scheduler.apply_updates = AsyncMock(side_effect=lambda *a, **kw: mock_results)
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
-            return_value=mock_scheduler,
+            side_effect=lambda *a, **kw: mock_scheduler,
         ):
             response = client.post("/admin/skills/updates/apply")
 
@@ -563,12 +563,12 @@ class TestApplySkillUpdates:
             {"skill_name": "code-review", "success": False, "error": "Network error"},
         ]
 
-        mock_scheduler = AsyncMock(return_value=None)
-        mock_scheduler.apply_updates = AsyncMock(return_value=mock_results)
+        mock_scheduler = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_scheduler.apply_updates = AsyncMock(side_effect=lambda *a, **kw: mock_results)
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
-            return_value=mock_scheduler,
+            side_effect=lambda *a, **kw: mock_scheduler,
         ):
             response = client.post("/admin/skills/updates/apply")
 
@@ -582,12 +582,12 @@ class TestApplySkillUpdates:
         client: TestClient,
     ) -> None:
         """Test applying updates when none available returns empty list."""
-        mock_scheduler = AsyncMock(return_value=None)
-        mock_scheduler.apply_updates = AsyncMock(return_value=[])
+        mock_scheduler = AsyncMock(return_value=None)  # noqa: async-mock-config
+        mock_scheduler.apply_updates = AsyncMock(side_effect=lambda *a, **kw: [])
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
-            return_value=mock_scheduler,
+            side_effect=lambda *a, **kw: mock_scheduler,
         ):
             response = client.post("/admin/skills/updates/apply")
 
@@ -602,12 +602,12 @@ class TestApplySkillUpdates:
         client: TestClient,
     ) -> None:
         """Test that scheduler errors are handled gracefully."""
-        mock_scheduler = AsyncMock(return_value=None)
+        mock_scheduler = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_scheduler.apply_updates = AsyncMock(side_effect=RuntimeError("Update failed"))
 
         with patch(
             "mcp_server_langgraph.api.v1.skills.get_auto_update_scheduler",
-            return_value=mock_scheduler,
+            side_effect=lambda *a, **kw: mock_scheduler,
         ):
             response = client.post("/admin/skills/updates/apply")
 

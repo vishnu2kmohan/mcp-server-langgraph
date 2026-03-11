@@ -219,6 +219,12 @@ class TestAIUXServiceInitialization:
         service = AIUXService(llm_factory=mock_llm_factory, settings=mock_settings)
         assert service.llm_enabled is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestErrorAnalysisWithLLM:
     """Test LLM-enhanced error analysis."""
@@ -319,6 +325,12 @@ class TestErrorAnalysisWithLLM:
         # Result should come from heuristics (ADR-0091 aligned fields)
         assert result.error_type == "authentication"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestEmptyStateSuggestionsWithLLM:
     """Test LLM-enhanced empty state suggestions."""
@@ -367,6 +379,12 @@ class TestEmptyStateSuggestionsWithLLM:
         # Should still return valid suggestions from heuristics
         assert result is not None
         assert len(result.suggestions) >= 1
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestPersonaAnalysisWithLLM:
@@ -419,6 +437,12 @@ class TestPersonaAnalysisWithLLM:
         # Should have behavior signals
         assert len(result.behavior_signals) > 0
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestLLMPromptConstruction:
     """Test prompt construction for LLM calls."""
@@ -467,6 +491,12 @@ class TestLLMPromptConstruction:
 
         assert "json" in prompt_content.lower()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestResponseParsing:
     """Test LLM response parsing."""
@@ -513,6 +543,12 @@ class TestResponseParsing:
         # Should parse successfully (ADR-0091 aligned fields)
         assert result.error_type == "timeout"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestTelemetryIntegration:
     """Test telemetry and logging."""
@@ -556,6 +592,12 @@ class TestTelemetryIntegration:
 
             # Should log fallback warning
             assert mock_logger.warning.called or mock_logger.error.called
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # =============================================================================
@@ -643,6 +685,12 @@ class TestDisclosureAnalysisWithLLM:
         assert result is not None
         assert result.current_level is not None
         assert result.recommended_level is not None
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # =============================================================================
@@ -746,6 +794,12 @@ class TestNudgeRecommendationsWithLLM:
         assert result is not None
         assert isinstance(result.should_show, bool)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Onboarding Personalization with LLM Tests
@@ -828,6 +882,12 @@ class TestOnboardingPersonalizationWithLLM:
         assert result.detected_intent is not None
         assert len(result.recommended_path) > 0
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Metrics Insights with LLM Tests
@@ -889,6 +949,12 @@ class TestMetricsInsightsWithLLM:
         # Should still return valid response
         assert result is not None
         assert len(result.insights) >= 1
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # =============================================================================
@@ -1086,6 +1152,12 @@ class TestAIUXServiceObservabilityMetrics:
         after = ai_ux_llm_calls_total.labels(method="error_analysis")._value.get()
         assert after == initial
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Response Caching Tests
@@ -1197,3 +1269,9 @@ class TestAIUXServiceResponseCaching:
 
         # LLM should only be called once
         assert mock_llm_factory.ainvoke.call_count == 1
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

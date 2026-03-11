@@ -132,7 +132,7 @@ class TestRetryProperties:
         """Property: Retry either succeeds within max_attempts or raises RetryExhaustedError"""
         attempt_count = [0]
 
-        @retry_with_backoff(max_attempts=num_retries, exponential_base=0.01, exponential_max=0.1)
+        @retry_with_backoff(max_attempts=num_retries, exponential_base=0.01, exponential_max=0.1, retry_on=Exception)
         async def sometimes_failing_operation():
             attempt_count[0] += 1
             if attempt_count[0] <= fail_before_success:
@@ -156,7 +156,7 @@ class TestRetryProperties:
         """Property: Retry attempts match max_attempts configuration"""
         attempt_count = [0]
 
-        @retry_with_backoff(max_attempts=max_retries, exponential_base=0.01)
+        @retry_with_backoff(max_attempts=max_retries, exponential_base=0.01, retry_on=Exception)
         async def always_failing_operation():
             attempt_count[0] += 1
             raise Exception("Always fails")

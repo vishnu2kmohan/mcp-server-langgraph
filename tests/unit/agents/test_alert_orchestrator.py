@@ -461,7 +461,7 @@ class TestAlertOrchestratorPatternDetection:
 
         mock_engine = MagicMock()
         mock_engine.detect_patterns = MagicMock(
-            return_value=[
+            side_effect=lambda alert_ids: [
                 {"type": "cascade", "alerts": ["a1", "a2"]},
             ]
         )

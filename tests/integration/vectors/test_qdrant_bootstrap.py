@@ -118,6 +118,7 @@ def cleanup_collections(qdrant_url: str):
 # ==============================================================================
 
 
+@pytest.mark.xdist_group("test_qdrant_validation")
 class TestQdrantValidation:
     """
     Integration tests for Qdrant connectivity validation.
@@ -191,6 +192,7 @@ class TestQdrantValidation:
 # ==============================================================================
 
 
+@pytest.mark.xdist_group("test_qdrant_bootstrap")
 class TestQdrantBootstrap:
     """
     Integration tests for Qdrant collection bootstrap.
@@ -324,6 +326,7 @@ class TestQdrantBootstrap:
 # ==============================================================================
 
 
+@pytest.mark.xdist_group("test_tenant_aware_bootstrap")
 class TestTenantAwareBootstrap:
     """
     Integration tests for tenant-aware collection naming.
@@ -426,6 +429,7 @@ class TestTenantAwareBootstrap:
 # ==============================================================================
 
 
+@pytest.mark.xdist_group("test_qdrant_collection_configuration")
 class TestQdrantCollectionConfiguration:
     """
     Tests for verifying collection configuration after bootstrap.
@@ -485,6 +489,7 @@ class TestQdrantCollectionConfiguration:
 # ==============================================================================
 
 
+@pytest.mark.xdist_group("test_default_collection_bootstrap")
 class TestDefaultCollectionBootstrap:
     """
     Tests for default collection bootstrap behavior.

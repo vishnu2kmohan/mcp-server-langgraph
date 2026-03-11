@@ -24,10 +24,13 @@ vi.mock("../hooks/useGenerateWorkflowFromChat", () => ({
   useGenerateWorkflowFromChat: vi.fn(),
 }));
 
-vi.mock("../api", () => ({
-  useGetFeatureFlagsQuery: vi.fn(),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useGetFeatureFlagsQuery: vi.fn(),
+  };
+});
 import { useGenerateWorkflowFromChat } from "../hooks/useGenerateWorkflowFromChat";
 import { useGetFeatureFlagsQuery } from "../api";
 import { GenerateWorkflowButton } from "./GenerateWorkflowButton";

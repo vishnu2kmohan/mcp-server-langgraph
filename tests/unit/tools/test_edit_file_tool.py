@@ -125,11 +125,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             result = edit_file.invoke(
@@ -157,11 +157,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             edit_file.invoke(
@@ -191,11 +191,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             edit_file.invoke(
@@ -228,11 +228,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             result = edit_file.invoke(
@@ -260,11 +260,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             result = edit_file.invoke(
@@ -292,11 +292,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             edit_file.invoke(
@@ -331,11 +331,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             # Invoke tool - we verify backup creation below, not the result
@@ -371,11 +371,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             edit_file.invoke(
@@ -405,11 +405,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             edit_file.invoke(
@@ -445,7 +445,7 @@ class TestEditFileTool:
         try:
             with patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ):
                 result = edit_file.invoke(
                     {
@@ -469,7 +469,7 @@ class TestEditFileTool:
 
         with patch(
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-            return_value=temp_workspace,
+            side_effect=lambda: temp_workspace,
         ):
             result = edit_file.invoke(
                 {
@@ -494,7 +494,7 @@ class TestEditFileTool:
 
         with patch(
             "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-            return_value=temp_workspace,
+            side_effect=lambda: temp_workspace,
         ):
             result = edit_file.invoke(
                 {
@@ -521,11 +521,11 @@ class TestEditFileTool:
         with (
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_workspace_root",
-                return_value=temp_workspace,
+                side_effect=lambda: temp_workspace,
             ),
             patch(
                 "mcp_server_langgraph.tools.edit_file_tools.get_sandbox_runner",
-                return_value=mock_runner,
+                side_effect=lambda: mock_runner,
             ),
         ):
             edit_file.invoke(

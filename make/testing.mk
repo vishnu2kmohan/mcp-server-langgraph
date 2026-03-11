@@ -236,7 +236,7 @@ test-mcp:
 test-frontend: ## Run frontend tests (sharded, parallel, default 150 shards)
 	cd src/mcp_server_langgraph/studio/frontend && bash scripts/run-tests-sharded.sh --parallel
 
-test-frontend-fast: ## Run frontend tests (fast mode, 75 shards, parallel)
+test-frontend-fast: ## Run frontend tests (fast mode, 110 shards, parallel)
 	cd src/mcp_server_langgraph/studio/frontend && bash scripts/run-tests-sharded.sh --fast --parallel
 
 test-frontend-ci: ## Run frontend tests in CI mode (50 shards, sequential)

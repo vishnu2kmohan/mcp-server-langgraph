@@ -386,7 +386,7 @@ class TestArtifactNameGeneratorLLMFactory:
         # Patch at the source module where create_llm_from_config is defined
         with patch(
             "mcp_server_langgraph.llm.factory.create_llm_from_config",
-            return_value=mock_factory,
+            side_effect=lambda *a, **kw: mock_factory,
         ) as mock_create:
             generator = ArtifactNameGenerator(enable_llm=True)
             # Use content that won't match heuristics to force LLM call

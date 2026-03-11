@@ -82,6 +82,12 @@ class TestWorkflowShareModels:
         assert "email" in properties
         assert "permission" in properties
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestGetWorkflowSharesEndpoint:
     """Tests for GET /workflows/{id}/shares endpoint."""
@@ -99,6 +105,12 @@ class TestGetWorkflowSharesEndpoint:
                 return
         pytest.fail("GET /workflows/{workflow_id}/shares route not found")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestAddWorkflowShareEndpoint:
     """Tests for POST /workflows/{id}/shares endpoint."""
@@ -115,6 +127,12 @@ class TestAddWorkflowShareEndpoint:
                 if "POST" in route.methods:
                     return
         pytest.fail("POST /workflows/{workflow_id}/shares route not found")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestRemoveWorkflowShareEndpoint:
@@ -141,6 +159,12 @@ class TestRemoveWorkflowShareEndpoint:
                 return
         pytest.fail("DELETE /workflows/{workflow_id}/shares/{user_id} route not found")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestUpdateWorkflowPublicEndpoint:
     """Tests for PUT /workflows/{id}/public endpoint."""
@@ -157,6 +181,12 @@ class TestUpdateWorkflowPublicEndpoint:
                 assert "PUT" in route.methods
                 return
         pytest.fail("PUT /workflows/{workflow_id}/public route not found")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestSharedWithMeEndpoint:
@@ -175,6 +205,12 @@ class TestSharedWithMeEndpoint:
                 return
         pytest.fail("GET /workflows/shared-with-me route not found")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestPublicWorkflowAccessEndpoint:
     """Tests for GET /workflows/public/{share_link} endpoint."""
@@ -192,6 +228,12 @@ class TestPublicWorkflowAccessEndpoint:
                 return
         pytest.fail("GET /workflows/public/{share_link} route not found")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestWorkflowSharingIntegration:
     """Integration-style unit tests for workflow sharing functionality."""
@@ -206,9 +248,11 @@ class TestWorkflowSharingIntegration:
         service = MagicMock()
         # Mock get_workflow for authorization check - returns workflow dict owned by mock user
         # Must be a dict since require_workflow_owner calls workflow.get("user_id")
-        service.get_workflow = AsyncMock(return_value={"id": "wf-123", "user_id": "owner-123", "name": "Test Workflow"})
+        service.get_workflow = AsyncMock(
+            side_effect=lambda *a, **kw: {"id": "wf-123", "user_id": "owner-123", "name": "Test Workflow"}
+        )
         service.get_workflow_shares = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "shares": [
                     {"user_id": "user-1", "email": "alice@example.com", "permission": "edit"},
                 ],
@@ -216,16 +260,16 @@ class TestWorkflowSharingIntegration:
                 "share_link": None,
             }
         )
-        service.add_workflow_share = AsyncMock(return_value=True)
-        service.remove_workflow_share = AsyncMock(return_value=True)
+        service.add_workflow_share = AsyncMock(side_effect=lambda *a, **kw: True)
+        service.remove_workflow_share = AsyncMock(side_effect=lambda *a, **kw: True)
         service.update_workflow_public = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "is_public": True,
                 "share_link": "abc123",
             }
         )
-        service.list_shared_with_me = AsyncMock(return_value=[])
-        service.get_public_workflow = AsyncMock(return_value=None)
+        service.list_shared_with_me = AsyncMock(side_effect=lambda *a, **kw: [])
+        service.get_public_workflow = AsyncMock(side_effect=lambda *a, **kw: None)
         return service
 
     @pytest.fixture
@@ -243,7 +287,7 @@ class TestWorkflowSharingIntegration:
 
         # GIVEN a workflow with shares
         mock_service.get_workflow_shares = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "shares": [
                     {"user_id": "user-1", "email": "alice@example.com", "permission": "edit"},
                     {"user_id": "user-2", "email": "bob@example.com", "permission": "view"},
@@ -315,7 +359,7 @@ class TestWorkflowSharingIntegration:
         # GIVEN a request to make workflow public
         request = UpdateWorkflowPublicRequest(is_public=True)
         mock_service.update_workflow_public = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "is_public": True,
                 "share_link": "abc123xyz",
             }
@@ -340,7 +384,7 @@ class TestWorkflowSharingIntegration:
         from mcp_server_langgraph.api.v1.workflows import get_workflow_shares
 
         # GIVEN workflow doesn't exist (get_workflow returns None)
-        mock_service.get_workflow = AsyncMock(return_value=None)
+        mock_service.get_workflow = AsyncMock(side_effect=lambda *a, **kw: None)
 
         # WHEN/THEN should raise 404
         with pytest.raises(HTTPException) as exc_info:
@@ -364,8 +408,10 @@ class TestWorkflowShareNotifications:
     def mock_service(self) -> MagicMock:
         """Create a mock WorkflowServiceAdapter with sharing methods."""
         service = MagicMock()
-        service.get_workflow = AsyncMock(return_value={"id": "wf-123", "user_id": "owner-123", "name": "Test Workflow"})
-        service.add_workflow_share = AsyncMock(return_value=True)
+        service.get_workflow = AsyncMock(
+            side_effect=lambda *a, **kw: {"id": "wf-123", "user_id": "owner-123", "name": "Test Workflow"}
+        )
+        service.add_workflow_share = AsyncMock(side_effect=lambda *a, **kw: True)
         return service
 
     @pytest.fixture
@@ -392,11 +438,13 @@ class TestWorkflowShareNotifications:
         # Mock the notification broadcaster
         # Implementation uses notify_user(), imported from websocket.registry
         mock_broadcaster = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
-        mock_broadcaster.notify_user = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
+        mock_broadcaster.notify_user = AsyncMock(
+            side_effect=lambda *a, **kw: None
+        )  # async-mock-configured  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             result = await add_workflow_share_authorized(
                 workflow_id="wf-123",
@@ -443,7 +491,7 @@ class TestWorkflowShareNotifications:
 
         with patch(
             "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             # Should not raise
             result = await add_workflow_share_authorized(
@@ -475,7 +523,7 @@ class TestWorkflowShareNotifications:
 
         # Workflow with specific name
         mock_service.get_workflow = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "id": "wf-456",
                 "user_id": "owner-123",
                 "name": "My Important Analysis",
@@ -485,11 +533,13 @@ class TestWorkflowShareNotifications:
         request = AddWorkflowShareRequest(email="carol@example.com", permission="execute")
         # Implementation uses notify_user(), imported from websocket.registry
         mock_broadcaster = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
-        mock_broadcaster.notify_user = AsyncMock(return_value=None)  # async-mock-configured  # noqa: async-mock-config
+        mock_broadcaster.notify_user = AsyncMock(
+            side_effect=lambda *a, **kw: None
+        )  # async-mock-configured  # noqa: async-mock-config
 
         with patch(
             "mcp_server_langgraph.websocket.registry.get_notification_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             await add_workflow_share_authorized(
                 workflow_id="wf-456",

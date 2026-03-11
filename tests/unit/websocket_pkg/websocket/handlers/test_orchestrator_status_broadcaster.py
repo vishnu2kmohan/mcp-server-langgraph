@@ -7,6 +7,8 @@ Following the pattern from test_devtools.py and test_trace_broadcaster.py.
 
 from __future__ import annotations
 
+import gc
+
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
@@ -42,8 +44,6 @@ class TestOrchestratorStatusBroadcaster:
     def teardown_method(self) -> None:
         """Clean up after each test. Force GC to prevent mock accumulation in xdist workers."""
         reset_orchestrator_status_broadcaster()
-        import gc
-
         gc.collect()
 
     # =========================================================================
@@ -416,6 +416,10 @@ class TestTaskInfo:
         assert result["category"] == "ux"
         assert "started_at" in result
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        gc.collect()
+
 
 class TestOrchestratorStatus:
     """Test suite for OrchestratorStatus enum."""
@@ -426,6 +430,10 @@ class TestOrchestratorStatus:
         assert OrchestratorStatus.PROCESSING.value == "processing"
         assert OrchestratorStatus.ERROR.value == "error"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        gc.collect()
+
 
 class TestTaskCategory:
     """Test suite for TaskCategory enum."""
@@ -435,6 +443,10 @@ class TestTaskCategory:
         expected = {"ux", "session", "conversation", "canvas", "diagram", "trace", "hitl", "command", "alert", "workflow"}
         actual = {c.value for c in TaskCategory}
         assert actual == expected
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        gc.collect()
 
 
 # =============================================================================
@@ -453,6 +465,7 @@ class TestOrchestratorStatusHandler:
     def teardown_method(self) -> None:
         """Clean up after each test."""
         reset_orchestrator_status_broadcaster()
+        gc.collect()
 
     # =========================================================================
     # Constructor Tests
@@ -703,6 +716,7 @@ class TestOrchestratorStatusMetrics:
     def teardown_method(self) -> None:
         """Clean up after each test."""
         reset_orchestrator_status_broadcaster()
+        gc.collect()
 
     def test_broadcaster_has_get_metrics_method(self) -> None:
         """Broadcaster should expose metrics via get_metrics()."""
@@ -820,6 +834,7 @@ class TestTaskProgress:
     def teardown_method(self) -> None:
         """Clean up after each test."""
         reset_orchestrator_status_broadcaster()
+        gc.collect()
 
     def test_task_info_has_progress_field(self) -> None:
         """TaskInfo should have optional progress field (0-100)."""
@@ -922,6 +937,7 @@ class TestTaskQueueDepth:
     def teardown_method(self) -> None:
         """Clean up after each test."""
         reset_orchestrator_status_broadcaster()
+        gc.collect()
 
     def test_broadcaster_has_queue_depth_property(self) -> None:
         """Broadcaster should have queue_depth property."""

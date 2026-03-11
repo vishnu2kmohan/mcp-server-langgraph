@@ -13,37 +13,40 @@ import { CostDocument } from "./CostDocument";
 import uiReducer from "../../store/slices/uiSlice";
 
 // Mock RTK Query hooks - camelCase per ADR-0091 Phase 6
-vi.mock("../../api", () => ({
-  useGetCostSummaryQuery: () => ({
-    data: {
-      totalCost: 125.5,
-      totalTokens: 50000,
-      requestCount: 250,
-    },
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: vi.fn(),
-  }),
-  useGetCostByModelQuery: () => ({
-    data: [
-      { model: "gpt-4", cost: 100.0, requests: 200 },
-      { model: "gpt-3.5-turbo", cost: 25.5, requests: 50 },
-    ],
-    isLoading: false,
-    refetch: vi.fn(),
-  }),
-  useGetCostHistoryQuery: () => ({
-    data: [
-      { date: "2024-01-01", cost: 10.5 },
-      { date: "2024-01-02", cost: 15.0 },
-      { date: "2024-01-03", cost: 20.0 },
-    ],
-    isLoading: false,
-    refetch: vi.fn(),
-  }),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useGetCostSummaryQuery: () => ({
+      data: {
+        totalCost: 125.5,
+        totalTokens: 50000,
+        requestCount: 250,
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: vi.fn(),
+    }),
+    useGetCostByModelQuery: () => ({
+      data: [
+        { model: "gpt-4", cost: 100.0, requests: 200 },
+        { model: "gpt-3.5-turbo", cost: 25.5, requests: 50 },
+      ],
+      isLoading: false,
+      refetch: vi.fn(),
+    }),
+    useGetCostHistoryQuery: () => ({
+      data: [
+        { date: "2024-01-01", cost: 10.5 },
+        { date: "2024-01-02", cost: 15.0 },
+        { date: "2024-01-03", cost: 20.0 },
+      ],
+      isLoading: false,
+      refetch: vi.fn(),
+    }),
+  };
+});
 // Create test store
 const createTestStore = () => {
   return configureStore({

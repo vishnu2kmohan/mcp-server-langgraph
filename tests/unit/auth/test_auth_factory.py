@@ -602,7 +602,7 @@ class TestRedisMetadataSerializationFix:
         mock_redis.rpush = AsyncMock(return_value=1)
         mock_redis.lrange = AsyncMock(return_value=[])
 
-        with patch("redis.asyncio.from_url", return_value=mock_redis):
+        with patch("redis.asyncio.from_url", side_effect=lambda *a, **kw: mock_redis):
             store = RedisSessionStore(redis_url="redis://localhost:6379/0")
 
             metadata = {
@@ -666,7 +666,7 @@ class TestRedisMetadataSerializationFix:
         mock_redis.rpush = AsyncMock(return_value=1)
         mock_redis.lrange = AsyncMock(return_value=[])
 
-        with patch("redis.asyncio.from_url", return_value=mock_redis):
+        with patch("redis.asyncio.from_url", side_effect=lambda *a, **kw: mock_redis):
             store = RedisSessionStore(redis_url="redis://localhost:6379/0")
 
             metadata = {

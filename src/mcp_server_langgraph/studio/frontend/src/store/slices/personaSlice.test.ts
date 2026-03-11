@@ -450,7 +450,6 @@ describe("personaSlice", () => {
         const modules = selectVisibleModules(state);
         expect(modules).toContain("chat");
         expect(modules).toContain("workflows");
-        expect(modules).toContain("mcp");
         expect(modules).toContain("agents");
         expect(modules).not.toContain("admin");
       });
@@ -465,7 +464,6 @@ describe("personaSlice", () => {
         };
         const modules = selectVisibleModules(state);
         expect(modules).toContain("chat");
-        expect(modules).toContain("traces");
         expect(modules).toContain("cost");
         expect(modules).toContain("observability");
       });
@@ -480,9 +478,8 @@ describe("personaSlice", () => {
         };
         const modules = selectVisibleModules(state);
         expect(modules).toContain("chat");
-        expect(modules).toContain("mcp");
         expect(modules).toContain("connections");
-        expect(modules).toContain("traces");
+        expect(modules).toContain("observability");
       });
 
       it("should return compliance modules for compliance-officer", () => {

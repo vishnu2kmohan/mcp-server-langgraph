@@ -119,7 +119,7 @@ class TestLLMStreamingMetricsEndpointBehavior:
 
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config (method configured below)
         mock_service.get_llm_streaming_metrics = AsyncMock(
-            return_value={
+            side_effect=lambda *a, **kw: {
                 "ttfc_p95_seconds": 1.5,
                 "ttfc_p50_seconds": 0.8,
                 "inter_chunk_latency_p95_seconds": 0.15,
@@ -131,7 +131,10 @@ class TestLLMStreamingMetricsEndpointBehavior:
 
         with (
             patch("mcp_server_langgraph.core.feature_flags.get_feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.observability.get_observability_service", return_value=mock_service),
+            patch(
+                "mcp_server_langgraph.api.v1.observability.get_observability_service",
+                side_effect=lambda *a, **kw: mock_service,
+            ),
         ):
             mock_flags.return_value.enable_streaming_metrics = True
 
@@ -157,7 +160,10 @@ class TestLLMStreamingMetricsEndpointBehavior:
 
         with (
             patch("mcp_server_langgraph.core.feature_flags.get_feature_flags") as mock_flags,
-            patch("mcp_server_langgraph.api.v1.observability.get_observability_service", return_value=mock_service),
+            patch(
+                "mcp_server_langgraph.api.v1.observability.get_observability_service",
+                side_effect=lambda *a, **kw: mock_service,
+            ),
         ):
             mock_flags.return_value.enable_streaming_metrics = True
 

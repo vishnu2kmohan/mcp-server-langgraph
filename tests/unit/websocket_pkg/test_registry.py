@@ -290,3 +290,9 @@ class TestRegistryExports:
         }
 
         assert set(registry.__all__) == expected_exports
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

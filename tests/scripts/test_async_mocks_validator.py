@@ -39,7 +39,7 @@ class TestAsyncMockConfigurationValidator:
                 from unittest.mock import AsyncMock
 
                 def test_something():
-                    mock = AsyncMock(return_value=None)  # No configuration - violation
+                    mock = AsyncMock()  # No configuration - violation
                     assert mock
                 """
             )
@@ -144,7 +144,7 @@ class TestAsyncMockConfigurationValidator:
                     mock.method.return_value = "value"  # Configured in this function
 
                 def test_second():
-                    mock = AsyncMock(return_value=None)  # Unconfigured in this function - violation
+                    mock = AsyncMock()  # Unconfigured in this function - violation
                     assert mock
                 """
             )

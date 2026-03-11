@@ -15,11 +15,26 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="observability_lazy_init")
 class TestObservabilitySafeFallback:
     """Test safe fallback behavior before observability initialization"""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Re-initialize OTEL and force GC after each test."""
+        from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+        if not is_initialized():
+            from mcp_server_langgraph.core.config import Settings
+
+            init_observability(
+                settings=Settings(
+                    log_format="text",
+                    enable_file_logging=False,
+                    langsmith_tracing=False,
+                    observability_backend="opentelemetry",
+                ),
+                enable_file_logging=False,
+            )
         gc.collect()
 
     def test_logger_usable_before_init(self):
@@ -104,6 +119,34 @@ class TestObservabilitySafeFallback:
         # Verify messages were logged
         assert any("Test info message" in record.message for record in caplog.records)
         assert any("Test warning message" in record.message for record in caplog.records)
+
+    def test_metrics_chained_call_noop_fallback(self):
+        """
+        Test that metrics.xxx.add() doesn't crash when OTEL is not initialized.
+
+        The metrics proxy (LazyConfig) must support chained attribute access
+        like metrics.successful_calls.add(1, {...}) in fallback mode.
+        Without the _NoOpProxy, this raises AttributeError because a plain
+        lambda doesn't have .add().
+
+        Explicitly forces uninitialized state via shutdown_observability() to
+        guarantee the _NoOpProxy path is exercised even if a previous test
+        left OTEL initialized.
+        """
+        from mcp_server_langgraph.observability.telemetry import (
+            is_initialized,
+            metrics,
+            shutdown_observability,
+        )
+
+        # Force fallback state
+        shutdown_observability()
+        assert is_initialized() is False
+
+        # These chained calls must not raise AttributeError
+        metrics.successful_calls.add(1, {"operation": "test"})
+        metrics.failed_calls.add(1, {"operation": "test"})
+        metrics.tool_calls.add(1, {"tool": "test"})
 
     def test_logger_after_init_uses_configured_logger(self):
         """

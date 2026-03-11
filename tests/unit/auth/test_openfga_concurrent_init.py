@@ -40,6 +40,12 @@ class TestOpenFGAClientConcurrentInitialization:
     calls to each create a new OpenFgaClient, leaking aiohttp sessions.
     """
 
+    @pytest.fixture(autouse=True)
+    def _isolate_openfga_globals(self):
+        """Isolate openfga module from global OTEL state contamination in xdist workers."""
+        with patch("mcp_server_langgraph.auth.openfga.logger", MagicMock()):
+            yield
+
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -275,6 +281,16 @@ class TestOpenFGAClientConcurrentInitialization:
 class TestOpenFGAClientResourceCleanup:
     """Tests for proper resource cleanup during client lifecycle."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_openfga_globals(self):
+        """Isolate openfga module from global OTEL state contamination in xdist workers.
+
+        The LazyLogger proxy depends on get_logger() which can fail when another
+        test in the same worker shuts down the OTEL provider.
+        """
+        with patch("mcp_server_langgraph.auth.openfga.logger", MagicMock()):
+            yield
+
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -300,9 +316,11 @@ class TestOpenFGAClientResourceCleanup:
         mock_sdk_client = MagicMock()
         mock_sdk_client.close = AsyncMock(return_value=None)
 
+        # Use side_effect (not return_value) for consistent behavior with
+        # the other tests in this file and to avoid xdist mock identity issues
         with patch(
             "mcp_server_langgraph.auth.openfga.OpenFgaClient",
-            return_value=mock_sdk_client,
+            side_effect=lambda *args, **kwargs: mock_sdk_client,
         ):
             await client._ensure_initialized()
             assert client._client is mock_sdk_client

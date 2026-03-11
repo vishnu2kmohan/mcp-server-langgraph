@@ -68,28 +68,32 @@ vi.mock(
   () => mockImplementations.useAgentRequestWebSocket,
 );
 // Extended api mock with useGetServerConfigQuery and useGetAvailableModelsQuery
-vi.mock("../../api", () => ({
-  ...mockImplementations.api,
-  useGetAvailableModelsQuery: () => ({
-    data: [
-      { id: "gpt-4", name: "GPT-4", provider: "openai" },
-      { id: "claude-3", name: "Claude 3", provider: "anthropic" },
-    ],
-    isLoading: false,
-    isError: false,
-    error: null,
-  }),
-  useGetServerConfigQuery: () => ({
-    data: {
-      model_name: "gpt-4",
-      provider: "openai",
-      features: {},
-    },
-    isLoading: false,
-    isError: false,
-    error: null,
-  }),
-}));
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    ...mockImplementations.api,
+    useGetAvailableModelsQuery: () => ({
+      data: [
+        { id: "gpt-4", name: "GPT-4", provider: "openai" },
+        { id: "claude-3", name: "Claude 3", provider: "anthropic" },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    }),
+    useGetServerConfigQuery: () => ({
+      data: {
+        model_name: "gpt-4",
+        provider: "openai",
+        features: {},
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    }),
+  };
+});
 vi.mock(
   "../../hooks/usePersonaRouting",
   () => mockImplementations.usePersonaRouting,

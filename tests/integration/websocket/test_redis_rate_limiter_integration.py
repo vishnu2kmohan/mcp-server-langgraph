@@ -87,6 +87,7 @@ async def redis_client() -> AsyncGenerator[redis.Redis, None]:
     await client.aclose()
 
 
+@pytest.mark.xdist_group("test_redis_user_rate_limiter_integration")
 @pytest.mark.skipif(
     not is_redis_available(),
     reason="Redis not available",
@@ -217,6 +218,7 @@ class TestRedisUserRateLimiterIntegration:
         assert ttl <= 60, "TTL should be at most 60 seconds"
 
 
+@pytest.mark.xdist_group("test_redis_web_socket_rate_limiter_integration")
 @pytest.mark.skipif(
     not is_redis_available(),
     reason="Redis not available",
@@ -306,6 +308,7 @@ class TestRedisWebSocketRateLimiterIntegration:
         assert stats["remaining"] == 75
 
 
+@pytest.mark.xdist_group("test_distributed_rate_limiting_integration")
 @pytest.mark.skipif(
     not is_redis_available(),
     reason="Redis not available",

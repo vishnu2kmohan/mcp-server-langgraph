@@ -20,7 +20,7 @@
   Canonical: monitoring/grafana/dashboards/
 */ -}}
 
-{{- $folders := list "AI" "Application" "Auth" "Compliance" "HEART" "Infrastructure" "Operations" "Overview" "Resilience" "WebSocket" }}
+{{- $folders := list "AI" "Application" "Auth" "Compliance" "ExecutionMode" "HEART" "Infrastructure" "Operations" "Overview" "Resilience" "WebSocket" }}
 {{- range $folder := $folders }}
 {{- $dashboards := $.Files.Glob (printf "dashboards/%s/*.json" $folder) }}
 {{- if $dashboards }}

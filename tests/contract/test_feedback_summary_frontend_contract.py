@@ -38,6 +38,7 @@ FRONTEND_HALLUCINATION_CATEGORY_FIELDS = {
 }
 
 
+@pytest.mark.xdist_group("test_feedback_summary_frontend_contract")
 @pytest.mark.contract
 class TestFeedbackSummaryFrontendContract:
     """Contract tests for FeedbackSummaryResponse alignment."""
@@ -173,3 +174,9 @@ class TestFeedbackSummaryFrontendContract:
             f"Backend fields should be snake_case, found camelCase: {camel_case_fields}\n"
             f"RTK Query transforms snake_case to camelCase at runtime."
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

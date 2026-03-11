@@ -101,6 +101,7 @@ def teardown_gc():
     gc.collect()
 
 
+@pytest.mark.xdist_group("test_s_s_o_login_initiation")
 class TestSSOLoginInitiation:
     """Tests for SSO login flow initiation."""
 
@@ -210,6 +211,7 @@ class TestSSOLoginInitiation:
         assert "oauth2_code_verifier" in cookies or "oauth2_state" in cookies
 
 
+@pytest.mark.xdist_group("test_s_s_o_callback_handling")
 class TestSSOCallbackHandling:
     """Tests for OAuth2 callback handling."""
 
@@ -271,6 +273,7 @@ class TestSSOCallbackHandling:
         assert response.status_code in [400, 401, 302]
 
 
+@pytest.mark.xdist_group("test_s_s_o_logout_flow")
 class TestSSOLogoutFlow:
     """Tests for SSO logout flow."""
 
@@ -317,6 +320,7 @@ class TestSSOLogoutFlow:
         assert response.status_code in [200, 302]
 
 
+@pytest.mark.xdist_group("test_s_s_o_token_refresh")
 class TestSSOTokenRefresh:
     """Tests for OAuth2 token refresh flow."""
 
@@ -340,6 +344,7 @@ class TestSSOTokenRefresh:
         assert response.status_code in [401, 403, 422]
 
 
+@pytest.mark.xdist_group("test_p_k_c_e_implementation")
 class TestPKCEImplementation:
     """Tests for PKCE (Proof Key for Code Exchange) implementation."""
 
@@ -392,6 +397,7 @@ class TestPKCEImplementation:
         assert len(set(challenges)) == 10
 
 
+@pytest.mark.xdist_group("test_s_s_o_security_headers")
 class TestSSOSecurityHeaders:
     """Tests for security headers in SSO responses."""
 

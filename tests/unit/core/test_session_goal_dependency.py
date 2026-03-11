@@ -90,3 +90,9 @@ class TestGetSessionGoalRepository:
 
         # Should have different sessions
         assert repo1._session is not repo2._session
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

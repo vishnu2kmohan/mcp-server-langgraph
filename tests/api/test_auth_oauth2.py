@@ -1165,6 +1165,7 @@ class TestOAuth2Logout:
         assert "id_token_hint=" in location
 
 
+@pytest.mark.xdist_group("test_native_logout")
 @pytest.mark.api
 @pytest.mark.auth
 class TestNativeLogout:
@@ -1271,3 +1272,9 @@ class TestNativeLogout:
         logout_url = data["keycloak_logout_url"]
         assert "/protocol/openid-connect/logout" in logout_url
         assert "client_id=" in logout_url
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

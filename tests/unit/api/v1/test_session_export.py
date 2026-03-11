@@ -152,6 +152,12 @@ class TestExportMarkdown:
         content = response.text
         assert "session-123" in content or "Session ID" in content
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestExportJson:
     """Tests for JSON export format."""
@@ -180,6 +186,12 @@ class TestExportJson:
         data = response.json()
         assert len(data["messages"]) == 4
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestExportHtml:
     """Tests for HTML export format."""
@@ -198,6 +210,12 @@ class TestExportHtml:
         assert "<html" in content
         assert "Test Session" in content
         assert "Hello, how are you?" in content
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # ==============================================================================
@@ -230,6 +248,12 @@ class TestExportErrors:
 
         assert response.status_code == 404
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # ==============================================================================
 # Content-Disposition Tests
@@ -259,3 +283,9 @@ class TestExportDownload:
 
         disposition = response.headers["content-disposition"]
         assert "Test" in disposition or "session" in disposition.lower()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

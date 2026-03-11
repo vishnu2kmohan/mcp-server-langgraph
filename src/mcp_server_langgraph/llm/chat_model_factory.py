@@ -162,7 +162,7 @@ def _create_litellm_adapter(settings: Settings) -> BaseChatModel:
     that don't have native LangChain integrations.
     """
     try:
-        from langchain_community.chat_models import ChatLiteLLM  # type: ignore[import-not-found,import-untyped]
+        from langchain_community.chat_models import ChatLiteLLM  # type: ignore[import-not-found]
 
         return ChatLiteLLM(  # type: ignore[no-any-return]
             model=settings.model_name,

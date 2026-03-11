@@ -119,3 +119,9 @@ class TestMakefileParallelism:
         assert returncode == 0, "make command failed"
         if _xdist_available():
             assert flag == "-n auto", f"PYTEST_WORKERS=-1 should fall back to auto, got '{flag}'"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

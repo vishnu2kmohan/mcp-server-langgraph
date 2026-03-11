@@ -26,14 +26,14 @@ from mcp_server_langgraph.execution.sql.exceptions import (
 logger = logging.getLogger(__name__)
 
 try:
-    import trino  # type: ignore[import-not-found,import-untyped]  # noqa: F401
+    import trino  # type: ignore[import-not-found]  # noqa: F401
 
     _HAS_TRINO = True
 except ImportError:
     _HAS_TRINO = False
 
 if TYPE_CHECKING:
-    from trino.dbapi import Connection as TrinoConnection  # type: ignore[import-not-found,import-untyped]
+    from trino.dbapi import Connection as TrinoConnection  # type: ignore[import-not-found]
 
 
 class TrinoDriver(DatabaseDriver):

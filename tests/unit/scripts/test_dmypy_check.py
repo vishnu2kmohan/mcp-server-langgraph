@@ -119,3 +119,9 @@ class TestDmypyCheckScript:
         assert has_all_flags, (
             f"At least one dmypy start command must include --config-file, --show-error-codes, --pretty. Found: {start_cmds}"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

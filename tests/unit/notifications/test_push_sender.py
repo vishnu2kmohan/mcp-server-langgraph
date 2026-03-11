@@ -143,6 +143,12 @@ class TestPushMessage:
         assert message.icon is None
         assert message.actions is None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # PushNotificationSender Tests
@@ -300,6 +306,12 @@ class TestPushNotificationSender:
 
         assert result == 3
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Error Handling Tests
@@ -345,6 +357,12 @@ class TestPushSenderErrorHandling:
 
         # For now, just verify it doesn't crash
         await sender.send_to_user(sample_subscription.user_id, message)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
         # Result may be 0 (failed) or subscription may be removed
 
 
@@ -516,6 +534,12 @@ class TestPushSenderCircuitBreaker:
 
         # Should return False due to open circuit
         assert result is False
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # =============================================================================

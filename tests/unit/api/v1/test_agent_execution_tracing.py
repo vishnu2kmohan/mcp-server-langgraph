@@ -173,7 +173,7 @@ class TestAgentExecutionTracingRepositoryInit:
         """
         with patch(
             "mcp_server_langgraph.bootstrap.agent_execution_tracing.is_agent_execution_tracing_available",
-            return_value=False,
+            side_effect=lambda *a, **kw: False,
         ):
             # Import the chat module to test streaming behavior
             # The streaming should work without errors, just no traces

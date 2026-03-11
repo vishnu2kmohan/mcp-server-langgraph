@@ -227,11 +227,11 @@ class TestSemanticToolSearchEndpoint:
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_vector_provider",
-                return_value=mock_vector_provider,
+                side_effect=lambda *a, **kw: mock_vector_provider,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_embedding_service",
-                return_value=mock_embedding_service,
+                side_effect=lambda *a, **kw: mock_embedding_service,
             ),
         ):
             response = client.post(
@@ -304,11 +304,11 @@ class TestSemanticToolSearchEndpoint:
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_vector_provider",
-                return_value=mock_vector_provider,
+                side_effect=lambda *a, **kw: mock_vector_provider,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_embedding_service",
-                return_value=mock_embedding_service,
+                side_effect=lambda *a, **kw: mock_embedding_service,
             ),
         ):
             response = client.post(
@@ -345,11 +345,11 @@ class TestSemanticToolSearchEndpoint:
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_vector_provider",
-                return_value=mock_vector_provider,
+                side_effect=lambda *a, **kw: mock_vector_provider,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_embedding_service",
-                return_value=mock_embedding_service,
+                side_effect=lambda *a, **kw: mock_embedding_service,
             ),
         ):
             response = client.post(
@@ -381,11 +381,11 @@ class TestSemanticToolSearchEndpoint:
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_vector_provider",
-                return_value=mock_vector_provider,
+                side_effect=lambda *a, **kw: mock_vector_provider,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_embedding_service",
-                return_value=mock_embedding_service,
+                side_effect=lambda *a, **kw: mock_embedding_service,
             ),
         ):
             response = client.post(
@@ -465,11 +465,11 @@ class TestSemanticSkillSearchEndpoint:
             ),
             patch(
                 "mcp_server_langgraph.api.v1.skills.get_vector_provider",
-                return_value=mock_vector_provider,
+                side_effect=lambda *a, **kw: mock_vector_provider,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.skills.get_embedding_service",
-                return_value=mock_embedding_service,
+                side_effect=lambda *a, **kw: mock_embedding_service,
             ),
         ):
             response = skill_client.post(
@@ -542,11 +542,11 @@ class TestSemanticSearchResponseSchema:
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_vector_provider",
-                return_value=mock_vector_provider,
+                side_effect=lambda *a, **kw: mock_vector_provider,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_embedding_service",
-                return_value=mock_embedding_service,
+                side_effect=lambda *a, **kw: mock_embedding_service,
             ),
         ):
             response = client.post(
@@ -582,11 +582,11 @@ class TestSemanticSearchResponseSchema:
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_vector_provider",
-                return_value=mock_vector_provider,
+                side_effect=lambda *a, **kw: mock_vector_provider,
             ),
             patch(
                 "mcp_server_langgraph.api.v1.tools.get_embedding_service",
-                return_value=mock_embedding_service,
+                side_effect=lambda *a, **kw: mock_embedding_service,
             ),
         ):
             response = client.post(

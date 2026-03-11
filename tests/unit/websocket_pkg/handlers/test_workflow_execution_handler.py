@@ -37,7 +37,7 @@ class TestWorkflowExecutionHandlerInit:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -59,7 +59,7 @@ class TestWorkflowExecutionHandlerInit:
         mock_service = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -88,7 +88,7 @@ class TestWorkflowExecutionHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -111,7 +111,7 @@ class TestWorkflowExecutionHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -141,7 +141,7 @@ class TestWorkflowExecutionHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.start_execution.return_value = "exec-123"
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -170,7 +170,7 @@ class TestWorkflowExecutionHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.start_execution.return_value = "exec-123"
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -196,7 +196,7 @@ class TestWorkflowExecutionHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.start_execution.side_effect = Exception("Workflow not found")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -222,7 +222,7 @@ class TestWorkflowExecutionHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.stop_execution.return_value = True
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -252,7 +252,7 @@ class TestWorkflowExecutionHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.stop_execution.return_value = False
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -278,7 +278,7 @@ class TestWorkflowExecutionHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.stop_execution.side_effect = Exception("Stop failed")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -308,7 +308,7 @@ class TestWorkflowExecutionHandlerMessages:
             "progress": 0.5,
         }
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -337,7 +337,7 @@ class TestWorkflowExecutionHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_execution_status.side_effect = Exception("Status unavailable")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -362,7 +362,7 @@ class TestWorkflowExecutionHandlerMessages:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -395,7 +395,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -423,7 +423,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -450,7 +450,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -472,7 +472,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -502,7 +502,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -529,7 +529,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -558,7 +558,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,
@@ -585,7 +585,7 @@ class TestWorkflowExecutionHandlerPush:
         config = WebSocketConfig(endpoint_name="workflow-execution")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = WorkflowExecutionHandler(
                 config=config,
                 execution_service=mock_service,

@@ -421,3 +421,9 @@ class TestOpenFGAModelValidation:
         # If model.json had validation errors like memory_index.viewer,
         # the seed service would have failed and those tests would fail.
         pass  # Implicit test - documented for clarity
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

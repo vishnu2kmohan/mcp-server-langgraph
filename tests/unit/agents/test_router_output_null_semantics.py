@@ -134,6 +134,12 @@ class TestRouterOutputNullSemantics:
 
         assert output.skills_needed == skills
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestDefaultRouterOutputNullSemantics:
@@ -156,6 +162,12 @@ class TestDefaultRouterOutputNullSemantics:
         from mcp_server_langgraph.agents.router_agent import DEFAULT_ROUTER_OUTPUT
 
         assert DEFAULT_ROUTER_OUTPUT.skills_needed is None
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -181,6 +193,12 @@ class TestRouterOutputWithDiscoveryNullSemantics:
         assert output.tools_needed is None
         assert output.skills_needed is None
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestRouterOutputWithTemplatesNullSemantics:
@@ -204,6 +222,12 @@ class TestRouterOutputWithTemplatesNullSemantics:
 
         assert output.tools_needed is None
         assert output.skills_needed is None
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -294,3 +318,9 @@ class TestRouterOutputToolPreferenceFields:
         from mcp_server_langgraph.agents.router_agent import DEFAULT_ROUTER_OUTPUT
 
         assert DEFAULT_ROUTER_OUTPUT.tool_selection_mode is None
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

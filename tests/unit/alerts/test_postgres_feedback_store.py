@@ -222,19 +222,15 @@ class TestPostgresFeedbackStoreCRUD:
         THEN should return dict of reason counts.
         """
         from mcp_server_langgraph.alerts.feedback import (
-            FeedbackRecord,
             PostgresFeedbackStore,
         )
 
-        # Create mock records with rejection reasons
-        mock_records = []
-        for reason in [RejectionReason.TOO_RISKY, RejectionReason.TOO_RISKY, RejectionReason.WRONG_COMMAND]:
-            mock_record = MagicMock(spec=FeedbackRecord)
-            mock_record.reason = reason.value
-            mock_records.append(mock_record)
-
+        # Production code uses GROUP BY returning (reason_val, count) tuples
         mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = mock_records
+        mock_result.all.return_value = [
+            (RejectionReason.TOO_RISKY.value, 2),
+            (RejectionReason.WRONG_COMMAND.value, 1),
+        ]
         mock_session.execute.return_value = mock_result
 
         store = PostgresFeedbackStore(mock_session_maker)
@@ -375,15 +371,14 @@ class TestPostgresFeedbackStoreEdgeCases:
         THEN should filter by alert type.
         """
         from mcp_server_langgraph.alerts.feedback import (
-            FeedbackRecord,
             PostgresFeedbackStore,
         )
 
-        mock_record = MagicMock(spec=FeedbackRecord)
-        mock_record.reason = RejectionReason.INCOMPLETE_STEPS.value
-
+        # Production code uses GROUP BY returning (reason_val, count) tuples
         mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = [mock_record]
+        mock_result.all.return_value = [
+            (RejectionReason.INCOMPLETE_STEPS.value, 1),
+        ]
         mock_session.execute.return_value = mock_result
 
         store = PostgresFeedbackStore(mock_session_maker)

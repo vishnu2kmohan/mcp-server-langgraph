@@ -62,6 +62,7 @@ def compose_config() -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
+@pytest.mark.xdist_group("test_g_h_c_r_tag_consistency")
 class TestGHCRTagConsistency:
     """Tests for GHCR tag configuration in docker-compose.test.yml."""
 
@@ -179,7 +180,14 @@ class TestGHCRTagConsistency:
             f"Services with incorrect image names: {incorrect_names}. Image names should match expected pattern."
         )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_build_context_integrity")
 class TestBuildContextIntegrity:
     """Tests for build context and Dockerfile configuration."""
 
@@ -238,7 +246,14 @@ class TestBuildContextIntegrity:
 
         assert not missing_dockerfiles, f"Services with missing Dockerfiles: {missing_dockerfiles}"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_o_i_d_c_wait_init_container")
 class TestOIDCWaitInitContainer:
     """Tests for the OIDC wait init container used by OpenFGA."""
 
@@ -284,7 +299,14 @@ class TestOIDCWaitInitContainer:
             "openfga-test must wait for openfga-oidc-wait to complete successfully"
         )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_infrastructure_makefile_targets")
 class TestInfrastructureMakefileTargets:
     """Tests for infrastructure.mk target configuration."""
 
@@ -329,3 +351,9 @@ class TestInfrastructureMakefileTargets:
         assert "TEST_IMAGES" in infrastructure_mk_content, (
             "Missing TEST_IMAGES variable in infrastructure.mk. This variable lists all custom-built images for cleanup."
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

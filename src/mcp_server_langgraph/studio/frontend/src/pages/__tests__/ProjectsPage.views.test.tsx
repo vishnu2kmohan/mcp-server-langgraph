@@ -16,12 +16,15 @@ const mockCreateProjectMutation = vi.hoisted(() => vi.fn());
 const mockDeleteProjectMutation = vi.hoisted(() => vi.fn());
 
 // Mock RTK Query hooks
-vi.mock("../../api", () => ({
-  useListProjectsQuery: () => mockListProjectsQuery(),
-  useCreateProjectMutation: () => mockCreateProjectMutation(),
-  useDeleteProjectMutation: () => mockDeleteProjectMutation(),
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useListProjectsQuery: () => mockListProjectsQuery(),
+    useCreateProjectMutation: () => mockCreateProjectMutation(),
+    useDeleteProjectMutation: () => mockDeleteProjectMutation(),
+  };
+});
 // =============================================================================
 // Imports (after mocks)
 // =============================================================================

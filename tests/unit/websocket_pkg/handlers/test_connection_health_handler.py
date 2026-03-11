@@ -37,7 +37,7 @@ class TestConnectionHealthHandlerInit:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         assert handler._connection_repository is mock_repo
@@ -63,7 +63,7 @@ class TestConnectionHealthHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         user = AuthUser(id="user-123", username="testuser")
@@ -82,7 +82,7 @@ class TestConnectionHealthHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         handler._subscriptions = {"conn-1", "conn-2"}
@@ -118,7 +118,7 @@ class TestConnectionHealthHandlerMessages:
         mock_conn.auth_type = "none"
         mock_repo.list.return_value = ([mock_conn], None)
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="refresh", id="msg-1")
@@ -141,7 +141,7 @@ class TestConnectionHealthHandlerMessages:
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_repo.list.side_effect = Exception("Database error")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="refresh", id="msg-1")
@@ -162,7 +162,7 @@ class TestConnectionHealthHandlerMessages:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="invalid", id="msg-2")
@@ -183,7 +183,7 @@ class TestConnectionHealthHandlerMessages:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(
@@ -209,7 +209,7 @@ class TestConnectionHealthHandlerMessages:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="subscribe", payload={}, id="msg-4")
@@ -230,7 +230,7 @@ class TestConnectionHealthHandlerMessages:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="subscribe", payload=None, id="msg-5")
@@ -251,7 +251,7 @@ class TestConnectionHealthHandlerMessages:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         handler._subscriptions.add("conn-123")
@@ -279,7 +279,7 @@ class TestConnectionHealthHandlerMessages:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="unsubscribe", payload={}, id="msg-7")
@@ -303,7 +303,7 @@ class TestConnectionHealthHandlerMessages:
         mock_conn.id = "conn-123"
         mock_repo.get.return_value = mock_conn
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(
@@ -330,7 +330,7 @@ class TestConnectionHealthHandlerMessages:
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_repo.get.return_value = None
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(
@@ -355,7 +355,7 @@ class TestConnectionHealthHandlerMessages:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(type="check_health", payload={}, id="msg-10")
@@ -377,7 +377,7 @@ class TestConnectionHealthHandlerMessages:
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_repo.get.side_effect = Exception("Database error")
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         message = MessageEnvelope(
@@ -410,7 +410,7 @@ class TestConnectionHealthHandlerPush:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         handler._subscriptions.add("conn-123")
@@ -436,7 +436,7 @@ class TestConnectionHealthHandlerPush:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -458,7 +458,7 @@ class TestConnectionHealthHandlerPush:
         config = WebSocketConfig(endpoint_name="connection-health")
         mock_repo = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(config=config, connection_repository=mock_repo, owner_id="owner-123")
 
         handler._subscriptions.add("conn-123")
@@ -516,7 +516,7 @@ class TestConnectionHealthHandlerWithMetrics:
         mock_repo = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = ConnectionHealthHandler(
                 config=config,
                 connection_repository=mock_repo,

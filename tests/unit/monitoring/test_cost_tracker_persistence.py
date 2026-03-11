@@ -10,7 +10,6 @@ Reference: Plan - Phase 6 database persistence verification
 """
 
 import gc
-import os
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -28,27 +27,20 @@ pytestmark = [
 
 
 @pytest.fixture
-def reset_singletons():
+def reset_singletons(monkeypatch):
     """Reset cost storage singleton before/after tests."""
     from mcp_server_langgraph.monitoring.cost_storage_factory import (
         reset_cost_storage_backend,
     )
     from mcp_server_langgraph.monitoring.cost_tracker import _reset_cost_collector
 
-    # Use memory backend for unit tests
-    original_backend = os.environ.get("COST_STORAGE_BACKEND")
-    os.environ["COST_STORAGE_BACKEND"] = "memory"
+    # Use memory backend for unit tests (monkeypatch auto-restores on teardown)
+    monkeypatch.setenv("COST_STORAGE_BACKEND", "memory")
 
     reset_cost_storage_backend()
     _reset_cost_collector()
 
     yield
-
-    # Restore
-    if original_backend:
-        os.environ["COST_STORAGE_BACKEND"] = original_backend
-    else:
-        os.environ.pop("COST_STORAGE_BACKEND", None)
 
     reset_cost_storage_backend()
     _reset_cost_collector()
@@ -105,7 +97,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
 
         with patch(
             "mcp_server_langgraph.database.get_async_session",
-            return_value=mock_context,
+            side_effect=lambda url: mock_context,
         ):
             # Act
             await collector._persist_to_database(usage)
@@ -157,7 +149,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
 
         with patch(
             "mcp_server_langgraph.database.get_async_session",
-            return_value=mock_context,
+            side_effect=lambda url: mock_context,
         ):
             # Act
             await collector._persist_to_database(usage)
@@ -209,7 +201,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
 
         with patch(
             "mcp_server_langgraph.database.get_async_session",
-            return_value=mock_context,
+            side_effect=lambda url: mock_context,
         ):
             # Act
             await collector._persist_to_database(usage)
@@ -263,7 +255,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
 
         with patch(
             "mcp_server_langgraph.database.get_async_session",
-            return_value=mock_context,
+            side_effect=lambda url: mock_context,
         ):
             # Act
             await collector._persist_to_database(usage)
@@ -317,7 +309,7 @@ class TestCostMetricsCollectorPersistenceOrgFields:
 
         with patch(
             "mcp_server_langgraph.database.get_async_session",
-            return_value=mock_context,
+            side_effect=lambda url: mock_context,
         ):
             # Act
             await collector._persist_to_database(usage)

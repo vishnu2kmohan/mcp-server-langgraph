@@ -4705,6 +4705,153 @@ export const api = createApi({
           }>;
         },
     }),
+
+    // ==========================================================================
+    // Session Goal Tracking
+    // ==========================================================================
+
+    /**
+     * Get AI predictions for a session.
+     */
+    getPredictions: builder.query<
+      {
+        predictions: Array<{
+          id: string;
+          type: string;
+          metric: string;
+          predictedValue: number;
+          confidence: number;
+          timeframe: string;
+          factors: Array<{ name: string; impact: number }>;
+          createdAt: number;
+        }>;
+      },
+      { sessionId: string; type?: string; minConfidence?: number }
+    >({
+      query: (params) => ({
+        url: "/ai/predictions",
+        params: transformCamelToSnake(params),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          predictions: Array<{
+            id: string;
+            type: string;
+            metric: string;
+            predictedValue: number;
+            confidence: number;
+            timeframe: string;
+            factors: Array<{ name: string; impact: number }>;
+            createdAt: number;
+          }>;
+        },
+    }),
+
+    /**
+     * Set a goal for a session.
+     */
+    setSessionGoal: builder.mutation<
+      { sessionId: string; goal: string; setAt: number },
+      { sessionId: string; goal: string; setAt: number }
+    >({
+      query: ({ sessionId, ...body }) => ({
+        url: `/sessions/${sessionId}/goal`,
+        method: "POST",
+        body: transformCamelToSnake(body),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          sessionId: string;
+          goal: string;
+          setAt: number;
+        },
+    }),
+
+    /**
+     * Complete a session goal.
+     */
+    completeSessionGoal: builder.mutation<
+      {
+        sessionId: string;
+        goal: string;
+        achieved: boolean | "partial";
+        feedback: string | null;
+        setAt: number;
+        completedAt: number;
+      },
+      {
+        sessionId: string;
+        goal: string;
+        achieved: boolean | "partial";
+        feedback?: string;
+        completedAt: number;
+      }
+    >({
+      query: ({ sessionId, ...body }) => ({
+        url: `/sessions/${sessionId}/goal/complete`,
+        method: "POST",
+        body: transformCamelToSnake(body),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          sessionId: string;
+          goal: string;
+          achieved: boolean | "partial";
+          feedback: string | null;
+          setAt: number;
+          completedAt: number;
+        },
+    }),
+
+    /**
+     * Get session goal history.
+     */
+    getSessionGoalHistory: builder.query<
+      {
+        sessionId: string;
+        goals: Array<{
+          id: string;
+          goal: string;
+          achieved: boolean | "partial";
+          feedback: string | null;
+          setAt: number;
+          completedAt: number;
+        }>;
+        total: number;
+      },
+      { sessionId: string; limit?: number; offset?: number }
+    >({
+      query: ({ sessionId, ...params }) => ({
+        url: `/sessions/${sessionId}/goals`,
+        params: transformCamelToSnake(params),
+      }),
+      transformResponse: (response: unknown) =>
+        transformSnakeToCamel(response) as {
+          sessionId: string;
+          goals: Array<{
+            id: string;
+            goal: string;
+            achieved: boolean | "partial";
+            feedback: string | null;
+            setAt: number;
+            completedAt: number;
+          }>;
+          total: number;
+        },
+    }),
+
+    /**
+     * Delete a session goal.
+     */
+    deleteSessionGoal: builder.mutation<
+      void,
+      { sessionId: string; goalId: string }
+    >({
+      query: ({ sessionId, goalId }) => ({
+        url: `/sessions/${sessionId}/goals/${goalId}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -4979,4 +5126,10 @@ export const {
   useUpdatePlanMutation,
   // Plan Templates
   useSearchTemplatesQuery,
+  // Session Goal Tracking
+  useGetPredictionsQuery,
+  useSetSessionGoalMutation,
+  useCompleteSessionGoalMutation,
+  useGetSessionGoalHistoryQuery,
+  useDeleteSessionGoalMutation,
 } = api;

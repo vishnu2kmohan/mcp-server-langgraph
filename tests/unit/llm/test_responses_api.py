@@ -78,6 +78,12 @@ class TestResponsesApiRouting:
 
             assert use_responses is False
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestResponsesApiNormalization:
@@ -168,6 +174,12 @@ class TestResponsesApiNormalization:
         assert output_items[0]["type"] == "web_search_call"
         assert output_items[1]["type"] == "message"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestResponsesApiParameterPassthrough:
@@ -216,6 +228,12 @@ class TestResponsesApiParameterPassthrough:
         assert "stream" not in filtered
         assert "logprobs" not in filtered
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestNativeToolsInAIMessage:
@@ -247,3 +265,9 @@ class TestNativeToolsInAIMessage:
         message = AIMessage(content="Regular response.", additional_kwargs=additional_kwargs)
 
         assert "native_output" not in message.additional_kwargs
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

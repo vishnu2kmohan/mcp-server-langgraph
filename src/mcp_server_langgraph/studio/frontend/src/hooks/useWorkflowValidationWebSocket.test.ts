@@ -14,10 +14,13 @@ vi.mock("./useRealtimeSync", () => ({
 }));
 
 // Mock auth utilities
-vi.mock("../utils/storage", () => ({
-  getAuthToken: vi.fn(() => "mock-token"),
-}));
-
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => "mock-token"),
+  };
+});
 // Mock websocket utilities
 vi.mock("../utils/websocket", () => ({
   buildWebSocketUrl: vi.fn(
@@ -34,11 +37,14 @@ vi.mock("../store/hooks", () => ({
   useAppSelector: vi.fn(() => true), // isAuthenticated
 }));
 
-vi.mock("../store/slices/authSlice", () => ({
-  logout: vi.fn(),
-  selectIsAuthenticated: vi.fn(),
-}));
-
+vi.mock("../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../store/slices/authSlice");
+  return {
+    ...actual,
+    logout: vi.fn(),
+    selectIsAuthenticated: vi.fn(),
+  };
+});
 import { useRealtimeSync } from "./useRealtimeSync";
 import { useWorkflowValidationWebSocket } from "./useWorkflowValidationWebSocket";
 

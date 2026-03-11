@@ -159,7 +159,7 @@ describe("ConnectionStatus", () => {
         </TestProvider>,
       );
 
-      expect(screen.getByText(/150ms/i)).toHaveClass("text-warning-10");
+      expect(screen.getByText(/150ms/i)).toHaveClass("text-warning-9");
     });
 
     it("should show red latency for slow connection", () => {

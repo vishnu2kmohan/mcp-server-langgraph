@@ -24,13 +24,16 @@ vi.mock("./useAICache", () => ({
 }));
 
 // Mock the API
-vi.mock("../api", () => ({
-  useInvalidateUserCacheMutation: vi.fn(() => [
-    vi.fn().mockResolvedValue({ data: { invalidated_count: 5 } }),
-    { isLoading: false, isError: false },
-  ]),
-}));
-
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useInvalidateUserCacheMutation: vi.fn(() => [
+      vi.fn().mockResolvedValue({ data: { invalidated_count: 5 } }),
+      { isLoading: false, isError: false },
+    ]),
+  };
+});
 import { usePersonaCacheInvalidation } from "./usePersonaCacheInvalidation";
 import { clearAllAICache } from "./useAICache";
 import personaReducer, {

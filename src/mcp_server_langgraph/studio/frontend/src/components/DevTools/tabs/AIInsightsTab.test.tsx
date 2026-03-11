@@ -112,10 +112,13 @@ vi.mock("../../../store/hooks", () => ({
   useAppDispatch: vi.fn(() => vi.fn()),
 }));
 
-vi.mock("../../../store/slices/authSlice", () => ({
-  selectUser: vi.fn(),
-}));
-
+vi.mock("../../../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../../../store/slices/authSlice");
+  return {
+    ...actual,
+    selectUser: vi.fn(),
+  };
+});
 // =============================================================================
 // Tests
 // =============================================================================

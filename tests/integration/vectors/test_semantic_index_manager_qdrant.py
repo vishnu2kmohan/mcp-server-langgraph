@@ -177,6 +177,7 @@ def mock_openfga_authorization():
         yield mock_client
 
 
+@pytest.mark.xdist_group("test_semantic_index_manager_connection")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerConnection:
     """Tests for SemanticIndexManager Qdrant connectivity."""
@@ -243,6 +244,7 @@ class TestSemanticIndexManagerConnection:
             await client.close()
 
 
+@pytest.mark.xdist_group("test_semantic_index_manager_tool_indexing")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerToolIndexing:
     """Tests for SemanticIndexManager tool indexing with real Qdrant."""
@@ -327,7 +329,14 @@ class TestSemanticIndexManagerToolIndexing:
         finally:
             await client.close()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_semantic_index_manager_tool_search")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerToolSearch:
     """Tests for SemanticIndexManager tool search with real Qdrant."""
@@ -456,7 +465,14 @@ class TestSemanticIndexManagerToolSearch:
         finally:
             await client.close()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_semantic_index_manager_skill_indexing")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerSkillIndexing:
     """Tests for SemanticIndexManager skill indexing with real Qdrant."""
@@ -498,7 +514,14 @@ class TestSemanticIndexManagerSkillIndexing:
         finally:
             await client.close()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_semantic_index_manager_skill_search")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerSkillSearch:
     """Tests for SemanticIndexManager skill search with real Qdrant."""
@@ -558,7 +581,14 @@ class TestSemanticIndexManagerSkillSearch:
         finally:
             await client.close()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_semantic_index_manager_memory_indexing")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerMemoryIndexing:
     """Tests for SemanticIndexManager memory indexing with real Qdrant."""
@@ -600,7 +630,14 @@ class TestSemanticIndexManagerMemoryIndexing:
         finally:
             await client.close()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_semantic_index_manager_memory_search")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerMemorySearch:
     """Tests for SemanticIndexManager memory search with real Qdrant."""
@@ -718,7 +755,14 @@ class TestSemanticIndexManagerMemorySearch:
         finally:
             await client.close()
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_semantic_index_manager_multi_tenant")
 @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")
 class TestSemanticIndexManagerMultiTenant:
     """Tests for SemanticIndexManager multi-tenant isolation with real Qdrant."""
@@ -839,3 +883,9 @@ class TestSemanticIndexManagerMultiTenant:
                 assert result.tenant_id == "tenant-001"
         finally:
             await client.close()
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

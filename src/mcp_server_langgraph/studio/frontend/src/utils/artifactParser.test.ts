@@ -115,7 +115,7 @@ def hello():
     it("should detect chart artifact from language", () => {
       expect(detectArtifactType("chart")).toBe("chart");
       expect(detectArtifactType("recharts")).toBe("chart");
-      expect(detectArtifactType("vega-lite")).toBe("chart");
+      expect(detectArtifactType("vega-lite")).toBe("vega-lite");
     });
 
     it("should detect mermaid artifact", () => {

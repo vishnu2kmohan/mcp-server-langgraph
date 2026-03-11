@@ -541,6 +541,7 @@ def test_base_service_no_cloud_specific_annotations():
 # ==============================================================================
 
 
+@pytest.mark.xdist_group("test_kubernetes_alerting_coverage")
 class TestKubernetesAlertingCoverage:
     """Tests for Kubernetes alerting rule coverage in Helm chart.
 
@@ -677,7 +678,14 @@ class TestKubernetesAlertingCoverage:
             f"Missing {canonical_count - helm_count} rule files"
         )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_grafana_dashboard_parity")
 class TestGrafanaDashboardParity:
     """Tests for Grafana dashboard parity between Docker Compose and Kubernetes."""
 
@@ -789,6 +797,12 @@ class TestGrafanaDashboardParity:
             f"Missing {canonical_count - helm_count} dashboards\n"
             f"\nTo fix, run: ./scripts/sync-grafana-dashboards.sh"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 if __name__ == "__main__":

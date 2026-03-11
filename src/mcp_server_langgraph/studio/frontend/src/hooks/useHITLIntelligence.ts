@@ -114,6 +114,12 @@ export function useRiskAssessment(
     error: null,
   });
 
+  // Serialize parameters for stable dependency comparison.
+  // Without this, inline object props like `parameters={{ path: "/data/temp" }}`
+  // create a new reference on every render, causing useCallback → useEffect →
+  // setState → re-render → infinite loop.
+  const parametersKey = JSON.stringify(parameters);
+
   const fetchRiskAssessment = useCallback(async () => {
     if (!enabled || !requestId) {
       setResult({
@@ -173,7 +179,8 @@ export function useRiskAssessment(
         error: err instanceof Error ? err : new Error(String(err)),
       }));
     }
-  }, [analyzeMutation, userId, requestId, actionType, parameters, enabled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analyzeMutation, userId, requestId, actionType, parametersKey, enabled]);
 
   useEffect(() => {
     fetchRiskAssessment();

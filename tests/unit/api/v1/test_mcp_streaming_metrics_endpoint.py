@@ -125,7 +125,8 @@ class TestStreamingMetricsWithData:
         WHEN GET request is made
         THEN response should reflect recorded data.
         """
-        from mcp_server_langgraph.api.v1.mcp_websocket import streaming_metrics_collector
+        # Import from canonical path (same as endpoint uses) to guarantee object identity
+        from mcp_server_langgraph.mcp.websocket.streaming import streaming_metrics_collector
 
         # Record some test data
         test_stream_id = "test-metrics-api-stream"
@@ -147,7 +148,7 @@ class TestStreamingMetricsWithData:
         WHEN GET request is made
         THEN active_streams count should include it.
         """
-        from mcp_server_langgraph.api.v1.mcp_websocket import streaming_metrics_collector
+        from mcp_server_langgraph.mcp.websocket.streaming import streaming_metrics_collector
 
         # Start a stream without ending it
         active_stream_id = "test-active-stream-api"
@@ -177,7 +178,7 @@ class TestStreamingMetricsFiltering:
         WHEN GET request is made with active_only=true
         THEN response should only include active streams.
         """
-        from mcp_server_langgraph.api.v1.mcp_websocket import streaming_metrics_collector
+        from mcp_server_langgraph.mcp.websocket.streaming import streaming_metrics_collector
 
         # Create both active and completed streams
         active_id = "filter-test-active"
@@ -238,7 +239,7 @@ class TestStreamingMetricsSchema:
         WHEN GET request is made
         THEN stream entries should have expected fields.
         """
-        from mcp_server_langgraph.api.v1.mcp_websocket import streaming_metrics_collector
+        from mcp_server_langgraph.mcp.websocket.streaming import streaming_metrics_collector
 
         # Record a stream
         stream_id = "schema-test-stream"

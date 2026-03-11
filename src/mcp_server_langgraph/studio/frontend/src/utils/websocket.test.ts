@@ -15,10 +15,13 @@ import {
 import { getAuthToken } from "./storage";
 
 // Mock the storage module
-vi.mock("./storage", () => ({
-  getAuthToken: vi.fn(() => null),
-}));
-
+vi.mock("./storage", async () => {
+  const actual = await vi.importActual("./storage");
+  return {
+    ...actual,
+    getAuthToken: vi.fn(() => null),
+  };
+});
 describe("websocket utilities", () => {
   const originalWindow = global.window;
   const _originalImportMeta = import.meta;

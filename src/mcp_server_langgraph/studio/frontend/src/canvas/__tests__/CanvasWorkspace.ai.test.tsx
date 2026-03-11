@@ -23,15 +23,18 @@ vi.mock("react-resizable-panels", () => ({
 }));
 
 // Mock useFeatureFlag
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: (flag: string) => {
-    if (flag === "canvas_ai_palette" || flag === "ai_suggestions") {
-      return true;
-    }
-    return false;
-  },
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: (flag: string) => {
+      if (flag === "canvas_ai_palette" || flag === "ai_suggestions") {
+        return true;
+      }
+      return false;
+    },
+  };
+});
 // Mock useCanvasIntelligence hooks
 vi.mock("../../hooks/useCanvasIntelligence", () => ({
   useCodeAnalysis: () => ({

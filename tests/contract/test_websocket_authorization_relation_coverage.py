@@ -383,6 +383,7 @@ def _build_inheritance_chain(
 # =============================================================================
 
 
+@pytest.mark.xdist_group("test_web_socket_authorization_relation_coverage")
 class TestWebSocketAuthorizationRelationCoverage:
     """
     Validate that WebSocket endpoint authorization requirements are satisfiable
@@ -535,7 +536,14 @@ class TestWebSocketAuthorizationRelationCoverage:
                 f"Reference: ADR-0091 (API Response Transformation Strategy)"
             )
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_relation_inheritance_gaps")
 class TestRelationInheritanceGaps:
     """
     Identify potential relation inheritance gaps in the OpenFGA model.
@@ -624,7 +632,14 @@ class TestRelationInheritanceGaps:
         # viewer is also directly computed from admin
         assert "admin" in viewer_info.computed_from, "ai.viewer should be computed from admin"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
 
+        gc.collect()
+
+
+@pytest.mark.xdist_group("test_m_c_p_type_relations")
 class TestMCPTypeRelations:
     """
     Validate MCP type relation patterns.
@@ -660,3 +675,9 @@ class TestMCPTypeRelations:
         for user in TEST_USERS:
             user_relations = get_user_relations_for_resource(tuples, user, "mcp:websocket")
             assert "user" in user_relations, f"{user} should have 'user' relation on mcp:websocket"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

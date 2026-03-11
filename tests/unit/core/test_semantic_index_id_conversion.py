@@ -234,7 +234,7 @@ class TestSemanticIndexManagerIdConversion:
         from mcp_server_langgraph.tools.semantic_index import ToolIndexEntry
 
         mock_embedder = MagicMock()
-        mock_embedder.embed_documents = MagicMock(return_value=[[0.1] * 384, [0.2] * 384])
+        mock_embedder.embed_documents = MagicMock(side_effect=lambda texts: [[0.1] * 384] * len(texts))
 
         mock_qdrant = AsyncMock(return_value=None)
 
@@ -366,7 +366,7 @@ class TestSemanticIndexManagerSearchIdRestoration:
             vector_size=384,
         )
 
-        with patch.object(manager, "_check_authorization", return_value=True):
+        with patch.object(manager, "_check_authorization", side_effect=lambda *a, **kw: True):
             results = await manager.search_tools(
                 query="test query",
                 user_id="user:test",

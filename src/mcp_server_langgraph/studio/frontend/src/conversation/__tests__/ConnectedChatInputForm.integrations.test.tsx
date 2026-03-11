@@ -28,10 +28,13 @@ import {
 // vi.mock() calls - all paths adjusted for __tests__/ depth
 // =============================================================================
 
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: (flagName: string) => mockIsEnabled(flagName),
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: (flagName: string) => mockIsEnabled(flagName),
+  };
+});
 vi.mock("../../store/hooks", () => ({
   useAppSelector: (selector: (state: unknown) => unknown) => {
     // Return the mock value for selectSubmitOnEnter
@@ -101,29 +104,37 @@ vi.mock("../../hooks/useAvailableTools", () => ({
   }),
 }));
 
-vi.mock("../../store/slices/chatConnectionSlice", () => ({
-  startConnectionSetup: vi.fn((payload) => ({
-    type: "chatConnection/startConnectionSetup",
-    payload,
-  })),
-}));
-
-vi.mock("../../store/slices/executionModeSlice", () => ({
-  selectExecutionMode: () => "default",
-  selectCanBypass: () => false,
-  cycleExecutionMode: vi.fn(() => ({
-    type: "executionMode/cycleExecutionMode",
-  })),
-  setExecutionMode: vi.fn((mode: string) => ({
-    type: "executionMode/setExecutionMode",
-    payload: mode,
-  })),
-  setHasBypassPermission: vi.fn((allowed: boolean) => ({
-    type: "executionMode/setHasBypassPermission",
-    payload: allowed,
-  })),
-}));
-
+vi.mock("../../store/slices/chatConnectionSlice", async () => {
+  const actual = await vi.importActual(
+    "../../store/slices/chatConnectionSlice",
+  );
+  return {
+    ...actual,
+    startConnectionSetup: vi.fn((payload) => ({
+      type: "chatConnection/startConnectionSetup",
+      payload,
+    })),
+  };
+});
+vi.mock("../../store/slices/executionModeSlice", async () => {
+  const actual = await vi.importActual("../../store/slices/executionModeSlice");
+  return {
+    ...actual,
+    selectExecutionMode: () => "default",
+    selectCanBypass: () => false,
+    cycleExecutionMode: vi.fn(() => ({
+      type: "executionMode/cycleExecutionMode",
+    })),
+    setExecutionMode: vi.fn((mode: string) => ({
+      type: "executionMode/setExecutionMode",
+      payload: mode,
+    })),
+    setHasBypassPermission: vi.fn((allowed: boolean) => ({
+      type: "executionMode/setHasBypassPermission",
+      payload: allowed,
+    })),
+  };
+});
 vi.mock("../../api", async () => {
   const actual = await vi.importActual("../../api");
   return {
@@ -136,26 +147,41 @@ vi.mock("../../api", async () => {
   };
 });
 
-vi.mock("../../contexts/TelemetryContext", () => ({
-  useSessionTelemetry: () => ({
-    trackExecutionModeChange: vi.fn(),
-    trackBypassApproval: vi.fn(),
-    trackSessionCreation: vi.fn(),
-    trackRevalidation: vi.fn(),
-    trackSync: vi.fn(),
-    trackArtifactSave: vi.fn(),
-    trackArtifactDelete: vi.fn(),
-    trackSuggestionAction: vi.fn(),
-    trackCanvasAction: vi.fn(),
-    getMetrics: vi.fn(),
-    getHistory: vi.fn(),
-    reset: vi.fn(),
-  }),
-  TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-}));
-
+vi.mock("../../contexts/TelemetryContext", async () => {
+  const actual = await vi.importActual("../../contexts/TelemetryContext");
+  return {
+    ...actual,
+    useSessionTelemetry: () => ({
+      trackExecutionModeChange: vi.fn(),
+      trackBypassApproval: vi.fn(),
+      trackSessionCreation: vi.fn(),
+      trackRevalidation: vi.fn(),
+      trackSync: vi.fn(),
+      trackArtifactSave: vi.fn(),
+      trackArtifactDelete: vi.fn(),
+      trackSuggestionAction: vi.fn(),
+      trackCanvasAction: vi.fn(),
+      getMetrics: vi.fn(),
+      getHistory: vi.fn(),
+      reset: vi.fn(),
+    }),
+    TelemetryProvider: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+    useWebVitals: () => ({
+      start: vi.fn(),
+      stop: vi.fn(),
+      getMetrics: () => ({ fcp: null, lcp: null, cls: null, inp: null }),
+    }),
+    useTelemetry: () => ({
+      sessionTelemetry: {
+        trackSessionCreation: vi.fn(),
+        getMetrics: () => ({}),
+      },
+      webVitals: { start: vi.fn(), stop: vi.fn(), getMetrics: () => ({}) },
+    }),
+  };
+});
 import { ConnectedChatInputForm } from "../ConnectedChatInputForm";
 
 // =============================================================================

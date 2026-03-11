@@ -142,16 +142,18 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
       // WHEN: Switching to a model that doesn't support thinking
       rerender(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="gpt-4o"
-          modelSupportsThinking={false}
-          enableThinking={false}
-          onEnableThinkingChange={vi.fn()}
-          onReasoningEffortChange={vi.fn()}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="gpt-4o"
+            modelSupportsThinking={false}
+            enableThinking={false}
+            onEnableThinkingChange={vi.fn()}
+            onReasoningEffortChange={vi.fn()}
+          />
+        </TestProvider>,
       );
 
       // THEN: Thinking toggle should NOT be visible
@@ -180,12 +182,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
       // Rerender with GPT-4o selected
       rerender(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="gpt-4o"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="gpt-4o"
+          />
+        </TestProvider>,
       );
 
       // Now shows GPT-4o
@@ -395,13 +399,15 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
       // Rerender with loaded models
       rerender(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="claude-3-5-sonnet"
-          isModelsLoading={false}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="claude-3-5-sonnet"
+            isModelsLoading={false}
+          />
+        </TestProvider>,
       );
 
       // Now enabled
@@ -491,13 +497,15 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
       // Parent updates selectedModel prop
       rerender(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithCapabilities}
-          selectedModel="gpt-4o"
-          onModelChange={onModelChange}
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithCapabilities}
+            selectedModel="gpt-4o"
+            onModelChange={onModelChange}
+          />
+        </TestProvider>,
       );
 
       // UI should reflect new selection
@@ -618,12 +626,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
       // Select a deprecated model
       rerender(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="claude-3-sonnet"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithLifecycleStatus}
+            selectedModel="claude-3-sonnet"
+          />
+        </TestProvider>,
       );
 
       // Button should now show deprecated badge
@@ -631,12 +641,14 @@ describe("ChatInputForm Model Flow E2E Integration", () => {
 
       // Select a preview model
       rerender(
-        <ChatInputForm
-          {...defaultProps}
-          showModelSelector={true}
-          availableModels={mockModelsWithLifecycleStatus}
-          selectedModel="gemini-3-flash-preview"
-        />,
+        <TestProvider>
+          <ChatInputForm
+            {...defaultProps}
+            showModelSelector={true}
+            availableModels={mockModelsWithLifecycleStatus}
+            selectedModel="gemini-3-flash-preview"
+          />
+        </TestProvider>,
       );
 
       // Button should now show preview badge

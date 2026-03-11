@@ -37,7 +37,7 @@ class TestHeartMetricsHandlerInit:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         assert handler._metrics_service is mock_service
@@ -55,7 +55,7 @@ class TestHeartMetricsHandlerInit:
         mock_service = MagicMock()
         mock_metrics = MagicMock()
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service, metrics=mock_metrics)
 
         assert handler._metrics is mock_metrics
@@ -86,7 +86,7 @@ class TestHeartMetricsHandlerLifecycle:
             "task_success": 0.88,
         }
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -112,7 +112,7 @@ class TestHeartMetricsHandlerLifecycle:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         handler.subscribed_dimensions = {"happiness", "engagement"}
@@ -141,7 +141,7 @@ class TestHeartMetricsHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_current_snapshot.return_value = {"happiness": 0.85}
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         message = MessageEnvelope(type="set_time_range", id="msg-1", payload={"time_range": "7d"})
@@ -164,7 +164,7 @@ class TestHeartMetricsHandlerMessages:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         message = MessageEnvelope(type="set_time_range", id="msg-1", payload={"time_range": "invalid"})
@@ -186,7 +186,7 @@ class TestHeartMetricsHandlerMessages:
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
         mock_service.get_current_snapshot.return_value = {"happiness": 0.85}
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         message = MessageEnvelope(type="set_time_range", id="msg-1", payload={})
@@ -212,7 +212,7 @@ class TestHeartMetricsHandlerMessages:
             "change": 0.05,
         }
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_dimension", id="msg-1", payload={"dimension": "happiness"})
@@ -235,7 +235,7 @@ class TestHeartMetricsHandlerMessages:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_dimension", id="msg-1", payload={})
@@ -256,7 +256,7 @@ class TestHeartMetricsHandlerMessages:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         message = MessageEnvelope(type="subscribe_dimension", id="msg-1", payload={"dimension": "invalid"})
@@ -277,7 +277,7 @@ class TestHeartMetricsHandlerMessages:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         handler.subscribed_dimensions = {"happiness", "engagement"}
@@ -301,7 +301,7 @@ class TestHeartMetricsHandlerMessages:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         message = MessageEnvelope(type="invalid", id="msg-1")
@@ -330,7 +330,7 @@ class TestHeartMetricsHandlerPush:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -352,7 +352,7 @@ class TestHeartMetricsHandlerPush:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -374,7 +374,7 @@ class TestHeartMetricsHandlerPush:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         mock_ws = AsyncMock(return_value=None)  # noqa: async-mock-config
@@ -400,7 +400,7 @@ class TestHeartMetricsHandlerPush:
         config = WebSocketConfig(endpoint_name="heart-metrics")
         mock_service = AsyncMock(return_value=None)  # noqa: async-mock-config
 
-        with patch(RATE_LIMITER_PATCH, return_value=MagicMock()):
+        with patch(RATE_LIMITER_PATCH, side_effect=lambda *a, **kw: MagicMock()):
             handler = HeartMetricsHandler(config=config, metrics_service=mock_service)
 
         # No websocket

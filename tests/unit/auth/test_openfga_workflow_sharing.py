@@ -60,6 +60,12 @@ class TestOpenFGAWorkflowSharingService:
 
         assert hasattr(OpenFGAWorkflowSharingService, "set_workflow_owner")
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestOpenFGASyncShare:
     """Tests for syncing shares to OpenFGA."""
@@ -350,3 +356,9 @@ class TestPermissionMapping:
         assert PERMISSION_TO_RELATION["view"] == "viewer"
         assert PERMISSION_TO_RELATION["edit"] == "editor"
         assert PERMISSION_TO_RELATION["execute"] == "executor"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

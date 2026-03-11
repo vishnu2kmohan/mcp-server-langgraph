@@ -95,6 +95,12 @@ class TestAutoApprovalMatrix:
         assert decision.auto_approved == expected_auto_approve
         assert decision.requires_user_approval == (not expected_auto_approve)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Risk Escalation Tests
@@ -201,6 +207,12 @@ class TestRiskEscalation:
         assert decision.risk_level == "high"
         assert decision.original_risk_level == "high"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # BypassDecision Attribute Tests
@@ -240,6 +252,12 @@ class TestBypassDecisionAttributes:
         assert len(decision.risk_factors) >= 1
         assert any("Sandbox-required tools" in f for f in decision.risk_factors)
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Tool Risk Escalation Configuration Tests
@@ -269,6 +287,12 @@ class TestToolRiskEscalationConfig:
         THEN capture_screenshot is classified as low risk.
         """
         assert TOOL_RISK_ESCALATION.get("capture_screenshot") == "low"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # =============================================================================
@@ -325,6 +349,12 @@ class TestBypassManagerPrometheusMetrics:
         # Should have been called for escalations
         assert mock_record.call_count >= 1
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 # =============================================================================
 # Cost Estimator Integration Tests
@@ -345,7 +375,7 @@ class TestBypassManagerCostEstimation:
 
         mocker.patch(
             "mcp_server_langgraph.execution.bypass_manager.estimate_execution_cost",
-            return_value=Decimal("0.05"),
+            side_effect=lambda **kwargs: Decimal("0.05"),
         )
 
         plan = _make_plan(
@@ -366,7 +396,7 @@ class TestBypassManagerCostEstimation:
         """
         mock_estimate = mocker.patch(
             "mcp_server_langgraph.execution.bypass_manager.estimate_execution_cost",
-            return_value=Decimal("0.10"),
+            side_effect=lambda **kwargs: Decimal("0.10"),
         )
 
         plan = _make_plan(
@@ -392,7 +422,7 @@ class TestBypassManagerCostEstimation:
 
         mocker.patch(
             "mcp_server_langgraph.execution.bypass_manager.estimate_execution_cost",
-            return_value=Decimal("0.07"),
+            side_effect=lambda **kwargs: Decimal("0.07"),
         )
         mock_record_cost = mocker.patch("mcp_server_langgraph.execution.bypass_manager.record_estimated_cost")
 
@@ -424,3 +454,9 @@ class TestBypassManagerCostEstimation:
         # Should still return a valid decision with zero cost
         assert decision.auto_approved is True
         assert decision.estimated_cost == Decimal("0")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

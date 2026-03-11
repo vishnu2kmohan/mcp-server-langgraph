@@ -282,7 +282,7 @@ class TestCodebaseProgressiveLoaderLoad:
         loader = CodebaseProgressiveLoader(root_path=Path("/tmp"))
 
         # Mock filesystem operations
-        with patch.object(loader, "_discover_files", return_value=[]):
+        with patch.object(loader, "_discover_files", side_effect=lambda *a, **kw: []):
             result = await loader.load(query="Find auth files")
 
         assert isinstance(result, LoadedCodebase)
@@ -310,7 +310,7 @@ class TestCodebaseProgressiveLoaderLoad:
             ),
         ]
 
-        with patch.object(loader, "_discover_files", return_value=test_files):
+        with patch.object(loader, "_discover_files", side_effect=lambda *a, **kw: test_files):
             with patch.object(loader, "_score_relevance", side_effect=[0.9, 0.2]) as mock_score:
                 await loader.load(query="authentication")
 
@@ -337,8 +337,8 @@ class TestCodebaseProgressiveLoaderLoad:
             for i in range(10)
         ]
 
-        with patch.object(loader, "_discover_files", return_value=test_files):
-            with patch.object(loader, "_score_relevance", return_value=0.5):
+        with patch.object(loader, "_discover_files", side_effect=lambda *a, **kw: test_files):
+            with patch.object(loader, "_score_relevance", side_effect=lambda *a, **kw: 0.5):
                 result = await loader.load(query="test")
 
         assert len(result.files) <= 2
@@ -363,8 +363,8 @@ class TestCodebaseProgressiveLoaderLoad:
             for i in range(5)
         ]
 
-        with patch.object(loader, "_discover_files", return_value=test_files):
-            with patch.object(loader, "_score_relevance", return_value=0.5):
+        with patch.object(loader, "_discover_files", side_effect=lambda *a, **kw: test_files):
+            with patch.object(loader, "_score_relevance", side_effect=lambda *a, **kw: 0.5):
                 result = await loader.load(query="test")
 
         # Should truncate based on token limit
@@ -405,7 +405,7 @@ class TestCodebaseProgressiveLoaderLoad:
                 return 0.5
             return 0.1
 
-        with patch.object(loader, "_discover_files", return_value=test_files):
+        with patch.object(loader, "_discover_files", side_effect=lambda *a, **kw: test_files):
             with patch.object(loader, "_score_relevance", side_effect=mock_score):
                 result = await loader.load(query="test")
 

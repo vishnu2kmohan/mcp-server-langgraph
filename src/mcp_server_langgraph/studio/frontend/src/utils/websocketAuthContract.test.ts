@@ -24,10 +24,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock getAuthToken to return a test token
-vi.mock("./storage", () => ({
-  getAuthToken: () => "test-jwt-token-for-contract-test",
-}));
-
+vi.mock("./storage", async () => {
+  const actual = await vi.importActual("./storage");
+  return {
+    ...actual,
+    getAuthToken: () => "test-jwt-token-for-contract-test",
+  };
+});
 // Import after mock setup
 import { buildWebSocketUrl, WS_ENDPOINTS } from "./websocket";
 
@@ -106,6 +109,24 @@ const BACKEND_AUTH_REQUIREMENTS: Record<
 
   // DevTools
   "/api/v1/ws/devtools": { requireAuth: true, backendLine: "ws_router.py:835" },
+
+  // Orchestrator Status
+  "/api/v1/ws/orchestrator/status": {
+    requireAuth: true,
+    backendLine: "ws_router.py:870",
+  },
+
+  // Metrics Session
+  "/api/v1/ws/metrics/session": {
+    requireAuth: true,
+    backendLine: "ws_router.py:900",
+  },
+
+  // LLM Streaming
+  "/api/v1/ws/llm/streaming": {
+    requireAuth: true,
+    backendLine: "ws_router.py:930",
+  },
 };
 
 /**
@@ -195,6 +216,27 @@ const FRONTEND_ENDPOINTS_TO_TEST: Array<{
   {
     name: "DEVTOOLS",
     endpoint: WS_ENDPOINTS.DEVTOOLS,
+    shouldIncludeToken: true,
+  },
+
+  // Orchestrator Status
+  {
+    name: "ORCHESTRATOR_STATUS",
+    endpoint: WS_ENDPOINTS.ORCHESTRATOR_STATUS,
+    shouldIncludeToken: true,
+  },
+
+  // Metrics Session
+  {
+    name: "METRICS_SESSION",
+    endpoint: WS_ENDPOINTS.METRICS_SESSION,
+    shouldIncludeToken: true,
+  },
+
+  // LLM Streaming
+  {
+    name: "LLM_STREAMING",
+    endpoint: WS_ENDPOINTS.LLM_STREAMING,
     shouldIncludeToken: true,
   },
 ];

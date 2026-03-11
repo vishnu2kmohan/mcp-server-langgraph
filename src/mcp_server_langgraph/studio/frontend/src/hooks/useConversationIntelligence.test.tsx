@@ -17,47 +17,50 @@ import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
 
 // Mock the API module - single mock at top level to avoid memory leaks
-vi.mock("../api", () => ({
-  useStudioAnalyzeMutation: vi.fn(() => [
-    vi.fn(() => ({
-      unwrap: () =>
-        Promise.resolve({
-          analyses: {
-            intent_detect: {
-              intent: "code_request",
-              confidence: 0.92,
-              sub_intents: ["generate", "explain"],
+vi.mock("../api", async () => {
+  const actual = await vi.importActual("../api");
+  return {
+    ...actual,
+    useStudioAnalyzeMutation: vi.fn(() => [
+      vi.fn(() => ({
+        unwrap: () =>
+          Promise.resolve({
+            analyses: {
+              intent_detect: {
+                intent: "code_request",
+                confidence: 0.92,
+                sub_intents: ["generate", "explain"],
+              },
+              context_optimize: {
+                current_tokens: 120000,
+                max_tokens: 128000,
+                usage_percent: 93.75,
+                suggestions: [
+                  {
+                    type: "remove_old_messages",
+                    description: "Remove messages older than 1 hour",
+                    tokens_saved: 25000,
+                  },
+                ],
+                recommended_action: "remove_old_messages",
+              },
+              goal_track: {
+                primary_goal: "Build a REST API",
+                sub_goals: ["Implement auth", "Add endpoints"],
+                progress_percent: 45,
+                current_focus: "Implement auth",
+                completed_sub_goals: [],
+              },
             },
-            context_optimize: {
-              current_tokens: 120000,
-              max_tokens: 128000,
-              usage_percent: 93.75,
-              suggestions: [
-                {
-                  type: "remove_old_messages",
-                  description: "Remove messages older than 1 hour",
-                  tokens_saved: 25000,
-                },
-              ],
-              recommended_action: "remove_old_messages",
-            },
-            goal_track: {
-              primary_goal: "Build a REST API",
-              sub_goals: ["Implement auth", "Add endpoints"],
-              progress_percent: 45,
-              current_focus: "Implement auth",
-              completed_sub_goals: [],
-            },
-          },
-          cross_insights: [],
-          failed_analyses: [],
-          total_cost: "0.001",
-        }),
-    })),
-    { isLoading: false },
-  ]),
-}));
-
+            cross_insights: [],
+            failed_analyses: [],
+            total_cost: "0.001",
+          }),
+      })),
+      { isLoading: false },
+    ]),
+  };
+});
 // =============================================================================
 // Test Utilities
 // =============================================================================

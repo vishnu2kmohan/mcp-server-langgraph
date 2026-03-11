@@ -22,6 +22,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.xdist_group("test_native_tool_execution_path")
 class TestNativeToolExecutionPath:
     """Integration tests for the complete native tool execution path."""
 
@@ -177,6 +178,7 @@ class TestNativeToolExecutionPath:
         assert "Direct builtin" in result
 
 
+@pytest.mark.xdist_group("test_native_result_routing_integration")
 class TestNativeResultRoutingIntegration:
     """Integration tests for native result routing in the agent graph."""
 
@@ -287,6 +289,7 @@ class TestNativeResultRoutingIntegration:
         assert "42" in result
 
 
+@pytest.mark.xdist_group("test_metrics_integration")
 class TestMetricsIntegration:
     """Integration tests for metrics recording during tool execution."""
 
@@ -375,6 +378,7 @@ class TestMetricsIntegration:
         assert "tools" in data
 
 
+@pytest.mark.xdist_group("test_circuit_breaker_metrics_integration")
 class TestCircuitBreakerMetricsIntegration:
     """Integration tests for circuit breaker metrics."""
 
@@ -403,6 +407,7 @@ class TestCircuitBreakerMetricsIntegration:
         assert breaker.is_open("anthropic") is False
 
 
+@pytest.mark.xdist_group("test_vertex_a_i_native_tool_integration")
 class TestVertexAINativeToolIntegration:
     """Integration tests for Vertex AI native tool capabilities.
 

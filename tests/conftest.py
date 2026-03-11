@@ -185,11 +185,19 @@ def pytest_collection_modifyitems(config, items):
 
 @pytest.fixture(scope="session", autouse=True)
 def init_test_observability():
-    """Initialize observability system for all tests (session-scoped)."""
+    """Initialize observability system for all tests (session-scoped).
+
+    IMPORTANT (xdist safety): We do NOT call shutdown_observability() at session
+    end because it destroys the TracerProvider/MeterProvider, making ALL module-level
+    OTEL instruments (counters, histograms, etc.) stale. Under pytest-xdist, this
+    causes cascading failures in subsequent tests on the same worker that use those
+    instruments. The Python process exits anyway at session end, so cleanup is
+    unnecessary.
+    """
     import os
 
     from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized, shutdown_observability
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
 
     os.environ.setdefault("OPENFGA_STORE_ID", "test-store-id")
     os.environ.setdefault("OPENFGA_MODEL_ID", "test-model-id")
@@ -204,9 +212,8 @@ def init_test_observability():
         )
         init_observability(settings=test_settings, enable_file_logging=False)
 
-    yield
-
-    shutdown_observability()
+    return
+    # No shutdown_observability() — see docstring above
 
 
 @pytest.fixture(autouse=True)
@@ -249,47 +256,20 @@ def ensure_observability_initialized(request):
 def reset_dependency_singletons():
     """Reset all dependency singletons before AND after each test for complete isolation."""
     # BEFORE test: Reset to clean up pollution from previous tests
-    try:
-        if "mcp_server_langgraph.core.dependencies" in sys.modules:
-            import mcp_server_langgraph.core.dependencies as deps
-
-            deps._keycloak_client = None
-            deps._openfga_client = None
-            deps._api_key_manager = None
-            deps._service_principal_manager = None
-            deps._user_provider = None
-            deps._token_denylist = None
-    except Exception:
-        pass
-
-    try:
-        if "mcp_server_langgraph.auth.middleware" in sys.modules:
-            import mcp_server_langgraph.auth.middleware as middleware
-
-            middleware._global_auth_middleware = None
-    except Exception:
-        pass
-
-    try:
-        if "mcp_server_langgraph.compliance.gdpr.factory" in sys.modules:
-            import mcp_server_langgraph.compliance.gdpr.factory as gdpr_factory
-
-            gdpr_factory._gdpr_storage = None
-    except Exception:
-        pass
-
-    try:
-        if "mcp_server_langgraph.database.session" in sys.modules:
-            import mcp_server_langgraph.database.session as session_module
-
-            session_module._engine = None
-            session_module._async_session_maker = None
-    except Exception:
-        pass
+    _reset_all_singletons()
 
     yield
 
     # AFTER test: Reset all dependency singletons
+    _reset_all_singletons()
+
+
+def _reset_all_singletons() -> None:
+    """Reset all module-level singletons for complete test isolation.
+
+    Covers: core.dependencies, auth.middleware, compliance.gdpr,
+    database.session, resilience.circuit_breaker, skills.auto_update.
+    """
     try:
         if "mcp_server_langgraph.core.dependencies" in sys.modules:
             import mcp_server_langgraph.core.dependencies as deps
@@ -300,6 +280,7 @@ def reset_dependency_singletons():
             deps._service_principal_manager = None
             deps._user_provider = None
             deps._token_denylist = None
+            deps._semantic_index_manager = None
     except Exception:
         pass
 
@@ -325,6 +306,72 @@ def reset_dependency_singletons():
 
             session_module._engine = None
             session_module._async_session_maker = None
+    except Exception:
+        pass
+
+    # Circuit breakers: reset all to CLOSED state (prevents cross-test trip contamination)
+    try:
+        if "mcp_server_langgraph.resilience.circuit_breaker" in sys.modules:
+            from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+            reset_all_circuit_breakers()
+    except Exception:
+        pass
+
+    # Skills auto-update scheduler singleton
+    try:
+        if "mcp_server_langgraph.skills.auto_update" in sys.modules:
+            from mcp_server_langgraph.skills.auto_update import reset_auto_update_scheduler
+
+            reset_auto_update_scheduler()
+    except Exception:
+        pass
+
+    # WebSocket config singletons (streaming enabled flag, max chunk size)
+    try:
+        if "mcp_server_langgraph.mcp.websocket.config" in sys.modules:
+            import mcp_server_langgraph.mcp.websocket.config as ws_config
+
+            ws_config._streaming_enabled = True  # Default value
+            ws_config._streaming_max_chunk_size = None  # Default value
+    except Exception:
+        pass
+
+    # WebSocket streaming metrics collector (clear accumulated stream data in-place)
+    # Clear via both module paths to handle potential object identity divergence:
+    # - streaming.py module-level variable (canonical)
+    # - __init__.py cached import (used by endpoint)
+    try:
+        if "mcp_server_langgraph.mcp.websocket.streaming" in sys.modules:
+            import mcp_server_langgraph.mcp.websocket.streaming as _ws_streaming
+
+            _ws_streaming.streaming_metrics_collector._streams.clear()
+    except Exception:
+        pass
+    try:
+        if "mcp_server_langgraph.mcp.websocket" in sys.modules:
+            import mcp_server_langgraph.mcp.websocket as _ws_pkg
+
+            _ws_pkg.streaming_metrics_collector._streams.clear()
+    except Exception:
+        pass
+
+    # Storage contextvar: reset user_id to prevent cross-test ownership leaks
+    try:
+        if "mcp_server_langgraph.storage.session.adapter" in sys.modules:
+            from mcp_server_langgraph.storage.session.adapter import set_current_user_id
+
+            set_current_user_id("")
+    except Exception:
+        pass
+
+    # Observability service singleton: prevent cached ObservabilityServiceImpl
+    # from leaking across tests (causes real Prometheus queries in mock tests)
+    try:
+        if "mcp_server_langgraph.api.v1.observability" in sys.modules:
+            from mcp_server_langgraph.api.v1.observability import reset_observability_service
+
+            reset_observability_service()
     except Exception:
         pass
 

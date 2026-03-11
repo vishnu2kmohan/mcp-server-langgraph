@@ -24,26 +24,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.authorization]
 def mock_embedder() -> MagicMock:
     """Create a mock embedder."""
     embedder = MagicMock()
-    embedder.embed_query = MagicMock(return_value=[0.1, 0.2, 0.3, 0.4] * 96)
+    embedder.embed_query = MagicMock(side_effect=lambda *a, **kw: [0.1, 0.2, 0.3, 0.4] * 96)
     return embedder
 
 
 @pytest.fixture
 def mock_qdrant_client() -> AsyncMock:
     """Create a mock Qdrant client."""
-    client = AsyncMock(return_value=None)
-    client.get_collections = AsyncMock(return_value=MagicMock(collections=[]))
+    client = AsyncMock()  # noqa: async-mock-config
+    client.get_collections = AsyncMock(side_effect=lambda *a, **kw: MagicMock(collections=[]))
     mock_response = MagicMock()
     mock_response.points = []
-    client.query_points = AsyncMock(return_value=mock_response)
+    client.query_points = AsyncMock(side_effect=lambda *a, **kw: mock_response)
     return client
 
 
 @pytest.fixture
 def mock_openfga_client() -> AsyncMock:
     """Create a mock OpenFGA client."""
-    client = AsyncMock(return_value=None)
-    client.check_permission = AsyncMock(return_value=True)
+    client = AsyncMock()  # noqa: async-mock-config
+    client.check_permission = AsyncMock(side_effect=lambda *a, **kw: True)
     return client
 
 
@@ -51,12 +51,12 @@ def mock_openfga_client() -> AsyncMock:
 def mock_cache_service() -> MagicMock:
     """Create a mock CacheService."""
     cache = MagicMock()
-    cache.get = MagicMock(return_value=None)
+    cache.get = MagicMock(side_effect=lambda *a, **kw: None)
     cache.set = MagicMock()
-    cache.aget = AsyncMock(return_value=None)
-    cache.aset = AsyncMock(return_value=None)
+    cache.aget = AsyncMock(side_effect=lambda *a, **kw: None)
+    cache.aset = AsyncMock(side_effect=lambda *a, **kw: None)
     cache.delete = MagicMock()
-    cache.adelete = AsyncMock(return_value=None)
+    cache.adelete = AsyncMock(side_effect=lambda *a, **kw: None)
     return cache
 
 
@@ -119,7 +119,7 @@ class TestDistributedCacheBehavior:
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
         # Configure cache service to return None (cache miss)
-        mock_cache_service.aget = AsyncMock(return_value=None)
+        mock_cache_service.aget = AsyncMock(side_effect=lambda *a, **kw: None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -129,7 +129,7 @@ class TestDistributedCacheBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             await manager._check_authorization(
                 user_id="user:alice",
@@ -155,7 +155,7 @@ class TestDistributedCacheBehavior:
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
         # Configure cache service to return True (cache hit)
-        mock_cache_service.aget = AsyncMock(return_value=True)
+        mock_cache_service.aget = AsyncMock(side_effect=lambda *a, **kw: True)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -165,7 +165,7 @@ class TestDistributedCacheBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             result = await manager._check_authorization(
                 user_id="user:alice",
@@ -188,7 +188,7 @@ class TestDistributedCacheBehavior:
         """Cache key should include appropriate prefix for distributed cache."""
         from mcp_server_langgraph.core.semantic_index_manager import SemanticIndexManager
 
-        mock_cache_service.aget = AsyncMock(return_value=None)
+        mock_cache_service.aget = AsyncMock(side_effect=lambda *a, **kw: None)
 
         manager = SemanticIndexManager(
             embedder=mock_embedder,
@@ -198,7 +198,7 @@ class TestDistributedCacheBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             await manager._check_authorization(
                 user_id="user:alice",

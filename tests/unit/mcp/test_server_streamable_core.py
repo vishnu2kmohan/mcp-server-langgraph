@@ -200,7 +200,9 @@ class TestMCPAgentStreamableServerCallTool:
             mock_auth = MagicMock()
             mock_auth.verify_token = AsyncMock(return_value=MagicMock(valid=False, error="Invalid token"))
 
-            with patch("mcp_server_langgraph.mcp.server_streamable.create_auth_middleware", return_value=mock_auth):
+            with patch(
+                "mcp_server_langgraph.mcp.server_streamable.create_auth_middleware", side_effect=lambda *a, **kw: mock_auth
+            ):
                 from mcp_server_langgraph.mcp.server_streamable import MCPAgentStreamableServer
 
                 server = MCPAgentStreamableServer()
@@ -232,7 +234,9 @@ class TestMCPAgentStreamableServerCallTool:
             )
             mock_auth.authorize = AsyncMock(return_value=True)
 
-            with patch("mcp_server_langgraph.mcp.server_streamable.create_auth_middleware", return_value=mock_auth):
+            with patch(
+                "mcp_server_langgraph.mcp.server_streamable.create_auth_middleware", side_effect=lambda *a, **kw: mock_auth
+            ):
                 from mcp_server_langgraph.mcp.server_streamable import MCPAgentStreamableServer
 
                 server = MCPAgentStreamableServer()
@@ -402,7 +406,7 @@ class TestGetMcpServer:
     def test_get_mcp_server_requires_observability(self):
         """Test that get_mcp_server fails if observability not initialized."""
         # Patch the is_initialized function in the telemetry module where it's imported from
-        with patch("mcp_server_langgraph.observability.telemetry.is_initialized", return_value=False):
+        with patch("mcp_server_langgraph.observability.telemetry.is_initialized", side_effect=lambda *a, **kw: False):
             from mcp_server_langgraph.mcp.server_streamable import get_mcp_server
 
             with pytest.raises(RuntimeError, match="Observability must be initialized"):

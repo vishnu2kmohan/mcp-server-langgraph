@@ -19,13 +19,16 @@ import personaReducer from "../../store/slices/personaSlice";
 import type { ThinkingBudgetDefaults } from "../../types/api";
 
 // Mock the API mutation
-vi.mock("../../api", () => ({
-  useUpdateThinkingBudgetMutation: () => [
-    vi.fn().mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) }),
-    { isLoading: false },
-  ],
-}));
-
+vi.mock("../../api", async () => {
+  const actual = await vi.importActual("../../api");
+  return {
+    ...actual,
+    useUpdateThinkingBudgetMutation: () => [
+      vi.fn().mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) }),
+      { isLoading: false },
+    ],
+  };
+});
 // Helper to create a test store with specific persona
 function createTestStoreWithPersona(persona: "admin" | "developer" | "user") {
   return configureStore({

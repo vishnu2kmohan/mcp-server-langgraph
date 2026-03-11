@@ -8,7 +8,7 @@
 # Usage:
 #   ./scripts/run-tests-sharded.sh                  # Run all shards sequentially (150 shards)
 #   ./scripts/run-tests-sharded.sh --parallel       # RECOMMENDED: Run shards in parallel (~5-10min)
-#   ./scripts/run-tests-sharded.sh --fast           # Fast mode: 75 shards for quick iteration
+#   ./scripts/run-tests-sharded.sh --fast           # Fast mode: 110 shards for quick iteration
 #   ./scripts/run-tests-sharded.sh --ci             # CI mode: 50 shards, sequential, memory monitoring
 #   ./scripts/run-tests-sharded.sh --ci --parallel  # CI mode with parallel execution
 #   ./scripts/run-tests-sharded.sh --shard 1        # Run specific shard (1-150)
@@ -17,9 +17,10 @@
 #
 # Parallel Mode:
 #   --parallel [N]    Run N shards concurrently (default: auto-detect based on memory)
-#                     Auto-detect formula: min(free_memory_gb * 0.8 / 4, cpu_count * 3/4, hard_limit)
-#                     hard_limit: CI=2, local=VITEST_SHARD_CONCURRENCY_MAX (default 12)
-#                     This ensures each shard has 3GB+ memory headroom
+#                     Auto-detect formula: min(free_memory_gb * 0.8 / 4, cpu_count / workers_per_shard, hard_limit)
+#                     workers_per_shard=2 (matches maxWorkers in vitest.config.ts)
+#                     hard_limit: CI=2, local=VITEST_SHARD_CONCURRENCY_MAX (default 8)
+#                     This ensures each shard has 3GB+ memory headroom and CPU isn't oversubscribed
 #
 # Shard Timeout:
 #   --shard-timeout N  Per-shard timeout in seconds (default: 300 / env: VITEST_SHARD_TIMEOUT)
@@ -68,7 +69,7 @@ fi
 #
 # Presets:
 #   --count 150  - Default: balanced speed/safety (~30min sequential)
-#   --count 75   - Fast: for quick iteration (~15min sequential)
+#   --count 110  - Fast: for quick iteration (~12min sequential)
 #   --count 250  - Safe: for memory-constrained systems (~50min sequential)
 #   --parallel   - Recommended: auto-concurrent execution (~5-10min)
 #
@@ -213,20 +214,24 @@ get_optimal_concurrency() {
     fi
 
     # Calculate limits
-    # Memory limit: Use 80% of free memory, 4GB per concurrent shard
+    # Memory limit: Use 80% of free memory, 4GB per concurrent shard (3GB heap + overhead)
     local mem_limit=$((free_mem_gb * 80 / 100 / 4))
     [[ $mem_limit -lt 1 ]] && mem_limit=1
 
-    # CPU limit: Use 3/4 of CPUs (shards are mixed I/O and CPU bound)
-    local cpu_limit=$((cpu_count * 3 / 4))
+    # CPU limit: Account for Vitest internal parallelism
+    # Each shard spawns 1 orchestrator (~idle) + maxWorkers fork workers (CPU-bound)
+    # maxWorkers=2 is hardcoded in vitest.config.ts (OOM prevention cap)
+    # Target: total CPU-bound workers ≤ cpu_count
+    local workers_per_shard=2  # Must match maxWorkers in vitest.config.ts
+    local cpu_limit=$((cpu_count / workers_per_shard))
     [[ $cpu_limit -lt 1 ]] && cpu_limit=1
 
-    # Environment-adaptive hard cap (replaces static 8)
+    # Environment-adaptive hard cap
     local hard_limit
     if [[ "${CI:-}" == "true" || "${GITHUB_ACTIONS:-}" == "true" ]]; then
         hard_limit=2   # CI: 4 vCPU / 16GB -> max 2 concurrent (4GB/shard, 8GB total + OS headroom)
     else
-        hard_limit=${VITEST_SHARD_CONCURRENCY_MAX:-12}  # Local: configurable, default 12
+        hard_limit=${VITEST_SHARD_CONCURRENCY_MAX:-8}  # Local: configurable, default 8
     fi
 
     # Return minimum of all limits
@@ -262,7 +267,13 @@ run_shards_parallel() {
     # Disable set -e for this function - we do our own error handling
     set +e
 
-    # Create temp directory for logs
+    # Persistent log directory: .vitest-shard-logs/ in frontend root
+    # Old logs are cleaned on each new run; failed shard logs are preserved
+    local persistent_log_dir=".vitest-shard-logs"
+    rm -rf "$persistent_log_dir"
+    mkdir -p "$persistent_log_dir"
+
+    # Also create a temp dir for in-flight logs (moved to persistent on failure)
     local log_dir
     log_dir=$(mktemp -d)
 
@@ -283,10 +294,8 @@ run_shards_parallel() {
         done
         # Wait for them to actually exit
         wait 2>/dev/null || true
-        # Remove temp dir (unless we had failures)
-        if [[ ${#failed_shards[@]} -eq 0 ]]; then
-            rm -rf "$log_dir"
-        fi
+        # Always remove temp dir (failed logs already copied to persistent dir)
+        rm -rf "$log_dir"
         exit $exit_code
     }
     trap cleanup EXIT INT TERM
@@ -336,12 +345,20 @@ run_shards_parallel() {
         else
             echo -e "${RED}✗ Shard $finished_shard failed ($completed/$total_shards)${NC}"
             failed_shards+=("$finished_shard")
-            # Show last few lines of log for failed shard
+            # Preserve failed shard log for post-mortem analysis
             local log_file="$log_dir/shard-$finished_shard.log"
             if [[ -f "$log_file" ]]; then
-                echo -e "${RED}--- Last 10 lines of shard $finished_shard log ---${NC}"
-                tail -10 "$log_file"
-                echo -e "${RED}--- End of log ---${NC}"
+                cp "$log_file" "$persistent_log_dir/shard-$finished_shard.log"
+                # Show failed test files (strip ANSI codes, extract unique file paths)
+                local failed_files
+                failed_files=$(sed 's/\x1b\[[0-9;]*m//g' "$log_file" \
+                    | grep 'FAIL' \
+                    | grep -oE 'src/[^ >]+\.test\.tsx?' \
+                    | sort -u)
+                if [[ -n "$failed_files" ]]; then
+                    echo -e "${RED}  Failed files: $(echo "$failed_files" | tr '\n' ' ')${NC}"
+                fi
+                echo -e "${RED}  Log: $persistent_log_dir/shard-$finished_shard.log${NC}"
             fi
         fi
 
@@ -359,11 +376,33 @@ run_shards_parallel() {
     echo "=== Parallel Test Summary ==="
     if [[ ${#failed_shards[@]} -eq 0 ]]; then
         echo -e "${GREEN}All $total_shards shards passed!${NC}"
+        rm -rf "$persistent_log_dir"  # Clean up if all passed
         return 0
     else
         echo -e "${RED}Failed shards (${#failed_shards[@]}/$total_shards): ${failed_shards[*]}${NC}"
-        echo -e "${YELLOW}Full logs available in: $log_dir${NC}"
-        trap - EXIT  # Don't clean up logs on failure
+        echo ""
+        # Extract and deduplicate all failing test files across shards
+        # Strip ANSI escape codes first, then extract file paths from FAIL lines
+        echo -e "${RED}=== Failing Test Files ===${NC}"
+        local all_failed_files
+        all_failed_files=$(sed 's/\x1b\[[0-9;]*m//g' "$persistent_log_dir"/shard-*.log 2>/dev/null \
+            | grep 'FAIL' \
+            | grep -oE 'src/[^ >]+\.test\.tsx?' \
+            | sort -u)
+        if [[ -n "$all_failed_files" ]]; then
+            local file_count
+            file_count=$(echo "$all_failed_files" | wc -l)
+            echo -e "${RED}$file_count unique test files with failures:${NC}"
+            echo "$all_failed_files" | while read -r f; do
+                echo -e "  ${RED}✗${NC} $f"
+            done
+        else
+            echo -e "${YELLOW}Could not extract file names (check logs manually)${NC}"
+        fi
+        echo ""
+        echo -e "${YELLOW}Shard logs preserved in: $persistent_log_dir/${NC}"
+        echo -e "${YELLOW}Inspect a specific shard: cat $persistent_log_dir/shard-<N>.log${NC}"
+        echo -e "${YELLOW}Re-run a failing file:   npx vitest run <file>${NC}"
         return 1
     fi
 }
@@ -396,8 +435,10 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --fast)
-            # Fast mode: 75 shards for quick iteration (~15min sequential, ~3-5min parallel)
-            SHARD_COUNT=75
+            # Fast mode: 110 shards for quick iteration (~12min sequential, ~3-5min parallel)
+            # 810 files / 110 shards = ~7.4 files/shard × 400MB = ~2.9GB (fits in 3GB heap)
+            # Reduced from 75 (which caused ~10 files/shard = 4GB, exceeding 3GB → OOM retries)
+            SHARD_COUNT=110
             shift
             ;;
         --safe)
@@ -429,7 +470,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --parallel [N]   RECOMMENDED: Run shards in parallel (~5-10min)"
-            echo "  --fast           Fast mode: 75 shards for quick iteration"
+            echo "  --fast           Fast mode: 110 shards for quick iteration"
             echo "  --safe           Safe mode: 200 shards for memory-constrained systems"
             echo "  --ci             CI mode: 50 shards, sequential, memory monitoring"
             echo "                   Can combine with --parallel for parallel CI runs"

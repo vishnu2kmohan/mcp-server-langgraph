@@ -1,9 +1,9 @@
 /**
  * Hook Telemetry Integration Tests
  *
- * Tests that verify hookTelemetry is properly integrated into WebSocket hooks.
- * These tests verify that telemetry.logError is called when hooks receive
- * error messages from the WebSocket server.
+ * Tests that verify error handling is properly integrated into WebSocket hooks.
+ * These tests verify that error state is set and onError callbacks are called
+ * when hooks receive error messages from the WebSocket server.
  *
  * Following TDD: Tests verify real integration behavior.
  */
@@ -20,34 +20,8 @@ import { api } from "../api";
 // Mocks - use vi.hoisted() for proper initialization before mock hoisting
 // =============================================================================
 
-const {
-  mockDevLoggerError,
-  mockDevLoggerWarn,
-  mockDevLoggerDebug,
-  mockWithPrefix,
-  mockUseRealtimeSync,
-} = vi.hoisted(() => ({
-  mockDevLoggerError: vi.fn(),
-  mockDevLoggerWarn: vi.fn(),
-  mockDevLoggerDebug: vi.fn(),
-  mockWithPrefix: vi.fn(),
+const { mockUseRealtimeSync } = vi.hoisted(() => ({
   mockUseRealtimeSync: vi.fn(),
-}));
-
-// Reset mockWithPrefix to return the logger mocks
-mockWithPrefix.mockReturnValue({
-  debug: mockDevLoggerDebug,
-  warn: mockDevLoggerWarn,
-  error: mockDevLoggerError,
-});
-
-vi.mock("../utils/devLogger", () => ({
-  devLogger: {
-    debug: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    withPrefix: mockWithPrefix,
-  },
 }));
 
 vi.mock("./useRealtimeSync", () => ({
@@ -60,24 +34,30 @@ vi.mock("../store/hooks", () => ({
   useAppDispatch: () => vi.fn(),
 }));
 
-vi.mock("../store/slices/authSlice", () => ({
-  selectIsAuthenticated: () => true,
-  selectWebSocketPermissions: () => ({
-    heart_metrics: true,
-    cost_tracking: true,
-    connections_realtime: true,
-  }),
-  logout: () => ({ type: "auth/logout" }),
-}));
-
+vi.mock("../store/slices/authSlice", async () => {
+  const actual = await vi.importActual("../store/slices/authSlice");
+  return {
+    ...actual,
+    selectIsAuthenticated: () => true,
+    selectWebSocketPermissions: () => ({
+      heart_metrics: true,
+      cost_tracking: true,
+      connections_realtime: true,
+    }),
+    logout: () => ({ type: "auth/logout" }),
+  };
+});
 vi.mock("../store/slices/notificationSlice", () => ({
   addNotification: vi.fn(),
 }));
 
-vi.mock("../utils/storage", () => ({
-  getAuthToken: () => "test-token",
-}));
-
+vi.mock("../utils/storage", async () => {
+  const actual = await vi.importActual("../utils/storage");
+  return {
+    ...actual,
+    getAuthToken: () => "test-token",
+  };
+});
 vi.mock("../utils/websocketTelemetry", () => ({
   reportWebSocketMetrics: vi.fn(),
 }));
@@ -154,13 +134,6 @@ describe("hookTelemetry integration", () => {
     vi.resetAllMocks();
     capturedCallbacks = { onMessage: null, onConnect: null };
 
-    // Re-setup mockWithPrefix after reset
-    mockWithPrefix.mockReturnValue({
-      debug: mockDevLoggerDebug,
-      warn: mockDevLoggerWarn,
-      error: mockDevLoggerError,
-    });
-
     // Default mock that captures callbacks
     mockUseRealtimeSync.mockImplementation(
       (options?: {
@@ -183,11 +156,15 @@ describe("hookTelemetry integration", () => {
     vi.clearAllMocks();
   });
 
-  describe("useHeartMetricsWebSocket telemetry integration", () => {
-    it("logs error via telemetry when receiving error message", () => {
-      renderHook(() => useHeartMetricsWebSocket(), { wrapper });
+  describe("useHeartMetricsWebSocket error handling", () => {
+    it("sets error state when receiving error message", () => {
+      const onError = vi.fn();
+      const { result } = renderHook(
+        () => useHeartMetricsWebSocket({ onError }),
+        { wrapper },
+      );
 
-      // Simulate server sending an error message - wrapped in act for state updates
+      // Simulate server sending an error message
       act(() => {
         capturedCallbacks.onMessage?.({
           type: "error",
@@ -195,27 +172,20 @@ describe("hookTelemetry integration", () => {
         });
       });
 
-      // Verify telemetry logged the error
-      expect(mockDevLoggerError).toHaveBeenCalledWith(
-        "Error occurred",
-        expect.objectContaining({
-          error: "Server error occurred",
-          messageType: "error",
-          endpoint: "heart_metrics",
-        }),
-      );
-    });
-
-    it("includes hook prefix in telemetry logs", () => {
-      renderHook(() => useHeartMetricsWebSocket(), { wrapper });
-
-      expect(mockWithPrefix).toHaveBeenCalledWith("[useHeartMetricsWebSocket]");
+      // Verify error state is set
+      expect(result.current.error).toBe("Server error occurred");
+      // Verify onError callback is called
+      expect(onError).toHaveBeenCalledWith("Server error occurred");
     });
   });
 
-  describe("useCostTrackingWebSocket telemetry integration", () => {
-    it("logs error via telemetry when receiving error message", () => {
-      renderHook(() => useCostTrackingWebSocket(), { wrapper });
+  describe("useCostTrackingWebSocket error handling", () => {
+    it("sets error state when receiving error message", () => {
+      const onError = vi.fn();
+      const { result } = renderHook(
+        () => useCostTrackingWebSocket({ onError }),
+        { wrapper },
+      );
 
       // Simulate server sending an error message
       act(() => {
@@ -228,27 +198,20 @@ describe("hookTelemetry integration", () => {
         });
       });
 
-      // Verify telemetry logged the error
-      expect(mockDevLoggerError).toHaveBeenCalledWith(
-        "Error occurred",
-        expect.objectContaining({
-          error: "Budget limit exceeded",
-          messageType: "error",
-          endpoint: "cost_tracking",
-        }),
-      );
-    });
-
-    it("includes hook prefix in telemetry logs", () => {
-      renderHook(() => useCostTrackingWebSocket(), { wrapper });
-
-      expect(mockWithPrefix).toHaveBeenCalledWith("[useCostTrackingWebSocket]");
+      // Verify error state is set
+      expect(result.current.error).toBe("Budget limit exceeded");
+      // Verify onError callback is called
+      expect(onError).toHaveBeenCalledWith("Budget limit exceeded");
     });
   });
 
-  describe("useConnectionsRealtimeWebSocket telemetry integration", () => {
-    it("logs error via telemetry when receiving error message", () => {
-      renderHook(() => useConnectionsRealtimeWebSocket(), { wrapper });
+  describe("useConnectionsRealtimeWebSocket error handling", () => {
+    it("sets error state when receiving error message", () => {
+      const onError = vi.fn();
+      const { result } = renderHook(
+        () => useConnectionsRealtimeWebSocket({ onError }),
+        { wrapper },
+      );
 
       // Simulate server sending an error message
       act(() => {
@@ -261,47 +224,17 @@ describe("hookTelemetry integration", () => {
         });
       });
 
-      // Verify telemetry logged the error
-      expect(mockDevLoggerError).toHaveBeenCalledWith(
-        "Error occurred",
-        expect.objectContaining({
-          error: "Failed to connect to service",
-          messageType: "error",
-          endpoint: "connections_realtime",
-        }),
-      );
-    });
-
-    it("includes hook prefix in telemetry logs", () => {
-      renderHook(() => useConnectionsRealtimeWebSocket(), { wrapper });
-
-      expect(mockWithPrefix).toHaveBeenCalledWith(
-        "[useConnectionsRealtimeWebSocket]",
-      );
-    });
-  });
-
-  describe("telemetry callback stability", () => {
-    it("uses stable telemetry instance across re-renders", () => {
-      const { rerender } = renderHook(() => useHeartMetricsWebSocket(), {
-        wrapper,
-      });
-
-      const firstCallCount = mockWithPrefix.mock.calls.length;
-
-      // Force re-render
-      rerender();
-
-      const secondCallCount = mockWithPrefix.mock.calls.length;
-
-      // withPrefix should only be called once (stable instance via useMemo)
-      expect(secondCallCount).toBe(firstCallCount);
+      // Verify error state is set
+      expect(result.current.error).toBe("Failed to connect to service");
+      // Verify onError callback is called
+      expect(onError).toHaveBeenCalledWith("Failed to connect to service");
     });
   });
 
   describe("error context enrichment", () => {
-    it("includes endpoint identifier in error context for heart metrics", () => {
-      renderHook(() => useHeartMetricsWebSocket(), { wrapper });
+    it("calls onError callback for heart metrics errors", () => {
+      const onError = vi.fn();
+      renderHook(() => useHeartMetricsWebSocket({ onError }), { wrapper });
 
       act(() => {
         capturedCallbacks.onMessage?.({
@@ -310,16 +243,12 @@ describe("hookTelemetry integration", () => {
         });
       });
 
-      expect(mockDevLoggerError).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          endpoint: "heart_metrics",
-        }),
-      );
+      expect(onError).toHaveBeenCalledWith("Test error");
     });
 
-    it("includes endpoint identifier in error context for cost tracking", () => {
-      renderHook(() => useCostTrackingWebSocket(), { wrapper });
+    it("calls onError callback for cost tracking errors", () => {
+      const onError = vi.fn();
+      renderHook(() => useCostTrackingWebSocket({ onError }), { wrapper });
 
       act(() => {
         capturedCallbacks.onMessage?.({
@@ -328,16 +257,14 @@ describe("hookTelemetry integration", () => {
         });
       });
 
-      expect(mockDevLoggerError).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          endpoint: "cost_tracking",
-        }),
-      );
+      expect(onError).toHaveBeenCalledWith("Test error");
     });
 
-    it("includes endpoint identifier in error context for connections realtime", () => {
-      renderHook(() => useConnectionsRealtimeWebSocket(), { wrapper });
+    it("calls onError callback for connections realtime errors", () => {
+      const onError = vi.fn();
+      renderHook(() => useConnectionsRealtimeWebSocket({ onError }), {
+        wrapper,
+      });
 
       act(() => {
         capturedCallbacks.onMessage?.({
@@ -346,12 +273,32 @@ describe("hookTelemetry integration", () => {
         });
       });
 
-      expect(mockDevLoggerError).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          endpoint: "connections_realtime",
-        }),
-      );
+      expect(onError).toHaveBeenCalledWith("Test error");
+    });
+  });
+
+  describe("error state stability", () => {
+    it("clears error state on successful connection", () => {
+      const { result } = renderHook(() => useHeartMetricsWebSocket(), {
+        wrapper,
+      });
+
+      // Simulate error
+      act(() => {
+        capturedCallbacks.onMessage?.({
+          type: "error",
+          message: "Test error",
+        });
+      });
+
+      expect(result.current.error).toBe("Test error");
+
+      // Simulate successful connection (onConnect callback clears error)
+      act(() => {
+        capturedCallbacks.onConnect?.();
+      });
+
+      expect(result.current.error).toBeNull();
     });
   });
 });

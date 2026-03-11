@@ -68,10 +68,13 @@ vi.mock("../../hooks/useTraceIntelligence", () => ({
   })),
 }));
 
-vi.mock("../../contexts/FeatureFlagContext", () => ({
-  useFeatureFlag: vi.fn(() => false),
-}));
-
+vi.mock("../../contexts/FeatureFlagContext", async () => {
+  const actual = await vi.importActual("../../contexts/FeatureFlagContext");
+  return {
+    ...actual,
+    useFeatureFlag: vi.fn(() => false),
+  };
+});
 // Import mocked hooks
 import {
   useListTracesQuery,
@@ -251,7 +254,13 @@ describe("ObservabilityPage - Traces", () => {
 
     it("should show trace count", async () => {
       mockUseListTracesQuery.mockReturnValue({
-        data: { items: mockTraces, total: 100, limit: 50, nextCursor: "next" },
+        data: {
+          items: mockTraces,
+          total: 100,
+          limit: 50,
+          nextCursor: "next",
+          hasNext: true,
+        },
         isLoading: false,
         error: null,
         refetch: mockRefetchTraces,
@@ -266,7 +275,7 @@ describe("ObservabilityPage - Traces", () => {
       fireEvent.click(screen.getByText("Distributed Traces"));
 
       await waitFor(() => {
-        expect(screen.getByText(/2 of 100/i)).toBeInTheDocument();
+        expect(screen.getByText(/Showing 2 traces/i)).toBeInTheDocument();
       });
     });
   });
@@ -523,7 +532,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         const errorBadge = screen.getByText("error");
         expect(errorBadge).toBeInTheDocument();
-        expect(errorBadge).toHaveClass("bg-error-2");
+        expect(errorBadge).toHaveClass("bg-error-3");
       });
     });
 
@@ -558,7 +567,7 @@ describe("ObservabilityPage - Traces", () => {
       await waitFor(() => {
         const runningBadge = screen.getByText("running");
         expect(runningBadge).toBeInTheDocument();
-        expect(runningBadge).toHaveClass("bg-primary-2");
+        expect(runningBadge).toHaveClass("bg-primary-3");
       });
     });
 

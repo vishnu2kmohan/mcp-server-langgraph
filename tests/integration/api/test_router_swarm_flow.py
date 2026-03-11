@@ -76,6 +76,7 @@ def sample_messages() -> list[dict[str, Any]]:
 # =============================================================================
 
 
+@pytest.mark.xdist_group("test_router_swarm_integration")
 class TestRouterSwarmIntegration:
     """Integration tests for Router → Swarm flow via create_stream().
 
@@ -210,6 +211,7 @@ class TestRouterSwarmIntegration:
 # =============================================================================
 
 
+@pytest.mark.xdist_group("test_orchestrator_selection_integration")
 class TestOrchestratorSelectionIntegration:
     """Integration tests for select_orchestrator() flow (ADR-0105 Phase 2)."""
 

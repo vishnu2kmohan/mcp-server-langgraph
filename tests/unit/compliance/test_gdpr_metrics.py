@@ -120,7 +120,14 @@ class TestGDPRDataDeletionMetrics:
             openfga_client=None,
         )
 
-        with patch("mcp_server_langgraph.compliance.gdpr.data_deletion.record_gdpr_data_deletion") as mock_record:
+        # Mock decision trace repository to return AsyncMock (MagicMock is not awaitable)
+        mock_decision_trace_repo = AsyncMock()  # noqa: async-mock-config
+        mock_decision_trace_repo.delete_by_user = AsyncMock(return_value=0)
+
+        with (
+            patch("mcp_server_langgraph.compliance.gdpr.data_deletion.record_gdpr_data_deletion") as mock_record,
+            patch.object(service, "_get_decision_trace_repository", return_value=mock_decision_trace_repo),
+        ):
             result = await service.delete_user_account(
                 user_id="user:test",
                 username="testuser",
@@ -183,8 +190,8 @@ class TestGDPRRetentionCleanupMetrics:
 
         # Create mock session store
         mock_session_store = MagicMock()
-        mock_session_store.get_inactive_sessions = AsyncMock(return_value=[])
-        mock_session_store.delete_inactive_sessions = AsyncMock(return_value=5)
+        mock_session_store.get_inactive_sessions = AsyncMock(side_effect=lambda *a, **kw: [])
+        mock_session_store.delete_inactive_sessions = AsyncMock(side_effect=lambda *a, **kw: 5)
 
         service = DataRetentionService(
             config_path="nonexistent.yaml",  # Will use defaults

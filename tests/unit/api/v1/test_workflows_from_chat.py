@@ -276,7 +276,7 @@ class TestFromChatSuccessfulGeneration:
         # Mock feature flag at the import location in workflows module
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -320,7 +320,7 @@ class TestFromChatSuccessfulGeneration:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -363,7 +363,7 @@ class TestFromChatSuccessfulGeneration:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -414,7 +414,7 @@ class TestFromChatValidation:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -449,7 +449,7 @@ class TestFromChatValidation:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -484,7 +484,7 @@ class TestFromChatValidation:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -533,7 +533,7 @@ class TestFromChatRefinementModes:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -578,7 +578,7 @@ class TestFromChatRefinementModes:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -629,7 +629,7 @@ class TestFromChatSanitization:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(
@@ -672,7 +672,7 @@ class TestFromChatAuthentication:
 
         with patch(
             "mcp_server_langgraph.api.v1.workflows.get_feature_flags",
-            return_value=mock_flags_obj,
+            side_effect=lambda *a, **kw: mock_flags_obj,
         ):
             client = TestClient(app)
             response = client.post(

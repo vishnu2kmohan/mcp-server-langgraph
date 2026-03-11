@@ -79,6 +79,12 @@ class TestWorkflowGeneratorModels:
         assert "confidence" in properties
         assert "suggestions" in properties
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 class TestWorkflowGeneratorClass:
     """Tests for WorkflowGenerator class structure."""
@@ -102,6 +108,12 @@ class TestWorkflowGeneratorClass:
 
         assert hasattr(WorkflowGenerator, "generate_from_session")
         assert callable(WorkflowGenerator.generate_from_session)
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 class TestWorkflowGeneratorIntegration:

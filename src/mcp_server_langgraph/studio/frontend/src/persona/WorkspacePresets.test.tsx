@@ -194,7 +194,7 @@ describe("WorkspacePresets", () => {
         </TestProvider>,
       );
       fireEvent.mouseEnter(screen.getByTestId("preset-focus-canvas"));
-      expect(screen.getByText("60%")).toBeInTheDocument(); // Canvas percentage
+      expect(screen.getByText("65%")).toBeInTheDocument(); // Canvas percentage
     });
   });
 

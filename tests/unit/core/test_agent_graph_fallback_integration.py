@@ -16,13 +16,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.xdist_group(name="test_agent_graph_f
 class TestExecuteToolWithFallback:
     """Tests for execute_tool_with_fallback function."""
 
-    def teardown_method(self) -> None:
-        """Reset state and force GC."""
+    @pytest.fixture(autouse=True)
+    def _isolate_singletons(self):
+        """Reset singletons before AND after each test to prevent xdist contamination."""
         from mcp_server_langgraph.tools.native_handler import reset_fallback_chain
         from mcp_server_langgraph.tools.native_metrics import get_metrics_aggregator
 
         reset_fallback_chain()
         get_metrics_aggregator().reset()
+        yield
+        reset_fallback_chain()
+        get_metrics_aggregator().reset()
+
+    def setup_method(self) -> None:
+        """Fresh state for each test - prevent cross-test mock leakage."""
+        gc.collect()
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
     @pytest.mark.asyncio
@@ -42,11 +53,19 @@ class TestExecuteToolWithFallback:
         )
 
         mock_tool = MagicMock()
-        mock_tool.ainvoke = AsyncMock(return_value="builtin result")
+        mock_tool.ainvoke = AsyncMock(side_effect=lambda *a, **kw: "builtin result")
 
-        with patch(
-            "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-            return_value=mock_tool,
+        with (
+            patch(
+                "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
+                side_effect=lambda *a, **kw: mock_tool,
+            ),
+            # Belt-and-suspenders: ensure native path is never taken even if
+            # tool_preference check is bypassed under xdist contamination
+            patch(
+                "mcp_server_langgraph.core.tool_executor._should_use_native",
+                side_effect=lambda *a, **kw: False,
+            ),
         ):
             result, source = await execute_tool_with_fallback(
                 tool_name="calculator",
@@ -65,22 +84,22 @@ class TestExecuteToolWithFallback:
             execute_tool_with_fallback,
         )
 
-        mock_native_executor = AsyncMock(return_value="native result")
+        mock_native_executor = AsyncMock(side_effect=lambda *a, **kw: "native result")
         mock_builtin_tool = MagicMock()
-        mock_builtin_tool.ainvoke = AsyncMock(return_value="builtin result")
+        mock_builtin_tool.ainvoke = AsyncMock(side_effect=lambda *a, **kw: "builtin result")
 
         with (
             patch(
                 "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-                return_value=mock_builtin_tool,
+                side_effect=lambda *a, **kw: mock_builtin_tool,
             ),
             patch(
                 "mcp_server_langgraph.core.tool_executor._get_native_executor",
-                return_value=mock_native_executor,
+                side_effect=lambda *a, **kw: mock_native_executor,
             ),
             patch(
                 "mcp_server_langgraph.core.tool_executor._should_use_native",
-                return_value=True,
+                side_effect=lambda *a, **kw: True,
             ),
         ):
             result, source = await execute_tool_with_fallback(
@@ -102,20 +121,20 @@ class TestExecuteToolWithFallback:
 
         mock_native_executor = AsyncMock(side_effect=RuntimeError("Native failed"))
         mock_builtin_tool = MagicMock()
-        mock_builtin_tool.ainvoke = AsyncMock(return_value="builtin result")
+        mock_builtin_tool.ainvoke = AsyncMock(side_effect=lambda *a, **kw: "builtin result")
 
         with (
             patch(
                 "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-                return_value=mock_builtin_tool,
+                side_effect=lambda *a, **kw: mock_builtin_tool,
             ),
             patch(
                 "mcp_server_langgraph.core.tool_executor._get_native_executor",
-                return_value=mock_native_executor,
+                side_effect=lambda *a, **kw: mock_native_executor,
             ),
             patch(
                 "mcp_server_langgraph.core.tool_executor._should_use_native",
-                return_value=True,
+                side_effect=lambda *a, **kw: True,
             ),
         ):
             result, source = await execute_tool_with_fallback(
@@ -137,7 +156,7 @@ class TestExecuteToolWithFallback:
 
         with patch(
             "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-            return_value=None,
+            side_effect=lambda *a, **kw: None,
         ):
             result, source = await execute_tool_with_fallback(
                 tool_name="unknown_tool",
@@ -156,22 +175,22 @@ class TestExecuteToolWithFallback:
             execute_tool_with_fallback,
         )
 
-        mock_native_executor = AsyncMock(return_value="native result")
+        mock_native_executor = AsyncMock(side_effect=lambda *a, **kw: "native result")
         mock_builtin_tool = MagicMock()
-        mock_builtin_tool.ainvoke = AsyncMock(return_value="builtin result")
+        mock_builtin_tool.ainvoke = AsyncMock(side_effect=lambda *a, **kw: "builtin result")
 
         with (
             patch(
                 "mcp_server_langgraph.core.tool_executor.get_tool_by_name",
-                return_value=mock_builtin_tool,
+                side_effect=lambda *a, **kw: mock_builtin_tool,
             ),
             patch(
                 "mcp_server_langgraph.core.tool_executor._get_native_executor",
-                return_value=mock_native_executor,
+                side_effect=lambda *a, **kw: mock_native_executor,
             ),
             patch(
                 "mcp_server_langgraph.core.tool_executor._should_use_native",
-                return_value=True,
+                side_effect=lambda *a, **kw: True,
             ),
         ):
             result, source = await execute_tool_with_fallback(
@@ -187,6 +206,10 @@ class TestExecuteToolWithFallback:
 
 class TestCircuitBreakerIntegration:
     """Tests for circuit breaker integration."""
+
+    def setup_method(self) -> None:
+        """Fresh state for each test - prevent cross-test mock leakage."""
+        gc.collect()
 
     def teardown_method(self) -> None:
         """Force GC."""

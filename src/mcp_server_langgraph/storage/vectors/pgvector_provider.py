@@ -85,21 +85,25 @@ class PgVectorProvider(VectorSearchProvider):
         """
         table = self._table_name(collection)
         async with self._pool.acquire() as conn:
-            await conn.execute(f"""
+            await conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                f"""
                 CREATE TABLE IF NOT EXISTS {table} (
                     id TEXT PRIMARY KEY,
                     vector vector,
                     metadata JSONB DEFAULT '{{}}'::jsonb,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
                 )
-            """)
+            """
+            )
             # Create index for similarity search
-            await conn.execute(f"""
+            await conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
+                f"""
                 CREATE INDEX IF NOT EXISTS {table}_vector_idx
                 ON {table}
                 USING ivfflat (vector vector_cosine_ops)
                 WITH (lists = 100)
-            """)
+            """
+            )
 
     async def upsert(
         self,
@@ -126,7 +130,7 @@ class PgVectorProvider(VectorSearchProvider):
 
             async with self._pool.acquire() as conn:
                 # S608: table name comes from internal config, not user input
-                await conn.execute(
+                await conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     f"""
                     INSERT INTO {table} (id, vector, metadata)
                     VALUES ($1, $2::vector, $3::jsonb)
@@ -251,7 +255,7 @@ class PgVectorProvider(VectorSearchProvider):
 
             async with self._pool.acquire() as conn:
                 # S608: table name comes from internal config, not user input
-                await conn.execute(
+                await conn.execute(  # nosemgrep: sqlalchemy-execute-raw-query
                     f"DELETE FROM {table} WHERE id = $1",
                     id,
                 )

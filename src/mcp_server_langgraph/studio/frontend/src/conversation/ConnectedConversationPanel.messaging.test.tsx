@@ -322,7 +322,23 @@ describe("ConnectedConversationPanel - Telemetry", () => {
 
   it("should log message sent event", async () => {
     const user = userEvent.setup();
-    const store = createTestStore();
+    // Provide session data so the panel fully renders after sending
+    const store = createTestStore({
+      session: {
+        currentSession: {
+          id: "session-123",
+          name: "Test Session",
+          messages: [],
+          config: {},
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+        sessions: [],
+        isLoading: false,
+        error: null,
+        hasPendingMutation: true,
+      },
+    });
 
     render(<ConnectedConversationPanel />, { wrapper: createWrapper(store) });
 
@@ -333,6 +349,7 @@ describe("ConnectedConversationPanel - Telemetry", () => {
     await user.click(sendButton);
 
     // Just verify no errors occur - actual telemetry is logged via devLogger
+    // ConversationPanel (inner) renders data-testid="conversation-panel"
     expect(screen.getByTestId("conversation-panel")).toBeInTheDocument();
   });
 });

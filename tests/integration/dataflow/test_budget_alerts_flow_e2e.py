@@ -85,6 +85,7 @@ def mock_websocket_connection():
 # ============================================================================
 
 
+@pytest.mark.xdist_group("test_budget_checker_flow")
 class TestBudgetCheckerFlow:
     """
     E2E tests for budget checking logic.
@@ -211,6 +212,7 @@ class TestBudgetCheckerFlow:
         assert status.remaining == Decimal("-20.00")
 
 
+@pytest.mark.xdist_group("test_budget_alert_broadcaster_flow")
 class TestBudgetAlertBroadcasterFlow:
     """
     E2E tests for budget alert broadcasting to WebSocket subscribers.
@@ -393,6 +395,7 @@ class TestBudgetAlertBroadcasterFlow:
         assert broadcaster.subscriber_count == 0
 
 
+@pytest.mark.xdist_group("test_budget_check_all_flow")
 class TestBudgetCheckAllFlow:
     """
     E2E tests for checking multiple budgets.
@@ -458,6 +461,7 @@ class TestBudgetCheckAllFlow:
         assert statuses[2].status == "exceeded"
 
 
+@pytest.mark.xdist_group("test_budget_message_format")
 class TestBudgetMessageFormat:
     """
     E2E tests for budget alert message format.

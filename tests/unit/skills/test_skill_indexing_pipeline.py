@@ -57,6 +57,17 @@ class TestSkillsStateSkillSearchTool:
 class TestInitSkillsBootstrap:
     """Test init_skills creates SkillSearchTool."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_singletons(self):
+        """Reset module-level singletons to prevent xdist cross-test contamination."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+        from mcp_server_langgraph.skills.auto_update import reset_auto_update_scheduler
+
+        reset_all_circuit_breakers()
+        reset_auto_update_scheduler()
+        yield
+        reset_auto_update_scheduler()
+
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -75,19 +86,23 @@ class TestInitSkillsBootstrap:
         with (
             patch(
                 "mcp_server_langgraph.skills.auto_update.is_auto_update_enabled",
-                return_value=False,
+                side_effect=lambda *a, **kw: False,
             ),
             patch(
                 "mcp_server_langgraph.bootstrap.skills.create_marketplace_admin_router",
-                return_value=(MagicMock(), MagicMock()),
+                side_effect=lambda *a, **kw: (MagicMock(), MagicMock()),
             ),
             patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags,
             patch(
                 "mcp_server_langgraph.skills.adapters.create_skill_search_tool",
-                return_value=mock_tool,
+                side_effect=lambda *a, **kw: mock_tool,
             ) as mock_create,
         ):
             mock_flags.enable_semantic_skill_search = True
+            # Explicitly set False to prevent auto-update path even if
+            # is_auto_update_enabled patch fails under xdist (MagicMock
+            # attributes are truthy by default)
+            mock_flags.enable_skills_marketplace = False
 
             mock_settings = MagicMock()
             state = await init_skills(mock_settings)
@@ -107,11 +122,11 @@ class TestInitSkillsBootstrap:
         with (
             patch(
                 "mcp_server_langgraph.skills.auto_update.is_auto_update_enabled",
-                return_value=False,
+                side_effect=lambda *a, **kw: False,
             ),
             patch(
                 "mcp_server_langgraph.bootstrap.skills.create_marketplace_admin_router",
-                return_value=(MagicMock(), MagicMock()),
+                side_effect=lambda *a, **kw: (MagicMock(), MagicMock()),
             ),
             patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags,
             patch(
@@ -119,6 +134,10 @@ class TestInitSkillsBootstrap:
             ) as mock_create,
         ):
             mock_flags.enable_semantic_skill_search = False
+            # Explicitly set False to prevent auto-update path even if
+            # is_auto_update_enabled patch fails under xdist (MagicMock
+            # attributes are truthy by default)
+            mock_flags.enable_skills_marketplace = False
 
             mock_settings = MagicMock()
             state = await init_skills(mock_settings)
@@ -130,6 +149,17 @@ class TestInitSkillsBootstrap:
 @pytest.mark.xdist_group(name="test_skill_indexing")
 class TestSkillIndexingOnInstall:
     """Test skills are indexed when installed."""
+
+    @pytest.fixture(autouse=True)
+    def _isolate_singletons(self):
+        """Reset module-level singletons to prevent xdist cross-test contamination."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+        from mcp_server_langgraph.skills.auto_update import reset_auto_update_scheduler
+
+        reset_all_circuit_breakers()
+        reset_auto_update_scheduler()
+        yield
+        reset_auto_update_scheduler()
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
@@ -250,6 +280,17 @@ class TestSkillDeindexingOnUninstall:
 class TestExistingSkillsIndexing:
     """Test existing skills are indexed during bootstrap."""
 
+    @pytest.fixture(autouse=True)
+    def _isolate_singletons(self):
+        """Reset module-level singletons to prevent xdist cross-test contamination."""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+        from mcp_server_langgraph.skills.auto_update import reset_auto_update_scheduler
+
+        reset_all_circuit_breakers()
+        reset_auto_update_scheduler()
+        yield
+        reset_auto_update_scheduler()
+
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
@@ -275,20 +316,20 @@ class TestExistingSkillsIndexing:
         with (
             patch(
                 "mcp_server_langgraph.skills.auto_update.is_auto_update_enabled",
-                return_value=True,  # Enable auto-update to trigger SkillInstaller creation
+                side_effect=lambda *a, **kw: True,  # Enable auto-update to trigger SkillInstaller creation
             ),
             patch(
                 "mcp_server_langgraph.skills.auto_update.AutoUpdateScheduler",
-                return_value=mock_scheduler,
+                side_effect=lambda *a, **kw: mock_scheduler,
             ),
             patch(
                 "mcp_server_langgraph.bootstrap.skills.create_marketplace_admin_router",
-                return_value=(MagicMock(), MagicMock()),
+                side_effect=lambda *a, **kw: (MagicMock(), MagicMock()),
             ),
             patch("mcp_server_langgraph.core.feature_flags.feature_flags") as mock_flags,
             patch(
                 "mcp_server_langgraph.skills.adapters.create_skill_search_tool",
-                return_value=mock_tool,
+                side_effect=lambda *a, **kw: mock_tool,
             ),
             patch(
                 "mcp_server_langgraph.skills.installer.SkillInstaller",

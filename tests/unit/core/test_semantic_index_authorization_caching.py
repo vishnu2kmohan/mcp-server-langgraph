@@ -118,7 +118,7 @@ class TestAuthorizationCachingBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             # First call should hit OpenFGA
             result1 = await manager._check_authorization(
@@ -158,7 +158,7 @@ class TestAuthorizationCachingBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             # Alice's authorization
             await manager._check_authorization(
@@ -194,7 +194,7 @@ class TestAuthorizationCachingBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             # tool_index authorization
             await manager._check_authorization(
@@ -230,7 +230,7 @@ class TestAuthorizationCachingBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             # First call - denied
             result1 = await manager._check_authorization(
@@ -268,7 +268,7 @@ class TestAuthorizationCachingBehavior:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             # Multiple calls
             await manager._check_authorization(
@@ -312,7 +312,7 @@ class TestAuthorizationCacheExpiry:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             # First call
             await manager._check_authorization(
@@ -365,7 +365,7 @@ class TestAuthorizationCacheExpiry:
 
         with patch(
             "mcp_server_langgraph.core.semantic_index_manager.get_openfga_client",
-            return_value=mock_openfga_client,
+            side_effect=lambda *a, **kw: mock_openfga_client,
         ):
             # First call
             await manager._check_authorization(

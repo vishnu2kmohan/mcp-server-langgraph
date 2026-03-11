@@ -156,7 +156,7 @@ class TestGenUIAPIEndpoint:
 
         with patch(
             "mcp_server_langgraph.api.v1.studio_ai.get_genui_orchestrator",
-            return_value=mock_genui_orchestrator,
+            side_effect=lambda *a, **kw: mock_genui_orchestrator,
         ):
             result = await generate_ui(request, current_user={"sub": "user-123"})
 
@@ -190,7 +190,7 @@ class TestGenUIFeatureFlag:
         with patch.object(studio_ai_module, "feature_flags", mock_flags):
             with patch(
                 "mcp_server_langgraph.api.v1.studio_ai.get_genui_orchestrator",
-                return_value=mock_genui_orchestrator,
+                side_effect=lambda *a, **kw: mock_genui_orchestrator,
             ):
                 result = await generate_ui(request, current_user={"sub": "user-123"})
 

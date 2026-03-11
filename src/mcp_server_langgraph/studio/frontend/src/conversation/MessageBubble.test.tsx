@@ -4,7 +4,13 @@
  * Tests for individual chat message bubbles with user/assistant styling.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);
@@ -273,58 +279,76 @@ describe("MessageBubble", () => {
   });
 
   describe("Thinking Trace", () => {
-    it("should render thinking trace when message has thinkingContent", () => {
+    // LLMThinkingTrace is lazy-loaded, so all queries must use waitFor
+
+    it("should render thinking trace when message has thinkingContent", async () => {
       render(
         <TestProvider>
           <MessageBubble message={messageWithThinking} />
         </TestProvider>,
       );
-      expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
+      });
     });
 
-    it("should not render thinking trace when message has no thinkingContent", () => {
+    it("should not render thinking trace when message has no thinkingContent", async () => {
       render(
         <TestProvider>
           <MessageBubble message={messageWithoutThinking} />
         </TestProvider>,
       );
-      expect(
-        screen.queryByTestId("llm-thinking-trace"),
-      ).not.toBeInTheDocument();
+      // Wait a tick for lazy loading to settle, then check absence
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("llm-thinking-trace"),
+        ).not.toBeInTheDocument();
+      });
     });
 
-    it("should render thinking trace collapsed by default for historical messages", () => {
+    it("should render thinking trace collapsed by default for historical messages", async () => {
       render(
         <TestProvider>
           <MessageBubble message={messageWithThinking} />
         </TestProvider>,
       );
+      // Wait for lazy component to load
+      await waitFor(() => {
+        expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
+      });
       // The thinking content should not be visible (collapsed)
       expect(screen.queryByTestId("thinking-content")).not.toBeInTheDocument();
     });
 
-    it("should expand thinking trace when toggle is clicked", () => {
+    it("should expand thinking trace when toggle is clicked", async () => {
       render(
         <TestProvider>
           <MessageBubble message={messageWithThinking} />
         </TestProvider>,
       );
+      // Wait for lazy component to load
+      await waitFor(() => {
+        expect(screen.getByTestId("llm-thinking-trace")).toBeInTheDocument();
+      });
       const toggleButton = screen.getByLabelText(/toggle thinking/i);
       fireEvent.click(toggleButton);
       expect(screen.getByTestId("thinking-content")).toBeInTheDocument();
     });
 
-    it("should display thinking tokens when provided", () => {
+    it("should display thinking tokens when provided", async () => {
       render(
         <TestProvider>
           <MessageBubble message={messageWithThinking} />
         </TestProvider>,
       );
-      // Token count should be visible in header even when collapsed
-      expect(screen.getByText(/150 tokens/i)).toBeInTheDocument();
+      // Wait for lazy component to load
+      await waitFor(() => {
+        // Token count should be visible in header even when collapsed
+        expect(screen.getByText(/150 tokens/i)).toBeInTheDocument();
+      });
     });
 
-    it("should not render thinking trace for user messages even if thinkingContent exists", () => {
+    it("should not render thinking trace for user messages even if thinkingContent exists", async () => {
       const userMsgWithThinking: ChatMessage = {
         ...userMessage,
         thinkingContent: "Some thinking",
@@ -334,9 +358,11 @@ describe("MessageBubble", () => {
           <MessageBubble message={userMsgWithThinking} />
         </TestProvider>,
       );
-      expect(
-        screen.queryByTestId("llm-thinking-trace"),
-      ).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("llm-thinking-trace"),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 });

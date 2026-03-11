@@ -193,7 +193,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_developer_permissions(),
+            side_effect=lambda *a, **kw: create_developer_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -230,7 +230,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_developer_permissions(),
+            side_effect=lambda *a, **kw: create_developer_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -252,7 +252,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_admin_permissions(),
+            side_effect=lambda *a, **kw: create_admin_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -276,7 +276,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_developer_permissions(),
+            side_effect=lambda *a, **kw: create_developer_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -299,7 +299,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_basic_user_permissions(),
+            side_effect=lambda *a, **kw: create_basic_user_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -329,7 +329,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_fail_closed_permissions(),
+            side_effect=lambda *a, **kw: create_fail_closed_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -347,7 +347,7 @@ class TestWebSocketPermissionsInMeEndpoint:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_developer_permissions(),
+            side_effect=lambda *a, **kw: create_developer_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -380,6 +380,12 @@ class TestWebSocketPermissionsInMeEndpoint:
 
         # Verify get_websocket_permissions was called with alice's user_id
         mock_get_perms.assert_called_once_with("user:alice")
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -419,6 +425,12 @@ class TestWebSocketPermissionsSchema:
         for field_name in WebSocketPermissions.model_fields:
             assert getattr(perms, field_name) is False, f"{field_name} should default to False"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestWebSocketPermissionsMapping:
@@ -456,6 +468,12 @@ class TestWebSocketPermissionsMapping:
             assert isinstance(object_id, str), f"{key} object_id should be a string"
             assert isinstance(relation, str), f"{key} relation should be a string"
 
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
+
 
 @pytest.mark.unit
 class TestWebSocketPermissionsIntegration:
@@ -474,7 +492,7 @@ class TestWebSocketPermissionsIntegration:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_developer_permissions(),
+            side_effect=lambda *a, **kw: create_developer_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -506,6 +524,12 @@ class TestWebSocketPermissionsIntegration:
         # All values should be booleans
         for key, value in perms_dict.items():
             assert isinstance(value, bool), f"{key} should be boolean, got {type(value)}"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 # ==============================================================================
@@ -673,7 +697,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_auditor_permissions(),
+            side_effect=lambda *a, **kw: create_auditor_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -699,7 +723,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_auditor_permissions(),
+            side_effect=lambda *a, **kw: create_auditor_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -721,7 +745,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_auditor_permissions(),
+            side_effect=lambda *a, **kw: create_auditor_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -743,7 +767,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_auditor_permissions(),
+            side_effect=lambda *a, **kw: create_auditor_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -778,7 +802,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_compliance_officer_permissions(),
+            side_effect=lambda *a, **kw: create_compliance_officer_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -802,7 +826,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_compliance_officer_permissions(),
+            side_effect=lambda *a, **kw: create_compliance_officer_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -831,7 +855,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_devops_permissions(),
+            side_effect=lambda *a, **kw: create_devops_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -859,7 +883,7 @@ class TestSubPersonaWebSocketPermissions:
         with patch(
             "mcp_server_langgraph.api.v1.user.get_websocket_permissions",
             new_callable=AsyncMock,
-            return_value=create_devops_permissions(),
+            side_effect=lambda *a, **kw: create_devops_permissions(),
         ):
             client = TestClient(app)
             response = client.get("/api/v1/me")
@@ -869,6 +893,12 @@ class TestSubPersonaWebSocketPermissions:
 
         true_count = sum(1 for v in perms.values() if v is True)
         assert true_count == 17, f"DevOps should have 17/17 permissions, got {true_count}"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()
 
 
 @pytest.mark.unit
@@ -903,3 +933,9 @@ class TestSubPersonaPermissionCounts:
         assert true_count == expected_count, (
             f"{description} ({persona}) should have {expected_count}/17 permissions, got {true_count}"
         )
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

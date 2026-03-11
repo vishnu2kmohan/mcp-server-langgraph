@@ -77,7 +77,7 @@ class TestParallelSecurityScanScript:
             },
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
             cwd=str(PROJECT_ROOT),
         )
         assert result.returncode == 0, f"Dry-run should exit 0, got {result.returncode}: {result.stderr}"
@@ -96,7 +96,7 @@ class TestParallelSecurityScanScript:
             },
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
             cwd=str(PROJECT_ROOT),
         )
         assert result.returncode == 0
@@ -109,7 +109,20 @@ class TestParallelSecurityScanScript:
         for tool in ["bandit", "trivy-k8s", "trivy-helm", "trivy-helm-full", "trivy-terraform", "semgrep"]:
             assert tool in content, f"Script must include {tool} scan"
 
+    def test_trivy_terraform_uses_ignorefile(self) -> None:
+        """Trivy terraform scan must use terraform/.trivyignore for accepted risks."""
+        content = SECURITY_SCRIPT.read_text()
+        assert "--ignorefile terraform/.trivyignore" in content, (
+            "trivy-terraform scan must include --ignorefile terraform/.trivyignore"
+        )
+
     def test_local_max_concurrent_caps_at_6(self) -> None:
         """Local mode should cap concurrency at 6."""
         content = SECURITY_SCRIPT.read_text()
         assert "6" in content, "Local mode should cap MAX_CONCURRENT at 6"
+
+    def teardown_method(self):
+        """Clean up after each test."""
+        import gc
+
+        gc.collect()

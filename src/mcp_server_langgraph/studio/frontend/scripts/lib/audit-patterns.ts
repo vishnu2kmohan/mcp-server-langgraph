@@ -19,7 +19,8 @@ export type ViolationCategory =
   | "shadow"
   | "zindex"
   | "animation"
-  | "component";
+  | "component"
+  | "testid";
 
 export type ViolationSeverity = "error" | "warning" | "info";
 
@@ -77,6 +78,10 @@ export const RIPGREP_PATTERNS: Record<ViolationCategory, string[]> = {
     '<Button[^>]*variant="primary"[^>]*(className="[^"]*w-full[^"]*text-left[^"]*"|className="[^"]*text-left[^"]*w-full[^"]*")',
     // Primary variant in navigation list items (className first)
     '<Button[^>]*className="[^"]*(w-full[^"]*text-left|text-left[^"]*w-full)[^"]*"[^>]*variant="primary"',
+  ],
+  testid: [
+    // Detect camelCase test IDs (should be kebab-case per convention)
+    'data-testid="[a-z]+[A-Z][a-zA-Z]*"',
   ],
 };
 
@@ -209,6 +214,11 @@ export function categorizeViolation(match: string): ViolationCategory | null {
     return "component";
   }
 
+  // Test ID (camelCase instead of kebab-case)
+  if (/data-testid="[a-z]+[A-Z][a-zA-Z]*"/.test(match)) {
+    return "testid";
+  }
+
   return null;
 }
 
@@ -240,6 +250,8 @@ export function getSuggestion(match: string, category: ViolationCategory): strin
         return 'Use variant="ghost" for navigation list items';
       }
       return "Follow component variant guidelines in STYLE.md";
+    case "testid":
+      return 'Use kebab-case for data-testid values (e.g., "file-upload-button" not "fileUploadButton")';
     default:
       return "Use Tailwind design tokens instead of arbitrary values";
   }

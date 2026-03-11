@@ -96,7 +96,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             ctx = StreamingMetricsContext(
                 model="gpt-4",
@@ -128,7 +128,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             ctx = StreamingMetricsContext(
                 model="gpt-4",
@@ -156,7 +156,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             ctx = StreamingMetricsContext(
                 model="gpt-4",
@@ -192,7 +192,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             ctx = StreamingMetricsContext(
                 model="gpt-4",
@@ -230,7 +230,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             ctx = StreamingMetricsContext(
                 model="gpt-4",
@@ -268,7 +268,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             ctx = StreamingMetricsContext(
                 model="gpt-4",
@@ -298,7 +298,7 @@ class TestStreamingMetricsContextBroadcasterIntegration:
 
         with patch(
             "mcp_server_langgraph.llm.streaming_metrics.get_llm_streaming_broadcaster",
-            return_value=mock_broadcaster,
+            side_effect=lambda *a, **kw: mock_broadcaster,
         ):
             ctx = StreamingMetricsContext(
                 model="gpt-4",
