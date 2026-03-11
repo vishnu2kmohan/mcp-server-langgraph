@@ -61,6 +61,17 @@ class TestParallelSecurityScanScript:
         assert "INT" in content, "Script must trap INT signal"
         assert "TERM" in content, "Script must trap TERM signal"
 
+    def test_durable_scan_logs(self) -> None:
+        """Scan logs must persist at a well-known path for post-hoc diagnosis."""
+        content = SECURITY_SCRIPT.read_text()
+        assert "/tmp/security-scan-lanes" in content, "Logs must use durable /tmp/security-scan-lanes/ directory"
+        # cleanup() must NOT delete logs (they're for post-hoc diagnosis)
+        # Extract the cleanup function body and verify no rm -rf
+        cleanup_start = content.index("cleanup()")
+        cleanup_end = content.index("trap cleanup", cleanup_start)
+        cleanup_body = content[cleanup_start:cleanup_end]
+        assert "rm -rf" not in cleanup_body, "cleanup() must NOT delete scan logs"
+
     def test_per_tool_exit_code_tracking(self) -> None:
         """Script must track exit codes per tool for reporting."""
         content = SECURITY_SCRIPT.read_text()

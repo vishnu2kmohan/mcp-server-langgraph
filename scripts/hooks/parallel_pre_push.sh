@@ -283,16 +283,20 @@ validate_lane_coverage || exit 1
 
 # -----------------------------------------------------------------------------
 # Signal handling: cleanup child processes on interruption
+# Logs persist at /tmp/pre-push-lanes/ for post-hoc diagnosis.
 # -----------------------------------------------------------------------------
 declare -a lane_pids=()
-log_dir=$(mktemp -d)
+log_dir="/tmp/pre-push-lanes"
+rm -rf "$log_dir"
+mkdir -p "$log_dir"
 
 cleanup() {
     for pid in "${lane_pids[@]}"; do
         kill "$pid" 2>/dev/null || true
     done
     wait 2>/dev/null || true
-    rm -rf "$log_dir"
+    # Logs are intentionally NOT deleted — persist for post-hoc diagnosis.
+    # Convention: /tmp/{tool}-{stage}.log (see .claude/rules/context-efficiency.md)
 }
 trap cleanup EXIT INT TERM
 
@@ -439,10 +443,11 @@ for name in "${lane_order[@]}"; do
 done
 echo ""
 
+echo "Lane logs: $log_dir/"
 if [[ $overall_exit -eq 0 ]]; then
     echo "All pre-push lanes passed."
 else
-    echo "Some pre-push lanes failed. See output above."
+    echo "Some pre-push lanes failed. See output above or inspect: ls $log_dir/"
 fi
 
 exit $overall_exit

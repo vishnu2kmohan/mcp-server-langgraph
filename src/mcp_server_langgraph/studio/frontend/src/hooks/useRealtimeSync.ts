@@ -112,7 +112,7 @@ export type { ReconnectionMetrics, ReconnectionAttempt };
  * Append protocol version as query parameter to WebSocket URL.
  *
  * @param url - The base WebSocket URL
- * @returns URL with protocol version query parameter (e.g., "ws://host/path?v=1.0.0")
+ * @returns URL with protocol version query parameter (e.g., "ws://host/path?v=1.0.0") // nosemgrep: detect-insecure-websocket
  */
 function appendProtocolVersion(url: string): string {
   const separator = url.includes("?") ? "&" : "?";
@@ -548,11 +548,11 @@ export function useRealtimeSync(
     }
 
     // Validate WebSocket URL protocol to prevent DOMException
-    // WebSocket URLs must start with ws:// or wss://
+    // WebSocket URLs must start with ws:// or wss:// // nosemgrep: detect-insecure-websocket
     if (!currentUrl.startsWith("ws://") && !currentUrl.startsWith("wss://")) {
       // nosemgrep: detect-insecure-websocket
       const error = new Error(
-        `Invalid WebSocket URL: "${currentUrl}". URL must start with ws:// or wss://`,
+        `Invalid WebSocket URL: "${currentUrl}". URL must start with ws:// or wss://`, // nosemgrep: detect-insecure-websocket
       );
       setStatus("error");
       callbacksRef.current.onError?.(error);

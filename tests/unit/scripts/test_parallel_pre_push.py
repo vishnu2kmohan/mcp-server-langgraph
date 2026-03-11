@@ -81,6 +81,17 @@ class TestParallelPrePushScript:
         assert "trap" in content, "Script must set up signal traps"
         assert "cleanup" in content, "Script must define a cleanup function"
 
+    def test_durable_lane_logs(self) -> None:
+        """Lane logs must persist at a well-known path for post-hoc diagnosis."""
+        content = PRE_PUSH_SCRIPT.read_text()
+        assert "/tmp/pre-push-lanes" in content, "Logs must use durable /tmp/pre-push-lanes/ directory"
+        # cleanup() must NOT delete logs (they're for post-hoc diagnosis)
+        # Extract the cleanup function body and verify no rm -rf
+        cleanup_start = content.index("cleanup()")
+        cleanup_end = content.index("trap cleanup", cleanup_start)
+        cleanup_body = content[cleanup_start:cleanup_end]
+        assert "rm -rf" not in cleanup_body, "cleanup() must NOT delete lane logs"
+
     def test_pre_commit_home_isolation(self) -> None:
         """Each lane must use isolated PRE_COMMIT_HOME to prevent cache corruption."""
         content = PRE_PUSH_SCRIPT.read_text()

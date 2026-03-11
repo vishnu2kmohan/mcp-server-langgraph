@@ -6,7 +6,7 @@
  *
  * Usage:
  * ```tsx
- * const { metrics } = useRealtimeSync({ url: "ws://..." });
+ * const { metrics } = useRealtimeSync({ url: "ws://..." }); // nosemgrep: detect-insecure-websocket
  *
  * useWebSocketMetricsReporter({
  *   endpointId: "notifications",

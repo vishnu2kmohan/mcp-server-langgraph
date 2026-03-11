@@ -59,16 +59,20 @@ fi
 
 # -----------------------------------------------------------------------------
 # Signal handling: cleanup child processes on interruption
+# Logs persist at /tmp/security-scan-lanes/ for post-hoc diagnosis.
 # -----------------------------------------------------------------------------
 declare -a active_pids=()
-log_dir=$(mktemp -d)
+log_dir="/tmp/security-scan-lanes"
+rm -rf "$log_dir"
+mkdir -p "$log_dir"
 
 cleanup() {
     for pid in "${all_pids[@]}"; do
         kill "$pid" 2>/dev/null || true
     done
     wait 2>/dev/null || true
-    rm -rf "$log_dir"
+    # Logs are intentionally NOT deleted — persist for post-hoc diagnosis.
+    # Convention: /tmp/{tool}-{stage}.log (see .claude/rules/context-efficiency.md)
 }
 trap cleanup EXIT INT TERM
 
@@ -256,10 +260,11 @@ for name in "${tool_names[@]}"; do
 done
 echo ""
 
+echo "Scan logs: $log_dir/"
 if [[ $overall_exit -eq 0 ]]; then
     echo "All security scans passed."
 else
-    echo "Some security scans failed. See output above."
+    echo "Some security scans failed. See output above or inspect: ls $log_dir/"
 fi
 
 exit $overall_exit

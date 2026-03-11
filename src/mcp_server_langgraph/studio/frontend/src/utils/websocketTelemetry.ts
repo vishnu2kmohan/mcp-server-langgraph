@@ -380,7 +380,7 @@ export const websocketTelemetry = new WebSocketTelemetry({
  *
  * Usage:
  * ```tsx
- * const { metrics } = useRealtimeSync({ url: "ws://..." });
+ * const { metrics } = useRealtimeSync({ url: "ws://..." }); // nosemgrep: detect-insecure-websocket
  *
  * useEffect(() => {
  *   reportWebSocketMetrics("notifications", metrics);

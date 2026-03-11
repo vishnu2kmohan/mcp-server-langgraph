@@ -137,7 +137,7 @@ export function getApiBaseUrl(): string {
  *
  * Priority:
  * 1. VITE_WS_BASE_URL environment variable (if set)
- * 2. Derived from window.location (wss:// for https://, ws:// for http://)
+ * 2. Derived from window.location (wss:// for https://, ws:// for http://) // nosemgrep: detect-insecure-websocket
  * 3. SSR default (Node.js environment)
  *
  * @param windowRef - Optional window reference (for testing/SSR)
