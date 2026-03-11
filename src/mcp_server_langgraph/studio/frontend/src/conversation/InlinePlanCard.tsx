@@ -265,7 +265,7 @@ export function InlinePlanCard({
       approvalType: "user",
       riskLevel: plan.riskLevel,
       complexity: plan.complexity,
-      toolsNeeded: plan.toolsNeeded,
+      toolsNeeded: plan.toolsNeeded ?? [],
     });
 
     onApprove(plan.planId);
@@ -279,7 +279,7 @@ export function InlinePlanCard({
       approvalType: "rejected",
       riskLevel: plan.riskLevel,
       complexity: plan.complexity,
-      toolsNeeded: plan.toolsNeeded,
+      toolsNeeded: plan.toolsNeeded ?? [],
     });
 
     onReject(plan.planId);
@@ -382,7 +382,7 @@ export function InlinePlanCard({
       <div className="mb-4">
         <span className="text-xs font-medium text-neutral-11">Tools: </span>
         <span className="text-xs text-neutral-12">
-          {plan.toolsNeeded.length > 0 ? plan.toolsNeeded.join(", ") : "None"}
+          {plan.toolsNeeded?.length ? plan.toolsNeeded.join(", ") : "None"}
         </span>
       </div>
 

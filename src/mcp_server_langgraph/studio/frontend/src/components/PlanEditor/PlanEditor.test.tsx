@@ -230,5 +230,37 @@ describe("PlanEditor", () => {
       expect(screen.getByText(/file_read/i)).toBeInTheDocument();
       expect(screen.getByText(/file_write/i)).toBeInTheDocument();
     });
+
+    it("should render safely when toolsNeeded is null", () => {
+      const planWithNullTools = {
+        ...samplePlan,
+        toolsNeeded: null as unknown as string[],
+      };
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} plan={planWithNullTools} />
+        </TestProvider>,
+      );
+      expect(screen.queryByText(/file_read/i)).not.toBeInTheDocument();
+      // The "None" fallback text appears in the tools section
+      const toolsSection = screen
+        .getByText("Tools Needed:")
+        .closest("div")!.parentElement!;
+      expect(toolsSection).toHaveTextContent("None");
+    });
+
+    it("should render safely when toolsNeeded is empty", () => {
+      const planWithEmptyTools = { ...samplePlan, toolsNeeded: [] };
+      render(
+        <TestProvider>
+          <PlanEditor {...defaultProps} plan={planWithEmptyTools} />
+        </TestProvider>,
+      );
+      expect(screen.queryByText(/file_read/i)).not.toBeInTheDocument();
+      const toolsSection = screen
+        .getByText("Tools Needed:")
+        .closest("div")!.parentElement!;
+      expect(toolsSection).toHaveTextContent("None");
+    });
   });
 });

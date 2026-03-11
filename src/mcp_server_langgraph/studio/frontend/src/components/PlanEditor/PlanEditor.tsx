@@ -247,14 +247,18 @@ export function PlanEditor({
             <span>Tools Needed:</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {plan.toolsNeeded.map((tool) => (
-              <span
-                key={tool}
-                className="px-2 py-1 bg-neutral-2 text-neutral-11 rounded text-xs font-mono"
-              >
-                {tool}
-              </span>
-            ))}
+            {(plan.toolsNeeded ?? []).length > 0 ? (
+              (plan.toolsNeeded ?? []).map((tool) => (
+                <span
+                  key={tool}
+                  className="px-2 py-1 bg-neutral-2 text-neutral-11 rounded text-xs font-mono"
+                >
+                  {tool}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-neutral-10">None</span>
+            )}
           </div>
         </div>
 

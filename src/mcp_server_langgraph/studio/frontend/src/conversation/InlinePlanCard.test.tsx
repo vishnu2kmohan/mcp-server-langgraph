@@ -674,4 +674,36 @@ describe("InlinePlanCard", () => {
       );
     });
   });
+
+  describe("Null safety", () => {
+    it("should render 'None' when toolsNeeded is null", () => {
+      const planWithNullTools = {
+        ...mockPlan,
+        toolsNeeded: null as unknown as string[],
+      };
+
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={planWithNullTools} />
+        </TestProvider>,
+      );
+
+      expect(screen.getByText("None")).toBeInTheDocument();
+    });
+
+    it("should render 'None' when toolsNeeded is an empty array", () => {
+      const planWithEmptyTools = {
+        ...mockPlan,
+        toolsNeeded: [],
+      };
+
+      render(
+        <TestProvider>
+          <InlinePlanCard {...defaultProps} plan={planWithEmptyTools} />
+        </TestProvider>,
+      );
+
+      expect(screen.getByText("None")).toBeInTheDocument();
+    });
+  });
 });
