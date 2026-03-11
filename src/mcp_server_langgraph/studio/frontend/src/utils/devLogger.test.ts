@@ -176,4 +176,41 @@ describe("devLogger", () => {
       expect(consoleSpies.log).toHaveBeenCalledWith("Plain message");
     });
   });
+
+  describe("metric method", () => {
+    it("should log structured metric data via console.debug", () => {
+      devLogger.metric("chat.fallback_post.total", 1, {
+        outcome: "success",
+      });
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
+        "[metric] chat.fallback_post.total",
+        1,
+        { outcome: "success" },
+      );
+    });
+
+    it("should include prefix when using prefixed logger", () => {
+      const logger = devLogger.withPrefix("[Chat]").withTestOutput();
+      logger.metric("chat.pending_mutation.duration_ms", 1234);
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
+        "[Chat] [metric] chat.pending_mutation.duration_ms",
+        1234,
+      );
+    });
+
+    it("should respect suppressInTests for prefixed loggers", () => {
+      const logger = devLogger.withPrefix("[Chat]");
+      logger.metric("dedup.skip", 1, { reason: "timestamp_proximity" });
+      // Prefixed loggers suppress debug-level in tests by default
+      expect(consoleSpies.debug).not.toHaveBeenCalled();
+    });
+
+    it("should log without tags when none provided", () => {
+      devLogger.metric("simple.counter", 42);
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
+        "[metric] simple.counter",
+        42,
+      );
+    });
+  });
 });

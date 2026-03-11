@@ -89,6 +89,12 @@ vi.mock("../hooks/useStreamingChat", () => ({
   useStreamingChat: () => mockStreamingChatReturn,
 }));
 
+// Mock useSessionSync to prevent it from clearing preloaded Redux state
+// (see useSessionSync.ts doc: "mock it to prevent interference with preloaded Redux state")
+vi.mock("../hooks/useSessionSync", () => ({
+  useSessionSync: vi.fn(),
+}));
+
 vi.mock("../hooks/useConversationIntelligence", () => ({
   useIntentDetection: vi.fn(() => ({
     intent: "code_request",
@@ -169,8 +175,8 @@ vi.mock("../hooks/useConnectorSuggestions", () => ({
   }),
 }));
 
-vi.mock("../api", async () => {
-  const actual = await vi.importActual<typeof import("../api")>("../api");
+vi.mock(import("../api"), async (importOriginal) => {
+  const actual = await importOriginal();
   return {
     ...actual,
     useListConnectionTemplatesQuery: () => ({
@@ -329,9 +335,10 @@ describe("ConnectedConversationPanel - handleSendMessage (RC1 Fix)", () => {
     });
   });
 
-  it("should call sendMessage as fallback when startStream throws synchronously (Finding 3)", async () => {
+  it("should persist message via authenticatedFetch fallback when startStream throws synchronously (Finding 3)", async () => {
     // Finding 3 fix: If startStream throws before the streaming endpoint can
-    // persist the message, sendMessage thunk is used as a fallback.
+    // persist the message, authenticatedFetch is used as a direct API fallback
+    // (not sendMessage thunk, which would create a duplicate optimistic message).
     const user = userEvent.setup();
     const store = createTestStore({
       session: {
@@ -362,7 +369,7 @@ describe("ConnectedConversationPanel - handleSendMessage (RC1 Fix)", () => {
     const sendButton = screen.getByRole("button", { name: /send/i });
     await user.click(sendButton);
 
-    // Finding 3 fix: sendMessage thunk SHOULD be called as fallback
+    // Finding 3 fix: authenticatedFetch SHOULD be called as fallback (POST to /messages)
     await waitFor(() => {
       const messagePostCalls = mockFetch.mock.calls.filter(
         (call: unknown[]) =>

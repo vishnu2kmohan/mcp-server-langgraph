@@ -40,11 +40,11 @@ import { InlineConnectionCard } from "../components/Chat/InlineConnectionCard";
 import {
   selectCurrentSession,
   selectMessages,
+  selectHasPendingMutation,
   createSession,
   clearMessages,
   addUserMessage,
   updateMessage,
-  sendMessage,
   setPendingMutation,
 } from "../store/slices/sessionSlice";
 import {
@@ -78,6 +78,7 @@ import type { SlashCommand, ModelOption } from "../components/Chat/ChatInput";
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import type { KBFocusMode, ToolPreference } from "../hooks/useStreamingChat";
 import type { ChatLoaderData } from "../router/loaders";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { devLogger } from "../utils/devLogger";
 import { cn } from "../utils/cn";
 
@@ -296,23 +297,32 @@ export const ConnectedConversationPanel = forwardRef<
     }
   }, [streamingError]);
 
-  // Finding 2: Mark optimistic message as failed when async stream errors occur.
-  // startStream is fire-and-forget, so errors from the fetch/SSE stream are
-  // surfaced asynchronously via the `streamingError` state rather than the
-  // catch block in handleSendMessage. Without this, the optimistic message
-  // would remain in a "sending" state indefinitely.
+  // Finding 2 + R13-3: Mark optimistic message as failed ONLY for
+  // connection-phase errors (no tokens received). Mid-stream disconnects
+  // mean the backend already persisted the user message.
+  //
+  // R17-1: Use `lastStreamedContentRef.current` instead of
+  // the `lastStreamedContent` state variable. The state variable persists
+  // after failed revalidation of the PREVIOUS stream, which cross-contaminates
+  // the check for new messages. The ref is correctly reset to "" by the
+  // streaming completion effect.
   useEffect(() => {
     if (streamingError && lastSentMessageIdRef.current) {
-      dispatch(
-        updateMessage({
-          messageId: lastSentMessageIdRef.current,
-          updates: { status: "failed" as const },
-        }),
-      );
+      const isConnectionPhaseError =
+        !streamingContent && !lastStreamedContentRef.current;
+      if (isConnectionPhaseError) {
+        dispatch(
+          updateMessage({
+            messageId: lastSentMessageIdRef.current,
+            updates: { status: "failed" as const },
+          }),
+        );
+      }
+      // Always clear pending -- stream is done regardless of error type
       dispatch(setPendingMutation(false));
       lastSentMessageIdRef.current = "";
     }
-  }, [streamingError, dispatch]);
+  }, [streamingError, streamingContent, dispatch]);
 
   // Dispatch auth_required events to Redux (ADR-0102)
   // This allows InlineConnectionCard to display and handle authentication
@@ -331,6 +341,21 @@ export const ConnectedConversationPanel = forwardRef<
 
   // Finding 2: Track the last sent messageId for async error handling
   const lastSentMessageIdRef = useRef<string>("");
+
+  // Ref: tracks the server UUID and originating session from a successful fallback POST.
+  // R11-1: Track sessionId alongside serverId for session-switch cleanup.
+  // R13-2: Include clientMessageId to scope Effect 1 clearing.
+  const pendingFallbackRef = useRef<{
+    serverId: string | null;
+    sessionId: string;
+    clientMessageId: string;
+  } | null>(null);
+
+  // Ref: tracks the fallback timeout for cleanup on unmount (R7-5).
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // R8-4: Track when setPendingMutation(true) was dispatched for duration metric.
+  const pendingMutationStartRef = useRef<number>(0);
 
   // Fix 1: Seamless handoff state for UI flicker prevention
   // The backend streaming endpoint already persists the message, so we DON'T call saveAssistantMessage.
@@ -479,6 +504,7 @@ export const ConnectedConversationPanel = forwardRef<
 
   // Get current session from Redux (contains optimistic updates)
   const currentSession = useAppSelector(selectCurrentSession);
+  const hasPendingMutation = useAppSelector(selectHasPendingMutation);
 
   // RC4 Fix: Get current messages for defense-in-depth history fallback
   const currentMessages = useAppSelector(selectMessages);
@@ -530,17 +556,38 @@ export const ConnectedConversationPanel = forwardRef<
   // Loader data may be stale until revalidation completes
   // Use Redux as the primary source, with deduplication to handle overlap
   const baseMessages = useMemo(() => {
-    // Primary source: Redux state (has optimistic updates)
     const reduxMessages = currentSession?.messages ?? [];
-
-    // Secondary source: Loader data (may have messages Redux doesn't know about yet)
     const loaderMessages = loaderData?.messages ?? [];
 
     // Merge with deduplication by ID (prefer Redux version if both have same ID)
     const messageMap = new Map<string, (typeof reduxMessages)[number]>();
 
-    // Add loader messages first (will be overwritten by Redux if duplicate)
+    // When a mutation is pending, loader messages may have server-generated IDs
+    // for the same user messages that Redux has with client-generated IDs.
+    //
+    // R3-3: Restrict matching to ONLY the most recent pending optimistic message
+    // (tracked by lastSentMessageIdRef), not all msg-* messages.
+    const pendingOptimistic =
+      hasPendingMutation && lastSentMessageIdRef.current
+        ? reduxMessages.find((msg) => msg.id === lastSentMessageIdRef.current)
+        : undefined;
+
+    // Add loader messages first (will be overwritten by Redux if duplicate ID)
+    // Skip at most ONE loader message that duplicates the pending optimistic
+    // message. Without this guard, two rapid user messages of the same role
+    // within 60s would both be hidden.
+    let skippedPendingDuplicate = false;
     for (const msg of loaderMessages) {
+      if (
+        !skippedPendingDuplicate &&
+        pendingOptimistic &&
+        msg.role === pendingOptimistic.role &&
+        Math.abs((msg.timestamp ?? 0) - (pendingOptimistic.timestamp ?? 0)) <
+          60000
+      ) {
+        skippedPendingDuplicate = true;
+        continue;
+      }
       messageMap.set(msg.id, msg);
     }
 
@@ -553,7 +600,95 @@ export const ConnectedConversationPanel = forwardRef<
     return Array.from(messageMap.values()).sort(
       (a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0),
     );
-  }, [currentSession?.messages, loaderData?.messages]);
+  }, [currentSession?.messages, loaderData?.messages, hasPendingMutation]);
+
+  // =============================================================================
+  // Fallback Lifecycle Effects (Bug 2 fix)
+  // =============================================================================
+
+  // Helper: clears all fallback state and pending mutation
+  const clearFallbackState = useCallback(() => {
+    pendingFallbackRef.current = null;
+    if (fallbackTimerRef.current !== null) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    // R8-4: Emit pending mutation duration metric
+    if (pendingMutationStartRef.current > 0) {
+      logger.metric(
+        "chat.pending_mutation.duration_ms",
+        Date.now() - pendingMutationStartRef.current,
+      );
+      pendingMutationStartRef.current = 0;
+    }
+    dispatch(setPendingMutation(false));
+  }, [dispatch]);
+
+  // Effect 1: Watch loaderData for the fallback server ID.
+  // R5-2: keeps hasPendingMutation=true until loaderData includes the server-persisted message.
+  // R13-2: Only clear if this fallback is still the active mutation.
+  useEffect(() => {
+    if (!pendingFallbackRef.current?.serverId) return;
+    if (
+      pendingFallbackRef.current.clientMessageId !==
+      lastSentMessageIdRef.current
+    )
+      return;
+    const loaderMessages = loaderData?.messages ?? [];
+    const found = loaderMessages.some(
+      (msg) => msg.id === pendingFallbackRef.current?.serverId,
+    );
+    if (found) {
+      clearFallbackState();
+    }
+  }, [loaderData?.messages, clearFallbackState]);
+
+  // Effect 2: Forward-looking session-switch watcher.
+  // R17-2: Use route param as PRIMARY authority when defined.
+  // R18-1: Unconditional clear when sessionId is undefined (chat index).
+  useEffect(() => {
+    if (!pendingFallbackRef.current) return;
+    const pendingSessionId = pendingFallbackRef.current.sessionId;
+    if (sessionId !== undefined) {
+      if (sessionId !== pendingSessionId) {
+        clearFallbackState();
+      }
+    } else {
+      clearFallbackState();
+    }
+  }, [sessionId, clearFallbackState]);
+
+  // Effect 3: Cleanup strictly on unmount.
+  // R13-1: UNCONDITIONALLY clear hasPendingMutation on unmount.
+  useEffect(() => {
+    return () => {
+      if (pendingFallbackRef.current) {
+        clearFallbackState();
+      } else {
+        dispatch(setPendingMutation(false));
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount only
+  }, []);
+
+  // Effect 4: Clear pending on session switch during normal streaming.
+  // R15-1: Must NOT fire on first-message auto-session creation (undefined -> newSessionId).
+  // R16-1: Handle id -> undefined (navigating to chat index).
+  const prevSessionIdRef = useRef(sessionId);
+  useEffect(() => {
+    const prevId = prevSessionIdRef.current;
+    const currId = sessionId;
+    prevSessionIdRef.current = currId;
+
+    if (
+      prevId &&
+      prevId !== currId &&
+      hasPendingMutation &&
+      !pendingFallbackRef.current
+    ) {
+      dispatch(setPendingMutation(false));
+    }
+  }, [sessionId, hasPendingMutation, dispatch]);
 
   // Append the streaming message separately so we don't re-merge/re-sort on every chunk.
   // Fix 1: Seamless handoff - show lastStreamedContent during revalidation to prevent flicker.
@@ -629,6 +764,13 @@ export const ConnectedConversationPanel = forwardRef<
   useEffect(() => {
     if (prevIsStreamingRef.current && !isStreaming) {
       // Streaming just ended (transition from true -> false)
+      if (pendingMutationStartRef.current > 0) {
+        logger.metric(
+          "chat.pending_mutation.duration_ms",
+          Date.now() - pendingMutationStartRef.current,
+        );
+        pendingMutationStartRef.current = 0;
+      }
       dispatch(setPendingMutation(false));
     }
     prevIsStreamingRef.current = isStreaming;
@@ -768,6 +910,13 @@ export const ConnectedConversationPanel = forwardRef<
           navigate(`/studio/chat/${newSession.id}`, { replace: true });
         }
 
+        // R7-5: Reset fallback state from any previous send
+        pendingFallbackRef.current = null;
+        if (fallbackTimerRef.current !== null) {
+          clearTimeout(fallbackTimerRef.current);
+          fallbackTimerRef.current = null;
+        }
+
         // 1. Optimistic update: add user message to Redux immediately
         // RC1 Fix: Do NOT call sendMessage thunk (which POSTs to /api/v1/sessions/{id}/messages)
         // The streaming endpoint already persists the user message with dedup logic.
@@ -775,6 +924,7 @@ export const ConnectedConversationPanel = forwardRef<
         // could read stale storage state.
         messageId = `msg-${crypto.randomUUID()}`;
         lastSentMessageIdRef.current = messageId; // Finding 2: Track for async error handling
+        pendingMutationStartRef.current = Date.now(); // R8-4: Start duration timer
         dispatch(setPendingMutation(true));
         dispatch(
           addUserMessage({
@@ -816,14 +966,141 @@ export const ConnectedConversationPanel = forwardRef<
 
         // 3. Trigger revalidation to sync loader data
         revalidateMessages();
-      } catch (error) {
-        // Finding 3 fix: If startStream threw synchronously (before the
-        // streaming endpoint could persist the message), use sendMessage
-        // thunk as a fallback to ensure the message is not lost.
-        try {
-          await dispatch(sendMessage(content)).unwrap();
-        } catch {
-          // Both paths failed — mark the optimistic message as failed
+      } catch (sendError) {
+        logger.warn("startStream failed, attempting fallback POST", {
+          sendError,
+        });
+
+        // If messageId is empty, session creation failed before we dispatched
+        // the optimistic message — preserve the user's input and bail out.
+        if (!messageId) {
+          return;
+        }
+
+        // Persist the optimistic message directly via API — do NOT use
+        // sendMessage thunk which calls addUserMessage() again, creating a duplicate.
+        let persistSucceeded = false;
+
+        // R3-4: Guard effectiveSessionId before fallback POST.
+        if (effectiveSessionId) {
+          try {
+            const response = await authenticatedFetch(
+              `/api/v1/sessions/${effectiveSessionId}/messages`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ role: "user", content }),
+                onAuthFailure: () => navigate("/login"),
+              },
+            );
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            persistSucceeded = true;
+            logger.metric("chat.fallback_post.total", 1, {
+              outcome: "success",
+            }); // R8-4
+
+            // R4-1: Update optimistic message with server-generated UUID.
+            // R5-1: API returns flat dict with `message_id` field.
+            // R5-3: Wrap JSON parsing in its own try/catch.
+            try {
+              const data = await response.json();
+              const serverId =
+                data?.message_id ?? data?.message?.id ?? data?.id;
+              if (serverId) {
+                dispatch(
+                  updateMessage({
+                    messageId,
+                    updates: { id: serverId, status: "sent" as const },
+                  }),
+                );
+                revalidateMessages();
+
+                // R16-2: Inline active-mutation check
+                if (lastSentMessageIdRef.current === messageId) {
+                  pendingFallbackRef.current = {
+                    serverId,
+                    sessionId: effectiveSessionId,
+                    clientMessageId: messageId,
+                  };
+                  // R13-4: Bounded fail-safe (10s)
+                  const capturedMsgId = messageId;
+                  fallbackTimerRef.current = setTimeout(() => {
+                    if (
+                      pendingFallbackRef.current?.serverId === serverId &&
+                      lastSentMessageIdRef.current === capturedMsgId
+                    ) {
+                      clearFallbackState();
+                    }
+                  }, 10000);
+                }
+              } else {
+                revalidateMessages();
+
+                if (lastSentMessageIdRef.current === messageId) {
+                  // R7-4: Server responded but no ID extractable.
+                  pendingFallbackRef.current = {
+                    serverId: null,
+                    sessionId: effectiveSessionId,
+                    clientMessageId: messageId,
+                  };
+                  const capturedMessageId = messageId;
+                  fallbackTimerRef.current = setTimeout(() => {
+                    if (
+                      pendingFallbackRef.current?.serverId === null &&
+                      lastSentMessageIdRef.current === capturedMessageId
+                    ) {
+                      clearFallbackState();
+                    }
+                  }, 5000);
+                }
+              }
+            } catch (jsonError) {
+              // R6-2: JSON parsing failed but POST succeeded.
+              // R17-4: Log explicitly for operational triage.
+              logger.warn("Fallback POST succeeded but JSON parse failed", {
+                jsonError,
+                messageId,
+              });
+              revalidateMessages();
+
+              if (lastSentMessageIdRef.current === messageId) {
+                pendingFallbackRef.current = {
+                  serverId: null,
+                  sessionId: effectiveSessionId,
+                  clientMessageId: messageId,
+                };
+                const capturedMessageId = messageId;
+                fallbackTimerRef.current = setTimeout(() => {
+                  if (
+                    pendingFallbackRef.current?.serverId === null &&
+                    lastSentMessageIdRef.current === capturedMessageId
+                  ) {
+                    clearFallbackState();
+                  }
+                }, 5000);
+              }
+            }
+          } catch (fetchError) {
+            // R3-2: Only mark message failed when persistence fails.
+            logger.error("Fallback POST failed", {
+              fetchError,
+              messageId,
+              sessionId: effectiveSessionId,
+            });
+            logger.metric("chat.fallback_post.total", 1, {
+              outcome: "failure",
+            }); // R8-4
+            dispatch(
+              updateMessage({
+                messageId,
+                updates: { status: "failed" as const },
+              }),
+            );
+          }
+        } else {
+          // No session — mark message as failed
           dispatch(
             updateMessage({
               messageId,
@@ -831,8 +1108,22 @@ export const ConnectedConversationPanel = forwardRef<
             }),
           );
         }
-        dispatch(setPendingMutation(false));
-        logger.error("Failed to send message", { error });
+
+        if (!persistSucceeded) {
+          // R15-2: Recheck active mutation before clearing pending.
+          if (lastSentMessageIdRef.current === messageId) {
+            if (pendingMutationStartRef.current > 0) {
+              logger.metric(
+                "chat.pending_mutation.duration_ms",
+                Date.now() - pendingMutationStartRef.current,
+              );
+              pendingMutationStartRef.current = 0;
+            }
+            dispatch(setPendingMutation(false));
+          }
+        }
+        // On success, pending is cleared by Effect 1 (loaderData catches up)
+        // or Effect 2 (session switch).
       }
 
       // Clear input for next message
@@ -842,6 +1133,7 @@ export const ConnectedConversationPanel = forwardRef<
       dispatch,
       navigate,
       revalidateMessages,
+      clearFallbackState,
       sessionId,
       currentSession?.id,
       startStream,

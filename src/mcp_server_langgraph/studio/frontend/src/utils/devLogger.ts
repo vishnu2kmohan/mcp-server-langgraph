@@ -143,6 +143,21 @@ function createDevLogger(options: DevLoggerOptions = {}) {
     },
 
     /**
+     * Log a structured metric (counter/histogram) via console.debug.
+     * Uses the same suppression rules as debug-level logging.
+     */
+    metric: (name: string, value: number, tags?: Record<string, string>) => {
+      if (shouldLog(DevLogLevel.DEBUG)) {
+        const label = formatMessage(`[metric] ${name}`);
+        if (tags) {
+          console.debug(label, value, tags);
+        } else {
+          console.debug(label, value);
+        }
+      }
+    },
+
+    /**
      * Create a new logger with a prefix
      *
      * Note: Component loggers (those with a prefix) automatically suppress
