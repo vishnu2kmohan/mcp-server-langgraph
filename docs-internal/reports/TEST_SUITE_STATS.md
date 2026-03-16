@@ -1,1 +1,3 @@
-/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.venv/bin/python3: can't open file '/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/scripts/generate_test_stats.py': [Errno 2] No such file or directory
+# Test Suite Statistics
+
+> Test stats generator is unavailable. Restore scripts/generate_test_stats.py and rerun make generate-reports.

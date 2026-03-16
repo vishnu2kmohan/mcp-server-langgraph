@@ -68,9 +68,13 @@ def main() -> int:
             all_issues.extend([(filepath, line, msg) for line, msg in issues])
 
     if all_issues:
-        print("❌ Found unconfigured AsyncMock instances:\n", file=sys.stderr)
+        print("❌ Found unconfigured AsyncMock instances:\n")
         for filepath, line_num, message in all_issues:
-            print(f"  {filepath}:{line_num} - {message}", file=sys.stderr)
+            try:
+                display_path = str(Path(filepath).relative_to(_project_root))
+            except ValueError:
+                display_path = filepath
+            print(f"  {display_path}:{line_num} - {message}")
 
         print("\n📖 Fix: Add explicit return_value or side_effect configuration:", file=sys.stderr)
         print("   Option 1 - Constructor kwargs: mock = AsyncMock(return_value=value)", file=sys.stderr)
@@ -80,6 +84,10 @@ def main() -> int:
         print("\nSee: tests/ASYNC_MOCK_GUIDELINES.md for best practices\n", file=sys.stderr)
         return 1
 
+    # Explicit success message for report generation (stdout)
+    print("✅ Async Mock Configuration Scan")
+    print()
+    print("No violations found. All async mocks follow safety patterns!")
     return 0
 
 

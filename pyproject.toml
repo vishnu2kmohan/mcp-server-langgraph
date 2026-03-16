@@ -147,13 +147,12 @@ dev = [
     "yamllint>=1.37.1",  # YAML linting for Kubernetes manifests and configs
     # Coverage tools (also available separately via coverage-tools extra)
     "coverage[toml]>=7.0.0",  # Coverage.py with TOML support
-    "packaging>=23.0",  # Version parsing for MCP SDK compatibility tests
+    "packaging>=23.0",  # Version parsing for MCP SDK compatibility and version tests
     # CLI testing dependencies (duplicated from cli extra for test coverage)
     "click>=8.1.0,<8.2.0",  # Command-line interface framework (8.2+ removed _textwrap module)
     "jinja2>=3.1.0",  # Template engine for code generation
     "rich>=13.0.0",  # Rich text and beautiful formatting in the terminal
     "websockets>=12.0",  # Required for E2E test imports (also in playground extra)
-    "packaging>=21.0",  # Version parsing for MCP SDK version tests
     "httpcore>=1.0.0",  # Low-level HTTP for network error handling in integration tests (httpcore.ConnectError)
 ]
 
@@ -162,7 +161,7 @@ secrets = [
     # See: requirements-infisical.txt for installation options
     # Docker builds: Automatically installed
     # Local builds: See docs/deployment/infisical-installation.md
-    "infisical-python>=2.1.7,<=2.3.5",
+    "infisical-python>=2.1.7,<=2.3.6",
 ]
 
 cli = [
@@ -884,6 +883,23 @@ filterwarnings = [
     "ignore:InMemoryUserProvider is being used in 'test' environment.*:UserWarning:mcp_server_langgraph.auth.factory",
     # OpenFGA fallback mode is expected when OPENFGA_STORE_ID/MODEL_ID not set
     "ignore:OpenFGA not configured, authorization will use fallback mode.*:UserWarning:mcp_server_langgraph.mcp.server_stdio",
+    # Deprecated internal imports: tests intentionally exercise backward-compatible paths
+    # from mcp_server_langgraph.api.v1.mcp_websocket (refactored to mcp.websocket.*)
+    "ignore:.*is deprecated\\. Import from 'mcp_server_langgraph\\.mcp\\.:DeprecationWarning",
+    # Deprecated calculate_cost() - tests verify the deprecated function still works
+    "ignore:calculate_cost\\(\\) is deprecated.*:DeprecationWarning",
+    # jsonschema.RefResolver deprecated in v4.18.0 (external library)
+    "ignore:jsonschema\\.RefResolver is deprecated.*:DeprecationWarning",
+    # HTTP_422_UNPROCESSABLE_ENTITY renamed to HTTP_422_UNPROCESSABLE_CONTENT
+    "ignore:.*HTTP_422_UNPROCESSABLE_ENTITY.*is deprecated.*:DeprecationWarning",
+    # authenticate_user() ROPC deprecated per RFC 9700 - tests verify backward compat
+    "ignore:authenticate_user\\(\\) uses ROPC.*:DeprecationWarning",
+    # get_auth_middleware() deprecated in favor of DI pattern
+    "ignore:get_auth_middleware\\(\\) is deprecated.*:DeprecationWarning",
+    # enable_llm_suggestions deprecated feature flag - tests verify migration path
+    "ignore:enable_llm_suggestions is deprecated.*:DeprecationWarning",
+    # AVAILABLE_MODELS deprecated in favor of ModelRegistry
+    "ignore:AVAILABLE_MODELS is deprecated.*:DeprecationWarning",
 ]
 markers = [
     "unit: Unit tests (fast, no external dependencies)",
@@ -1041,6 +1057,10 @@ markers = [
     "native_tools: Native LLM provider tools tests (metrics, fallback, comparison)",
     "source_citations: Source citation extraction tests (Anthropic, Google, OpenAI, ToolMessage)",
     "preview: Preview environment deployment tests",
+    "sql: SQL integration tests (database connections, queries)",
+    "schema: Schema validation tests (execution plans, data models)",
+    "pgvector: pgvector extension tests (vector similarity search)",
+    "tracing: Tracing tests (OpenTelemetry spans, execution traces)",
 ]
 # CODEX FINDING #4: Benchmark configuration
 # Benchmarks are DISABLED by default for fast test iteration (via --benchmark-disable in addopts)
@@ -1172,7 +1192,7 @@ authz-proxy = [
     # HTTP client for proxying
     "httpx>=0.28.0",
     # JWT validation and crypto
-    "python-jose[cryptography]>=3.3.0",
+    "python-jose[cryptography]>=3.5.0",  # >=3.5.0 excludes CVE-2024-33663 (algorithm confusion)
     "pyjwt>=2.8.0",  # PyJWT for jwt module import
     "bcrypt>=5.0.0",  # Password hashing for API key management
     # OpenFGA SDK

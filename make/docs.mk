@@ -91,15 +91,21 @@ generate-reports:
 	@echo "Regenerating test infrastructure reports..."
 	@echo ""
 	@echo "Running AsyncMock configuration scan..."
-	@$(UV_RUN) python scripts/validators/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validators/check_async_mock_configuration.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>/dev/null || true
 	@echo "AsyncMock scan complete"
 	@echo ""
 	@echo "Running memory safety scan..."
-	@$(UV_RUN) python scripts/validators/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validators/check_test_memory_safety.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>/dev/null || true
 	@echo "Memory safety scan complete"
 	@echo ""
 	@echo "Generating test suite statistics..."
-	@$(UV_RUN) python scripts/generate_test_stats.py > docs-internal/reports/TEST_SUITE_STATS.md 2>&1 || true
+	@if [ -f scripts/generate_test_stats.py ]; then \
+		$(UV_RUN) python scripts/generate_test_stats.py > docs-internal/reports/TEST_SUITE_STATS.md 2>/dev/null || true; \
+	else \
+		echo "# Test Suite Statistics" > docs-internal/reports/TEST_SUITE_STATS.md; \
+		echo "" >> docs-internal/reports/TEST_SUITE_STATS.md; \
+		echo "> Test stats generator is unavailable. Restore scripts/generate_test_stats.py and rerun make generate-reports." >> docs-internal/reports/TEST_SUITE_STATS.md; \
+	fi
 	@echo "Test statistics generated"
 	@echo ""
 	@echo "All reports regenerated in docs-internal/reports/"
