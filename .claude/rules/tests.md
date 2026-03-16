@@ -555,6 +555,92 @@ npx vitest run src/path/to/failing.test.tsx
 # The summary shows all failing test files and their shard numbers
 ```
 
+## Playwright E2E Tests
+
+### Use `playwright-cli` for Interactive Work (PREFERRED)
+
+**Before writing or fixing E2E tests**, use `playwright-cli` to interactively
+explore the UI, verify DOM structure, and validate selectors. This prevents
+writing tests against assumptions about element names, attributes, or visibility.
+
+```bash
+# Open browser and navigate
+playwright-cli open http://localhost:5175/studio/chat
+
+# Take a snapshot to see element refs (preferred over screenshots)
+playwright-cli snapshot
+
+# Interact using refs from the snapshot
+playwright-cli click e15
+playwright-cli fill e5 "test query"
+playwright-cli press Enter
+
+# Check localStorage/cookies
+playwright-cli localstorage-list
+playwright-cli localstorage-get studio-onboarding
+
+# Mock API responses for isolated testing
+playwright-cli route "**/api/v1/features**" --body='{"preferences_menu":true}'
+
+# Save browser state (cookies + localStorage) for reuse
+playwright-cli state-save auth-state.json
+
+# Close when done
+playwright-cli close
+```
+
+**When to use each tool**:
+
+| Task | Tool | Browser Mode |
+|------|------|-------------|
+| Explore UI, verify selectors, debug failures | `playwright-cli` | **Headed** (visible) by default |
+| Set up auth state, inspect localStorage | `playwright-cli` storage commands | Headed |
+| Run the full E2E test suite | `npx playwright test` | Headless by default |
+| Run a single spec, headed for debugging | `npx playwright test --headed e2e/file.ts` | Headed |
+
+`playwright-cli open` always launches a **visible browser window** — no flags needed.
+Use `npx playwright test --headed` when you need to watch test suite execution.
+
+### Auth Fixtures (`e2e/fixtures/auth.ts`)
+
+E2E tests use persona-based auth fixtures (`alicePage`, `adminPage`, `bobPage`).
+Auth flow: PKCE via Keycloak → fallback to mock auth if PKCE fails.
+
+| Env Var | Effect |
+|---------|--------|
+| `BASE_URL` | App origin (default: `http://localhost` = Traefik) |
+| `BACKEND_ENABLED=false` | Skip PKCE, use mock auth only |
+
+**Known limitation**: Mock auth sets tokens in localStorage but `AuthGuard`
+checks `selectUser` (populated by `/api/v1/auth/me`). Mock auth requires
+the `/me` endpoint to succeed or be mocked too.
+
+**Debugging auth issues**: Use `playwright-cli` to inspect auth state:
+```bash
+playwright-cli open http://localhost:5175/studio/login
+playwright-cli localstorage-list
+playwright-cli cookie-list
+playwright-cli snapshot  # See what the page actually renders
+```
+
+### Route Cleanup
+
+Always call `page.unrouteAll({ behavior: "ignoreErrors" })` before context
+teardown when using `page.route()` with `route.fetch()` — prevents errors
+when browser context is torn down while routes are active.
+
+### Radix UI Assertions
+
+Radix dropdown items use `data-state` not `data-active`:
+
+```typescript
+// CORRECT - Radix RadioItem
+await expect(item).toHaveAttribute("data-state", "checked");
+
+// WRONG - Radix doesn't use data-active
+await expect(item).toHaveAttribute("data-active", "true");
+```
+
 ## Commands
 
 ```bash
@@ -567,6 +653,17 @@ uv run --frozen pytest --cov=src
 bash scripts/run-tests-sharded.sh --fast --parallel  # Full suite
 npm test -- --run src/path/to/file.test.ts           # Single file
 npm run test:coverage                                 # Coverage (sharded internally)
+
+# E2E - Interactive (playwright-cli: always headed, visible browser)
+playwright-cli open http://localhost:5175/studio/chat  # Explore UI (headed)
+playwright-cli snapshot                                # Inspect DOM refs
+playwright-cli close                                   # Clean up
+
+# E2E - Test Suite (headless by default, add --headed to watch)
+cd src/mcp_server_langgraph/studio/frontend
+BASE_URL=http://localhost npx playwright test              # All E2E (headless)
+BASE_URL=http://localhost npx playwright test --headed e2e/file.ts  # Single spec (headed)
+BACKEND_ENABLED=false BASE_URL=http://localhost:5175 npx playwright test  # Mock auth
 ```
 
 ## Parallelism (Default, with Opt-Out)

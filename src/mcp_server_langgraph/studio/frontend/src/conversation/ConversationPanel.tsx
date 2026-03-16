@@ -181,6 +181,18 @@ export interface ConversationPanelProps {
   /** Callback when thinking enabled state changes */
   onEnableThinkingChange?: (enabled: boolean) => void;
 
+  // URL Content Fetch (OpenWebUI-style #URL integration)
+  /** Enable URL content fetching when #https://... detected in input */
+  enableUrlFetch?: boolean;
+
+  // Style Presets (behind PreferencesMenu)
+  /** Currently active style preset */
+  activeStylePreset?: import("../components/Chat/StylePresets").PresetName;
+  /** Callback when style preset changes */
+  onStylePresetChange?: (
+    preset: import("../components/Chat/StylePresets").StylePreset,
+  ) => void;
+
   // v7: Tool preference for native vs builtin execution
   /** Current tool preference */
   toolPreference?: "auto" | "native" | "builtin" | "mcp";
@@ -345,6 +357,11 @@ export function ConversationPanel({
   onReasoningEffortChange,
   enableThinking = false,
   onEnableThinkingChange,
+  // URL Content Fetch
+  enableUrlFetch = false,
+  // Style Presets
+  activeStylePreset,
+  onStylePresetChange,
   // v7: Tool preference
   toolPreference = "auto",
   onToolPreferenceChange,
@@ -531,6 +548,11 @@ export function ConversationPanel({
           onReasoningEffortChange={onReasoningEffortChange}
           enableThinking={enableThinking}
           onEnableThinkingChange={onEnableThinkingChange}
+          // URL Content Fetch
+          enableUrlFetch={enableUrlFetch}
+          // Style Presets (behind PreferencesMenu)
+          activeStylePreset={activeStylePreset}
+          onStylePresetChange={onStylePresetChange}
           // v7: Tool preference for native vs builtin execution
           toolPreference={toolPreference}
           onToolPreferenceChange={onToolPreferenceChange}

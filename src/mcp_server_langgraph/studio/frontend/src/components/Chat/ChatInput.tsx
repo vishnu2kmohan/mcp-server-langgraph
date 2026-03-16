@@ -283,6 +283,12 @@ export interface ChatInputProps {
   criticModel?: string | null;
   /** Callback when critic model changes */
   onCriticModelChange?: (modelId: string | null) => void;
+
+  // Style Presets (behind PreferencesMenu)
+  /** Currently active style preset */
+  activeStylePreset?: import("./StylePresets").PresetName;
+  /** Callback when style preset changes */
+  onStylePresetChange?: (preset: import("./StylePresets").StylePreset) => void;
 }
 
 // ==============================================================================
@@ -438,6 +444,9 @@ export function ChatInput({
   onExecutorModelChange,
   criticModel,
   onCriticModelChange,
+  // Style presets
+  activeStylePreset,
+  onStylePresetChange,
 }: ChatInputProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState("");
@@ -563,14 +572,17 @@ export function ChatInput({
         suffix,
       );
 
-      onChange(newText);
+      // Enforce maxLength after formatting
+      const finalText = maxLength ? newText.slice(0, maxLength) : newText;
+      onChange(finalText);
 
       requestAnimationFrame(() => {
         textarea.focus();
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        const clampedPos = Math.min(newCursorPos, finalText.length);
+        textarea.setSelectionRange(clampedPos, clampedPos);
       });
     },
-    [value, onChange, disabled],
+    [value, onChange, disabled, maxLength],
   );
 
   // Handle text change
@@ -578,9 +590,11 @@ export function ChatInput({
     (e: ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value;
 
-      // Apply maxLength if set
+      // Apply maxLength if set — truncate instead of silently discarding
       if (maxLength && newValue.length > maxLength) {
-        return; // Don't allow input beyond maxLength
+        onChange(newValue.slice(0, maxLength));
+        onCursorPositionChange?.(maxLength);
+        return;
       }
 
       onChange(newValue);
@@ -595,8 +609,13 @@ export function ChatInput({
 
       if (lastAtIndex !== -1 && mentionOptions.length > 0) {
         const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1);
-        // Check if there's no space after @ (still typing mention)
-        if (!textAfterAt.includes(" ")) {
+        // Only trigger mentions when @ is at start or preceded by whitespace
+        // (avoids false positives on email addresses like user@example.com)
+        const charBeforeAt =
+          lastAtIndex > 0 ? textBeforeCursor[lastAtIndex - 1] : " ";
+        const isWordBoundary =
+          charBeforeAt === " " || charBeforeAt === "\n" || lastAtIndex === 0;
+        if (isWordBoundary && !textAfterAt.includes(" ")) {
           setShowMentions(true);
           setMentionFilter(textAfterAt);
           setMentionStartPos(lastAtIndex);
@@ -740,13 +759,22 @@ export function ChatInput({
       const lastAtIndex = value.lastIndexOf("@");
       if (lastAtIndex !== -1) {
         const textAfterAt = value.slice(lastAtIndex + 1);
-        // Check if there's no space after @ (still typing mention)
-        if (!textAfterAt.includes(" ")) {
+        // Only trigger when @ is at word boundary (not inside email addresses)
+        const charBeforeAt = lastAtIndex > 0 ? value[lastAtIndex - 1] : " ";
+        const atWordBoundary =
+          charBeforeAt === " " || charBeforeAt === "\n" || lastAtIndex === 0;
+        if (atWordBoundary && !textAfterAt.includes(" ")) {
           setShowMentions(true);
           setMentionFilter(textAfterAt);
           setMentionStartPos(lastAtIndex);
+        } else {
+          setShowMentions(false);
         }
+      } else {
+        setShowMentions(false);
       }
+    } else {
+      setShowMentions(false);
     }
   }, [value, mentionOptions.length]);
 
@@ -802,7 +830,7 @@ export function ChatInput({
       {/* P1: URL fetch loading */}
       {enableUrlFetch && urlFetchLoading.length > 0 && (
         <div
-          data-testid="url-fetch-loading"
+          data-testid="url-fetch-indicator"
           className="px-3 pt-3 flex items-center gap-2 text-sm text-neutral-11"
         >
           <Loader2
@@ -817,6 +845,7 @@ export function ChatInput({
           {fetchedUrls.map((urlData) => (
             <div
               key={urlData.url}
+              data-testid="url-fetched-badge"
               className="flex items-center gap-2 bg-primary-3 px-3 py-1.5 rounded-full text-sm border border-primary-6"
             >
               <Link className="w-3.5 h-3.5 text-primary-9" />
@@ -827,7 +856,7 @@ export function ChatInput({
                   className="min-h-[44px] min-w-[44px] text-neutral-9 hover:text-error-9 p-0.5"
                   type="button"
                   onClick={() => onRemoveFetchedUrl(urlData.url)}
-                  aria-label="Remove URL"
+                  aria-label="Remove fetched URL"
                 >
                   <X className="w-3.5 h-3.5" />
                 </Button>
@@ -903,7 +932,7 @@ export function ChatInput({
           placeholder="Type your message..."
           disabled={disabled}
           rows={1}
-          className="w-full px-0 py-2 bg-transparent text-neutral-12 placeholder-neutral-9 resize-none border-0 focus:ring-0 min-h-[40px] max-h-[200px]"
+          className="w-full px-0 py-2 bg-transparent text-neutral-12 placeholder-neutral-9 resize-none border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-9 focus-visible:ring-offset-2 min-h-[40px] max-h-[200px]"
         />
 
         {/* P0: Suggestion loading indicator */}
@@ -927,7 +956,7 @@ export function ChatInput({
             data-testid="mention-suggestions"
             role="listbox"
             aria-label="Mention suggestions"
-            className="absolute z-10 w-48 mt-1 bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+            className="absolute z-dropdown w-48 mt-1 bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg max-h-48 overflow-y-auto"
           >
             {filteredMentions.map((option) => (
               <Button
@@ -949,7 +978,7 @@ export function ChatInput({
         {showSlashCommandMenu && filteredSlashCommands.length > 0 && (
           <div
             data-testid="slash-command-menu"
-            className="absolute z-10 left-3 bottom-full mb-2 w-64 bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg py-1"
+            className="absolute z-dropdown left-3 bottom-full mb-2 w-64 bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg py-1"
           >
             {filteredSlashCommands.map((cmd) => (
               <Button
@@ -1090,7 +1119,7 @@ export function ChatInput({
                   data-testid="model-settings-dropdown"
                   role="listbox"
                   aria-label="Model settings"
-                  className="absolute z-20 mt-1 left-0 w-72 py-2 bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+                  className="absolute z-dropdown mt-1 left-0 w-72 py-2 bg-neutral-1 border border-neutral-5 rounded-lg shadow-lg max-h-80 overflow-y-auto"
                 >
                   {/* P2: Model search */}
                   {enableModelSearch && (
@@ -1292,6 +1321,7 @@ export function ChatInput({
               onToolModeChange={onToolSelectionModeChange}
               selectedTools={selectedTools}
               onToolsChange={onSelectedToolsChange}
+              availableTools={availableTools}
               kbFocusMode={kbFocusMode}
               onKBFocusChange={onKBFocusModeChange}
               // v7: Tool preference for native vs builtin execution
@@ -1305,6 +1335,9 @@ export function ChatInput({
               onExecutorModelChange={onExecutorModelChange}
               criticModel={criticModel}
               onCriticModelChange={onCriticModelChange}
+              // Style presets
+              activeStylePreset={activeStylePreset}
+              onStylePresetChange={onStylePresetChange}
             />
           )}
 

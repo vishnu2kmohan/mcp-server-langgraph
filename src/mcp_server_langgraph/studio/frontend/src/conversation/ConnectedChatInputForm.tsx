@@ -51,6 +51,8 @@ import {
 } from "../store/slices/executionModeSlice";
 import { useCheckBypassPermissionQuery } from "../api";
 import type { ConnectionTemplate } from "../types/connectionTemplate";
+import { toast } from "sonner";
+import { TOAST_ID_URL_FETCH_ERROR } from "../constants/toastIds";
 
 // =============================================================================
 // Types
@@ -155,6 +157,17 @@ export interface ConnectedChatInputFormProps {
   onToolPreferenceChange?: (
     preference: "auto" | "native" | "builtin" | "mcp",
   ) => void;
+
+  // ==========================================================================
+  // Style Presets Props (behind PreferencesMenu)
+  // ==========================================================================
+
+  /** Currently active style preset */
+  activeStylePreset?: import("../components/Chat/StylePresets").PresetName;
+  /** Callback when style preset changes */
+  onStylePresetChange?: (
+    preset: import("../components/Chat/StylePresets").StylePreset,
+  ) => void;
 }
 
 // =============================================================================
@@ -220,6 +233,9 @@ export function ConnectedChatInputForm({
   // v7: Tool preference for native vs builtin execution
   toolPreference: toolPreferenceProp,
   onToolPreferenceChange,
+  // Style presets (behind PreferencesMenu)
+  activeStylePreset,
+  onStylePresetChange,
 }: ConnectedChatInputFormProps) {
   // =============================================================================
   // Feature Flags & UI State
@@ -322,11 +338,13 @@ export function ConnectedChatInputForm({
   >(persistedToolPreference);
 
   // Sync internal state when persisted preference changes (e.g., from settings page)
+  const prevPersistedRef = useRef(persistedToolPreference);
   useEffect(() => {
-    if (persistedToolPreference !== internalToolPreference) {
+    if (persistedToolPreference !== prevPersistedRef.current) {
+      prevPersistedRef.current = persistedToolPreference;
       setInternalToolPreference(persistedToolPreference);
     }
-  }, [persistedToolPreference]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [persistedToolPreference]);
 
   // Use controlled values if provided, otherwise use internal state
   const selectedTools = selectedToolsProp ?? internalSelectedTools;
@@ -414,6 +432,20 @@ export function ConnectedChatInputForm({
     }
   }, [enableUrlFetch, value, detectUrls]);
 
+  // Show toast when URL fetch fails (use ref to avoid re-firing on stable errors)
+  const lastToastedUrlError = useRef<string | null>(null);
+  useEffect(() => {
+    const failedFetch = fetchedContent.find((c) => c.error);
+    if (failedFetch && failedFetch.error !== lastToastedUrlError.current) {
+      lastToastedUrlError.current = failedFetch.error ?? null;
+      toast.error(`Failed to fetch URL: ${failedFetch.error}`, {
+        id: TOAST_ID_URL_FETCH_ERROR,
+      });
+    } else if (!failedFetch) {
+      lastToastedUrlError.current = null;
+    }
+  }, [fetchedContent]);
+
   // =============================================================================
   // File Upload Hook
   // =============================================================================
@@ -471,10 +503,12 @@ export function ConnectedChatInputForm({
     onAccept: (suggestion) => {
       // Append the suggestion to the current input
       onChange(value + suggestion);
-      onAcceptSuggestionProp?.(suggestion);
+      // Note: Do NOT call onAcceptSuggestionProp here — the outer onAcceptSuggestion
+      // handler already calls it, and calling it in both places would double-fire.
     },
     onDismiss: () => {
-      onDismissSuggestionProp?.();
+      // Note: Do NOT call onDismissSuggestionProp here — the outer onDismissSuggestion
+      // handler already calls it, and calling it in both places would double-fire.
     },
   });
 
@@ -511,10 +545,9 @@ export function ConnectedChatInputForm({
     enabled: useWebSocketForSuggestions,
     sessionId,
     debounceMs: 300, // Built-in debouncing for typing scenarios
-    onSuggestion: (suggestion) => {
-      // Optionally trigger accept callback when suggestion is received
-      onAcceptSuggestionProp?.(suggestion.text);
-    },
+    // Note: onSuggestion is intentionally NOT wired to onAcceptSuggestionProp.
+    // The accept callback should only fire when the user explicitly accepts
+    // (Tab key), not when a suggestion arrives. See onAcceptSuggestion below.
   });
 
   // Track cursor position for WebSocket suggestions
@@ -605,8 +638,8 @@ export function ConnectedChatInputForm({
     if (isWebSocketActive && wsSuggestion?.suggestionId) {
       // Send reject feedback to WebSocket for learning
       wsRejectSuggestion(wsSuggestion.suggestionId);
-    } else {
-      // Clear WebSocket suggestion state
+    } else if (useWebSocketForSuggestions) {
+      // Clear stale WS suggestion when WS is configured but currently disconnected
       wsClearSuggestion();
     }
     // Call the REST hook dismiss if using hook mode
@@ -617,6 +650,7 @@ export function ConnectedChatInputForm({
     onDismissSuggestionProp?.();
   }, [
     isWebSocketActive,
+    useWebSocketForSuggestions,
     wsSuggestion,
     wsRejectSuggestion,
     wsClearSuggestion,
@@ -717,6 +751,11 @@ export function ConnectedChatInputForm({
     [onKBFocusChange],
   );
 
+  // Memoize cursor position handler to avoid re-renders on every keystroke
+  const handleCursorPositionChange = useCallback((pos: number) => {
+    cursorPositionRef.current = pos;
+  }, []);
+
   // Memoize drag handlers to avoid re-renders
   const memoizedDragHandlers = useMemo(() => dragHandlers, [dragHandlers]);
 
@@ -808,9 +847,7 @@ export function ConnectedChatInputForm({
         toolPreference={toolPreference}
         onToolPreferenceChange={handleToolPreferenceChange}
         // Cursor position tracking for WebSocket suggestions
-        onCursorPositionChange={(pos) => {
-          cursorPositionRef.current = pos;
-        }}
+        onCursorPositionChange={handleCursorPositionChange}
         // Execution mode (Ctrl/Cmd+Shift+M toggle)
         executionMode={executionMode}
         onCycleExecutionMode={
@@ -824,6 +861,9 @@ export function ConnectedChatInputForm({
         showPreferencesMenu={enablePreferencesMenu}
         kbFocusMode={kbFocusMode as "all" | "kb_only" | "web_only" | "none"}
         onKBFocusModeChange={handleKBFocusModeChange}
+        // Style presets (behind PreferencesMenu)
+        activeStylePreset={activeStylePreset}
+        onStylePresetChange={onStylePresetChange}
       />
     </>
   );

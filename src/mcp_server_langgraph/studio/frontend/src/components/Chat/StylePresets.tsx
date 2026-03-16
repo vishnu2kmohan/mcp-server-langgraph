@@ -41,6 +41,17 @@ export interface StylePresetsProps {
 // Constants
 // =============================================================================
 
+/** Exported preset configs (single source of truth for temperature/maxTokens) */
+// eslint-disable-next-line react-refresh/only-export-components
+export const PRESET_CONFIGS: Record<
+  PresetName,
+  { temperature: number; maxTokens: number }
+> = {
+  creative: { temperature: 1.0, maxTokens: 4096 },
+  balanced: { temperature: 0.7, maxTokens: 2048 },
+  precise: { temperature: 0.3, maxTokens: 1024 },
+};
+
 const PRESETS: Record<
   PresetName,
   StylePreset & { label: string; description: string; icon: typeof Sparkles }
@@ -49,9 +60,8 @@ const PRESETS: Record<
     name: "creative",
     label: "Creative",
     description:
-      "Imaginative and varied responses (Temperature: 1.2, Max Tokens: 4096)",
-    temperature: 1.2,
-    maxTokens: 4096,
+      "Imaginative and varied responses (Temperature: 1.0, Max Tokens: 4096)",
+    ...PRESET_CONFIGS.creative,
     icon: Sparkles,
   },
   balanced: {
@@ -59,8 +69,7 @@ const PRESETS: Record<
     label: "Balanced",
     description:
       "Balanced and coherent responses (Temperature: 0.7, Max Tokens: 2048)",
-    temperature: 0.7,
-    maxTokens: 2048,
+    ...PRESET_CONFIGS.balanced,
     icon: Scale,
   },
   precise: {
@@ -68,8 +77,7 @@ const PRESETS: Record<
     label: "Precise",
     description:
       "Focused and accurate responses (Temperature: 0.3, Max Tokens: 1024)",
-    temperature: 0.3,
-    maxTokens: 1024,
+    ...PRESET_CONFIGS.precise,
     icon: Target,
   },
 };
@@ -94,12 +102,8 @@ export function StylePresets({
     });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, presetName: PresetName) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleSelect(presetName);
-    }
-  };
+  // Note: No separate onKeyDown handler needed — HTML <button> natively
+  // fires onClick for Enter/Space, so a manual onKeyDown would double-fire.
 
   return (
     <div
@@ -120,7 +124,6 @@ export function StylePresets({
             data-testid={`preset-${presetName}`}
             type="button"
             onClick={() => handleSelect(presetName)}
-            onKeyDown={(e) => handleKeyDown(e, presetName)}
             disabled={disabled}
             title={preset.description}
             aria-label={`${preset.label} style: ${preset.description}`}

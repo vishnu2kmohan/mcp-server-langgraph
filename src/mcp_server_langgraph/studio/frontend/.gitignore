@@ -18,3 +18,8 @@ storybook-static
 
 # Heap snapshots (security-sensitive, may contain in-memory secrets)
 *.heapsnapshot
+
+# Playwright artifacts
+.playwright-cli/
+test-results/
+playwright-report/

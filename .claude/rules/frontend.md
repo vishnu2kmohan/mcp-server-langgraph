@@ -232,3 +232,61 @@ import { Button } from "../components/UI/Button";
 // Components (src/components/**/*.tsx) - Barrel imports
 import { Button, Badge } from "@/components/UI";
 ```
+
+---
+
+## E2E Testing (Playwright)
+
+### localStorage Key Convention
+
+`storage.get(key)` auto-prefixes keys with `studio-` unless the key already starts with `studio-`. When setting localStorage directly in E2E fixtures, use the full key:
+
+```typescript
+// CORRECT - key already includes prefix
+localStorage.setItem('studio-onboarding', 'true');
+localStorage.setItem('studio-auth', JSON.stringify({ state: { tokens: {...} } }));
+
+// WRONG - will be read as studio-studio-onboarding
+localStorage.setItem('onboarding', 'true');
+```
+
+### Onboarding Dismissal
+
+`StudioShellLayout` checks `storage.get<boolean>("studio-onboarding") !== true`.
+The value must be `'true'` (JSON boolean string), NOT an object:
+
+```typescript
+// CORRECT
+localStorage.setItem('studio-onboarding', 'true');
+
+// WRONG - StudioShellLayout expects JSON boolean, not object
+localStorage.setItem('studio-onboarding', JSON.stringify({ completed: true }));
+```
+
+After PKCE auth (cross-origin redirect), `addInitScript` may not persist. Set localStorage explicitly after auth succeeds and reload if needed.
+
+### Feature Flag Mocking
+
+Feature flags are loaded from `/api/v1/features`. E2E tests needing specific flags must mock the endpoint:
+
+```typescript
+await page.route("**/api/v1/features**", async (route) => {
+  await route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ preferences_menu: true, kb_focus: true }),
+  });
+});
+```
+
+### Prop Threading Pattern
+
+New props flowing through the chat component hierarchy must be added at every layer:
+
+```
+ConnectedConversationPanel (state + handlers)
+  → ConversationPanel (interface + destructuring + pass-through)
+    → ConnectedChatInputForm (interface + destructuring + pass-through)
+      → ChatInput (interface + destructuring + render)
+        → PreferencesMenu / other leaf components
+```

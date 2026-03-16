@@ -36,20 +36,16 @@ import {
 import * as sessionSlice from "../store/slices/sessionSlice";
 // authenticatedFetch mock is hoisted via vi.mock below
 
-// =============================================================================
 // Controllable mock state for useParams (hoisted for vi.mock)
-// =============================================================================
-
 const mockState = {
   sessionIdParam: "session-123" as string | undefined,
   navigate: vi.fn(),
   authenticatedFetchImpl: vi.fn() as ReturnType<typeof vi.fn>,
 };
 
-// =============================================================================
-// Mocks
-// =============================================================================
-
+// react-router importActual is acceptable here — the fixtures file needs
+// MemoryRouter/Routes/Route for rendering. react-router is ~30KB (NOT a
+// heavy project barrel like ../api at 5,132 lines) so OOM risk is negligible.
 vi.mock("react-router", async () => {
   const actual =
     await vi.importActual<typeof import("react-router")>("react-router");
@@ -185,7 +181,7 @@ vi.mock("../hooks/useAISuggestionsWebSocket", () => ({
 vi.mock("../hooks/useConnectorSuggestions", () => ({
   useConnectorSuggestions: () => ({
     suggestions: [],
-    visible: false,
+    isVisible: false,
     dismiss: vi.fn(),
     isLoading: false,
     inputValue: "",
@@ -194,22 +190,78 @@ vi.mock("../hooks/useConnectorSuggestions", () => ({
   }),
 }));
 
-// Mock RTK Query hooks used by the component (avoid vi.importActual on heavy barrel)
-vi.mock(import("../api"), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useListConnectionTemplatesQuery: () => ({
-      data: { templates: [] },
-      isLoading: false,
-      error: null,
-    }),
-    useCreateConnectionMutation: () => [vi.fn(), { isLoading: false }],
-    useTestConnectionMutation: () => [vi.fn(), { isLoading: false }],
-    useStartOAuth2FlowMutation: () => [vi.fn(), { isLoading: false }],
-    useSubmitMessageRatingMutation: () => [vi.fn(), { isLoading: false }],
-    useSubmitHallucinationReportMutation: () => [vi.fn(), { isLoading: false }],
+// Mock RTK Query hooks used by the component.
+// CRITICAL: Do NOT use importOriginal() — ../api barrel is 5,132 lines and
+// causes OOM (>8 GB) in sharded CI workers. Instead, provide a fully-synthetic
+// mock with a Proxy fallback for transitive hooks we don't explicitly list.
+const mockMutationTrigger = vi.fn(() => ({
+  unwrap: () => Promise.resolve({}),
+}));
+const mockMutationReturn = [mockMutationTrigger, { isLoading: false }] as const;
+const mockQueryReturn = {
+  data: undefined,
+  isLoading: false,
+  error: null,
+  refetch: vi.fn(),
+  isUninitialized: false,
+  isFetching: false,
+  isSuccess: true,
+  isError: false,
+};
+
+vi.mock("../api", () => {
+  // Minimal RTK Query api stub for store setup (fixtures use api.reducer/middleware)
+  const mockApi = {
+    reducerPath: "api" as const,
+    reducer: (state: Record<string, unknown> = {}) => state,
+    middleware:
+      () => (next: (action: unknown) => unknown) => (action: unknown) =>
+        next(action),
+    endpoints: {},
+    injectEndpoints: vi.fn(() => mockApi),
+    enhanceEndpoints: vi.fn(() => mockApi),
+    util: {
+      resetApiState: vi.fn(),
+      invalidateTags: vi.fn(),
+      prefetch: vi.fn(),
+      updateQueryData: vi.fn(),
+      upsertQueryData: vi.fn(),
+      patchQueryData: vi.fn(),
+    },
   };
+
+  const explicitMocks: Record<string, unknown> = {
+    api: mockApi,
+    useListConnectionTemplatesQuery: vi.fn(() => ({
+      ...mockQueryReturn,
+      data: { templates: [] },
+    })),
+    useCreateConnectionMutation: vi.fn(() => mockMutationReturn),
+    useTestConnectionMutation: vi.fn(() => mockMutationReturn),
+    useStartOAuth2FlowMutation: vi.fn(() => mockMutationReturn),
+    useSubmitMessageRatingMutation: vi.fn(() => mockMutationReturn),
+    useSubmitHallucinationReportMutation: vi.fn(() => mockMutationReturn),
+    useCheckBypassPermissionQuery: vi.fn(() => mockQueryReturn),
+  };
+
+  // Proxy auto-mocks any transitive hook we didn't explicitly list
+  return new Proxy(explicitMocks, {
+    get(target, prop, receiver) {
+      if (prop in target) return Reflect.get(target, prop, receiver);
+      const name = String(prop);
+      if (name.startsWith("use") && name.endsWith("Mutation")) {
+        const mock = vi.fn(() => mockMutationReturn);
+        target[name] = mock; // Cache for stable reference
+        return mock;
+      }
+      if (name.startsWith("use") && name.endsWith("Query")) {
+        const mock = vi.fn(() => mockQueryReturn);
+        target[name] = mock;
+        return mock;
+      }
+      return undefined;
+    },
+  });
 });
 
 // Mock authenticatedFetch for fallback POST tests
@@ -217,10 +269,6 @@ vi.mock("../utils/authenticatedFetch", () => ({
   authenticatedFetch: (...args: unknown[]) =>
     mockState.authenticatedFetchImpl(...args),
 }));
-
-// =============================================================================
-// Tests
-// =============================================================================
 
 describe("ConnectedConversationPanel - Message Deduplication (Fix 1)", () => {
   let saveAssistantMessageSpy: ReturnType<typeof vi.spyOn>;
@@ -235,6 +283,7 @@ describe("ConnectedConversationPanel - Message Deduplication (Fix 1)", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    vi.restoreAllMocks();
     saveAssistantMessageSpy.mockRestore();
   });
 
@@ -518,10 +567,6 @@ describe("ConnectedConversationPanel - Message Deduplication (Fix 1)", () => {
   });
 });
 
-// =============================================================================
-// User Message Deduplication Tests (Bug 1 & Bug 2)
-// =============================================================================
-
 describe("ConnectedConversationPanel - User Message Dedup", () => {
   const now = Date.now();
 
@@ -577,10 +622,6 @@ describe("ConnectedConversationPanel - User Message Dedup", () => {
       },
     });
   }
-
-  // =========================================================================
-  // Bug 1: baseMessages dedup during streaming
-  // =========================================================================
 
   describe("Bug 1: baseMessages merge with hasPendingMutation guard", () => {
     it("test 1: when hasPendingMutation=true and loaderData has server message with different ID, dedup is scoped to lastSentMessageIdRef", async () => {
@@ -660,6 +701,193 @@ describe("ConnectedConversationPanel - User Message Dedup", () => {
       // is filtered by the timestamp-proximity dedup
       const msgs = screen.getAllByText("dedup primary");
       expect(msgs).toHaveLength(1);
+    });
+
+    it("test 1c: race window — hasPendingMutation=false but Redux still has optimistic msg-* ID should dedup against loader server UUID", async () => {
+      // This is the race condition: streaming ends, setPendingMutation(false)
+      // fires BEFORE useSessionSync replaces Redux messages. During that frame:
+      // - hasPendingMutation = false
+      // - Redux still has msg-client-abc (optimistic)
+      // - loaderData has server-uuid-xyz (same message, different ID)
+      // Without fix: both render (duplicate). With fix: deduped to 1.
+      const clientMsgId = "msg-client-race";
+      const store = storeWithSession({
+        messages: [
+          {
+            id: clientMsgId,
+            role: "user",
+            content: "race condition test",
+            timestamp: now,
+          },
+        ],
+        hasPendingMutation: false, // KEY: already cleared
+      });
+
+      mockSessionLoaderData.messages = [
+        {
+          id: "server-uuid-race",
+          role: "user",
+          content: "race condition test",
+          timestamp: now + 50, // Within 60s window
+        },
+      ];
+
+      render(<ConnectedConversationPanel />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Should be deduped to exactly 1 message, not 2
+      const msgs = screen.getAllByText("race condition test");
+      expect(msgs).toHaveLength(1);
+    });
+
+    it("test 1d: race window dedup should NOT affect messages with non-msg-* IDs", async () => {
+      // Messages with server-generated IDs (not msg-* prefix) should NOT
+      // be deduped even if content matches — they are real distinct messages
+      const store = storeWithSession({
+        messages: [
+          {
+            id: "real-server-id-1",
+            role: "user",
+            content: "repeated",
+            timestamp: now - 2000,
+          },
+        ],
+        hasPendingMutation: false,
+      });
+
+      mockSessionLoaderData.messages = [
+        {
+          id: "real-server-id-1",
+          role: "user",
+          content: "repeated",
+          timestamp: now - 2000,
+        },
+        {
+          id: "real-server-id-2",
+          role: "user",
+          content: "repeated",
+          timestamp: now,
+        },
+      ];
+
+      render(<ConnectedConversationPanel />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Both should render — they have different real server IDs
+      const msgs = screen.getAllByText("repeated");
+      expect(msgs).toHaveLength(2);
+    });
+
+    it("test 1e: race window dedup should NOT suppress loader message with different content within 60s", async () => {
+      // Two distinct user messages within 60s — only the one matching by
+      // content should be deduped, the other must render.
+      const store = storeWithSession({
+        messages: [
+          {
+            id: "msg-client-hello",
+            role: "user",
+            content: "hello",
+            timestamp: now,
+          },
+        ],
+        hasPendingMutation: false,
+      });
+
+      mockSessionLoaderData.messages = [
+        {
+          id: "server-uuid-hello",
+          role: "user",
+          content: "hello",
+          timestamp: now + 50,
+        },
+        {
+          id: "server-uuid-goodbye",
+          role: "user",
+          content: "goodbye",
+          timestamp: now + 5000, // Within 60s but different content
+        },
+      ];
+
+      render(<ConnectedConversationPanel />, {
+        wrapper: createWrapper(store),
+      });
+
+      // "hello" should appear once (deduped), "goodbye" should appear (not suppressed)
+      const helloMsgs = screen.getAllByText("hello");
+      expect(helloMsgs).toHaveLength(1);
+      expect(screen.getByText("goodbye")).toBeInTheDocument();
+    });
+
+    it("test 1f: failed optimistic messages should NOT participate in race window dedup", async () => {
+      // A failed optimistic message never reached the server, so a matching
+      // loader message is a distinct server-persisted message.
+      const store = storeWithSession({
+        messages: [
+          {
+            id: "msg-client-failed",
+            role: "user",
+            content: "retry me",
+            timestamp: now,
+            status: "failed",
+          },
+        ],
+        hasPendingMutation: false,
+      });
+
+      mockSessionLoaderData.messages = [
+        {
+          id: "server-uuid-retry",
+          role: "user",
+          content: "retry me",
+          timestamp: now + 50,
+        },
+      ];
+
+      render(<ConnectedConversationPanel />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Both should render — failed optimistic should not suppress the server message
+      const msgs = screen.getAllByText("retry me");
+      expect(msgs).toHaveLength(2);
+    });
+
+    it("test 1g: help messages (msg-help-*) should NOT participate in race window dedup", async () => {
+      // /help creates messages with id: msg-help-${Date.now()} and role: "system".
+      // The dedup filter must only target role: "user" optimistic messages.
+      const store = storeWithSession({
+        messages: [
+          {
+            id: "msg-help-1234567890",
+            role: "system",
+            content: "**Available Commands**",
+            timestamp: now,
+          },
+        ],
+        hasPendingMutation: false,
+      });
+
+      mockSessionLoaderData.messages = [
+        {
+          id: "server-uuid-help",
+          role: "system",
+          content: "**Available Commands**",
+          timestamp: now + 50,
+        },
+      ];
+
+      render(<ConnectedConversationPanel />, {
+        wrapper: createWrapper(store),
+      });
+
+      // Both should render — system messages should never be deduped
+      // even though the msg-help-* ID starts with "msg-"
+      const msgs = screen.getAllByText((content) =>
+        content.includes("Available Commands"),
+      );
+      expect(msgs).toHaveLength(2);
     });
 
     it("test 2: when hasPendingMutation=false, loaderData messages merge normally", async () => {

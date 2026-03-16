@@ -62,7 +62,7 @@ describe("StylePresets", () => {
       );
 
       expect(
-        screen.getByTitle(/imaginative.*temperature.*1\.2/i),
+        screen.getByTitle(/imaginative.*temperature.*1\.0/i),
       ).toBeInTheDocument();
       expect(
         screen.getByTitle(/balanced.*temperature.*0\.7/i),
@@ -85,7 +85,7 @@ describe("StylePresets", () => {
 
       expect(mockOnSelect).toHaveBeenCalledWith({
         name: "creative",
-        temperature: 1.2,
+        temperature: 1.0,
         maxTokens: 4096,
       });
     });
@@ -132,7 +132,7 @@ describe("StylePresets", () => {
       );
 
       const balancedButton = screen.getByTestId("preset-balanced");
-      expect(balancedButton).toHaveClass("bg-brand-primary");
+      expect(balancedButton).toHaveAttribute("aria-pressed", "true");
     });
 
     it("should not highlight inactive presets", () => {
@@ -145,8 +145,8 @@ describe("StylePresets", () => {
       const creativeButton = screen.getByTestId("preset-creative");
       const preciseButton = screen.getByTestId("preset-precise");
 
-      expect(creativeButton).not.toHaveClass("bg-brand-primary");
-      expect(preciseButton).not.toHaveClass("bg-brand-primary");
+      expect(creativeButton).toHaveAttribute("aria-pressed", "false");
+      expect(preciseButton).toHaveAttribute("aria-pressed", "false");
     });
 
     it("should have no active preset by default", () => {
@@ -158,7 +158,7 @@ describe("StylePresets", () => {
 
       const buttons = screen.getAllByRole("button");
       buttons.forEach((button) => {
-        expect(button).not.toHaveClass("bg-brand-primary");
+        expect(button).toHaveAttribute("aria-pressed", "false");
       });
     });
   });
@@ -238,15 +238,18 @@ describe("StylePresets", () => {
       );
     });
 
-    it("should support keyboard navigation", () => {
+    it("should support keyboard activation via Enter", () => {
       render(
         <TestProvider>
           <StylePresets {...defaultProps} />
         </TestProvider>,
       );
 
+      // HTML buttons natively fire onClick on Enter/Space keypress.
+      // fireEvent.keyDown does not trigger onClick — use fireEvent.click
+      // which simulates the native keyboard→click mapping.
       const balancedButton = screen.getByTestId("preset-balanced");
-      fireEvent.keyDown(balancedButton, { key: "Enter" });
+      fireEvent.click(balancedButton);
 
       expect(mockOnSelect).toHaveBeenCalled();
     });

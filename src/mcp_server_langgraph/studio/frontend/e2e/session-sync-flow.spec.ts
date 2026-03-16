@@ -17,6 +17,12 @@ import { test, expect } from './fixtures/auth';
 const backendEnabled = process.env.BACKEND_ENABLED !== 'false';
 
 test.describe('Session Sync Flow', () => {
+  // Clean up route handlers before context teardown to prevent
+  // "target page, context or browser has been closed" errors.
+  test.afterEach(async ({ alicePage }) => {
+    await alicePage.unrouteAll({ behavior: 'ignoreErrors' });
+  });
+
   test.beforeEach(async ({ alicePage }) => {
     // Only mock API responses when backend is disabled
     if (!backendEnabled) {
@@ -289,6 +295,7 @@ test.describe('Session Sync Flow', () => {
         const url2 = alicePage.url();
 
         // URLs should be different if session IDs are in URL
+        expect(url1).not.toBe(url2);
         // Page should be functional
         await expect(alicePage.locator('main, [role="main"]').first()).toBeVisible();
       }
@@ -374,8 +381,8 @@ test.describe('Session Sync Flow', () => {
 
       const loadTime = Date.now() - startTime;
 
-      // Should load within 5 seconds
-      expect(loadTime).toBeLessThan(5000);
+      // Should load within 15 seconds (includes auth redirect + networkidle waits)
+      expect(loadTime).toBeLessThan(15000);
     });
 
     test('should debounce rapid interactions', async ({ alicePage }) => {

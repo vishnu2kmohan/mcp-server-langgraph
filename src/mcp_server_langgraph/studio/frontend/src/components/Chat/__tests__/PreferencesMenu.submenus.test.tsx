@@ -41,6 +41,7 @@ vi.mock("lucide-react", async () => {
     Sparkles: () => <span data-testid="icon-sparkles" />,
     MessageSquare: () => <span data-testid="icon-message" />,
     Zap: () => <span data-testid="icon-zap" />,
+    Palette: () => <span data-testid="icon-palette" />,
   };
 });
 
@@ -800,6 +801,172 @@ describe("PreferencesMenu", () => {
         "submenu-trigger-selected-tools",
       );
       expect(selectedTrigger).toHaveTextContent("2 selected");
+    });
+  });
+
+  describe("Style Presets Submenu", () => {
+    it("displays Style submenu trigger with current preset label", async () => {
+      const user = userEvent.setup();
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} activeStylePreset="creative" />
+        </TestProvider>,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      const styleTrigger = screen.getByTestId("submenu-trigger-style");
+      expect(styleTrigger).toHaveTextContent(/Creative/i);
+    });
+
+    it("defaults to Balanced when no activeStylePreset is set", async () => {
+      const user = userEvent.setup();
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      const styleTrigger = screen.getByTestId("submenu-trigger-style");
+      expect(styleTrigger).toHaveTextContent(/Balanced/i);
+    });
+
+    it("opens Style submenu and shows all three presets", async () => {
+      const user = userEvent.setup();
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      const styleTrigger = screen.getByTestId("submenu-trigger-style");
+      await user.hover(styleTrigger);
+
+      const styleSubmenu = await screen.findByTestId("submenu-content-style");
+      expect(
+        within(styleSubmenu).getByTestId("preset-creative"),
+      ).toBeInTheDocument();
+      expect(
+        within(styleSubmenu).getByTestId("preset-balanced"),
+      ).toBeInTheDocument();
+      expect(
+        within(styleSubmenu).getByTestId("preset-precise"),
+      ).toBeInTheDocument();
+    });
+
+    it("shows preset descriptions with temperature and token values", async () => {
+      const user = userEvent.setup();
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} />
+        </TestProvider>,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      const styleTrigger = screen.getByTestId("submenu-trigger-style");
+      await user.hover(styleTrigger);
+
+      const styleSubmenu = await screen.findByTestId("submenu-content-style");
+      expect(styleSubmenu).toHaveTextContent(/Temperature 1/);
+      expect(styleSubmenu).toHaveTextContent(/Temperature 0\.7/);
+      expect(styleSubmenu).toHaveTextContent(/Temperature 0\.3/);
+    });
+
+    it("calls onStylePresetChange with correct preset values", async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const onStylePresetChange = vi.fn();
+      render(
+        <TestProvider>
+          <PreferencesMenu
+            {...defaultProps}
+            onStylePresetChange={onStylePresetChange}
+          />
+        </TestProvider>,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      const styleTrigger = screen.getByTestId("submenu-trigger-style");
+      await user.click(styleTrigger);
+
+      const styleSubmenu = await screen.findByTestId("submenu-content-style");
+
+      const radioItems = within(styleSubmenu).getAllByRole("menuitemradio");
+      const creativeOption = radioItems.find((el) =>
+        el.textContent?.includes("Creative"),
+      );
+      expect(creativeOption).toBeTruthy();
+      fireEvent.click(creativeOption!);
+
+      await waitFor(() => {
+        expect(onStylePresetChange).toHaveBeenCalledWith({
+          name: "creative",
+          temperature: 1.0,
+          maxTokens: 4096,
+        });
+      });
+    });
+
+    it("calls onStylePresetChange with precise preset values", async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const onStylePresetChange = vi.fn();
+      render(
+        <TestProvider>
+          <PreferencesMenu
+            {...defaultProps}
+            onStylePresetChange={onStylePresetChange}
+          />
+        </TestProvider>,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      const styleTrigger = screen.getByTestId("submenu-trigger-style");
+      await user.click(styleTrigger);
+
+      const styleSubmenu = await screen.findByTestId("submenu-content-style");
+
+      const radioItems = within(styleSubmenu).getAllByRole("menuitemradio");
+      const preciseOption = radioItems.find((el) =>
+        el.textContent?.includes("Precise"),
+      );
+      expect(preciseOption).toBeTruthy();
+      fireEvent.click(preciseOption!);
+
+      await waitFor(() => {
+        expect(onStylePresetChange).toHaveBeenCalledWith({
+          name: "precise",
+          temperature: 0.3,
+          maxTokens: 1024,
+        });
+      });
+    });
+
+    it("highlights active preset in submenu", async () => {
+      const user = userEvent.setup();
+      render(
+        <TestProvider>
+          <PreferencesMenu {...defaultProps} activeStylePreset="precise" />
+        </TestProvider>,
+      );
+
+      await user.click(screen.getByTestId("preferences-menu-trigger"));
+
+      const styleTrigger = screen.getByTestId("submenu-trigger-style");
+      await user.hover(styleTrigger);
+
+      const styleSubmenu = await screen.findByTestId("submenu-content-style");
+
+      const preciseItem = within(styleSubmenu).getByTestId("preset-precise");
+      expect(preciseItem).toHaveClass("bg-primary-3");
+
+      const creativeItem = within(styleSubmenu).getByTestId("preset-creative");
+      expect(creativeItem).not.toHaveClass("bg-primary-3");
     });
   });
 });

@@ -77,10 +77,19 @@ import { ConversationPanel } from "./ConversationPanel";
 import type { SlashCommand, ModelOption } from "../components/Chat/ChatInput";
 import type { ReasoningEffortLevel } from "../components/Chat/ReasoningEffortSelector";
 import type { KBFocusMode, ToolPreference } from "../hooks/useStreamingChat";
+import { useToolPreference } from "../contexts/PreferencesContext";
 import type { ChatLoaderData } from "../router/loaders";
+import { toast } from "sonner";
 import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { devLogger } from "../utils/devLogger";
 import { cn } from "../utils/cn";
+import {
+  TOAST_ID_CONVERSATION_CLEAR,
+  TOAST_ID_COPY,
+  TOAST_ID_CHAT_ERROR,
+} from "../constants/toastIds";
+import type { PresetName, StylePreset } from "../components/Chat/StylePresets";
+import { PRESET_CONFIGS } from "../components/Chat/StylePresets";
 
 import { Button } from "@/components/UI";
 
@@ -186,11 +195,27 @@ const DEFAULT_SLASH_COMMANDS: SlashCommand[] = [
     icon: "trash",
   },
   {
+    name: "copy",
+    description: "Copy conversation to clipboard",
+    icon: "clipboard",
+  },
+  {
     name: "help",
     description: "Show available commands",
     icon: "help",
   },
 ];
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+/**
+ * Minimum ms to wait after revalidation before clearing the streaming placeholder.
+ * Gives React one render cycle to commit the newly-loaded messages from the store
+ * before we remove the placeholder — prevents a single-frame content flash.
+ */
+const REVALIDATION_RENDER_SETTLE_MS = 50;
 
 // =============================================================================
 // Component
@@ -257,8 +282,22 @@ export const ConnectedConversationPanel = forwardRef<
   // KB focus mode state (lifted from ConnectedChatInputForm for API integration)
   const [kbFocusMode, setKbFocusMode] = useState<KBFocusMode>("all");
 
-  // v7: Tool preference state for native vs builtin execution
-  const [toolPreference, setToolPreference] = useState<ToolPreference>("auto");
+  // v7: Tool preference from persisted context (survives remount/navigation)
+  const { toolPreference, setToolPreference: setPersistedToolPreference } =
+    useToolPreference();
+  const setToolPreference = useCallback(
+    (pref: ToolPreference) => setPersistedToolPreference(pref),
+    [setPersistedToolPreference],
+  );
+
+  // Style preset state (behind PreferencesMenu)
+  // Derive config from preset name via PRESET_CONFIGS (single source of truth)
+  const [activeStylePreset, setActiveStylePreset] =
+    useState<PresetName>("balanced");
+  const stylePresetConfig = PRESET_CONFIGS[activeStylePreset];
+  const handleStylePresetChange = useCallback((preset: StylePreset) => {
+    setActiveStylePreset(preset.name);
+  }, []);
 
   // =============================================================================
   // Message Ratings & Actions State (ADR-0104 UnifiedMessageList)
@@ -267,7 +306,14 @@ export const ConnectedConversationPanel = forwardRef<
   const [messageRatings, setMessageRatings] = useState<
     Record<string, "up" | "down" | null>
   >({});
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  // Ref for reading current ratings inside useCallback without adding
+  // messageRatings to the dependency array (avoids re-creating the callback
+  // on every rating change, which would cascade re-renders to all MessageBubbles).
+  const messageRatingsRef = useRef(messageRatings);
+  useEffect(() => {
+    messageRatingsRef.current = messageRatings;
+  }, [messageRatings]);
+  const [isRegenerating, _setIsRegenerating] = useState(false);
 
   // RTK Query mutations for feedback APIs
   const [submitRating, { isLoading: isRatingSubmitting }] =
@@ -290,10 +336,22 @@ export const ConnectedConversationPanel = forwardRef<
     sources: streamingSources, // Source citations from web search (ADR-0099)
   } = useStreamingChat();
 
-  // Reset dismissed error state when a new error occurs
+  // Reset dismissed error state when a new error occurs + show toast.
+  // Track last toasted error to avoid re-toasting the same error on re-renders
+  // and to ensure distinct errors each get their own toast notification.
+  const lastToastedStreamingErrorRef = useRef<string | null>(null);
   useEffect(() => {
-    if (streamingError) {
+    if (
+      streamingError &&
+      streamingError !== lastToastedStreamingErrorRef.current
+    ) {
+      lastToastedStreamingErrorRef.current = streamingError;
       setIsStreamingErrorDismissed(false);
+      toast.error(`Chat error: ${streamingError}`, {
+        id: TOAST_ID_CHAT_ERROR,
+      });
+    } else if (!streamingError) {
+      lastToastedStreamingErrorRef.current = null;
     }
   }, [streamingError]);
 
@@ -447,21 +505,23 @@ export const ConnectedConversationPanel = forwardRef<
     requestSuggestions,
   ]);
 
-  // Filter suggestions by type
-  const bannerSuggestions = useMemo(
-    () => aiSuggestions.filter((s: Suggestion) => s.type === "banner"),
-    [aiSuggestions],
-  );
-
-  const tooltipSuggestions = useMemo(
-    () => aiSuggestions.filter((s: Suggestion) => s.type === "tooltip"),
-    [aiSuggestions],
-  );
-
-  const spotlightSuggestions = useMemo(
-    () => aiSuggestions.filter((s: Suggestion) => s.type === "spotlight"),
-    [aiSuggestions],
-  );
+  // Filter suggestions by type (single-pass partition)
+  const { bannerSuggestions, tooltipSuggestions, spotlightSuggestions } =
+    useMemo(() => {
+      const banner: Suggestion[] = [];
+      const tooltip: Suggestion[] = [];
+      const spotlight: Suggestion[] = [];
+      for (const s of aiSuggestions) {
+        if (s.type === "banner") banner.push(s);
+        else if (s.type === "tooltip") tooltip.push(s);
+        else if (s.type === "spotlight") spotlight.push(s);
+      }
+      return {
+        bannerSuggestions: banner,
+        tooltipSuggestions: tooltip,
+        spotlightSuggestions: spotlight,
+      };
+    }, [aiSuggestions]);
 
   // Hook for revalidating loader data after sending messages
   const { revalidateMessages } = useMessageRevalidation();
@@ -476,12 +536,17 @@ export const ConnectedConversationPanel = forwardRef<
 
     Promise.resolve()
       .then(() => revalidateMessages())
-      .then(() => new Promise((resolve) => setTimeout(resolve, 50)))
+      .then(
+        () =>
+          new Promise<void>((resolve) =>
+            setTimeout(resolve, REVALIDATION_RENDER_SETTLE_MS),
+          ),
+      )
       .then(() => {
         setLastStreamedContent(null);
       })
       .catch((error: unknown) => {
-        console.error("Revalidation retry failed:", error);
+        logger.error("Revalidation retry failed:", error);
         setRevalidationFailed(true);
       })
       .finally(() => {
@@ -510,8 +575,11 @@ export const ConnectedConversationPanel = forwardRef<
   const currentMessages = useAppSelector(selectMessages);
 
   // S4: Use ref for currentMessages to avoid re-creating handleSendMessage on every message change
+  // Note: Update in useEffect (not during render) for React Concurrent Mode safety
   const currentMessagesRef = useRef(currentMessages);
-  currentMessagesRef.current = currentMessages;
+  useEffect(() => {
+    currentMessagesRef.current = currentMessages;
+  }, [currentMessages]);
 
   // Get execution mode from Redux (plan/default/auto_accept/bypass)
   const executionMode = useAppSelector(selectExecutionMode);
@@ -533,11 +601,16 @@ export const ConnectedConversationPanel = forwardRef<
   );
 
   // Plan approval handlers (Issue 7: Plan Rendering)
+  // Store timer IDs in a ref to clear on unmount (prevents dispatch after unmount)
+  const planClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleApprovePlan = useCallback(
     (_planId: string) => {
       dispatch(setPlanStatus("approved"));
+      // Clear any pending plan-clear timer
+      if (planClearTimerRef.current) clearTimeout(planClearTimerRef.current);
       // Clear the plan after a short delay to allow UI feedback
-      setTimeout(() => dispatch(clearPlan()), 500);
+      planClearTimerRef.current = setTimeout(() => dispatch(clearPlan()), 500);
     },
     [dispatch],
   );
@@ -545,11 +618,20 @@ export const ConnectedConversationPanel = forwardRef<
   const handleRejectPlan = useCallback(
     (_planId: string) => {
       dispatch(setPlanStatus("rejected"));
+      // Clear any pending plan-clear timer
+      if (planClearTimerRef.current) clearTimeout(planClearTimerRef.current);
       // Clear the plan after a short delay to allow UI feedback
-      setTimeout(() => dispatch(clearPlan()), 500);
+      planClearTimerRef.current = setTimeout(() => dispatch(clearPlan()), 500);
     },
     [dispatch],
   );
+
+  // Cleanup plan-clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (planClearTimerRef.current) clearTimeout(planClearTimerRef.current);
+    };
+  }, []);
 
   // Combine Redux messages with loader data for display.
   // CRITICAL: Redux currentSession.messages contains optimistic updates (user messages added immediately)
@@ -572,6 +654,22 @@ export const ConnectedConversationPanel = forwardRef<
         ? reduxMessages.find((msg) => msg.id === lastSentMessageIdRef.current)
         : undefined;
 
+    // R19-1: Race window dedup. When setPendingMutation(false) fires before
+    // useSessionSync replaces Redux messages, there's a 1-frame window where
+    // hasPendingMutation=false but Redux still has optimistic msg-* IDs.
+    // Only activate when hasPendingMutation is already false (the race window).
+    // Exclude failed messages — they never reached the server so a matching
+    // loader message is a distinct, successfully persisted message.
+    const optimisticMessages =
+      !hasPendingMutation && !pendingOptimistic
+        ? reduxMessages.filter(
+            (msg) =>
+              msg.id.startsWith("msg-") &&
+              msg.role === "user" &&
+              msg.status !== "failed",
+          )
+        : [];
+
     // Add loader messages first (will be overwritten by Redux if duplicate ID)
     // Skip at most ONE loader message that duplicates the pending optimistic
     // message. Without this guard, two rapid user messages of the same role
@@ -582,12 +680,28 @@ export const ConnectedConversationPanel = forwardRef<
         !skippedPendingDuplicate &&
         pendingOptimistic &&
         msg.role === pendingOptimistic.role &&
+        msg.content === pendingOptimistic.content &&
         Math.abs((msg.timestamp ?? 0) - (pendingOptimistic.timestamp ?? 0)) <
           60000
       ) {
         skippedPendingDuplicate = true;
         continue;
       }
+
+      // R19-1: Check if this loader message duplicates a stale optimistic message
+      // still in Redux after the pending flag was cleared.
+      // Match on role + content + timestamp proximity to avoid false positives.
+      const matchIdx = optimisticMessages.findIndex(
+        (opt) =>
+          opt.role === msg.role &&
+          opt.content === msg.content &&
+          Math.abs((msg.timestamp ?? 0) - (opt.timestamp ?? 0)) < 60000,
+      );
+      if (matchIdx >= 0) {
+        optimisticMessages.splice(matchIdx, 1);
+        continue;
+      }
+
       messageMap.set(msg.id, msg);
     }
 
@@ -690,6 +804,16 @@ export const ConnectedConversationPanel = forwardRef<
     }
   }, [sessionId, hasPendingMutation, dispatch]);
 
+  // Stable timestamp for the streaming placeholder — only update when streaming starts
+  // to avoid defeating downstream memoization with a new Date.now() on every render.
+  // Moved to useEffect to avoid mutating ref during render phase (unsafe in Concurrent Mode).
+  const streamingTimestampRef = useRef(Date.now());
+  useEffect(() => {
+    if (isStreaming && !streamingContent) {
+      streamingTimestampRef.current = Date.now();
+    }
+  }, [isStreaming, streamingContent]);
+
   // Append the streaming message separately so we don't re-merge/re-sort on every chunk.
   // Fix 1: Seamless handoff - show lastStreamedContent during revalidation to prevent flicker.
   const messages = useMemo(() => {
@@ -698,12 +822,26 @@ export const ConnectedConversationPanel = forwardRef<
     const lastPersistedAssistantMessage = baseMessages
       .filter((m) => m.role === "assistant")
       .pop();
+    // Require a minimum prefix length (20 chars) to avoid trivial false-positive
+    // matches on short responses like "OK" or "Done". Also verify lengths are
+    // within 50 chars of each other to prevent prefix-match against unrelated messages.
+    const prefixLen = Math.min(100, lastStreamedContent?.length ?? 0);
+    const prefix = lastStreamedContent?.slice(0, prefixLen) ?? "";
     const hasMatchingPersistedMessage =
       lastPersistedAssistantMessage &&
       lastStreamedContent &&
-      lastPersistedAssistantMessage.content?.startsWith(
-        lastStreamedContent.slice(0, 100),
-      );
+      prefix.length >= 20 &&
+      lastPersistedAssistantMessage.content?.startsWith(prefix) &&
+      Math.abs(
+        (lastPersistedAssistantMessage.content?.length ?? 0) -
+          lastStreamedContent.length,
+      ) < 50 &&
+      // Timestamp proximity check: persisted message must be within 60s of streaming start
+      // to prevent false-positive prefix matches against unrelated older messages
+      Math.abs(
+        (lastPersistedAssistantMessage.timestamp ?? 0) -
+          streamingTimestampRef.current,
+      ) < 60_000;
 
     // Show streaming placeholder if:
     // - We're actively streaming, OR
@@ -720,7 +858,7 @@ export const ConnectedConversationPanel = forwardRef<
           id: "streaming-message",
           role: "assistant" as const,
           content: contentToShow,
-          timestamp: Date.now(),
+          timestamp: streamingTimestampRef.current,
           isStreaming: isStreaming, // Only show streaming indicator when actually streaming
           isRevalidating: revalidationInProgress && !isStreaming, // Show saving indicator
           revalidationFailed: revalidationFailed, // Show retry option on failure
@@ -738,6 +876,12 @@ export const ConnectedConversationPanel = forwardRef<
     revalidationInProgress,
     revalidationFailed,
   ]);
+
+  // Ref for messages — avoids re-creating handleSlashCommand on every message change
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // =============================================================================
   // Session Auto-Naming
@@ -805,32 +949,48 @@ export const ConnectedConversationPanel = forwardRef<
 
         // 2. Revalidate to fetch persisted message from backend
         // Note: We use Promise.resolve().then() instead of async/await
-        // to avoid needing to mark this effect as async
+        // to avoid needing to mark this effect as async.
+        // Guard state updates with `cancelled` flag to prevent updates after unmount.
+        let cancelled = false;
         Promise.resolve()
           .then(() => revalidateMessages())
           .then(() => {
             // 3. SUCCESS: Clear placeholder after messages are confirmed in store
             // Small delay ensures React has re-rendered with new messages
-            return new Promise((resolve) => setTimeout(resolve, 50));
+            return new Promise<void>((resolve) =>
+              setTimeout(resolve, REVALIDATION_RENDER_SETTLE_MS),
+            );
           })
           .then(() => {
-            // Clear the placeholder - persisted message is now in store
-            setLastStreamedContent(null);
+            if (!cancelled) {
+              // Clear the placeholder - persisted message is now in store
+              setLastStreamedContent(null);
+            }
           })
           .catch((error: unknown) => {
-            // 4. FAILURE: Keep lastStreamedContent visible, show retry option
-            console.error("Revalidation failed:", error);
-            setRevalidationFailed(true);
-            // Do NOT clear lastStreamedContent - keep message visible
+            if (!cancelled) {
+              // 4. FAILURE: Keep lastStreamedContent visible, show retry option
+              logger.error("Revalidation failed:", error);
+              setRevalidationFailed(true);
+              // Do NOT clear lastStreamedContent - keep message visible
+            }
           })
           .finally(() => {
-            setRevalidationInProgress(false);
+            if (!cancelled) {
+              setRevalidationInProgress(false);
+            }
           });
 
         // 5. Extract artifacts (independent of message display)
         extractAndSaveArtifacts(assistantContent);
+
+        // Cleanup: cancel pending state updates if component unmounts
+        return () => {
+          cancelled = true;
+        };
       }
     }
+    return undefined;
   }, [
     isStreaming,
     sessionId,
@@ -922,7 +1082,7 @@ export const ConnectedConversationPanel = forwardRef<
         // The streaming endpoint already persists the user message with dedup logic.
         // Dual persistence caused a race condition where _load_and_merge_history
         // could read stale storage state.
-        messageId = `msg-${crypto.randomUUID()}`;
+        messageId = `msg-${typeof crypto?.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`}`;
         lastSentMessageIdRef.current = messageId; // Finding 2: Track for async error handling
         pendingMutationStartRef.current = Date.now(); // R8-4: Start duration timer
         dispatch(setPendingMutation(true));
@@ -955,6 +1115,8 @@ export const ConnectedConversationPanel = forwardRef<
           kbFocus: kbFocusMode,
           executionMode,
           toolPreference, // v7: Native vs builtin tool preference
+          temperature: stylePresetConfig.temperature, // Style preset override
+          maxTokens: stylePresetConfig.maxTokens, // Style preset override
           history, // RC4: Bounded client history fallback
           messageId, // Finding 1: Pass optimistic messageId for ID-based dedup
         });
@@ -1144,6 +1306,8 @@ export const ConnectedConversationPanel = forwardRef<
       modelSupportsThinking,
       executionMode,
       toolPreference, // v7
+      stylePresetConfig.temperature, // Style preset: derived from PRESET_CONFIGS
+      stylePresetConfig.maxTokens,
     ],
   );
 
@@ -1197,16 +1361,55 @@ export const ConnectedConversationPanel = forwardRef<
             .unwrap()
             .then(() => {
               revalidateMessages();
+              toast.success("Conversation cleared", {
+                id: TOAST_ID_CONVERSATION_CLEAR,
+              });
               logger.debug("Cleared messages");
             })
             .catch((error) => {
               logger.error("Failed to clear messages", error);
+              toast.error("Failed to clear conversation");
             });
           break;
-        case "help":
-          // Navigate to help page
-          navigate("/studio/help");
+        case "copy": {
+          // Copy conversation to clipboard (use ref to avoid re-creating callback on every message)
+          const conversationText = messagesRef.current
+            .filter((msg) => msg.role === "user" || msg.role === "assistant")
+            .map(
+              (msg) =>
+                `${msg.role === "user" ? "You" : "Assistant"}: ${msg.content}`,
+            )
+            .join("\n\n");
+          if (!navigator.clipboard?.writeText) {
+            toast.error("Clipboard not supported in this browser context");
+            break;
+          }
+          navigator.clipboard
+            .writeText(conversationText)
+            .then(() => {
+              toast.success("Copied to clipboard", { id: TOAST_ID_COPY });
+              logger.debug("Copied conversation to clipboard");
+            })
+            .catch((error) => {
+              logger.error("Failed to copy to clipboard", error);
+              toast.error("Failed to copy to clipboard");
+            });
           break;
+        }
+        case "help": {
+          // Show available commands as a toast notification.
+          // Using toast instead of dispatch(addMessage) because:
+          // 1. addMessage is a no-op without an active session (chat index route)
+          // 2. Client-only messages (msg-help-*) are removed by background revalidation
+          // 3. Help info is ephemeral — toast is the correct UX pattern
+          const helpText = DEFAULT_SLASH_COMMANDS.map(
+            (cmd) => `/${cmd.name} — ${cmd.description}`,
+          ).join("\n");
+          toast.info(`Available Commands:\n${helpText}`, {
+            duration: 10000,
+          });
+          break;
+        }
       }
     },
     [dispatch, navigate, revalidateMessages],
@@ -1221,6 +1424,10 @@ export const ConnectedConversationPanel = forwardRef<
     async (messageId: string, rating: "up" | "down" | null) => {
       if (!sessionId || !rating) return;
 
+      // Capture previous rating via ref for correct rollback on failure
+      // (avoids adding messageRatings to deps, preventing re-render cascade)
+      const previousRating = messageRatingsRef.current[messageId] ?? null;
+
       // Optimistic update
       setMessageRatings((prev) => ({ ...prev, [messageId]: rating }));
 
@@ -1232,8 +1439,8 @@ export const ConnectedConversationPanel = forwardRef<
         }).unwrap();
         logger.debug("Message rated", { messageId, rating });
       } catch (error) {
-        // Revert on error
-        setMessageRatings((prev) => ({ ...prev, [messageId]: null }));
+        // Revert to previous rating (not null) on error
+        setMessageRatings((prev) => ({ ...prev, [messageId]: previousRating }));
         logger.error("Failed to submit rating", error);
       }
     },
@@ -1250,7 +1457,7 @@ export const ConnectedConversationPanel = forwardRef<
         await submitRating({
           session_id: sessionId,
           message_id: messageId,
-          rating: messageRatings[messageId] ?? "down",
+          rating: messageRatingsRef.current[messageId] ?? "down",
           feedback,
         }).unwrap();
         logger.debug("Rating feedback submitted", { messageId, feedback });
@@ -1258,7 +1465,7 @@ export const ConnectedConversationPanel = forwardRef<
         logger.error("Failed to submit rating feedback", error);
       }
     },
-    [sessionId, submitRating, messageRatings],
+    [sessionId, submitRating],
   );
 
   // Handle message edit
@@ -1275,10 +1482,9 @@ export const ConnectedConversationPanel = forwardRef<
 
   // Handle message regeneration
   const handleRegenerateMessage = useCallback((messageId: string) => {
-    setIsRegenerating(true);
-    // TODO: Implement message regeneration when supported
+    // TODO: Implement message regeneration when supported (ADR-TBD)
+    // setIsRegenerating(true/false) will wrap the actual async call
     logger.debug("Regenerate message requested", { messageId });
-    setIsRegenerating(false);
   }, []);
 
   // Handle hallucination report
@@ -1601,6 +1807,11 @@ export const ConnectedConversationPanel = forwardRef<
         // KB Focus mode (controlled - lifted from ConnectedChatInputForm)
         kbFocusValue={kbFocusMode}
         onKBFocusChange={setKbFocusMode}
+        // URL Content Fetch (OpenWebUI-style #URL integration)
+        enableUrlFetch
+        // Style Presets (behind PreferencesMenu)
+        activeStylePreset={activeStylePreset}
+        onStylePresetChange={handleStylePresetChange}
         // v7: Tool preference for native vs builtin execution
         toolPreference={toolPreference}
         onToolPreferenceChange={setToolPreference}

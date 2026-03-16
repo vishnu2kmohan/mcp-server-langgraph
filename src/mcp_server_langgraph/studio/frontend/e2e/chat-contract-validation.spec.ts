@@ -18,6 +18,12 @@ import { test, expect } from "./fixtures/auth";
 const backendEnabled = process.env.BACKEND_ENABLED !== "false";
 
 test.describe("Chat API Contract Validation", () => {
+  // Clean up route handlers before context teardown to prevent
+  // "target page, context or browser has been closed" errors.
+  test.afterEach(async ({ alicePage }) => {
+    await alicePage.unrouteAll({ behavior: "ignoreErrors" });
+  });
+
   test.describe("Chat Message Send/Receive", () => {
     test("should send message with correct request body format", async ({
       alicePage,
@@ -125,28 +131,28 @@ test.describe("Chat API Contract Validation", () => {
         (r) => r.url.includes("/chat/completions") && r.method === "POST"
       );
 
-      if (chatRequest) {
-        // Validate request body structure
-        expect(chatRequest.body).toBeDefined();
-        const body = chatRequest.body as Record<string, unknown>;
+      expect(chatRequest, "Chat completion request was not captured").toBeDefined();
 
-        // Should have session_id (snake_case for backend)
-        expect(body).toHaveProperty("session_id");
-        expect(typeof body.session_id).toBe("string");
+      // Validate request body structure
+      expect(chatRequest!.body).toBeDefined();
+      const body = chatRequest!.body as Record<string, unknown>;
 
-        // Should have messages array
-        expect(body).toHaveProperty("messages");
-        expect(Array.isArray(body.messages)).toBe(true);
+      // Should have session_id (snake_case for backend)
+      expect(body).toHaveProperty("session_id");
+      expect(typeof body.session_id).toBe("string");
 
-        // Each message should have role and content
-        const messages = body.messages as Array<{
-          role: string;
-          content: string;
-        }>;
-        for (const msg of messages) {
-          expect(typeof msg.role).toBe("string");
-          expect(typeof msg.content).toBe("string");
-        }
+      // Should have messages array
+      expect(body).toHaveProperty("messages");
+      expect(Array.isArray(body.messages)).toBe(true);
+
+      // Each message should have role and content
+      const messages = body.messages as Array<{
+        role: string;
+        content: string;
+      }>;
+      for (const msg of messages) {
+        expect(typeof msg.role).toBe("string");
+        expect(typeof msg.content).toBe("string");
       }
     });
 
@@ -250,6 +256,8 @@ test.describe("Chat API Contract Validation", () => {
       // Wait for streaming to complete
       await alicePage.waitForTimeout(5000);
 
+      // Route cleanup handled by afterEach (unrouteAll)
+
       // No contract errors should occur
       expect(streamingErrors).toBe(0);
     });
@@ -257,6 +265,10 @@ test.describe("Chat API Contract Validation", () => {
 });
 
 test.describe("Agent Request Contract Validation", () => {
+  test.afterEach(async ({ adminPage }) => {
+    await adminPage.unrouteAll({ behavior: "ignoreErrors" });
+  });
+
   test("should send batch approve with correct field names", async ({
     adminPage,
   }) => {
@@ -302,6 +314,7 @@ test.describe("Agent Request Contract Validation", () => {
       r.url.includes("/agents/requests/batch/approve")
     );
 
+    // Batch approve may not be triggered in all test environments
     if (batchApproveRequest) {
       const body = batchApproveRequest.body as Record<string, unknown>;
 
@@ -316,6 +329,10 @@ test.describe("Agent Request Contract Validation", () => {
 });
 
 test.describe("Artifact Contract Validation", () => {
+  test.afterEach(async ({ alicePage }) => {
+    await alicePage.unrouteAll({ behavior: "ignoreErrors" });
+  });
+
   test("should send fork artifact with new_name (not new_title)", async ({
     alicePage,
   }) => {

@@ -13,33 +13,35 @@
 import { test as base, type Page, type BrowserContext } from '@playwright/test';
 
 // Test user credentials (from default-realm.json)
+// Passwords read from env vars to avoid hardcoded secrets in source control.
+// Defaults match docker-compose dev environment — override in CI via env.
 const TEST_USERS = {
   admin: {
-    username: 'admin',
-    password: 'admin123',
-    persona: 'admin',
+    username: process.env.E2E_ADMIN_USER ?? 'admin',
+    password: process.env.E2E_ADMIN_PASSWORD ?? 'admin123',
+    persona: 'admin' as const,
   },
   alice: {
-    username: 'alice',
-    password: 'alice123',
-    persona: 'developer',
+    username: process.env.E2E_ALICE_USER ?? 'alice',
+    password: process.env.E2E_ALICE_PASSWORD ?? 'alice123',
+    persona: 'developer' as const,
   },
   bob: {
-    username: 'bob',
-    password: 'bob123',
-    persona: 'user',
+    username: process.env.E2E_BOB_USER ?? 'bob',
+    password: process.env.E2E_BOB_PASSWORD ?? 'bob123',
+    persona: 'user' as const,
   },
   auditor: {
-    username: 'auditor',
-    password: 'auditor123',
-    persona: 'auditor',
+    username: process.env.E2E_AUDITOR_USER ?? 'auditor',
+    password: process.env.E2E_AUDITOR_PASSWORD ?? 'auditor123',
+    persona: 'auditor' as const,
   },
   complianceOfficer: {
-    username: 'compliance',
-    password: 'compliance123',
-    persona: 'compliance-officer',
+    username: process.env.E2E_COMPLIANCE_USER ?? 'compliance',
+    password: process.env.E2E_COMPLIANCE_PASSWORD ?? 'compliance123',
+    persona: 'compliance-officer' as const,
   },
-} as const;
+};
 
 type TestUser = keyof typeof TEST_USERS;
 
@@ -62,7 +64,10 @@ interface AuthFixtures {
 async function skipOnboarding(page: Page): Promise<void> {
   await page.addInitScript(() => {
     // Skip onboarding modal for e2e tests
-    localStorage.setItem('langgraph_onboarding_completed', 'true');
+    // StudioShellLayout checks: storage.get("studio-onboarding") !== true
+    // useOnboarding checks: storage.get("studio-onboarding", { expectObject: true })?.completed
+    // Set to "true" (JSON boolean) to satisfy StudioShellLayout's check
+    localStorage.setItem('studio-onboarding', 'true');
   });
 }
 
@@ -122,6 +127,21 @@ async function authenticateViaBrowserPKCE(
       return false;
     }
 
+    // Dismiss onboarding modal after auth. The addInitScript may not persist
+    // through the cross-origin Keycloak redirect, so set localStorage explicitly
+    // and reload once to ensure the onboarding hook reads it before rendering.
+    const needsOnboardingDismiss = await page.evaluate(() => {
+      const stored = localStorage.getItem('studio-onboarding');
+      if (stored !== 'true') {
+        localStorage.setItem('studio-onboarding', 'true');
+        return true;
+      }
+      return false;
+    });
+    if (needsOnboardingDismiss) {
+      await page.reload({ waitUntil: 'networkidle' });
+    }
+
     return true;
   } catch (error) {
     console.warn(`Browser PKCE authentication failed for ${user.username}:`, error);
@@ -171,7 +191,8 @@ async function setupMockAuth(
       }));
 
       // Skip onboarding modal for e2e tests
-      localStorage.setItem('langgraph_onboarding_completed', 'true');
+      // StudioShellLayout checks: storage.get("studio-onboarding") !== true
+      localStorage.setItem('studio-onboarding', 'true');
     },
     { user }
   );

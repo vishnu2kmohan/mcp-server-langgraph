@@ -33,6 +33,7 @@ import {
   Sparkles,
   MessageSquare,
   Zap,
+  Palette,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
 import { Button } from "@/components/UI";
@@ -42,6 +43,8 @@ import type { ToolSelectionMode, ToolPreference } from "@/types/tools";
 import { formatProviderDisplay } from "@/utils/modelDisplay";
 import type { ModelOption } from "./ChatInput";
 import type { ToolOption } from "./ToolSelector";
+import type { PresetName, StylePreset } from "./StylePresets";
+import { PRESET_CONFIGS } from "./StylePresets";
 
 // =============================================================================
 // Types
@@ -100,6 +103,13 @@ export interface PreferencesMenuProps {
   criticModel?: string | null;
   /** Callback when critic model changes */
   onCriticModelChange?: (modelId: string | null) => void;
+  // =========================================================================
+  // Style Presets
+  // =========================================================================
+  /** Currently active style preset */
+  activeStylePreset?: PresetName;
+  /** Callback when style preset changes */
+  onStylePresetChange?: (preset: StylePreset) => void;
 }
 
 // =============================================================================
@@ -117,6 +127,34 @@ const TOOL_MODES: { value: ToolSelectionMode; label: string }[] = [
   { value: "manual", label: "Manual" },
   { value: "none", label: "None" },
 ];
+
+const STYLE_PRESET_OPTIONS: {
+  value: PresetName;
+  label: string;
+  description: string;
+  icon: typeof Sparkles;
+}[] = [
+  {
+    value: "creative",
+    label: "Creative",
+    description: `Temperature ${PRESET_CONFIGS.creative.temperature}, ${PRESET_CONFIGS.creative.maxTokens} tokens`,
+    icon: Sparkles,
+  },
+  {
+    value: "balanced",
+    label: "Balanced",
+    description: `Temperature ${PRESET_CONFIGS.balanced.temperature}, ${PRESET_CONFIGS.balanced.maxTokens} tokens`,
+    icon: MessageSquare,
+  },
+  {
+    value: "precise",
+    label: "Precise",
+    description: `Temperature ${PRESET_CONFIGS.precise.temperature}, ${PRESET_CONFIGS.precise.maxTokens} tokens`,
+    icon: Cpu,
+  },
+];
+
+// PRESET_CONFIGS imported directly from StylePresets.tsx (single source of truth)
 
 const KB_FOCUS_MODES: { value: KBFocusMode; label: string }[] = [
   { value: "all", label: "All Sources" },
@@ -170,6 +208,15 @@ function getToolModeLabel(mode: ToolSelectionMode): string {
  */
 function getKBFocusModeLabel(mode: KBFocusMode): string {
   return KB_FOCUS_MODES.find((m) => m.value === mode)?.label ?? "All Sources";
+}
+
+/**
+ * Get display label for style preset
+ */
+function getStylePresetLabel(preset?: PresetName): string {
+  return (
+    STYLE_PRESET_OPTIONS.find((p) => p.value === preset)?.label ?? "Balanced"
+  );
 }
 
 /**
@@ -284,7 +331,13 @@ export function PreferencesMenu({
   onExecutorModelChange,
   criticModel,
   onCriticModelChange,
+  // Style presets
+  activeStylePreset,
+  onStylePresetChange,
 }: PreferencesMenuProps) {
+  // Normalize style preset so RadioGroup value and highlight class stay in sync
+  const effectiveStylePreset: PresetName = activeStylePreset ?? "balanced";
+
   // Get current model display name
   const currentModel = availableModels.find((m) => m.id === selectedModel);
   const currentModelName = currentModel?.name ?? "Select Model";
@@ -782,6 +835,68 @@ export function PreferencesMenu({
                     </DropdownMenu.RadioItem>
                   ))}
                 </DropdownMenu.RadioGroup>
+              </SubMenuContent>
+            </DropdownMenu.Sub>
+
+            <DropdownMenu.Separator className="h-px bg-neutral-6 my-1" />
+
+            {/* Style Presets Submenu */}
+            <DropdownMenu.Sub>
+              <SubMenuTrigger
+                data-testid="submenu-trigger-style"
+                icon={<Palette className="h-4 w-4" aria-hidden="true" />}
+                label="Style"
+                value={getStylePresetLabel(effectiveStylePreset)}
+              />
+              <SubMenuContent data-testid="submenu-content-style">
+                <div data-testid="style-presets-container">
+                  <DropdownMenu.RadioGroup
+                    value={effectiveStylePreset}
+                    onValueChange={(value) => {
+                      const presetName = value as PresetName;
+                      const config = PRESET_CONFIGS[presetName];
+                      onStylePresetChange?.({
+                        name: presetName,
+                        ...config,
+                      });
+                    }}
+                  >
+                    {STYLE_PRESET_OPTIONS.map((preset) => {
+                      const Icon = preset.icon;
+                      return (
+                        <DropdownMenu.RadioItem
+                          key={preset.value}
+                          value={preset.value}
+                          data-testid={`preset-${preset.value}`}
+                          className={cn(
+                            "flex items-center justify-between w-full px-3 py-2.5 text-sm",
+                            "hover:bg-neutral-4 focus:bg-neutral-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-7",
+                            "cursor-pointer rounded-md",
+                            "transition-colors duration-150",
+                            effectiveStylePreset === preset.value
+                              ? "text-primary-11 bg-primary-3"
+                              : "text-neutral-12",
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" aria-hidden="true" />
+                            <div className="flex flex-col items-start gap-0.5">
+                              <span className="font-medium">
+                                {preset.label}
+                              </span>
+                              <span className="text-xs text-neutral-10">
+                                {preset.description}
+                              </span>
+                            </div>
+                          </div>
+                          <DropdownMenu.ItemIndicator>
+                            <Check className="h-4 w-4" aria-hidden="true" />
+                          </DropdownMenu.ItemIndicator>
+                        </DropdownMenu.RadioItem>
+                      );
+                    })}
+                  </DropdownMenu.RadioGroup>
+                </div>
               </SubMenuContent>
             </DropdownMenu.Sub>
           </DropdownMenu.Content>

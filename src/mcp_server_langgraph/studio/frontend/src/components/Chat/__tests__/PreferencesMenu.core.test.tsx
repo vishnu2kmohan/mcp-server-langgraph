@@ -40,6 +40,7 @@ vi.mock("lucide-react", async () => {
     Sparkles: () => <span data-testid="icon-sparkles" />,
     MessageSquare: () => <span data-testid="icon-message" />,
     Zap: () => <span data-testid="icon-zap" />,
+    Palette: () => <span data-testid="icon-palette" />,
   };
 });
 

@@ -17,6 +17,10 @@ const backendEnabled = process.env.BACKEND_ENABLED !== "false";
 
 test.describe("Chat UX Features", () => {
   test.describe("URL Content Fetch (#URL)", () => {
+    test.afterEach(async ({ alicePage }) => {
+      await alicePage.unrouteAll({ behavior: "ignoreErrors" });
+    });
+
     test("should detect URL pattern when typing #https://", async ({
       alicePage,
     }) => {
@@ -50,12 +54,9 @@ test.describe("Chat UX Features", () => {
       // Type URL - auto-fetch should trigger
       await chatInput.fill("#https://httpbin.org/delay/1");
 
-      // Should show loading indicator (spinner or loading text)
-      const loadingIndicator = alicePage.locator(
-        '[data-testid="url-fetch-loading"], .animate-spin'
-      );
-      // May or may not appear depending on debounce timing
-      // This is a soft check - we just verify no errors occur
+      // Loading indicator may or may not appear depending on debounce timing.
+      // Soft check: verify the page remains stable (no JS errors).
+      await expect(alicePage.locator("body")).toBeVisible();
     });
 
     test("should display fetched URL as chip/badge", async ({ alicePage }) => {
@@ -128,6 +129,10 @@ test.describe("Chat UX Features", () => {
   });
 
   test.describe("Slash Commands", () => {
+    test.afterEach(async ({ alicePage }) => {
+      await alicePage.unrouteAll({ behavior: "ignoreErrors" });
+    });
+
     test("should show command menu when typing /", async ({ alicePage }) => {
       await alicePage.goto("/studio/chat");
 
@@ -250,19 +255,55 @@ test.describe("Chat UX Features", () => {
   });
 
   test.describe("Style Presets", () => {
-    test("should display style presets selector", async ({ alicePage }) => {
-      await alicePage.goto("/studio/chat");
+    // Style presets live inside the PreferencesMenu dropdown (⚙ Preferences).
+    // The preferences_menu feature flag must be enabled; we mock the API to ensure it.
+    test.beforeEach(async ({ alicePage }) => {
+      // Mock feature flags to enable preferences_menu
+      await alicePage.route("**/api/v1/features**", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ preferences_menu: true }),
+        });
+      });
+    });
 
-      // Style presets container should be visible
+    test.afterEach(async ({ alicePage }) => {
+      await alicePage.unrouteAll({ behavior: "ignoreErrors" });
+    });
+
+    /** Helper: open the Style submenu inside PreferencesMenu */
+    async function openStyleSubmenu(page: import("@playwright/test").Page) {
+      // Open the preferences dropdown
+      const prefsTrigger = page.getByTestId("preferences-menu-trigger");
+      await expect(prefsTrigger).toBeVisible({ timeout: 10000 });
+      await prefsTrigger.click();
+
+      // Open the Style submenu
+      const styleTrigger = page.getByTestId("submenu-trigger-style");
+      await expect(styleTrigger).toBeVisible({ timeout: 5000 });
+      await styleTrigger.click();
+
+      // Wait for the style presets container to appear
+      const container = page.getByTestId("style-presets-container");
+      await expect(container).toBeVisible({ timeout: 5000 });
+      return container;
+    }
+
+    test("should display style presets in preferences menu", async ({
+      alicePage,
+    }) => {
+      await alicePage.goto("/studio/chat");
+      await openStyleSubmenu(alicePage);
+
+      // The style presets container should be visible inside the dropdown
       const stylePresets = alicePage.getByTestId("style-presets-container");
-      await expect(stylePresets).toBeVisible({ timeout: 10000 });
+      await expect(stylePresets).toBeVisible();
     });
 
     test("should show three preset options", async ({ alicePage }) => {
       await alicePage.goto("/studio/chat");
-
-      const stylePresets = alicePage.getByTestId("style-presets-container");
-      await expect(stylePresets).toBeVisible({ timeout: 10000 });
+      const stylePresets = await openStyleSubmenu(alicePage);
 
       // Should have Creative, Balanced, and Precise options
       await expect(stylePresets.getByText("Creative")).toBeVisible();
@@ -273,67 +314,72 @@ test.describe("Chat UX Features", () => {
     test("should have Balanced selected by default", async ({ alicePage }) => {
       await alicePage.goto("/studio/chat");
 
-      const stylePresets = alicePage.getByTestId("style-presets-container");
-      await expect(stylePresets).toBeVisible({ timeout: 10000 });
+      // Verify the trigger label also shows "Balanced" (end-to-end default propagation)
+      const prefsTrigger = alicePage.getByTestId("preferences-menu-trigger");
+      await expect(prefsTrigger).toBeVisible({ timeout: 10000 });
+      await prefsTrigger.click();
+      const styleTrigger = alicePage.getByTestId("submenu-trigger-style");
+      await expect(styleTrigger).toBeVisible({ timeout: 5000 });
+      await expect(styleTrigger).toContainText("Balanced");
 
-      // Balanced should be the active/selected preset
-      const balancedButton = stylePresets.getByRole("button", {
-        name: /balanced/i,
-      });
-      await expect(balancedButton).toHaveAttribute("data-active", "true");
+      // Open the submenu and verify radio state
+      await styleTrigger.click();
+      const balancedItem = alicePage.getByTestId("preset-balanced");
+      await expect(balancedItem).toHaveAttribute("data-state", "checked");
     });
 
     test("should allow selecting different presets", async ({ alicePage }) => {
       await alicePage.goto("/studio/chat");
-
-      const stylePresets = alicePage.getByTestId("style-presets-container");
-      await expect(stylePresets).toBeVisible({ timeout: 10000 });
+      await openStyleSubmenu(alicePage);
 
       // Click on Creative
-      const creativeButton = stylePresets.getByRole("button", {
-        name: /creative/i,
-      });
-      await creativeButton.click();
+      const creativeItem = alicePage.getByTestId("preset-creative");
+      await creativeItem.click();
 
-      // Creative should now be active
-      await expect(creativeButton).toHaveAttribute("data-active", "true");
+      // Re-open menu to verify state persisted
+      await openStyleSubmenu(alicePage);
 
-      // Balanced should not be active
-      const balancedButton = stylePresets.getByRole("button", {
-        name: /balanced/i,
-      });
-      await expect(balancedButton).not.toHaveAttribute("data-active", "true");
+      // Creative should now be checked
+      await expect(
+        alicePage.getByTestId("preset-creative"),
+      ).toHaveAttribute("data-state", "checked");
+
+      // Balanced should not be checked
+      await expect(
+        alicePage.getByTestId("preset-balanced"),
+      ).toHaveAttribute("data-state", "unchecked");
     });
 
-    test("should persist preset selection during session", async ({
+    test("should reset preset to balanced after navigation (React state)", async ({
       alicePage,
     }) => {
       await alicePage.goto("/studio/chat");
-
-      const stylePresets = alicePage.getByTestId("style-presets-container");
-      await expect(stylePresets).toBeVisible({ timeout: 10000 });
+      await openStyleSubmenu(alicePage);
 
       // Select Precise
-      const preciseButton = stylePresets.getByRole("button", {
-        name: /precise/i,
-      });
-      await preciseButton.click();
-      await expect(preciseButton).toHaveAttribute("data-active", "true");
+      const preciseItem = alicePage.getByTestId("preset-precise");
+      await preciseItem.click();
 
       // Navigate away and back
       await alicePage.goto("/studio/workflows");
       await alicePage.goto("/studio/chat");
 
-      // Precise should still be selected (within same session)
-      const stylePresetsAfter = alicePage.getByTestId("style-presets-container");
-      await expect(stylePresetsAfter).toBeVisible({ timeout: 10000 });
-
-      // Note: This depends on state management - may reset on navigation
-      // This test documents the expected behavior
+      // Re-open and verify state resets to balanced (component-local state)
+      await openStyleSubmenu(alicePage);
+      await expect(
+        alicePage.getByTestId("preset-balanced"),
+      ).toHaveAttribute("data-state", "checked");
+      await expect(
+        alicePage.getByTestId("preset-precise"),
+      ).toHaveAttribute("data-state", "unchecked");
     });
   });
 
   test.describe("Error Handling UX", () => {
+    test.afterEach(async ({ alicePage }) => {
+      await alicePage.unrouteAll({ behavior: "ignoreErrors" });
+    });
+
     test("should show error toast when URL fetch fails", async ({
       alicePage,
     }) => {

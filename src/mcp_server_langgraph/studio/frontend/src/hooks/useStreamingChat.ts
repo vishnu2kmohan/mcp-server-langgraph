@@ -157,6 +157,10 @@ export interface StartStreamOptions {
   history?: Array<{ id: string; role: string; content: string }>;
   /** Message ID for the current user message (Finding 1: enables ID-based dedup) */
   messageId?: string;
+  /** Sampling temperature override from style presets (0.0-2.0) */
+  temperature?: number;
+  /** Maximum tokens to generate override from style presets */
+  maxTokens?: number;
 }
 
 /**
@@ -223,6 +227,40 @@ export interface UseStreamingChatReturn extends StreamingChatState {
   ) => void;
   stopStream: () => void;
   clearContent: () => void;
+}
+
+// =============================================================================
+// Runtime Type Guards for SSE Data (defense against malformed payloads)
+// =============================================================================
+
+function isLangGraphNodeLike(v: unknown): boolean {
+  if (!v || typeof v !== "object") return false;
+  const n = v as Record<string, unknown>;
+  return typeof n.id === "string" && typeof n.name === "string";
+}
+
+function isLangGraphEdgeLike(v: unknown): boolean {
+  if (!v || typeof v !== "object") return false;
+  const e = v as Record<string, unknown>;
+  return typeof e.from === "string" && typeof e.to === "string";
+}
+
+function isRoutingDecisionLike(v: unknown): boolean {
+  if (!v || typeof v !== "object") return false;
+  const d = v as Record<string, unknown>;
+  return typeof d.complexity === "string" && typeof d.risk === "string";
+}
+
+// Upper bounds for streaming state to prevent unbounded growth
+const MAX_LANGGRAPH_NODES = 500;
+const MAX_LANGGRAPH_EDGES = 1000;
+const MAX_SOURCES = 200;
+const MAX_STREAMING_CONTENT_LENGTH = 500_000; // ~500KB cap for streaming text
+
+function isPlanLike(v: unknown): boolean {
+  if (!v || typeof v !== "object") return false;
+  const p = v as Record<string, unknown>;
+  return typeof p.id === "string" && typeof p.status === "string";
 }
 
 /**
@@ -380,13 +418,13 @@ export function useStreamingChat(): UseStreamingChatReturn {
             result.traceId = data.trace_id;
           }
 
-          // Handle LangGraph node updates
-          if (data.langgraph_node) {
+          // Handle LangGraph node updates (with runtime validation)
+          if (data.langgraph_node && isLangGraphNodeLike(data.langgraph_node)) {
             result.langgraphNode = data.langgraph_node as LangGraphNode;
           }
 
-          // Handle LangGraph edge updates
-          if (data.langgraph_edge) {
+          // Handle LangGraph edge updates (with runtime validation)
+          if (data.langgraph_edge && isLangGraphEdgeLike(data.langgraph_edge)) {
             result.langgraphEdge = data.langgraph_edge as LangGraphEdge;
           }
 
@@ -420,14 +458,18 @@ export function useStreamingChat(): UseStreamingChatReturn {
           // Handle plan_generated events (Execution Mode feature)
           // Uses transformSnakeToCamel to convert all 27 fields from snake_case
           if (data.plan_generated) {
-            result.planGenerated = transformSnakeToCamel(
-              data.plan_generated,
-            ) as ExecutionPlan;
+            const transformed = transformSnakeToCamel(data.plan_generated);
+            if (isPlanLike(transformed)) {
+              result.planGenerated = transformed as ExecutionPlan;
+            }
           }
 
           // Handle routing_decision events (Router Agent classification)
           // Contains complexity, risk, confidence, and rationale for debugging
-          if (data.routing_decision) {
+          if (
+            data.routing_decision &&
+            isRoutingDecisionLike(data.routing_decision)
+          ) {
             result.routingDecision = {
               complexity: data.routing_decision.complexity,
               risk: data.routing_decision.risk,
@@ -593,6 +635,14 @@ export function useStreamingChat(): UseStreamingChatReturn {
         requestBody.tool_preference = options.toolPreference;
       }
 
+      // Style preset overrides: temperature and max_tokens
+      if (options?.temperature !== undefined) {
+        requestBody.temperature = options.temperature;
+      }
+      if (options?.maxTokens !== undefined) {
+        requestBody.max_tokens = options.maxTokens;
+      }
+
       // Start the fetch + stream processing
       const processStream = async () => {
         try {
@@ -702,13 +752,20 @@ export function useStreamingChat(): UseStreamingChatReturn {
                 const updates: Partial<StreamingChatState> = {};
 
                 if (parsed.content) {
+                  const combined = prev.streamingContent + parsed.content;
                   updates.streamingContent =
-                    prev.streamingContent + parsed.content;
+                    combined.length > MAX_STREAMING_CONTENT_LENGTH
+                      ? combined.slice(0, MAX_STREAMING_CONTENT_LENGTH)
+                      : combined;
                 }
 
                 if (parsed.thinking) {
-                  updates.thinkingContent =
+                  const combinedThinking =
                     prev.thinkingContent + parsed.thinking;
+                  updates.thinkingContent =
+                    combinedThinking.length > MAX_STREAMING_CONTENT_LENGTH
+                      ? combinedThinking.slice(0, MAX_STREAMING_CONTENT_LENGTH)
+                      : combinedThinking;
                 }
 
                 if (parsed.thinkingTokens !== undefined) {
@@ -738,11 +795,11 @@ export function useStreamingChat(): UseStreamingChatReturn {
                     updatedNodes[existingNodeIndex] = parsed.langgraphNode;
                     updates.langgraphNodes = updatedNodes;
                   } else {
-                    // Add new node
+                    // Add new node (bounded)
                     updates.langgraphNodes = [
                       ...prev.langgraphNodes,
                       parsed.langgraphNode,
-                    ];
+                    ].slice(-MAX_LANGGRAPH_NODES);
                   }
                 }
 
@@ -757,7 +814,7 @@ export function useStreamingChat(): UseStreamingChatReturn {
                     updates.langgraphEdges = [
                       ...prev.langgraphEdges,
                       parsed.langgraphEdge,
-                    ];
+                    ].slice(-MAX_LANGGRAPH_EDGES);
                   }
                 }
 
@@ -790,7 +847,9 @@ export function useStreamingChat(): UseStreamingChatReturn {
                     (s) => !existingUrls.has(s.url),
                   );
                   if (newSources.length > 0) {
-                    updates.sources = [...prev.sources, ...newSources];
+                    updates.sources = [...prev.sources, ...newSources].slice(
+                      -MAX_SOURCES,
+                    );
                   }
                 }
 
