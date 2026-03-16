@@ -560,7 +560,7 @@ jobs:
       if: hashFiles('coverage.json') != ''
 
     - name: Upload merged coverage to Codecov
-      uses: codecov/codecov-action@v5.5.1
+      uses: codecov/codecov-action@v5.5.2
       with:
         files: ./coverage-merged.xml
         flags: unit
@@ -844,7 +844,7 @@ jobs:
 
     - name: Log in to Container Registry
       if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3.6.0
+      uses: docker/login-action@v4.0.0
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
@@ -852,7 +852,7 @@ jobs:
 
     # OPTIMIZATION: Variant-specific cache scopes with GitHub Actions cache
     - name: Build ${{ matrix.variant }} image
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v7.0.0
       with:
         context: .
         file: docker/Dockerfile
@@ -879,7 +879,7 @@ jobs:
     # Retry failed builds once (handles transient network issues)
     - name: Retry build on failure
       if: failure()
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v7.0.0
       with:
         context: .
         file: docker/Dockerfile
@@ -996,7 +996,7 @@ jobs:
         enable-qemu: 'true'
 
     - name: Log in to Container Registry
-      uses: docker/login-action@v3.6.0
+      uses: docker/login-action@v4.0.0
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
@@ -1010,7 +1010,7 @@ jobs:
 
     # OPTIMIZATION: Platform-specific builds in parallel with enhanced caching
     - name: Build ${{ matrix.variant }} for ${{ matrix.platform }}
-      uses: docker/build-push-action@v6.18.0
+      uses: docker/build-push-action@v7.0.0
       with:
         context: .
         file: docker/Dockerfile
@@ -1048,7 +1048,7 @@ jobs:
       uses: ./.github/actions/setup-docker-buildx
 
     - name: Log in to Container Registry
-      uses: docker/login-action@v3.6.0
+      uses: docker/login-action@v4.0.0
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
