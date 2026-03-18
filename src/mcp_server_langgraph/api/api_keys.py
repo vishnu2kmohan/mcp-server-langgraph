@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
+from mcp_server_langgraph.observability.telemetry import logger
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
@@ -23,7 +24,7 @@ APIKeyManagerDep = Annotated[APIKeyManager, Depends(get_api_key_manager)]
 KeycloakClientDep = Annotated[KeycloakClient, Depends(get_keycloak_client)]
 
 router = APIRouter(
-    prefix="/api/v1/api-keys",
+    prefix="/api-keys",
     tags=["API Keys"],
 )
 
@@ -243,8 +244,9 @@ async def validate_api_key(
             username=user_info["username"],
         )
 
-    except Exception as e:
+    except Exception:
+        logger.error("Failed to issue JWT for API key exchange", exc_info=True, extra={"user_id": user_info.get("user_id")})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to issue JWT: {e!s}",
+            detail="Failed to issue access token",
         )

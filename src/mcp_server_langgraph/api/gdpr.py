@@ -24,7 +24,7 @@ from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord as GDPRCo
 from mcp_server_langgraph.core.security import sanitize_header_value
 from mcp_server_langgraph.observability.telemetry import logger, tracer
 
-router = APIRouter(prefix="/api/v1/users", tags=["GDPR Compliance"])
+router = APIRouter(prefix="/users", tags=["GDPR Compliance"])
 
 
 # ==================== Models ====================
@@ -377,7 +377,7 @@ async def delete_user_account(
             )
             raise HTTPException(
                 status_code=500,
-                detail=f"Account deletion completed with errors: {', '.join(result.errors)}",
+                detail="Account deletion could not be fully completed. Please contact support.",
             )
 
         logger.warning(

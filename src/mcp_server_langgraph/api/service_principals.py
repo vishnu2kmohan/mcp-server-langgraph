@@ -18,7 +18,7 @@ from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.core.dependencies import get_openfga_client_from_request, get_service_principal_manager
 
 router = APIRouter(
-    prefix="/api/v1/service-principals",
+    prefix="/service-principals",
     tags=["Service Principals"],
 )
 
@@ -139,23 +139,22 @@ async def _validate_user_association_permission(
                 )
                 return  # Authorized via OpenFGA delegation
 
-        except Exception as e:
+        except Exception:
             # Log error but continue to denial
-            from mcp_server_langgraph.observability.telemetry import logger
-
             logger.warning(
-                f"OpenFGA check failed for Service Principal authorization: {e}",
+                "OpenFGA check failed for Service Principal authorization",
+                exc_info=True,
                 extra={"user_id": user_id, "target_user_id": target_user_id},
             )
 
     # Rule 4: All other cases are denied
+    logger.warning(
+        "Service principal authorization denied",
+        extra={"user_id": user_id, "target_user_id": target_user_id},
+    )
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail=(
-            f"You are not authorized to create service principals that act as '{target_user_id}'. "
-            f"You can create SPs for yourself ('{user_id}'), or with admin privileges, "
-            f"or can_manage_service_principals OpenFGA relation."
-        ),
+        detail="You are not authorized to create service principals for this user.",
     )
 
 
