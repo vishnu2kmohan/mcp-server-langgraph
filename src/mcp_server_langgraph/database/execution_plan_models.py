@@ -13,6 +13,7 @@ Phase 4: PostgreSQL Repositories (SQLAlchemy AsyncSession)
 from datetime import datetime, UTC
 from decimal import Decimal
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -129,8 +130,8 @@ class ExecutionPlanModel(Base):
     embedding_error: Mapped[str | None] = mapped_column(String(255), nullable=True)
     embedding_failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    # Note: description_embedding is vector(768) type, added via pgvector migration
-    # SQLAlchemy doesn't have native vector type, so we handle this in raw SQL
+    # pgvector embedding for semantic search (768 dimensions = text-embedding-005)
+    description_embedding = mapped_column(Vector(768), nullable=True)
 
     # Indexes
     __table_args__ = (Index("ix_execution_plans_session_status", "session_id", "status"),)
@@ -194,7 +195,8 @@ class PlanTemplateModel(Base):
     embedding_error: Mapped[str | None] = mapped_column(String(255), nullable=True)
     embedding_failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    # Note: description_embedding is vector(768) type, added via pgvector migration
+    # pgvector embedding for semantic search (768 dimensions = text-embedding-005)
+    description_embedding = mapped_column(Vector(768), nullable=True)
 
     # Indexes
     __table_args__ = (

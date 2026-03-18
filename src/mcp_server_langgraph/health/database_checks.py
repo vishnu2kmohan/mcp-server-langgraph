@@ -131,8 +131,8 @@ class DatabaseValidator:
         suffix = "_test" if self.environment == Environment.TEST else ""
 
         return {
-            f"gdpr{suffix}": DatabaseInfo(
-                name=f"gdpr{suffix}",
+            f"compliance{suffix}": DatabaseInfo(
+                name=f"compliance{suffix}",
                 purpose="GDPR compliance storage (user profiles, consents, audit logs)",
                 required_tables=["user_profiles", "user_preferences", "consent_records", "conversations", "audit_logs"],
                 managed_by="migrations",

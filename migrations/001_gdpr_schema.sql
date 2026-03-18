@@ -15,6 +15,12 @@
 -- - 90-day retention for conversations (configurable)
 
 -- ==============================================================================
+-- 0. EXTENSIONS
+-- ==============================================================================
+-- Required for vector(768) embedding columns in execution_plans table
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- ==============================================================================
 -- 1. USER PROFILES
 -- ==============================================================================
 -- Stores basic user information for GDPR data subject rights
@@ -224,6 +230,7 @@ CREATE TABLE IF NOT EXISTS execution_plans (
     embedding_status TEXT NOT NULL DEFAULT 'pending',
     embedding_error TEXT,
     embedding_failed_at TIMESTAMPTZ,
+    description_embedding vector(768),
 
     -- Constraints
     CONSTRAINT execution_plans_status_valid CHECK (

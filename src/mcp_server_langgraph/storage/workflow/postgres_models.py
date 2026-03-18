@@ -67,7 +67,12 @@ class WorkflowModel(Base):
     # Versioning fields (added for chat-to-workflow feature)
     head_version_id: Mapped[str | None] = mapped_column(
         String(36),
-        ForeignKey("workflow_versions.id", ondelete="SET NULL", use_alter=True),
+        ForeignKey(
+            "workflow_versions.id",
+            name="fk_workflows_head_version",
+            ondelete="SET NULL",
+            use_alter=True,
+        ),
         nullable=True,
     )
     source_text: Mapped[str | None] = mapped_column(Text, nullable=True)

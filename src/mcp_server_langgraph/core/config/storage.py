@@ -78,7 +78,7 @@ class StorageSettings(DomainSettings):
     # Qdrant Vector Database
     qdrant_url: str = "localhost"
     qdrant_port: int = 6333
-    qdrant_collection_name: str = "mcp_context"
+    qdrant_collection_name: str = "agent_studio_context"
     dynamic_context_max_tokens: int = 2000
     dynamic_context_top_k: int = 3
     context_cache_size: int = 100
