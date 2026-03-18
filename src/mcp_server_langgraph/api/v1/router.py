@@ -294,6 +294,24 @@ v1_router.include_router(plan_templates_router, prefix="/plan-templates", tags=[
 # Frontend WebSocket reconnection metrics collection (Prometheus integration)
 v1_router.include_router(websocket_metrics_router, tags=["websocket-metrics"])
 
+# =============================================================================
+# GDPR, Service Principals & API Keys
+# =============================================================================
+# GDPR compliance endpoints (Articles 15-21: access, portability, rectification, erasure, consent)
+from mcp_server_langgraph.api.gdpr import router as gdpr_router
+
+v1_router.include_router(gdpr_router, tags=["gdpr"])
+
+# Service principal management (ADR-0033)
+from mcp_server_langgraph.api.service_principals import router as service_principals_router
+
+v1_router.include_router(service_principals_router, tags=["service-principals"])
+
+# API key management (ADR-0034: API key to JWT exchange)
+from mcp_server_langgraph.api.api_keys import router as api_keys_router
+
+v1_router.include_router(api_keys_router, tags=["api-keys"])
+
 # Note: Admin marketplace management (marketplace_admin) uses factory pattern
 # It is registered separately during application bootstrap if marketplace feature is enabled
 

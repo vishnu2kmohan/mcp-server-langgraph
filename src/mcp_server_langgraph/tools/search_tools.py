@@ -81,7 +81,7 @@ def _build_qdrant_guidance() -> str:
 Required environment variables:
   QDRANT_URL=localhost (or http://qdrant:6333 in Docker)
   QDRANT_PORT=6333
-  QDRANT_COLLECTION_NAME=mcp_context
+  QDRANT_COLLECTION_NAME=agent_studio_context
   ENABLE_DYNAMIC_CONTEXT_LOADING=true
 
 See: .env.example"""

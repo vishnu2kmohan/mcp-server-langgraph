@@ -22,7 +22,7 @@ Usage:
     # Bootstrap default collection
     bootstrap = await bootstrap_qdrant_collection(
         url="http://qdrant:6333",
-        collection_name="mcp_context",
+        collection_name="agent_studio_context",
         vector_size=384,
     )
 """
@@ -136,7 +136,7 @@ async def validate_qdrant_connection(
 
 async def bootstrap_qdrant_collection(
     url: str = "http://localhost:6333",
-    collection_name: str = "mcp_context",
+    collection_name: str = "agent_studio_context",
     vector_size: int = 384,
     distance: str = "Cosine",
     timeout: int = 10,

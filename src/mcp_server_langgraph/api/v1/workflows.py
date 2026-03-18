@@ -1031,12 +1031,12 @@ def get_workflow_service() -> WorkflowServiceAdapter:
             # Use Any type to allow different manager types across branches
             manager: Any = loop.run_until_complete(init_postgres_manager())
 
-            # Create share repository (use in-memory for now, can be replaced with Postgres impl)
+            # Create share repository backed by PostgreSQL for durable persistence
             from mcp_server_langgraph.storage.workflow.share_repository import (
-                InMemoryWorkflowShareRepository,
+                PostgresWorkflowShareRepository,
             )
 
-            share_repo = InMemoryWorkflowShareRepository()
+            share_repo = PostgresWorkflowShareRepository(engine=manager._engine)
             _workflow_service = WorkflowServiceAdapter(manager, share_repository=share_repo)
             logger.info("Workflow service initialized with PostgreSQL storage")
 
@@ -1060,14 +1060,14 @@ def get_workflow_service() -> WorkflowServiceAdapter:
                 asyncio.set_event_loop(loop)
             manager = loop.run_until_complete(init_redis_manager())
 
-            # Create share repository
+            # Redis mode uses in-memory shares (Redis share repo not implemented)
             from mcp_server_langgraph.storage.workflow.share_repository import (
                 InMemoryWorkflowShareRepository,
             )
 
             share_repo = InMemoryWorkflowShareRepository()
             _workflow_service = WorkflowServiceAdapter(manager, share_repository=share_repo)
-            logger.info("Workflow service initialized with Redis storage")
+            logger.info("Workflow service initialized with Redis storage (shares in-memory)")
 
         else:
             # Fallback to in-memory storage for development/testing
