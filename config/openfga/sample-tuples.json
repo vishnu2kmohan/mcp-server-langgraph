@@ -690,12 +690,6 @@
       "object": "logs:audit"
     },
     {
-      "_comment": "Audit WebSocket - bob has viewer access for transparency (can see own actions)",
-      "user": "user:bob",
-      "relation": "viewer",
-      "object": "logs:audit"
-    },
-    {
       "_comment": "Notification WebSocket (/api/v1/ws/notifications) - all authenticated users",
       "user": "user:admin",
       "relation": "viewer",
@@ -848,6 +842,50 @@
       "object": "system:global"
     },
     {
+      "_comment": "=== Role Assignments for Sub-Persona Specializations ===",
+      "_section": "Maps users to specialized roles (security, audit, analyst, devops, compliance)"
+    },
+    {
+      "_comment": "Admin sub-persona: security-admin (admin + security role)"
+    },
+    {
+      "user": "user:admin",
+      "relation": "assignee",
+      "object": "role:security"
+    },
+    {
+      "_comment": "Admin sub-persona: auditor (admin + audit role)"
+    },
+    {
+      "user": "user:admin",
+      "relation": "assignee",
+      "object": "role:audit"
+    },
+    {
+      "_comment": "Alice sub-persona: alice-analyst (developer + analyst role)"
+    },
+    {
+      "user": "user:alice",
+      "relation": "assignee",
+      "object": "role:analyst"
+    },
+    {
+      "_comment": "Alice sub-persona: alice-devops (developer + devops role)"
+    },
+    {
+      "user": "user:alice",
+      "relation": "assignee",
+      "object": "role:devops"
+    },
+    {
+      "_comment": "Alice sub-persona: compliance-officer (developer + compliance role)"
+    },
+    {
+      "user": "user:alice",
+      "relation": "assignee",
+      "object": "role:compliance"
+    },
+    {
       "_comment": "Connection permissions (/api/v1/connections)",
       "user": "user:admin",
       "relation": "owner",
@@ -859,14 +897,43 @@
       "object": "connection:alice_conn"
     },
     {
-      "user": "user:bob",
-      "relation": "viewer",
-      "object": "connection:alice_conn"
-    },
-    {
       "user": "organization:acme",
       "relation": "organization",
       "object": "connection:default"
+    },
+    {
+      "_comment": "Admin owns admin_conn (private connection)"
+    },
+    {
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "connection:admin_conn"
+    },
+    {
+      "_comment": "Bob owns bob_conn (private connection)"
+    },
+    {
+      "user": "user:bob",
+      "relation": "owner",
+      "object": "connection:bob_conn"
+    },
+    {
+      "_comment": "Shared connection - admin owns, alice and bob have viewer access"
+    },
+    {
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "connection:shared_conn"
+    },
+    {
+      "user": "user:alice",
+      "relation": "viewer",
+      "object": "connection:shared_conn"
+    },
+    {
+      "user": "user:bob",
+      "relation": "viewer",
+      "object": "connection:shared_conn"
     },
     {
       "_comment": "AI permissions (/api/v1/ai, /api/v1/ws/ai/suggestions) - admin implicitly has 'user' via model inheritance (ADR-0068)",
@@ -1055,6 +1122,22 @@
       "object": "project:default"
     },
     {
+      "_comment": "Admin owns admin_project (private project)"
+    },
+    {
+      "user": "user:admin",
+      "relation": "owner",
+      "object": "project:admin_project"
+    },
+    {
+      "_comment": "Alice owns alice_project (private project)"
+    },
+    {
+      "user": "user:alice",
+      "relation": "owner",
+      "object": "project:alice_project"
+    },
+    {
       "_comment": "Traces Stream WebSocket (/api/v1/ws/traces) - real-time trace streaming",
       "user": "user:admin",
       "relation": "admin",
@@ -1140,6 +1223,14 @@
     {
       "_comment": "Skill Index - organization for tenant isolation",
       "user": "organization:acme",
+      "relation": "organization",
+      "object": "skill_index:default"
+    },
+    {
+      "_comment": "Test organization for skill index access (org members get viewer via tupleToUserset)"
+    },
+    {
+      "user": "organization:test_org",
       "relation": "organization",
       "object": "skill_index:default"
     },

@@ -612,6 +612,11 @@ services:
       # but it's required when using path-based routing (KC_HTTP_RELATIVE_PATH=/authn)
       # because hostname v2's KC_HOSTNAME doesn't support paths.
       #
+      # ISSUER MISMATCH NOTE: Tokens obtained via gateway (iss: http://localhost/authn/...)
+      # differ from tokens obtained via internal Docker network (iss: http://keycloak-test:8080/authn/...).
+      # Services that introspect gateway-issued tokens must route through the gateway,
+      # or accept both issuers (see OPENFGA_AUTHN_OIDC_ISSUER_ALIASES for OpenFGA).
+      #
       # KC_PROXY_HEADERS=xforwarded: Required for Keycloak behind reverse proxy (Traefik)
       # Reference: https://www.keycloak.org/server/reverseproxy
       - KC_HOSTNAME_URL=http://localhost/authn

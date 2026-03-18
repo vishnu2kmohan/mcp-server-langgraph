@@ -55,12 +55,14 @@ echo "✓ TimescaleDB extension enabled"
 # Required for execution plan and template embedding search
 # TimescaleDB 2.17.2-pg16 includes pgvector as a bundled extension
 # Reference: Phase 1 - pgvector Test Image
-echo "Enabling pgvector extension in agent_studio_test database..."
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "agent_studio_test" <<-EOSQL
-    CREATE EXTENSION IF NOT EXISTS vector;
-    \echo 'pgvector extension enabled in agent_studio_test'
+echo "Enabling pgvector extension in all test databases..."
+for db in agent_studio_test compliance_test; do
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db" <<-EOSQL
+        CREATE EXTENSION IF NOT EXISTS vector;
+        \echo 'pgvector extension enabled in $db'
 EOSQL
-echo "✓ pgvector extension enabled"
+done
+echo "✓ pgvector extension enabled in all databases"
 
 # Apply compliance schema to compliance_test database
 # The compliance schema is required for E2E tests (test_infrastructure fixture checks for these tables)

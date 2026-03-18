@@ -472,13 +472,8 @@
                 }
               },
               {
-                "tupleToUserset": {
-                  "tupleset": {
-                    "relation": "organization"
-                  },
-                  "computedUserset": {
-                    "relation": "member"
-                  }
+                "computedUserset": {
+                  "relation": "editor"
                 }
               }
             ]
@@ -1218,6 +1213,50 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "role",
+      "relations": {
+        "assignee": {
+          "this": {}
+        },
+        "member": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "assignee"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "assignee": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "organization",
+                "relation": "member"
               }
             ]
           }
