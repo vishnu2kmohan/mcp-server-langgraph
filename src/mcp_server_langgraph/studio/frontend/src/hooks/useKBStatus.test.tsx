@@ -83,7 +83,7 @@ describe("useKBStatus", () => {
         data: {
           status: "ready",
           qdrantConnected: true,
-          collectionName: "mcp_context",
+          collectionName: "agent_studio_context",
           vectorsCount: 1500,
         },
         isLoading: false,
@@ -110,7 +110,7 @@ describe("useKBStatus", () => {
         data: {
           status: "ready",
           qdrantConnected: true,
-          collectionName: "mcp_context",
+          collectionName: "agent_studio_context",
           vectorsCount: 2500,
           embeddingProvider: "google_vertex",
           embeddingModel: "text-embedding-005",
@@ -132,7 +132,7 @@ describe("useKBStatus", () => {
       expect(result.current.isReady).toBe(true);
       expect(result.current.isMisconfigured).toBe(false);
       expect(result.current.isUnavailable).toBe(false);
-      expect(result.current.collectionName).toBe("mcp_context");
+      expect(result.current.collectionName).toBe("agent_studio_context");
       expect(result.current.vectorsCount).toBe(2500);
     });
 
@@ -166,7 +166,7 @@ describe("useKBStatus", () => {
         data: {
           status: "unavailable",
           qdrantConnected: false,
-          collectionName: "mcp_context",
+          collectionName: "agent_studio_context",
           message: "Unable to connect to Qdrant",
         },
         isLoading: false,
@@ -235,7 +235,7 @@ describe("useKBStatus", () => {
         data: {
           status: "ready",
           qdrantConnected: true,
-          collectionName: "mcp_context",
+          collectionName: "agent_studio_context",
           vectorsCount: 1500,
         },
         isLoading: false,
@@ -272,7 +272,7 @@ describe("useKBStatus", () => {
         data: {
           status: "ready",
           qdrantConnected: true,
-          collectionName: "mcp_context",
+          collectionName: "agent_studio_context",
           vectorsCount: 1500,
           contextTokenBudget: 2000,
           contextTopK: 5,

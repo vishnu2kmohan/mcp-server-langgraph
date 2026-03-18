@@ -1127,7 +1127,7 @@ export const handlers = [
     return HttpResponse.json({
       status: "ready",
       qdrant_connected: true,
-      collection_name: "mcp_context",
+      collection_name: "agent_studio_context",
       vectors_count: 1500,
       embedding_provider: "google_vertex",
       embedding_model: "text-embedding-005",
