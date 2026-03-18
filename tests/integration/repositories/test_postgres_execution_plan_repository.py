@@ -13,12 +13,21 @@ Phase 4: PostgreSQL Repositories (SQLAlchemy AsyncSession)
 """
 
 import gc
+import socket
 import uuid
 from datetime import datetime, timedelta, UTC
+from typing import AsyncGenerator
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
+from tests.constants import (
+    TEST_POSTGRES_HOST,
+    TEST_POSTGRES_PASSWORD,
+    TEST_POSTGRES_PORT,
+    TEST_POSTGRES_USER,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.repository]
 
@@ -63,27 +72,42 @@ class TestPostgresExecutionPlanRepository:
         gc.collect()
 
     @pytest.fixture
-    async def repo(self, postgres_connection_clean):
-        """Create repository with test database session."""
+    async def async_engine(self) -> AsyncGenerator[AsyncEngine, None]:
+        """Create SQLAlchemy async engine for compliance_test database."""
+        try:
+            with socket.create_connection((TEST_POSTGRES_HOST, TEST_POSTGRES_PORT), timeout=2):
+                pass
+        except (ConnectionRefusedError, TimeoutError, OSError):
+            pytest.skip(f"PostgreSQL not available at {TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}")
+
+        # Import models to register them with Base.metadata (resolves FK references)
+        import mcp_server_langgraph.database.execution_plan_models  # noqa: F401
+        import mcp_server_langgraph.storage.session.postgres_models  # noqa: F401
+
+        compliance_db = "compliance_test"
+        database_url = (
+            f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
+            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{compliance_db}"
+        )
+        engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
+        yield engine
+        await engine.dispose()
+
+    @pytest.fixture
+    async def repo(self, async_engine: AsyncEngine):
+        """Create repository with SQLAlchemy async session factory, cleaning execution_plans first."""
+        from sqlalchemy import text
+
         from mcp_server_langgraph.repositories.postgres_execution_plan import (
             PostgresExecutionPlanRepository,
         )
 
-        # Create mock session factory from connection
-        class MockSessionFactory:
-            def __init__(self, conn):
-                self.conn = conn
+        # Clean up leftover data from previous test runs
+        async with async_engine.begin() as conn:
+            await conn.execute(text("DELETE FROM execution_plans"))
 
-            def __call__(self):
-                return self
-
-            async def __aenter__(self):
-                return self.conn
-
-            async def __aexit__(self, *args):
-                pass
-
-        return PostgresExecutionPlanRepository(MockSessionFactory(postgres_connection_clean))
+        session_factory = async_sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+        return PostgresExecutionPlanRepository(session_factory)
 
     async def test_create_and_get_plan(self, repo):
         """Test creating and retrieving an execution plan."""

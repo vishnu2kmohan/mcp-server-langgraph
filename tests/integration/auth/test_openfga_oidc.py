@@ -35,8 +35,8 @@ pytestmark = [
 OPENFGA_URL = os.getenv("OPENFGA_URL", "http://localhost:9080")
 KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL", "http://localhost/authn")
 KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "default")
-OPENFGA_OIDC_CLIENT_ID = os.getenv("OPENFGA_OIDC_CLIENT_ID", "openfga-server")
-OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET", "test-openfga-server-secret")
+OPENFGA_OIDC_CLIENT_ID = os.getenv("OPENFGA_OIDC_CLIENT_ID", "agent-studio-openfga-oidc-cient-id-for-e2e-tests")
+OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET", "agent-studio-openfga-oidc-client-secret-for-e2e-tests")
 
 # Construct OIDC issuer URL
 OIDC_ISSUER = f"{KEYCLOAK_SERVER_URL.rstrip('/')}/realms/{KEYCLOAK_REALM}"
@@ -198,7 +198,7 @@ class TestOpenFGAOIDCAuthentication:
         """
         config = OpenFGAConfig(
             api_url=OPENFGA_URL,
-            store_name="mcp-server-langgraph-test",
+            store_name="agent-studio-openfga-store-test",
             oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
             oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
             oidc_issuer=OIDC_ISSUER,
@@ -239,7 +239,7 @@ class TestOpenFGAOIDCAuthentication:
         """
         config = OpenFGAConfig(
             api_url=OPENFGA_URL,
-            store_name="mcp-server-langgraph-test",
+            store_name="agent-studio-openfga-store-test",
             oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
             oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
             oidc_issuer=OIDC_ISSUER,
@@ -284,7 +284,7 @@ class TestOpenFGAOIDCAuthentication:
         """
         config = OpenFGAConfig(
             api_url=OPENFGA_URL,
-            store_name="mcp-server-langgraph-test",
+            store_name="agent-studio-openfga-store-test",
             oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
             oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
             oidc_issuer=OIDC_ISSUER,

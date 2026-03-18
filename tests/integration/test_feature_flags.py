@@ -108,20 +108,20 @@ class TestFeatureFlags:
         """Test experimental features require master switch"""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
-        # Master switch off
+        # Master switch off — individual flags have no effect
         flags = FeatureFlags(
-            enable_experimental_features=False, enable_multi_agent_collaboration=True, enable_tool_reflection=True
+            enable_experimental_features=False, enable_multi_agent_orchestration=True, enable_tool_reflection=True
         )
 
-        assert flags.should_use_experimental("enable_multi_agent_collaboration") is False
+        assert flags.should_use_experimental("enable_multi_agent_orchestration") is False
         assert flags.should_use_experimental("enable_tool_reflection") is False
 
-        # Master switch on
+        # Master switch on — individual flags control each feature
         flags = FeatureFlags(
-            enable_experimental_features=True, enable_multi_agent_collaboration=True, enable_tool_reflection=False
+            enable_experimental_features=True, enable_multi_agent_orchestration=True, enable_tool_reflection=False
         )
 
-        assert flags.should_use_experimental("enable_multi_agent_collaboration") is True
+        assert flags.should_use_experimental("enable_multi_agent_orchestration") is True
         assert flags.should_use_experimental("enable_tool_reflection") is False
 
     def test_global_feature_flags_instance(self):

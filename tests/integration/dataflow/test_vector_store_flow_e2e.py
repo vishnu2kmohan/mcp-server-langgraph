@@ -44,7 +44,7 @@ def unique_tenant_id() -> str:
 @pytest.fixture
 def unique_tool_id() -> str:
     """Generate unique tool ID for test isolation."""
-    return f"tool-{uuid4().hex[:8]}"
+    return f"builtin:test-tool-{uuid4().hex[:8]}"
 
 
 @pytest.fixture
@@ -269,7 +269,7 @@ class TestSemanticIndexManagerFlow:
         )
 
         # Create multiple entries
-        entries = [create_tool_entry(f"tool-{i}", f"tool_{i}", f"Tool {i} description") for i in range(3)]
+        entries = [create_tool_entry(f"builtin:tool-{i}", f"tool_{i}", f"Tool {i} description") for i in range(3)]
 
         # Index batch
         await manager.index_tools_batch(entries)

@@ -63,7 +63,7 @@ class TestDatabaseConnectivityReal:
 
         from mcp_server_langgraph.infrastructure.database import check_database_connectivity
 
-        postgres_url = os.getenv("GDPR_POSTGRES_URL", "postgresql://postgres:postgres@localhost:9432/gdpr_test")
+        postgres_url = os.getenv("GDPR_POSTGRES_URL", "postgresql://postgres:postgres@localhost:9432/compliance_test")
 
         is_healthy, message = await check_database_connectivity(postgres_url, timeout=5.0)
 
@@ -94,7 +94,9 @@ class TestDatabaseConnectivityReal:
         # Use real PostgreSQL connection (assumes Docker Compose is running)
         # Use POSTGRES_PORT env var (default 9432 for tests, not production 5432)
         postgres_port = os.getenv("POSTGRES_PORT", "9432")
-        postgres_url = os.getenv("GDPR_POSTGRES_URL", f"postgresql://postgres:postgres@localhost:{postgres_port}/gdpr_test")
+        postgres_url = os.getenv(
+            "GDPR_POSTGRES_URL", f"postgresql://postgres:postgres@localhost:{postgres_port}/compliance_test"
+        )
 
         pool = await create_connection_pool(
             postgres_url,

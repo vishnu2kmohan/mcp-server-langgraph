@@ -61,9 +61,10 @@ async def test_engine():
         pytest.skip("PostgreSQL not available for integration tests")
 
     # Use test database URL from environment or default
+    # Database name is agent_studio_test (managed by Alembic migrations)
     database_url = os.getenv(
         "TEST_DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:9432/mcp_test",
+        "postgresql+asyncpg://postgres:postgres@localhost:9432/agent_studio_test",
     )
 
     try:
@@ -79,24 +80,8 @@ async def test_engine():
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
 
-    except Exception:
-        # Try gdpr_test database as fallback
-        database_url = os.getenv(
-            "TEST_DATABASE_URL",
-            "postgresql+asyncpg://postgres:postgres@localhost:9432/gdpr_test",
-        )
-        try:
-            engine = create_async_engine(
-                database_url,
-                echo=False,
-                pool_size=5,
-                max_overflow=10,
-                pool_pre_ping=True,
-            )
-            async with engine.begin() as conn:
-                await conn.execute(text("SELECT 1"))
-        except Exception as e:
-            pytest.skip(f"PostgreSQL not available: {e}")
+    except Exception as e:
+        pytest.skip(f"PostgreSQL not available: {e}")
 
     yield engine
 
@@ -112,7 +97,7 @@ async def setup_database(test_engine):
     1. Fresh database - creates the table
     2. Existing database (from migrations) - uses existing table
     """
-    # Check if table exists
+    # Check if table exists and has required columns
     async with test_engine.begin() as conn:
         result = await conn.execute(
             text("""
@@ -124,13 +109,33 @@ async def setup_database(test_engine):
         )
         table_exists = result.scalar()
 
+        if table_exists:
+            # Check if created_at column exists (may be missing from old schema)
+            col_result = await conn.execute(
+                text("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.columns
+                        WHERE table_name = 'token_usage_records'
+                        AND column_name = 'created_at'
+                    )
+                """)
+            )
+            has_created_at = col_result.scalar()
+            if not has_created_at:
+                # Drop and recreate to match current model schema
+                await conn.execute(text("DROP TABLE token_usage_records"))
+                table_exists = False
+
         if not table_exists:
-            # Create table for testing
+            # Create table matching the SQLAlchemy model (TokenUsageRecord)
+            # Column names must match the model: 'metadata' not 'metadata_',
+            # 'created_at' added, cost precision matches NUMERIC(10, 6)
             await conn.execute(
                 text("""
                     CREATE TABLE IF NOT EXISTS token_usage_records (
                         id SERIAL PRIMARY KEY,
                         timestamp TIMESTAMPTZ NOT NULL,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                         user_id VARCHAR(255) NOT NULL,
                         session_id VARCHAR(255) NOT NULL,
                         model VARCHAR(255) NOT NULL,
@@ -138,9 +143,9 @@ async def setup_database(test_engine):
                         prompt_tokens INTEGER NOT NULL,
                         completion_tokens INTEGER NOT NULL,
                         total_tokens INTEGER NOT NULL,
-                        estimated_cost_usd DECIMAL(20, 10) NOT NULL,
+                        estimated_cost_usd NUMERIC(10, 6) NOT NULL,
                         feature VARCHAR(255) DEFAULT 'chat',
-                        metadata_ JSONB,
+                        metadata JSON,
                         organization_id VARCHAR(255),
                         project_id VARCHAR(255),
                         team_id VARCHAR(255),
@@ -159,7 +164,9 @@ async def setup_database(test_engine):
 @pytest.fixture(scope="module")
 async def database_url(test_engine) -> str:
     """Get the database URL for creating PostgresCostStorage."""
-    url_str = str(test_engine.url)
+    # Use render_as_string(hide_password=False) to preserve the actual password.
+    # str(engine.url) replaces the password with '***' which causes auth failures.
+    url_str = test_engine.url.render_as_string(hide_password=False)
     # Ensure we use asyncpg driver
     if not url_str.startswith("postgresql+asyncpg://"):
         url_str = url_str.replace("postgresql://", "postgresql+asyncpg://")

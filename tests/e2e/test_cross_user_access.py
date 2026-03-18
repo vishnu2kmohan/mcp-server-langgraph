@@ -30,7 +30,6 @@ class TestCrossUserAccess:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_01_alice_cannot_access_bobs_private_workflow(
         self,
         e2e_api_base_url: str,
@@ -57,7 +56,6 @@ class TestCrossUserAccess:
             # Alice should NOT have access
             assert response.status_code in [403, 404, 401]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_bob_cannot_access_admin_routes(
         self,
         e2e_api_base_url: str,
@@ -89,7 +87,6 @@ class TestCrossUserAccess:
                 # Bob should be denied access to all admin routes
                 assert response.status_code in [403, 401, 404], f"Bob should not have access to {endpoint}"
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_03_alice_shares_workflow_with_bob(
         self,
         e2e_api_base_url: str,
@@ -116,7 +113,6 @@ class TestCrossUserAccess:
             # Bob should have viewer access
             assert response.status_code in [200, 401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_04_bob_cannot_delete_shared_workflow(
         self,
         e2e_api_base_url: str,
@@ -142,7 +138,6 @@ class TestCrossUserAccess:
             # Bob should NOT be able to delete (viewer only)
             assert response.status_code in [403, 401]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_05_alice_can_revoke_bobs_access(
         self,
         e2e_api_base_url: str,
@@ -169,7 +164,6 @@ class TestCrossUserAccess:
             # Should succeed or 404 if endpoint not implemented
             assert response.status_code in [200, 204, 401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_06_admin_can_access_any_workflow(
         self,
         e2e_api_base_url: str,
@@ -195,7 +189,6 @@ class TestCrossUserAccess:
             # Admin should have access to all workflows
             assert response.status_code in [200, 401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_07_anonymous_user_cannot_access_any_workflow(
         self,
         e2e_api_base_url: str,

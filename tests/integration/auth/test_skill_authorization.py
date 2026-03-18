@@ -34,15 +34,53 @@ pytestmark = [
 
 # URLs and credentials
 OPENFGA_URL = os.getenv("OPENFGA_URL", "http://localhost:9080")
-OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
+# OIDC credentials for OpenFGA API access (ADR-0070: OIDC replaces preshared key)
+OPENFGA_OIDC_CLIENT_ID = os.getenv("OPENFGA_OIDC_CLIENT_ID", "agent-studio-openfga-oidc-cient-id-for-e2e-tests")
+OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET", "agent-studio-openfga-oidc-client-secret-for-e2e-tests")
+KEYCLOAK_TOKEN_URL = os.getenv(
+    "KEYCLOAK_TOKEN_URL",
+    "http://localhost/authn/realms/default/protocol/openid-connect/token",
+)
+_cached_oidc_token: str | None = None
+
+
+def _get_oidc_token() -> str | None:
+    """Obtain OIDC token from Keycloak for OpenFGA API access."""
+    global _cached_oidc_token
+    if _cached_oidc_token:
+        return _cached_oidc_token
+    try:
+        response = requests.post(
+            KEYCLOAK_TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": OPENFGA_OIDC_CLIENT_ID,
+                "client_secret": OPENFGA_OIDC_CLIENT_SECRET,
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            _cached_oidc_token = response.json().get("access_token")
+            return _cached_oidc_token
+    except Exception:
+        pass
+    return None
+
+
+def _get_auth_headers() -> dict[str, str]:
+    """Get OIDC authentication headers for OpenFGA API requests."""
+    token = _get_oidc_token()
+    if not token:
+        pytest.skip("Could not obtain OIDC token from Keycloak for OpenFGA API access")
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
 
 
 def _get_openfga_store_and_model() -> tuple[str | None, str | None]:
     """Dynamically discover OpenFGA store and model IDs."""
-    headers = {
-        "Authorization": f"Bearer {OPENFGA_PRESHARED_KEY}",
-        "Content-Type": "application/json",
-    }
+    headers = _get_auth_headers()
 
     try:
         stores_resp = requests.get(f"{OPENFGA_URL}/stores", headers=headers, timeout=10)
@@ -52,7 +90,7 @@ def _get_openfga_store_and_model() -> tuple[str | None, str | None]:
         stores = stores_resp.json().get("stores", [])
         store_id = None
         for store in stores:
-            if store.get("name") == "mcp-server-langgraph-test":
+            if store.get("name") == "agent-studio-openfga-store-test":
                 store_id = store.get("id")
                 break
 
@@ -84,10 +122,7 @@ def _check_permission(user: str, relation: str, obj: str) -> bool:
     if not store_id or not model_id:
         pytest.skip("OpenFGA store not initialized")
 
-    headers = {
-        "Authorization": f"Bearer {OPENFGA_PRESHARED_KEY}",
-        "Content-Type": "application/json",
-    }
+    headers = _get_auth_headers()
 
     response = requests.post(
         f"{OPENFGA_URL}/stores/{store_id}/check",

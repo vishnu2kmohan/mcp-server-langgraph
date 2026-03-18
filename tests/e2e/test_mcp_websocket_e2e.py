@@ -37,7 +37,7 @@ pytestmark = [
 E2E_WS_BASE_URL = os.getenv("E2E_WS_BASE_URL", "ws://localhost:8000")
 E2E_HTTP_BASE_URL = os.getenv("E2E_HTTP_BASE_URL", "http://localhost:8000")
 E2E_KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost/authn")
-E2E_CLIENT_ID = "mcp-server"
+E2E_CLIENT_ID = "agent-studio-keycloak-client-id-for-e2e-tests"
 E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 
@@ -49,12 +49,35 @@ def _get_keycloak_token(
 ) -> str | None:
     """Get Keycloak access token via modern OAuth2 flows.
 
-    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    Two-step Token Exchange (RFC 8693):
+    1. Get service account token via client_credentials
+    2. Exchange it for a user-specific token with subject_token
+
     ROPC (password grant) is disabled per security audit (ADR-0086).
     """
     token_url = f"{E2E_KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
-    # Try Token Exchange first (RFC 8693) for user-specific context
+    # Step 1: Get service account token via client_credentials
+    try:
+        sa_response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if sa_response.status_code != 200:
+            return None
+        sa_token = sa_response.json().get("access_token")
+        if not sa_token:
+            return None
+    except Exception:
+        return None
+
+    # Step 2: Exchange for user-specific token (RFC 8693)
     try:
         response = requests.post(
             token_url,
@@ -62,8 +85,9 @@ def _get_keycloak_token(
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "requested_subject": username,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email",
             },
@@ -74,23 +98,8 @@ def _get_keycloak_token(
     except Exception:
         pass
 
-    # Fallback to client_credentials (service account)
-    try:
-        response = requests.post(
-            token_url,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "scope": "openid profile email",
-            },
-            timeout=10,
-        )
-        if response.status_code == 200:
-            return response.json().get("access_token")
-    except Exception:
-        pass
-    return None
+    # Fallback to service account token if exchange not configured
+    return sa_token
 
 
 def _mcp_websocket_available() -> bool:
@@ -137,26 +146,35 @@ class TestMCPWebSocketE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_connection_unauthenticated(self) -> None:
+    async def test_mcp_websocket_requires_authentication(self) -> None:
         """
         GIVEN no authentication token
-        WHEN connecting to the basic MCP WebSocket endpoint
-        THEN the connection is established (for anonymous access).
+        WHEN connecting to the MCP WebSocket endpoint
+        THEN the connection is rejected (ADR-0103: all WS require auth).
         """
         try:
             import websockets
+            from websockets.exceptions import InvalidStatus, WebSocketException
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0"
 
-        async with websockets.connect(ws_url, open_timeout=10) as websocket:
-            assert websocket.open
+        try:
+            async with websockets.connect(ws_url, open_timeout=5) as websocket:
+                # If connection succeeds, server should close it quickly
+                try:
+                    await asyncio.wait_for(websocket.recv(), timeout=2.0)
+                    pytest.fail("MCP WebSocket should require authentication")
+                except (TimeoutError, WebSocketException):
+                    pass  # Connection closed by server - expected
+        except (TimeoutError, InvalidStatus, ConnectionRefusedError, WebSocketException):
+            pass  # Connection rejected - expected
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_initialize_handshake(self) -> None:
+    async def test_mcp_websocket_initialize_handshake(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN sending initialize message
         THEN should receive proper initialize response with server info.
         """
@@ -165,7 +183,10 @@ class TestMCPWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send initialize request
@@ -193,9 +214,9 @@ class TestMCPWebSocketE2E:
             assert "capabilities" in response["result"]
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_tools_list(self) -> None:
+    async def test_mcp_websocket_tools_list(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket after initialize
+        GIVEN an authenticated MCP WebSocket after initialize
         WHEN sending tools/list message
         THEN should receive list of available tools.
         """
@@ -204,7 +225,10 @@ class TestMCPWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -241,9 +265,9 @@ class TestMCPWebSocketE2E:
             assert isinstance(response["result"]["tools"], list)
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_resources_list(self) -> None:
+    async def test_mcp_websocket_resources_list(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket after initialize
+        GIVEN an authenticated MCP WebSocket after initialize
         WHEN sending resources/list message
         THEN should receive list of available resources.
         """
@@ -252,7 +276,10 @@ class TestMCPWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -288,9 +315,9 @@ class TestMCPWebSocketE2E:
             assert "resources" in response["result"]
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_prompts_list(self) -> None:
+    async def test_mcp_websocket_prompts_list(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket after initialize
+        GIVEN an authenticated MCP WebSocket after initialize
         WHEN sending prompts/list message
         THEN should receive list of available prompts.
         """
@@ -299,7 +326,10 @@ class TestMCPWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -335,9 +365,9 @@ class TestMCPWebSocketE2E:
             assert "prompts" in response["result"]
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_unknown_method_error(self) -> None:
+    async def test_mcp_websocket_unknown_method_error(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN sending unknown method
         THEN should receive method not found error.
         """
@@ -346,7 +376,10 @@ class TestMCPWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send unknown method
@@ -391,7 +424,7 @@ class TestMCPWebSocketAuthenticatedE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             assert websocket.open
@@ -405,13 +438,13 @@ class TestMCPWebSocketAuthenticatedE2E:
         """
         try:
             import websockets
-            from websockets.exceptions import InvalidStatusCode
+            from websockets.exceptions import InvalidStatus
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0"
 
-        with pytest.raises((InvalidStatusCode, asyncio.TimeoutError, ConnectionRefusedError)):
+        with pytest.raises((InvalidStatus, asyncio.TimeoutError, ConnectionRefusedError)):
             async with websockets.connect(ws_url, open_timeout=5) as _:
                 pass
 
@@ -424,14 +457,14 @@ class TestMCPWebSocketAuthenticatedE2E:
         """
         try:
             import websockets
-            from websockets.exceptions import InvalidStatusCode
+            from websockets.exceptions import InvalidStatus
         except ImportError:
             pytest.skip("websockets library not installed")
 
         invalid_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.token"
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={invalid_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={invalid_token}"
 
-        with pytest.raises((InvalidStatusCode, asyncio.TimeoutError, ConnectionRefusedError)):
+        with pytest.raises((InvalidStatus, asyncio.TimeoutError, ConnectionRefusedError)):
             async with websockets.connect(ws_url, open_timeout=5) as _:
                 pass
 
@@ -450,7 +483,7 @@ class TestMCPWebSocketAuthenticatedE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -503,8 +536,8 @@ class TestMCPWebSocketAuthenticatedE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        alice_ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={alice_token}"
-        bob_ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={bob_token}"
+        alice_ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
+        bob_ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={bob_token}"
 
         async def connect_and_initialize(ws_url: str) -> bool:
             async with websockets.connect(ws_url, open_timeout=10) as ws:
@@ -543,9 +576,9 @@ class TestMCPWebSocketSessionE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_with_session_id(self) -> None:
+    async def test_mcp_websocket_with_session_id(self, alice_token: str | None) -> None:
         """
-        GIVEN a specific session ID
+        GIVEN a specific session ID and valid authentication
         WHEN connecting to MCP WebSocket with session ID
         THEN connection is established with session context.
         """
@@ -554,8 +587,11 @@ class TestMCPWebSocketSessionE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
         session_id = "test-session-12345"
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{session_id}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{session_id}?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             assert websocket.open
@@ -578,9 +614,9 @@ class TestMCPWebSocketSessionE2E:
             assert response["result"]["protocolVersion"] == "2025-11-25"
 
     @pytest.mark.asyncio
-    async def test_mcp_websocket_reconnection_with_same_session(self) -> None:
+    async def test_mcp_websocket_reconnection_with_same_session(self, alice_token: str | None) -> None:
         """
-        GIVEN a session ID that was previously connected
+        GIVEN an authenticated session ID that was previously connected
         WHEN reconnecting with the same session ID
         THEN connection is established for context resumption.
         """
@@ -589,8 +625,11 @@ class TestMCPWebSocketSessionE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
         session_id = "test-reconnect-session"
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{session_id}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{session_id}?v=1.0.0&token={alice_token}"
 
         # First connection
         async with websockets.connect(ws_url, open_timeout=10) as websocket1:
@@ -627,9 +666,9 @@ class TestMCPWebSocketSecurityE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_message_size_limit_enforced(self) -> None:
+    async def test_message_size_limit_enforced(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN sending a message exceeding the size limit (1MB)
         THEN should receive error response.
         """
@@ -638,7 +677,10 @@ class TestMCPWebSocketSecurityE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send oversized message (>1MB)
@@ -662,17 +704,20 @@ class TestMCPWebSocketSecurityE2E:
             assert response["error"]["code"] == -32600  # Invalid request
 
     @pytest.mark.asyncio
-    async def test_invalid_session_id_rejected(self) -> None:
+    async def test_invalid_session_id_rejected(self, alice_token: str | None) -> None:
         """
         GIVEN an invalid session ID with special characters
-        WHEN connecting to MCP WebSocket with session ID
+        WHEN connecting to authenticated MCP WebSocket with session ID
         THEN connection is rejected with appropriate error.
         """
         try:
             import websockets
-            from websockets.exceptions import InvalidStatusCode
+            from websockets.exceptions import InvalidStatus
         except ImportError:
             pytest.skip("websockets library not installed")
+
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
 
         # Session IDs with special characters should be rejected
         invalid_session_ids = [
@@ -686,10 +731,10 @@ class TestMCPWebSocketSecurityE2E:
             import urllib.parse
 
             encoded_session = urllib.parse.quote(session_id, safe="")
-            ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{encoded_session}"
+            ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{encoded_session}?v=1.0.0&token={alice_token}"
 
             with pytest.raises(
-                (InvalidStatusCode, asyncio.TimeoutError, ConnectionRefusedError),
+                (InvalidStatus, asyncio.TimeoutError, ConnectionRefusedError),
                 match=r".*",
             ):
                 async with websockets.connect(ws_url, open_timeout=5) as _:
@@ -697,9 +742,9 @@ class TestMCPWebSocketSecurityE2E:
                     pass
 
     @pytest.mark.asyncio
-    async def test_json_parse_error_handled_gracefully(self) -> None:
+    async def test_json_parse_error_handled_gracefully(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN sending invalid JSON
         THEN should receive parse error response.
         """
@@ -708,7 +753,10 @@ class TestMCPWebSocketSecurityE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send invalid JSON
@@ -731,9 +779,9 @@ class TestMCPWebSocketStreamingE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_tools_list_returns_langgraph_run(self) -> None:
+    async def test_tools_list_returns_langgraph_run(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN requesting tools/list
         THEN should include langgraph-run tool with streaming capability.
         """
@@ -742,7 +790,10 @@ class TestMCPWebSocketStreamingE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -780,9 +831,9 @@ class TestMCPWebSocketStreamingE2E:
             assert "langgraph-run" in tool_names
 
     @pytest.mark.asyncio
-    async def test_prompts_get_code_review(self) -> None:
+    async def test_prompts_get_code_review(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN requesting prompts/get for code_review
         THEN should return formatted prompt messages.
         """
@@ -791,7 +842,10 @@ class TestMCPWebSocketStreamingE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -834,9 +888,9 @@ class TestMCPWebSocketStreamingE2E:
             assert messages[0]["role"] == "user"
 
     @pytest.mark.asyncio
-    async def test_initialize_returns_streaming_capability(self) -> None:
+    async def test_initialize_returns_streaming_capability(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN receiving initialize response
         THEN should include streaming capability.
         """
@@ -845,7 +899,10 @@ class TestMCPWebSocketStreamingE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send initialize
@@ -885,7 +942,7 @@ class TestMCPWebSocketStreamingE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1008,7 +1065,7 @@ class TestMCPWebSocketStreamingE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1078,18 +1135,21 @@ class TestMCPWebSocketStreamingE2E:
                             assert i < end_idx, "Chunk must come before end"
 
     @pytest.mark.asyncio
-    async def test_anonymous_streaming_tools_call(self) -> None:
+    async def test_authenticated_streaming_tools_call(self, alice_token: str | None) -> None:
         """
-        GIVEN an anonymous MCP WebSocket connection
+        GIVEN an authenticated MCP WebSocket connection
         WHEN sending tools/call with _meta.streaming=true
-        THEN should receive streaming notifications (anonymous streaming supported).
+        THEN should receive streaming notifications (authenticated streaming supported).
         """
         try:
             import websockets
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1106,14 +1166,14 @@ class TestMCPWebSocketStreamingE2E:
             await websocket.send(json.dumps(init_message))
             await asyncio.wait_for(websocket.recv(), timeout=5.0)
 
-            # Send streaming tools/call (anonymous)
+            # Send streaming tools/call (authenticated)
             tool_call_message = {
                 "jsonrpc": "2.0",
                 "id": 30,
                 "method": "tools/call",
                 "params": {
                     "name": "langgraph-run",
-                    "arguments": {"query": "Hello anonymous streaming"},
+                    "arguments": {"query": "Hello authenticated streaming"},
                     "_meta": {"streaming": True},
                 },
             }
@@ -1158,7 +1218,7 @@ class TestMCPWebSocketStreamingE2E:
                     assert "params" in start
                     assert "streamId" in start["params"]
                     assert "toolCallId" in start["params"]
-                    # Anonymous connections should also work
+                    # Authenticated connections should work
                     assert start["params"]["toolCallId"] == 30
 
 
@@ -1185,11 +1245,11 @@ class TestMCPWebSocketSecurityLimitsE2E:
 
         try:
             import websockets
-            from websockets.exceptions import InvalidStatusCode
+            from websockets.exceptions import InvalidStatus
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
         connections: list[Any] = []
         max_connections = 5  # Default limit
 
@@ -1201,7 +1261,7 @@ class TestMCPWebSocketSecurityLimitsE2E:
                 assert ws.open, f"Connection {i + 1} should be open"
 
             # Attempt to exceed the limit
-            with pytest.raises(InvalidStatusCode) as exc_info:
+            with pytest.raises(InvalidStatus) as exc_info:
                 await websockets.connect(ws_url, open_timeout=5)
 
             # Should be rejected with 4029 (too many connections)
@@ -1212,9 +1272,9 @@ class TestMCPWebSocketSecurityLimitsE2E:
                 await ws.close()
 
     @pytest.mark.asyncio
-    async def test_rate_limit_enforcement(self) -> None:
+    async def test_rate_limit_enforcement(self, alice_token: str | None) -> None:
         """
-        GIVEN a connected MCP WebSocket
+        GIVEN an authenticated MCP WebSocket
         WHEN sending messages faster than the rate limit (default 600/min)
         THEN should receive rate limit exceeded error.
 
@@ -1226,7 +1286,10 @@ class TestMCPWebSocketSecurityLimitsE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1269,9 +1332,9 @@ class TestMCPWebSocketSecurityLimitsE2E:
             assert rate_limit_hit, "Rate limit should be enforced"
 
     @pytest.mark.asyncio
-    async def test_configurable_message_size_limit(self) -> None:
+    async def test_configurable_message_size_limit(self, alice_token: str | None) -> None:
         """
-        GIVEN default message size limit (1MB)
+        GIVEN default message size limit (1MB) on an authenticated connection
         WHEN sending a message just under the limit
         THEN should succeed without error.
         """
@@ -1280,7 +1343,10 @@ class TestMCPWebSocketSecurityLimitsE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1328,18 +1394,21 @@ class TestMCPWebSocketConnectionLimitsE2E:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_multiple_anonymous_connections_allowed(self) -> None:
+    async def test_multiple_authenticated_connections_allowed(self, alice_token: str | None) -> None:
         """
-        GIVEN multiple anonymous WebSocket clients
+        GIVEN multiple authenticated WebSocket clients
         WHEN connecting to MCP WebSocket
-        THEN all connections are established (no per-user limit for anonymous).
+        THEN all connections are established within the per-user limit.
         """
         try:
             import websockets
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
         connections: list[Any] = []
 
         try:
@@ -1360,9 +1429,9 @@ class TestMCPWebSocketConnectionLimitsE2E:
                 await ws.close()
 
     @pytest.mark.asyncio
-    async def test_connection_persists_during_message_exchange(self) -> None:
+    async def test_connection_persists_during_message_exchange(self, alice_token: str | None) -> None:
         """
-        GIVEN an established MCP WebSocket connection
+        GIVEN an authenticated MCP WebSocket connection
         WHEN sending multiple messages in succession
         THEN connection remains stable throughout.
         """
@@ -1371,7 +1440,10 @@ class TestMCPWebSocketConnectionLimitsE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws"
+        if alice_token is None:
+            pytest.skip("Could not obtain alice's token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send multiple messages

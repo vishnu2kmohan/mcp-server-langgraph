@@ -161,11 +161,11 @@ class TestStandardUserJourney:
             print(f"DEBUG: Token claims: iss={decoded.get('iss')}, aud={decoded.get('aud')}")
 
             # Assert audience is present and correct (if mapper is working)
-            # Should contain "mcp-server" or "account"
+            # Should contain the client ID or "account"
             aud = decoded.get("aud")
             if isinstance(aud, str):
                 aud = [aud]
-            assert "mcp-server" in aud or "account" in aud
+            assert "agent-studio-keycloak-client-id-for-e2e-tests" in aud or "account" in aud
 
     async def test_02_mcp_initialize(self, authenticated_session):
         """Step 2: Initialize MCP protocol connection"""

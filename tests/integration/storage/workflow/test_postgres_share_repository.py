@@ -81,17 +81,21 @@ async def async_engine() -> AsyncGenerator[AsyncEngine, None]:
         await engine.dispose()
         pytest.skip(f"PostgreSQL connection failed: {e}")
 
-    # Create tables
+    # Import models BEFORE create_all so they register with Base.metadata
     from mcp_server_langgraph.models.base import Base
+
+    import mcp_server_langgraph.storage.workflow.postgres_models  # noqa: F401 — registers WorkflowModel, WorkflowShareModel, WorkflowVersionModel
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
 
-    # Cleanup
+    # Cleanup: drop tables with CASCADE to handle FK dependencies
+    # (Base.metadata.drop_all fails when execution_plans FK → sessions blocks drop order)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(text(f"DROP TABLE IF EXISTS {table.name} CASCADE"))
 
     await engine.dispose()
 

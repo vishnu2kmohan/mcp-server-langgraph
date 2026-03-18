@@ -36,7 +36,6 @@ class TestBobStandardUserJourney:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_01_bob_token_acquisition(
         self,
         e2e_keycloak_base_url: str,
@@ -62,7 +61,6 @@ class TestBobStandardUserJourney:
         # Token should be a non-empty string
         assert len(token) > 0
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_bob_cannot_access_admin_routes(
         self,
         e2e_api_base_url: str,
@@ -89,7 +87,6 @@ class TestBobStandardUserJourney:
             # Should be denied access
             assert response.status_code in [401, 403]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_03_bob_can_create_own_workflow(
         self,
         e2e_api_base_url: str,
@@ -124,7 +121,6 @@ class TestBobStandardUserJourney:
             # Bob should be able to create workflows
             assert response.status_code in [201, 401]  # 401 if auth not configured
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure and shared workflow")
     async def test_04_bob_can_view_shared_workflow(
         self,
         e2e_api_base_url: str,
@@ -150,7 +146,6 @@ class TestBobStandardUserJourney:
             # Bob should be able to view shared workflows
             assert response.status_code in [200, 401]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure and shared workflow")
     async def test_05_bob_cannot_edit_shared_workflow(
         self,
         e2e_api_base_url: str,
@@ -177,7 +172,6 @@ class TestBobStandardUserJourney:
             # Bob should NOT be able to edit (viewer only)
             assert response.status_code in [403, 401]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_06_bob_can_use_agent_chat(
         self,
         e2e_api_base_url: str,

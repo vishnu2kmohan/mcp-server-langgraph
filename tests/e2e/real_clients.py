@@ -42,9 +42,9 @@ class RealKeycloakAuth:
             base_url: Keycloak base URL (default: http://localhost:9082)
         """
         # CRITICAL: Include /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
-        self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082/authn")
-        self.realm = os.getenv("KEYCLOAK_REALM", "mcp-test")
-        self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
+        self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost/authn")
+        self.realm = os.getenv("KEYCLOAK_REALM", "default")
+        self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "agent-studio-keycloak-client-id-for-e2e-tests")
         # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection
         # Keycloak requires client authentication for introspection endpoint
         self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "test-client-secret-for-e2e-tests")
@@ -70,25 +70,8 @@ class RealKeycloakAuth:
         """
         token_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
 
-        # Try Token Exchange first (RFC 8693) for user-specific context
-        try:
-            data = {
-                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-                "requested_subject": username,
-                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
-                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
-                "scope": "openid profile email",
-            }
-            response = await self.client.post(token_url, data=data)
-            if response.status_code == 200:
-                return response.json()
-        except Exception:
-            pass
-
-        # Fallback to client_credentials (service account)
-        data = {
+        # Step 1: Get service account token via client_credentials
+        sa_data = {
             "grant_type": "client_credentials",
             "client_id": self.client_id,
             "client_secret": self.client_secret,
@@ -96,12 +79,37 @@ class RealKeycloakAuth:
         }
 
         try:
-            response = await self.client.post(
-                token_url,
-                data=data,
-            )
-            response.raise_for_status()
-            return response.json()
+            sa_response = await self.client.post(token_url, data=sa_data)
+            sa_response.raise_for_status()
+            sa_token_data = sa_response.json()
+            sa_token = sa_token_data.get("access_token")
+        except httpx.HTTPError as e:
+            raise RuntimeError(f"Failed to get service account token from {token_url}: {e}") from e
+
+        if not sa_token:
+            raise RuntimeError("Service account token response missing access_token")
+
+        # Step 2: Exchange for user-specific token (RFC 8693)
+        try:
+            exchange_data = {
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "subject_token": sa_token,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": username,
+                "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "scope": "openid profile email",
+            }
+            response = await self.client.post(token_url, data=exchange_data)
+            if response.status_code == 200:
+                return response.json()
+        except Exception:
+            pass
+
+        # Fallback to service account token if exchange not configured
+        try:
+            return sa_token_data
 
         except httpx.TimeoutException as e:
             raise RuntimeError(
@@ -164,6 +172,122 @@ class RealKeycloakAuth:
                 "refresh_token": refresh_token,
             },
         )
+
+    async def login_as_user(self, username: str) -> dict[str, str]:
+        """
+        Login as a specific user using Token Exchange (RFC 8693).
+
+        This method attempts to get a user-specific token without requiring a password.
+        Falls back to client_credentials if token exchange is not configured.
+
+        IMPORTANT: ROPC (password grant) is disabled per ADR-0086.
+
+        Args:
+            username: Username to authenticate as
+
+        Returns:
+            Dict with access_token, refresh_token, expires_in, etc.
+
+        Raises:
+            RuntimeError: If token exchange is not configured and client_credentials
+                         doesn't provide user-specific claims
+        """
+        token_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
+
+        # Step 1: Get service account token via client_credentials
+        try:
+            sa_data = {
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "scope": "openid profile email",
+            }
+            sa_response = await self.client.post(token_url, data=sa_data)
+            sa_response.raise_for_status()
+            sa_token_data = sa_response.json()
+            sa_token = sa_token_data.get("access_token")
+            if not sa_token:
+                return await self._fallback_client_credentials(username)
+        except httpx.HTTPError:
+            return await self._fallback_client_credentials(username)
+
+        # Step 2: Exchange for user-specific token (RFC 8693)
+        exchange_data = {
+            "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "subject_token": sa_token,
+            "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+            "requested_subject": username,
+            "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+            "scope": "openid profile email",
+        }
+
+        try:
+            response = await self.client.post(token_url, data=exchange_data)
+            if response.status_code == 200:
+                return response.json()
+            # Token exchange not configured or other error — fall back
+            return sa_token_data
+        except httpx.HTTPError:
+            # Fall back to SA token on any HTTP error
+            return sa_token_data
+
+    async def _fallback_client_credentials(self, username: str) -> dict[str, str]:
+        """
+        Fallback to client_credentials when token exchange is not available.
+
+        Args:
+            username: Username (for logging/debugging only)
+
+        Returns:
+            Dict with access_token from client_credentials grant
+
+        Raises:
+            RuntimeError: If client_credentials also fails
+        """
+        token_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
+
+        data = {
+            "grant_type": "client_credentials",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "scope": "openid profile email",
+        }
+
+        try:
+            response = await self.client.post(token_url, data=data)
+            response.raise_for_status()
+            token_data = response.json()
+            # Note: client_credentials doesn't include user-specific claims
+            # Tests should handle this appropriately
+            return token_data
+        except httpx.HTTPError as e:
+            raise RuntimeError(f"Client credentials fallback failed for user {username}: {e}") from e
+
+    async def login_pkce(self, username: str, password: str) -> dict[str, str]:
+        """
+        Login using PKCE flow (Authorization Code with PKCE).
+
+        This is a compatibility method that delegates to the login() method.
+        Since ROPC is disabled (ADR-0086) and true PKCE requires browser interaction,
+        this method uses the same token exchange → client_credentials flow as login().
+
+        For E2E tests, prefer using login_as_user() directly.
+
+        Args:
+            username: User username
+            password: User password (ignored - ROPC disabled)
+
+        Returns:
+            Dict with access_token, refresh_token, expires_in, etc.
+
+        Raises:
+            RuntimeError: If authentication fails
+        """
+        # Delegate to login() which uses token exchange → client_credentials
+        # Password parameter is ignored since ROPC is disabled
+        return await self.login(username, password)
 
     async def introspect(self, token: str) -> dict[str, Any]:
         """

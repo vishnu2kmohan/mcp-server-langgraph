@@ -26,7 +26,7 @@ pytestmark = pytest.mark.integration
 def app():
     """Create FastAPI test app"""
     app = FastAPI()
-    app.include_router(router)
+    app.include_router(router, prefix="/api/v1")
     return app
 
 
@@ -347,7 +347,7 @@ class TestGDPREndpoints:
                 return await call_next(request)
 
         app.add_middleware(TestAuthMiddleware)
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Mock session store with proper return values
         # Note: SessionStore only has create, get, update, delete, list_user_sessions methods

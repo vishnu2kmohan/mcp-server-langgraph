@@ -204,18 +204,35 @@ class TestGrafanaOAuth2Login:
         # Should end up at Keycloak login page
         assert "authn/realms/default" in response.url, f"Expected to be redirected to Keycloak, got: {response.url}"
 
-        # Step 2: Get admin token via Token Exchange or client_credentials
+        # Step 2: Get admin token via two-step Token Exchange (RFC 8693)
         # ROPC is disabled per security audit (ADR-0086)
+        token_url = f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
-        # Try Token Exchange first (RFC 8693) for user-specific roles
+        # Step 2a: Get service account token via client_credentials
+        sa_response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": "agent-studio-keycloak-client-id-for-e2e-tests",
+                "client_secret": "test-client-secret-for-e2e-tests",
+                "scope": "openid profile email roles",
+            },
+            timeout=10,
+        )
+        assert sa_response.status_code == 200, f"SA token request failed: {sa_response.text}"
+        sa_token = sa_response.json().get("access_token")
+        assert sa_token, "SA token response missing access_token"
+
+        # Step 2b: Exchange for admin-specific token (RFC 8693)
         token_response = requests.post(
-            f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
+            token_url,
             data={
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-                "client_id": "mcp-server",
+                "client_id": "agent-studio-keycloak-client-id-for-e2e-tests",
                 "client_secret": "test-client-secret-for-e2e-tests",
-                "requested_subject": ADMIN_USERNAME,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": ADMIN_USERNAME,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email roles",
             },
@@ -223,19 +240,7 @@ class TestGrafanaOAuth2Login:
         )
 
         if token_response.status_code != 200:
-            # Fallback to client_credentials (won't have user roles)
-            token_response = requests.post(
-                f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": "mcp-server",
-                    "client_secret": "test-client-secret-for-e2e-tests",
-                    "scope": "openid profile email roles",
-                },
-                timeout=10,
-            )
-            if token_response.status_code == 200:
-                pytest.skip("Token Exchange not configured - cannot test user-specific roles")
+            pytest.skip("Token Exchange not configured - cannot test user-specific roles")
 
         assert token_response.status_code == 200, f"Admin token request failed: {token_response.text}"
 
@@ -264,18 +269,35 @@ class TestGrafanaOAuth2Login:
 
         User Journey: Alice logs in and gets view-only access
         """
-        # Get alice token via Token Exchange or client_credentials
+        # Get alice token via two-step Token Exchange (RFC 8693)
         # ROPC is disabled per security audit (ADR-0086)
+        token_url = f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
-        # Try Token Exchange first (RFC 8693) for user-specific roles
+        # Step 1: Get service account token via client_credentials
+        sa_response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": "agent-studio-keycloak-client-id-for-e2e-tests",
+                "client_secret": "test-client-secret-for-e2e-tests",
+                "scope": "openid profile email roles",
+            },
+            timeout=10,
+        )
+        assert sa_response.status_code == 200, f"SA token request failed: {sa_response.text}"
+        sa_token = sa_response.json().get("access_token")
+        assert sa_token, "SA token response missing access_token"
+
+        # Step 2: Exchange for alice-specific token (RFC 8693)
         token_response = requests.post(
-            f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
+            token_url,
             data={
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-                "client_id": "mcp-server",
+                "client_id": "agent-studio-keycloak-client-id-for-e2e-tests",
                 "client_secret": "test-client-secret-for-e2e-tests",
-                "requested_subject": ALICE_USERNAME,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": ALICE_USERNAME,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email roles",
             },
@@ -283,19 +305,7 @@ class TestGrafanaOAuth2Login:
         )
 
         if token_response.status_code != 200:
-            # Fallback to client_credentials (won't have user roles)
-            token_response = requests.post(
-                f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": "mcp-server",
-                    "client_secret": "test-client-secret-for-e2e-tests",
-                    "scope": "openid profile email roles",
-                },
-                timeout=10,
-            )
-            if token_response.status_code == 200:
-                pytest.skip("Token Exchange not configured - cannot test user-specific roles")
+            pytest.skip("Token Exchange not configured - cannot test user-specific roles")
 
         assert token_response.status_code == 200, f"Alice token request failed: {token_response.text}"
 

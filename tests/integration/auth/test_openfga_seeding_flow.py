@@ -48,14 +48,50 @@ def _openfga_available() -> bool:
 
 # URLs and credentials
 OPENFGA_URL = os.getenv("OPENFGA_URL", "http://localhost:9080")
-VALID_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
-EXPECTED_STORE_NAME = "mcp-server-langgraph-test"
+EXPECTED_STORE_NAME = "agent-studio-openfga-store-test"
+
+# OIDC credentials for OpenFGA API access (ADR-0070: OIDC replaces preshared key)
+OPENFGA_OIDC_CLIENT_ID = os.getenv("OPENFGA_OIDC_CLIENT_ID", "agent-studio-openfga-oidc-cient-id-for-e2e-tests")
+OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET", "agent-studio-openfga-oidc-client-secret-for-e2e-tests")
+KEYCLOAK_TOKEN_URL = os.getenv(
+    "KEYCLOAK_TOKEN_URL",
+    "http://localhost/authn/realms/default/protocol/openid-connect/token",
+)
+
+# Cache OIDC token at module level to avoid repeated Keycloak calls
+_cached_oidc_token: str | None = None
+
+
+def _get_oidc_token() -> str | None:
+    """Obtain OIDC token from Keycloak using client credentials grant."""
+    global _cached_oidc_token
+    if _cached_oidc_token:
+        return _cached_oidc_token
+    try:
+        response = requests.post(
+            KEYCLOAK_TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": OPENFGA_OIDC_CLIENT_ID,
+                "client_secret": OPENFGA_OIDC_CLIENT_SECRET,
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            _cached_oidc_token = response.json().get("access_token")
+            return _cached_oidc_token
+    except Exception:
+        pass
+    return None
 
 
 def _get_auth_headers() -> dict[str, str]:
-    """Get authentication headers for OpenFGA API requests."""
+    """Get OIDC authentication headers for OpenFGA API requests."""
+    token = _get_oidc_token()
+    if not token:
+        pytest.skip("Could not obtain OIDC token from Keycloak for OpenFGA API access")
     return {
-        "Authorization": f"Bearer {VALID_PRESHARED_KEY}",
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
 
@@ -101,7 +137,7 @@ class TestOpenFGASeedingStoreCreation:
         """
         GIVEN: openfga-seed-test container has run
         WHEN: Listing stores via OpenFGA API
-        THEN: Should find the mcp-server-langgraph-test store
+        THEN: Should find the agent-studio-openfga-store-test store
 
         User Journey: Developer runs make test-infra-up and store is auto-created
         """

@@ -505,7 +505,7 @@ class TestDefaultCollectionBootstrap:
         """
         GIVEN default bootstrap parameters
         WHEN bootstrap_qdrant_collection() is called with defaults
-        THEN 'mcp_context' collection is created.
+        THEN 'agent_studio_context' collection is created.
         """
         from mcp_server_langgraph.core.startup_validation import (
             bootstrap_qdrant_collection,
@@ -515,7 +515,7 @@ class TestDefaultCollectionBootstrap:
         result = await bootstrap_qdrant_collection(url=qdrant_url)
 
         assert result.success is True
-        assert result.collection_name == "mcp_context"
+        assert result.collection_name == "agent_studio_context"
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not qdrant_available(), reason="Qdrant not available")

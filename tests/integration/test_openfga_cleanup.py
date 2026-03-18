@@ -38,7 +38,7 @@ class TestOpenFGATupleCleanup:
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
         client = OpenFGAClient(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )
@@ -83,7 +83,7 @@ class TestOpenFGATupleCleanup:
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
         client = OpenFGAClient(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )
@@ -108,7 +108,7 @@ class TestOpenFGATupleCleanup:
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
         client = OpenFGAClient(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )
@@ -147,7 +147,7 @@ class TestOpenFGATupleCleanup:
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
         client = OpenFGAClient(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )

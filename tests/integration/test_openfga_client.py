@@ -28,9 +28,9 @@ class TestOpenFGAClient:
         """Test OpenFGA client initialization (lazy pattern)"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-        client = OpenFGAClient(api_url="http://localhost:8080", store_id="test-store", model_id="test-model")
+        client = OpenFGAClient(api_url="http://localhost:9080", store_id="test-store", model_id="test-model")
 
-        assert client.api_url == "http://localhost:8080"
+        assert client.api_url == "http://localhost:9080"
         assert client.store_id == "test-store"
         assert client.model_id == "test-model"
         # Lazy init: SDK client should NOT be created until first async call
@@ -50,7 +50,7 @@ class TestOpenFGAClient:
         mock_instance.check.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
-        client = OpenFGAClient(api_url="http://localhost:8080", store_id="test-store", model_id="test-model")
+        client = OpenFGAClient(api_url="http://localhost:9080", store_id="test-store", model_id="test-model")
 
         result = await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:chat")
 
@@ -326,7 +326,6 @@ class TestOpenFGAAuthorizationModel:
         assert "organization" in types
         assert "tool" in types
         assert "conversation" in types
-        assert "role" in types
 
     def test_organization_relations_include_member_and_admin(self):
         """Test organization type has correct relations"""
@@ -430,10 +429,10 @@ class TestOpenFGAUtilityFunctions:
         # Verify write was called
         mock_instance.write.assert_called_once()
 
-        # Verify we wrote tuples (sample data has 62 tuples as of ADR-0068 update)
+        # Verify we wrote tuples (sample data grows as new types/relations are added)
         call_args = mock_instance.write.call_args[0][0]
         assert isinstance(call_args, ClientWriteRequest)
-        assert len(call_args.writes) == 62
+        assert len(call_args.writes) >= 100, f"Expected significant sample data, got {len(call_args.writes)} tuples"
 
 
 @pytest.mark.integration

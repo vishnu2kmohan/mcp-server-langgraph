@@ -127,7 +127,7 @@ def test_qdrant_init_depends_on_qdrant_healthy(docker_compose_config: dict) -> N
 
 def test_qdrant_init_creates_default_collection(docker_compose_config: dict) -> None:
     """
-    Verify that qdrant-init-test creates the default mcp_context collection.
+    Verify that qdrant-init-test creates the default agent_studio_context collection.
 
     The default collection should match config.qdrant_collection_name from
     src/mcp_server_langgraph/core/config.py
@@ -142,8 +142,8 @@ def test_qdrant_init_creates_default_collection(docker_compose_config: dict) -> 
     command_str = " ".join(command) if isinstance(command, list) else command
 
     # Check that the command creates the default collection
-    assert "mcp_context" in command_str or "collections" in command_str, (
-        "qdrant-init-test command should create the 'mcp_context' collection\n"
+    assert "agent_studio_context" in command_str or "collections" in command_str, (
+        "qdrant-init-test command should create the 'agent_studio_context' collection\n"
         "\n"
         "This collection name matches config.qdrant_collection_name.\n"
         "E2E tests expect this collection to exist.\n"

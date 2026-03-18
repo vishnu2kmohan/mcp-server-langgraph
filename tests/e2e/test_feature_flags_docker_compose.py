@@ -54,16 +54,40 @@ def extract_ff_flags_from_env(file_path: Path) -> dict[str, str]:
 
 
 def extract_ff_flags_from_docker_compose(file_path: Path) -> dict[str, str]:
-    """Extract FF_* feature flags from docker-compose.test.yml."""
+    """Extract FF_* feature flags from docker-compose.test.yml.
+
+    Checks two sources:
+    1. Inline environment vars: ``- FF_FLAG_NAME=value``
+    2. env_file references: parses ``env_file: .env.test`` and extracts FF_* from there
+
+    Since docker-compose.test.yml uses env_file for single-source-of-truth,
+    most FF_* flags come from the referenced .env.test file.
+    """
     flags = {}
     content = file_path.read_text()
 
-    # Match lines like: - FF_FLAG_NAME=value
-    pattern = r"-\s*(FF_[A-Z_0-9]+)=([^\s#]+)"
-    for match in re.finditer(pattern, content):
+    # 1. Match inline environment vars: - FF_FLAG_NAME=value
+    inline_pattern = r"-\s*(FF_[A-Z_0-9]+)=([^\s#]+)"
+    for match in re.finditer(inline_pattern, content):
         key = match.group(1)
         value = match.group(2)
         flags[key] = value
+
+    # 2. Check env_file references for .env.test
+    env_file_pattern = r"env_file:\s*\n(?:\s+-\s+(?:path:\s+)?(\S+)\s*(?:\n\s+required:\s+\w+)?\s*)*"
+    for block_match in re.finditer(env_file_pattern, content):
+        block = block_match.group(0)
+        # Extract individual file references
+        for ref_match in re.finditer(r"-\s+(?:path:\s+)?(\S+)", block):
+            ref_file = ref_match.group(1)
+            if ref_file == ".env.test":
+                env_path = file_path.parent / ref_file
+                if env_path.exists():
+                    env_flags = extract_ff_flags_from_env(env_path)
+                    # env_file flags are overridden by inline, so add first
+                    merged = dict(env_flags)
+                    merged.update(flags)
+                    flags = merged
 
     return flags
 

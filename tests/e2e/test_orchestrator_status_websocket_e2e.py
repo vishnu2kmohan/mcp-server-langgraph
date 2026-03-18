@@ -37,7 +37,7 @@ pytestmark = [
 E2E_WS_BASE_URL = os.getenv("E2E_WS_BASE_URL", "ws://localhost:8000")
 E2E_HTTP_BASE_URL = os.getenv("E2E_HTTP_BASE_URL", "http://localhost:8000")
 E2E_KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost/authn")
-E2E_CLIENT_ID = "mcp-server"
+E2E_CLIENT_ID = "agent-studio-keycloak-client-id-for-e2e-tests"
 E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 # Orchestrator status WebSocket endpoint
@@ -51,12 +51,35 @@ def _get_keycloak_token(
 ) -> str | None:
     """Get Keycloak access token via modern OAuth2 flows.
 
-    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    Two-step Token Exchange (RFC 8693):
+    1. Get service account token via client_credentials
+    2. Exchange it for a user-specific token with subject_token
+
     ROPC (password grant) is disabled per security audit (ADR-0086).
     """
     token_url = f"{E2E_KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
-    # Try Token Exchange first (RFC 8693) for user-specific context
+    # Step 1: Get service account token via client_credentials
+    try:
+        sa_response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if sa_response.status_code != 200:
+            return None
+        sa_token = sa_response.json().get("access_token")
+        if not sa_token:
+            return None
+    except Exception:
+        return None
+
+    # Step 2: Exchange for user-specific token (RFC 8693)
     try:
         response = requests.post(
             token_url,
@@ -64,8 +87,9 @@ def _get_keycloak_token(
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "requested_subject": username,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email",
             },
@@ -76,23 +100,8 @@ def _get_keycloak_token(
     except Exception:
         pass
 
-    # Fallback to client_credentials (service account)
-    try:
-        response = requests.post(
-            token_url,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "scope": "openid profile email",
-            },
-            timeout=10,
-        )
-        if response.status_code == 200:
-            return response.json().get("access_token")
-    except Exception:
-        pass
-    return None
+    # Fallback to service account token if exchange not configured
+    return sa_token
 
 
 def _orchestrator_status_available() -> bool:
@@ -146,7 +155,7 @@ class TestOrchestratorStatusWebSocketE2E:
         if not token:
             pytest.skip("Could not obtain Keycloak token")
 
-        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?token={token}"
+        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?v=1.0.0&token={token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as ws:
@@ -170,7 +179,7 @@ class TestOrchestratorStatusWebSocketE2E:
         if not token:
             pytest.skip("Could not obtain Keycloak token")
 
-        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?token={token}"
+        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?v=1.0.0&token={token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as ws:
@@ -203,7 +212,7 @@ class TestOrchestratorStatusWebSocketE2E:
         if not token:
             pytest.skip("Could not obtain Keycloak token")
 
-        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?token={token}"
+        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?v=1.0.0&token={token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as ws:
@@ -238,7 +247,7 @@ class TestOrchestratorStatusWebSocketE2E:
         if not token:
             pytest.skip("Could not obtain Keycloak token")
 
-        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?token={token}"
+        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?v=1.0.0&token={token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as ws:
@@ -270,7 +279,7 @@ class TestOrchestratorStatusWebSocketE2E:
         """
         import websockets
 
-        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}"
+        ws_url = f"{E2E_WS_BASE_URL}{ORCHESTRATOR_STATUS_ENDPOINT}?v=1.0.0"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as ws:

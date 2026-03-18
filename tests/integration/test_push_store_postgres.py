@@ -83,10 +83,10 @@ async def test_engine():
             await conn.execute(text("SELECT 1"))
 
     except Exception:
-        # Try gdpr_test database as fallback
+        # Try compliance_test database as fallback
         database_url = os.getenv(
             "TEST_DATABASE_URL",
-            "postgresql+asyncpg://postgres:postgres@localhost:9432/gdpr_test",
+            "postgresql+asyncpg://postgres:postgres@localhost:9432/compliance_test",
         )
         try:
             engine = create_async_engine(

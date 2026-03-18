@@ -83,7 +83,6 @@ def skip_if_auth_infrastructure_unavailable():
 # URLs and credentials - use gateway URLs consistent with integration tests
 KEYCLOAK_URL = os.getenv("KEYCLOAK_SERVER_URL", "http://localhost/authn")
 OPENFGA_URL = os.getenv("OPENFGA_URL", "http://localhost:9080")
-OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
 
 # Test users from default-realm.json
 TEST_USERS = {
@@ -107,7 +106,7 @@ class KeycloakAuthHelper:
         self.keycloak_url = keycloak_url
         self.token_url = f"{keycloak_url}/realms/default/protocol/openid-connect/token"
         self.userinfo_url = f"{keycloak_url}/realms/default/protocol/openid-connect/userinfo"
-        self.client_id = "mcp-server"
+        self.client_id = "agent-studio-keycloak-client-id-for-e2e-tests"
         self.client_secret = "test-client-secret-for-e2e-tests"
 
     def get_token_via_client_credentials(self) -> dict:
@@ -138,19 +137,43 @@ class KeycloakAuthHelper:
         """
         Get user-specific access token via token exchange (RFC 8693).
 
+        Two-step flow:
+        1. Get service account token via client_credentials
+        2. Exchange it for a user-specific token with subject_token
+
         Use for tests that need user-specific claims without the user's password.
         Requires token exchange to be enabled in Keycloak for the client.
         """
         import requests
 
+        # Step 1: Get service account token
+        sa_response = requests.post(
+            self.token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "scope": "openid email profile",
+            },
+            timeout=10,
+        )
+        if sa_response.status_code != 200:
+            raise ValueError(f"Client credentials request failed: {sa_response.status_code} - {sa_response.text}")
+
+        sa_token = sa_response.json().get("access_token")
+        if not sa_token:
+            raise ValueError("Service account token response missing access_token")
+
+        # Step 2: Exchange for user-specific token (RFC 8693)
         response = requests.post(
             self.token_url,
             data={
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
-                "requested_subject": username,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid email profile",
             },
@@ -222,18 +245,52 @@ class KeycloakAuthHelper:
 
 
 class OpenFGAAuthHelper:
-    """Helper class for OpenFGA authorization operations."""
+    """Helper class for OpenFGA authorization operations.
 
-    def __init__(self, openfga_url: str = OPENFGA_URL, preshared_key: str = OPENFGA_PRESHARED_KEY):
+    Uses OIDC JWT tokens from Keycloak for OpenFGA API access.
+    docker-compose.test.yml configures OPENFGA_AUTHN_METHOD=oidc,
+    so pre-shared key auth is rejected. The dedicated OpenFGA OIDC client
+    in Keycloak provides tokens with the correct audience claim.
+    """
+
+    # OpenFGA OIDC client credentials (from Keycloak default-realm.json)
+    _OPENFGA_OIDC_CLIENT_ID = "agent-studio-openfga-oidc-cient-id-for-e2e-tests"
+    _OPENFGA_OIDC_CLIENT_SECRET = "agent-studio-openfga-oidc-client-secret-for-e2e-tests"
+
+    def __init__(self, openfga_url: str = OPENFGA_URL):
         self.openfga_url = openfga_url
-        self.preshared_key = preshared_key
         self._store_id = None
         self._model_id = None
+        self._token = None
+
+    def _get_oidc_token(self) -> str:
+        """Get OIDC token from Keycloak for OpenFGA API access."""
+        if self._token:
+            return self._token
+
+        import requests
+
+        response = requests.post(
+            f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self._OPENFGA_OIDC_CLIENT_ID,
+                "client_secret": self._OPENFGA_OIDC_CLIENT_SECRET,
+                "scope": "openid",
+            },
+            timeout=10,
+        )
+
+        if response.status_code != 200:
+            raise ValueError(f"Failed to get OpenFGA OIDC token: {response.status_code} - {response.text}")
+
+        self._token = response.json()["access_token"]
+        return self._token
 
     def _get_headers(self) -> dict:
-        """Get headers with preshared key auth."""
+        """Get headers with OIDC bearer token auth."""
         return {
-            "Authorization": f"Bearer {self.preshared_key}",
+            "Authorization": f"Bearer {self._get_oidc_token()}",
             "Content-Type": "application/json",
         }
 
@@ -307,13 +364,46 @@ class OpenFGAAuthHelper:
         return False
 
 
+_TOKEN_EXCHANGE_AVAILABLE: bool | None = None
+
+
+def _token_exchange_available() -> bool:
+    """Check if token exchange (RFC 8693) is configured in Keycloak."""
+    global _TOKEN_EXCHANGE_AVAILABLE
+    if _TOKEN_EXCHANGE_AVAILABLE is not None:
+        return _TOKEN_EXCHANGE_AVAILABLE
+    auth = KeycloakAuthHelper()
+    try:
+        auth.get_token_via_token_exchange("admin")
+        _TOKEN_EXCHANGE_AVAILABLE = True
+    except ValueError:
+        _TOKEN_EXCHANGE_AVAILABLE = False
+    return _TOKEN_EXCHANGE_AVAILABLE
+
+
+@pytest.fixture
+def require_user_token():
+    """Skip test if user-specific tokens are unavailable.
+
+    Token exchange (RFC 8693) is needed for user-impersonation tokens.
+    When not configured, client_credentials fallback returns service
+    account tokens without user-specific claims (preferred_username, etc.).
+    """
+    if not _token_exchange_available():
+        pytest.skip(
+            "Token exchange (RFC 8693) not configured in Keycloak. "
+            "client_credentials returns service account tokens "
+            "without user-specific claims."
+        )
+
+
 def _get_user_token(auth: KeycloakAuthHelper, username: str) -> dict:
     """
     Helper to get user token using modern auth methods with fallback.
 
     Tries:
     1. Token exchange (RFC 8693) - no password needed
-    2. ROPC (deprecated) - fallback if token exchange not configured
+    2. client_credentials (fallback) - returns service account token
 
     Args:
         auth: KeycloakAuthHelper instance
@@ -324,11 +414,9 @@ def _get_user_token(auth: KeycloakAuthHelper, username: str) -> dict:
     """
     try:
         return auth.get_token_via_token_exchange(username)
-    except ValueError as e:
-        if "not configured" in str(e) or "not allowed" in str(e):
-            # Fall back to client_credentials (ROPC is disabled per ADR-0086)
-            return auth.get_token(username)
-        raise
+    except ValueError:
+        # Token exchange may not be configured — fall back to client_credentials
+        return auth.get_token(username)
 
 
 @pytest.mark.xdist_group(name="test_keycloak_openfga_auth_flow")
@@ -401,15 +489,15 @@ class TestKeycloakAuthentication:
         """
         pass  # Skipped via decorator - ROPC disabled per ADR-0086
 
-    def test_userinfo_endpoint_returns_claims(self):
+    def test_userinfo_endpoint_returns_claims(self, require_user_token):
         """
-        GIVEN: Valid access token
+        GIVEN: Valid user-specific access token (via token exchange)
         WHEN: Requesting userinfo endpoint
         THEN: Should return user claims (sub, email, preferred_username)
 
         User Journey: Verify user identity after login
 
-        Authentication: Uses RFC 8693 token exchange with ROPC fallback
+        Authentication: Requires RFC 8693 token exchange for user-specific claims
         """
         auth = KeycloakAuthHelper()
         token_response = _get_user_token(auth, "alice")
@@ -488,7 +576,7 @@ class TestFullAuthFlow:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_admin_full_flow_vector_store_access(self):
+    def test_admin_full_flow_vector_store_access(self, require_user_token):
         """
         GIVEN: Admin credentials and running infrastructure
         WHEN: Admin authenticates and checks vector_store permission
@@ -496,7 +584,7 @@ class TestFullAuthFlow:
 
         User Journey: Admin logs in and accesses vector store management
 
-        Authentication: Uses RFC 8693 token exchange with ROPC fallback
+        Authentication: Requires RFC 8693 token exchange for user-specific claims
         """
         # Step 1: Authenticate via Keycloak (using modern auth)
         auth = KeycloakAuthHelper()
@@ -512,7 +600,7 @@ class TestFullAuthFlow:
         allowed = authz.check_permission("user:admin", "owner", "vector_store:default")
         assert allowed, "Admin should have owner access to vector_store"
 
-    def test_alice_full_flow_editor_access(self):
+    def test_alice_full_flow_editor_access(self, require_user_token):
         """
         GIVEN: Alice credentials and running infrastructure
         WHEN: Alice authenticates and checks vector_store permission
@@ -520,7 +608,7 @@ class TestFullAuthFlow:
 
         User Journey: Alice logs in and has CRUD access to vector_store
 
-        Authentication: Uses RFC 8693 token exchange with ROPC fallback
+        Authentication: Requires RFC 8693 token exchange for user-specific claims
         """
         # Step 1: Authenticate via Keycloak (using modern auth)
         auth = KeycloakAuthHelper()
@@ -536,7 +624,7 @@ class TestFullAuthFlow:
         allowed = authz.check_permission("user:alice", "editor", "vector_store:default")
         assert allowed, "Alice should have editor access to vector_store:default"
 
-    def test_bob_full_flow_viewer_only(self):
+    def test_bob_full_flow_viewer_only(self, require_user_token):
         """
         GIVEN: Bob credentials and running infrastructure
         WHEN: Bob authenticates and checks vector_store permission
@@ -544,7 +632,7 @@ class TestFullAuthFlow:
 
         User Journey: Bob logs in with read-only access to vector_store
 
-        Authentication: Uses RFC 8693 token exchange with ROPC fallback
+        Authentication: Requires RFC 8693 token exchange for user-specific claims
         """
         # Step 1: Authenticate via Keycloak (using modern auth)
         auth = KeycloakAuthHelper()

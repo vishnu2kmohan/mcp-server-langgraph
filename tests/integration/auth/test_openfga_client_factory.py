@@ -69,7 +69,7 @@ class TestGetOpenFGAClient:
 
         # GIVEN: Create and set a client
         config = OpenFGAConfig(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )
@@ -100,7 +100,7 @@ class TestGetOpenFGAClient:
 
         # GIVEN: Create and set a client
         config = OpenFGAConfig(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )
@@ -132,7 +132,7 @@ class TestGetOpenFGAClient:
 
         # GIVEN: Create and set a client
         config = OpenFGAConfig(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )
@@ -177,7 +177,7 @@ class TestOpenFGAClientConcurrency:
 
         # GIVEN: Create and set a client
         config = OpenFGAConfig(
-            api_url="http://localhost:8080",
+            api_url="http://localhost:9080",
             store_id="test-store",
             model_id="test-model",
         )

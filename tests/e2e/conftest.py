@@ -59,8 +59,52 @@ def skip_if_e2e_infrastructure_unavailable():
 
 # OpenFGA configuration constants
 OPENFGA_URL = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
-OPENFGA_PRESHARED_KEY = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
 OPENFGA_TEST_STORE_NAME = "agent-studio-openfga-store-test"
+
+# OIDC credentials for OpenFGA API access (ADR-0070: OIDC replaces preshared key)
+OPENFGA_OIDC_CLIENT_ID = os.getenv("OPENFGA_OIDC_CLIENT_ID", "agent-studio-openfga-oidc-cient-id-for-e2e-tests")
+OPENFGA_OIDC_CLIENT_SECRET = os.getenv("OPENFGA_OIDC_CLIENT_SECRET", "agent-studio-openfga-oidc-client-secret-for-e2e-tests")
+KEYCLOAK_TOKEN_URL = os.getenv(
+    "KEYCLOAK_TOKEN_URL",
+    "http://localhost/authn/realms/default/protocol/openid-connect/token",
+)
+
+# Cache OIDC token at module level to avoid repeated Keycloak calls
+_cached_openfga_oidc_token: str | None = None
+
+
+def _get_openfga_oidc_token() -> str | None:
+    """Obtain OIDC token from Keycloak for OpenFGA API access."""
+    global _cached_openfga_oidc_token
+    if _cached_openfga_oidc_token:
+        return _cached_openfga_oidc_token
+    try:
+        response = requests.post(
+            KEYCLOAK_TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": OPENFGA_OIDC_CLIENT_ID,
+                "client_secret": OPENFGA_OIDC_CLIENT_SECRET,
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            _cached_openfga_oidc_token = response.json().get("access_token")
+            return _cached_openfga_oidc_token
+    except Exception:
+        pass
+    return None
+
+
+def _get_openfga_auth_headers() -> dict[str, str]:
+    """Get OIDC authentication headers for OpenFGA API requests."""
+    token = _get_openfga_oidc_token()
+    if not token:
+        return {"Content-Type": "application/json"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
 
 
 def _get_openfga_store_and_model() -> tuple[str | None, str | None]:
@@ -75,10 +119,7 @@ def _get_openfga_store_and_model() -> tuple[str | None, str | None]:
     """
     import requests
 
-    headers = {
-        "Authorization": f"Bearer {OPENFGA_PRESHARED_KEY}",
-        "Content-Type": "application/json",
-    }
+    headers = _get_openfga_auth_headers()
 
     # Find the test store
     try:
@@ -149,7 +190,9 @@ async def openfga_seeded_tuples(test_infrastructure):
         api_url=OPENFGA_URL,
         store_id=store_id,
         model_id=model_id,
-        preshared_key=OPENFGA_PRESHARED_KEY,
+        oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
+        oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
+        oidc_issuer=os.getenv("OPENFGA_OIDC_ISSUER", "http://localhost/authn/realms/default"),
     )
     client = OpenFGAClient(config=config)
 
@@ -209,7 +252,9 @@ async def openfga_admin_tuples(test_infrastructure):
         api_url=OPENFGA_URL,
         store_id=store_id,
         model_id=model_id,
-        preshared_key=OPENFGA_PRESHARED_KEY,
+        oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
+        oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
+        oidc_issuer=os.getenv("OPENFGA_OIDC_ISSUER", "http://localhost/authn/realms/default"),
     )
     client = OpenFGAClient(config=config)
 
@@ -271,7 +316,9 @@ async def openfga_bob_tuples(test_infrastructure):
         api_url=OPENFGA_URL,
         store_id=store_id,
         model_id=model_id,
-        preshared_key=OPENFGA_PRESHARED_KEY,
+        oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
+        oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
+        oidc_issuer=os.getenv("OPENFGA_OIDC_ISSUER", "http://localhost/authn/realms/default"),
     )
     client = OpenFGAClient(config=config)
 
@@ -334,7 +381,9 @@ async def openfga_cross_user_tuples(test_infrastructure):
         api_url=OPENFGA_URL,
         store_id=store_id,
         model_id=model_id,
-        preshared_key=OPENFGA_PRESHARED_KEY,
+        oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
+        oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
+        oidc_issuer=os.getenv("OPENFGA_OIDC_ISSUER", "http://localhost/authn/realms/default"),
     )
     client = OpenFGAClient(config=config)
 
@@ -404,7 +453,9 @@ async def openfga_workflow_tuples(test_infrastructure):
         api_url=OPENFGA_URL,
         store_id=store_id,
         model_id=model_id,
-        preshared_key=OPENFGA_PRESHARED_KEY,
+        oidc_client_id=OPENFGA_OIDC_CLIENT_ID,
+        oidc_client_secret=OPENFGA_OIDC_CLIENT_SECRET,
+        oidc_issuer=os.getenv("OPENFGA_OIDC_ISSUER", "http://localhost/authn/realms/default"),
     )
     client = OpenFGAClient(config=config)
 
@@ -460,7 +511,7 @@ def e2e_keycloak_base_url():
 
 
 # OAuth2 client configuration for E2E tests
-E2E_CLIENT_ID = "mcp-server"
+E2E_CLIENT_ID = "agent-studio-keycloak-client-id-for-e2e-tests"
 E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 
@@ -516,3 +567,52 @@ def admin_credentials():
         "client_id": E2E_CLIENT_ID,
         "client_secret": E2E_CLIENT_SECRET,
     }
+
+
+def get_keycloak_token_for_tests(
+    keycloak_base_url: str = "http://localhost/authn",
+    client_id: str = E2E_CLIENT_ID,
+    client_secret: str = E2E_CLIENT_SECRET,
+) -> str | None:
+    """
+    Get Keycloak access token for E2E tests using client_credentials grant.
+
+    Uses client_credentials grant per ADR-0086 (ROPC is disabled).
+
+    Args:
+        keycloak_base_url: Keycloak base URL (default: http://localhost/authn)
+        client_id: OAuth2 client ID (default: agent-studio-keycloak-client-id-for-e2e-tests)
+        client_secret: OAuth2 client secret (default: test-client-secret-for-e2e-tests)
+
+    Returns:
+        Access token or None if authentication fails
+    """
+    token_url = f"{keycloak_base_url}/realms/default/protocol/openid-connect/token"
+
+    try:
+        response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception:
+        pass
+    return None
+
+
+@pytest.fixture
+def e2e_auth_token(e2e_keycloak_base_url):
+    """
+    Get a valid Keycloak access token for E2E API tests.
+
+    Returns:
+        str | None: Access token or None if authentication fails
+    """
+    return get_keycloak_token_for_tests(keycloak_base_url=e2e_keycloak_base_url)

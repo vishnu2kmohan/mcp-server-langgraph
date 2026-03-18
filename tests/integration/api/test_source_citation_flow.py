@@ -348,9 +348,10 @@ class TestMessageStorageSourceCitations:
         ]
 
         message = Message(
-            id="msg-test-1",
+            message_id="msg-test-1",
             role="assistant",
             content="Here are the results.",
+            user_id="test-user",
             sources=sources,
         )
 
@@ -372,9 +373,10 @@ class TestMessageStorageSourceCitations:
         from mcp_server_langgraph.storage.session.models import Message
 
         message = Message(
-            id="msg-test-2",
+            message_id="msg-test-2",
             role="user",
             content="Hello!",
+            user_id="test-user",
         )
 
         assert message.sources == []
@@ -418,9 +420,10 @@ class TestMessageStorageSourceCitations:
         ]
 
         message = Message(
-            id="msg-edge-1",
+            message_id="msg-edge-1",
             role="assistant",
             content="Response",
+            user_id="test-user",
             sources=sources_with_empty_snippet,
         )
 
@@ -432,9 +435,10 @@ class TestMessageStorageSourceCitations:
         ]
 
         message2 = Message(
-            id="msg-edge-2",
+            message_id="msg-edge-2",
             role="assistant",
             content="Response",
+            user_id="test-user",
             sources=sources_with_none_snippet,
         )
 
@@ -453,9 +457,10 @@ class TestMessageStorageSourceCitations:
         ]
 
         message = Message(
-            id="msg-special-1",
+            message_id="msg-special-1",
             role="assistant",
             content="Response",
+            user_id="test-user",
             sources=sources_with_special,
         )
 

@@ -52,7 +52,7 @@ def app_with_mocks(mock_repo: InMemoryExecutionPlanRepository, mock_user: dict[s
     from mcp_server_langgraph.auth.dependencies import get_current_user
 
     app = FastAPI()
-    app.include_router(execution_plans_router, prefix="/api/v1")
+    app.include_router(execution_plans_router, prefix="/api/v1/plans")
 
     # Override authentication
     async def _override_current_user():
@@ -267,7 +267,9 @@ class TestChatApprovalHTTPEndpoints:
         """Test listing pending plans when none exist."""
         response = client.get("/api/v1/plans")
         assert response.status_code == 200
-        assert response.json() == []
+        data = response.json()
+        assert data["plans"] == []
+        assert data["total"] == 0
 
     def test_get_plan_not_found(
         self,

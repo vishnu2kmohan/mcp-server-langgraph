@@ -50,7 +50,6 @@ class TestKBFocusModeE2E:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_01_chat_completions_accepts_kb_focus_all_mode(
         self,
         e2e_api_base_url: str,
@@ -111,7 +110,6 @@ class TestKBFocusModeE2E:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_chat_completions_accepts_kb_focus_kb_only_mode(
         self,
         e2e_api_base_url: str,
@@ -163,7 +161,6 @@ class TestKBFocusModeE2E:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_03_chat_completions_accepts_kb_focus_web_only_mode(
         self,
         e2e_api_base_url: str,
@@ -215,7 +212,6 @@ class TestKBFocusModeE2E:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_04_chat_completions_accepts_kb_focus_none_mode(
         self,
         e2e_api_base_url: str,
@@ -267,7 +263,6 @@ class TestKBFocusModeE2E:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_05_chat_completions_rejects_invalid_kb_focus_mode(
         self,
         e2e_api_base_url: str,
@@ -323,7 +318,6 @@ class TestKBFocusModeE2E:
             }
             print(f"\n[HEART METRICS] {heart_metrics}")
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_06_chat_completions_defaults_to_all_mode(
         self,
         e2e_api_base_url: str,

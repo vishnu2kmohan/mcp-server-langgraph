@@ -83,7 +83,7 @@ class TestKBStatusEndpoint:
             mock_get_status.return_value = {
                 "status": "ready",
                 "qdrant_connected": True,
-                "collection_name": "mcp_context",
+                "collection_name": "agent_studio_context",
                 "vectors_count": 1500,
                 "embedding_provider": "google_vertex",
                 "embedding_model": "text-embedding-005",
@@ -110,7 +110,7 @@ class TestKBStatusEndpoint:
             mock_get_status.return_value = {
                 "status": "ready",
                 "qdrant_connected": True,
-                "collection_name": "mcp_context",
+                "collection_name": "agent_studio_context",
                 "vectors_count": 2500,
                 "embedding_provider": "google_vertex",
                 "embedding_model": "text-embedding-005",
@@ -121,7 +121,7 @@ class TestKBStatusEndpoint:
             response = client.get("/api/v1/kb/status")
 
             data = response.json()
-            assert data["collection_name"] == "mcp_context"
+            assert data["collection_name"] == "agent_studio_context"
             assert data["vectors_count"] == 2500
 
     def test_get_kb_status_includes_embedding_info(
@@ -136,7 +136,7 @@ class TestKBStatusEndpoint:
             mock_get_status.return_value = {
                 "status": "ready",
                 "qdrant_connected": True,
-                "collection_name": "mcp_context",
+                "collection_name": "agent_studio_context",
                 "vectors_count": 1000,
                 "embedding_provider": "openai",
                 "embedding_model": "text-embedding-3-small",
@@ -192,7 +192,7 @@ class TestKBStatusEndpoint:
             mock_get_status.return_value = {
                 "status": "unavailable",
                 "qdrant_connected": False,
-                "collection_name": "mcp_context",
+                "collection_name": "agent_studio_context",
                 "vectors_count": 0,
                 "embedding_provider": "google_vertex",
                 "embedding_model": "text-embedding-005",
@@ -220,7 +220,7 @@ class TestKBStatusEndpoint:
             mock_get_status.return_value = {
                 "status": "ready",
                 "qdrant_connected": True,
-                "collection_name": "mcp_context",
+                "collection_name": "agent_studio_context",
                 "vectors_count": 1500,
                 "embedding_provider": "google_vertex",
                 "embedding_model": "text-embedding-005",
@@ -272,7 +272,7 @@ class TestKBStatusResponse:
         response = KBStatusResponse(
             status="ready",
             qdrant_connected=True,
-            collection_name="mcp_context",
+            collection_name="agent_studio_context",
             vectors_count=1500,
             embedding_provider="google_vertex",
             embedding_model="text-embedding-005",
@@ -281,7 +281,7 @@ class TestKBStatusResponse:
 
         assert response.status == "ready"
         assert response.qdrant_connected is True
-        assert response.collection_name == "mcp_context"
+        assert response.collection_name == "agent_studio_context"
 
     def test_kb_status_response_model_misconfigured(self) -> None:
         """GIVEN misconfigured KB data

@@ -76,7 +76,7 @@ class TestServiceHealthcheckConfiguration:
             "keycloak-test",
             "openfga-test",
             "redis-test",
-            "mcp-server-test",
+            "agent-studio-test",
         ]
 
         missing_healthcheck = []
@@ -430,18 +430,20 @@ class TestServiceHealthcheckLive:
         """
         import socket
 
+        from tests.constants import TEST_QDRANT_PORT
+
         try:
-            # Try to connect to Qdrant
-            sock = socket.create_connection(("localhost", 6333), timeout=2)
+            # Try to connect to Qdrant on test port (docker-compose.test.yml)
+            sock = socket.create_connection(("localhost", TEST_QDRANT_PORT), timeout=2)
             sock.close()
         except (TimeoutError, OSError):
-            pytest.skip("Qdrant not running on localhost:6333")
+            pytest.skip(f"Qdrant not running on localhost:{TEST_QDRANT_PORT}")
 
         import urllib.request
         import urllib.error
 
         try:
-            response = urllib.request.urlopen("http://localhost:6333/readyz", timeout=5)
+            response = urllib.request.urlopen(f"http://localhost:{TEST_QDRANT_PORT}/readyz", timeout=5)
             assert response.status == 200, f"Qdrant /readyz returned {response.status}"
             print("✅ Qdrant /readyz endpoint responds with 200")
         except urllib.error.URLError as e:
@@ -454,17 +456,19 @@ class TestServiceHealthcheckLive:
         """
         import socket
 
+        from tests.constants import TEST_ALLOY_PORT
+
         try:
-            sock = socket.create_connection(("localhost", 12345), timeout=2)
+            sock = socket.create_connection(("localhost", TEST_ALLOY_PORT), timeout=2)
             sock.close()
         except (TimeoutError, OSError):
-            pytest.skip("Alloy not running on localhost:12345")
+            pytest.skip(f"Alloy not running on localhost:{TEST_ALLOY_PORT}")
 
         import urllib.request
         import urllib.error
 
         try:
-            response = urllib.request.urlopen("http://localhost:12345/-/ready", timeout=5)
+            response = urllib.request.urlopen(f"http://localhost:{TEST_ALLOY_PORT}/-/ready", timeout=5)
             assert response.status == 200, f"Alloy /-/ready returned {response.status}"
             print("✅ Alloy /-/ready endpoint responds with 200")
         except urllib.error.URLError as e:

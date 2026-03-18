@@ -46,7 +46,7 @@ TEST_USERS = {
 }
 
 # Keycloak client credentials from config
-KEYCLOAK_CLIENT_ID = "mcp-server"
+KEYCLOAK_CLIENT_ID = "agent-studio-keycloak-client-id-for-e2e-tests"
 KEYCLOAK_CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 
@@ -143,14 +143,37 @@ def skip_if_infra_unavailable():
 def _get_token(username: str, password: str = "") -> str | None:
     """Get access token from Keycloak using modern OAuth2 flows.
 
-    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    Two-step Token Exchange (RFC 8693):
+    1. Get service account token via client_credentials
+    2. Exchange it for a user-specific token with subject_token
+
     ROPC (password grant) is disabled per security audit (ADR-0086).
     """
     import requests
 
     token_url = f"{KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
-    # Try Token Exchange first (RFC 8693) for user-specific context
+    # Step 1: Get service account token via client_credentials
+    try:
+        sa_response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": KEYCLOAK_CLIENT_ID,
+                "client_secret": KEYCLOAK_CLIENT_SECRET,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if sa_response.status_code != 200:
+            return None
+        sa_token = sa_response.json().get("access_token")
+        if not sa_token:
+            return None
+    except Exception:
+        return None
+
+    # Step 2: Exchange for user-specific token (RFC 8693)
     try:
         response = requests.post(
             token_url,
@@ -158,8 +181,9 @@ def _get_token(username: str, password: str = "") -> str | None:
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": KEYCLOAK_CLIENT_ID,
                 "client_secret": KEYCLOAK_CLIENT_SECRET,
-                "requested_subject": username,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email",
             },
@@ -170,23 +194,8 @@ def _get_token(username: str, password: str = "") -> str | None:
     except Exception:
         pass
 
-    # Fallback to client_credentials (service account)
-    try:
-        response = requests.post(
-            token_url,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": KEYCLOAK_CLIENT_ID,
-                "client_secret": KEYCLOAK_CLIENT_SECRET,
-                "scope": "openid profile email",
-            },
-            timeout=10,
-        )
-        if response.status_code == 200:
-            return response.json().get("access_token")
-    except Exception:
-        pass
-    return None
+    # Fallback to service account token if exchange not configured
+    return sa_token
 
 
 @pytest.mark.xdist_group(name="test_vectors_api")

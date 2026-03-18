@@ -37,7 +37,7 @@ def test_settings():
         anthropic_api_key="test-key",
         model_name="claude-sonnet-4-5-20250929",
         log_level="DEBUG",
-        openfga_api_url="http://localhost:8080",
+        openfga_api_url="http://localhost:9080",
         openfga_store_id="test-store",
         openfga_model_id="test-model",
         enable_context_compaction=False,

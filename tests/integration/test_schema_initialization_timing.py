@@ -42,7 +42,7 @@ class TestSchemaInitializationTiming:
     @pytest.mark.asyncio
     async def test_gdpr_schema_tables_exist_before_tests(self, integration_test_env):
         """
-        Should verify all GDPR tables exist in gdpr_test database.
+        Should verify all GDPR tables exist in compliance_test database.
 
         This test runs early in the integration suite to catch schema
         initialization failures before other tests start.
@@ -63,7 +63,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -118,7 +118,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -183,7 +183,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -219,7 +219,7 @@ class TestSchemaInitializationTiming:
         pool = await asyncpg.create_pool(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
             min_size=1,
@@ -262,7 +262,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -324,7 +324,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )

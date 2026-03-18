@@ -84,7 +84,7 @@ async def postgres_connection_real(integration_test_env):
         pool = await asyncpg.create_pool(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("POSTGRES_DB", "gdpr_test"),
+            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),  # Match docker-compose.test.yml
             min_size=1,  # Minimal: 8 workers × 1 = 8 connections base
@@ -494,7 +494,7 @@ async def db_pool_gdpr(integration_test_env):
         port=int(os.getenv("POSTGRES_PORT", "9432")),
         user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "gdpr_test"),
+        database=os.getenv("COMPLIANCE_DB", "compliance_test"),
         min_size=1,
         max_size=2,  # Reduced to prevent connection exhaustion with xdist workers
     )

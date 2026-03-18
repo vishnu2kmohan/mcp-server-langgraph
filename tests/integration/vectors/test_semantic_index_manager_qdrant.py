@@ -270,9 +270,9 @@ class TestSemanticIndexManagerToolIndexing:
 
             await manager.ensure_collection()
 
-            # Create and index tool (use UUID for Qdrant compatibility)
+            # Create and index tool
             tool_entry = ToolIndexEntry(
-                tool_id=str(uuid.uuid4()),
+                tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                 name="calculator",
                 description="Perform mathematical calculations with precision",
                 category=ToolCategory.CALCULATOR,
@@ -310,10 +310,10 @@ class TestSemanticIndexManagerToolIndexing:
 
             await manager.ensure_collection()
 
-            # Create multiple tools (use UUIDs for Qdrant compatibility)
+            # Create multiple tools
             tools = [
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name=f"tool_{i}",
                     description=f"Description for tool {i}",
                     category=ToolCategory.OTHER,
@@ -362,22 +362,22 @@ class TestSemanticIndexManagerToolSearch:
 
             await manager.ensure_collection()
 
-            # Index diverse tools (use UUIDs for Qdrant compatibility)
+            # Index diverse tools
             tools = [
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="calculator",
                     description="Perform mathematical calculations and arithmetic",
                     category=ToolCategory.CALCULATOR,
                 ),
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="web_search",
                     description="Search the web for information",
                     category=ToolCategory.SEARCH,
                 ),
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="file_reader",
                     description="Read and parse file contents",
                     category=ToolCategory.FILESYSTEM,
@@ -424,22 +424,22 @@ class TestSemanticIndexManagerToolSearch:
 
             await manager.ensure_collection()
 
-            # Index tools with different categories (use UUIDs for Qdrant compatibility)
+            # Index tools with different categories
             tools = [
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="calculator_basic",
                     description="Basic arithmetic operations",
                     category=ToolCategory.CALCULATOR,
                 ),
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="calculator_scientific",
                     description="Scientific calculations with functions",
                     category=ToolCategory.CALCULATOR,
                 ),
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="web_browser",
                     description="Browse the web",
                     category=ToolCategory.WEB,
@@ -788,17 +788,17 @@ class TestSemanticIndexManagerMultiTenant:
 
             await manager.ensure_collection()
 
-            # Index tools for different tenants (use UUIDs for Qdrant compatibility)
+            # Index tools for different tenants
             tools = [
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="tenant1_calculator",
                     description="Calculator for tenant 1",
                     category=ToolCategory.CALCULATOR,
                     tenant_id="tenant-001",
                 ),
                 ToolIndexEntry(
-                    tool_id=str(uuid.uuid4()),
+                    tool_id=f"builtin:test-{uuid.uuid4().hex[:8]}",
                     name="tenant2_calculator",
                     description="Calculator for tenant 2",
                     category=ToolCategory.CALCULATOR,

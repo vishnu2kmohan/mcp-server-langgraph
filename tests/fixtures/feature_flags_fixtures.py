@@ -119,6 +119,14 @@ class MockFeatureFlags:
         precedent_search_max_results: int = 10,
         # Source Citation flags
         enable_source_citations: bool = True,
+        # Native tools flags
+        native_tools_enabled: bool = False,
+        anthropic_native_web_search_enabled: bool = False,
+        google_native_search_enabled: bool = False,
+        anthropic_native_code_execution_enabled: bool = False,
+        openai_native_web_search_enabled: bool = False,
+        openai_native_code_interpreter_enabled: bool = False,
+        use_responses_api_for_openai: bool = False,
     ) -> None:
         """Initialize MockFeatureFlags with configurable defaults.
 
@@ -241,6 +249,31 @@ class MockFeatureFlags:
 
         # Source Citation flags
         self.enable_source_citations = enable_source_citations
+
+        # Native tools flags
+        self.native_tools_enabled = native_tools_enabled
+        self.anthropic_native_web_search_enabled = anthropic_native_web_search_enabled
+        self.google_native_search_enabled = google_native_search_enabled
+        self.anthropic_native_code_execution_enabled = anthropic_native_code_execution_enabled
+        self.openai_native_web_search_enabled = openai_native_web_search_enabled
+        self.openai_native_code_interpreter_enabled = openai_native_code_interpreter_enabled
+        self.use_responses_api_for_openai = use_responses_api_for_openai
+
+    def __getattr__(self, name: str) -> object:
+        """Fall back to real FeatureFlags defaults for attributes not explicitly set.
+
+        This prevents MockFeatureFlags from going out of sync when new flags
+        are added to the real FeatureFlags class. Any attribute not set in
+        __init__ will return the real default value.
+        """
+        try:
+            from mcp_server_langgraph.core.feature_flags import FeatureFlags
+
+            if name in FeatureFlags.model_fields:
+                return FeatureFlags.model_fields[name].default
+        except ImportError:
+            pass
+        raise AttributeError(f"'MockFeatureFlags' object has no attribute '{name}'")
 
     def is_feature_enabled(self, feature_name: str) -> bool:
         """Check if a feature is enabled.

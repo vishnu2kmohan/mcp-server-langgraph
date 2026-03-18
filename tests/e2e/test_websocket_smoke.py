@@ -60,7 +60,7 @@ pytestmark = [
 E2E_WS_BASE_URL = os.getenv("E2E_WS_BASE_URL", "ws://localhost:8000")
 E2E_HTTP_BASE_URL = os.getenv("E2E_HTTP_BASE_URL", "http://localhost:8000")
 E2E_KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost/authn")
-E2E_CLIENT_ID = "mcp-server"
+E2E_CLIENT_ID = "agent-studio-keycloak-client-id-for-e2e-tests"
 E2E_CLIENT_SECRET = "test-client-secret-for-e2e-tests"
 
 # WebSocket endpoints from frontend WS_ENDPOINTS constant
@@ -96,30 +96,50 @@ WS_ENDPOINTS = {
     "TRACES": "/api/v1/ws/traces",
 }
 
-# Endpoints that allow anonymous access
-ANONYMOUS_ALLOWED_ENDPOINTS = {
-    "MCP",
-    "MCP_SESSION",
-}
+# All WebSocket endpoints require authentication (ADR-0103)
+ANONYMOUS_ALLOWED_ENDPOINTS: set[str] = set()
 
-# Endpoints that require authentication
-AUTH_REQUIRED_ENDPOINTS = set(WS_ENDPOINTS.keys()) - ANONYMOUS_ALLOWED_ENDPOINTS
+# Endpoints that require authentication (sorted for deterministic xdist collection)
+AUTH_REQUIRED_ENDPOINTS = sorted(set(WS_ENDPOINTS.keys()) - ANONYMOUS_ALLOWED_ENDPOINTS)
 
 
 def _get_keycloak_token(
     username: str = "alice",
-    password: str = "alice123",  # Deprecated: ROPC is disabled per ADR-0086
+    password: str = "",  # Deprecated: ROPC is disabled per ADR-0086
     client_id: str = E2E_CLIENT_ID,
     client_secret: str = E2E_CLIENT_SECRET,
 ) -> str | None:
     """Get Keycloak access token via modern OAuth2 flows.
 
-    Uses Token Exchange (RFC 8693) or client_credentials grant.
+    Two-step Token Exchange (RFC 8693):
+    1. Get service account token via client_credentials
+    2. Exchange it for a user-specific token with subject_token
+
     ROPC (password grant) is disabled per security audit (ADR-0086).
     """
     token_url = f"{E2E_KEYCLOAK_URL}/realms/default/protocol/openid-connect/token"
 
-    # Try Token Exchange first (RFC 8693) for user-specific context
+    # Step 1: Get service account token via client_credentials
+    try:
+        sa_response = requests.post(
+            token_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": "openid profile email",
+            },
+            timeout=10,
+        )
+        if sa_response.status_code != 200:
+            return None
+        sa_token = sa_response.json().get("access_token")
+        if not sa_token:
+            return None
+    except Exception:
+        return None
+
+    # Step 2: Exchange for user-specific token (RFC 8693)
     try:
         response = requests.post(
             token_url,
@@ -127,8 +147,9 @@ def _get_keycloak_token(
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "requested_subject": username,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email",
             },
@@ -139,23 +160,8 @@ def _get_keycloak_token(
     except Exception:
         pass
 
-    # Fallback to client_credentials (service account)
-    try:
-        response = requests.post(
-            token_url,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "scope": "openid profile email",
-            },
-            timeout=10,
-        )
-        if response.status_code == 200:
-            return response.json().get("access_token")
-    except Exception:
-        pass
-    return None
+    # Fallback to service account token if exchange not configured
+    return sa_token
 
 
 def _websocket_available() -> bool:
@@ -190,8 +196,8 @@ class TestWebSocketSmoke:
 
     @pytest.mark.parametrize(
         "endpoint_name",
-        list(ANONYMOUS_ALLOWED_ENDPOINTS),
-        ids=list(ANONYMOUS_ALLOWED_ENDPOINTS),
+        sorted(ANONYMOUS_ALLOWED_ENDPOINTS),
+        ids=sorted(ANONYMOUS_ALLOWED_ENDPOINTS),
     )
     @pytest.mark.asyncio
     async def test_anonymous_endpoint_accepts_connection(
@@ -209,7 +215,7 @@ class TestWebSocketSmoke:
             pytest.skip("websockets library not installed")
 
         endpoint_path = WS_ENDPOINTS[endpoint_name]
-        ws_url = f"{E2E_WS_BASE_URL}{endpoint_path}"
+        ws_url = f"{E2E_WS_BASE_URL}{endpoint_path}?v=1.0.0"
 
         try:
             async with websockets.connect(
@@ -242,7 +248,7 @@ class TestWebSocketSmoke:
             pytest.skip("websockets library not installed")
 
         endpoint_path = WS_ENDPOINTS[endpoint_name]
-        ws_url = f"{E2E_WS_BASE_URL}{endpoint_path}"
+        ws_url = f"{E2E_WS_BASE_URL}{endpoint_path}?v=1.0.0"
 
         try:
             async with websockets.connect(
@@ -297,7 +303,7 @@ class TestWebSocketSmoke:
             pytest.skip("Could not obtain auth token from Keycloak")
 
         endpoint_path = WS_ENDPOINTS[endpoint_name]
-        ws_url = f"{E2E_WS_BASE_URL}{endpoint_path}?token={auth_token}"
+        ws_url = f"{E2E_WS_BASE_URL}{endpoint_path}?v=1.0.0&token={auth_token}"
 
         try:
             async with websockets.connect(
@@ -349,7 +355,10 @@ class TestWebSocketMessageFormat:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_mcp_endpoint_supports_jsonrpc(self) -> None:
+    async def test_mcp_endpoint_supports_jsonrpc(
+        self,
+        auth_token: str | None,
+    ) -> None:
         """
         GIVEN the MCP WebSocket endpoint
         WHEN sending a JSON-RPC 2.0 initialize message
@@ -360,7 +369,10 @@ class TestWebSocketMessageFormat:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['MCP']}"
+        if not auth_token:
+            pytest.skip("Could not obtain auth token from Keycloak")
+
+        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['MCP']}?v=1.0.0&token={auth_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send JSON-RPC initialize
@@ -400,7 +412,7 @@ class TestWebSocketMessageFormat:
         if not auth_token:
             pytest.skip("Could not obtain auth token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['TRACES']}?token={auth_token}"
+        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['TRACES']}?v=1.0.0&token={auth_token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as websocket:
@@ -441,7 +453,7 @@ class TestWebSocketMessageFormat:
         if not auth_token:
             pytest.skip("Could not obtain auth token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['DEVTOOLS']}?token={auth_token}"
+        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['DEVTOOLS']}?v=1.0.0&token={auth_token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as websocket:
@@ -482,7 +494,7 @@ class TestWebSocketMessageFormat:
         if not auth_token:
             pytest.skip("Could not obtain auth token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['BUDGET_ALERTS']}?token={auth_token}"
+        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['BUDGET_ALERTS']}?v=1.0.0&token={auth_token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as websocket:
@@ -522,7 +534,7 @@ class TestWebSocketMessageFormat:
         if not auth_token:
             pytest.skip("Could not obtain auth token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['AI_SUGGESTIONS']}?token={auth_token}"
+        ws_url = f"{E2E_WS_BASE_URL}{WS_ENDPOINTS['AI_SUGGESTIONS']}?v=1.0.0&token={auth_token}"
 
         try:
             async with websockets.connect(ws_url, open_timeout=10) as websocket:

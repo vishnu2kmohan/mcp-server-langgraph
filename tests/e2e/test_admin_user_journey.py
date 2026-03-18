@@ -36,7 +36,6 @@ class TestAdminUserJourney:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_01_admin_token_acquisition(
         self,
         e2e_keycloak_base_url: str,
@@ -65,7 +64,6 @@ class TestAdminUserJourney:
         # Token should be a non-empty string
         assert len(token) > 0
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_02_admin_can_access_admin_dashboard(
         self,
         e2e_api_base_url: str,
@@ -89,7 +87,6 @@ class TestAdminUserJourney:
             # Admin should be able to access
             assert response.status_code in [200, 401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_03_admin_can_list_users(
         self,
         e2e_api_base_url: str,
@@ -118,7 +115,6 @@ class TestAdminUserJourney:
                 # Expected if endpoint not implemented
                 assert response.status_code in [401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_04_admin_can_view_user_details(
         self,
         e2e_api_base_url: str,
@@ -145,7 +141,6 @@ class TestAdminUserJourney:
             else:
                 assert response.status_code in [401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_05_admin_can_manage_organizations(
         self,
         e2e_api_base_url: str,
@@ -172,7 +167,6 @@ class TestAdminUserJourney:
             else:
                 assert response.status_code in [401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_06_admin_can_view_audit_logs(
         self,
         e2e_api_base_url: str,
@@ -199,7 +193,6 @@ class TestAdminUserJourney:
             else:
                 assert response.status_code in [401, 404]
 
-    @pytest.mark.xfail(strict=True, reason="Requires E2E infrastructure running")
     async def test_07_admin_can_access_all_workflows(
         self,
         e2e_api_base_url: str,

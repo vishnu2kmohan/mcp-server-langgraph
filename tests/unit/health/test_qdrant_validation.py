@@ -494,7 +494,7 @@ class TestQdrantCollectionBootstrapAtStartup:
 
         async def mock_bootstrap_success():
             call_tracker["bootstrap_called"] = True
-            return (True, "Qdrant collection 'mcp_context' already exists")
+            return (True, "Qdrant collection 'agent_studio_context' already exists")
 
         async def mock_db_validation():
             return (True, "OK")
@@ -563,7 +563,7 @@ class TestQdrantCollectionBootstrapAtStartup:
         ):
             mock_settings.qdrant_url = "http://localhost:6333"
             mock_settings.enable_dynamic_context_loading = True
-            mock_settings.qdrant_collection_name = "mcp_context"
+            mock_settings.qdrant_collection_name = "agent_studio_context"
 
             await run_startup_validation_async()
 
@@ -750,7 +750,7 @@ class TestQdrantCollectionBootstrapAtStartup:
         ):
             mock_settings.qdrant_url = "http://localhost:6333"
             mock_settings.enable_dynamic_context_loading = True
-            mock_settings.qdrant_collection_name = "mcp_context"
+            mock_settings.qdrant_collection_name = "agent_studio_context"
 
             # Track warning calls via side_effect
             mock_logger.warning.side_effect = mock_warning_call

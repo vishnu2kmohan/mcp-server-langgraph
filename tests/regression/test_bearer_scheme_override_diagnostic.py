@@ -172,7 +172,7 @@ class TestBearerSchemeOverrideDiagnostic:
         )
 
         # Include router AFTER bearer_scheme override
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Override other dependencies
         app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync

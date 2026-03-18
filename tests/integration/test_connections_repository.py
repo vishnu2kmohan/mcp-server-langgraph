@@ -68,12 +68,12 @@ async def test_engine():
         pytest.skip("PostgreSQL not available for integration tests")
 
     # Use test database URL from environment or default
+    # Database name is agent_studio_test (managed by Alembic migrations)
     database_url = os.getenv(
         "TEST_DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:9432/mcp_test",
+        "postgresql+asyncpg://postgres:postgres@localhost:9432/agent_studio_test",
     )
 
-    # Fallback to standard postgres DB if mcp_test doesn't exist
     try:
         engine = create_async_engine(
             database_url,
@@ -87,24 +87,8 @@ async def test_engine():
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
 
-    except Exception:
-        # Try gdpr_test database as fallback
-        database_url = os.getenv(
-            "TEST_DATABASE_URL",
-            "postgresql+asyncpg://postgres:postgres@localhost:9432/gdpr_test",
-        )
-        try:
-            engine = create_async_engine(
-                database_url,
-                echo=False,
-                pool_size=5,
-                max_overflow=10,
-                pool_pre_ping=True,
-            )
-            async with engine.begin() as conn:
-                await conn.execute(text("SELECT 1"))
-        except Exception as e:
-            pytest.skip(f"PostgreSQL not available: {e}")
+    except Exception as e:
+        pytest.skip(f"PostgreSQL not available: {e}")
 
     yield engine
 

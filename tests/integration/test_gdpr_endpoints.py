@@ -123,7 +123,7 @@ def test_app(mock_get_current_user, monkeypatch, mock_auth_user):
         scheme="Bearer", credentials="mock_token_for_testing"
     )
 
-    app.include_router(router)
+    app.include_router(router, prefix="/api/v1")
 
     # Override the dependency (async function for async dependency)
     # Use middleware.get_current_user (just re-imported) for correct instance
@@ -209,7 +209,7 @@ class TestGDPREndpoints:
         app = FastAPI()
         from mcp_server_langgraph.api.gdpr import router
 
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
         # Don't override dependency
         client = TestClient(app)
 
@@ -320,7 +320,7 @@ class TestGDPREndpoints:
             response = client.delete("/api/v1/users/me?confirm=true")
 
             assert response.status_code == 500
-            assert "errors" in response.json()["detail"]
+            assert "could not be fully completed" in response.json()["detail"]
 
     def test_update_consent_success(self, client, mock_auth_user):
         """Test POST /api/v1/users/me/consent."""

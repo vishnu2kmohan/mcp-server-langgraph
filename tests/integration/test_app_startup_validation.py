@@ -104,32 +104,21 @@ class TestFastAPIStartupValidation:
         This test validates Bug Fix #1: Keycloak admin credentials must be
         wired from settings to KeycloakClient.
         """
-        # Arrange: Set admin credentials
-        monkeypatch.setenv("KEYCLOAK_ADMIN_USERNAME", "test-admin")
-        monkeypatch.setenv("KEYCLOAK_ADMIN_PASSWORD", "test-password")
-        monkeypatch.setenv("KEYCLOAK_SERVER_URL", "http://test-keycloak:8080")
-        monkeypatch.setenv("KEYCLOAK_REALM", "test")
-        monkeypatch.setenv("KEYCLOAK_CLIENT_ID", "test-client")
-
-        # Reload config to pick up monkeypatched env vars
-        import importlib
-
-        import mcp_server_langgraph.core.config as config_module
-        import mcp_server_langgraph.core.dependencies as deps_module
-
-        importlib.reload(config_module)
-        importlib.reload(deps_module)
-
-        # Reset singleton
         import mcp_server_langgraph.core.dependencies as deps
 
+        # Arrange: Patch settings attributes directly (reload doesn't work
+        # because config/__init__.py reload doesn't re-execute _settings.py)
+        monkeypatch.setattr(deps.settings, "keycloak_admin_username", "test-admin")
+        monkeypatch.setattr(deps.settings, "keycloak_admin_password", "test-password")
+        monkeypatch.setattr(deps.settings, "keycloak_server_url", "http://test-keycloak:8080")
+        monkeypatch.setattr(deps.settings, "keycloak_realm", "test")
+        monkeypatch.setattr(deps.settings, "keycloak_client_id", "test-client")
+
+        # Reset singleton so get_keycloak_client() creates a new one
         deps._keycloak_client = None
 
-        # Re-import to get updated function
-        from mcp_server_langgraph.core.dependencies import get_keycloak_client
-
         # Act: Get Keycloak client
-        client = get_keycloak_client()
+        client = deps.get_keycloak_client()
 
         # Assert: Admin credentials are wired
         assert client.config.admin_username == "test-admin"
@@ -206,49 +195,39 @@ class TestDependencyInjectionWiring:
         This is a comprehensive smoke test that validates all dependency
         factories are properly wired.
         """
-        # Arrange: Set minimal config for all services
-        monkeypatch.setenv("KEYCLOAK_SERVER_URL", "http://localhost:8082")
-        monkeypatch.setenv("KEYCLOAK_REALM", "test")
-        monkeypatch.setenv("KEYCLOAK_CLIENT_ID", "test-client")
-        monkeypatch.setenv("KEYCLOAK_ADMIN_USERNAME", "admin")
-        monkeypatch.setenv("KEYCLOAK_ADMIN_PASSWORD", "admin-password")
-        monkeypatch.setenv("OPENFGA_API_URL", "http://localhost:8080")
-        # Explicitly unset OpenFGA store/model to test graceful degradation
-        monkeypatch.setenv("OPENFGA_STORE_ID", "")
-        monkeypatch.setenv("OPENFGA_MODEL_ID", "")
-
-        # Reload config to pick up monkeypatched env vars
-        import importlib
-
-        import mcp_server_langgraph.core.config as config_module
-        import mcp_server_langgraph.core.dependencies as deps_module
-
-        importlib.reload(config_module)
-        importlib.reload(deps_module)
-
-        # Reset all singletons
         import mcp_server_langgraph.core.dependencies as deps
 
+        # Arrange: Patch settings attributes directly on the deps module's
+        # settings reference (importlib.reload doesn't re-execute _settings.py)
+        monkeypatch.setattr(deps.settings, "keycloak_server_url", "http://localhost:8082")
+        monkeypatch.setattr(deps.settings, "keycloak_realm", "test")
+        monkeypatch.setattr(deps.settings, "keycloak_client_id", "test-client")
+        monkeypatch.setattr(deps.settings, "keycloak_client_secret", None)
+        monkeypatch.setattr(deps.settings, "keycloak_admin_username", "admin")
+        monkeypatch.setattr(deps.settings, "keycloak_admin_password", "admin-password")
+        monkeypatch.setattr(deps.settings, "openfga_api_url", "http://localhost:9080")
+        monkeypatch.setattr(deps.settings, "openfga_store_id", "")
+        monkeypatch.setattr(deps.settings, "openfga_model_id", "")
+
+        # Reset all singletons
         deps._keycloak_client = None
         deps._openfga_client = None
         deps._service_principal_manager = None
         deps._api_key_manager = None
 
         # Act & Assert: All factories should work
-        from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client, get_openfga_client
-
         # Keycloak client should instantiate with admin creds
-        keycloak = get_keycloak_client()
+        keycloak = deps.get_keycloak_client()
         assert keycloak is not None
         assert keycloak.config.admin_username == "admin"
         assert keycloak.config.admin_password == "admin-password"
 
         # OpenFGA should return None (incomplete config)
-        openfga = get_openfga_client()
+        openfga = deps.get_openfga_client()
         assert openfga is None
 
         # API Key Manager should instantiate
-        api_key_mgr = get_api_key_manager()
+        api_key_mgr = deps.get_api_key_manager()
         assert api_key_mgr is not None
 
 
@@ -286,32 +265,21 @@ class TestGracefulDegradation:
 
         App should start even if Keycloak server is unreachable.
         """
-        # Arrange: Point to non-existent Keycloak
-        monkeypatch.setenv("KEYCLOAK_SERVER_URL", "http://nonexistent:9999")
-        monkeypatch.setenv("KEYCLOAK_REALM", "test")
-        monkeypatch.setenv("KEYCLOAK_CLIENT_ID", "test-client")
-        monkeypatch.setenv("KEYCLOAK_ADMIN_USERNAME", "admin")
-        monkeypatch.setenv("KEYCLOAK_ADMIN_PASSWORD", "admin-password")
-
-        # Reload config to pick up monkeypatched env vars
-        import importlib
-
-        import mcp_server_langgraph.core.config as config_module
-        import mcp_server_langgraph.core.dependencies as deps_module
-
-        importlib.reload(config_module)
-        importlib.reload(deps_module)
-
-        # Reset singleton
         import mcp_server_langgraph.core.dependencies as deps
 
+        # Arrange: Patch settings to point to non-existent Keycloak
+        monkeypatch.setattr(deps.settings, "keycloak_server_url", "http://nonexistent:9999")
+        monkeypatch.setattr(deps.settings, "keycloak_realm", "test")
+        monkeypatch.setattr(deps.settings, "keycloak_client_id", "test-client")
+        monkeypatch.setattr(deps.settings, "keycloak_client_secret", None)
+        monkeypatch.setattr(deps.settings, "keycloak_admin_username", "admin")
+        monkeypatch.setattr(deps.settings, "keycloak_admin_password", "admin-password")
+
+        # Reset singleton
         deps._keycloak_client = None
 
-        # Re-import to get updated function
-        from mcp_server_langgraph.core.dependencies import get_keycloak_client
-
         # Act: Create Keycloak client (should succeed - connectivity tested lazily)
-        client = get_keycloak_client()
+        client = deps.get_keycloak_client()
 
         # Assert: Client created with correct config
         assert client is not None

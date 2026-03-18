@@ -406,7 +406,7 @@ class TestProductionAuthValidation:
 
         # Validation error should mention GDPR requirement
         error_message = str(exc_info.value)
-        assert "GDPR_STORAGE_BACKEND=memory is not allowed in production" in error_message
+        assert "COMPLIANCE_STORAGE_BACKEND=memory is not allowed in production" in error_message
         assert "postgres" in error_message.lower()
 
     def test_production_allows_keycloak_when_configured(self):
@@ -466,7 +466,7 @@ class TestProductionAuthValidation:
 
         error_message = str(exc_info.value)
         assert "AUTH_PROVIDER=inmemory is not allowed in production" in error_message
-        assert "GDPR_STORAGE_BACKEND=memory is not allowed in production" in error_message
+        assert "COMPLIANCE_STORAGE_BACKEND=memory is not allowed in production" in error_message
 
 
 @pytest.mark.xdist_group(name="testcontainerintegrationwithexistingcode")

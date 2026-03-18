@@ -83,7 +83,7 @@ class TestFullResilienceStack:
         call_count = 0
 
         @circuit_breaker(name="test", fail_max=5)
-        @retry_with_backoff(max_attempts=3)
+        @retry_with_backoff(max_attempts=3, retry_on=(ValueError,))
         @with_timeout(seconds=5)
         @with_bulkhead(resource_type="test", limit=10)
         async def func():
@@ -107,7 +107,7 @@ class TestFullResilienceStack:
         reset_circuit_breaker("test_cb_retry_exhausted")
 
         @circuit_breaker(name="test_cb_retry_exhausted", fail_max=3)
-        @retry_with_backoff(max_attempts=2)
+        @retry_with_backoff(max_attempts=2, retry_on=(ValueError,))
         async def func():
             raise ValueError("Always fails")
 
@@ -132,7 +132,7 @@ class TestFullResilienceStack:
         max_active = 0
 
         @with_bulkhead(resource_type="test", limit=3)
-        @retry_with_backoff(max_attempts=2)
+        @retry_with_backoff(max_attempts=2, retry_on=(ValueError,))
         async def func(should_fail):
             nonlocal active_count, max_active
             active_count += 1
@@ -169,7 +169,7 @@ class TestRealWorldScenarios:
 
         @with_fallback(fallback="Cached response from previous call")
         @circuit_breaker(name="llm", fail_max=5, timeout=60)
-        @retry_with_backoff(max_attempts=3)
+        @retry_with_backoff(max_attempts=3, retry_on=(ValueError,))
         @with_timeout(operation_type="llm")
         @with_bulkhead(resource_type="llm")
         async def call_llm_api(prompt):
@@ -198,7 +198,7 @@ class TestRealWorldScenarios:
             return True
 
         @circuit_breaker(name="openfga", fail_max=2, timeout=30, fallback=check_permission_fallback)
-        @retry_with_backoff(max_attempts=3)
+        @retry_with_backoff(max_attempts=3, retry_on=(ValueError,))
         @with_timeout(operation_type="auth")
         @with_bulkhead(resource_type="openfga")
         async def check_permission(user, resource):
@@ -237,7 +237,7 @@ class TestMetricsIntegration:
         call_count = 0
 
         @circuit_breaker(name="test_metrics")
-        @retry_with_backoff(max_attempts=3)
+        @retry_with_backoff(max_attempts=3, retry_on=(ValueError,))
         @with_timeout(seconds=5)
         @with_bulkhead(resource_type="test_metrics")
         async def func():
@@ -269,7 +269,7 @@ class TestErrorPropagation:
         """Test that timeout can interrupt retry loop"""
 
         @with_timeout(seconds=2)
-        @retry_with_backoff(max_attempts=10, exponential_base=2)
+        @retry_with_backoff(max_attempts=10, exponential_base=2, retry_on=(ValueError,))
         async def slow_func_with_retries():
             await asyncio.sleep(1)
             raise ValueError("Keep retrying")
@@ -288,7 +288,7 @@ class TestErrorPropagation:
         reset_circuit_breaker("test_cb_stops_retry")
 
         @circuit_breaker(name="test_cb_stops_retry", fail_max=2)
-        @retry_with_backoff(max_attempts=5)
+        @retry_with_backoff(max_attempts=5, retry_on=(ValueError,))
         async def func():
             raise ValueError("Always fails")
 

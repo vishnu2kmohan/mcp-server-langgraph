@@ -53,6 +53,7 @@ async def integration_app(mock_user: dict[str, Any]) -> FastAPI:
     """Create a test app with sessions router and mock auth."""
     from mcp_server_langgraph.api.v1.sessions import sessions_router
     from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.core.dependencies import get_audit_log_repository, get_session_goal_repository
 
     app = FastAPI()
     app.include_router(sessions_router, prefix="/api/v1")
@@ -61,6 +62,41 @@ async def integration_app(mock_user: dict[str, Any]) -> FastAPI:
         return mock_user
 
     app.dependency_overrides[get_current_user] = override_get_current_user
+
+    # Mock goal repository (in-memory)
+    mock_goal_repo = MagicMock()
+    mock_goal_repo.create_goal = AsyncMock(
+        side_effect=lambda **kwargs: {
+            "id": str(uuid4()),
+            "session_id": kwargs.get("session_id"),
+            "goal": kwargs.get("goal"),
+            "set_at": kwargs.get("set_at"),
+            "user_id": kwargs.get("user_id"),
+        }
+    )
+    mock_goal_repo.complete_goal = AsyncMock(
+        side_effect=lambda **kwargs: {
+            "id": str(uuid4()),
+            "session_id": kwargs.get("session_id"),
+            "goal": kwargs.get("goal"),
+            "achieved": kwargs.get("achieved"),
+            "feedback": kwargs.get("feedback"),
+            "set_at": 1705123456789,
+            "completed_at": kwargs.get("completed_at"),
+            "user_id": kwargs.get("user_id"),
+        }
+    )
+    mock_goal_repo.get_goals_by_session = AsyncMock(return_value=[])
+    mock_goal_repo.count_goals_by_session = AsyncMock(return_value=0)
+    mock_goal_repo.get_current_goal = AsyncMock(return_value=None)
+    mock_goal_repo.delete_goal = AsyncMock(return_value=True)
+
+    app.dependency_overrides[get_session_goal_repository] = lambda: mock_goal_repo
+
+    # Mock audit log repository to avoid default DB connection
+    mock_audit = MagicMock()
+    mock_audit.log_event = AsyncMock(return_value=None)
+    app.dependency_overrides[get_audit_log_repository] = lambda: mock_audit
 
     yield app
 

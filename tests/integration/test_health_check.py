@@ -63,7 +63,7 @@ class TestHealthCheckEndpoints:
         # Configure settings
         mock_settings.openfga_store_id = "test-store"
         mock_settings.openfga_model_id = "test-model"
-        mock_settings.openfga_api_url = "http://localhost:8080"
+        mock_settings.openfga_api_url = "http://localhost:9080"
         mock_settings.anthropic_api_key = "test-key"
         mock_settings.jwt_secret_key = "test-secret"
         mock_settings.service_version = "1.0.0"
@@ -97,7 +97,7 @@ class TestHealthCheckEndpoints:
         """Test readiness check when OpenFGA is unavailable"""
         mock_settings.openfga_store_id = "test-store"
         mock_settings.openfga_model_id = "test-model"
-        mock_settings.openfga_api_url = "http://localhost:8080"
+        mock_settings.openfga_api_url = "http://localhost:9080"
         mock_settings.anthropic_api_key = "test-key"
         mock_settings.jwt_secret_key = "test-secret"
         mock_settings.service_version = "1.0.0"

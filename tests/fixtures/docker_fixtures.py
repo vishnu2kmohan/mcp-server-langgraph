@@ -91,11 +91,11 @@ async def _verify_schema_ready(host: str, port: int, timeout: float = 30.0) -> b
 
     while time.time() - start_time < timeout:
         try:
-            # Connect to gdpr_test database
+            # Connect to compliance_test database
             conn = await asyncpg.connect(
                 host=host,
                 port=port,
-                database=os.getenv("POSTGRES_DB", "gdpr_test"),
+                database=os.getenv("COMPLIANCE_DB", "compliance_test"),
                 user=os.getenv("POSTGRES_USER", "postgres"),
                 password=os.getenv("POSTGRES_PASSWORD", "postgres"),
                 timeout=5,

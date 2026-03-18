@@ -248,9 +248,11 @@ class TestProductionReadinessChecks:
                         if pattern in line and not line.strip().startswith("#") and '"""' not in line:
                             violations.append(f"{src_file}:{i + 1}: {line.strip()}")
 
-        # Filter out known false positives (test data, examples)
+        # Filter out known false positives (test data, examples, redaction patterns)
         violations = [
-            v for v in violations if "test" not in v.lower() and "example" not in v.lower() and "mock" not in v.lower()
+            v
+            for v in violations
+            if "test" not in v.lower() and "example" not in v.lower() and "mock" not in v.lower() and "redact" not in v.lower()
         ]
 
         assert len(violations) == 0, "Hardcoded credentials found:\n" + "\n".join(violations)

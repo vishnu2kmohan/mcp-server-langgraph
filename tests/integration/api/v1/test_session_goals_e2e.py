@@ -133,9 +133,11 @@ def app(
     async_session: AsyncSession,
 ) -> FastAPI:
     """Create FastAPI app with real database session."""
+    from unittest.mock import AsyncMock as AsyncMockFn
+
     from mcp_server_langgraph.auth.middleware import get_current_user
     from mcp_server_langgraph.api.v1 import sessions as sessions_module
-    from mcp_server_langgraph.core.dependencies import get_session_goal_repository
+    from mcp_server_langgraph.core.dependencies import get_audit_log_repository, get_session_goal_repository
 
     app = FastAPI()
     app.include_router(sessions_router, prefix="/api/v1")
@@ -151,6 +153,14 @@ def app(
         return PostgresSessionGoalRepository(async_session)
 
     app.dependency_overrides[get_session_goal_repository] = get_test_repository
+
+    # Mock audit log repository to avoid default DB connection
+    def get_mock_audit_repo():
+        mock_audit = MagicMock()
+        mock_audit.log_event = AsyncMockFn(return_value=None)
+        return mock_audit
+
+    app.dependency_overrides[get_audit_log_repository] = get_mock_audit_repo
 
     # Set mock session service
     sessions_module.set_session_service(mock_session_service)

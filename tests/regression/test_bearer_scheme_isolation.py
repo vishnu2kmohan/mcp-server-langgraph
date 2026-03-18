@@ -116,7 +116,7 @@ class TestBearerSchemeIsolation:
         )
 
         # Include router AFTER bearer_scheme override
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Override other dependencies
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
@@ -179,7 +179,7 @@ class TestBearerSchemeIsolation:
         app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync
         app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
 
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
         client = TestClient(app)
 
         try:
@@ -409,7 +409,7 @@ class TestCodexReloadScenario:
         )
 
         # Include router AFTER bearer_scheme override
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Override other dependencies
         app.dependency_overrides[get_current_user] = mock_get_current_user_async

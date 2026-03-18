@@ -172,11 +172,11 @@ class TestSemanticToolSelectionE2E:
             # Setup mock search results
             mock_qdrant_client.query_points.return_value.points = [
                 ScoredPoint(
-                    id="tool-calculator",
+                    id="builtin-calculator",
                     version=1,
                     score=0.95,
                     payload={
-                        "tool_id": "tool-calculator",
+                        "tool_id": "builtin:calculator",
                         "name": "calculator",
                         "description": "Perform mathematical calculations",
                         "category": "math",
@@ -186,11 +186,11 @@ class TestSemanticToolSelectionE2E:
                     vector=None,
                 ),
                 ScoredPoint(
-                    id="tool-search",
+                    id="builtin-search",
                     version=1,
                     score=0.88,
                     payload={
-                        "tool_id": "tool-search",
+                        "tool_id": "builtin:search",
                         "name": "web_search",
                         "description": "Search the web for information",
                         "category": "search",
@@ -279,11 +279,11 @@ class TestSemanticToolSelectionE2E:
             # Setup mock search result
             mock_qdrant_client.query_points.return_value.points = [
                 ScoredPoint(
-                    id="tool-read_file",
+                    id="builtin-read_file",
                     version=1,
                     score=0.92,
                     payload={
-                        "tool_id": "tool-read_file",
+                        "tool_id": "builtin:read_file",
                         "name": "read_file",
                         "description": "Read contents of a file",
                         "category": "filesystem",

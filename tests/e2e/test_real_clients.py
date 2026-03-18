@@ -66,7 +66,7 @@ class TestRealKeycloakAuth:
             # Verify token endpoint was called (may be Token Exchange or client_credentials)
             assert mock_instance.post.call_count >= 1
             call_args = mock_instance.post.call_args
-            assert "/realms/mcp-test/protocol/openid-connect/token" in call_args[0][0]
+            assert "/realms/default/protocol/openid-connect/token" in call_args[0][0]
             # Uses Token Exchange or client_credentials (ROPC is disabled per ADR-0086)
             grant_type = call_args[1]["data"]["grant_type"]
             assert grant_type in ["client_credentials", "urn:ietf:params:oauth:grant-type:token-exchange"]

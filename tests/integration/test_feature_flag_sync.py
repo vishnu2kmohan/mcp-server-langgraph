@@ -119,7 +119,7 @@ class TestFeatureFlagSync:
         fields = get_feature_flag_fields()
 
         expected_canvas_flags = [
-            "canvas_hybrid_shell",
+            "studio_canvas_shell",
             "canvas_editable",
             "canvas_agents",
             "canvas_ai_palette",
@@ -146,7 +146,7 @@ class TestFeatureFlagSync:
         ui_flags = get_ui_exposed_flags()
 
         expected_canvas_flags = [
-            "canvas_hybrid_shell",
+            "studio_canvas_shell",
             "canvas_editable",
             "canvas_agents",
             "canvas_ai_palette",
@@ -239,7 +239,7 @@ class TestFeatureFlagSync:
         all_vars = {**dotenv_vars, **compose_vars}
 
         expected_canvas_flags = [
-            "FF_CANVAS_HYBRID_SHELL",
+            "FF_STUDIO_CANVAS_SHELL",
             "FF_CANVAS_EDITABLE",
             "FF_CANVAS_AGENTS",
             "FF_CANVAS_AI_PALETTE",
@@ -280,7 +280,7 @@ class TestFeatureFlagSync:
         # Experimental flags that should be enabled for comprehensive testing
         expected_experimental_flags = [
             "FF_ENABLE_EXPERIMENTAL_FEATURES",
-            "FF_ENABLE_MULTI_AGENT_COLLABORATION",
+            "FF_ENABLE_MULTI_AGENT_ORCHESTRATION",
             "FF_ENABLE_TOOL_REFLECTION",
         ]
 
@@ -513,8 +513,10 @@ class TestADR0072FeatureFlags:
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
-        # Create a flags instance with a specific flag disabled
-        with patch.dict(os.environ, {"FF_ENABLE_MULTI_AGENT_ORCHESTRATION": "false"}):
+        # Create a flags instance with the flag disabled and FF_TEST_MODE cleared
+        # (FF_TEST_MODE bypasses all require_feature checks, see is_test_mode property)
+        env_overrides = {"FF_ENABLE_MULTI_AGENT_ORCHESTRATION": "false", "FF_TEST_MODE": ""}
+        with patch.dict(os.environ, env_overrides):
             flags = FeatureFlags()
 
             with pytest.raises(FeatureDisabledError) as exc_info:
@@ -566,180 +568,117 @@ class TestADR0072ModuleIntegration:
         """
         Test that Orchestrator.decompose_task() checks multi-agent flag.
 
-        The @feature_gated decorator uses feature_flags from core module.
-        We test by unsetting FF_TEST_MODE env var and disabling the feature flag.
+        The @feature_gated decorator reads feature_flags from the core module.
+        The autouse enable_pii_for_integration_tests fixture replaces it with a
+        MockFeatureFlags(is_test_mode=True), so we must patch the module-level
+        feature_flags with a mock that has is_test_mode=False and the target
+        flag disabled.
         """
-        import os
         from unittest.mock import patch
 
         from mcp_server_langgraph.agents.orchestrator import Orchestrator
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
-        from mcp_server_langgraph.core.feature_flags import feature_flags
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
         orchestrator = Orchestrator()
 
-        # Save original flag value
-        original_flag = feature_flags.enable_multi_agent_orchestration
+        # Patch module-level feature_flags with test_mode disabled and flag off
+        mock_flags = MockFeatureFlags(
+            is_test_mode=False,
+            enable_multi_agent_orchestration=False,
+        )
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                orchestrator.decompose_task("Test task")
 
-        try:
-            # Disable the feature flag
-            feature_flags.enable_multi_agent_orchestration = False
-
-            # Unset FF_TEST_MODE to disable test mode bypass
-            env_without_test_mode = {k: v for k, v in os.environ.items() if k != "FF_TEST_MODE"}
-            with patch.dict(os.environ, env_without_test_mode, clear=True):
-                with pytest.raises(FeatureDisabledError) as exc_info:
-                    orchestrator.decompose_task("Test task")
-
-                assert "Multi-Agent Orchestration" in str(exc_info.value)
-        finally:
-            # Restore original flag value
-            feature_flags.enable_multi_agent_orchestration = original_flag
-
-        print("✅ Orchestrator.decompose_task() enforces feature flag")
+            assert "Multi-Agent Orchestration" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_subagent_requires_multi_agent_flag(self):
         """
         Test that Subagent.execute() checks multi-agent flag.
-
-        The @feature_gated decorator uses feature_flags from core module.
-        We test by unsetting FF_TEST_MODE env var and disabling the feature flag.
         """
-        import os
         from unittest.mock import patch
 
         from mcp_server_langgraph.agents.subagent import Subagent
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
-        from mcp_server_langgraph.core.feature_flags import feature_flags
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
         subagent = Subagent(task_id="test-1", instructions="Test instructions")
 
-        # Save original flag value
-        original_flag = feature_flags.enable_multi_agent_orchestration
+        mock_flags = MockFeatureFlags(
+            is_test_mode=False,
+            enable_multi_agent_orchestration=False,
+        )
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                await subagent.execute()
 
-        try:
-            # Disable the feature flag
-            feature_flags.enable_multi_agent_orchestration = False
-
-            # Unset FF_TEST_MODE to disable test mode bypass
-            env_without_test_mode = {k: v for k, v in os.environ.items() if k != "FF_TEST_MODE"}
-            with patch.dict(os.environ, env_without_test_mode, clear=True):
-                with pytest.raises(FeatureDisabledError) as exc_info:
-                    await subagent.execute()
-
-                assert "Multi-Agent Orchestration" in str(exc_info.value)
-        finally:
-            # Restore original flag value
-            feature_flags.enable_multi_agent_orchestration = original_flag
-
-        print("✅ Subagent.execute() enforces feature flag")
+            assert "Multi-Agent Orchestration" in str(exc_info.value)
 
     def test_notes_manager_requires_agentic_memory_flag(self):
         """
         Test that NotesManager.add_note() checks agentic memory flag.
-
-        The @feature_gated decorator uses feature_flags from core module.
-        We test by unsetting FF_TEST_MODE env var and disabling the feature flag.
         """
-        import os
         from unittest.mock import patch
 
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
-        from mcp_server_langgraph.core.feature_flags import feature_flags
         from mcp_server_langgraph.memory.notes import NotesManager
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
         manager = NotesManager()
 
-        # Save original flag value
-        original_flag = feature_flags.enable_agentic_memory
+        mock_flags = MockFeatureFlags(
+            is_test_mode=False,
+            enable_agentic_memory=False,
+        )
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                manager.add_note(content="Test note")
 
-        try:
-            # Disable the feature flag
-            feature_flags.enable_agentic_memory = False
-
-            # Unset FF_TEST_MODE to disable test mode bypass
-            env_without_test_mode = {k: v for k, v in os.environ.items() if k != "FF_TEST_MODE"}
-            with patch.dict(os.environ, env_without_test_mode, clear=True):
-                with pytest.raises(FeatureDisabledError) as exc_info:
-                    manager.add_note(content="Test note")
-
-                assert "Agentic Memory" in str(exc_info.value)
-        finally:
-            # Restore original flag value
-            feature_flags.enable_agentic_memory = original_flag
-
-        print("✅ NotesManager.add_note() enforces feature flag")
+            assert "Agentic Memory" in str(exc_info.value)
 
     def test_checkpoint_manager_requires_agentic_memory_flag(self):
         """
         Test that CheckpointManager.create_checkpoint() checks agentic memory flag.
-
-        The @feature_gated decorator uses feature_flags from core module.
-        We test by unsetting FF_TEST_MODE env var and disabling the feature flag.
         """
-        import os
         from unittest.mock import patch
 
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
-        from mcp_server_langgraph.core.feature_flags import feature_flags
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
         manager = CheckpointManager()
 
-        # Save original flag value
-        original_flag = feature_flags.enable_agentic_memory
+        mock_flags = MockFeatureFlags(
+            is_test_mode=False,
+            enable_agentic_memory=False,
+        )
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                manager.create_checkpoint(phase="test", summary="Test summary")
 
-        try:
-            # Disable the feature flag
-            feature_flags.enable_agentic_memory = False
-
-            # Unset FF_TEST_MODE to disable test mode bypass
-            env_without_test_mode = {k: v for k, v in os.environ.items() if k != "FF_TEST_MODE"}
-            with patch.dict(os.environ, env_without_test_mode, clear=True):
-                with pytest.raises(FeatureDisabledError) as exc_info:
-                    manager.create_checkpoint(phase="test", summary="Test summary")
-
-                assert "Agentic Memory" in str(exc_info.value)
-        finally:
-            # Restore original flag value
-            feature_flags.enable_agentic_memory = original_flag
-
-        print("✅ CheckpointManager.create_checkpoint() enforces feature flag")
+            assert "Agentic Memory" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_tool_bridge_requires_programmatic_tools_flag(self):
         """
         Test that ToolBridge.call_tool() checks programmatic tools flag.
-
-        The @feature_gated decorator uses feature_flags from core module.
-        We test by unsetting FF_TEST_MODE env var and disabling the feature flag.
         """
-        import os
         from unittest.mock import patch
 
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
-        from mcp_server_langgraph.core.feature_flags import feature_flags
         from mcp_server_langgraph.execution.tool_bridge import ToolBridge
+        from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
         bridge = ToolBridge()
 
-        # Save original flag value
-        original_flag = feature_flags.enable_programmatic_tools
+        mock_flags = MockFeatureFlags(
+            is_test_mode=False,
+            enable_programmatic_tools=False,
+        )
+        with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
+            with pytest.raises(FeatureDisabledError) as exc_info:
+                await bridge.call_tool("test_tool", {})
 
-        try:
-            # Disable the feature flag
-            feature_flags.enable_programmatic_tools = False
-
-            # Unset FF_TEST_MODE to disable test mode bypass
-            env_without_test_mode = {k: v for k, v in os.environ.items() if k != "FF_TEST_MODE"}
-            with patch.dict(os.environ, env_without_test_mode, clear=True):
-                with pytest.raises(FeatureDisabledError) as exc_info:
-                    await bridge.call_tool("test_tool", {})
-
-                assert "Programmatic Tools" in str(exc_info.value)
-        finally:
-            # Restore original flag value
-            feature_flags.enable_programmatic_tools = original_flag
-
-        print("✅ ToolBridge.call_tool() enforces feature flag")
+            assert "Programmatic Tools" in str(exc_info.value)

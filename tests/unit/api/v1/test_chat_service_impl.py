@@ -1239,7 +1239,7 @@ class TestChatServiceImpl:
             mock_settings.enable_dynamic_context_loading = True
             mock_settings.qdrant_url = "localhost"
             mock_settings.qdrant_port = 6333
-            mock_settings.qdrant_collection_name = "mcp_context"
+            mock_settings.qdrant_collection_name = "agent_studio_context"
             mock_settings.embedding_provider = "google_vertex"  # Uses GCP WIF, no API key needed
             mock_settings.embedding_model_name = "text-embedding-005"
             mock_settings.embedding_dimensions = 768

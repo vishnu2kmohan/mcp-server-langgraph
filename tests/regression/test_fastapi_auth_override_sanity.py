@@ -135,7 +135,7 @@ class TestGDPREndpointAuthOverrides:
                 return response
 
         app.add_middleware(TestAuthMiddleware)
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Mock GDPR storage to avoid global singleton issues
         mock_storage = create_mock_gdpr_storage()
@@ -182,7 +182,7 @@ class TestGDPREndpointAuthOverrides:
                 return response
 
         app.add_middleware(TestAuthMiddleware)
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Mock GDPR storage to avoid global singleton issues
         mock_storage = create_mock_gdpr_storage()
@@ -228,7 +228,7 @@ class TestGDPREndpointAuthOverrides:
                 return response
 
         app.add_middleware(TestAuthMiddleware)
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Mock GDPR storage to avoid global singleton issues
         mock_storage = create_mock_gdpr_storage()
@@ -388,7 +388,7 @@ class TestAuthOverrideSanityPattern:
                 return response
 
         app.add_middleware(TestAuthMiddleware)
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Mock GDPR storage to avoid global singleton issues
         mock_storage = create_mock_gdpr_storage()
@@ -426,7 +426,7 @@ class TestAuthOverrideSanityPattern:
         from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
-        app.include_router(router)
+        app.include_router(router, prefix="/api/v1")
 
         # Mock GDPR storage to avoid RuntimeError (GDPR storage must be initialized)
         # But NO auth override - this is the PROBLEM we're testing

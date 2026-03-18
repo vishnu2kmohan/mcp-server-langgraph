@@ -267,7 +267,7 @@ class TestBearerSchemeOverrideDiagnostic:
 
             # Include router
             print("[DEBUG] Including router...")
-            app.include_router(router)
+            app.include_router(router, prefix="/api/v1")
 
             # Create client and make request
             client = TestClient(app)

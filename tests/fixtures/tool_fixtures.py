@@ -159,20 +159,6 @@ def playground_service_available():
 
 
 @pytest.fixture(scope="session")
-def builder_service_available():
-    """
-    Check if the Builder API service is available.
-
-    Returns True if the builder service is responding on TEST_BUILDER_API_PORT.
-    This fixture enables tests to skip gracefully when docker-compose.test.yml
-    infrastructure isn't running.
-    """
-    from tests.constants import TEST_BUILDER_API_PORT
-
-    return _check_service_health("localhost", TEST_BUILDER_API_PORT)
-
-
-@pytest.fixture(scope="session")
 def test_postgres_available():
     """
     Check if the test PostgreSQL database is available.
@@ -221,20 +207,6 @@ def skip_if_no_playground_service(playground_service_available):
     """
     if not playground_service_available:
         pytest.skip("Playground service not available. Start test infrastructure with: make test-infra-up")
-    return True
-
-
-@pytest.fixture
-def skip_if_no_builder_service(builder_service_available):
-    """
-    Skip test if the Builder API service is not available.
-
-    Use this fixture for tests that require a running builder service
-    from docker-compose.test.yml. Tests will be skipped with a clear
-    message when infrastructure isn't available.
-    """
-    if not builder_service_available:
-        pytest.skip("Builder service not available. Start test infrastructure with: make test-infra-up")
     return True
 
 

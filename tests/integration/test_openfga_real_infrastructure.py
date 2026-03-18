@@ -324,10 +324,14 @@ class TestBootstrapSecurityRealIntegration:
         settings.openfga_store_name = None
         settings.openfga_model_id = os.getenv("OPENFGA_MODEL_ID")
         settings.openfga_api_url = f"http://localhost:{test_infrastructure_ports['openfga_http']}"
-        settings.openfga_oidc_client_id = None
-        settings.openfga_oidc_client_secret = None
-        settings.openfga_oidc_issuer = None
-        settings.openfga_preshared_key = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
+        settings.openfga_oidc_client_id = os.getenv(
+            "OPENFGA_OIDC_CLIENT_ID", "agent-studio-openfga-oidc-cient-id-for-e2e-tests"
+        )
+        settings.openfga_oidc_client_secret = os.getenv(
+            "OPENFGA_OIDC_CLIENT_SECRET", "agent-studio-openfga-oidc-client-secret-for-e2e-tests"
+        )
+        settings.openfga_oidc_issuer = os.getenv("OPENFGA_OIDC_ISSUER", "http://localhost/authn/realms/default")
+        settings.openfga_preshared_key = None  # Deprecated: use OIDC auth (ADR-0070)
         settings.jwt_secret_key = "test-secret-key"
         settings.auth_provider = "inmemory"
         settings.keycloak_server_url = "http://localhost:9082"

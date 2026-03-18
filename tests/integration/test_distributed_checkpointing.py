@@ -54,7 +54,7 @@ class TestCheckpointerFactory:
         """Test factory creates RedisSaver when backend is 'redis'"""
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "redis")
-        monkeypatch.setattr(settings, "checkpoint_redis_url", "redis://localhost:6379/1")
+        monkeypatch.setattr(settings, "checkpoint_redis_url", "redis://localhost:9379/1")
 
         checkpointer = _create_checkpointer()
 
@@ -198,7 +198,7 @@ class TestRedisCheckpointer:
 
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "redis")
-        monkeypatch.setattr(settings, "checkpoint_redis_url", "redis://localhost:6379/1")
+        monkeypatch.setattr(settings, "checkpoint_redis_url", "redis://localhost:9379/1")
         monkeypatch.setattr(settings, "enable_checkpointing", True)
 
         # Simulate Pod A with mocked LLM
@@ -260,7 +260,7 @@ class TestRedisCheckpointer:
         """Test different thread_ids remain isolated even with Redis backend"""
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "redis")
-        monkeypatch.setattr(settings, "checkpoint_redis_url", "redis://localhost:6379/1")
+        monkeypatch.setattr(settings, "checkpoint_redis_url", "redis://localhost:9379/1")
         monkeypatch.setattr(settings, "enable_checkpointing", True)
 
         try:

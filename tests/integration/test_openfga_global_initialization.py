@@ -42,14 +42,14 @@ class TestOpenFGAGlobalInitialization:
         mock_settings.openfga_store_id = "test-store-id"
         mock_settings.openfga_store_name = None
         mock_settings.openfga_model_id = "test-model-id"
-        mock_settings.openfga_api_url = "http://localhost:8080"
+        mock_settings.openfga_api_url = "http://localhost:9080"
         mock_settings.openfga_oidc_client_id = None
         mock_settings.openfga_oidc_client_secret = None
         mock_settings.openfga_oidc_issuer = None
         mock_settings.openfga_preshared_key = None
         mock_settings.jwt_secret_key = "test-secret"
         mock_settings.auth_provider = "inmemory"
-        mock_settings.keycloak_server_url = "http://localhost:8080"
+        mock_settings.keycloak_server_url = "http://localhost/authn"
         mock_settings.keycloak_realm = "default"
 
         # Mock OpenFGA client
@@ -128,12 +128,12 @@ class TestOpenFGAGlobalInitialization:
         mock_settings.openfga_store_id = "test-store-id"
         mock_settings.openfga_store_name = None
         mock_settings.openfga_model_id = "test-model-id"
-        mock_settings.openfga_api_url = "http://localhost:8080"
+        mock_settings.openfga_api_url = "http://localhost:9080"
         mock_settings.openfga_oidc_client_id = "test-client"
         mock_settings.openfga_oidc_client_secret = "test-secret"
         mock_settings.openfga_oidc_issuer = None
         mock_settings.openfga_preshared_key = None
-        mock_settings.keycloak_server_url = "http://localhost:8080"
+        mock_settings.keycloak_server_url = "http://localhost/authn"
         mock_settings.keycloak_realm = "default"
         mock_settings.enable_file_logging = False
 

@@ -16,29 +16,33 @@ import requests
 
 
 def _openfga_available() -> bool:
-    """Check if OpenFGA is available AND accessible with pre-shared key auth.
+    """Check if OpenFGA server is running and healthy.
 
-    This validates:
-    1. OpenFGA server is running (healthz endpoint)
-    2. Pre-shared key authentication works (stores endpoint)
-
-    If OIDC is enabled and pre-shared key is disabled, tests using pre-shared key
-    auth should skip gracefully.
+    Only checks the health endpoint — does NOT validate auth method.
+    Auth-method-specific checks are handled by _openfga_preshared_key_available().
     """
-    import os
-
     try:
-        # Check 1: Server is running
         response = requests.get(
             "http://localhost:9080/healthz",
             timeout=5,
         )
-        if response.status_code != 200:
-            return False
+        return response.status_code == 200
+    except Exception:
+        return False
 
-        # Check 2: Pre-shared key auth works
-        # Tests in test_openfga_seeding_flow.py use pre-shared key auth
-        # If OIDC is enabled and pre-shared key is disabled, skip these tests
+
+def _openfga_preshared_key_available() -> bool:
+    """Check if OpenFGA pre-shared key authentication works.
+
+    Returns False when OIDC is the configured auth method (pre-shared key gets 401).
+    Only test_openfga_preshared_key.py should use this check.
+    """
+    import os
+
+    if not _openfga_available():
+        return False
+
+    try:
         preshared_key = os.getenv("OPENFGA_PRESHARED_KEY", "test-openfga-preshared-key")
         stores_response = requests.get(
             "http://localhost:9080/stores",
@@ -48,11 +52,6 @@ def _openfga_available() -> bool:
             },
             timeout=5,
         )
-        # Accept 200 (success) or 401 (pre-shared key disabled/OIDC mode)
-        if stores_response.status_code == 401:
-            # Pre-shared key auth not working (likely OIDC mode)
-            return False
-
         return stores_response.status_code == 200
     except Exception:
         return False
@@ -145,7 +144,7 @@ def _grafana_oauth2_configured() -> bool:
 
 def get_service_account_token(
     token_url: str = "http://localhost/authn/realms/default/protocol/openid-connect/token",
-    client_id: str = "mcp-server",
+    client_id: str = "agent-studio-keycloak-client-id-for-e2e-tests",
     client_secret: str = "test-client-secret-for-e2e-tests",
 ) -> str | None:
     """
@@ -195,10 +194,15 @@ def _get_test_token_via_modern_auth() -> str | None:
         Access token string or None if all methods fail
     """
     token_url = "http://localhost/authn/realms/default/protocol/openid-connect/token"
-    client_id = "mcp-server"
+    client_id = "agent-studio-keycloak-client-id-for-e2e-tests"
     client_secret = "test-client-secret-for-e2e-tests"
 
-    # Try 1: Token exchange (RFC 8693) for user-specific token
+    # Step 1: Get service account token via client_credentials
+    sa_token = get_service_account_token(token_url, client_id, client_secret)
+    if not sa_token:
+        return None
+
+    # Step 2: Exchange for admin-specific token (RFC 8693)
     try:
         response = requests.post(
             token_url,
@@ -206,8 +210,9 @@ def _get_test_token_via_modern_auth() -> str | None:
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "requested_subject": "admin",
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": "admin",
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email",
             },
@@ -220,8 +225,8 @@ def _get_test_token_via_modern_auth() -> str | None:
     except Exception:
         pass
 
-    # Try 2: Client credentials (service account) - always works with ROPC disabled
-    return get_service_account_token(token_url, client_id, client_secret)
+    # Fallback to service account token if exchange not configured
+    return sa_token
 
 
 def _keycloak_token_endpoint_functional() -> bool:
@@ -283,7 +288,7 @@ def get_user_token(
     username: str,
     password: str | None = None,  # Deprecated: ROPC is disabled
     token_url: str = "http://localhost/authn/realms/default/protocol/openid-connect/token",
-    client_id: str = "mcp-server",
+    client_id: str = "agent-studio-keycloak-client-id-for-e2e-tests",
     client_secret: str = "test-client-secret-for-e2e-tests",
 ) -> str | None:
     """
@@ -307,7 +312,12 @@ def get_user_token(
     Returns:
         Access token string or None if Token Exchange fails
     """
-    # Token exchange (RFC 8693) for user-specific token
+    # Step 1: Get service account token via client_credentials
+    sa_token = get_service_account_token(token_url, client_id, client_secret)
+    if not sa_token:
+        return None
+
+    # Step 2: Exchange for user-specific token (RFC 8693)
     try:
         response = requests.post(
             token_url,
@@ -315,8 +325,9 @@ def get_user_token(
                 "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "requested_subject": username,
+                "subject_token": sa_token,
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "scope": "openid profile email",
             },
@@ -329,10 +340,8 @@ def get_user_token(
     except Exception:
         pass
 
-    # Fallback: Return service account token if Token Exchange not configured
-    # Tests should use get_service_account_token() directly if user identity
-    # is not required
-    return get_service_account_token(token_url, client_id, client_secret)
+    # Fallback to service account token if exchange not configured
+    return sa_token
 
 
 # User credentials mapping for quick lookups
@@ -364,8 +373,10 @@ def skip_if_openfga_unavailable(request):
 
     Only applies to tests in files that need OpenFGA. Uses request.fspath
     to determine which tests need this check.
+
+    Pre-shared key tests get an additional check since OIDC mode disables pre-shared key auth.
     """
-    # Files that require OpenFGA
+    # Files that require OpenFGA (health check only)
     openfga_files = [
         "test_openfga_preshared_key.py",
         "test_openfga_seeding_flow.py",
@@ -377,9 +388,17 @@ def skip_if_openfga_unavailable(request):
         "test_observability_authorization.py",
     ]
 
+    # Files that specifically require pre-shared key auth (not just OpenFGA running)
+    preshared_key_files = [
+        "test_openfga_preshared_key.py",
+    ]
+
     test_file = request.fspath.basename if hasattr(request.fspath, "basename") else str(request.fspath).split("/")[-1]
 
-    if test_file in openfga_files:
+    if test_file in preshared_key_files:
+        if not _openfga_preshared_key_available():
+            pytest.skip("OpenFGA pre-shared key auth not available (OIDC mode active)")
+    elif test_file in openfga_files:
         if not _openfga_available():
             pytest.skip("OpenFGA not available at localhost:9080")
 

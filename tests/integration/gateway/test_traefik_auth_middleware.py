@@ -232,7 +232,7 @@ class TestAuthenticatedAccess:
             token_url,
             data={
                 "grant_type": "client_credentials",
-                "client_id": "mcp-server",
+                "client_id": "agent-studio-keycloak-client-id-for-e2e-tests",
                 "client_secret": "test-client-secret-for-e2e-tests",
                 "scope": "openid profile email",
             },

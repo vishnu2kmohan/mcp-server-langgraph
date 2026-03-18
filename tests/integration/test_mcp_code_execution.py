@@ -52,6 +52,8 @@ class TestMCPCodeExecutionEndpoint:
             settings=MagicMock(
                 allow_auth_fallback=True,
                 environment="test",
+                openfga_org_context_enforcement=False,
+                openfga_org_context_fail_closed=True,
             ),
         )
 
@@ -95,6 +97,8 @@ class TestMCPCodeExecutionEndpoint:
             settings=MagicMock(
                 allow_auth_fallback=True,
                 environment="test",
+                openfga_org_context_enforcement=False,
+                openfga_org_context_fail_closed=True,
             ),
         )
 
@@ -225,6 +229,8 @@ class TestMCPToolDiscoveryEndpoint:
             settings=MagicMock(
                 allow_auth_fallback=True,
                 environment="test",
+                openfga_org_context_enforcement=False,
+                openfga_org_context_fail_closed=True,
             ),
         )
 
