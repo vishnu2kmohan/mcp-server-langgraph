@@ -76,6 +76,11 @@ class TestCheckpointerFactory:
 class TestMemoryCheckpointer:
     """Tests for in-memory checkpointer (development/testing)"""
 
+    @pytest.fixture(autouse=True)
+    def _mock_pydantic_agent(self):
+        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+            yield
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -181,6 +186,11 @@ class TestMemoryCheckpointer:
 @pytest.mark.xdist_group(name="distributed_checkpointing_tests")
 class TestRedisCheckpointer:
     """Integration tests for Redis checkpointer (requires Redis)"""
+
+    @pytest.fixture(autouse=True)
+    def _mock_pydantic_agent(self):
+        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+            yield
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""

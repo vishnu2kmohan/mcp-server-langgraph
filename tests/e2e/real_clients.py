@@ -75,7 +75,7 @@ class RealKeycloakAuth:
             "grant_type": "client_credentials",
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "scope": "openid profile email",
+            "scope": "openid profile email offline_access",
         }
 
         try:
@@ -99,7 +99,7 @@ class RealKeycloakAuth:
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
-                "scope": "openid profile email",
+                "scope": "openid profile email offline_access",
             }
             response = await self.client.post(token_url, data=exchange_data)
             if response.status_code == 200:
@@ -200,7 +200,7 @@ class RealKeycloakAuth:
                 "grant_type": "client_credentials",
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
-                "scope": "openid profile email",
+                "scope": "openid profile email offline_access",
             }
             sa_response = await self.client.post(token_url, data=sa_data)
             sa_response.raise_for_status()
@@ -220,7 +220,7 @@ class RealKeycloakAuth:
             "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
             "requested_subject": username,
             "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
-            "scope": "openid profile email",
+            "scope": "openid profile email offline_access",
         }
 
         try:
@@ -252,7 +252,7 @@ class RealKeycloakAuth:
             "grant_type": "client_credentials",
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "scope": "openid profile email",
+            "scope": "openid profile email offline_access",
         }
 
         try:

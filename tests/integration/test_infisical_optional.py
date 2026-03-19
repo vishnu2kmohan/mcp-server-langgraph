@@ -168,12 +168,13 @@ class TestApplicationStartupWithoutInfisical:
         # Should not raise ImportError or other errors
         from mcp_server_langgraph.core.agent import create_agent_graph
 
-        # Mock LLM creation to avoid actual API calls
-        with patch("mcp_server_langgraph.llm.factory.create_llm_from_config") as mock_llm:
-            mock_llm.return_value = MagicMock()
+        # Mock LLM creation and pydantic agent to avoid actual API calls
+        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+            with patch("mcp_server_langgraph.llm.factory.create_llm_from_config") as mock_llm:
+                mock_llm.return_value = MagicMock()
 
-            graph = create_agent_graph()
-            assert graph is not None
+                graph = create_agent_graph()
+                assert graph is not None
 
     @pytest.mark.asyncio
     async def test_health_check_without_infisical(self):

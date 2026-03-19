@@ -46,6 +46,11 @@ def mock_llm():
 class TestConversationStatePersistence:
     """Test that conversation state is preserved across agent operations."""
 
+    @pytest.fixture(autouse=True)
+    def _mock_pydantic_agent(self):
+        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+            yield
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()

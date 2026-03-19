@@ -67,7 +67,7 @@ def _get_keycloak_token(
                 "grant_type": "client_credentials",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "scope": "openid profile email",
+                "scope": "openid profile email offline_access",
             },
             timeout=10,
         )
@@ -91,7 +91,7 @@ def _get_keycloak_token(
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
-                "scope": "openid profile email",
+                "scope": "openid profile email offline_access",
             },
             timeout=10,
         )

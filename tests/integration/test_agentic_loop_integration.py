@@ -110,6 +110,11 @@ def mock_verifier_fail():
 class TestAgenticLoopIntegration:
     """Integration tests for the complete agentic loop."""
 
+    @pytest.fixture(autouse=True)
+    def _mock_pydantic_agent(self):
+        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+            yield
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -371,6 +376,11 @@ class TestAgenticLoopIntegration:
 @pytest.mark.xdist_group(name="agentic_loop_integration_tests")
 class TestAgentGraphStructure:
     """Test the structure of the agent graph."""
+
+    @pytest.fixture(autouse=True)
+    def _mock_pydantic_agent(self):
+        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+            yield
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""

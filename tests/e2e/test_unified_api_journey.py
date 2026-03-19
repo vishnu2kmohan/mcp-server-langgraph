@@ -16,7 +16,7 @@ Test Scope:
 - Sessions CRUD (/api/v1/sessions)
 - Chat completions (/api/v1/chat/completions)
 - Cost summary (/api/v1/cost/summary)
-- MCP WebSocket (/api/v1/mcp/ws)
+- MCP WebSocket (/api/v1/ws/mcp)
 
 These tests require E2E infrastructure (make test-infra-up).
 """
@@ -465,7 +465,7 @@ class TestUnifiedAPIJourney:
         e2e_auth_token: str | None,
     ) -> None:
         """
-        Test 6: MCP WebSocket connection via /api/v1/mcp/ws.
+        Test 6: MCP WebSocket connection via /api/v1/ws/mcp.
 
         HEART Metrics:
         - Task Success: WebSocket connection establishment
@@ -489,7 +489,7 @@ class TestUnifiedAPIJourney:
 
         # Convert http to ws protocol
         ws_url = e2e_api_base_url.replace("http://", "ws://").replace("https://", "wss://")
-        ws_endpoint = f"{ws_url}/api/v1/mcp/ws"
+        ws_endpoint = f"{ws_url}/api/v1/ws/mcp"
 
         try:
             async with websockets.connect(

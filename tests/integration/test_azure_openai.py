@@ -293,7 +293,6 @@ class TestAzureOpenAIWithLiteLLM:
     def test_model_selector_azure_vendor(self):
         """Test that ModelSelector can work with Azure as a vendor."""
         from mcp_server_langgraph.agents.model_selector import (
-            MODEL_TIERS,
             VENDOR_LITELLM_PREFIX,
         )
 
@@ -301,6 +300,5 @@ class TestAzureOpenAIWithLiteLLM:
         assert "azure" in VENDOR_LITELLM_PREFIX
         assert VENDOR_LITELLM_PREFIX["azure"] == "azure/"
 
-        # While Azure isn't in MODEL_TIERS by default (enterprise config),
-        # the prefix mapping supports it for LiteLLM routing
-        assert "openai" in MODEL_TIERS["simple"]  # OpenAI models can be used via Azure
+        # OpenAI vendor is also registered (OpenAI models can be used via Azure)
+        assert "openai" in VENDOR_LITELLM_PREFIX

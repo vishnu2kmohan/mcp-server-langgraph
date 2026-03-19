@@ -596,7 +596,7 @@ def get_keycloak_token_for_tests(
                 "grant_type": "client_credentials",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "scope": "openid profile email",
+                "scope": "openid profile email offline_access",
             },
             timeout=10,
         )

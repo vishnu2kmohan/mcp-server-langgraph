@@ -65,7 +65,7 @@ def _get_keycloak_token(
                 "grant_type": "client_credentials",
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "scope": "openid profile email",
+                "scope": "openid profile email offline_access",
             },
             timeout=10,
         )
@@ -89,7 +89,7 @@ def _get_keycloak_token(
                 "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
                 "requested_subject": username,
                 "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
-                "scope": "openid profile email",
+                "scope": "openid profile email offline_access",
             },
             timeout=10,
         )
@@ -158,7 +158,7 @@ class TestMCPWebSocketE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0"
 
         try:
             async with websockets.connect(ws_url, open_timeout=5) as websocket:
@@ -186,7 +186,7 @@ class TestMCPWebSocketE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send initialize request
@@ -228,7 +228,7 @@ class TestMCPWebSocketE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -279,7 +279,7 @@ class TestMCPWebSocketE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -329,7 +329,7 @@ class TestMCPWebSocketE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -379,7 +379,7 @@ class TestMCPWebSocketE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send unknown method
@@ -424,7 +424,7 @@ class TestMCPWebSocketAuthenticatedE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             assert websocket.open
@@ -442,7 +442,7 @@ class TestMCPWebSocketAuthenticatedE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0"
 
         with pytest.raises((InvalidStatus, asyncio.TimeoutError, ConnectionRefusedError)):
             async with websockets.connect(ws_url, open_timeout=5) as _:
@@ -462,7 +462,7 @@ class TestMCPWebSocketAuthenticatedE2E:
             pytest.skip("websockets library not installed")
 
         invalid_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.token"
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={invalid_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={invalid_token}"
 
         with pytest.raises((InvalidStatus, asyncio.TimeoutError, ConnectionRefusedError)):
             async with websockets.connect(ws_url, open_timeout=5) as _:
@@ -483,7 +483,7 @@ class TestMCPWebSocketAuthenticatedE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -536,8 +536,8 @@ class TestMCPWebSocketAuthenticatedE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        alice_ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
-        bob_ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={bob_token}"
+        alice_ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={alice_token}"
+        bob_ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={bob_token}"
 
         async def connect_and_initialize(ws_url: str) -> bool:
             async with websockets.connect(ws_url, open_timeout=10) as ws:
@@ -591,7 +591,7 @@ class TestMCPWebSocketSessionE2E:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
         session_id = "test-session-12345"
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{session_id}?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/{session_id}?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             assert websocket.open
@@ -629,7 +629,7 @@ class TestMCPWebSocketSessionE2E:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
         session_id = "test-reconnect-session"
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{session_id}?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/{session_id}?v=1.0.0&token={alice_token}"
 
         # First connection
         async with websockets.connect(ws_url, open_timeout=10) as websocket1:
@@ -680,7 +680,7 @@ class TestMCPWebSocketSecurityE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send oversized message (>1MB)
@@ -731,7 +731,7 @@ class TestMCPWebSocketSecurityE2E:
             import urllib.parse
 
             encoded_session = urllib.parse.quote(session_id, safe="")
-            ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/{encoded_session}?v=1.0.0&token={alice_token}"
+            ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/{encoded_session}?v=1.0.0&token={alice_token}"
 
             with pytest.raises(
                 (InvalidStatus, asyncio.TimeoutError, ConnectionRefusedError),
@@ -756,7 +756,7 @@ class TestMCPWebSocketSecurityE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send invalid JSON
@@ -793,7 +793,7 @@ class TestMCPWebSocketStreamingE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -845,7 +845,7 @@ class TestMCPWebSocketStreamingE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -902,7 +902,7 @@ class TestMCPWebSocketStreamingE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send initialize
@@ -942,7 +942,7 @@ class TestMCPWebSocketStreamingE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1065,7 +1065,7 @@ class TestMCPWebSocketStreamingE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1149,7 +1149,7 @@ class TestMCPWebSocketStreamingE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1249,7 +1249,7 @@ class TestMCPWebSocketSecurityLimitsE2E:
         except ImportError:
             pytest.skip("websockets library not installed")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws/auth?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp/auth?v=1.0.0&token={alice_token}"
         connections: list[Any] = []
         max_connections = 5  # Default limit
 
@@ -1289,7 +1289,7 @@ class TestMCPWebSocketSecurityLimitsE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1346,7 +1346,7 @@ class TestMCPWebSocketSecurityLimitsE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Initialize first
@@ -1408,7 +1408,7 @@ class TestMCPWebSocketConnectionLimitsE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
         connections: list[Any] = []
 
         try:
@@ -1443,7 +1443,7 @@ class TestMCPWebSocketConnectionLimitsE2E:
         if alice_token is None:
             pytest.skip("Could not obtain alice's token from Keycloak")
 
-        ws_url = f"{E2E_WS_BASE_URL}/api/v1/mcp/ws?v=1.0.0&token={alice_token}"
+        ws_url = f"{E2E_WS_BASE_URL}/api/v1/ws/mcp?v=1.0.0&token={alice_token}"
 
         async with websockets.connect(ws_url, open_timeout=10) as websocket:
             # Send multiple messages

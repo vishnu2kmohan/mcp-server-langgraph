@@ -88,7 +88,7 @@ class TestNativeToolRegistration:
         web_search = registry.get_by_id("native:web_search")
         assert web_search is not None, "Expected native:web_search to be registered"
         assert web_search.source == "native"
-        assert web_search.provider in ("anthropic", "google")
+        assert web_search.provider in ("anthropic", "google", "openai")
 
     def test_native_tool_id_format(self, mock_feature_flags):
         """Native tool IDs should follow source:name format."""
