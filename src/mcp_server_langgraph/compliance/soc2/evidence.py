@@ -12,10 +12,13 @@ Evidence Categories:
 - Privacy (P): Data subject rights, consent management
 """
 
+from __future__ import annotations
+
+import warnings
 from datetime import datetime, timedelta, UTC
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
@@ -24,6 +27,9 @@ from mcp_server_langgraph.auth.session import SessionStore
 from mcp_server_langgraph.auth.user_provider import UserProvider
 from mcp_server_langgraph.monitoring.prometheus_client import get_prometheus_client
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.repositories.evidence import EvidenceRepository
 
 
 class EvidenceType(str, Enum):
@@ -104,6 +110,7 @@ class EvidenceCollector:
         user_provider: UserProvider | None = None,
         openfga_client: OpenFGAClient | None = None,
         evidence_dir: Path | None = None,
+        repository: EvidenceRepository | None = None,
     ):
         """
         Initialize evidence collector
@@ -112,15 +119,30 @@ class EvidenceCollector:
             session_store: Session storage backend
             user_provider: User provider for MFA statistics
             openfga_client: OpenFGA client for RBAC queries
-            evidence_dir: Directory for storing evidence files (default: ./evidence)
+            evidence_dir: Deprecated. Directory for storing evidence files.
+            repository: Optional EvidenceRepository. Defaults via get_evidence_repository()
         """
         self.session_store = session_store
         self.user_provider = user_provider
         self.openfga_client = openfga_client
-        self.evidence_dir = evidence_dir or Path("./evidence")
-        self.evidence_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"Evidence collector initialized: {self.evidence_dir}")
+        if evidence_dir is not None:
+            warnings.warn(
+                "EvidenceCollector 'evidence_dir' parameter is deprecated. "
+                "Reports are persisted via the EvidenceRepository backend.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        self.evidence_dir = evidence_dir or Path("./evidence")
+
+        if repository is not None:
+            self._repository = repository
+        else:
+            from mcp_server_langgraph.core.dependencies import get_evidence_repository
+
+            self._repository = get_evidence_repository()
+
+        logger.info("Evidence collector initialized")
 
     async def collect_all_evidence(self) -> list[Evidence]:
         """
@@ -799,10 +821,6 @@ class EvidenceCollector:
         }
 
     async def _save_report(self, report: ComplianceReport) -> None:
-        """Save report to file"""
-        report_file = self.evidence_dir / f"{report.report_id}.json"
-
-        with open(report_file, "w") as f:
-            f.write(report.model_dump_json(indent=2))
-
-        logger.info(f"Saved compliance report: {report_file}")
+        """Save report via repository backend."""
+        await self._repository.save_report(report)
+        logger.info("Saved compliance report: %s", report.report_id)

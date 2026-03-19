@@ -338,10 +338,24 @@ class ComplianceScheduler:
                     actions_required=actions_required,
                 )
 
-                # Save report
-                report_file = self.evidence_collector.evidence_dir / f"{report.review_id}.json"
-                with open(report_file, "w") as f:
-                    f.write(report.model_dump_json(indent=2))
+                # Save report via repository
+                from mcp_server_langgraph.compliance.soc2.evidence import ComplianceReport
+
+                compliance_report = ComplianceReport(
+                    report_id=report.review_id,
+                    report_type="weekly_access_review",
+                    generated_at=report.generated_at,
+                    period_start=report.period_start,
+                    period_end=report.period_end,
+                    evidence_items=[],
+                    summary=report.model_dump(),
+                    compliance_score=100.0,
+                    passed_controls=0,
+                    failed_controls=0,
+                    partial_controls=0,
+                    total_controls=0,
+                )
+                await self.evidence_collector._save_report(compliance_report)
 
                 logger.info(
                     "Weekly access review completed",

@@ -456,7 +456,7 @@ class TestReferencesResolver:
         )
 
         mock_manager = MagicMock()
-        mock_manager.get_note = MagicMock(return_value=mock_note)
+        mock_manager.get_note = AsyncMock(return_value=mock_note)
 
         request = MagicMock()
         with patch(
@@ -495,7 +495,7 @@ class TestReferencesResolver:
         )
 
         mock_manager = MagicMock()
-        mock_manager.get_note = MagicMock(return_value=None)
+        mock_manager.get_note = AsyncMock(return_value=None)
 
         request = MagicMock()
         with patch(
@@ -539,7 +539,7 @@ class TestReferencesResolver:
         )
 
         mock_manager = MagicMock()
-        mock_manager.get_note = MagicMock(return_value=mock_note)
+        mock_manager.get_note = AsyncMock(return_value=mock_note)
 
         # Auth middleware that denies session access
         mock_auth = AsyncMock(return_value=None)

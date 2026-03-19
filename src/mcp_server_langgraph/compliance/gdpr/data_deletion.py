@@ -173,7 +173,16 @@ class DataDeletionService:
             # 6b. Delete plan templates (Phase 9 GDPR)
             await self._safe_delete("plan_templates", self._delete_plan_templates, user_id, deleted_items, errors)
 
-            # 6c. Delete legacy templates by email (if email provided and verified)
+            # 6c. Delete notes
+            await self._safe_delete("notes", self._delete_notes, user_id, deleted_items, errors)
+
+            # 6d. Delete phase checkpoints
+            await self._safe_delete("checkpoints", self._delete_checkpoints, user_id, deleted_items, errors)
+
+            # 6e. Delete evidence reports
+            await self._safe_delete("evidence_reports", self._delete_evidence_reports, user_id, deleted_items, errors)
+
+            # 6f. Delete legacy templates by email (if email provided and verified)
             if email:
                 await self._safe_delete(
                     "legacy_templates_by_email",
@@ -504,6 +513,96 @@ class DataDeletionService:
             return count
         except Exception as e:
             logger.error(f"Failed to delete user plan templates: {e}", exc_info=True)
+            raise
+
+    def _get_notes_repository(self) -> Any:
+        """Get notes repository from dependencies."""
+        try:
+            from mcp_server_langgraph.core.dependencies import get_notes_repository
+
+            return get_notes_repository()
+        except Exception as e:
+            logger.debug(f"Notes repository not available: {e}")
+            return None
+
+    def _get_checkpoint_repository(self) -> Any:
+        """Get checkpoint repository from dependencies."""
+        try:
+            from mcp_server_langgraph.core.dependencies import get_checkpoint_repository
+
+            return get_checkpoint_repository()
+        except Exception as e:
+            logger.debug(f"Checkpoint repository not available: {e}")
+            return None
+
+    def _get_evidence_repository(self) -> Any:
+        """Get evidence repository from dependencies."""
+        try:
+            from mcp_server_langgraph.core.dependencies import get_evidence_repository
+
+            return get_evidence_repository()
+        except Exception as e:
+            logger.debug(f"Evidence repository not available: {e}")
+            return None
+
+    async def _delete_notes(self, user_id: str) -> int:
+        """Delete user notes for GDPR compliance.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Number of notes deleted
+        """
+        repo = self._get_notes_repository()
+        if repo is None:
+            return 0
+
+        try:
+            count: int = await repo.delete_by_user(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user notes: {e}", exc_info=True)
+            raise
+
+    async def _delete_checkpoints(self, user_id: str) -> int:
+        """Delete user phase checkpoints for GDPR compliance.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Number of checkpoints deleted
+        """
+        repo = self._get_checkpoint_repository()
+        if repo is None:
+            return 0
+
+        try:
+            count: int = await repo.delete_by_user(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user checkpoints: {e}", exc_info=True)
+            raise
+
+    async def _delete_evidence_reports(self, user_id: str) -> int:
+        """Delete evidence reports referencing a user for GDPR compliance.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            Number of evidence reports deleted
+        """
+        repo = self._get_evidence_repository()
+        if repo is None:
+            return 0
+
+        try:
+            count: int = await repo.delete_reports_by_user(user_id)
+            return count
+        except Exception as e:
+            logger.error(f"Failed to delete user evidence reports: {e}", exc_info=True)
             raise
 
     async def _delete_legacy_templates_by_email(self, email: str) -> int:

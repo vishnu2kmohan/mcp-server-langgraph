@@ -87,15 +87,31 @@ npm run test:e2e                  # Playwright
 
 ```
 src/mcp_server_langgraph/
-  core/       - Agent, config, 355 feature flags
-  auth/       - Keycloak + OpenFGA + DPoP
-  llm/        - Multi-provider LLM factory
-  mcp/        - MCP server implementations
-  studio/     - Agent Studio frontend (React + Redux)
-  execution/  - Sandboxed code execution
-  security/   - Prompt injection protection
-  observability/ - OpenTelemetry + Grafana LGTM
+  core/           - Agent, config, 355 feature flags
+  auth/           - Keycloak + OpenFGA + DPoP
+  llm/            - Multi-provider LLM factory
+  mcp/            - MCP server implementations
+  studio/         - Agent Studio frontend (React + Redux)
+  execution/      - Sandboxed code execution
+  security/       - Prompt injection protection
+  observability/  - OpenTelemetry + Grafana LGTM
+  repositories/   - Storage ABCs + Postgres/Redis/InMemory implementations
+  migrations/     - Legacy data migration utilities
 ```
+
+### Agentic Runtime State Backends
+
+Storage backends for notes, checkpoints, agent state, and evidence. Configured via env vars:
+
+| Setting | Env Var | Options | Default |
+|---------|---------|---------|---------|
+| Notes | `NOTES_BACKEND` | `memory`, `postgres` | `memory` |
+| Phase Checkpoints | `PHASE_CHECKPOINT_BACKEND` | `memory`, `postgres` | `memory` |
+| Agent State | `AGENT_STATE_BACKEND` | `memory`, `redis` | `memory` |
+| Evidence | `EVIDENCE_BACKEND` | `memory`, `postgres` | `memory` |
+
+Postgres backends require `DATABASE_URL`. Redis backend requires Redis URL.
+Factory functions in `core/dependencies.py`. See `.env.example` for documentation.
 
 ---
 

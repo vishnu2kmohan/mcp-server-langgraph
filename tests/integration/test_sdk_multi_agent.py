@@ -382,49 +382,47 @@ class TestFullWorkflowIntegration:
         """Test complete agent workflow with memory persistence."""
         from mcp_server_langgraph.sdk import LangGraphAgentClient
         from mcp_server_langgraph.memory import NotesManager, CheckpointManager
-        from pathlib import Path
-        import tempfile
+        from mcp_server_langgraph.repositories.notes import InMemoryNotesRepository
+        from mcp_server_langgraph.repositories.checkpoint import InMemoryCheckpointRepository
 
-        # Create temp directory for persistence
-        with tempfile.TemporaryDirectory() as tmpdir:
-            notes_manager = NotesManager(notes_path=Path(tmpdir) / "NOTES.md")
-            checkpoint_manager = CheckpointManager()
+        notes_manager = NotesManager(repository=InMemoryNotesRepository())
+        checkpoint_manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
-            client = LangGraphAgentClient()
-            session_id = "workflow-session"
+        client = LangGraphAgentClient()
+        session_id = "workflow-session"
 
-            # Phase 1: Research
-            await client.query("Research AI safety", session_id=session_id)
-            notes_manager.add_note(
-                content="Researched AI safety approaches",
-                category="research",
-            )
-            checkpoint_manager.create_checkpoint(
-                phase="research",
-                summary="Completed AI safety research",
-            )
+        # Phase 1: Research
+        await client.query("Research AI safety", session_id=session_id)
+        await notes_manager.add_note(
+            content="Researched AI safety approaches",
+            category="research",
+        )
+        await checkpoint_manager.create_checkpoint(
+            phase="research",
+            summary="Completed AI safety research",
+        )
 
-            # Phase 2: Analysis
-            result = await client.run_orchestrated_task(
-                task="Analyze AI safety findings",
-                subagent_count=2,
-            )
-            notes_manager.add_note(
-                content=f"Analysis complete: {result['subtask_count']} subtasks",
-                category="analysis",
-            )
-            checkpoint_manager.create_checkpoint(
-                phase="analysis",
-                summary="Synthesized findings",
-            )
+        # Phase 2: Analysis
+        result = await client.run_orchestrated_task(
+            task="Analyze AI safety findings",
+            subagent_count=2,
+        )
+        await notes_manager.add_note(
+            content=f"Analysis complete: {result['subtask_count']} subtasks",
+            category="analysis",
+        )
+        await checkpoint_manager.create_checkpoint(
+            phase="analysis",
+            summary="Synthesized findings",
+        )
 
-            # Verify memory state
-            all_notes = notes_manager.list_notes()
-            assert len(all_notes) == 2
+        # Verify memory state
+        all_notes = await notes_manager.list_notes()
+        assert len(all_notes) == 2
 
-            session_summary = checkpoint_manager.summarize_session()
-            assert "research" in session_summary.lower()
-            assert "analysis" in session_summary.lower()
+        session_summary = await checkpoint_manager.summarize_session()
+        assert "research" in session_summary.lower()
+        assert "analysis" in session_summary.lower()
 
     @pytest.mark.asyncio
     async def test_sdk_client_exports_available(self):

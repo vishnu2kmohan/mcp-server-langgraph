@@ -6,7 +6,6 @@ and compliance reporting.
 """
 
 import gc
-import json
 from datetime import datetime, UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -21,6 +20,7 @@ from mcp_server_langgraph.compliance.soc2.evidence import (
     EvidenceStatus,
     EvidenceType,
 )
+from mcp_server_langgraph.repositories.evidence import InMemoryEvidenceRepository
 from mcp_server_langgraph.schedulers.compliance import AccessReviewItem, AccessReviewReport, ComplianceScheduler
 
 pytestmark = pytest.mark.integration
@@ -41,9 +41,19 @@ def evidence_dir(tmp_path):
 
 
 @pytest.fixture
-def evidence_collector(mock_session_store, evidence_dir):
+def evidence_repository():
+    """In-memory evidence repository for test isolation."""
+    return InMemoryEvidenceRepository()
+
+
+@pytest.fixture
+def evidence_collector(mock_session_store, evidence_dir, evidence_repository):
     """Evidence collector instance"""
-    return EvidenceCollector(session_store=mock_session_store, evidence_dir=evidence_dir)
+    return EvidenceCollector(
+        session_store=mock_session_store,
+        evidence_dir=evidence_dir,
+        repository=evidence_repository,
+    )
 
 
 @pytest.fixture
@@ -263,7 +273,7 @@ class TestComplianceReport:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    async def test_generate_daily_report(self, evidence_collector, evidence_dir):
+    async def test_generate_daily_report(self, evidence_collector):
         """Test daily compliance report generation"""
         report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
@@ -274,9 +284,10 @@ class TestComplianceReport:
         assert report.total_controls > 0
         assert len(report.evidence_items) > 0
 
-        # Verify report file was saved
-        report_file = evidence_dir / f"{report.report_id}.json"
-        assert report_file.exists()
+        # Verify report was saved to repository
+        saved = await evidence_collector._repository.get_report(report.report_id)
+        assert saved is not None
+        assert saved.report_id == report.report_id
 
     async def test_generate_weekly_report(self, evidence_collector):
         """Test weekly compliance report generation"""
@@ -323,20 +334,15 @@ class TestComplianceReport:
         evidence_by_control = report.summary["evidence_by_control"]
         assert isinstance(evidence_by_control, dict)
 
-    async def test_report_persistence(self, evidence_collector, evidence_dir):
-        """Test report file persistence"""
+    async def test_report_persistence(self, evidence_collector):
+        """Test report persistence to repository"""
         report = await evidence_collector.generate_compliance_report(report_type="daily", period_days=1)
 
-        # Verify report file exists
-        report_file = evidence_dir / f"{report.report_id}.json"
-        assert report_file.exists()
-
-        # Verify file content
-        with open(report_file) as f:
-            saved_data = json.load(f)
-
-        assert saved_data["report_id"] == report.report_id
-        assert saved_data["compliance_score"] == report.compliance_score
+        # Verify report was persisted to repository
+        saved = await evidence_collector._repository.get_report(report.report_id)
+        assert saved is not None
+        assert saved.report_id == report.report_id
+        assert saved.compliance_score == report.compliance_score
 
 
 # --- Compliance Scheduler Tests ---
@@ -455,19 +461,14 @@ class TestAccessReview:
         assert item.active_sessions == 2
         assert item.account_status == "active"
 
-    async def test_access_review_report_persistence(self, compliance_scheduler, evidence_dir):
-        """Test access review report file persistence"""
+    async def test_access_review_report_persistence(self, compliance_scheduler):
+        """Test access review report persistence to repository"""
         report = await compliance_scheduler.trigger_weekly_review()
 
-        # Verify report file exists
-        report_file = evidence_dir / f"{report.review_id}.json"
-        assert report_file.exists()
-
-        # Verify file content
-        with open(report_file) as f:
-            saved_data = json.load(f)
-
-        assert saved_data["review_id"] == report.review_id
+        # Verify report was persisted to repository
+        saved = await compliance_scheduler.evidence_collector._repository.get_report(report.review_id)
+        assert saved is not None
+        assert saved.report_id == report.review_id
 
 
 # --- Edge Cases and Integration Tests ---

@@ -14,7 +14,7 @@ Phase 1.2: enable_agentic_memory feature flag
 - GET /api/v1/memory/checkpoint/latest - Get latest checkpoint
 - GET /api/v1/memory/checkpoint/summary - Get session summary
 
-RED phase: These tests define expected behavior before implementation.
+Refactored for async repository-backed managers.
 """
 
 import gc
@@ -49,6 +49,8 @@ def mock_app(mock_feature_flags: MagicMock) -> Generator[FastAPI, None, None]:
     from mcp_server_langgraph.auth.dependencies import get_current_user
     from mcp_server_langgraph.memory.notes import NotesManager
     from mcp_server_langgraph.memory.checkpoints import CheckpointManager
+    from mcp_server_langgraph.repositories.notes import InMemoryNotesRepository
+    from mcp_server_langgraph.repositories.checkpoint import InMemoryCheckpointRepository
 
     # Configure mock to have require_feature as a no-op
     mock_feature_flags.require_feature = MagicMock(return_value=None)
@@ -75,9 +77,9 @@ def mock_app(mock_feature_flags: MagicMock) -> Generator[FastAPI, None, None]:
         patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_feature_flags),
         patch.object(memory_module, "feature_flags", mock_feature_flags),
     ):
-        # Reset managers for clean state INSIDE the patch context
-        set_notes_manager(NotesManager())
-        set_checkpoint_manager(CheckpointManager())
+        # Reset managers with fresh repositories for clean state
+        set_notes_manager(NotesManager(repository=InMemoryNotesRepository()))
+        set_checkpoint_manager(CheckpointManager(repository=InMemoryCheckpointRepository()))
         yield app
 
 
@@ -250,11 +252,11 @@ class TestCheckpointAPI:
 
     def test_get_latest_when_none_exists_returns_404(self, client: TestClient) -> None:
         """GET /api/v1/memory/checkpoint/latest returns 404 if none exist."""
-        # Use fresh managers to ensure no checkpoints
-        from mcp_server_langgraph.api.v1 import memory as memory_module
+        from mcp_server_langgraph.api.v1.memory import set_checkpoint_manager
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
+        from mcp_server_langgraph.repositories.checkpoint import InMemoryCheckpointRepository
 
-        memory_module.set_checkpoint_manager(CheckpointManager())
+        set_checkpoint_manager(CheckpointManager(repository=InMemoryCheckpointRepository()))
 
         response = client.get("/api/v1/memory/checkpoint/latest")
 

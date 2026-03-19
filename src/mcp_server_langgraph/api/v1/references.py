@@ -344,7 +344,7 @@ async def _resolve_memory(
         from mcp_server_langgraph.api.v1.memory import get_notes_manager
 
         manager = get_notes_manager()
-        note = manager.get_note(ref.id)
+        note = await manager.get_note(ref.id)
 
         if note is None:
             return ResolvedReference(

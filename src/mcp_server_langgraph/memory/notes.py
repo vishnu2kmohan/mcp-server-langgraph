@@ -1,31 +1,37 @@
 """
 Structured Note-Taking
 
-Manages NOTES.md for persistent agent memory across sessions.
+Manages structured notes for persistent agent memory across sessions.
 
-Provides structured note storage with categorization, tagging,
-and search capabilities for agentic workflows.
+Delegates storage to a NotesRepository backend (InMemory or Postgres).
+The dual NOTES.md/NOTES.json file format is deprecated — persist()/load()
+are no-ops when using a non-file repository backend.
 
 Usage:
     from mcp_server_langgraph.memory.notes import NotesManager
 
-    manager = NotesManager(notes_path=Path("./NOTES.md"))
-    note = manager.add_note(content="Important finding", category="research")
-    manager.persist()
+    manager = NotesManager()
+    note = await manager.add_note(content="Important finding", category="research")
 """
 
 from __future__ import annotations
 
-import json
+import logging
 import re
 import uuid
+import warnings
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.feature_flags import feature_gated
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.repositories.notes import NotesRepository
+
+logger = logging.getLogger(__name__)
 
 
 class Note(BaseModel):
@@ -62,12 +68,7 @@ class Note(BaseModel):
     )
 
     def to_markdown(self) -> str:
-        """Convert note to markdown format.
-
-        Returns:
-            Markdown-formatted note string
-        """
-        # Use title for heading if available, otherwise use ID
+        """Convert note to markdown format."""
         heading = self.title if self.title else self.id
         lines = [
             f"## {heading}",
@@ -86,23 +87,34 @@ class Note(BaseModel):
 
 
 class NotesManager:
-    """Manager for structured notes with persistence.
+    """Manager for structured notes with repository-backed persistence.
 
-    Handles note storage, retrieval, and persistence to
-    NOTES.md file for cross-session memory.
+    Delegates all storage operations to a NotesRepository.
+    Business logic (feature gating, authorization) remains here.
     """
 
-    def __init__(self, notes_path: Path | None = None) -> None:
+    def __init__(
+        self,
+        notes_path: Path | None = None,
+        repository: NotesRepository | None = None,
+    ) -> None:
         """Initialize notes manager.
 
         Args:
-            notes_path: Path to NOTES.md file
+            notes_path: Deprecated. Path to NOTES.md file (ignored when repository provided)
+            repository: Optional NotesRepository. Defaults via get_notes_repository()
         """
         self.notes_path = notes_path or Path("./NOTES.md")
-        self._notes: dict[str, Note] = {}
+
+        if repository is not None:
+            self._repository = repository
+        else:
+            from mcp_server_langgraph.core.dependencies import get_notes_repository
+
+            self._repository = get_notes_repository()
 
     @feature_gated("enable_agentic_memory", "Agentic Memory")
-    def add_note(
+    async def add_note(
         self,
         content: str,
         category: str = "general",
@@ -143,126 +155,73 @@ class NotesManager:
             title=title,
             slug=slug,
         )
-        self._notes[note_id] = note
+        return await self._repository.create(note)
+
+    async def get_note(self, note_id: str, *, actor_user_id: str | None = None) -> Note | None:
+        """Get a note by ID, with optional ownership enforcement."""
+        note = await self._repository.get(note_id)
+        if note and actor_user_id and note.user_id and note.user_id != actor_user_id:
+            return None
         return note
 
-    def get_note(self, note_id: str) -> Note | None:
-        """Get a note by ID.
+    async def delete_note(self, note_id: str, *, actor_user_id: str | None = None) -> None:
+        """Delete a note by ID, with optional ownership enforcement."""
+        if actor_user_id:
+            note = await self._repository.get(note_id)
+            if note and note.user_id and note.user_id != actor_user_id:
+                return
+        await self._repository.delete(note_id)
 
-        Args:
-            note_id: Note identifier
-
-        Returns:
-            Note if found, None otherwise
-        """
-        return self._notes.get(note_id)
-
-    def delete_note(self, note_id: str) -> None:
-        """Delete a note by ID.
-
-        Args:
-            note_id: Note identifier
-        """
-        self._notes.pop(note_id, None)
-
-    def list_notes(
+    async def list_notes(
         self,
         category: str | None = None,
         session_id: str | None = None,
         user_id: str | None = None,
     ) -> list[Note]:
-        """List all notes, optionally filtered by category, session, or user.
+        """List all notes, optionally filtered."""
+        return await self._repository.list(category=category, session_id=session_id, user_id=user_id)
 
-        Args:
-            category: Optional category filter
-            session_id: Optional session ID filter
-            user_id: Optional user ID filter
-
-        Returns:
-            List of notes matching all provided filters
-        """
-        notes = list(self._notes.values())
-        if category:
-            notes = [n for n in notes if n.category == category]
-        if session_id:
-            notes = [n for n in notes if n.session_id == session_id]
-        if user_id:
-            notes = [n for n in notes if n.user_id == user_id]
+    async def search(self, query: str, *, actor_user_id: str | None = None) -> list[Note]:
+        """Search notes by content, with optional ownership filtering."""
+        notes = await self._repository.search(query)
+        if actor_user_id:
+            notes = [n for n in notes if n.user_id is None or n.user_id == actor_user_id]
         return notes
 
-    def search(self, query: str) -> list[Note]:
-        """Search notes by content.
-
-        Args:
-            query: Search query
-
-        Returns:
-            List of matching notes
-        """
-        if not query:
-            return self.list_notes()
-
-        query_lower = query.lower()
-        results = []
-        for note in self._notes.values():
-            if query_lower in note.content.lower():
-                results.append(note)
-        return results
-
-    def clear(self) -> None:
+    async def clear(self) -> None:
         """Clear all notes."""
-        self._notes.clear()
+        await self._repository.clear()
 
     def persist(self) -> None:
-        """Persist notes to NOTES.md file."""
-        lines = [
-            "# Agent Notes",
-            "",
-            f"*Last updated: {datetime.now(UTC).isoformat()}*",
-            "",
-        ]
-
-        for note in sorted(self._notes.values(), key=lambda n: n.created_at):
-            lines.append(note.to_markdown())
-
-        # Also persist as JSON for reliable loading
-        json_data = {"notes": [note.model_dump(mode="json") for note in self._notes.values()]}
-
-        self.notes_path.write_text("\n".join(lines))
-
-        # Write JSON sidecar for reliable round-trip
-        json_path = self.notes_path.with_suffix(".json")
-        json_path.write_text(json.dumps(json_data, indent=2, default=str))
+        """Deprecated: No-op when using repository backend."""
+        warnings.warn(
+            "NotesManager.persist() is deprecated. Notes are persisted via repository backend.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def load(self) -> None:
-        """Load notes from NOTES.md file."""
-        json_path = self.notes_path.with_suffix(".json")
-
-        if json_path.exists():
-            # Load from JSON sidecar for reliability
-            data = json.loads(json_path.read_text())
-            for note_data in data.get("notes", []):
-                # Parse datetime string back to datetime
-                if "created_at" in note_data and isinstance(note_data["created_at"], str):
-                    note_data["created_at"] = datetime.fromisoformat(note_data["created_at"])
-                note = Note(**note_data)
-                self._notes[note.id] = note
-        elif self.notes_path.exists():
-            # Fallback: parse markdown (less reliable)
-            self._parse_markdown(self.notes_path.read_text())
+        """Deprecated: No-op when using repository backend."""
+        warnings.warn(
+            "NotesManager.load() is deprecated. Notes are loaded via repository backend.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def _parse_markdown(self, content: str) -> None:
-        """Parse notes from markdown content.
+        """Deprecated: Parse notes from markdown content.
 
-        Args:
-            content: Markdown content
+        Retained only for legacy data migration utility.
         """
-        # Simple parsing: find ## note-xxx sections
+        warnings.warn(
+            "NotesManager._parse_markdown() is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         pattern = r"## (note-[\w]+)\n\*\*Category:\*\* (\w+)\n"
         matches = re.findall(pattern, content)
 
         for note_id, category in matches:
-            # Extract content between sections
             section_start = content.find(f"## {note_id}")
             next_section = content.find("\n## ", section_start + 1)
             if next_section == -1:
@@ -271,7 +230,6 @@ class NotesManager:
             section = content[section_start:next_section]
             lines = section.split("\n")
 
-            # Find content (after blank line)
             content_lines = []
             in_content = False
             for line in lines:
@@ -282,5 +240,4 @@ class NotesManager:
 
             note_content = "\n".join(content_lines)
             if note_content:
-                note = Note(id=note_id, content=note_content, category=category)
-                self._notes[note_id] = note
+                logger.debug("Parsed legacy note: %s", note_id)

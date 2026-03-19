@@ -616,7 +616,7 @@ class TestADR0072ModuleIntegration:
 
             assert "Multi-Agent Orchestration" in str(exc_info.value)
 
-    def test_notes_manager_requires_agentic_memory_flag(self):
+    async def test_notes_manager_requires_agentic_memory_flag(self):
         """
         Test that NotesManager.add_note() checks agentic memory flag.
         """
@@ -624,9 +624,10 @@ class TestADR0072ModuleIntegration:
 
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.memory.notes import NotesManager
+        from mcp_server_langgraph.repositories.notes import InMemoryNotesRepository
         from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
-        manager = NotesManager()
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
         mock_flags = MockFeatureFlags(
             is_test_mode=False,
@@ -634,11 +635,11 @@ class TestADR0072ModuleIntegration:
         )
         with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
             with pytest.raises(FeatureDisabledError) as exc_info:
-                manager.add_note(content="Test note")
+                await manager.add_note(content="Test note")
 
             assert "Agentic Memory" in str(exc_info.value)
 
-    def test_checkpoint_manager_requires_agentic_memory_flag(self):
+    async def test_checkpoint_manager_requires_agentic_memory_flag(self):
         """
         Test that CheckpointManager.create_checkpoint() checks agentic memory flag.
         """
@@ -646,9 +647,10 @@ class TestADR0072ModuleIntegration:
 
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
+        from mcp_server_langgraph.repositories.checkpoint import InMemoryCheckpointRepository
         from tests.fixtures.feature_flags_fixtures import MockFeatureFlags
 
-        manager = CheckpointManager()
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
         mock_flags = MockFeatureFlags(
             is_test_mode=False,
@@ -656,7 +658,7 @@ class TestADR0072ModuleIntegration:
         )
         with patch("mcp_server_langgraph.core.feature_flags.feature_flags", mock_flags):
             with pytest.raises(FeatureDisabledError) as exc_info:
-                manager.create_checkpoint(phase="test", summary="Test summary")
+                await manager.create_checkpoint(phase="test", summary="Test summary")
 
             assert "Agentic Memory" in str(exc_info.value)
 

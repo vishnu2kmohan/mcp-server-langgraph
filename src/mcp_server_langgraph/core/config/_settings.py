@@ -697,6 +697,14 @@ class Settings(BaseSettings):
     # - "memory": In-memory (development/testing only)
     plan_storage_backend: str = "memory"  # "postgres" (production), "memory" (dev/test)
 
+    # Agentic Memory Storage (12-factor stateless processes)
+    # Routes file-based runtime state to backing services
+    notes_backend: str = "memory"  # "memory" (dev/test), "postgres" (production)
+    phase_checkpoint_backend: str = "memory"  # "memory" (dev/test), "postgres" (production)
+    # NOTE: Distinct from checkpoint_backend which controls LangGraph conversation checkpointing
+    agent_state_backend: str = "memory"  # "memory" (dev/test), "redis" (production)
+    evidence_backend: str = "memory"  # "memory" (dev/test), "postgres" (production)
+
     # GDPR/HIPAA/SOC2/FedRAMP Compliance Storage (ADR-0041: Pure PostgreSQL)
     # Storage for user profiles, preferences, consents, conversations, and audit logs
     # CRITICAL: Must use "postgres" in production (in-memory is DEVELOPMENT ONLY)

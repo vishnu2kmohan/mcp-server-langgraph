@@ -2,28 +2,29 @@
 Phase Checkpoints
 
 Manages phase completion summaries for agentic workflows.
-
-Enables agents to checkpoint progress and retrieve context
-when approaching context limits.
+Delegates storage to a CheckpointRepository backend (InMemory or Postgres).
 
 Usage:
     from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-    manager = CheckpointManager(storage_dir=Path("./checkpoints"))
-    checkpoint = manager.create_checkpoint(phase="research", summary="...")
+    manager = CheckpointManager()
+    checkpoint = await manager.create_checkpoint(phase="research", summary="...")
 """
 
 from __future__ import annotations
 
-import json
 import uuid
+import warnings
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.feature_flags import feature_gated
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.repositories.checkpoint import CheckpointRepository
 
 
 class Checkpoint(BaseModel):
@@ -44,31 +45,52 @@ class Checkpoint(BaseModel):
         default_factory=dict,
         description="Additional metadata",
     )
+    session_id: str | None = Field(
+        default=None,
+        description="Session ID for scoping",
+    )
+    user_id: str | None = Field(
+        default=None,
+        description="User ID who created the checkpoint",
+    )
 
 
 class CheckpointManager:
-    """Manager for phase checkpoints.
+    """Manager for phase checkpoints with repository-backed persistence.
 
-    Handles checkpoint creation, retrieval, and persistence
-    for cross-session context recovery.
+    Delegates all storage operations to a CheckpointRepository.
+    Business logic (feature gating) remains here.
     """
 
-    def __init__(self, storage_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        storage_dir: Path | None = None,
+        repository: CheckpointRepository | None = None,
+    ) -> None:
         """Initialize checkpoint manager.
 
         Args:
-            storage_dir: Directory for checkpoint storage
+            storage_dir: Deprecated. Directory for checkpoint storage.
+            repository: Optional CheckpointRepository. Defaults via get_checkpoint_repository()
         """
         self.storage_dir = storage_dir or Path("./checkpoints")
-        self._checkpoints: dict[str, Checkpoint] = {}
+
+        if repository is not None:
+            self._repository = repository
+        else:
+            from mcp_server_langgraph.core.dependencies import get_checkpoint_repository
+
+            self._repository = get_checkpoint_repository()
 
     @feature_gated("enable_agentic_memory", "Agentic Memory")
-    def create_checkpoint(
+    async def create_checkpoint(
         self,
         phase: str,
         summary: str,
         artifacts: list[str] | None = None,
         metadata: dict[str, Any] | None = None,
+        session_id: str | None = None,
+        user_id: str | None = None,
     ) -> Checkpoint:
         """Create a new checkpoint.
 
@@ -77,6 +99,8 @@ class CheckpointManager:
             summary: Phase completion summary
             artifacts: Optional artifact references
             metadata: Optional metadata
+            session_id: Optional session ID
+            user_id: Optional user ID
 
         Returns:
             Created Checkpoint object
@@ -91,96 +115,54 @@ class CheckpointManager:
             summary=summary,
             artifacts=artifacts or [],
             metadata=metadata or {},
+            session_id=session_id,
+            user_id=user_id,
         )
-        self._checkpoints[checkpoint_id] = checkpoint
+        return await self._repository.create(checkpoint)
+
+    async def get_checkpoint(self, checkpoint_id: str, *, actor_user_id: str | None = None) -> Checkpoint | None:
+        """Get a checkpoint by ID, with optional ownership enforcement."""
+        checkpoint = await self._repository.get(checkpoint_id)
+        if checkpoint and actor_user_id and checkpoint.user_id and checkpoint.user_id != actor_user_id:
+            return None
         return checkpoint
 
-    def get_checkpoint(self, checkpoint_id: str) -> Checkpoint | None:
-        """Get a checkpoint by ID.
+    async def get_latest_checkpoint(self, user_id: str | None = None) -> Checkpoint | None:
+        """Get the most recent checkpoint, optionally scoped by user."""
+        return await self._repository.get_latest(user_id=user_id)
 
-        Args:
-            checkpoint_id: Checkpoint identifier
+    async def list_checkpoints(self, phase: str | None = None, *, actor_user_id: str | None = None) -> list[Checkpoint]:
+        """List checkpoints, optionally filtered by phase and scoped by user."""
+        return await self._repository.list(phase=phase, user_id=actor_user_id)
 
-        Returns:
-            Checkpoint if found, None otherwise
-        """
-        return self._checkpoints.get(checkpoint_id)
+    async def delete_checkpoint(self, checkpoint_id: str, *, actor_user_id: str | None = None) -> None:
+        """Delete a checkpoint by ID, with optional ownership enforcement."""
+        if actor_user_id:
+            checkpoint = await self._repository.get(checkpoint_id)
+            if checkpoint and checkpoint.user_id and checkpoint.user_id != actor_user_id:
+                return
+        await self._repository.delete(checkpoint_id)
 
-    def get_latest_checkpoint(self) -> Checkpoint | None:
-        """Get the most recent checkpoint.
-
-        Returns:
-            Latest checkpoint if any, None otherwise
-        """
-        if not self._checkpoints:
-            return None
-
-        return max(self._checkpoints.values(), key=lambda c: c.created_at)
-
-    def list_checkpoints(self, phase: str | None = None) -> list[Checkpoint]:
-        """List all checkpoints, optionally filtered by phase.
-
-        Args:
-            phase: Optional phase filter
-
-        Returns:
-            List of checkpoints
-        """
-        checkpoints = list(self._checkpoints.values())
-        if phase:
-            checkpoints = [c for c in checkpoints if c.phase == phase]
-        return checkpoints
-
-    def delete_checkpoint(self, checkpoint_id: str) -> None:
-        """Delete a checkpoint by ID.
-
-        Args:
-            checkpoint_id: Checkpoint identifier
-        """
-        self._checkpoints.pop(checkpoint_id, None)
-
-    def clear(self) -> None:
+    async def clear(self) -> None:
         """Clear all checkpoints."""
-        self._checkpoints.clear()
+        await self._repository.clear()
+
+    async def summarize_session(self, user_id: str | None = None) -> str:
+        """Generate a summary of the session from all checkpoints."""
+        return await self._repository.summarize(user_id=user_id)
 
     def persist(self) -> None:
-        """Persist checkpoints to storage directory."""
-        self.storage_dir.mkdir(parents=True, exist_ok=True)
-
-        checkpoints_file = self.storage_dir / "checkpoints.json"
-        data = {"checkpoints": [c.model_dump(mode="json") for c in self._checkpoints.values()]}
-        checkpoints_file.write_text(json.dumps(data, indent=2, default=str))
+        """Deprecated: No-op when using repository backend."""
+        warnings.warn(
+            "CheckpointManager.persist() is deprecated. Checkpoints are persisted via repository backend.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def load(self) -> None:
-        """Load checkpoints from storage directory."""
-        checkpoints_file = self.storage_dir / "checkpoints.json"
-
-        if not checkpoints_file.exists():
-            return
-
-        data = json.loads(checkpoints_file.read_text())
-        for checkpoint_data in data.get("checkpoints", []):
-            # Parse datetime string back to datetime
-            if "created_at" in checkpoint_data and isinstance(checkpoint_data["created_at"], str):
-                checkpoint_data["created_at"] = datetime.fromisoformat(checkpoint_data["created_at"])
-            checkpoint = Checkpoint(**checkpoint_data)
-            self._checkpoints[checkpoint.id] = checkpoint
-
-    def summarize_session(self) -> str:
-        """Generate a summary of the session from all checkpoints.
-
-        Returns:
-            Session summary string
-        """
-        if not self._checkpoints:
-            return "No checkpoints recorded."
-
-        checkpoints = sorted(self._checkpoints.values(), key=lambda c: c.created_at)
-
-        lines = ["# Session Summary", ""]
-        for checkpoint in checkpoints:
-            lines.append(f"## {checkpoint.phase.title()}")
-            lines.append(checkpoint.summary)
-            lines.append("")
-
-        return "\n".join(lines)
+        """Deprecated: No-op when using repository backend."""
+        warnings.warn(
+            "CheckpointManager.load() is deprecated. Checkpoints are loaded via repository backend.",
+            DeprecationWarning,
+            stacklevel=2,
+        )

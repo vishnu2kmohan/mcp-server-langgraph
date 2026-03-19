@@ -4,11 +4,11 @@ TDD: Integration tests for Agentic Memory API
 Tests the REST API endpoints for notes and checkpoints,
 following the agentic memory pattern for persistent agent state.
 
-RED phase: These tests define expected behavior before implementation.
+Refactored for async repository-backed managers.
 """
 
 import gc
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -21,17 +21,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.agentic_memory]
 
 @pytest.fixture
 def mock_notes_manager():
-    """Create mock NotesManager."""
-    manager = MagicMock()
-    manager._notes = {}
+    """Create mock NotesManager with async methods."""
+    manager = AsyncMock()  # noqa: async-mock-config
     return manager
 
 
 @pytest.fixture
 def mock_checkpoint_manager():
-    """Create mock CheckpointManager."""
-    manager = MagicMock()
-    manager._checkpoints = {}
+    """Create mock CheckpointManager with async methods."""
+    manager = AsyncMock()  # noqa: async-mock-config
     return manager
 
 
@@ -164,7 +162,7 @@ class TestNotesAPI:
         response = client.delete("/api/v1/memory/notes/note-123")
 
         assert response.status_code == 204
-        mock_notes_manager.delete_note.assert_called_once_with("note-123")
+        mock_notes_manager.delete_note.assert_called_once_with("note-123", actor_user_id="user-123")
 
     def test_search_notes_with_query_returns_matching_notes(self, client, mock_notes_manager):
         """GIVEN notes exist WHEN GET /notes?query=x THEN searches notes."""
@@ -180,7 +178,7 @@ class TestNotesAPI:
         assert response.status_code == 200
         data = response.json()
         assert len(data["notes"]) == 1
-        mock_notes_manager.search.assert_called_once_with("keyword")
+        mock_notes_manager.search.assert_called_once_with("keyword", actor_user_id="user-123")
 
 
 class TestCheckpointAPI:
@@ -267,12 +265,13 @@ class TestAgenticMemoryFeatureFlag:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_notes_manager_respects_feature_flag(self):
+    async def test_notes_manager_respects_feature_flag(self):
         """GIVEN feature flag disabled WHEN adding note THEN raises error."""
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.memory.notes import NotesManager
+        from mcp_server_langgraph.repositories.notes import InMemoryNotesRepository
 
-        manager = NotesManager()
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
         # Mock require_feature to raise FeatureDisabledError
         def mock_require_feature(feature_name, display_name=None):
@@ -286,14 +285,15 @@ class TestAgenticMemoryFeatureFlag:
             side_effect=mock_require_feature,
         ):
             with pytest.raises(FeatureDisabledError):
-                manager.add_note(content="Test note")
+                await manager.add_note(content="Test note")
 
-    def test_checkpoint_manager_respects_feature_flag(self):
+    async def test_checkpoint_manager_respects_feature_flag(self):
         """GIVEN feature flag disabled WHEN creating checkpoint THEN raises error."""
         from mcp_server_langgraph.core.exceptions import FeatureDisabledError
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
+        from mcp_server_langgraph.repositories.checkpoint import InMemoryCheckpointRepository
 
-        manager = CheckpointManager()
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
         # Mock require_feature to raise FeatureDisabledError
         def mock_require_feature(feature_name, display_name=None):
@@ -307,4 +307,4 @@ class TestAgenticMemoryFeatureFlag:
             side_effect=mock_require_feature,
         ):
             with pytest.raises(FeatureDisabledError):
-                manager.create_checkpoint(phase="test", summary="Test")
+                await manager.create_checkpoint(phase="test", summary="Test")

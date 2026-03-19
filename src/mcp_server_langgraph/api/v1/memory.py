@@ -166,11 +166,12 @@ async def create_note(
         )
 
     manager = get_notes_manager()
-    note = manager.add_note(
+    note = await manager.add_note(
         content=request.content,
         category=request.category,
         tags=request.tags,
         metadata=request.metadata,
+        user_id=current_user.get("sub"),
     )
 
     logger.info(
@@ -200,13 +201,14 @@ async def list_notes(
         category: Filter by category
     """
     manager = get_notes_manager()
+    user_id = current_user.get("sub")
 
     if query:
-        notes = manager.search(query)
+        notes = await manager.search(query, actor_user_id=user_id)
     elif category:
-        notes = manager.list_notes(category=category)
+        notes = await manager.list_notes(category=category, user_id=user_id)
     else:
-        notes = manager.list_notes()
+        notes = await manager.list_notes(user_id=user_id)
 
     return NotesListResponse(notes=[NoteResponse.from_note(note) for note in notes])
 
@@ -220,7 +222,8 @@ async def get_note(
 ) -> NoteResponse:
     """Get a note by ID."""
     manager = get_notes_manager()
-    note = manager.get_note(note_id)
+    user_id = current_user.get("sub")
+    note = await manager.get_note(note_id, actor_user_id=user_id)
 
     if not note:
         raise HTTPException(
@@ -241,7 +244,8 @@ async def delete_note(
 ) -> None:
     """Delete a note by ID."""
     manager = get_notes_manager()
-    note = manager.get_note(note_id)
+    user_id = current_user.get("sub")
+    note = await manager.get_note(note_id, actor_user_id=user_id)
 
     if not note:
         raise HTTPException(
@@ -249,7 +253,7 @@ async def delete_note(
             detail=f"Note {note_id} not found",
         )
 
-    manager.delete_note(note_id)
+    await manager.delete_note(note_id, actor_user_id=user_id)
     logger.info(
         "Note deleted",
         extra={
@@ -283,11 +287,12 @@ async def create_checkpoint(
         )
 
     manager = get_checkpoint_manager()
-    checkpoint = manager.create_checkpoint(
+    checkpoint = await manager.create_checkpoint(
         phase=request.phase,
         summary=request.summary,
         artifacts=request.artifacts,
         metadata=request.metadata,
+        user_id=current_user.get("sub"),
     )
 
     logger.info(
@@ -311,7 +316,8 @@ async def list_checkpoints(
 ) -> CheckpointsListResponse:
     """List checkpoints with optional phase filter."""
     manager = get_checkpoint_manager()
-    checkpoints = manager.list_checkpoints(phase=phase)
+    user_id = current_user.get("sub")
+    checkpoints = await manager.list_checkpoints(phase=phase, actor_user_id=user_id)
 
     return CheckpointsListResponse(checkpoints=[CheckpointResponse.from_checkpoint(cp) for cp in checkpoints])
 
@@ -324,7 +330,7 @@ async def get_latest_checkpoint(
 ) -> CheckpointResponse:
     """Get the most recent checkpoint."""
     manager = get_checkpoint_manager()
-    checkpoint = manager.get_latest_checkpoint()
+    checkpoint = await manager.get_latest_checkpoint(user_id=current_user.get("sub"))
 
     if not checkpoint:
         raise HTTPException(
@@ -343,6 +349,6 @@ async def get_session_summary(
 ) -> SessionSummaryResponse:
     """Get session summary from all checkpoints."""
     manager = get_checkpoint_manager()
-    summary = manager.summarize_session()
+    summary = await manager.summarize_session(user_id=current_user.get("sub"))
 
     return SessionSummaryResponse(summary=summary)

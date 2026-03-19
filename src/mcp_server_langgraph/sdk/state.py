@@ -2,37 +2,59 @@
 Cross-Session State Management
 
 Persistent state across agent sessions for continuity.
+Delegates storage to an AgentStateRepository backend (InMemory or Redis).
 
 Usage:
     from mcp_server_langgraph.sdk.state import AgentStateManager
 
-    manager = AgentStateManager(state_dir=Path("./state"))
+    manager = AgentStateManager()
     await manager.save_state("session-1", {"progress": "50%"})
     state = await manager.resume_session("session-1")
 """
 
 from __future__ import annotations
 
-import json
-from datetime import UTC, datetime
+import warnings
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.repositories.agent_state import AgentStateRepository
 
 
 class AgentStateManager:
     """Persistent state across agent sessions.
 
     Enables session resumption and checkpoint-based context recovery.
+    Delegates all storage operations to an AgentStateRepository.
     """
 
-    def __init__(self, state_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        state_dir: Path | None = None,
+        repository: AgentStateRepository | None = None,
+    ) -> None:
         """Initialize state manager.
 
         Args:
-            state_dir: Directory for state storage
+            state_dir: Deprecated. Directory for state storage.
+            repository: Optional AgentStateRepository. Defaults via get_agent_state_repository()
         """
+        if state_dir is not None:
+            warnings.warn(
+                "AgentStateManager 'state_dir' parameter is deprecated. "
+                "State is persisted via the AgentStateRepository backend.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.state_dir = state_dir or Path("./agent_state")
-        self._states: dict[str, dict[str, Any]] = {}
+
+        if repository is not None:
+            self._repository = repository
+        else:
+            from mcp_server_langgraph.core.dependencies import get_agent_state_repository
+
+            self._repository = get_agent_state_repository()
 
     async def save_state(
         self,
@@ -45,13 +67,7 @@ class AgentStateManager:
             session_id: Session identifier
             state: State to save
         """
-        self._states[session_id] = {
-            "state": state,
-            "updated_at": datetime.now(UTC).isoformat(),
-        }
-
-        # Persist to disk
-        await self._persist()
+        await self._repository.save(session_id, state)
 
     async def resume_session(
         self,
@@ -65,14 +81,7 @@ class AgentStateManager:
         Returns:
             Saved state if found, None otherwise
         """
-        # Load from disk if not in memory
-        if session_id not in self._states:
-            await self._load()
-
-        entry = self._states.get(session_id)
-        if entry:
-            return entry.get("state")
-        return None
+        return await self._repository.get(session_id)
 
     async def checkpoint(
         self,
@@ -87,20 +96,7 @@ class AgentStateManager:
             phase: Phase name
             summary: Phase summary
         """
-        state = await self.resume_session(session_id) or {}
-
-        if "checkpoints" not in state:
-            state["checkpoints"] = []
-
-        state["checkpoints"].append(
-            {
-                "phase": phase,
-                "summary": summary,
-                "timestamp": datetime.now(UTC).isoformat(),
-            }
-        )
-
-        await self.save_state(session_id, state)
+        await self._repository.checkpoint(session_id, phase, summary)
 
     async def list_sessions(self) -> list[str]:
         """List all session IDs.
@@ -108,8 +104,7 @@ class AgentStateManager:
         Returns:
             List of session identifiers
         """
-        await self._load()
-        return list(self._states.keys())
+        return await self._repository.list_sessions()
 
     async def delete_session(self, session_id: str) -> None:
         """Delete a session state.
@@ -117,17 +112,4 @@ class AgentStateManager:
         Args:
             session_id: Session identifier
         """
-        self._states.pop(session_id, None)
-        await self._persist()
-
-    async def _persist(self) -> None:
-        """Persist states to disk."""
-        self.state_dir.mkdir(parents=True, exist_ok=True)
-        state_file = self.state_dir / "sessions.json"
-        state_file.write_text(json.dumps(self._states, indent=2, default=str))
-
-    async def _load(self) -> None:
-        """Load states from disk."""
-        state_file = self.state_dir / "sessions.json"
-        if state_file.exists():
-            self._states = json.loads(state_file.read_text())
+        await self._repository.delete(session_id)

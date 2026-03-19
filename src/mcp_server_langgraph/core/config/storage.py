@@ -75,6 +75,12 @@ class StorageSettings(DomainSettings):
     # Cost Metrics Storage
     cost_storage_backend: str = "memory"  # "postgres", "memory"
 
+    # Agentic Memory Storage (12-factor stateless processes)
+    notes_backend: str = "memory"  # "memory" (dev/test), "postgres" (production)
+    phase_checkpoint_backend: str = "memory"  # "memory" (dev/test), "postgres" (production)
+    agent_state_backend: str = "memory"  # "memory" (dev/test), "redis" (production)
+    evidence_backend: str = "memory"  # "memory" (dev/test), "postgres" (production)
+
     # Qdrant Vector Database
     qdrant_url: str = "localhost"
     qdrant_port: int = 6333

@@ -38,6 +38,8 @@ class UserDataExport(BaseModel):
     )
     execution_plans: list[dict[str, Any]] = Field(default_factory=list, description="Execution plans (Phase 9 GDPR)")
     plan_templates: list[dict[str, Any]] = Field(default_factory=list, description="Plan templates (Phase 9 GDPR)")
+    notes: list[dict[str, Any]] = Field(default_factory=list, description="Agentic memory notes")
+    checkpoints: list[dict[str, Any]] = Field(default_factory=list, description="Agentic memory phase checkpoints")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = ConfigDict(
@@ -129,6 +131,8 @@ class DataExportService:
             decision_traces = await self._get_user_decision_traces(user_id)
             execution_plans = await self._get_user_execution_plans(user_id)
             plan_templates = await self._get_user_plan_templates(user_id)
+            notes = await self._get_user_notes(user_id)
+            checkpoints = await self._get_user_checkpoints(user_id)
 
             export = UserDataExport(
                 export_id=export_id,
@@ -145,6 +149,8 @@ class DataExportService:
                 decision_traces=decision_traces,
                 execution_plans=execution_plans,
                 plan_templates=plan_templates,
+                notes=notes,
+                checkpoints=checkpoints,
                 metadata={"export_reason": "user_request", "gdpr_article": "15"},
             )
 
@@ -454,4 +460,56 @@ class DataExportService:
             return [template.model_dump() for template in templates]
         except Exception as e:
             logger.error(f"Failed to retrieve user plan templates: {e}", exc_info=True)
+            return []
+
+    def _get_notes_repository(self) -> Any:
+        """Get notes repository from dependencies.
+
+        Returns the repository if available, None otherwise.
+        """
+        try:
+            from mcp_server_langgraph.core.dependencies import get_notes_repository
+
+            return get_notes_repository()
+        except Exception as e:
+            logger.debug(f"Notes repository not available: {e}")
+            return None
+
+    def _get_checkpoint_repository(self) -> Any:
+        """Get checkpoint repository from dependencies.
+
+        Returns the repository if available, None otherwise.
+        """
+        try:
+            from mcp_server_langgraph.core.dependencies import get_checkpoint_repository
+
+            return get_checkpoint_repository()
+        except Exception as e:
+            logger.debug(f"Checkpoint repository not available: {e}")
+            return None
+
+    async def _get_user_notes(self, user_id: str) -> list[dict[str, Any]]:
+        """Get user notes for GDPR export."""
+        repo = self._get_notes_repository()
+        if repo is None:
+            return []
+
+        try:
+            notes = await repo.list_by_user(user_id)
+            return [note.model_dump() for note in notes]
+        except Exception as e:
+            logger.error(f"Failed to retrieve user notes: {e}", exc_info=True)
+            return []
+
+    async def _get_user_checkpoints(self, user_id: str) -> list[dict[str, Any]]:
+        """Get user checkpoints for GDPR export."""
+        repo = self._get_checkpoint_repository()
+        if repo is None:
+            return []
+
+        try:
+            checkpoints = await repo.list_by_user(user_id)
+            return [checkpoint.model_dump() for checkpoint in checkpoints]
+        except Exception as e:
+            logger.error(f"Failed to retrieve user checkpoints: {e}", exc_info=True)
             return []

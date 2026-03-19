@@ -3,21 +3,22 @@ Tests for Structured Note-Taking & Agentic Memory
 
 PR 11: Implements NOTES.md management and phase summaries
 for persistent memory across agent sessions.
+
+Refactored for async repository-backed managers.
 """
 
 from __future__ import annotations
 
 import gc
+import warnings
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
 
-pytestmark = pytest.mark.unit
+from mcp_server_langgraph.repositories.checkpoint import InMemoryCheckpointRepository
+from mcp_server_langgraph.repositories.notes import InMemoryNotesRepository
 
-if TYPE_CHECKING:
-    pass
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
@@ -172,165 +173,129 @@ class TestNote:
 @pytest.mark.memory
 @pytest.mark.xdist_group(name="memory_notes")
 class TestNotesManager:
-    """Tests for NotesManager."""
+    """Tests for NotesManager with repository backend."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_notes_manager_initialization(self, tmp_path: Path) -> None:
-        """Test initializing notes manager."""
+    async def test_notes_manager_initialization(self) -> None:
+        """Test initializing notes manager with empty repository."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        assert manager.notes_path == notes_file
-        assert len(manager.list_notes()) == 0
+        notes = await manager.list_notes()
+        assert len(notes) == 0
 
-    def test_add_note_persists_content(self, tmp_path: Path) -> None:
-        """Test adding a note."""
+    async def test_add_note_persists_content(self) -> None:
+        """Test adding a note stores it in repository."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        note = manager.add_note(
+        note = await manager.add_note(
             content="First note content",
             category="general",
         )
 
         assert note.id is not None
         assert note.content == "First note content"
-        assert len(manager.list_notes()) == 1
+        notes = await manager.list_notes()
+        assert len(notes) == 1
 
-    def test_get_note_by_id(self, tmp_path: Path) -> None:
+    async def test_get_note_by_id(self) -> None:
         """Test retrieving a note by ID."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        note = manager.add_note(content="Test content")
-        retrieved = manager.get_note(note.id)
+        note = await manager.add_note(content="Test content")
+        retrieved = await manager.get_note(note.id)
 
         assert retrieved is not None
         assert retrieved.id == note.id
         assert retrieved.content == "Test content"
 
-    def test_get_nonexistent_note_returns_none(self, tmp_path: Path) -> None:
+    async def test_get_nonexistent_note_returns_none(self) -> None:
         """Test getting a nonexistent note returns None."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        result = manager.get_note("nonexistent-id")
+        result = await manager.get_note("nonexistent-id")
 
         assert result is None
 
-    def test_delete_note_removes_from_storage(self, tmp_path: Path) -> None:
+    async def test_delete_note_removes_from_storage(self) -> None:
         """Test deleting a note."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        note = manager.add_note(content="To be deleted")
-        assert len(manager.list_notes()) == 1
+        note = await manager.add_note(content="To be deleted")
+        notes = await manager.list_notes()
+        assert len(notes) == 1
 
-        manager.delete_note(note.id)
+        await manager.delete_note(note.id)
 
-        assert len(manager.list_notes()) == 0
-        assert manager.get_note(note.id) is None
+        notes = await manager.list_notes()
+        assert len(notes) == 0
+        assert await manager.get_note(note.id) is None
 
-    def test_list_notes_by_category(self, tmp_path: Path) -> None:
+    async def test_list_notes_by_category(self) -> None:
         """Test listing notes by category."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Research note 1", category="research")
-        manager.add_note(content="Research note 2", category="research")
-        manager.add_note(content="General note", category="general")
+        await manager.add_note(content="Research note 1", category="research")
+        await manager.add_note(content="Research note 2", category="research")
+        await manager.add_note(content="General note", category="general")
 
-        research_notes = manager.list_notes(category="research")
-        general_notes = manager.list_notes(category="general")
+        research_notes = await manager.list_notes(category="research")
+        general_notes = await manager.list_notes(category="general")
 
         assert len(research_notes) == 2
         assert len(general_notes) == 1
 
-    def test_search_notes_by_content(self, tmp_path: Path) -> None:
+    async def test_search_notes_by_content(self) -> None:
         """Test searching notes by content."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Python is great")
-        manager.add_note(content="JavaScript is also useful")
-        manager.add_note(content="Python and JavaScript together")
+        await manager.add_note(content="Python is great")
+        await manager.add_note(content="JavaScript is also useful")
+        await manager.add_note(content="Python and JavaScript together")
 
-        results = manager.search("Python")
+        results = await manager.search("Python")
 
         assert len(results) == 2
 
-    def test_persist_notes_to_file(self, tmp_path: Path) -> None:
-        """Test persisting notes to NOTES.md file."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
-
-        manager.add_note(content="Persisted note", category="test")
-        manager.persist()
-
-        assert notes_file.exists()
-        content = notes_file.read_text()
-        assert "Persisted note" in content
-
-    def test_load_notes_from_file(self, tmp_path: Path) -> None:
-        """Test loading notes from existing NOTES.md file."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-
-        notes_file = tmp_path / "NOTES.md"
-        # Create manager, add note, persist
-        manager1 = NotesManager(notes_path=notes_file)
-        manager1.add_note(content="Saved note", category="test")
-        manager1.persist()
-
-        # Create new manager that loads from file
-        manager2 = NotesManager(notes_path=notes_file)
-        manager2.load()
-
-        notes = manager2.list_notes()
-        assert len(notes) == 1
-        assert notes[0].content == "Saved note"
-
-    def test_clear_all_notes(self, tmp_path: Path) -> None:
+    async def test_clear_all_notes(self) -> None:
         """Test clearing all notes."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Note 1")
-        manager.add_note(content="Note 2")
-        assert len(manager.list_notes()) == 2
+        await manager.add_note(content="Note 1")
+        await manager.add_note(content="Note 2")
+        notes = await manager.list_notes()
+        assert len(notes) == 2
 
-        manager.clear()
+        await manager.clear()
 
-        assert len(manager.list_notes()) == 0
+        notes = await manager.list_notes()
+        assert len(notes) == 0
 
-    def test_add_note_with_session_and_user(self, tmp_path: Path) -> None:
+    async def test_add_note_with_session_and_user(self) -> None:
         """Test adding a note with session_id and user_id."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        note = manager.add_note(
+        note = await manager.add_note(
             content="Session-bound note",
             session_id="session-abc",
             user_id="user-xyz",
@@ -339,14 +304,13 @@ class TestNotesManager:
         assert note.session_id == "session-abc"
         assert note.user_id == "user-xyz"
 
-    def test_add_note_with_title_and_slug(self, tmp_path: Path) -> None:
+    async def test_add_note_with_title_and_slug(self) -> None:
         """Test adding a note with title and slug."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        note = manager.add_note(
+        note = await manager.add_note(
             content="Titled note content",
             title="My Important Note",
             slug="my-important-note",
@@ -355,68 +319,62 @@ class TestNotesManager:
         assert note.title == "My Important Note"
         assert note.slug == "my-important-note"
 
-    def test_persist_and_load_preserves_phase4_fields(self, tmp_path: Path) -> None:
-        """Test that session_id, user_id, title, slug survive persist/load."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-
-        notes_file = tmp_path / "NOTES.md"
-        manager1 = NotesManager(notes_path=notes_file)
-
-        note = manager1.add_note(
-            content="Phase 4 note",
-            session_id="session-persist",
-            user_id="user-persist",
-            title="Persistent Title",
-            slug="persistent-slug",
-        )
-        note_id = note.id
-        manager1.persist()
-
-        # Reload in new manager
-        manager2 = NotesManager(notes_path=notes_file)
-        manager2.load()
-
-        loaded = manager2.get_note(note_id)
-        assert loaded is not None
-        assert loaded.session_id == "session-persist"
-        assert loaded.user_id == "user-persist"
-        assert loaded.title == "Persistent Title"
-        assert loaded.slug == "persistent-slug"
-
-    def test_list_notes_by_session(self, tmp_path: Path) -> None:
+    async def test_list_notes_by_session(self) -> None:
         """Test listing notes filtered by session_id."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Session 1 note 1", session_id="session-1")
-        manager.add_note(content="Session 1 note 2", session_id="session-1")
-        manager.add_note(content="Session 2 note", session_id="session-2")
-        manager.add_note(content="No session note")
+        await manager.add_note(content="Session 1 note 1", session_id="session-1")
+        await manager.add_note(content="Session 1 note 2", session_id="session-1")
+        await manager.add_note(content="Session 2 note", session_id="session-2")
+        await manager.add_note(content="No session note")
 
-        session1_notes = manager.list_notes(session_id="session-1")
-        session2_notes = manager.list_notes(session_id="session-2")
+        session1_notes = await manager.list_notes(session_id="session-1")
+        session2_notes = await manager.list_notes(session_id="session-2")
 
         assert len(session1_notes) == 2
         assert len(session2_notes) == 1
 
-    def test_list_notes_by_user(self, tmp_path: Path) -> None:
+    async def test_list_notes_by_user(self) -> None:
         """Test listing notes filtered by user_id."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="User A note 1", user_id="user-a")
-        manager.add_note(content="User A note 2", user_id="user-a")
-        manager.add_note(content="User B note", user_id="user-b")
+        await manager.add_note(content="User A note 1", user_id="user-a")
+        await manager.add_note(content="User A note 2", user_id="user-a")
+        await manager.add_note(content="User B note", user_id="user-b")
 
-        user_a_notes = manager.list_notes(user_id="user-a")
-        user_b_notes = manager.list_notes(user_id="user-b")
+        user_a_notes = await manager.list_notes(user_id="user-a")
+        user_b_notes = await manager.list_notes(user_id="user-b")
 
         assert len(user_a_notes) == 2
         assert len(user_b_notes) == 1
+
+    def test_persist_emits_deprecation_warning(self) -> None:
+        """Test that persist() emits a DeprecationWarning."""
+        from mcp_server_langgraph.memory.notes import NotesManager
+
+        manager = NotesManager(repository=InMemoryNotesRepository())
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            manager.persist()
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+
+    def test_load_emits_deprecation_warning(self) -> None:
+        """Test that load() emits a DeprecationWarning."""
+        from mcp_server_langgraph.memory.notes import NotesManager
+
+        manager = NotesManager(repository=InMemoryNotesRepository())
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            manager.load()
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
 
 
 @pytest.mark.unit
@@ -464,28 +422,28 @@ class TestCheckpoint:
 @pytest.mark.memory
 @pytest.mark.xdist_group(name="memory_checkpoints")
 class TestCheckpointManager:
-    """Tests for CheckpointManager."""
+    """Tests for CheckpointManager with repository backend."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_checkpoint_manager_initialization(self, tmp_path: Path) -> None:
-        """Test initializing checkpoint manager."""
+    async def test_checkpoint_manager_initialization(self) -> None:
+        """Test initializing checkpoint manager with empty repository."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-        manager = CheckpointManager(storage_dir=tmp_path)
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
-        assert manager.storage_dir == tmp_path
-        assert len(manager.list_checkpoints()) == 0
+        checkpoints = await manager.list_checkpoints()
+        assert len(checkpoints) == 0
 
-    def test_create_checkpoint_returns_id(self, tmp_path: Path) -> None:
+    async def test_create_checkpoint_returns_id(self) -> None:
         """Test creating a checkpoint."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-        manager = CheckpointManager(storage_dir=tmp_path)
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
-        checkpoint = manager.create_checkpoint(
+        checkpoint = await manager.create_checkpoint(
             phase="phase-1",
             summary="Completed initial setup",
         )
@@ -494,97 +452,109 @@ class TestCheckpointManager:
         assert checkpoint.phase == "phase-1"
         assert checkpoint.summary == "Completed initial setup"
 
-    def test_get_checkpoint_by_id(self, tmp_path: Path) -> None:
+    async def test_get_checkpoint_by_id(self) -> None:
         """Test retrieving a checkpoint by ID."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-        manager = CheckpointManager(storage_dir=tmp_path)
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
-        checkpoint = manager.create_checkpoint(
+        checkpoint = await manager.create_checkpoint(
             phase="phase-1",
             summary="Test checkpoint",
         )
-        retrieved = manager.get_checkpoint(checkpoint.id)
+        retrieved = await manager.get_checkpoint(checkpoint.id)
 
         assert retrieved is not None
         assert retrieved.id == checkpoint.id
 
-    def test_get_latest_checkpoint(self, tmp_path: Path) -> None:
+    async def test_get_latest_checkpoint(self) -> None:
         """Test getting the latest checkpoint."""
-        from mcp_server_langgraph.memory.checkpoints import CheckpointManager
         import time
 
-        manager = CheckpointManager(storage_dir=tmp_path)
+        from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-        manager.create_checkpoint(phase="phase-1", summary="First")
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
+
+        await manager.create_checkpoint(phase="phase-1", summary="First")
         time.sleep(0.01)  # Ensure different timestamps
-        latest = manager.create_checkpoint(phase="phase-2", summary="Second")
+        latest = await manager.create_checkpoint(phase="phase-2", summary="Second")
 
-        retrieved = manager.get_latest_checkpoint()
+        retrieved = await manager.get_latest_checkpoint()
 
         assert retrieved is not None
         assert retrieved.id == latest.id
         assert retrieved.phase == "phase-2"
 
-    def test_list_checkpoints_by_phase(self, tmp_path: Path) -> None:
+    async def test_list_checkpoints_by_phase(self) -> None:
         """Test listing checkpoints by phase."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-        manager = CheckpointManager(storage_dir=tmp_path)
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
-        manager.create_checkpoint(phase="implementation", summary="Impl 1")
-        manager.create_checkpoint(phase="testing", summary="Test 1")
-        manager.create_checkpoint(phase="implementation", summary="Impl 2")
+        await manager.create_checkpoint(phase="implementation", summary="Impl 1")
+        await manager.create_checkpoint(phase="testing", summary="Test 1")
+        await manager.create_checkpoint(phase="implementation", summary="Impl 2")
 
-        impl_checkpoints = manager.list_checkpoints(phase="implementation")
-        test_checkpoints = manager.list_checkpoints(phase="testing")
+        impl_checkpoints = await manager.list_checkpoints(phase="implementation")
+        test_checkpoints = await manager.list_checkpoints(phase="testing")
 
         assert len(impl_checkpoints) == 2
         assert len(test_checkpoints) == 1
 
-    def test_checkpoint_persistence_survives_restart(self, tmp_path: Path) -> None:
-        """Test checkpoint persistence to storage."""
-        from mcp_server_langgraph.memory.checkpoints import CheckpointManager
-
-        manager1 = CheckpointManager(storage_dir=tmp_path)
-        manager1.create_checkpoint(phase="test", summary="Persistent checkpoint")
-        manager1.persist()
-
-        manager2 = CheckpointManager(storage_dir=tmp_path)
-        manager2.load()
-
-        checkpoints = manager2.list_checkpoints()
-        assert len(checkpoints) == 1
-        assert checkpoints[0].summary == "Persistent checkpoint"
-
-    def test_delete_checkpoint_removes_state(self, tmp_path: Path) -> None:
+    async def test_delete_checkpoint_removes_state(self) -> None:
         """Test deleting a checkpoint."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-        manager = CheckpointManager(storage_dir=tmp_path)
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
-        checkpoint = manager.create_checkpoint(phase="test", summary="To delete")
-        assert len(manager.list_checkpoints()) == 1
+        checkpoint = await manager.create_checkpoint(phase="test", summary="To delete")
+        checkpoints = await manager.list_checkpoints()
+        assert len(checkpoints) == 1
 
-        manager.delete_checkpoint(checkpoint.id)
+        await manager.delete_checkpoint(checkpoint.id)
 
-        assert len(manager.list_checkpoints()) == 0
+        checkpoints = await manager.list_checkpoints()
+        assert len(checkpoints) == 0
 
-    def test_summarize_session_generates_overview(self, tmp_path: Path) -> None:
+    async def test_summarize_session_generates_overview(self) -> None:
         """Test generating session summary from checkpoints."""
         from mcp_server_langgraph.memory.checkpoints import CheckpointManager
 
-        manager = CheckpointManager(storage_dir=tmp_path)
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
 
-        manager.create_checkpoint(phase="research", summary="Researched architecture")
-        manager.create_checkpoint(phase="implementation", summary="Implemented core")
-        manager.create_checkpoint(phase="testing", summary="All tests pass")
+        await manager.create_checkpoint(phase="research", summary="Researched architecture")
+        await manager.create_checkpoint(phase="implementation", summary="Implemented core")
+        await manager.create_checkpoint(phase="testing", summary="All tests pass")
 
-        summary = manager.summarize_session()
+        summary = await manager.summarize_session()
 
         assert "research" in summary.lower()
         assert "implementation" in summary.lower()
         assert "testing" in summary.lower()
+
+    def test_persist_emits_deprecation_warning(self) -> None:
+        """Test that persist() emits a DeprecationWarning."""
+        from mcp_server_langgraph.memory.checkpoints import CheckpointManager
+
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            manager.persist()
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+
+    def test_load_emits_deprecation_warning(self) -> None:
+        """Test that load() emits a DeprecationWarning."""
+        from mcp_server_langgraph.memory.checkpoints import CheckpointManager
+
+        manager = CheckpointManager(repository=InMemoryCheckpointRepository())
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            manager.load()
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
 
 
 @pytest.mark.unit
@@ -596,161 +566,75 @@ class TestNotesManagerSearch:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_search_empty_query_returns_all_notes(self, tmp_path: Path) -> None:
+    async def test_search_empty_query_returns_all_notes(self) -> None:
         """Test that empty search query returns all notes."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Note 1")
-        manager.add_note(content="Note 2")
-        manager.add_note(content="Note 3")
+        await manager.add_note(content="Note 1")
+        await manager.add_note(content="Note 2")
+        await manager.add_note(content="Note 3")
 
-        results = manager.search("")
+        results = await manager.search("")
 
         assert len(results) == 3
 
-    def test_search_case_insensitive(self, tmp_path: Path) -> None:
+    async def test_search_case_insensitive(self) -> None:
         """Test that search is case insensitive."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="PYTHON is great")
-        manager.add_note(content="python is awesome")
-        manager.add_note(content="Python is versatile")
+        await manager.add_note(content="PYTHON is great")
+        await manager.add_note(content="python is awesome")
+        await manager.add_note(content="Python is versatile")
 
-        results = manager.search("python")
+        results = await manager.search("python")
         assert len(results) == 3
 
-        results = manager.search("PYTHON")
+        results = await manager.search("PYTHON")
         assert len(results) == 3
 
-    def test_search_no_matches(self, tmp_path: Path) -> None:
+    async def test_search_no_matches(self) -> None:
         """Test search with no matching notes."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Python is great")
-        manager.add_note(content="JavaScript is useful")
+        await manager.add_note(content="Python is great")
+        await manager.add_note(content="JavaScript is useful")
 
-        results = manager.search("Rust")
+        results = await manager.search("Rust")
 
         assert len(results) == 0
 
-    def test_search_partial_match(self, tmp_path: Path) -> None:
+    async def test_search_partial_match(self) -> None:
         """Test search matches partial words."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Programming is fun")
-        manager.add_note(content="Reprogramming the system")
+        await manager.add_note(content="Programming is fun")
+        await manager.add_note(content="Reprogramming the system")
 
-        results = manager.search("gram")
+        results = await manager.search("gram")
 
         assert len(results) == 2
 
-    def test_search_with_special_characters(self, tmp_path: Path) -> None:
+    async def test_search_with_special_characters(self) -> None:
         """Test search handles special characters."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        manager.add_note(content="Error: FileNotFoundError at line 42")
-        manager.add_note(content="Success: All tests pass!")
+        await manager.add_note(content="Error: FileNotFoundError at line 42")
+        await manager.add_note(content="Success: All tests pass!")
 
-        results = manager.search("Error:")
+        results = await manager.search("Error:")
 
         assert len(results) == 1
         assert "FileNotFoundError" in results[0].content
-
-
-@pytest.mark.unit
-@pytest.mark.memory
-class TestNotesManagerTimestamps:
-    """Tests for note timestamp handling."""
-
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
-        gc.collect()
-
-    def test_notes_sorted_by_timestamp_in_persist(self, tmp_path: Path) -> None:
-        """Test that notes are sorted by created_at when persisted."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-        import time
-
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
-
-        # Add notes with small delays to get different timestamps
-        manager.add_note(content="First note")
-        time.sleep(0.01)
-        manager.add_note(content="Second note")
-        time.sleep(0.01)
-        manager.add_note(content="Third note")
-
-        manager.persist()
-
-        content = notes_file.read_text()
-        first_pos = content.find("First note")
-        second_pos = content.find("Second note")
-        third_pos = content.find("Third note")
-
-        # Earlier notes should appear first
-        assert first_pos < second_pos < third_pos
-
-    def test_timestamp_preserved_after_load(self, tmp_path: Path) -> None:
-        """Test that timestamps are preserved after load from JSON."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-
-        notes_file = tmp_path / "NOTES.md"
-        manager1 = NotesManager(notes_path=notes_file)
-
-        note = manager1.add_note(content="Timestamped note")
-        original_timestamp = note.created_at
-        manager1.persist()
-
-        manager2 = NotesManager(notes_path=notes_file)
-        manager2.load()
-
-        loaded_notes = manager2.list_notes()
-        assert len(loaded_notes) == 1
-        # Allow for small timezone differences in parsing
-        assert abs((loaded_notes[0].created_at - original_timestamp).total_seconds()) < 1
-
-    def test_notes_with_explicit_timestamps(self, tmp_path: Path) -> None:
-        """Test creating notes with explicit timestamps."""
-        from mcp_server_langgraph.memory.notes import Note, NotesManager
-
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
-
-        from datetime import datetime
-
-        past = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
-
-        # Manually create note with explicit timestamp
-        note = Note(
-            id="note-past",
-            content="Historical note",
-            created_at=past,
-        )
-
-        manager._notes[note.id] = note
-        manager.persist()
-        manager.load()
-
-        loaded = manager.get_note("note-past")
-        assert loaded is not None
-        # Verify year is preserved
-        assert loaded.created_at.year == 2024
 
 
 @pytest.mark.unit
@@ -762,57 +646,39 @@ class TestNotesManagerLargeContent:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_large_note_content(self, tmp_path: Path) -> None:
+    async def test_large_note_content(self) -> None:
         """Test handling notes with large content."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        # Create a large note (10KB)
         large_content = "Lorem ipsum " * 1000  # ~12KB
-        note = manager.add_note(content=large_content)
+        note = await manager.add_note(content=large_content)
 
-        manager.persist()
-
-        # Reload and verify
-        manager2 = NotesManager(notes_path=notes_file)
-        manager2.load()
-
-        loaded = manager2.get_note(note.id)
+        loaded = await manager.get_note(note.id)
         assert loaded is not None
         assert len(loaded.content) == len(large_content)
 
-    def test_many_notes_handled_efficiently(self, tmp_path: Path) -> None:
+    async def test_many_notes_handled_efficiently(self) -> None:
         """Test handling many notes."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
-        # Add 100 notes
         for i in range(100):
-            manager.add_note(
+            await manager.add_note(
                 content=f"Note number {i}",
                 category=f"category-{i % 10}",
             )
 
-        assert len(manager.list_notes()) == 100
+        notes = await manager.list_notes()
+        assert len(notes) == 100
 
-        manager.persist()
-
-        # Reload and verify
-        manager2 = NotesManager(notes_path=notes_file)
-        manager2.load()
-
-        assert len(manager2.list_notes()) == 100
-
-    def test_note_with_multiline_content(self, tmp_path: Path) -> None:
+    async def test_note_with_multiline_content(self) -> None:
         """Test notes with multiline content."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
         multiline = """First line
 Second line
@@ -823,23 +689,18 @@ def hello():
 ```
 End of note"""
 
-        note = manager.add_note(content=multiline)
-        manager.persist()
+        note = await manager.add_note(content=multiline)
 
-        manager2 = NotesManager(notes_path=notes_file)
-        manager2.load()
-
-        loaded = manager2.get_note(note.id)
+        loaded = await manager.get_note(note.id)
         assert loaded is not None
         assert "First line" in loaded.content
         assert "def hello" in loaded.content
 
-    def test_note_with_markdown_formatting(self, tmp_path: Path) -> None:
+    async def test_note_with_markdown_formatting(self) -> None:
         """Test notes with markdown formatting."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
         markdown_content = """# Header
 ## Subheader
@@ -857,13 +718,9 @@ End of note"""
 [Link](https://example.com)
 """
 
-        note = manager.add_note(content=markdown_content)
-        manager.persist()
+        note = await manager.add_note(content=markdown_content)
 
-        manager2 = NotesManager(notes_path=notes_file)
-        manager2.load()
-
-        loaded = manager2.get_note(note.id)
+        loaded = await manager.get_note(note.id)
         assert loaded is not None
         assert "# Header" in loaded.content
         assert "**Bold**" in loaded.content
@@ -871,77 +728,19 @@ End of note"""
 
 @pytest.mark.unit
 @pytest.mark.memory
-class TestNotesManagerMarkdownParsing:
-    """Tests for markdown parsing edge cases."""
+class TestNotesManagerMarkdownRendering:
+    """Tests for Note.to_markdown() rendering."""
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    def test_parse_markdown_fallback(self, tmp_path: Path) -> None:
-        """Test markdown parsing when JSON sidecar is missing."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-
-        notes_file = tmp_path / "NOTES.md"
-
-        # Create markdown-only file (no JSON sidecar)
-        markdown_content = """# Agent Notes
-
-*Last updated: 2024-01-01T00:00:00*
-
-## note-abc123
-**Category:** research
-
-**Created:** 2024-01-01T00:00:00
-
-This is the note content.
-
-## note-def456
-**Category:** general
-
-**Created:** 2024-01-02T00:00:00
-
-Another note here.
-"""
-        notes_file.write_text(markdown_content)
-
-        manager = NotesManager(notes_path=notes_file)
-        manager.load()
-
-        notes = manager.list_notes()
-        assert len(notes) >= 1  # Should parse at least some notes
-
-    def test_load_from_empty_file(self, tmp_path: Path) -> None:
-        """Test loading from empty notes file."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-
-        notes_file = tmp_path / "NOTES.md"
-        notes_file.write_text("")
-
-        manager = NotesManager(notes_path=notes_file)
-        manager.load()
-
-        assert len(manager.list_notes()) == 0
-
-    def test_load_from_nonexistent_file(self, tmp_path: Path) -> None:
-        """Test loading when file doesn't exist."""
-        from mcp_server_langgraph.memory.notes import NotesManager
-
-        notes_file = tmp_path / "nonexistent.md"
-
-        manager = NotesManager(notes_path=notes_file)
-        manager.load()  # Should not raise
-
-        assert len(manager.list_notes()) == 0
-
-    def test_note_with_tags_in_markdown(self, tmp_path: Path) -> None:
+    def test_note_with_tags_in_markdown(self) -> None:
         """Test notes with tags are properly formatted in markdown."""
-        from mcp_server_langgraph.memory.notes import NotesManager
+        from mcp_server_langgraph.memory.notes import Note
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
-
-        note = manager.add_note(
+        note = Note(
+            id="note-tags",
             content="Tagged note",
             tags=["important", "architecture", "review"],
         )
@@ -953,14 +752,14 @@ Another note here.
         assert "review" in markdown
         assert "Tags:" in markdown
 
-    def test_note_without_tags_omits_tags_line(self, tmp_path: Path) -> None:
+    def test_note_without_tags_omits_tags_line(self) -> None:
         """Test notes without tags don't include empty Tags line."""
-        from mcp_server_langgraph.memory.notes import NotesManager
+        from mcp_server_langgraph.memory.notes import Note
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
-
-        note = manager.add_note(content="No tags here")
+        note = Note(
+            id="note-no-tags",
+            content="No tags here",
+        )
 
         markdown = note.to_markdown()
 
@@ -969,14 +768,14 @@ Another note here.
         tags_lines = [line for line in lines if line.startswith("**Tags:**")]
         assert len(tags_lines) == 0
 
-    def test_delete_nonexistent_note_no_error(self, tmp_path: Path) -> None:
+    async def test_delete_nonexistent_note_no_error(self) -> None:
         """Test deleting nonexistent note doesn't raise error."""
         from mcp_server_langgraph.memory.notes import NotesManager
 
-        notes_file = tmp_path / "NOTES.md"
-        manager = NotesManager(notes_path=notes_file)
+        manager = NotesManager(repository=InMemoryNotesRepository())
 
         # Should not raise
-        manager.delete_note("nonexistent-note-id")
+        await manager.delete_note("nonexistent-note-id")
 
-        assert len(manager.list_notes()) == 0
+        notes = await manager.list_notes()
+        assert len(notes) == 0

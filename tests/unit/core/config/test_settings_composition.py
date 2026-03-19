@@ -345,3 +345,60 @@ class TestSettingsBackwardCompatibility:
         assert settings.auth_provider == "inmemory"
         assert settings.session_backend == "memory"
         assert settings.log_level == "INFO"
+
+
+@pytest.mark.xdist_group(name="test_settings_composition")
+class TestAgenticMemoryBackendSettings:
+    """Tests for agentic memory backend settings (12-factor stateless processes)."""
+
+    def teardown_method(self) -> None:
+        gc.collect()
+
+    def test_settings_has_notes_backend(self) -> None:
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+        assert hasattr(settings, "notes_backend")
+        assert settings.notes_backend == "memory"
+
+    def test_settings_has_phase_checkpoint_backend(self) -> None:
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+        assert hasattr(settings, "phase_checkpoint_backend")
+        assert settings.phase_checkpoint_backend == "memory"
+
+    def test_settings_has_agent_state_backend(self) -> None:
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+        assert hasattr(settings, "agent_state_backend")
+        assert settings.agent_state_backend == "memory"
+
+    def test_settings_has_evidence_backend(self) -> None:
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+        assert hasattr(settings, "evidence_backend")
+        assert settings.evidence_backend == "memory"
+
+    def test_phase_checkpoint_backend_distinct_from_checkpoint_backend(self) -> None:
+        """Verify phase_checkpoint_backend is distinct from checkpoint_backend (LangGraph conversation state)."""
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+        # Both exist and are independent
+        assert hasattr(settings, "checkpoint_backend")
+        assert hasattr(settings, "phase_checkpoint_backend")
+        # They can differ (both default to memory but control different things)
+        assert settings.checkpoint_backend == "memory"
+        assert settings.phase_checkpoint_backend == "memory"
+
+    def test_storage_settings_has_agentic_memory_fields(self) -> None:
+        from mcp_server_langgraph.core.config import StorageSettings
+
+        storage = StorageSettings()
+        assert storage.notes_backend == "memory"
+        assert storage.phase_checkpoint_backend == "memory"
+        assert storage.agent_state_backend == "memory"
+        assert storage.evidence_backend == "memory"

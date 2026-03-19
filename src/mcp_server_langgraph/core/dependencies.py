@@ -1105,6 +1105,132 @@ def set_execution_plan_repository(repository: Any) -> None:
 
 
 # ==============================================================================
+# Agentic Memory Repository Dependencies (12-factor stateless processes)
+# ==============================================================================
+
+_notes_repository: Any = None
+
+
+def get_notes_repository() -> Any:
+    """Get NotesRepository instance (singleton)."""
+    global _notes_repository
+    if _notes_repository is None:
+        if settings.notes_backend == "postgres":
+            from mcp_server_langgraph.database.session import get_session_maker
+            from mcp_server_langgraph.repositories.postgres_notes import PostgresNotesRepository
+
+            database_url = settings.database_url
+            if not database_url:
+                raise RuntimeError("DATABASE_URL is not configured for postgres notes storage.")
+            session_maker = get_session_maker(database_url)
+            _notes_repository = PostgresNotesRepository(session_maker)
+        else:
+            from mcp_server_langgraph.repositories.notes import InMemoryNotesRepository
+
+            _notes_repository = InMemoryNotesRepository()
+    return _notes_repository
+
+
+def set_notes_repository(repo: Any) -> None:
+    """Set the NotesRepository singleton instance (for testing)."""
+    global _notes_repository
+    _notes_repository = repo
+
+
+_checkpoint_repository: Any = None
+
+
+def get_checkpoint_repository() -> Any:
+    """Get CheckpointRepository instance (singleton)."""
+    global _checkpoint_repository
+    if _checkpoint_repository is None:
+        if settings.phase_checkpoint_backend == "postgres":
+            from mcp_server_langgraph.database.session import get_session_maker
+            from mcp_server_langgraph.repositories.postgres_checkpoint import PostgresCheckpointRepository
+
+            database_url = settings.database_url
+            if not database_url:
+                raise RuntimeError("DATABASE_URL is not configured for postgres checkpoint storage.")
+            session_maker = get_session_maker(database_url)
+            _checkpoint_repository = PostgresCheckpointRepository(session_maker)
+        else:
+            from mcp_server_langgraph.repositories.checkpoint import InMemoryCheckpointRepository
+
+            _checkpoint_repository = InMemoryCheckpointRepository()
+    return _checkpoint_repository
+
+
+def set_checkpoint_repository(repo: Any) -> None:
+    """Set the CheckpointRepository singleton instance (for testing)."""
+    global _checkpoint_repository
+    _checkpoint_repository = repo
+
+
+_agent_state_repository: Any = None
+
+
+def get_agent_state_repository() -> Any:
+    """Get AgentStateRepository instance (singleton)."""
+    global _agent_state_repository
+    if _agent_state_repository is None:
+        if settings.agent_state_backend == "redis":
+            import redis.asyncio as aioredis
+            from mcp_server_langgraph.repositories.redis_agent_state import RedisAgentStateRepository
+            from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+
+            redis_url = settings.redis_url
+            if not redis_url:
+                raise RuntimeError("REDIS_URL is not configured for redis agent state storage.")
+            client = aioredis.from_url(redis_url, decode_responses=True)
+            breaker = get_circuit_breaker("agent_state")
+            _agent_state_repository = RedisAgentStateRepository(
+                client,
+                session_ttl_seconds=settings.session_ttl_seconds,
+                circuit_breaker=breaker,
+            )
+        else:
+            from mcp_server_langgraph.repositories.agent_state import InMemoryAgentStateRepository
+
+            _agent_state_repository = InMemoryAgentStateRepository()
+    return _agent_state_repository
+
+
+def set_agent_state_repository(repo: Any) -> None:
+    """Set the AgentStateRepository singleton instance (for testing)."""
+    global _agent_state_repository
+    _agent_state_repository = repo
+
+
+_evidence_repository: Any = None
+
+
+def get_evidence_repository() -> Any:
+    """Get EvidenceRepository instance (singleton)."""
+    global _evidence_repository
+    if _evidence_repository is None:
+        if settings.evidence_backend == "postgres":
+            from mcp_server_langgraph.database.session import get_session_maker
+            from mcp_server_langgraph.repositories.postgres_evidence import PostgresEvidenceRepository
+
+            database_url = settings.database_url
+            if not database_url:
+                raise RuntimeError("DATABASE_URL is not configured for postgres evidence storage.")
+            session_maker = get_session_maker(database_url)
+            _evidence_repository = PostgresEvidenceRepository(session_maker)
+        else:
+            from mcp_server_langgraph.repositories.evidence import InMemoryEvidenceRepository
+
+            _evidence_repository = InMemoryEvidenceRepository()
+    return _evidence_repository
+
+
+def set_evidence_repository(repo: Any) -> None:
+    """Set the EvidenceRepository singleton instance (for testing)."""
+    global _evidence_repository
+    _evidence_repository = repo
+
+
+# ==============================================================================
 # MCP Client Dependencies
 # ==============================================================================
 

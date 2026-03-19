@@ -122,20 +122,18 @@ class TestLangGraphAgentClient:
         from mcp_server_langgraph.sdk.client import LangGraphAgentClient
         from mcp_server_langgraph.sdk.state import AgentStateManager
 
-        import tempfile
-        from pathlib import Path
+        from mcp_server_langgraph.repositories.agent_state import InMemoryAgentStateRepository
 
-        with tempfile.TemporaryDirectory() as tmp:
-            state_manager = AgentStateManager(state_dir=Path(tmp))
-            client = LangGraphAgentClient(state_manager=state_manager)
+        state_manager = AgentStateManager(repository=InMemoryAgentStateRepository())
+        client = LangGraphAgentClient(state_manager=state_manager)
 
-            response = await client.query("What is 2 + 2?", session_id="test-session")
+        response = await client.query("What is 2 + 2?", session_id="test-session")
 
-            assert response is not None
-            # State should have been saved
-            state = await state_manager.resume_session("test-session")
-            assert state is not None
-            assert "last_query" in state
+        assert response is not None
+        # State should have been saved
+        state = await state_manager.resume_session("test-session")
+        assert state is not None
+        assert "last_query" in state
 
     @pytest.mark.asyncio
     async def test_call_tool(self) -> None:
@@ -216,23 +214,21 @@ class TestLangGraphAgentClient:
         from mcp_server_langgraph.sdk.client import LangGraphAgentClient
         from mcp_server_langgraph.sdk.state import AgentStateManager
 
-        import tempfile
-        from pathlib import Path
+        from mcp_server_langgraph.repositories.agent_state import InMemoryAgentStateRepository
 
-        with tempfile.TemporaryDirectory() as tmp:
-            state_manager = AgentStateManager(state_dir=Path(tmp))
-            client = LangGraphAgentClient(state_manager=state_manager)
+        state_manager = AgentStateManager(repository=InMemoryAgentStateRepository())
+        client = LangGraphAgentClient(state_manager=state_manager)
 
-            await client.checkpoint_session(
-                session_id="session-1",
-                phase="research",
-                summary="Completed initial research",
-            )
+        await client.checkpoint_session(
+            session_id="session-1",
+            phase="research",
+            summary="Completed initial research",
+        )
 
-            state = await state_manager.resume_session("session-1")
-            assert state is not None
-            assert "checkpoints" in state
-            assert len(state["checkpoints"]) == 1
+        state = await state_manager.resume_session("session-1")
+        assert state is not None
+        assert "checkpoints" in state
+        assert len(state["checkpoints"]) == 1
 
 
 @pytest.mark.unit
@@ -318,7 +314,9 @@ class TestAgentStateManager:
         """Test state manager initialization."""
         from mcp_server_langgraph.sdk.state import AgentStateManager
 
-        manager = AgentStateManager(state_dir=tmp_path)
+        from mcp_server_langgraph.repositories.agent_state import InMemoryAgentStateRepository
+
+        manager = AgentStateManager(state_dir=tmp_path, repository=InMemoryAgentStateRepository())
 
         assert manager.state_dir == tmp_path
 
@@ -327,7 +325,9 @@ class TestAgentStateManager:
         """Test saving session state."""
         from mcp_server_langgraph.sdk.state import AgentStateManager
 
-        manager = AgentStateManager(state_dir=tmp_path)
+        from mcp_server_langgraph.repositories.agent_state import InMemoryAgentStateRepository
+
+        manager = AgentStateManager(repository=InMemoryAgentStateRepository())
 
         await manager.save_state("session-1", {"progress": "50%"})
 
@@ -339,7 +339,9 @@ class TestAgentStateManager:
         """Test resuming nonexistent session returns None."""
         from mcp_server_langgraph.sdk.state import AgentStateManager
 
-        manager = AgentStateManager(state_dir=tmp_path)
+        from mcp_server_langgraph.repositories.agent_state import InMemoryAgentStateRepository
+
+        manager = AgentStateManager(repository=InMemoryAgentStateRepository())
 
         state = await manager.resume_session("nonexistent")
 
@@ -350,7 +352,9 @@ class TestAgentStateManager:
         """Test creating checkpoint."""
         from mcp_server_langgraph.sdk.state import AgentStateManager
 
-        manager = AgentStateManager(state_dir=tmp_path)
+        from mcp_server_langgraph.repositories.agent_state import InMemoryAgentStateRepository
+
+        manager = AgentStateManager(repository=InMemoryAgentStateRepository())
 
         await manager.checkpoint("session-1", "phase-1", "Completed research")
 
