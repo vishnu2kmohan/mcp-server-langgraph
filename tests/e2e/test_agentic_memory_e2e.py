@@ -10,6 +10,10 @@ real database/Redis connections. Otherwise they fall back to in-memory backends.
 
 Requires: docker-compose.test.yml infrastructure (make test-infra-up)
 
+Uses httpx.AsyncClient with ASGITransport to keep all async operations
+(SQLAlchemy, asyncpg, Redis) in the same event loop. This avoids the classic
+"Future attached to a different loop" error that occurs with sync TestClient.
+
 Test journeys:
 1. Notes CRUD: Create -> List -> Get -> Search -> Delete
 2. Checkpoints lifecycle: Create -> List -> Get latest -> Summarize
@@ -25,12 +29,12 @@ import socket
 import time
 import uuid
 import warnings
-from typing import Any, Generator
+from typing import Any, AsyncGenerator
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 from tests.constants import (
     TEST_POSTGRES_HOST,
@@ -97,11 +101,14 @@ def _make_user(user_id: str, username: str) -> dict[str, Any]:
 
 
 @pytest.fixture
-def e2e_app(mock_feature_flags: MagicMock) -> Generator[FastAPI, None, None]:
+async def e2e_app(mock_feature_flags: MagicMock) -> AsyncGenerator[FastAPI, None]:
     """Create FastAPI app wired to real (or in-memory) backends.
 
     Uses the same backend selection as production: reads NOTES_BACKEND,
     PHASE_CHECKPOINT_BACKEND from settings to determine repository type.
+
+    This fixture is async so that SQLAlchemy engine creation happens inside
+    the same event loop used by httpx.AsyncClient (avoids loop mismatch).
     """
     from mcp_server_langgraph.api.v1 import memory as memory_module
     from mcp_server_langgraph.api.v1.memory import (
@@ -184,25 +191,25 @@ def e2e_app(mock_feature_flags: MagicMock) -> Generator[FastAPI, None, None]:
         set_notes_manager(None)
         set_checkpoint_manager(None)
         if engine is not None:
-            import asyncio
-
-            # Sync fixture can't await; asyncio.run() is safe here because
-            # TestClient runs its own event loop that's already closed at teardown
-            asyncio.run(engine.dispose())
+            await engine.dispose()
 
 
 @pytest.fixture
-def alice_client(e2e_app: FastAPI) -> TestClient:
-    """Test client authenticated as alice."""
+async def alice_client(e2e_app: FastAPI) -> AsyncGenerator[httpx.AsyncClient, None]:
+    """Async HTTP client authenticated as alice."""
     e2e_app.state.current_user = _make_user("user:alice-e2e", "alice")
-    return TestClient(e2e_app)
+    transport = httpx.ASGITransport(app=e2e_app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
 
 
 @pytest.fixture
-def bob_client(e2e_app: FastAPI) -> TestClient:
-    """Test client authenticated as bob."""
+async def bob_client(e2e_app: FastAPI) -> AsyncGenerator[httpx.AsyncClient, None]:
+    """Async HTTP client authenticated as bob."""
     e2e_app.state.current_user = _make_user("user:bob-e2e", "bob")
-    return TestClient(e2e_app)
+    transport = httpx.ASGITransport(app=e2e_app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
 
 
 # =============================================================================
@@ -219,9 +226,9 @@ class TestNotesE2EJourney:
     def teardown_method(self) -> None:
         gc.collect()
 
-    def test_create_note_returns_201_with_user_ownership(self, alice_client: TestClient) -> None:
+    async def test_create_note_returns_201_with_user_ownership(self, alice_client: httpx.AsyncClient) -> None:
         """POST /notes creates a note owned by the authenticated user."""
-        response = alice_client.post(
+        response = await alice_client.post(
             "/api/v1/memory/notes",
             json={
                 "content": f"E2E test note {uuid.uuid4().hex[:8]}",
@@ -236,10 +243,10 @@ class TestNotesE2EJourney:
         assert data["category"] == "research"
         assert "id" in data
 
-    def test_notes_crud_lifecycle(self, alice_client: TestClient) -> None:
+    async def test_notes_crud_lifecycle(self, alice_client: httpx.AsyncClient) -> None:
         """Full CRUD: create -> list -> get -> delete -> verify gone."""
         # Create
-        create_resp = alice_client.post(
+        create_resp = await alice_client.post(
             "/api/v1/memory/notes",
             json={
                 "content": f"Lifecycle note {uuid.uuid4().hex[:8]}",
@@ -251,51 +258,51 @@ class TestNotesE2EJourney:
         note_id = create_resp.json()["id"]
 
         # List (should include our note)
-        list_resp = alice_client.get("/api/v1/memory/notes")
+        list_resp = await alice_client.get("/api/v1/memory/notes")
         assert list_resp.status_code == 200
         notes = list_resp.json()["notes"]
         assert any(n["id"] == note_id for n in notes)
 
         # Get by ID
-        get_resp = alice_client.get(f"/api/v1/memory/notes/{note_id}")
+        get_resp = await alice_client.get(f"/api/v1/memory/notes/{note_id}")
         assert get_resp.status_code == 200
         assert get_resp.json()["id"] == note_id
 
         # Delete
-        del_resp = alice_client.delete(f"/api/v1/memory/notes/{note_id}")
+        del_resp = await alice_client.delete(f"/api/v1/memory/notes/{note_id}")
         assert del_resp.status_code == 204
 
         # Verify gone
-        get_resp2 = alice_client.get(f"/api/v1/memory/notes/{note_id}")
+        get_resp2 = await alice_client.get(f"/api/v1/memory/notes/{note_id}")
         assert get_resp2.status_code == 404
 
-    def test_list_notes_filters_by_category(self, alice_client: TestClient) -> None:
+    async def test_list_notes_filters_by_category(self, alice_client: httpx.AsyncClient) -> None:
         """GET /notes?category=X returns only matching notes."""
         suffix = uuid.uuid4().hex[:8]
 
-        alice_client.post(
+        await alice_client.post(
             "/api/v1/memory/notes",
             json={"content": f"Research {suffix}", "category": "research"},
         )
-        alice_client.post(
+        await alice_client.post(
             "/api/v1/memory/notes",
             json={"content": f"Analysis {suffix}", "category": "analysis"},
         )
 
-        resp = alice_client.get("/api/v1/memory/notes", params={"category": "research"})
+        resp = await alice_client.get("/api/v1/memory/notes", params={"category": "research"})
         assert resp.status_code == 200
         notes = resp.json()["notes"]
         assert all(n["category"] == "research" for n in notes)
 
-    def test_search_notes_returns_matching_content(self, alice_client: TestClient) -> None:
+    async def test_search_notes_returns_matching_content(self, alice_client: httpx.AsyncClient) -> None:
         """GET /notes?query=X returns notes matching the search term."""
         unique = uuid.uuid4().hex[:8]
-        alice_client.post(
+        await alice_client.post(
             "/api/v1/memory/notes",
             json={"content": f"quantum entanglement {unique}", "category": "research"},
         )
 
-        resp = alice_client.get("/api/v1/memory/notes", params={"query": unique})
+        resp = await alice_client.get("/api/v1/memory/notes", params={"query": unique})
         assert resp.status_code == 200
         notes = resp.json()["notes"]
         assert len(notes) >= 1
@@ -316,9 +323,9 @@ class TestCheckpointsE2EJourney:
     def teardown_method(self) -> None:
         gc.collect()
 
-    def test_create_checkpoint_returns_201(self, alice_client: TestClient) -> None:
+    async def test_create_checkpoint_returns_201(self, alice_client: httpx.AsyncClient) -> None:
         """POST /checkpoint creates a checkpoint for the authenticated user."""
-        response = alice_client.post(
+        response = await alice_client.post(
             "/api/v1/memory/checkpoint",
             json={
                 "phase": "research",
@@ -331,10 +338,10 @@ class TestCheckpointsE2EJourney:
         assert data["phase"] == "research"
         assert "id" in data
 
-    def test_checkpoint_create_list_latest_summarize_lifecycle(self, alice_client: TestClient) -> None:
+    async def test_checkpoint_create_list_latest_summarize_lifecycle(self, alice_client: httpx.AsyncClient) -> None:
         """Create multiple checkpoints -> list -> get latest -> summarize."""
         # Create two checkpoints in sequence
-        cp1 = alice_client.post(
+        cp1 = await alice_client.post(
             "/api/v1/memory/checkpoint",
             json={"phase": "research", "summary": "Started research"},
         )
@@ -342,26 +349,26 @@ class TestCheckpointsE2EJourney:
 
         time.sleep(0.05)  # Ensure ordering on loaded CI runners
 
-        cp2 = alice_client.post(
+        cp2 = await alice_client.post(
             "/api/v1/memory/checkpoint",
             json={"phase": "analysis", "summary": "Completed analysis"},
         )
         assert cp2.status_code == 201
 
         # List checkpoints
-        list_resp = alice_client.get("/api/v1/memory/checkpoint")
+        list_resp = await alice_client.get("/api/v1/memory/checkpoint")
         assert list_resp.status_code == 200
         checkpoints = list_resp.json()["checkpoints"]
         assert len(checkpoints) >= 2
 
         # Get latest
-        latest_resp = alice_client.get("/api/v1/memory/checkpoint/latest")
+        latest_resp = await alice_client.get("/api/v1/memory/checkpoint/latest")
         assert latest_resp.status_code == 200
         latest = latest_resp.json()
         assert latest["phase"] == "analysis"
 
         # Get summary
-        summary_resp = alice_client.get("/api/v1/memory/checkpoint/summary")
+        summary_resp = await alice_client.get("/api/v1/memory/checkpoint/summary")
         assert summary_resp.status_code == 200
         assert "summary" in summary_resp.json()
 
@@ -380,13 +387,18 @@ class TestCrossUserIsolationE2E:
     def teardown_method(self) -> None:
         gc.collect()
 
-    def test_alice_cannot_see_bobs_notes(self, alice_client: TestClient, bob_client: TestClient, e2e_app: FastAPI) -> None:
+    async def test_alice_cannot_see_bobs_notes(
+        self,
+        alice_client: httpx.AsyncClient,
+        bob_client: httpx.AsyncClient,
+        e2e_app: FastAPI,
+    ) -> None:
         """Alice's note listing should not include Bob's notes."""
         suffix = uuid.uuid4().hex[:8]
 
         # Bob creates a note (explicitly set identity before call)
         e2e_app.state.current_user = _make_user("user:bob-e2e", "bob")
-        bob_resp = bob_client.post(
+        bob_resp = await bob_client.post(
             "/api/v1/memory/notes",
             json={"content": f"Bob secret {suffix}", "category": "private"},
         )
@@ -395,20 +407,23 @@ class TestCrossUserIsolationE2E:
 
         # Alice lists her notes — Bob's note should not appear
         e2e_app.state.current_user = _make_user("user:alice-e2e", "alice")
-        alice_list = alice_client.get("/api/v1/memory/notes")
+        alice_list = await alice_client.get("/api/v1/memory/notes")
         assert alice_list.status_code == 200
         alice_note_ids = [n["id"] for n in alice_list.json()["notes"]]
         assert bob_note_id not in alice_note_ids
 
-    def test_alice_cannot_get_bobs_note_by_id(
-        self, alice_client: TestClient, bob_client: TestClient, e2e_app: FastAPI
+    async def test_alice_cannot_get_bobs_note_by_id(
+        self,
+        alice_client: httpx.AsyncClient,
+        bob_client: httpx.AsyncClient,
+        e2e_app: FastAPI,
     ) -> None:
         """Alice cannot retrieve Bob's note by ID (IDOR protection)."""
         suffix = uuid.uuid4().hex[:8]
 
         # Bob creates a note (explicitly set identity before call)
         e2e_app.state.current_user = _make_user("user:bob-e2e", "bob")
-        bob_resp = bob_client.post(
+        bob_resp = await bob_client.post(
             "/api/v1/memory/notes",
             json={"content": f"Bob private {suffix}", "category": "secret"},
         )
@@ -417,16 +432,21 @@ class TestCrossUserIsolationE2E:
 
         # Alice tries to get Bob's note by ID
         e2e_app.state.current_user = _make_user("user:alice-e2e", "alice")
-        alice_get = alice_client.get(f"/api/v1/memory/notes/{bob_note_id}")
+        alice_get = await alice_client.get(f"/api/v1/memory/notes/{bob_note_id}")
         assert alice_get.status_code == 404
 
-    def test_alice_cannot_delete_bobs_note(self, alice_client: TestClient, bob_client: TestClient, e2e_app: FastAPI) -> None:
+    async def test_alice_cannot_delete_bobs_note(
+        self,
+        alice_client: httpx.AsyncClient,
+        bob_client: httpx.AsyncClient,
+        e2e_app: FastAPI,
+    ) -> None:
         """Alice cannot delete Bob's note (IDOR protection)."""
         suffix = uuid.uuid4().hex[:8]
 
         # Bob creates a note (explicitly set identity before call)
         e2e_app.state.current_user = _make_user("user:bob-e2e", "bob")
-        bob_resp = bob_client.post(
+        bob_resp = await bob_client.post(
             "/api/v1/memory/notes",
             json={"content": f"Bob undeletable {suffix}", "category": "secure"},
         )
@@ -435,21 +455,24 @@ class TestCrossUserIsolationE2E:
 
         # Alice tries to delete Bob's note
         e2e_app.state.current_user = _make_user("user:alice-e2e", "alice")
-        alice_del = alice_client.delete(f"/api/v1/memory/notes/{bob_note_id}")
+        alice_del = await alice_client.delete(f"/api/v1/memory/notes/{bob_note_id}")
         assert alice_del.status_code == 404
 
         # Verify Bob's note still exists
         e2e_app.state.current_user = _make_user("user:bob-e2e", "bob")
-        bob_get = bob_client.get(f"/api/v1/memory/notes/{bob_note_id}")
+        bob_get = await bob_client.get(f"/api/v1/memory/notes/{bob_note_id}")
         assert bob_get.status_code == 200
 
-    def test_alice_cannot_see_bobs_checkpoints(
-        self, alice_client: TestClient, bob_client: TestClient, e2e_app: FastAPI
+    async def test_alice_cannot_see_bobs_checkpoints(
+        self,
+        alice_client: httpx.AsyncClient,
+        bob_client: httpx.AsyncClient,
+        e2e_app: FastAPI,
     ) -> None:
         """Alice's checkpoint listing should not include Bob's checkpoints."""
         # Bob creates a checkpoint (explicitly set identity before call)
         e2e_app.state.current_user = _make_user("user:bob-e2e", "bob")
-        bob_resp = bob_client.post(
+        bob_resp = await bob_client.post(
             "/api/v1/memory/checkpoint",
             json={"phase": "bob-only", "summary": "Bob's secret checkpoint"},
         )
@@ -457,20 +480,23 @@ class TestCrossUserIsolationE2E:
 
         # Alice lists checkpoints — Bob's should not appear
         e2e_app.state.current_user = _make_user("user:alice-e2e", "alice")
-        alice_list = alice_client.get("/api/v1/memory/checkpoint")
+        alice_list = await alice_client.get("/api/v1/memory/checkpoint")
         assert alice_list.status_code == 200
         phases = [c["phase"] for c in alice_list.json()["checkpoints"]]
         assert "bob-only" not in phases
 
-    def test_alice_search_does_not_return_bobs_notes(
-        self, alice_client: TestClient, bob_client: TestClient, e2e_app: FastAPI
+    async def test_alice_search_does_not_return_bobs_notes(
+        self,
+        alice_client: httpx.AsyncClient,
+        bob_client: httpx.AsyncClient,
+        e2e_app: FastAPI,
     ) -> None:
         """Alice's search should not return Bob's notes (IDOR via search)."""
         unique = uuid.uuid4().hex[:8]
 
         # Bob creates a note with unique content
         e2e_app.state.current_user = _make_user("user:bob-e2e", "bob")
-        bob_resp = bob_client.post(
+        bob_resp = await bob_client.post(
             "/api/v1/memory/notes",
             json={"content": f"bob-secret-{unique}", "category": "private"},
         )
@@ -478,7 +504,7 @@ class TestCrossUserIsolationE2E:
 
         # Alice searches for that unique content
         e2e_app.state.current_user = _make_user("user:alice-e2e", "alice")
-        resp = alice_client.get("/api/v1/memory/notes", params={"query": unique})
+        resp = await alice_client.get("/api/v1/memory/notes", params={"query": unique})
         assert resp.status_code == 200
         assert len(resp.json()["notes"]) == 0
 
@@ -531,7 +557,6 @@ class TestAgentStateE2E:
         if redis_client is not None:
             await redis_client.aclose()
 
-    @pytest.mark.asyncio
     async def test_agent_state_save_and_get(self, agent_state_repo) -> None:
         """Save agent state and retrieve it."""
         session_id = f"e2e-session-{uuid.uuid4().hex[:8]}"
@@ -546,7 +571,6 @@ class TestAgentStateE2E:
         # Cleanup
         await agent_state_repo.delete(session_id)
 
-    @pytest.mark.asyncio
     async def test_agent_state_checkpoint_and_list(self, agent_state_repo) -> None:
         """Checkpoint a session and list active sessions."""
         session_id = f"e2e-session-{uuid.uuid4().hex[:8]}"
@@ -565,7 +589,6 @@ class TestAgentStateE2E:
         # Cleanup
         await agent_state_repo.delete(session_id)
 
-    @pytest.mark.asyncio
     async def test_agent_state_delete_removes_session(self, agent_state_repo) -> None:
         """Deleting a session removes it from storage and index."""
         session_id = f"e2e-session-{uuid.uuid4().hex[:8]}"

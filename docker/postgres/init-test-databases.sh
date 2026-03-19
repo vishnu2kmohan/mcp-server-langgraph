@@ -68,14 +68,18 @@ echo "✓ pgvector extension enabled in all databases"
 # The compliance schema is required for E2E tests (test_infrastructure fixture checks for these tables)
 # Supports GDPR, HIPAA, SOC2, and FedRAMP compliance data storage
 # See: tests/fixtures/docker_fixtures.py - _verify_schema_ready()
-if [ -f "/docker-entrypoint-initdb.d/01-migrations/001_gdpr_schema.sql" ]; then
-    echo "Applying compliance schema to compliance_test database..."
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "compliance_test" \
-        -f /docker-entrypoint-initdb.d/01-migrations/001_gdpr_schema.sql
-    echo "✓ Compliance schema applied to compliance_test"
-else
-    echo "⚠ Compliance schema migration not found at /docker-entrypoint-initdb.d/01-migrations/001_gdpr_schema.sql"
-fi
+# Apply all numbered SQL migrations to compliance_test database in order
+# Each migration uses IF NOT EXISTS / IF NOT EXISTS for idempotency
+echo "Applying SQL migrations to compliance_test database..."
+for migration in /docker-entrypoint-initdb.d/01-migrations/[0-9]*.sql; do
+    if [ -f "$migration" ]; then
+        echo "  Applying $(basename "$migration")..."
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "compliance_test" \
+            -f "$migration"
+        echo "  ✓ $(basename "$migration") applied"
+    fi
+done
+echo "✓ All SQL migrations applied to compliance_test"
 
 # NOTE: agent_studio_test database schema is now managed by Alembic (alembic-migrate-test service)
 # The alembic-migrate-test service runs AFTER postgres-test is healthy and BEFORE mcp-server-test starts
