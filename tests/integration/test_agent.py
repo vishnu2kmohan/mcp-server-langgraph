@@ -45,7 +45,7 @@ class TestAgentGraph:
 
     @pytest.fixture(autouse=True)
     def _mock_pydantic_agent(self):
-        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+        with patch("mcp_server_langgraph.llm.pydantic_agent.create_pydantic_agent", return_value=None):
             yield
 
     def teardown_method(self):
@@ -73,6 +73,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Hello! I can help you."))
         mock_create_llm.return_value = mock_model
 
@@ -98,6 +99,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Search completed."))
         mock_create_llm.return_value = mock_model
 
@@ -122,6 +124,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Calculation result"))
         mock_create_llm.return_value = mock_model
 
@@ -145,6 +148,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Follow-up response"))
         mock_create_llm.return_value = mock_model
 
@@ -172,6 +176,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
         mock_create_llm.return_value = mock_model
 
@@ -229,6 +234,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response without LangSmith"))
         mock_create_llm.return_value = mock_model
 
@@ -252,6 +258,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
         mock_create_llm.return_value = mock_model
 
@@ -276,6 +283,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Search result"))
         mock_create_llm.return_value = mock_model
 
@@ -303,6 +311,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Handled empty input"))
         mock_create_llm.return_value = mock_model
 
@@ -332,6 +341,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
         mock_create_llm.return_value = mock_model
 
@@ -360,6 +370,7 @@ class TestAgentGraph:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         mock_model = MagicMock()
+        mock_model.bind_tools = MagicMock(return_value=mock_model)
         mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response to long history"))
         mock_create_llm.return_value = mock_model
 

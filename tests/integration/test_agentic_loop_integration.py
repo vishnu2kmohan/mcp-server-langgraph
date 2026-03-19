@@ -112,7 +112,7 @@ class TestAgenticLoopIntegration:
 
     @pytest.fixture(autouse=True)
     def _mock_pydantic_agent(self):
-        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+        with patch("mcp_server_langgraph.llm.pydantic_agent.create_pydantic_agent", return_value=None):
             yield
 
     def teardown_method(self):
@@ -379,7 +379,7 @@ class TestAgentGraphStructure:
 
     @pytest.fixture(autouse=True)
     def _mock_pydantic_agent(self):
-        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+        with patch("mcp_server_langgraph.llm.pydantic_agent.create_pydantic_agent", return_value=None):
             yield
 
     def teardown_method(self):

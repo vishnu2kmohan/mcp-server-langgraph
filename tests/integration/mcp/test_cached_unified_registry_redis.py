@@ -19,6 +19,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from mcp_server_langgraph.mcp.client.cached_unified_registry import (
+    generate_prompts_cache_key,
+    generate_resources_cache_key,
+    generate_server_capabilities_cache_key,
+    generate_server_list_cache_key,
+    generate_tools_cache_key,
+)
 from tests.constants import TEST_REDIS_PORT
 
 pytestmark = [
@@ -230,7 +237,7 @@ class TestCachedUnifiedRegistryRedis:
         await cached_registry.get_tools()
 
         # Verify cache was populated
-        cached = await redis_cache_service.aget("mcp:tools:all")
+        cached = await redis_cache_service.aget(generate_tools_cache_key(None))
         assert cached is not None
         assert len(cached) == 2
 
@@ -416,14 +423,14 @@ class TestCachedUnifiedRegistryRedis:
         await cached_registry.get_tools(server_name="test-server")
 
         # Verify cache was populated
-        cached = await redis_cache_service.aget("mcp:tools:test-server")
+        cached = await redis_cache_service.aget(generate_tools_cache_key("test-server"))
         assert cached is not None
 
         # Invalidate
         await cached_registry.invalidate_server("test-server")
 
         # Cache should be cleared
-        cached = await redis_cache_service.aget("mcp:tools:test-server")
+        cached = await redis_cache_service.aget(generate_tools_cache_key("test-server"))
         assert cached is None
 
     async def test_invalidate_server_also_clears_all_cache(self, cached_registry, redis_cache_service, mock_registry):
@@ -436,14 +443,14 @@ class TestCachedUnifiedRegistryRedis:
         await cached_registry.get_tools()
 
         # Verify cache was populated
-        cached = await redis_cache_service.aget("mcp:tools:all")
+        cached = await redis_cache_service.aget(generate_tools_cache_key(None))
         assert cached is not None
 
         # Invalidate a server
         await cached_registry.invalidate_server("test-server")
 
         # "all" cache should be cleared (contains this server's data)
-        cached = await redis_cache_service.aget("mcp:tools:all")
+        cached = await redis_cache_service.aget(generate_tools_cache_key(None))
         assert cached is None
 
     async def test_invalidate_all_clears_all_mcp_cache(self, cached_registry, redis_cache_service, mock_registry):
@@ -463,11 +470,11 @@ class TestCachedUnifiedRegistryRedis:
         await cached_registry.invalidate_all()
 
         # All caches should be cleared
-        assert await redis_cache_service.aget("mcp:tools:all") is None
-        assert await redis_cache_service.aget("mcp:resources:all") is None
-        assert await redis_cache_service.aget("mcp:prompts:all") is None
-        assert await redis_cache_service.aget("mcp:servers:all") is None
-        assert await redis_cache_service.aget("mcp:server:test-server:capabilities") is None
+        assert await redis_cache_service.aget(generate_tools_cache_key(None)) is None
+        assert await redis_cache_service.aget(generate_resources_cache_key(None)) is None
+        assert await redis_cache_service.aget(generate_prompts_cache_key(None)) is None
+        assert await redis_cache_service.aget(generate_server_list_cache_key()) is None
+        assert await redis_cache_service.aget(generate_server_capabilities_cache_key("test-server")) is None
 
     # =========================================================================
     # TTL Expiration Tests

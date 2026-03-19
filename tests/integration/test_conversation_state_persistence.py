@@ -36,9 +36,10 @@ def test_settings():
 @pytest.fixture
 def mock_llm():
     """Create a mock LLM for testing."""
-    llm = AsyncMock(return_value=None)  # Container for configured methods
+    llm = MagicMock()
     llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
     llm.invoke = MagicMock(return_value=AIMessage(content="Test response"))
+    llm.bind_tools = MagicMock(return_value=llm)
     return llm
 
 
@@ -48,7 +49,7 @@ class TestConversationStatePersistence:
 
     @pytest.fixture(autouse=True)
     def _mock_pydantic_agent(self):
-        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+        with patch("mcp_server_langgraph.llm.pydantic_agent.create_pydantic_agent", return_value=None):
             yield
 
     def teardown_method(self):
@@ -226,7 +227,7 @@ class TestConversationStatePersistence:
         # Mock pydantic agent to disable the real API call path
         with patch("mcp_server_langgraph.core.agent._initialize_pydantic_agent", return_value=None):
             with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
-                with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
+                with patch("mcp_server_langgraph.llm.verifier.OutputVerifier", return_value=mock_verifier):
                     graph = create_agent_graph(settings_with_verification)
 
                     # Act: Run the graph with verification

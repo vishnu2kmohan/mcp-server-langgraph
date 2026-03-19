@@ -520,7 +520,7 @@ class CachedUnifiedRegistry:
             count = await self._cache.adelete_pattern(pattern)
 
             # Also invalidate "all" keys since they contain this server's data
-            await self._cache.adelete_pattern(f"{CACHE_PREFIX}*:all")
+            await self._cache.adelete_pattern(f"{CACHE_PREFIX}*:all:*")
 
             logger.info(
                 "Invalidated cache for server",

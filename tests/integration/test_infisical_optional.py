@@ -169,7 +169,7 @@ class TestApplicationStartupWithoutInfisical:
         from mcp_server_langgraph.core.agent import create_agent_graph
 
         # Mock LLM creation and pydantic agent to avoid actual API calls
-        with patch("mcp_server_langgraph.core.agent_graph_builder.create_pydantic_agent", return_value=None):
+        with patch("mcp_server_langgraph.llm.pydantic_agent.create_pydantic_agent", return_value=None):
             with patch("mcp_server_langgraph.llm.factory.create_llm_from_config") as mock_llm:
                 mock_llm.return_value = MagicMock()
 
