@@ -13,16 +13,21 @@ import gc
 import socket
 import uuid
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from tests.constants import (
+    TEST_POSTGRES_DB,
     TEST_POSTGRES_HOST,
     TEST_POSTGRES_PASSWORD,
     TEST_POSTGRES_PORT,
     TEST_POSTGRES_USER,
 )
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.compliance.soc2.evidence import ComplianceReport
 
 pytestmark = [pytest.mark.integration, pytest.mark.repository]
 
@@ -30,7 +35,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.repository]
 def create_test_report(
     report_type: str = "daily",
     compliance_score: float = 95.0,
-) -> ComplianceReport:  # noqa: F821
+) -> ComplianceReport:
     from mcp_server_langgraph.compliance.soc2.evidence import ComplianceReport
 
     now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
@@ -72,7 +77,7 @@ class TestPostgresEvidenceRepository:
 
         database_url = (
             f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
-            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/compliance_test"
+            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
         )
         engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
         yield engine

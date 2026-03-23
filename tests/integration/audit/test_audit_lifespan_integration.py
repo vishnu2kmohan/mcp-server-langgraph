@@ -1,13 +1,15 @@
 """
 Tests for audit scheduler integration with FastAPI app lifespan.
 
-TDD RED phase: These tests define expected behavior for scheduler integration.
-
-The integration should:
+Tests verify that bootstrap/storage.py correctly manages audit scheduler lifecycle:
 - Start the audit scheduler on app startup when enabled
 - Not start the scheduler when disabled
 - Stop the scheduler gracefully on app shutdown
 - Use configuration from settings
+
+Architecture: create_app() → lifespan → bootstrap_all() → init_storage()
+init_storage() creates audit service, then conditionally creates and starts
+audit scheduler based on settings.audit_scheduler_enabled and audit_service presence.
 """
 
 import gc
@@ -20,12 +22,26 @@ from mcp_server_langgraph.core.config import Settings
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.skip(
-        reason="Test architecture outdated: app.py was refactored to use bootstrap/storage.py. "
-        "These tests need to be rewritten to mock bootstrap.storage.init_storage() or "
-        "the audit.factory module correctly. See ADR-0081 for bootstrap architecture."
-    ),
 ]
+
+
+def _make_storage_only_bootstrap():
+    """Create a mock bootstrap_all that only initializes storage.
+
+    Replaces the full bootstrap_all (which initializes auth, http, websocket,
+    skills, context_graph, semantic, model_sync) with a version that only
+    calls init_storage. This lets tests focus on audit scheduler behavior
+    without requiring 8+ other infrastructure services.
+    """
+
+    async def mock_bootstrap_all(settings):
+        from mcp_server_langgraph.bootstrap import AppState
+        from mcp_server_langgraph.bootstrap.storage import init_storage
+
+        storage = await init_storage(settings)
+        return AppState(storage=storage)
+
+    return mock_bootstrap_all
 
 
 @pytest.mark.integration
@@ -89,12 +105,16 @@ class TestAuditSchedulerLifespanIntegration:
 
         with (
             patch(
-                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
-                side_effect=create_mock_scheduler,
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.storage.get_audit_service",
-                side_effect=lambda: MagicMock(),
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
+                side_effect=create_mock_scheduler,
             ),
         ):
             # Create app with test settings
@@ -126,8 +146,17 @@ class TestAuditSchedulerLifespanIntegration:
             environment="test",
         )
 
-        # Mock the scheduler factory
-        with patch("mcp_server_langgraph.audit.factory.create_audit_scheduler") as mock_create_scheduler:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch("mcp_server_langgraph.audit.factory.create_audit_scheduler") as mock_create_scheduler,
+        ):
             # Create app with test settings
             app = create_app(
                 settings_override=test_settings,
@@ -180,12 +209,16 @@ class TestAuditSchedulerLifespanIntegration:
 
         with (
             patch(
-                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
-                side_effect=create_mock_scheduler,
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.storage.get_audit_service",
-                side_effect=lambda: MagicMock(),
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
+                side_effect=create_mock_scheduler,
             ),
         ):
             app = create_app(
@@ -238,12 +271,16 @@ class TestAuditSchedulerLifespanIntegration:
 
         with (
             patch(
-                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
-                side_effect=create_mock_scheduler,
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.storage.get_audit_service",
-                side_effect=lambda: MagicMock(),
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
+                side_effect=create_mock_scheduler,
             ),
         ):
             app = create_app(
@@ -261,12 +298,13 @@ class TestAuditSchedulerLifespanIntegration:
     @pytest.mark.asyncio
     async def test_scheduler_not_started_without_audit_service(self) -> None:
         """
-        GIVEN audit_scheduler_enabled=True but no audit service configured
+        GIVEN audit_scheduler_enabled=True but audit service creation fails
         WHEN the app starts
         THEN the scheduler is NOT started (graceful degradation).
 
-        PYTEST-XDIST FIX (2025-12-16): Use side_effect with lambda instead of
-        return_value=None to prevent MagicMock pollution across xdist workers.
+        init_storage wraps audit creation in try/except. When create_audit_repository
+        raises, audit_service stays None, and the scheduler condition
+        (audit_scheduler_enabled AND audit_service is not None) fails.
         """
         from mcp_server_langgraph.app import create_app
 
@@ -286,12 +324,16 @@ class TestAuditSchedulerLifespanIntegration:
 
         with (
             patch(
-                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
-                side_effect=mock_create_scheduler_tracking,
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.storage.get_audit_service",
-                side_effect=lambda: None,  # No audit service - use side_effect for xdist safety
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                side_effect=Exception("DB unavailable"),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
+                side_effect=mock_create_scheduler_tracking,
             ),
         ):
             app = create_app(
@@ -343,12 +385,7 @@ class TestAuditSchedulerDependencies:
         )
 
         # PYTEST-XDIST FIX: Track call kwargs via mutable container
-        call_tracker = {"create_kwargs": None, "audit_service_instance": None}
-
-        # Create a unique mock audit service to verify it's passed through
-        mock_audit_service = MagicMock()
-        mock_audit_service._test_marker = "unique_audit_service"
-        call_tracker["audit_service_instance"] = mock_audit_service
+        call_tracker = {"create_kwargs": None}
 
         def create_mock_scheduler(**kwargs):
             """Factory function to create fresh mock scheduler for each call."""
@@ -367,12 +404,16 @@ class TestAuditSchedulerDependencies:
 
         with (
             patch(
-                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
-                side_effect=create_mock_scheduler,
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
             ),
             patch(
-                "mcp_server_langgraph.bootstrap.storage.get_audit_service",
-                side_effect=lambda: call_tracker["audit_service_instance"],
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.factory.create_audit_scheduler",
+                side_effect=create_mock_scheduler,
             ),
         ):
             app = create_app(
@@ -383,7 +424,8 @@ class TestAuditSchedulerDependencies:
             with TestClient(app):
                 pass
 
-            # Verify audit_service was passed
+            # Verify audit_service was passed to create_audit_scheduler
             assert call_tracker["create_kwargs"] is not None, "create_audit_scheduler should have been called"
             assert "audit_service" in call_tracker["create_kwargs"]
-            assert call_tracker["create_kwargs"]["audit_service"] is mock_audit_service
+            # init_storage creates a real UnifiedAuditService with the mock repo
+            assert call_tracker["create_kwargs"]["audit_service"] is not None

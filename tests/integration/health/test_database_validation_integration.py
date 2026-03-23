@@ -34,7 +34,7 @@ def setup_test_environment(monkeypatch, integration_test_env):
     before attempting connections (prevents "Connection refused" errors).
     """
     monkeypatch.setenv("TESTING", "true")
-    monkeypatch.setenv("POSTGRES_DB", "compliance_test")
+    monkeypatch.setenv("POSTGRES_DB", "agent_studio_test")
 
 
 @pytest.mark.integration
@@ -54,7 +54,7 @@ class TestDatabaseValidationIntegration:
         Prerequisites:
         - docker-compose.test.yml running
         - migrations/000_init_databases.sh executed
-        - Databases: compliance_test, openfga_test, keycloak_test created
+        - Databases: agent_studio_test, openfga_test, keycloak_test created
         """
         # Get connection parameters from environment
         host = os.getenv("POSTGRES_HOST", "localhost")
@@ -75,12 +75,12 @@ class TestDatabaseValidationIntegration:
 
         # Should have all 3 databases
         assert len(result.databases) == 3
-        assert "compliance_test" in result.databases
+        assert "agent_studio_test" in result.databases
         assert "openfga_test" in result.databases
         assert "keycloak_test" in result.databases
 
         # GDPR database should be fully valid (migration-managed)
-        gdpr_result = result.databases["compliance_test"]
+        gdpr_result = result.databases["agent_studio_test"]
         assert gdpr_result.exists, "GDPR database should exist"
         assert gdpr_result.tables_valid, f"GDPR tables should be valid. Errors: {gdpr_result.errors}"
         assert len(gdpr_result.errors) == 0, f"GDPR database should have no errors: {gdpr_result.errors}"
@@ -131,7 +131,7 @@ class TestDatabaseValidationIntegration:
 
         # Get expected databases
         databases = validator.get_expected_databases()
-        gdpr_db_info = databases["compliance_test"]
+        gdpr_db_info = databases["agent_studio_test"]
 
         # Validate GDPR database specifically
         result = await validator.validate_database(gdpr_db_info)
@@ -176,7 +176,7 @@ class TestDatabaseValidationIntegration:
 
         # Should contain all databases
         assert len(result_dict["databases"]) == 3
-        for db_name in ["compliance_test", "openfga_test", "keycloak_test"]:
+        for db_name in ["agent_studio_test", "openfga_test", "keycloak_test"]:
             assert db_name in result_dict["databases"]
             db_info = result_dict["databases"][db_name]
             assert "exists" in db_info
@@ -186,7 +186,7 @@ class TestDatabaseValidationIntegration:
 
     async def test_environment_auto_detection_in_integration(self):
         """Should auto-detect test environment from POSTGRES_DB"""
-        # Environment variables already set by fixture (POSTGRES_DB=compliance_test)
+        # Environment variables already set by fixture (POSTGRES_DB=agent_studio_test)
         host = os.getenv("POSTGRES_HOST", "localhost")
         port = int(os.getenv("POSTGRES_PORT", "9432"))
         user = os.getenv("POSTGRES_USER", "postgres")
@@ -204,7 +204,7 @@ class TestDatabaseValidationIntegration:
 
         # Should expect _test suffix databases
         databases = validator.get_expected_databases()
-        assert "compliance_test" in databases
+        assert "agent_studio_test" in databases
         assert "openfga_test" in databases
         assert "keycloak_test" in databases
 

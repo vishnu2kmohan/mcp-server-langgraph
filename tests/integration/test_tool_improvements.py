@@ -62,6 +62,7 @@ class TestResponseFormatControl:
         mock_graph.checkpointer = None
         # Inject mock graph via DI (no more singleton patching issues)
         mcp_server.agent_graph = mock_graph
+        mcp_server._chat_handler.agent_graph = mock_graph
 
         # Mock span context
         mock_span = mocker.Mock()
@@ -97,6 +98,7 @@ class TestResponseFormatControl:
         mock_graph.checkpointer = None
         # Inject mock graph via DI (no more singleton patching issues)
         mcp_server.agent_graph = mock_graph
+        mcp_server._chat_handler.agent_graph = mock_graph
 
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
@@ -128,6 +130,7 @@ class TestResponseFormatControl:
         mock_graph.checkpointer = None
         # Inject mock graph via DI (no more singleton patching issues)
         mcp_server.agent_graph = mock_graph
+        mcp_server._chat_handler.agent_graph = mock_graph
 
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
@@ -479,6 +482,7 @@ class TestEndToEndToolImprovements:
         mock_graph.checkpointer = None
         # Inject mock graph via DI (no more singleton patching issues)
         mcp_server.agent_graph = mock_graph
+        mcp_server._chat_handler.agent_graph = mock_graph
 
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)

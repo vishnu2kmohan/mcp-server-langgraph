@@ -1,5 +1,4 @@
 import gc
-import os
 
 """Unit tests for agent.py - LangGraph Agent"""
 
@@ -7,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from tests.conftest import get_user_id
+from tests.constants import HAS_ANTHROPIC
 from langchain_core.messages import AIMessage, HumanMessage
 
 pytestmark = pytest.mark.integration
@@ -407,7 +407,7 @@ class TestAgentIntegration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="Requires ANTHROPIC_API_KEY")
+    @pytest.mark.skipif(not HAS_ANTHROPIC, reason="Requires ANTHROPIC_API_KEY or Vertex AI ADC")
     async def test_real_llm_invocation(self):
         """
         Test with real Anthropic API.

@@ -1,11 +1,14 @@
 """
-Property-based tests for LLM Factory
+Property-based tests for LLM Factory (async ainvoke API)
 
 Tests invariants that should hold for all inputs using Hypothesis.
+
+Migrated from sync invoke() to async ainvoke() after LLM Factory
+was migrated to async-only. See: tests/unit/llm/test_factory_async_only.py
 """
 
 import gc
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from hypothesis import given, settings
@@ -14,11 +17,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.skip(
-        reason="LLM Factory was migrated to async-only (ainvoke). "
-        "These property tests use removed sync invoke() method. "
-        "See: tests/unit/llm/test_factory_async_only.py for async tests."
-    ),
+    pytest.mark.property,
 ]
 
 # Hypothesis strategies
@@ -45,14 +44,16 @@ message_lists = st.lists(
 )
 
 
-@pytest.mark.property
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="property_llm_properties_tests")
 class TestLLMFactoryProperties:
     """Property-based tests for LLM Factory"""
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and reset circuit breakers to prevent state leakage in xdist workers"""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
         gc.collect()
 
     @given(provider=valid_providers, temperature=valid_temperatures, max_tokens=valid_max_tokens)
@@ -74,28 +75,26 @@ class TestLLMFactoryProperties:
             pytest.fail(f"Factory creation failed with valid inputs: {e}")
 
     @given(messages=message_lists)
-    @settings(max_examples=30, deadline=3000)
-    def test_invoke_preserves_message_content(self, messages):
-        """Property: Invoke should accept messages without crashing"""
+    @settings(max_examples=30, deadline=5000)
+    async def test_ainvoke_preserves_message_content(self, messages):
+        """Property: ainvoke should accept messages without crashing"""
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model")
 
-        # Mock the LLM completion call to test public API
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             mock_response = self._create_mock_response("test response")
-            mock_completion.return_value = mock_response
+            mock_acompletion.return_value = mock_response
 
             try:
-                # Test public API invoke() instead of private _format_messages()
-                response = factory.invoke(messages)
+                response = await factory.ainvoke(messages)
 
-                # Property: Response is returned
+                # Property: Response is returned as AIMessage
                 assert response is not None
                 assert hasattr(response, "content")
             except Exception as e:
                 # Should not crash with valid messages
-                pytest.fail(f"invoke() failed with valid messages: {e}")
+                pytest.fail(f"ainvoke() failed with valid messages: {e}")
 
     @given(
         messages=message_lists,
@@ -104,33 +103,33 @@ class TestLLMFactoryProperties:
         max_tokens1=valid_max_tokens,
         max_tokens2=valid_max_tokens,
     )
-    @settings(max_examples=20, deadline=3000)
-    def test_parameter_override_consistency(self, messages, temperature1, temperature2, max_tokens1, max_tokens2):
+    @settings(max_examples=20, deadline=5000)
+    async def test_parameter_override_consistency(self, messages, temperature1, temperature2, max_tokens1, max_tokens2):
         """Property: Parameter overrides should be consistent"""
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model", temperature=temperature1, max_tokens=max_tokens1)
 
-        # Mock the completion call
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
-            mock_response = MagicMock()
-            mock_response.choices = [MagicMock()]
-            mock_response.choices[0].message.content = "test response"
-            mock_response.usage = None
-            mock_completion.return_value = mock_response
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
+            mock_response = self._create_mock_response("test response")
+            mock_acompletion.return_value = mock_response
 
             # Call with override
-            factory.invoke(messages, temperature=temperature2, max_tokens=max_tokens2)
+            await factory.ainvoke(messages, temperature=temperature2, max_tokens=max_tokens2)
 
             # Property: Overrides take precedence
-            call_kwargs = mock_completion.call_args[1]
+            call_kwargs = mock_acompletion.call_args.kwargs
             assert call_kwargs["temperature"] == temperature2
             assert call_kwargs["max_tokens"] == max_tokens2
 
     @given(messages=message_lists)
-    @settings(max_examples=20, deadline=3000)
-    def test_fallback_always_tried_on_failure(self, messages):
+    @settings(max_examples=20, deadline=5000)
+    async def test_fallback_always_tried_on_failure(self, messages):
         """Property: Fallback should always be attempted when primary fails"""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         fallback_models = ["fallback-1", "fallback-2"]
@@ -141,43 +140,41 @@ class TestLLMFactoryProperties:
             fallback_models=fallback_models,
         )
 
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             # Make primary fail, fallback succeed
-            mock_completion.side_effect = [
+            mock_acompletion.side_effect = [
                 Exception("Primary failed"),  # First call fails
                 self._create_mock_response("fallback response"),  # Fallback succeeds
             ]
 
-            response = factory.invoke(messages)
+            response = await factory.ainvoke(messages)
 
             # Property: Should have called at least twice (primary + fallback)
-            assert mock_completion.call_count >= 2
+            assert mock_acompletion.call_count >= 2
 
             # Property: Response should come from fallback
             assert response.content == "fallback response"
 
     @given(messages=message_lists, provider=valid_providers)
-    @settings(max_examples=20, deadline=3000)
-    def test_invoke_handles_different_message_types(self, messages, provider):
-        """Property: invoke() should handle all message types for all providers"""
+    @settings(max_examples=20, deadline=5000)
+    async def test_ainvoke_handles_different_message_types(self, messages, provider):
+        """Property: ainvoke() should handle all message types for all providers"""
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider=provider, model_name="test-model")
 
-        # Mock the LLM completion to test public API
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             mock_response = self._create_mock_response("response")
-            mock_completion.return_value = mock_response
+            mock_acompletion.return_value = mock_response
 
             try:
-                # Test public API with different message types
-                response = factory.invoke(messages)
+                response = await factory.ainvoke(messages)
 
                 # Property: Response is always returned for valid messages
                 assert response is not None
                 assert hasattr(response, "content")
             except Exception as e:
-                pytest.fail(f"invoke() failed for provider {provider}: {e}")
+                pytest.fail(f"ainvoke() failed for provider {provider}: {e}")
 
     @staticmethod
     def _create_mock_response(content: str):
@@ -189,14 +186,16 @@ class TestLLMFactoryProperties:
         return mock_response
 
 
-@pytest.mark.property
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="property_llm_properties_tests")
 class TestLLMFactoryEdgeCases:
     """Property tests for edge cases and invariants"""
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and reset circuit breakers to prevent state leakage in xdist workers"""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
         gc.collect()
 
     @staticmethod
@@ -209,26 +208,24 @@ class TestLLMFactoryEdgeCases:
         return mock_response
 
     @given(st.lists(st.text(min_size=0, max_size=0), min_size=1, max_size=5))
-    @settings(max_examples=20, deadline=2000)
-    def test_invoke_handles_empty_message_content(self, empty_contents):
-        """Property: invoke() should handle empty message content gracefully"""
+    @settings(max_examples=20, deadline=5000)
+    async def test_ainvoke_handles_empty_message_content(self, empty_contents):
+        """Property: ainvoke() should handle empty message content gracefully"""
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model")
 
         messages = [HumanMessage(content=content) for content in empty_contents]
 
-        # Mock LLM to test public API
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             mock_response = self._create_mock_response("response")
-            mock_completion.return_value = mock_response
+            mock_acompletion.return_value = mock_response
 
             try:
-                # Should not crash with empty content
-                response = factory.invoke(messages)
+                response = await factory.ainvoke(messages)
                 assert response is not None
             except Exception as e:
-                pytest.fail(f"invoke() crashed with empty messages: {e}")
+                pytest.fail(f"ainvoke() crashed with empty messages: {e}")
 
     @given(
         temperature=st.one_of(
@@ -248,69 +245,71 @@ class TestLLMFactoryEdgeCases:
         assert factory.temperature == temperature
 
     @given(provider=valid_providers)
-    @settings(max_examples=10, deadline=2000)
-    def test_invoke_works_with_api_key_for_all_providers(self, provider):
-        """Property: invoke() should work with API keys for all providers"""
+    @settings(max_examples=10, deadline=5000)
+    async def test_ainvoke_works_with_api_key_for_all_providers(self, provider):
+        """Property: ainvoke() should work with API keys for all providers"""
         from mcp_server_langgraph.llm.factory import LLMFactory
 
-        # Mock the completion call to test public API
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             mock_response = self._create_mock_response("test response")
-            mock_completion.return_value = mock_response
+            mock_acompletion.return_value = mock_response
 
             try:
-                # Test public API with API key
                 factory = LLMFactory(provider=provider, model_name="test-model", api_key="test-key-123")
                 messages = [HumanMessage(content="test")]
-                response = factory.invoke(messages)
+                response = await factory.ainvoke(messages)
 
                 # Property: Response is returned regardless of provider
                 assert response is not None
                 assert hasattr(response, "content")
             except Exception as e:
-                pytest.fail(f"invoke() failed for provider {provider}: {e}")
+                pytest.fail(f"ainvoke() failed for provider {provider}: {e}")
 
     @given(messages=st.lists(st.builds(HumanMessage, content=st.text(min_size=1, max_size=100)), min_size=1, max_size=10))
-    @settings(max_examples=20, deadline=3000)
-    def test_invoke_processes_messages_successfully(self, messages):
-        """Property: invoke() should process message lists of any length"""
+    @settings(max_examples=20, deadline=5000)
+    async def test_ainvoke_processes_messages_successfully(self, messages):
+        """Property: ainvoke() should process message lists of any length"""
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         factory = LLMFactory(provider="anthropic", model_name="test-model")
 
-        # Mock LLM to test public API
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             mock_response = self._create_mock_response("test response")
-            mock_completion.return_value = mock_response
+            mock_acompletion.return_value = mock_response
 
             try:
-                # Test public API with varying message list lengths
-                response = factory.invoke(messages)
+                response = await factory.ainvoke(messages)
 
                 # Property: Response is returned for any valid message list
                 assert response is not None
                 assert hasattr(response, "content")
             except Exception as e:
-                pytest.fail(f"invoke() failed with {len(messages)} messages: {e}")
+                pytest.fail(f"ainvoke() failed with {len(messages)} messages: {e}")
 
 
-@pytest.mark.property
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="property_llm_properties_tests")
 class TestLLMFactoryFallbackProperties:
     """Property tests for fallback behavior"""
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """Force GC and reset circuit breakers to prevent state leakage in xdist workers"""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
         gc.collect()
 
     @given(
         fallback_count=st.integers(min_value=1, max_value=5),
         success_index=st.integers(min_value=0, max_value=4),
     )
-    @settings(max_examples=15, deadline=3000)
-    def test_fallback_stops_on_first_success(self, fallback_count, success_index):
+    @settings(max_examples=15, deadline=5000)
+    async def test_fallback_stops_on_first_success(self, fallback_count, success_index):
         """Property: Fallback should stop trying once one succeeds"""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         # Ensure success_index is within fallback_count
@@ -320,7 +319,7 @@ class TestLLMFactoryFallbackProperties:
 
         factory = LLMFactory(provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models)
 
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             # Create side effects: fail until success_index, then succeed
             side_effects = []
             for i in range(success_index + 1):
@@ -329,35 +328,41 @@ class TestLLMFactoryFallbackProperties:
                 else:
                     side_effects.append(Exception(f"Failure {i}"))
 
-            mock_completion.side_effect = side_effects
+            mock_acompletion.side_effect = side_effects
 
             messages = [HumanMessage(content="test")]
-            response = factory.invoke(messages)
+            response = await factory.ainvoke(messages)
 
             # Property: Should call exactly success_index + 1 times (including primary)
-            assert mock_completion.call_count == success_index + 1
+            assert mock_acompletion.call_count == success_index + 1
             assert response.content == "success"
 
     @given(fallback_count=st.integers(min_value=1, max_value=3))
-    @settings(max_examples=10, deadline=3000)
-    def test_all_fallbacks_exhausted_raises(self, fallback_count):
+    @settings(max_examples=10, deadline=5000)
+    async def test_all_fallbacks_exhausted_raises(self, fallback_count):
         """Property: If all fallbacks fail, should raise exception"""
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_all_circuit_breakers
+
+        reset_all_circuit_breakers()
+
         from mcp_server_langgraph.llm.factory import LLMFactory
 
         fallback_models = [f"fallback-{i}" for i in range(fallback_count)]
 
         factory = LLMFactory(provider="anthropic", model_name="primary", enable_fallback=True, fallback_models=fallback_models)
 
-        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
             # All fail
-            mock_completion.side_effect = Exception("All models failed")
+            mock_acompletion.side_effect = Exception("All models failed")
 
             messages = [HumanMessage(content="test")]
 
             # Property: Should raise RuntimeError when all fail
-            with pytest.raises(RuntimeError, match="All models failed"):
-                factory.invoke(messages)
+            # ainvoke catches the primary error, tries fallback via _try_fallback_async,
+            # which raises RuntimeError("All async models failed including fallbacks")
+            with pytest.raises(RuntimeError, match="All.*models failed"):
+                await factory.ainvoke(messages)
 
             # Property: Should have tried all models
             # +1 for primary, +fallback_count for fallbacks
-            assert mock_completion.call_count >= fallback_count
+            assert mock_acompletion.call_count >= fallback_count

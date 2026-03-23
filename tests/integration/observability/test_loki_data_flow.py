@@ -315,9 +315,10 @@ class TestLokiAttributeNamingConventions:
         """
         GIVEN a LokiLoggingClient
         WHEN get_logs_by_attribute is called
-        THEN it should construct LogQL with the attribute as a label selector.
+        THEN it should construct LogQL with the label key as a label selector.
 
-        This validates the LogQL template uses the attribute name directly.
+        The client maps dotted OTEL attributes to underscore labels (e.g.
+        session.id -> session_id) before building the LogQL stream selector.
         """
         import inspect
 
@@ -325,8 +326,8 @@ class TestLokiAttributeNamingConventions:
 
         source = inspect.getsource(loki)
 
-        # The Loki client should use the attribute directly in LogQL
-        # Looking for pattern like: logql = f'{{{attribute}="{value}"}}'
-        assert "logql = f'{{{attribute}=\"" in source or "{attribute}=" in source, (
-            "LokiLoggingClient should construct LogQL using attribute directly"
+        # The Loki client maps attribute -> label_key (dots to underscores)
+        # then builds LogQL like: logql = f'{{{label_key}="{value}"}}'
+        assert "{label_key}=" in source or "label_key" in source, (
+            "LokiLoggingClient should construct LogQL using label_key (mapped from attribute)"
         )

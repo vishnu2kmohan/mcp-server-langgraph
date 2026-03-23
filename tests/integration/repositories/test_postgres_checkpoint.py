@@ -9,19 +9,25 @@ Phase 4: PostgreSQL Repositories (SQLAlchemy AsyncSession)
 
 from __future__ import annotations
 
+import asyncio
 import gc
 import socket
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from tests.constants import (
+    TEST_POSTGRES_DB,
     TEST_POSTGRES_HOST,
     TEST_POSTGRES_PASSWORD,
     TEST_POSTGRES_PORT,
     TEST_POSTGRES_USER,
 )
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.memory.checkpoints import Checkpoint
 
 pytestmark = [pytest.mark.integration, pytest.mark.repository]
 
@@ -30,7 +36,7 @@ def create_test_checkpoint(
     user_id: str | None = None,
     phase: str = "research",
     summary: str = "Completed research phase",
-) -> Checkpoint:  # noqa: F821
+) -> Checkpoint:
     from mcp_server_langgraph.memory.checkpoints import Checkpoint
 
     return Checkpoint(
@@ -63,7 +69,7 @@ class TestPostgresCheckpointRepository:
 
         database_url = (
             f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
-            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/compliance_test"
+            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
         )
         engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
         yield engine
@@ -91,8 +97,6 @@ class TestPostgresCheckpointRepository:
         assert retrieved.phase == "research"
 
     async def test_get_latest(self, repo):
-        import asyncio
-
         cp1 = create_test_checkpoint(phase="research", summary="First")
         await repo.create(cp1)
         await asyncio.sleep(0.01)  # Ensure different timestamps

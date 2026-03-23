@@ -33,16 +33,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 # ============================================================================
 
 
-@pytest.fixture(scope="module")
-def event_loop():
-    """Create event loop for the module."""
-    import asyncio
-
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
 def _database_available() -> bool:
     """Check if the test database is available."""
     import socket
@@ -63,7 +53,6 @@ async def test_engine():
     if not _database_available():
         pytest.skip("PostgreSQL not available for integration tests")
 
-    # Use test database URL from environment or default
     database_url = os.getenv(
         "TEST_DATABASE_URL",
         "postgresql+asyncpg://postgres:postgres@localhost:9432/agent_studio_test",
@@ -78,28 +67,11 @@ async def test_engine():
             pool_pre_ping=True,
         )
 
-        # Test connection
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
 
-    except Exception:
-        # Try compliance_test database as fallback
-        database_url = os.getenv(
-            "TEST_DATABASE_URL",
-            "postgresql+asyncpg://postgres:postgres@localhost:9432/compliance_test",
-        )
-        try:
-            engine = create_async_engine(
-                database_url,
-                echo=False,
-                pool_size=5,
-                max_overflow=10,
-                pool_pre_ping=True,
-            )
-            async with engine.begin() as conn:
-                await conn.execute(text("SELECT 1"))
-        except Exception as e:
-            pytest.skip(f"PostgreSQL not available: {e}")
+    except Exception as e:
+        pytest.skip(f"PostgreSQL not available: {e}")
 
     yield engine
 
@@ -109,34 +81,20 @@ async def test_engine():
 @pytest.fixture(scope="module")
 async def setup_database(test_engine):
     """
-    Setup push_subscriptions table for testing.
+    Verify push_subscriptions table exists (Alembic-managed schema).
 
-    Handles two scenarios:
-    1. Fresh database - creates the table
-    2. Existing database (from migrations) - uses existing table
+    Schema is created by Alembic migrations (docker-compose.test.yml alembic-migrate-test).
+    This fixture validates the table exists rather than creating it, avoiding
+    xdist collisions with Base.metadata.create_all().
     """
-    from mcp_server_langgraph.models.base import Base
-
-    tables_created = False
-
     async with test_engine.begin() as conn:
-        # Check if table already exists
         result = await conn.execute(
             text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'push_subscriptions')")
         )
-        tables_exist = result.scalar()
+        if not result.scalar():
+            pytest.skip("push_subscriptions table not found — run Alembic migrations first")
 
-        if not tables_exist:
-            # Fresh database - create table
-            await conn.run_sync(Base.metadata.create_all)
-            tables_created = True
-
-    yield
-
-    # Only cleanup if we created the table
-    if tables_created:
-        async with test_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
+    return
 
 
 @pytest.fixture

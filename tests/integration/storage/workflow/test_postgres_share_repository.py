@@ -57,7 +57,7 @@ async def async_engine() -> AsyncGenerator[AsyncEngine, None]:
     Create an async SQLAlchemy engine for PostgreSQL testing.
 
     Requires PostgreSQL with TSVECTOR support - cannot fallback to SQLite.
-    Uses docker-compose.test.yml PostgreSQL instance.
+    Uses docker-compose.test.yml PostgreSQL instance with Alembic-managed schema.
     """
     if not _database_available():
         pytest.skip(
@@ -73,29 +73,21 @@ async def async_engine() -> AsyncGenerator[AsyncEngine, None]:
 
     engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
 
-    # Test connection before proceeding
+    # Test connection and verify Alembic-managed schema
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
+            result = await conn.execute(
+                text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'workflows')")
+            )
+            if not result.scalar():
+                await engine.dispose()
+                pytest.skip("workflows table not found — run Alembic migrations first")
     except Exception as e:
         await engine.dispose()
         pytest.skip(f"PostgreSQL connection failed: {e}")
 
-    # Import models BEFORE create_all so they register with Base.metadata
-    from mcp_server_langgraph.models.base import Base
-
-    import mcp_server_langgraph.storage.workflow.postgres_models  # noqa: F401 — registers WorkflowModel, WorkflowShareModel, WorkflowVersionModel
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
     yield engine
-
-    # Cleanup: drop tables with CASCADE to handle FK dependencies
-    # (Base.metadata.drop_all fails when execution_plans FK → sessions blocks drop order)
-    async with engine.begin() as conn:
-        for table in reversed(Base.metadata.sorted_tables):
-            await conn.execute(text(f"DROP TABLE IF EXISTS {table.name} CASCADE"))
 
     await engine.dispose()
 
@@ -108,6 +100,21 @@ async def repo(async_engine: AsyncEngine) -> PostgresWorkflowShareRepository:
     )
 
     return PostgresWorkflowShareRepository(engine=async_engine)
+
+
+@pytest.fixture(autouse=True)
+async def cleanup_test_data(async_engine: AsyncEngine):
+    """Clean up test data before and after each test to prevent data pollution."""
+
+    async def _cleanup():
+        async with AsyncSession(async_engine) as session:
+            async with session.begin():
+                await session.execute(text("DELETE FROM workflow_shares WHERE created_by = 'owner-user'"))
+                await session.execute(text("DELETE FROM workflows WHERE user_id = 'owner-user'"))
+
+    await _cleanup()
+    yield
+    await _cleanup()
 
 
 @pytest.fixture

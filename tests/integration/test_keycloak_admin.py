@@ -22,11 +22,11 @@ from tests.conftest import get_user_id
 # Test configuration - can be overridden via environment variables
 # CRITICAL: Include /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
 KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082/authn")
-KEYCLOAK_TEST_REALM = os.getenv("KEYCLOAK_TEST_REALM", "test-realm")
+KEYCLOAK_TEST_REALM = os.getenv("KEYCLOAK_TEST_REALM", "default")
 KEYCLOAK_TEST_CLIENT_ID = os.getenv("KEYCLOAK_TEST_CLIENT_ID", "test-client")
 KEYCLOAK_TEST_CLIENT_SECRET = os.getenv("KEYCLOAK_TEST_CLIENT_SECRET", "test-secret")  # gitleaks:allow
 KEYCLOAK_ADMIN_USER = os.getenv("KEYCLOAK_ADMIN_USER", "admin")
-KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD", "admin")
+KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD", "admin123")
 
 # Skip integration tests if Keycloak is not available
 pytestmark = pytest.mark.integration

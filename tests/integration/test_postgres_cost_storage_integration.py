@@ -30,16 +30,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.cost, pytest.mark.asyncio]
 # ============================================================================
 
 
-@pytest.fixture(scope="module")
-def event_loop():
-    """Create event loop for the module."""
-    import asyncio
-
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
 def _database_available() -> bool:
     """Check if the test database is available."""
     import socket
@@ -91,13 +81,12 @@ async def test_engine():
 @pytest.fixture(scope="module")
 async def setup_database(test_engine):
     """
-    Setup token_usage_records table for testing.
+    Verify token_usage_records table exists (Alembic-managed schema).
 
-    Handles two scenarios:
-    1. Fresh database - creates the table
-    2. Existing database (from migrations) - uses existing table
+    Schema is created by Alembic migrations (docker-compose.test.yml alembic-migrate-test).
+    This fixture validates the table exists rather than creating it, avoiding
+    schema duplication between tests and Alembic.
     """
-    # Check if table exists and has required columns
     async with test_engine.begin() as conn:
         result = await conn.execute(
             text("""
@@ -107,52 +96,8 @@ async def setup_database(test_engine):
                 )
             """)
         )
-        table_exists = result.scalar()
-
-        if table_exists:
-            # Check if created_at column exists (may be missing from old schema)
-            col_result = await conn.execute(
-                text("""
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.columns
-                        WHERE table_name = 'token_usage_records'
-                        AND column_name = 'created_at'
-                    )
-                """)
-            )
-            has_created_at = col_result.scalar()
-            if not has_created_at:
-                # Drop and recreate to match current model schema
-                await conn.execute(text("DROP TABLE token_usage_records"))
-                table_exists = False
-
-        if not table_exists:
-            # Create table matching the SQLAlchemy model (TokenUsageRecord)
-            # Column names must match the model: 'metadata' not 'metadata_',
-            # 'created_at' added, cost precision matches NUMERIC(10, 6)
-            await conn.execute(
-                text("""
-                    CREATE TABLE IF NOT EXISTS token_usage_records (
-                        id SERIAL PRIMARY KEY,
-                        timestamp TIMESTAMPTZ NOT NULL,
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                        user_id VARCHAR(255) NOT NULL,
-                        session_id VARCHAR(255) NOT NULL,
-                        model VARCHAR(255) NOT NULL,
-                        provider VARCHAR(255) NOT NULL,
-                        prompt_tokens INTEGER NOT NULL,
-                        completion_tokens INTEGER NOT NULL,
-                        total_tokens INTEGER NOT NULL,
-                        estimated_cost_usd NUMERIC(10, 6) NOT NULL,
-                        feature VARCHAR(255) DEFAULT 'chat',
-                        metadata JSON,
-                        organization_id VARCHAR(255),
-                        project_id VARCHAR(255),
-                        team_id VARCHAR(255),
-                        allocation_tags JSONB
-                    )
-                """)
-            )
+        if not result.scalar():
+            pytest.skip("token_usage_records table not found — run Alembic migrations first")
 
     yield
 

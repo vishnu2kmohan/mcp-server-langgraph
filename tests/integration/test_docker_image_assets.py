@@ -179,6 +179,7 @@ class TestDockerTestImageAssets:
 
     @pytest.mark.integration
     @pytest.mark.slow
+    @pytest.mark.timeout(420)
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
     @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
     @requires_tool("docker")
@@ -249,6 +250,7 @@ class TestDockerTestImageAssets:
 
     @pytest.mark.integration
     @pytest.mark.slow
+    @pytest.mark.timeout(420)
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
     @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
     @requires_tool("docker")

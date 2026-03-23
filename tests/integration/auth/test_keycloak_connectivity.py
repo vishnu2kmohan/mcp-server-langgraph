@@ -14,6 +14,7 @@ Usage:
 """
 
 import gc
+import os
 import subprocess
 
 import pytest
@@ -294,23 +295,22 @@ class TestKeycloakConnectivity:
 
         try:
             # Get admin token from master realm
+            admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD", "admin123")
             response = httpx.post(
                 "http://localhost/authn/realms/master/protocol/openid-connect/token",
                 data={
                     "grant_type": "password",
                     "client_id": "admin-cli",
                     "username": "admin",
-                    "password": "admin",
+                    "password": admin_password,
                 },
                 timeout=10.0,
             )
 
             if response.status_code == 200:
-                print("✅ Keycloak admin API accessible (admin/admin)")
+                print("✅ Keycloak admin API accessible")
             elif response.status_code == 401:
-                pytest.skip(
-                    "Keycloak admin credentials are not admin/admin.\nThis is expected in production-like environments."
-                )
+                pytest.skip("Keycloak admin credentials are invalid.\nThis is expected in production-like environments.")
             else:
                 pytest.skip(f"Keycloak admin login returned {response.status_code}.\nResponse: {response.text[:200]}")
 

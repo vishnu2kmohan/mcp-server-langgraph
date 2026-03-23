@@ -138,6 +138,10 @@ class TestOpenFGAGlobalInitialization:
         mock_settings.enable_file_logging = False
 
         # Patch where the imports are used (server_streamable imports at module level)
+        # Also patch function-level imports in lifespan for init_storage, query clients, cleanup
+        mock_storage_state = AsyncMock()  # noqa: async-mock-config (configured on next line)
+        mock_storage_state.cleanup = AsyncMock(return_value=None)
+
         with (
             patch("mcp_server_langgraph.mcp.server_streamable.settings", mock_settings),
             patch(
@@ -157,6 +161,31 @@ class TestOpenFGAGlobalInitialization:
                 new_callable=AsyncMock,
             ),
             patch("mcp_server_langgraph.observability.telemetry.shutdown_observability"),
+            # Function-level imports in lifespan that perform real I/O
+            patch(
+                "mcp_server_langgraph.bootstrap.storage.init_storage",
+                new_callable=AsyncMock,
+                return_value=mock_storage_state,
+            ),
+            patch(
+                "mcp_server_langgraph.observability.query.factory.init_query_clients",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "mcp_server_langgraph.observability.query.factory.get_tracing_client",
+                return_value=MagicMock(),
+            ),
+            patch(
+                "mcp_server_langgraph.observability.query.factory.close_query_clients",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "mcp_server_langgraph.lifecycle.cleanup.cleanup_all_clients",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "mcp_server_langgraph.auth.middleware.set_global_auth_middleware",
+            ),
         ):
             mock_get_server.return_value = MagicMock(auth=MagicMock())
 

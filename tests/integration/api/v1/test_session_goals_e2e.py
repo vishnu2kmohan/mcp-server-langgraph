@@ -17,7 +17,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from mcp_server_langgraph.api.v1.sessions import sessions_router
-from mcp_server_langgraph.models.base import Base
 from mcp_server_langgraph.repositories.session_goal import PostgresSessionGoalRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -36,18 +35,12 @@ def _database_available() -> bool:
 
 
 @pytest.fixture(scope="module")
-def event_loop():
-    """Create event loop for the module."""
-    import asyncio
-
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="module")
 async def test_engine():
-    """Create a test database engine."""
+    """Create a test database engine.
+
+    Schema is managed by Alembic migrations (docker-compose.test.yml alembic-migrate-test).
+    No Base.metadata.create_all() — avoids xdist collisions with Alembic-managed tables.
+    """
     if not _database_available():
         pytest.skip("PostgreSQL not available for integration tests")
 
@@ -65,11 +58,14 @@ async def test_engine():
     )
 
     try:
-        # Test connection and create tables
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
-            # Create session_goals table if not exists
-            await conn.run_sync(Base.metadata.create_all)
+            # Verify session_goals table exists (Alembic-managed)
+            result = await conn.execute(
+                text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'session_goals')")
+            )
+            if not result.scalar():
+                pytest.skip("session_goals table not found — run Alembic migrations first")
     except Exception as e:
         pytest.skip(f"Could not connect to test database: {e}")
 

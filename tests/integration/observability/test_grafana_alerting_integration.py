@@ -42,7 +42,7 @@ pytestmark = [
 ]
 
 # Default Grafana URL for local testing
-DEFAULT_GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
+DEFAULT_GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:13001")
 
 
 def _grafana_alerting_available() -> bool:

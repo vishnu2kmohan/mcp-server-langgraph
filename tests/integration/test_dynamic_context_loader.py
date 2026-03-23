@@ -5,7 +5,6 @@ Tests semantic search, indexing, progressive discovery, and caching.
 """
 
 import gc
-import os
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,6 +17,7 @@ from mcp_server_langgraph.core.dynamic_context_loader import (
     LoadedContext,
     search_and_load_context,
 )
+from tests.constants import has_google_credentials
 
 pytestmark = [pytest.mark.integration]
 
@@ -418,8 +418,8 @@ class TestSearchAndLoadContext:
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="dynamic_context_loader_tests")
 @pytest.mark.skipif(
-    not (os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("GOOGLE_API_KEY")),
-    reason="Google credentials not set - requires GOOGLE_APPLICATION_CREDENTIALS (Vertex AI) or GOOGLE_API_KEY (Gemini)",
+    not has_google_credentials(),
+    reason="Google credentials not set - requires GOOGLE_APPLICATION_CREDENTIALS, GOOGLE_API_KEY, or gcloud ADC",
 )
 class TestDynamicContextIntegration:
     """Integration tests requiring actual Qdrant instance and Google credentials (Vertex AI or Gemini)"""

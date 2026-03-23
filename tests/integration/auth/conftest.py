@@ -11,6 +11,8 @@ These fixtures are centralized here to avoid duplicate autouse fixtures
 across test files (best practice per tests/meta/test_fixture_organization.py).
 """
 
+import os
+
 import pytest
 import requests
 
@@ -249,7 +251,7 @@ def _keycloak_admin_api_available() -> bool:
 
     This validates that:
     1. Keycloak master realm is accessible
-    2. Admin credentials (admin/admin) are valid
+    2. Admin credentials (admin/admin123) are valid
     3. Admin API can be queried
 
     Tests that require admin API access should be skipped if this returns False.
@@ -264,13 +266,14 @@ def _keycloak_admin_api_available() -> bool:
     """
     try:
         # Get admin token from master realm using admin-cli (Keycloak's standard pattern)
+        admin_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD", "admin123")
         token_response = requests.post(
             "http://localhost/authn/realms/master/protocol/openid-connect/token",
             data={
                 "grant_type": "password",
                 "client_id": "admin-cli",
                 "username": "admin",
-                "password": "admin",
+                "password": admin_password,
             },
             timeout=5,
         )

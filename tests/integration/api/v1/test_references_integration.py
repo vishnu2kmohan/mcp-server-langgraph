@@ -432,7 +432,7 @@ class TestReferencesAPIIntegration:
         ):
             mock_flags.enable_markdown_references = True
             mock_manager = MagicMock()
-            mock_manager.get_note = MagicMock(return_value=mock_note)
+            mock_manager.get_note = AsyncMock(return_value=mock_note)
             mock_manager_fn.return_value = mock_manager
 
             async with AsyncClient(

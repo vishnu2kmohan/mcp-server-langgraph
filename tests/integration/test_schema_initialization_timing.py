@@ -24,6 +24,7 @@ References:
 
 import gc
 import os
+import re
 
 import pytest
 
@@ -42,7 +43,7 @@ class TestSchemaInitializationTiming:
     @pytest.mark.asyncio
     async def test_gdpr_schema_tables_exist_before_tests(self, integration_test_env):
         """
-        Should verify all GDPR tables exist in compliance_test database.
+        Should verify all GDPR tables exist in agent_studio_test database.
 
         This test runs early in the integration suite to catch schema
         initialization failures before other tests start.
@@ -63,7 +64,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+            database=os.getenv("POSTGRES_DB", "agent_studio_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -118,7 +119,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+            database=os.getenv("POSTGRES_DB", "agent_studio_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -183,7 +184,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+            database=os.getenv("POSTGRES_DB", "agent_studio_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -219,7 +220,7 @@ class TestSchemaInitializationTiming:
         pool = await asyncpg.create_pool(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+            database=os.getenv("POSTGRES_DB", "agent_studio_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
             min_size=1,
@@ -262,7 +263,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+            database=os.getenv("POSTGRES_DB", "agent_studio_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )
@@ -271,6 +272,10 @@ class TestSchemaInitializationTiming:
             # Get worker ID from environment
             worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
             schema_name = f"test_worker_{worker_id}"
+
+            # Validate schema name to prevent SQL injection (DDL cannot use parameterized queries)
+            if not re.match(r"^test_worker_gw\d+$", schema_name):
+                pytest.skip(f"Invalid schema name (expected test_worker_gwN pattern): {schema_name}")
 
             # Create worker schema
             await conn.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
@@ -293,7 +298,10 @@ class TestSchemaInitializationTiming:
             )
 
             # Insert test data
-            await conn.execute(f"INSERT INTO {schema_name}.test_isolation (data) VALUES ('worker_{worker_id}')")
+            await conn.execute(
+                f"INSERT INTO {schema_name}.test_isolation (data) VALUES ($1)",
+                f"worker_{worker_id}",
+            )
 
             # Verify data
             result = await conn.fetchval(f"SELECT data FROM {schema_name}.test_isolation LIMIT 1")
@@ -324,7 +332,7 @@ class TestSchemaInitializationTiming:
         conn = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+            database=os.getenv("POSTGRES_DB", "agent_studio_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         )

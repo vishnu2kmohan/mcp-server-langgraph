@@ -662,8 +662,21 @@ class TestBudgetCRUDE2E:
 
         _reset_budget_storage()
 
+        from mcp_server_langgraph.auth.dependencies import (
+            require_cost_admin,
+            require_cost_viewer,
+        )
+
+        mock_user = {
+            "sub": "test-user",
+            "preferred_username": "test",
+            "roles": ["admin"],
+        }
+
         app = FastAPI()
         app.include_router(cost_router, prefix="/api/v1")
+        app.dependency_overrides[require_cost_viewer] = lambda: mock_user
+        app.dependency_overrides[require_cost_admin] = lambda: mock_user
         client = TestClient(app)
 
         # CREATE

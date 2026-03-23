@@ -8,9 +8,9 @@ Follows memory safety patterns for pytest-xdist.
 Uses SQLAlchemy async sessions with test database.
 """
 
+import asyncio
 import gc
 import os
-import time
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -19,9 +19,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from mcp_server_langgraph.core.secrets import InMemorySecretsProvider
-from mcp_server_langgraph.models.base import Base
-
-# Import model modules to register tables on Base.metadata:
 from mcp_server_langgraph.models.project import ProjectModel
 from mcp_server_langgraph.repositories.connections import PostgresConnectionRepository
 from mcp_server_langgraph.storage.models import (
@@ -35,16 +32,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 # ============================================================================
 # Test Fixtures
 # ============================================================================
-
-
-@pytest.fixture(scope="module")
-def event_loop():
-    """Create event loop for the module."""
-    import asyncio
-
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 def _database_available() -> bool:
@@ -98,60 +85,20 @@ async def test_engine():
 @pytest.fixture(scope="module")
 async def setup_database(test_engine):
     """
-    Setup tables for testing.
+    Verify mcp_connections table exists (Alembic-managed schema).
 
-    Handles two scenarios:
-    1. Fresh database - creates all tables
-    2. Existing database (from migrations) - uses existing tables
+    Schema is created by Alembic migrations (docker-compose.test.yml alembic-migrate-test).
+    This fixture validates the table exists rather than creating it, avoiding
+    xdist collisions with Base.metadata.create_all().
     """
-    tables_created = False
-
     async with test_engine.begin() as conn:
-        # Check if tables already exist (database was initialized via migrations)
         result = await conn.execute(
             text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'mcp_connections')")
         )
-        tables_exist = result.scalar()
+        if not result.scalar():
+            pytest.skip("mcp_connections table not found — run Alembic migrations first")
 
-        if not tables_exist:
-            # Fresh database - create tables (unified Base has all tables)
-            await conn.run_sync(Base.metadata.create_all)
-            tables_created = True
-
-            # Check if transport column exists (MCP 2025-11-25 migration)
-            # If missing, add it to match the model definition
-            result = await conn.execute(
-                text(
-                    """
-                    SELECT EXISTS (
-                        SELECT 1 FROM information_schema.columns
-                        WHERE table_name = 'mcp_connections' AND column_name = 'transport'
-                    )
-                    """
-                )
-            )
-            transport_exists = result.scalar()
-
-            if not transport_exists:
-                # Add transport and stdio columns to match model
-                await conn.execute(
-                    text(
-                        """
-                        ALTER TABLE mcp_connections
-                        ADD COLUMN IF NOT EXISTS transport VARCHAR(50) NOT NULL DEFAULT 'streamable_http',
-                        ADD COLUMN IF NOT EXISTS command TEXT,
-                        ADD COLUMN IF NOT EXISTS args TEXT[],
-                        ADD COLUMN IF NOT EXISTS env JSONB;
-                        """
-                    )
-                )
-
-    yield
-
-    # Only cleanup if we created the tables
-    if tables_created:
-        async with test_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
+    return
 
 
 @pytest.fixture
@@ -602,7 +549,7 @@ class TestConnectionSorting:
             MCPConnectionCreate(name="First Server", url="https://first.com"),
             owner_id="time-owner",
         )
-        time.sleep(0.01)  # Ensure different timestamps
+        await asyncio.sleep(0.01)  # Ensure different timestamps
         await repo.create(
             MCPConnectionCreate(name="Second Server", url="https://second.com"),
             owner_id="time-owner",

@@ -12,6 +12,7 @@ TDD Approach:
 Phase 4: PostgreSQL Repositories (SQLAlchemy AsyncSession)
 """
 
+import asyncio
 import gc
 import socket
 import uuid
@@ -23,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from mcp_server_langgraph.core.models.execution_plan import ExecutionPlan
 from tests.constants import (
+    TEST_POSTGRES_DB,
     TEST_POSTGRES_HOST,
     TEST_POSTGRES_PASSWORD,
     TEST_POSTGRES_PORT,
@@ -40,7 +42,7 @@ def create_test_plan(
     """Create a test execution plan with minimal required fields."""
     return ExecutionPlan(
         plan_id=f"plan_{uuid.uuid4().hex[:8]}",
-        session_id=session_id or f"session_{uuid.uuid4().hex[:8]}",
+        session_id=session_id or "_test_parent_session",
         message="Test plan message",
         complexity="simple",
         risk_level="low",
@@ -73,7 +75,7 @@ class TestPostgresExecutionPlanRepository:
 
     @pytest.fixture
     async def async_engine(self) -> AsyncGenerator[AsyncEngine, None]:
-        """Create SQLAlchemy async engine for compliance_test database."""
+        """Create SQLAlchemy async engine for agent_studio_test database."""
         try:
             with socket.create_connection((TEST_POSTGRES_HOST, TEST_POSTGRES_PORT), timeout=2):
                 pass
@@ -84,10 +86,9 @@ class TestPostgresExecutionPlanRepository:
         import mcp_server_langgraph.database.execution_plan_models  # noqa: F401
         import mcp_server_langgraph.storage.session.postgres_models  # noqa: F401
 
-        compliance_db = "compliance_test"
         database_url = (
             f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
-            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{compliance_db}"
+            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
         )
         engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
         yield engine
@@ -106,8 +107,38 @@ class TestPostgresExecutionPlanRepository:
         async with async_engine.begin() as conn:
             await conn.execute(text("DELETE FROM execution_plans"))
 
+        # Ensure a reusable parent session exists (FK constraint)
+        async with async_engine.begin() as conn:
+            await conn.execute(
+                text(
+                    "INSERT INTO sessions (id, name, user_id) "
+                    "VALUES ('_test_parent_session', 'test', 'test_user') "
+                    "ON CONFLICT (id) DO NOTHING"
+                )
+            )
+
         session_factory = async_sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
-        return PostgresExecutionPlanRepository(session_factory)
+        repo = PostgresExecutionPlanRepository(session_factory)
+        repo._test_engine = async_engine  # Expose for session creation helper
+        return repo
+
+    @pytest.fixture
+    async def ensure_session(self, async_engine: AsyncEngine):
+        """Helper to create parent session records for FK constraint."""
+        from sqlalchemy import text
+
+        async def _ensure(session_id: str) -> str:
+            async with async_engine.begin() as conn:
+                await conn.execute(
+                    text(
+                        "INSERT INTO sessions (id, name, user_id) "
+                        f"VALUES ('{session_id}', 'test', 'test_user') "
+                        "ON CONFLICT (id) DO NOTHING"
+                    )
+                )
+            return session_id
+
+        return _ensure
 
     async def test_create_and_get_plan(self, repo):
         """Test creating and retrieving an execution plan."""
@@ -159,9 +190,10 @@ class TestPostgresExecutionPlanRepository:
         result = await repo.delete("non_existent_id")
         assert result is False
 
-    async def test_list_by_session(self, repo):
+    async def test_list_by_session(self, repo, ensure_session):
         """Test listing plans by session ID."""
         session_id = f"session_{uuid.uuid4().hex[:8]}"
+        await ensure_session(session_id)
 
         # Create multiple plans for same session
         plans = [create_test_plan(session_id=session_id) for _ in range(3)]
@@ -259,8 +291,6 @@ class TestPostgresExecutionPlanRepository:
 
     async def test_list_all_with_pagination(self, repo):
         """Test list_all with pagination (v35.0 Plan)."""
-        import time
-
         # Create plans with slight time differences to ensure ordering
         plans = []
         for i in range(5):
@@ -284,7 +314,7 @@ class TestPostgresExecutionPlanRepository:
             )
             plans.append(plan)
             await repo.create(plan)
-            time.sleep(0.01)  # Small delay to ensure ordering
+            await asyncio.sleep(0.01)  # Small delay to ensure ordering
 
         # Test limit
         limited = await repo.list_all(limit=3)

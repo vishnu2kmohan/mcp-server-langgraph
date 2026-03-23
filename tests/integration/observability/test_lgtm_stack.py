@@ -174,9 +174,9 @@ class TestLGTMConfiguration:
         """
         import json
 
-        dashboard_path = PROJECT_ROOT / "monitoring" / "grafana" / "dashboards" / "Application" / "llm-streaming.json"
+        dashboard_path = PROJECT_ROOT / "monitoring" / "grafana" / "dashboards" / "WebSocket" / "llm-streaming.json"
         helm_dashboard_path = (
-            PROJECT_ROOT / "deployments" / "helm" / "mcp-server-langgraph" / "dashboards" / "llm-streaming.json"
+            PROJECT_ROOT / "deployments" / "helm" / "mcp-server-langgraph" / "dashboards" / "WebSocket" / "llm-streaming.json"
         )
 
         # Verify both locations have the dashboard
@@ -373,8 +373,8 @@ class TestLGTMConfiguration:
 
         # Verify the volume mount exists
         volumes = loki_service.get("volumes", [])
-        loki_data_mount = any("loki-data:/tmp/loki" in str(v) for v in volumes)
-        assert loki_data_mount, "Loki should mount loki-data volume to /tmp/loki"
+        loki_data_mount = any("loki-data:/data/loki" in str(v) for v in volumes)
+        assert loki_data_mount, "Loki should mount loki-data volume to /data/loki"
 
 
 # ==============================================================================

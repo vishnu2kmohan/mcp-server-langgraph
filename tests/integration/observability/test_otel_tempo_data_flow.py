@@ -245,6 +245,14 @@ class TestOTELTempoDataFlow:
         os.environ["OBSERVABILITY_LOGGING_BACKEND"] = "lgtm"
         os.environ["OBSERVABILITY_METRICS_BACKEND"] = "lgtm"
 
+        # Reset factory singletons to avoid reusing closed clients from prior tests
+        import mcp_server_langgraph.observability.query.factory as obs_factory
+
+        obs_factory._tracing_client = None
+        obs_factory._metrics_client = None
+        obs_factory._logging_client = None
+        obs_factory._alerting_client = None
+
         # Create real clients using factory (reads from env vars)
         tracing = get_tracing_client()
         metrics = get_metrics_client()

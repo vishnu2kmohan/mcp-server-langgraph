@@ -68,11 +68,11 @@ class TestSemanticToolSelectionIntegration:
         # Setup mock search results
         mock_qdrant_client.query_points.return_value.points = [
             ScoredPoint(
-                id="tool-123",
+                id="builtin:calculator",
                 version=1,
                 score=0.95,
                 payload={
-                    "tool_id": "tool-123",
+                    "tool_id": "builtin:calculator",
                     "name": "calculator",
                     "description": "Perform calculations",
                     "category": "math",

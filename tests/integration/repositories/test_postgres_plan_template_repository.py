@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from mcp_server_langgraph.core.models.plan_template import PlanTemplate
 from tests.constants import (
+    TEST_POSTGRES_DB,
     TEST_POSTGRES_HOST,
     TEST_POSTGRES_PASSWORD,
     TEST_POSTGRES_PORT,
@@ -66,7 +67,7 @@ class TestPostgresPlanTemplateRepository:
 
     @pytest.fixture
     async def async_engine(self) -> AsyncGenerator[AsyncEngine, None]:
-        """Create SQLAlchemy async engine for compliance_test database."""
+        """Create SQLAlchemy async engine for agent_studio_test database."""
         try:
             with socket.create_connection((TEST_POSTGRES_HOST, TEST_POSTGRES_PORT), timeout=2):
                 pass
@@ -77,10 +78,9 @@ class TestPostgresPlanTemplateRepository:
         import mcp_server_langgraph.database.execution_plan_models  # noqa: F401
         import mcp_server_langgraph.storage.session.postgres_models  # noqa: F401
 
-        compliance_db = "compliance_test"
         database_url = (
             f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
-            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{compliance_db}"
+            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
         )
         engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
         yield engine

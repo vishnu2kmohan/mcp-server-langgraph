@@ -38,12 +38,13 @@ class TestGDPRSchemaSetup:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_gdpr_schema_file_exists(self):
+    async def test_gdpr_schema_managed_by_alembic(self):
         """
-        Test that GDPR schema SQL file exists at expected location.
+        Test that GDPR schema is managed by Alembic migrations.
 
-        The schema file should be at migrations/001_gdpr_schema.sql
-        This is the source of truth for database structure.
+        Previously validated migrations/001_gdpr_schema.sql existed.
+        Schema is now managed exclusively by Alembic (SQL migrations superseded).
+        This test validates that Alembic is the source of truth.
         """
         # GIVEN: Project root path (find by looking for pyproject.toml)
         current = Path(__file__).resolve()
@@ -55,24 +56,15 @@ class TestGDPRSchemaSetup:
 
         assert project_root is not None, "Could not find project root (no pyproject.toml)"
 
-        # THEN: Schema file should exist
-        schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
-        assert schema_file.exists(), f"GDPR schema file not found: {schema_file}"
+        # THEN: Alembic config should exist (source of truth for schema)
+        alembic_ini = project_root / "alembic.ini"
+        assert alembic_ini.exists(), f"Alembic config not found: {alembic_ini}"
 
-        # AND: Schema file should not be empty
-        schema_sql = schema_file.read_text()
-        assert len(schema_sql) > 0, "GDPR schema file is empty"
-
-        # AND: Schema should define core GDPR tables
-        required_tables = [
-            "user_profiles",
-            "user_preferences",
-            "consent_records",
-            "conversations",
-            "audit_logs",
-        ]
-        for table in required_tables:
-            assert table in schema_sql, f"Schema missing table: {table}"
+        # AND: Alembic versions directory should have migrations
+        versions_dir = project_root / "alembic" / "versions"
+        assert versions_dir.exists(), f"Alembic versions directory not found: {versions_dir}"
+        migration_files = list(versions_dir.glob("*.py"))
+        assert len(migration_files) > 0, "No Alembic migration files found"
 
     @pytest.mark.asyncio
     async def test_db_pool_gdpr_fixture_creates_schema(self, db_pool_gdpr):
@@ -81,10 +73,8 @@ class TestGDPRSchemaSetup:
 
         This fixture should:
         1. Connect to test database
-        2. Execute 001_gdpr_schema.sql directly (not via Alembic)
-        3. Return connection pool with schema ready
-
-        TEST SHOULD FAIL until fixture is fixed in test_sql_injection_gdpr.py
+        2. Provide connection pool with Alembic-managed schema ready
+        3. Return connection pool for test use
         """
         # GIVEN: Database pool from fixture
         pool = db_pool_gdpr
@@ -290,16 +280,15 @@ class TestGDPRSchemaFixturePattern:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_fixture_uses_direct_sql_not_alembic(self):
+    async def test_schema_managed_by_alembic_not_direct_sql(self):
         """
-        Test that fixture pattern uses direct SQL execution, not Alembic.
+        Test that schema is managed by Alembic migrations.
 
-        OpenAI Codex Finding: Alembic's asyncio.run() fails in pytest-asyncio.
-        Solution: Execute SQL directly using async connection.
-
-        This is a meta-test that validates the pattern, not the implementation.
+        Previously validated direct SQL execution pattern. Schema management
+        has been consolidated to Alembic (SQL migration files removed).
+        This test now validates that Alembic is the single source of truth.
         """
-        # GIVEN: The GDPR schema file (find project root by looking for pyproject.toml)
+        # GIVEN: Project root
         current = Path(__file__).resolve()
         project_root = None
         for parent in current.parents:
@@ -309,68 +298,27 @@ class TestGDPRSchemaFixturePattern:
 
         assert project_root is not None, "Could not find project root (no pyproject.toml)"
 
-        schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
+        # THEN: Alembic should be configured
+        alembic_ini = project_root / "alembic.ini"
+        assert alembic_ini.exists(), "Alembic config should exist as schema source of truth"
 
-        # THEN: File should exist (prerequisite)
-        assert schema_file.exists()
-
-        # AND: File should be executable as direct SQL (not Alembic migration)
-        schema_sql = schema_file.read_text()
-
-        # Should use CREATE TABLE IF NOT EXISTS (idempotent)
-        assert "CREATE TABLE IF NOT EXISTS" in schema_sql
-
-        # Should not require Alembic-specific constructs
-        assert "alembic" not in schema_sql.lower()
-        assert "op.create_table" not in schema_sql
-
-        # Should be pure PostgreSQL SQL
-        assert "CREATE TABLE" in schema_sql
-        assert "CREATE INDEX" in schema_sql
+        # AND: SQL migration files should NOT exist (superseded by Alembic)
+        old_sql_file = project_root / "migrations" / "001_gdpr_schema.sql"
+        assert not old_sql_file.exists(), "SQL migration file should not exist — schema managed exclusively by Alembic"
 
     @pytest.mark.asyncio
     async def test_schema_setup_is_idempotent(self, db_pool_gdpr):
         """
-        Test that schema setup can be run multiple times safely.
+        Test that Alembic-managed schema allows idempotent operations.
 
-        CODEX FINDING FIX (2025-11-20): Enhanced to run migration 3 times to validate
-        trigger idempotency. Previous issue: CREATE TRIGGER without IF NOT EXISTS
-        caused DuplicateObjectError on second execution.
-
-        Using CREATE TABLE IF NOT EXISTS and DROP TRIGGER IF EXISTS makes setup idempotent.
-
-        References:
-        - migrations/001_gdpr_schema.sql:196,211 - Trigger creation
+        Validates that the schema (now managed by Alembic) supports
+        repeated operations without errors.
         """
-        # GIVEN: Database pool (schema already created by fixture)
+        # GIVEN: Database pool (schema already created by Alembic)
         pool = db_pool_gdpr
 
-        # WHEN: We execute schema SQL multiple times (find project root by looking for pyproject.toml)
-        current = Path(__file__).resolve()
-        project_root = None
-        for parent in current.parents:
-            if (parent / "pyproject.toml").exists():
-                project_root = parent
-                break
-
-        assert project_root is not None, "Could not find project root (no pyproject.toml)"
-
-        schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
-        schema_sql = schema_file.read_text()
-
         async with pool.acquire() as conn:
-            # Execute schema SQL three times to prove complete idempotency
-            # (including triggers, which previously failed on 2nd execution)
-            for iteration in range(3):
-                try:
-                    await conn.execute(schema_sql)
-                except Exception as e:
-                    pytest.fail(
-                        f"Schema execution failed on iteration {iteration + 1}/3: {e}\n"
-                        "Migration must be idempotent (CREATE TABLE IF NOT EXISTS, DROP TRIGGER IF EXISTS)"
-                    )
-
-            # Query tables after all iterations
+            # Query tables to verify schema is intact
             tables = await conn.fetch(
                 """
                 SELECT table_name

@@ -11,9 +11,10 @@ TDD Phase: Tests for real LLM integration with capability architecture.
 from __future__ import annotations
 
 import gc
+import json
 import os
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -21,17 +22,19 @@ if TYPE_CHECKING:
     pass
 
 
-# Skip all tests if no LLM API key is available
+# Skip all tests if no LLM credentials are available (API key or Vertex AI ADC)
+from tests.constants import HAS_ANTHROPIC, HAS_ANY_LLM
+
 HAS_OPENAI_KEY = bool(os.getenv("OPENAI_API_KEY"))
-HAS_ANTHROPIC_KEY = bool(os.getenv("ANTHROPIC_API_KEY"))
-HAS_ANY_LLM_KEY = HAS_OPENAI_KEY or HAS_ANTHROPIC_KEY
+HAS_ANTHROPIC_KEY = HAS_ANTHROPIC
+HAS_ANY_LLM_KEY = HAS_ANY_LLM
 
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.llm,
     pytest.mark.skipif(
         not HAS_ANY_LLM_KEY,
-        reason="No LLM API key available (OPENAI_API_KEY or ANTHROPIC_API_KEY)",
+        reason="No LLM credentials available (API key or Vertex AI ADC)",
     ),
 ]
 
@@ -47,31 +50,28 @@ class TestRealLLMRouterOutput:
     @pytest.mark.asyncio
     async def test_router_produces_tools_needed_list(self) -> None:
         """Real LLM should populate tools_needed based on task analysis."""
-        from mcp_server_langgraph.agents.router_agent import RouterAgent, RouterOutput
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
 
-        # Create router with real LLM
-        router = RouterAgent()
+        # Create router with mock LLM factory that returns JSON RouterOutput
+        mock_factory = MagicMock()
+        router_data = {
+            "complexity": "simple",
+            "risk": "low",
+            "task_type": "analysis",
+            "tools_needed": ["file_read"],
+            "skills_needed": [],
+            "execution_mode": "tool_calling",
+            "routing_rationale": "Simple file read operation requires file_read tool",
+            "suggested_orchestrator": "standard",
+            "critique_rounds": 0,
+            "thinking_budget": "none",
+            "confidence": 0.9,
+        }
+        mock_factory.ainvoke = AsyncMock(return_value=MagicMock(content=json.dumps(router_data)))
+        router = RouterAgent(llm_factory=mock_factory)
 
-        # Simple task that might need tools
         task = "Read the file config.yaml and show me its contents"
-
-        with patch.object(router, "_invoke_llm") as mock_invoke:
-            # Simulate structured output from LLM
-            mock_invoke.return_value = RouterOutput(
-                complexity="simple",
-                risk="low",
-                task_type="read",
-                tools_needed=["file_read"],
-                skills_needed=[],
-                execution_mode="tool_calling",
-                routing_rationale="Simple file read operation requires file_read tool",
-                suggested_orchestrator="standard",
-                critique_rounds=0,
-                thinking_budget="none",
-                confidence=0.9,
-            )
-
-            result = await router.route(task)
+        result = await router.route(task)
 
         # Verify tools_needed is populated
         assert hasattr(result, "tools_needed")
@@ -80,27 +80,27 @@ class TestRealLLMRouterOutput:
     @pytest.mark.asyncio
     async def test_router_produces_execution_mode(self) -> None:
         """Real LLM should select appropriate execution mode."""
-        from mcp_server_langgraph.agents.router_agent import RouterAgent, RouterOutput
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
 
-        router = RouterAgent()
+        mock_factory = MagicMock()
+        router_data = {
+            "complexity": "complicated",
+            "risk": "low",
+            "task_type": "analysis",
+            "tools_needed": ["grep", "find"],
+            "skills_needed": [],
+            "execution_mode": "react",
+            "routing_rationale": "Search task requires exploration - using ReACT pattern",
+            "suggested_orchestrator": "standard",
+            "critique_rounds": 1,
+            "thinking_budget": "light",
+            "confidence": 0.85,
+        }
+        mock_factory.ainvoke = AsyncMock(return_value=MagicMock(content=json.dumps(router_data)))
+        router = RouterAgent(llm_factory=mock_factory)
         task = "Search the codebase for all usages of deprecated API"
 
-        with patch.object(router, "_invoke_llm") as mock_invoke:
-            mock_invoke.return_value = RouterOutput(
-                complexity="complicated",
-                risk="low",
-                task_type="search",
-                tools_needed=["grep", "find"],
-                skills_needed=[],
-                execution_mode="react",
-                routing_rationale="Search task requires exploration - using ReACT pattern",
-                suggested_orchestrator="standard",
-                critique_rounds=1,
-                thinking_budget="light",
-                confidence=0.85,
-            )
-
-            result = await router.route(task)
+        result = await router.route(task)
 
         # Verify execution_mode is populated
         assert hasattr(result, "execution_mode")
@@ -115,27 +115,27 @@ class TestRealLLMRouterOutput:
     @pytest.mark.asyncio
     async def test_router_produces_routing_rationale(self) -> None:
         """Real LLM should provide reasoning for routing decisions."""
-        from mcp_server_langgraph.agents.router_agent import RouterAgent, RouterOutput
+        from mcp_server_langgraph.agents.router_agent import RouterAgent
 
-        router = RouterAgent()
+        mock_factory = MagicMock()
+        router_data = {
+            "complexity": "simple",
+            "risk": "high",
+            "task_type": "ops",
+            "tools_needed": ["file_delete", "glob"],
+            "skills_needed": [],
+            "execution_mode": "tool_calling",
+            "routing_rationale": "High-risk delete operation requires explicit tool calling with confirmation",
+            "suggested_orchestrator": "standard",
+            "critique_rounds": 2,
+            "thinking_budget": "light",
+            "confidence": 0.8,
+        }
+        mock_factory.ainvoke = AsyncMock(return_value=MagicMock(content=json.dumps(router_data)))
+        router = RouterAgent(llm_factory=mock_factory)
         task = "Delete all files matching *.tmp in the workspace"
 
-        with patch.object(router, "_invoke_llm") as mock_invoke:
-            mock_invoke.return_value = RouterOutput(
-                complexity="simple",
-                risk="high",
-                task_type="delete",
-                tools_needed=["file_delete", "glob"],
-                skills_needed=[],
-                execution_mode="tool_calling",
-                routing_rationale="High-risk delete operation requires explicit tool calling with confirmation",
-                suggested_orchestrator="standard",
-                critique_rounds=2,
-                thinking_budget="light",
-                confidence=0.8,
-            )
-
-            result = await router.route(task)
+        result = await router.route(task)
 
         # Verify rationale is provided
         assert hasattr(result, "routing_rationale")
@@ -229,7 +229,7 @@ class TestRealLLMCapabilityResolution:
         # Get tools for task scope
         tools = await provider.get_tools(
             scope=CapabilityScope.TASK,
-            tool_names=["file_read", "file_write"],
+            names=["file_read", "file_write"],
         )
 
         # NullProvider returns empty, but verifies the interface works
@@ -259,7 +259,7 @@ class TestRealLLMCapabilityResolution:
         # Task scope should find project-level tools
         tools = await provider.get_tools(
             scope=CapabilityScope.TASK,
-            tool_names=["test_tool"],
+            names=["test_tool"],
         )
 
         assert len(tools) >= 0  # May find the tool if scope resolution works
@@ -282,7 +282,8 @@ class TestRealLLMWorkerIntegration:
         from mcp_server_langgraph.core.scopes import CapabilityScope
 
         provider = NullCapabilityProvider()
-        _worker = WorkerAgent(capability_provider=provider)
+        mock_factory = MagicMock()
+        _worker = WorkerAgent(llm_factory=mock_factory, capability_provider=provider)
 
         # Create request with capability fields from router
         request = AgentRequest(
@@ -354,7 +355,7 @@ class TestRealLLMEndToEndFlow:
         router_output = RouterOutput(
             complexity=analysis.complexity,
             risk=analysis.risk_level,
-            task_type="read",
+            task_type="analysis",
             tools_needed=["file_read"],
             skills_needed=[],
             execution_mode=mode.value,
@@ -406,7 +407,6 @@ class TestRealLLMEndToEndFlow:
             action_id="test-action-1",
             action_type="database_delete",
             description="Delete inactive user records",
-            session_id="test-session",
             execute_fn=AsyncMock(return_value={"deleted": 100}),
             undo_fn=AsyncMock(return_value={"restored": 100}),
         )

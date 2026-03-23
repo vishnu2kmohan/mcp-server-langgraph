@@ -1,5 +1,4 @@
 import gc
-import os
 
 """
 Unit tests for ContextManager LLM-based extraction
@@ -11,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from tests.constants import HAS_ANTHROPIC
 
 from mcp_server_langgraph.core.context_manager import ContextManager
 
@@ -510,7 +510,7 @@ class TestContextManagerLLMIntegration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="Requires ANTHROPIC_API_KEY")
+    @pytest.mark.skipif(not HAS_ANTHROPIC, reason="Requires ANTHROPIC_API_KEY or Vertex AI ADC")
     @pytest.mark.asyncio
     async def test_full_extraction_workflow(self):
         """

@@ -23,6 +23,15 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
+# Accept VERTEX_PROJECT or GOOGLE_CLOUD_PROJECT (standard GCP env var)
+_VERTEX_PROJECT = os.getenv("VERTEX_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT")
+_has_vertex_project = _VERTEX_PROJECT is not None
+
+_vertex_ai_required = pytest.mark.skipif(
+    not _has_vertex_project,
+    reason="VERTEX_PROJECT or GOOGLE_CLOUD_PROJECT not set - requires Vertex AI access",
+)
+
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="vertex_ai_google_tests")
@@ -33,17 +42,14 @@ class TestVertexAIGeminiModels:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_gemini_3_pro_via_vertex_ai_explicit_prefix(self):
         """Test Gemini 3.0 Pro via Vertex AI with explicit vertex_ai/ prefix."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-3-pro-preview",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
@@ -56,17 +62,14 @@ class TestVertexAIGeminiModels:
         assert isinstance(response.content, str)
         assert len(response.content) > 0
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_gemini_3_pro_via_vertex_ai_implicit_routing(self):
         """Test Gemini 3.0 Pro via Vertex AI without vertex_ai/ prefix (auto-routing)."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="gemini-3-pro-preview",  # No prefix - LiteLLM should auto-route to Vertex AI
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
@@ -79,17 +82,14 @@ class TestVertexAIGeminiModels:
         assert isinstance(response.content, str)
         assert len(response.content) > 0
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_gemini_2_5_flash_via_vertex_ai(self):
         """Test Gemini 2.5 Flash via Vertex AI."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
@@ -102,17 +102,14 @@ class TestVertexAIGeminiModels:
         assert isinstance(response.content, str)
         assert len(response.content) > 0
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_gemini_2_5_flash_via_vertex_ai_implicit(self):
         """Test Gemini 2.5 Flash via Vertex AI with implicit routing."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="gemini-2.5-flash",  # No prefix
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
@@ -125,17 +122,14 @@ class TestVertexAIGeminiModels:
         assert isinstance(response.content, str)
         assert "8" in response.content
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_vertex_ai_gemini_with_conversation(self):
         """Test multi-turn conversation with Gemini via Vertex AI."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location=os.getenv("GOOGLE_CLOUD_LOCATION", "global"),
         )
 
@@ -163,10 +157,7 @@ class TestVertexAIGeminiConfiguration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_vertex_ai_gemini_uses_project_from_config(self):
         """Test that Vertex AI uses project ID from configuration."""
@@ -183,17 +174,14 @@ class TestVertexAIGeminiConfiguration:
         assert llm.provider == "vertex_ai"
         assert "gemini" in llm.model_name.lower()
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_vertex_ai_gemini_supports_multiple_regions(self):
         """Test that Vertex AI Gemini works with different regions."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location="global",  # Different region
         )
 
@@ -204,10 +192,7 @@ class TestVertexAIGeminiConfiguration:
         assert response is not None
         assert response.content
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_vertex_ai_prefix_vs_no_prefix_equivalence(self):
         """Test that vertex_ai/ prefix and no prefix produce equivalent results."""
@@ -215,14 +200,14 @@ class TestVertexAIGeminiConfiguration:
         llm_with_prefix = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-3-pro-preview",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location="global",
         )
 
         llm_without_prefix = LLMFactory(
             provider="vertex_ai",
             model_name="gemini-3-pro-preview",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location="global",
         )
 
@@ -261,17 +246,14 @@ class TestVertexAIGeminiErrorHandling:
         # The factory should be created, but invocation may fail without credentials
         assert llm is not None
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_vertex_ai_gemini_invalid_model_name(self):
         """Test error handling for invalid Gemini model name."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-invalid-version",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location="global",
         )
 
@@ -281,17 +263,14 @@ class TestVertexAIGeminiErrorHandling:
         with pytest.raises(Exception):  # LiteLLM will raise an error
             await llm.ainvoke(messages)
 
-    @pytest.mark.skipif(
-        not os.getenv("VERTEX_PROJECT"),
-        reason="VERTEX_PROJECT not set - requires Vertex AI access",
-    )
+    @_vertex_ai_required
     @pytest.mark.asyncio
     async def test_vertex_ai_gemini_empty_message(self):
         """Test error handling for empty message."""
         llm = LLMFactory(
             provider="vertex_ai",
             model_name="vertex_ai/gemini-2.5-flash",
-            vertex_project=os.getenv("VERTEX_PROJECT"),
+            vertex_project=_VERTEX_PROJECT,
             vertex_location="global",
         )
 

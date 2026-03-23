@@ -378,7 +378,7 @@ class TestGrafanaClientConfiguration:
                 "grant_type": "password",
                 "client_id": "admin-cli",
                 "username": "admin",
-                "password": "admin",
+                "password": ADMIN_PASSWORD,
             },
             timeout=10,
         )

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
+from tests.constants import HAS_ANTHROPIC, HAS_GOOGLE, HAS_VERTEX_EMBEDDINGS_PKG
 
 from mcp_server_langgraph.core.agent import create_agent_graph
 from mcp_server_langgraph.core.context_manager import ContextManager
@@ -45,8 +46,8 @@ def mock_settings():
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="integration_anthropic_enhancements_integration_tests")
 @pytest.mark.skipif(
-    not (os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("GOOGLE_API_KEY")),
-    reason="Google credentials not set - requires GOOGLE_APPLICATION_CREDENTIALS (Vertex AI) or GOOGLE_API_KEY (Gemini)",
+    not (HAS_GOOGLE and HAS_VERTEX_EMBEDDINGS_PKG),
+    reason="Google credentials not set or langchain-google-vertexai not installed",
 )
 class TestDynamicContextIntegration:
     """Test dynamic context loading integration - requires Google embeddings"""
@@ -272,7 +273,7 @@ class TestFullAgentIntegration:
         gc.collect()
 
     @pytest.mark.skipif(
-        not (os.getenv("ANTHROPIC_API_KEY") and os.getenv("RUN_FULL_INTEGRATION_TESTS")),
+        not (HAS_ANTHROPIC and os.getenv("RUN_FULL_INTEGRATION_TESTS")),
         reason="Requires full infrastructure (Qdrant, Redis, LLM) - set RUN_FULL_INTEGRATION_TESTS=1",
     )
     @pytest.mark.asyncio
@@ -281,7 +282,7 @@ class TestFullAgentIntegration:
         Test agent graph with dynamic context loading.
 
         Requires:
-        - ANTHROPIC_API_KEY environment variable
+        - ANTHROPIC_API_KEY or Vertex AI ADC
         - RUN_FULL_INTEGRATION_TESTS=1
         - Docker infrastructure (Qdrant, Redis) via integration_test_env fixture
         """
@@ -309,8 +310,8 @@ class TestFullAgentIntegration:
         assert len(system_messages) > 0
 
     @pytest.mark.skipif(
-        not (os.getenv("ANTHROPIC_API_KEY") and os.getenv("RUN_FULL_INTEGRATION_TESTS")),
-        reason="Requires full infrastructure - set RUN_FULL_INTEGRATION_TESTS=1 and ANTHROPIC_API_KEY",
+        not (HAS_ANTHROPIC and os.getenv("RUN_FULL_INTEGRATION_TESTS")),
+        reason="Requires full infrastructure - set RUN_FULL_INTEGRATION_TESTS=1 and Anthropic credentials",
     )
     @pytest.mark.asyncio
     async def test_agent_with_verification_loop(self, mock_settings, integration_test_env):
@@ -356,17 +357,13 @@ class TestEndToEndWorkflow:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.skipif(
-        not os.getenv("RUN_FULL_INTEGRATION_TESTS"),
-        reason="Requires langchain-google-genai - set RUN_FULL_INTEGRATION_TESTS=1",
-    )
     @pytest.mark.asyncio
     async def test_mock_full_workflow(self):
         """
         Test complete workflow with mocked external dependencies.
 
-        Requires langchain-google-genai package to be installed.
-        Runs when RUN_FULL_INTEGRATION_TESTS environment variable is set.
+        All external dependencies (Qdrant, embeddings, LLM) are fully mocked.
+        No real API keys or infrastructure required.
         """
         with patch("mcp_server_langgraph.core.dynamic_context_loader.QdrantClient") as mock_qdrant_cls:
             mock_qdrant = MagicMock()

@@ -601,11 +601,11 @@ class TestPrometheusMetricsClient:
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(not mimir_available(), reason="Mimir not available")
-    async def test_mimir_client_invalid_query_raises_error(self, monkeypatch) -> None:
+    async def test_mimir_client_invalid_query_returns_empty(self, monkeypatch) -> None:
         """
         GIVEN PrometheusMetricsClient configured with test environment
         WHEN query_instant() is called with invalid PromQL
-        THEN it raises an appropriate exception.
+        THEN it returns an empty MetricQueryResult (client catches errors internally).
         """
         from mcp_server_langgraph.observability.query.backends.prometheus import (
             PrometheusMetricsClient,
@@ -617,9 +617,9 @@ class TestPrometheusMetricsClient:
             client = PrometheusMetricsClient()
             await client.initialize()
 
-            # Invalid PromQL should raise an error
-            with pytest.raises(Exception):
-                await client.query_instant("invalid{{{query")
+            # Invalid PromQL — client catches the error and returns empty result
+            result = await client.query_instant("invalid{{{query")
+            assert result.series == []
         finally:
             await client.close()
 

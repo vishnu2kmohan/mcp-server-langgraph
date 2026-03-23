@@ -12,16 +12,21 @@ from __future__ import annotations
 import gc
 import socket
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from tests.constants import (
+    TEST_POSTGRES_DB,
     TEST_POSTGRES_HOST,
     TEST_POSTGRES_PASSWORD,
     TEST_POSTGRES_PORT,
     TEST_POSTGRES_USER,
 )
+
+if TYPE_CHECKING:
+    from mcp_server_langgraph.memory.notes import Note
 
 pytestmark = [pytest.mark.integration, pytest.mark.repository]
 
@@ -30,7 +35,7 @@ def create_test_note(
     user_id: str | None = None,
     category: str = "research",
     content: str = "Test note content",
-) -> Note:  # noqa: F821
+) -> Note:
     from mcp_server_langgraph.memory.notes import Note
 
     return Note(
@@ -64,7 +69,7 @@ class TestPostgresNotesRepository:
 
         database_url = (
             f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
-            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/compliance_test"
+            f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
         )
         engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
         yield engine

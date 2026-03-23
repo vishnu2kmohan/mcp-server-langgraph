@@ -2,14 +2,16 @@
 Integration Tests for Full Agentic Loop
 
 Tests the complete gather-action-verify-repeat cycle.
-These are integration tests that may require mocking but test full workflows.
+These are integration tests that use mocks to test full workflows.
 
-NOTE: These tests require proper LLM mocking. When mocks don't fully isolate
-the code from real API calls, tests are skipped to prevent CI failures.
+All LLM calls are isolated via mocking:
+- create_llm_from_config: lazily imported in build_agent_graph(), patched at source
+- ContextManager: lazily imported in build_agent_graph(), patched at source
+- OutputVerifier: lazily imported in build_agent_graph(), patched at source
+- create_pydantic_agent: patched via autouse fixture
 """
 
 import gc
-import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,10 +23,6 @@ from mcp_server_langgraph.core.context_manager import ContextManager
 from mcp_server_langgraph.llm.verifier import OutputVerifier, VerificationResult
 
 pytestmark = pytest.mark.integration
-
-# Skip tests that make real LLM calls in CI (no valid API key)
-# These tests attempt to mock LLM calls but some code paths still reach real APIs
-_SKIP_REAL_LLM_TESTS = os.getenv("ANTHROPIC_API_KEY") is None or os.getenv("ANTHROPIC_API_KEY") == "test-key"
 
 
 @pytest.fixture
@@ -51,9 +49,13 @@ def test_settings():
 @pytest.fixture
 def mock_llm():
     """Create a mock LLM for testing."""
-    llm = AsyncMock(return_value=None)  # Container for configured methods
+    llm = MagicMock()  # Use MagicMock so .bind_tools() returns a MagicMock (not a coroutine)
     llm.ainvoke = AsyncMock(return_value=MagicMock(content="This is a helpful response about Python."))
     llm.invoke = MagicMock(return_value=MagicMock(content="This is a helpful response."))
+    # Ensure bind_tools returns a mock that also has working ainvoke
+    bound_mock = MagicMock()
+    bound_mock.ainvoke = AsyncMock(return_value=MagicMock(content="This is a helpful response about Python."))
+    llm.bind_tools = MagicMock(return_value=bound_mock)
     return llm
 
 
@@ -121,7 +123,6 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skipif(_SKIP_REAL_LLM_TESTS, reason="Requires valid ANTHROPIC_API_KEY - mocks don't fully isolate LLM calls")
     async def test_basic_workflow_without_compaction_verification(self, mock_llm, test_settings):
         """Test basic workflow when compaction and verification are disabled."""
         test_settings.enable_context_compaction = False
@@ -149,14 +150,13 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skipif(_SKIP_REAL_LLM_TESTS, reason="Requires valid ANTHROPIC_API_KEY - mocks don't fully isolate LLM calls")
     async def test_workflow_with_compaction_enabled(self, mock_llm, mock_context_manager, test_settings):
         """Test workflow with context compaction enabled."""
         test_settings.enable_context_compaction = True
         test_settings.enable_verification = False
 
         with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_context_manager):
+            with patch("mcp_server_langgraph.core.context_manager.ContextManager", return_value=mock_context_manager):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
 
@@ -177,7 +177,6 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skipif(_SKIP_REAL_LLM_TESTS, reason="Requires valid ANTHROPIC_API_KEY - mocks don't fully isolate LLM calls")
     async def test_workflow_with_verification_pass(self, mock_llm, mock_verifier_pass, test_settings):
         """Test workflow with verification enabled (passes immediately)."""
         test_settings.enable_context_compaction = False
@@ -185,7 +184,7 @@ class TestAgenticLoopIntegration:
         test_settings.max_refinement_attempts = 3
 
         with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_pass):
+            with patch("mcp_server_langgraph.llm.verifier.OutputVerifier", return_value=mock_verifier_pass):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
 
@@ -210,7 +209,6 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skipif(_SKIP_REAL_LLM_TESTS, reason="Requires valid ANTHROPIC_API_KEY - mocks don't fully isolate LLM calls")
     async def test_workflow_with_verification_refinement(self, mock_llm, mock_verifier_fail, test_settings):
         """Test workflow with verification enabled (requires refinement)."""
         test_settings.enable_context_compaction = False
@@ -218,7 +216,7 @@ class TestAgenticLoopIntegration:
         test_settings.max_refinement_attempts = 3
 
         with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_fail):
+            with patch("mcp_server_langgraph.llm.verifier.OutputVerifier", return_value=mock_verifier_fail):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
 
@@ -242,7 +240,6 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skipif(_SKIP_REAL_LLM_TESTS, reason="Requires valid ANTHROPIC_API_KEY - mocks don't fully isolate LLM calls")
     async def test_workflow_max_refinement_attempts(self, mock_llm, test_settings):
         """Test that workflow respects max refinement attempts."""
         test_settings.enable_context_compaction = False
@@ -262,7 +259,7 @@ class TestAgenticLoopIntegration:
         )
 
         with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
+            with patch("mcp_server_langgraph.llm.verifier.OutputVerifier", return_value=mock_verifier):
                 # Pass test_settings directly to create_agent_graph for proper dependency injection
                 graph = create_agent_graph(settings=test_settings)
 
@@ -313,7 +310,6 @@ class TestAgenticLoopIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    @pytest.mark.skipif(_SKIP_REAL_LLM_TESTS, reason="Requires valid ANTHROPIC_API_KEY - mocks don't fully isolate LLM calls")
     async def test_full_loop_with_all_features(self, mock_llm, test_settings):
         """Test complete agentic loop with all features enabled."""
         test_settings.enable_context_compaction = True
@@ -344,8 +340,8 @@ class TestAgenticLoopIntegration:
         )
 
         with patch("mcp_server_langgraph.llm.factory.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_manager):
-                with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
+            with patch("mcp_server_langgraph.core.context_manager.ContextManager", return_value=mock_manager):
+                with patch("mcp_server_langgraph.llm.verifier.OutputVerifier", return_value=mock_verifier):
                     # Pass test_settings directly to create_agent_graph for proper dependency injection
                     graph = create_agent_graph(settings=test_settings)
 

@@ -76,21 +76,27 @@ class TestOpenFGAClient:
         assert result is False
 
     @pytest.mark.asyncio
-    @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
-    async def test_check_permission_error(self, mock_sdk_client):
+    async def test_check_permission_error(self):
         """Test permission check handles errors (wrapped in RetryExhaustedError after retries)"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
         from mcp_server_langgraph.core.exceptions import RetryExhaustedError
 
-        mock_instance = AsyncMock(spec=OpenFgaClient)
-        mock_instance.check.side_effect = Exception("OpenFGA unavailable")
-        mock_sdk_client.return_value = mock_instance
+        with (
+            patch("mcp_server_langgraph.auth.openfga._get_auth_cache", return_value=None),
+            patch("mcp_server_langgraph.auth.openfga.OpenFgaClient") as mock_sdk_client,
+        ):
+            mock_instance = AsyncMock(spec=OpenFgaClient)
+            mock_instance.check.side_effect = Exception("OpenFGA unavailable")
+            mock_sdk_client.return_value = mock_instance
 
-        client = OpenFGAClient()
+            # Explicit params prevent _ensure_initialized from making real HTTP calls
+            # to look up store by name (OPENFGA_STORE_NAME from .env.test) or latest model.
+            # Without these, _lookup_store_by_name triggers real httpx requests that
+            # can interfere with the mocked OpenFgaClient lifecycle.
+            client = OpenFGAClient(api_url="http://localhost:9080", store_id="test-store", model_id="test-model")
 
-        # After resilience decorators, exceptions are wrapped in RetryExhaustedError
-        with pytest.raises(RetryExhaustedError, match="Retry exhausted after 3 attempts"):
-            await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:chat")
+            with pytest.raises(RetryExhaustedError, match="Retry exhausted after"):
+                await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:error_test")
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")

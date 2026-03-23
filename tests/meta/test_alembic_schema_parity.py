@@ -37,7 +37,7 @@ def is_postgres_available() -> bool:
         bool: True if Postgres is reachable, False otherwise
     """
     host = os.getenv("POSTGRES_HOST", "localhost")
-    port = int(os.getenv("POSTGRES_PORT", "5432"))
+    port = int(os.getenv("POSTGRES_PORT", "9432"))
 
     try:
         with socket.create_connection((host, port), timeout=2):
@@ -63,7 +63,7 @@ def get_db_dsn(db_name: str) -> str:
         f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:"
         f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
         f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
-        f"{os.getenv('POSTGRES_PORT', '5432')}/{db_name}"
+        f"{os.getenv('POSTGRES_PORT', '9432')}/{db_name}"
     )
 
 
@@ -73,7 +73,7 @@ def get_alembic_dsn(db_name: str) -> str:
         f"postgresql+asyncpg://{os.getenv('POSTGRES_USER', 'postgres')}:"
         f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
         f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
-        f"{os.getenv('POSTGRES_PORT', '5432')}/{db_name}"
+        f"{os.getenv('POSTGRES_PORT', '9432')}/{db_name}"
     )
 
 
@@ -106,11 +106,12 @@ class TestAlembicSchemaParity:
         try:
             # Terminate existing connections
             await admin_conn.execute(
-                f"""
+                """
                 SELECT pg_terminate_backend(pid)
                 FROM pg_stat_activity
-                WHERE datname = '{db_name}' AND pid <> pg_backend_pid()
-                """
+                WHERE datname = $1 AND pid <> pg_backend_pid()
+                """,
+                db_name,
             )
             await admin_conn.execute(f'DROP DATABASE IF EXISTS "{db_name}"')
         finally:
@@ -282,11 +283,16 @@ class TestAlembicSchemaParity:
             # Cleanup
             await self._drop_test_database(db_name)
 
+    @pytest.mark.skipif(
+        not (get_repo_root() / "migrations" / "001_gdpr_schema.sql").exists(),
+        reason="SQL migration file removed — schema now managed exclusively by Alembic",
+    )
     async def test_sql_schema_creates_all_tables(self):
         """
         Test that SQL schema file creates all expected GDPR tables.
 
         This validates the current test approach (direct SQL execution).
+        NOTE: Skipped when SQL migration is absent (superseded by Alembic).
         """
         db_name = f"test_sql_{os.getpid()}_createtables"
 
@@ -324,12 +330,19 @@ class TestAlembicSchemaParity:
             # Cleanup
             await self._drop_test_database(db_name)
 
+    @pytest.mark.skipif(
+        not (get_repo_root() / "migrations" / "001_gdpr_schema.sql").exists(),
+        reason="SQL migration file removed — schema now managed exclusively by Alembic",
+    )
     async def test_alembic_and_sql_produce_identical_schemas(self):
         """
         CRITICAL TEST: Verify Alembic migrations produce identical schema to SQL file.
 
         This prevents schema drift between test environment (SQL) and
         production environment (Alembic).
+
+        NOTE: Skipped when SQL migration is absent (superseded by Alembic).
+        Alembic is now the single source of truth for schema management.
 
         Compares:
         - Table structures (columns, types, constraints)

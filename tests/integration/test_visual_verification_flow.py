@@ -37,9 +37,13 @@ class TestVisualVerificationMCPFlow:
         from mcp_server_langgraph.core.config._settings import Settings
 
         # Create settings with visual verification enabled
+        # Note: MagicMock(spec=Settings) doesn't expose Pydantic v2 fields,
+        # so we set all attributes accessed by get_all_tools explicitly.
         mock_settings = MagicMock(spec=Settings)
+        mock_settings.environment = "test"
         mock_settings.enable_visual_verification = True
         mock_settings.enable_code_execution = False
+        mock_settings.enable_dynamic_context_loading = False
 
         from mcp_server_langgraph.tools import get_all_tools
 
@@ -58,8 +62,10 @@ class TestVisualVerificationMCPFlow:
 
         # Create settings with visual verification disabled
         mock_settings = MagicMock(spec=Settings)
+        mock_settings.environment = "test"
         mock_settings.enable_visual_verification = False
         mock_settings.enable_code_execution = False
+        mock_settings.enable_dynamic_context_loading = False
 
         from mcp_server_langgraph.tools import get_all_tools
 

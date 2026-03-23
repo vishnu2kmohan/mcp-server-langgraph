@@ -428,8 +428,8 @@ class TestVisualVerificationRetryIntegration:
             if mock_sleep.call_count >= 2:
                 first_delay = mock_sleep.call_args_list[0][0][0]
                 second_delay = mock_sleep.call_args_list[1][0][0]
-                # Allow some jitter tolerance
-                assert 0.5 <= first_delay <= 2.0
+                # Allow jitter tolerance (backoff with jitter can exceed base * 2)
+                assert 0.5 <= first_delay <= 5.0
                 assert second_delay >= first_delay  # Exponential increase
 
     @pytest.mark.asyncio

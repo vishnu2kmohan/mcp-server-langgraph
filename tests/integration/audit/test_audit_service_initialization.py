@@ -1,13 +1,15 @@
 """
-Tests for audit service initialization in app.py.
+Tests for audit service initialization during app bootstrap.
 
-TDD RED phase: These tests define expected behavior for service initialization.
+Tests verify that bootstrap/storage.py correctly initializes:
+- UnifiedAuditService during app startup
+- set_audit_service() for middleware access
+- Repository selection (InMemory vs Postgres)
+- Retention scheduler lifecycle
 
-The initialization should:
-- Create UnifiedAuditService during app startup
-- Set the service for middleware via set_audit_service()
-- Use InMemoryAuditRepository in test/dev, PostgreSQL in production
-- Handle initialization failures gracefully
+Architecture: create_app() → lifespan → bootstrap_all() → init_storage()
+init_storage() creates audit repo, audit service, calls set_audit_service(),
+and conditionally starts retention scheduler based on settings.
 """
 
 import gc
@@ -20,12 +22,26 @@ from mcp_server_langgraph.core.config import Settings
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.skip(
-        reason="Test architecture outdated: app.py was refactored to use bootstrap/storage.py. "
-        "These tests need to be rewritten to mock bootstrap.storage.init_storage() correctly. "
-        "See ADR-0081 for bootstrap architecture."
-    ),
 ]
+
+
+def _make_storage_only_bootstrap():
+    """Create a mock bootstrap_all that only initializes storage.
+
+    Replaces the full bootstrap_all (which initializes auth, http, websocket,
+    skills, context_graph, semantic, model_sync) with a version that only
+    calls init_storage. This lets tests focus on audit service behavior
+    without requiring 8+ other infrastructure services.
+    """
+
+    async def mock_bootstrap_all(settings):
+        from mcp_server_langgraph.bootstrap import AppState
+        from mcp_server_langgraph.bootstrap.storage import init_storage
+
+        storage = await init_storage(settings)
+        return AppState(storage=storage)
+
+    return mock_bootstrap_all
 
 
 @pytest.mark.integration
@@ -51,9 +67,19 @@ class TestAuditServiceInitialization:
         )
 
         # Reset global audit service before test
-        with patch(
-            "mcp_server_langgraph.middleware.audit._audit_service",
-            None,
+        with (
+            patch(
+                "mcp_server_langgraph.middleware.audit._audit_service",
+                None,
+            ),
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
         ):
             app = create_app(
                 settings_override=test_settings,
@@ -70,6 +96,9 @@ class TestAuditServiceInitialization:
         GIVEN app starts
         WHEN initialization completes
         THEN set_audit_service was called.
+
+        init_storage() calls set_audit_service() after creating the audit service
+        (moved from app.py to bootstrap/storage.py).
         """
         from mcp_server_langgraph.app import create_app
 
@@ -77,7 +106,17 @@ class TestAuditServiceInitialization:
             environment="test",
         )
 
-        with patch("mcp_server_langgraph.app.set_audit_service") as mock_set_service:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch("mcp_server_langgraph.middleware.audit.set_audit_service") as mock_set_service,
+        ):
             app = create_app(
                 settings_override=test_settings,
                 skip_startup_validation=True,
@@ -86,7 +125,7 @@ class TestAuditServiceInitialization:
             with TestClient(app):
                 pass
 
-            # set_audit_service should have been called
+            # set_audit_service should have been called by init_storage
             mock_set_service.assert_called_once()
 
     def test_audit_service_uses_integrity_secret(self) -> None:
@@ -94,6 +133,9 @@ class TestAuditServiceInitialization:
         GIVEN app with audit_integrity_secret configured
         WHEN audit service is created
         THEN service uses the configured secret.
+
+        init_storage() creates UnifiedAuditService with integrity_secret
+        from settings (moved from app.py to bootstrap/storage.py).
         """
         from mcp_server_langgraph.app import create_app
 
@@ -102,7 +144,17 @@ class TestAuditServiceInitialization:
             audit_integrity_secret="test-integrity-secret-12345",
         )
 
-        with patch("mcp_server_langgraph.app.UnifiedAuditService") as mock_service_class:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch("mcp_server_langgraph.audit.service.UnifiedAuditService") as mock_service_class,
+        ):
             mock_service = MagicMock()
             mock_service_class.return_value = mock_service
 
@@ -134,6 +186,9 @@ class TestAuditRepositorySelection:
         GIVEN audit service initialization
         WHEN app is created
         THEN uses create_audit_repository factory to select appropriate repository.
+
+        init_storage() calls create_audit_repository(database_url=settings.database_url)
+        (moved from app.py to bootstrap/storage.py).
         """
         from mcp_server_langgraph.app import create_app
         from mcp_server_langgraph.audit.repository import InMemoryUnifiedAuditRepository
@@ -142,7 +197,13 @@ class TestAuditRepositorySelection:
             environment="test",
         )
 
-        with patch("mcp_server_langgraph.app.create_audit_repository") as mock_factory:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch("mcp_server_langgraph.audit.repository.create_audit_repository") as mock_factory,
+        ):
             mock_repo = MagicMock(spec=InMemoryUnifiedAuditRepository)
             mock_factory.return_value = mock_repo
 
@@ -182,18 +243,28 @@ class TestAuditServiceMiddlewareIntegration:
             environment="test",
         )
 
-        app = create_app(
-            settings_override=test_settings,
-            skip_startup_validation=True,
-        )
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+        ):
+            app = create_app(
+                settings_override=test_settings,
+                skip_startup_validation=True,
+            )
 
-        with TestClient(app) as client:
-            # Make a request to trigger middleware
-            client.get("/health")
+            with TestClient(app) as client:
+                # Make a request to trigger middleware
+                client.get("/health")
 
-            # Audit service should be available
-            service = get_audit_service()
-            assert service is not None
+                # Audit service should be available
+                service = get_audit_service()
+                assert service is not None
 
 
 @pytest.mark.integration
@@ -210,6 +281,9 @@ class TestRetentionSchedulerIntegration:
         GIVEN partition_retention_enabled=True
         WHEN app starts
         THEN retention scheduler is started.
+
+        init_storage() creates and starts retention scheduler based on
+        settings.partition_retention_enabled (moved from app.py to bootstrap/storage.py).
         """
         from mcp_server_langgraph.app import create_app
 
@@ -220,7 +294,17 @@ class TestRetentionSchedulerIntegration:
             partition_retention_hours=24,
         )
 
-        with patch("mcp_server_langgraph.app.create_retention_scheduler") as mock_create_scheduler:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch("mcp_server_langgraph.audit.retention_scheduler.create_retention_scheduler") as mock_create_scheduler,
+        ):
             mock_scheduler = AsyncMock(return_value=None)  # async-mock-configured
             mock_scheduler.start = AsyncMock(return_value=None)  # async-mock-configured
             mock_scheduler.stop = AsyncMock(return_value=None)  # async-mock-configured
@@ -255,7 +339,17 @@ class TestRetentionSchedulerIntegration:
             partition_retention_enabled=False,
         )
 
-        with patch("mcp_server_langgraph.app.create_retention_scheduler") as mock_create_scheduler:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch("mcp_server_langgraph.audit.retention_scheduler.create_retention_scheduler") as mock_create_scheduler,
+        ):
             app = create_app(
                 settings_override=test_settings,
                 skip_startup_validation=True,
@@ -272,6 +366,8 @@ class TestRetentionSchedulerIntegration:
         GIVEN retention scheduler is running
         WHEN app shuts down
         THEN scheduler is stopped gracefully.
+
+        StorageState.cleanup() calls await retention_scheduler.stop().
         """
         from mcp_server_langgraph.app import create_app
 
@@ -282,7 +378,17 @@ class TestRetentionSchedulerIntegration:
             partition_retention_hours=12,
         )
 
-        with patch("mcp_server_langgraph.app.create_retention_scheduler") as mock_create_scheduler:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch("mcp_server_langgraph.audit.retention_scheduler.create_retention_scheduler") as mock_create_scheduler,
+        ):
             mock_scheduler = AsyncMock(return_value=None)  # async-mock-configured
             mock_scheduler.start = AsyncMock(return_value=None)  # async-mock-configured
             mock_scheduler.stop = AsyncMock(return_value=None)  # async-mock-configured
@@ -314,7 +420,17 @@ class TestRetentionSchedulerIntegration:
             partition_retention_hours=12,  # Twice daily
         )
 
-        with patch("mcp_server_langgraph.app.create_retention_scheduler") as mock_create_scheduler:
+        with (
+            patch(
+                "mcp_server_langgraph.app.bootstrap_all",
+                side_effect=_make_storage_only_bootstrap(),
+            ),
+            patch(
+                "mcp_server_langgraph.audit.repository.create_audit_repository",
+                return_value=MagicMock(),
+            ),
+            patch("mcp_server_langgraph.audit.retention_scheduler.create_retention_scheduler") as mock_create_scheduler,
+        ):
             mock_scheduler = AsyncMock(return_value=None)  # async-mock-configured
             mock_scheduler.start = AsyncMock(return_value=None)  # async-mock-configured
             mock_scheduler.stop = AsyncMock(return_value=None)  # async-mock-configured
