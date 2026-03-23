@@ -13,8 +13,10 @@ Fixture Categories:
 All fixtures support pytest-xdist worker isolation for parallel test execution.
 """
 
+import asyncio
 import logging
 import os
+import re
 
 import pytest
 
@@ -84,7 +86,7 @@ async def postgres_connection_real(integration_test_env):
         pool = await asyncpg.create_pool(
             host=os.getenv("POSTGRES_HOST", "localhost"),
             port=int(os.getenv("POSTGRES_PORT", "9432")),
-            database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+            database=os.getenv("POSTGRES_DB", "agent_studio_test"),
             user=os.getenv("POSTGRES_USER", "postgres"),
             password=os.getenv("POSTGRES_PASSWORD", "postgres"),  # Match docker-compose.test.yml
             min_size=1,  # Minimal: 8 workers × 1 = 8 connections base
@@ -178,9 +180,34 @@ async def openfga_client_real(integration_test_env, test_infrastructure_ports):
     # OpenFGA test URL - use infrastructure port from fixture (ensures consistency)
     api_url = os.getenv("OPENFGA_API_URL", f"http://localhost:{test_infrastructure_ports['openfga_http']}")
 
-    # Verify OpenFGA is actually ready (not just health check passing)
-    # Health check can pass while service is still initializing
-    logging.info(f"Verifying OpenFGA readiness at {api_url}...")
+    # Verify OpenFGA HTTP API is actually ready (not just gRPC health check passing)
+    # The Docker healthcheck uses grpc_health_probe on port 8081, but the HTTP API
+    # on port 8080 may not be ready yet. This causes initialize_openfga_store() to
+    # fail with connection errors even though Docker reports the container as healthy.
+    logging.info(f"Waiting for OpenFGA HTTP API readiness at {api_url}...")
+
+    import httpx
+
+    http_ready_retries = 10
+    http_ready_delay = 2.0
+    for http_attempt in range(1, http_ready_retries + 1):
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as http_client:
+                resp = await http_client.get(f"{api_url}/healthz")
+                if resp.status_code == 200:
+                    logging.info(f"OpenFGA HTTP API ready (attempt {http_attempt}/{http_ready_retries})")
+                    break
+                logging.warning(f"OpenFGA HTTP API returned {resp.status_code} (attempt {http_attempt}/{http_ready_retries})")
+        except Exception as e:
+            logging.warning(f"OpenFGA HTTP API not ready (attempt {http_attempt}/{http_ready_retries}): {e}")
+
+        if http_attempt == http_ready_retries:
+            pytest.skip(
+                f"OpenFGA HTTP API not ready after {http_ready_retries} attempts at {api_url}/healthz\n"
+                f"The gRPC health check may pass before the HTTP API is fully initialized.\n"
+                f"To debug: curl {api_url}/healthz"
+            )
+        await asyncio.sleep(http_ready_delay)
 
     # Retry OpenFGA initialization with exponential backoff
     # Addresses race condition where health check passes but store creation fails
@@ -221,12 +248,10 @@ async def openfga_client_real(integration_test_env, test_infrastructure_ports):
             logging.warning(f"OpenFGA initialization attempt {attempt}/{max_retries} failed: {e}")
 
             if attempt < max_retries:
-                # Retry with exponential backoff
-                import time
-
+                # Retry with exponential backoff (use asyncio.sleep to avoid blocking event loop)
                 sleep_time = retry_delay * (2 ** (attempt - 1))
                 logging.info(f"Retrying in {sleep_time}s...")
-                time.sleep(sleep_time)
+                await asyncio.sleep(sleep_time)
             else:
                 # All retries exhausted - skip tests that require OpenFGA
                 error_msg = (
@@ -296,6 +321,10 @@ async def postgres_connection_clean(postgres_connection_real):
     """
     # Get worker-scoped schema name (uses worker_utils for consistency)
     schema_name = get_worker_postgres_schema()
+
+    # Validate schema name to prevent SQL injection (DDL cannot use parameterized queries)
+    if not re.match(r"^test_worker_gw\d+$", schema_name):
+        raise ValueError(f"Invalid schema name (expected test_worker_gwN pattern): {schema_name}")
 
     # Acquire connection from pool
     async with postgres_connection_real.acquire() as conn:
@@ -411,6 +440,12 @@ async def openfga_client_clean(openfga_client_real):
     # Get worker-scoped store name (uses worker_utils for consistency)
     store_name = get_worker_openfga_store()
 
+    # NOTE: True per-worker store isolation is not yet implemented.
+    # Currently, all workers share the same OpenFGA store created by openfga_client_real.
+    # Isolation is achieved via: (1) unique object IDs per worker (get_user_id()),
+    # (2) tracked tuple cleanup below, and (3) xdist_group markers on conflicting tests.
+    # TODO: Implement per-worker OpenFGA stores for full isolation.
+
     # Track tuples written during this test for cleanup
     written_tuples = []
 
@@ -447,7 +482,7 @@ async def openfga_client_clean(openfga_client_real):
 # REMOVED: postgres_with_schema fixture (OpenAI Codex Finding Fix 2025-11-20)
 #
 # Reason: Duplicate schema initialization causing race conditions
-# - Docker container already runs migrations/001_gdpr_schema.sql via docker-entrypoint-initdb.d
+# - Docker container schema managed by Alembic (alembic-migrate-test service in docker-compose.test.yml)
 # - This fixture was redundantly running the same migration
 # - test_infrastructure fixture now verifies schema completion before tests start
 #
@@ -459,23 +494,17 @@ async def openfga_client_clean(openfga_client_real):
 # References:
 # - tests/integration/test_schema_initialization_timing.py::test_no_duplicate_schema_initialization
 # - docker-compose.test.yml: volumes mapping migrations to /docker-entrypoint-initdb.d
-# - migrations/000_init_databases.sh: Auto-runs 001_gdpr_schema.sql on container start
+# - docker/postgres/init-test-databases.sh: Creates databases; schema managed by Alembic
 
 
 @pytest.fixture
 async def db_pool_gdpr(integration_test_env):
     """
-    PostgreSQL connection pool with GDPR schema for integration/security tests.
+    PostgreSQL connection pool for integration/security tests.
 
-    Creates a connection pool and initializes GDPR schema tables.
+    Creates a connection pool to the agent_studio_test database.
+    Schema is managed by Alembic (alembic-migrate-test service in docker-compose.test.yml).
     Used by security tests and GDPR compliance tests that need pool-based access.
-
-    OpenAI Codex Finding Fix (2025-11-16):
-    =======================================
-    This fixture replaces the Alembic-based approach in test_sql_injection_gdpr.py
-    which failed due to asyncio.run() conflicts in pytest-asyncio context.
-
-    Executes schema SQL directly using async connection pool.
     """
     if not integration_test_env:
         pytest.skip("Integration test environment not available (requires Docker)")
@@ -485,8 +514,6 @@ async def db_pool_gdpr(integration_test_env):
     except ImportError:
         pytest.skip("asyncpg not installed")
 
-    from pathlib import Path
-
     # Create connection pool
     # Note: Postgres test port is 9432 (offset from standard 5432 to avoid conflicts)
     pool = await asyncpg.create_pool(
@@ -494,24 +521,12 @@ async def db_pool_gdpr(integration_test_env):
         port=int(os.getenv("POSTGRES_PORT", "9432")),
         user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+        database=os.getenv("POSTGRES_DB", "agent_studio_test"),
         min_size=1,
         max_size=2,  # Reduced to prevent connection exhaustion with xdist workers
     )
 
-    # Execute GDPR schema SQL directly
-    project_root = Path(__file__).parent.parent.parent
-    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
-
-    if schema_file.exists():
-        schema_sql = schema_file.read_text()
-
-        async with pool.acquire() as conn:
-            try:
-                await conn.execute(schema_sql)
-            except Exception:
-                # Schema might already exist (CREATE TABLE IF NOT EXISTS makes this idempotent)
-                pass
+    # Schema is managed by Alembic (alembic-migrate-test service) — no manual SQL needed
 
     yield pool
 

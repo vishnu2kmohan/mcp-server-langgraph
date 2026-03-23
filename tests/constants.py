@@ -121,6 +121,8 @@ TEST_TEMPO_PORT = 13200  # +10000 from standard 3200
 TEST_LOKI_PORT = 13100  # +10000 from standard 3100
 TEST_MIMIR_PORT = 19009  # +10000 from standard 9009
 TEST_ALLOY_PORT = 12345  # Alloy UI/API (no offset, uses standard port)
+TEST_ALLOY_OTLP_HTTP_PORT = 4318  # Alloy OTLP HTTP receiver (applications send here)
+TEST_ALLOY_OTLP_GRPC_PORT = 4317  # Alloy OTLP gRPC receiver (applications send here)
 TEST_GRAFANA_PORT = 13001  # +10000 from prod's 3001
 
 # Legacy port aliases (deprecated, use new names above)
@@ -145,6 +147,66 @@ TEST_MAX_MESSAGES_PER_SESSION = 50
 
 # Session timeout in seconds
 TEST_SESSION_TIMEOUT_SECONDS = 60
+
+
+# ==============================================================================
+# LLM Credential Detection (API Key OR Vertex AI ADC)
+# ==============================================================================
+
+
+def _has_vertex_ai_adc() -> bool:
+    """Check if Vertex AI Application Default Credentials are available."""
+    import os
+    from pathlib import Path
+
+    # Explicit service account key file
+    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+        return True
+    # User ADC from `gcloud auth application-default login`
+    adc_path = Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
+    return adc_path.exists()
+
+
+def has_anthropic_credentials() -> bool:
+    """Check if Anthropic API is accessible via API key or Vertex AI ADC."""
+    import os
+
+    if os.getenv("ANTHROPIC_API_KEY"):
+        return True
+    # Vertex AI path: need ADC + project ID
+    project = os.getenv("ANTHROPIC_VERTEX_PROJECT_ID") or os.getenv("VERTEX_PROJECT")
+    return bool(project) and _has_vertex_ai_adc()
+
+
+def has_google_credentials() -> bool:
+    """Check if Google API is accessible via API key or Vertex AI ADC."""
+    import os
+
+    if os.getenv("GOOGLE_API_KEY"):
+        return True
+    # Vertex AI path: ADC alone is sufficient (project can be inferred from ADC)
+    return _has_vertex_ai_adc()
+
+
+def has_any_llm_credentials() -> bool:
+    """Check if any LLM provider credentials are available."""
+    import os
+
+    return has_anthropic_credentials() or has_google_credentials() or bool(os.getenv("OPENAI_API_KEY"))
+
+
+# Precomputed flags for skip markers (evaluated at import time)
+HAS_ANTHROPIC = has_anthropic_credentials()
+HAS_GOOGLE = has_google_credentials()
+HAS_ANY_LLM = has_any_llm_credentials()
+
+# Package availability checks (optional dependencies)
+try:
+    import langchain_google_vertexai as _  # noqa: F401
+
+    HAS_VERTEX_EMBEDDINGS_PKG = True
+except ImportError:
+    HAS_VERTEX_EMBEDDINGS_PKG = False
 
 
 # ==============================================================================

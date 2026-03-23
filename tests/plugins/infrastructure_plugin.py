@@ -112,7 +112,7 @@ def test_app_settings(test_infrastructure_ports):
         keycloak_realm="default",  # Use default realm for tests
         keycloak_client_id="admin-cli",
         keycloak_admin_username="admin",
-        keycloak_admin_password="admin",
+        keycloak_admin_password="admin123",
         # Qdrant settings
         qdrant_url="localhost",
         qdrant_port=test_infrastructure_ports["qdrant"],

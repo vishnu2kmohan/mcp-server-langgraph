@@ -375,6 +375,30 @@ def _reset_all_singletons() -> None:
     except Exception:
         pass
 
+    # Observability query client factory singletons: prevent closed httpx clients
+    # from being reused after tests that call tracing/metrics/logging .close()
+    try:
+        if "mcp_server_langgraph.observability.query.factory" in sys.modules:
+            import mcp_server_langgraph.observability.query.factory as obs_factory
+
+            obs_factory._tracing_client = None
+            obs_factory._logging_client = None
+            obs_factory._metrics_client = None
+            obs_factory._alerting_client = None
+    except Exception:
+        pass
+
+    # Cache service singleton: prevent L1 cache hits from leaking between tests
+    # (e.g., auth permission cache causing test_check_permission_error to skip mock)
+    try:
+        if "mcp_server_langgraph.core.cache" in sys.modules:
+            import mcp_server_langgraph.core.cache as cache_module
+
+            if cache_module._cache_service is not None:
+                cache_module._cache_service.l1_cache.clear()
+    except Exception:
+        pass
+
 
 # ==============================================================================
 # Worker-Safe ID Helpers for pytest-xdist Isolation

@@ -91,11 +91,11 @@ async def _verify_schema_ready(host: str, port: int, timeout: float = 30.0) -> b
 
     while time.time() - start_time < timeout:
         try:
-            # Connect to compliance_test database
+            # Connect to agent_studio_test database (compliance tables consolidated here)
             conn = await asyncpg.connect(
                 host=host,
                 port=port,
-                database=os.getenv("COMPLIANCE_DB", "compliance_test"),
+                database=os.getenv("POSTGRES_DB", "agent_studio_test"),
                 user=os.getenv("POSTGRES_USER", "postgres"),
                 password=os.getenv("POSTGRES_PASSWORD", "postgres"),
                 timeout=5,
@@ -211,7 +211,7 @@ def test_infrastructure_ports():
     return {
         "postgres": 9432,
         "redis_checkpoints": 9379,
-        "redis_sessions": 9380,
+        "redis_sessions": 9379,
         "qdrant": 9333,
         "qdrant_grpc": 9334,
         "openfga_http": 9080,
@@ -269,7 +269,7 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     logging.info("Verifying GDPR schema initialization...")
     schema_ready = asyncio.run(_verify_schema_ready("localhost", test_infrastructure_ports["postgres"], timeout=30))
     if not schema_ready:
-        pytest.skip("GDPR schema not initialized in time - run migrations/001_gdpr_schema.sql")
+        pytest.skip("GDPR schema not initialized in time - ensure alembic-migrate-test service ran successfully")
     logging.info("✓ PostgreSQL ready with GDPR schema")
 
     # Redis (checkpoints)
