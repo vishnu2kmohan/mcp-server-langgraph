@@ -9,10 +9,32 @@ Provides FastAPI dependencies for:
 Phase 2.2 SRP decomposition: Extracted from middleware.py
 """
 
+import os
 from typing import TYPE_CHECKING, Any
 
 from mcp_server_langgraph.auth.jwt_utils import extract_user_from_jwt_payload
 from mcp_server_langgraph.observability.telemetry import logger
+
+
+def _is_auth_bypass_allowed() -> bool:
+    """Check if auth bypass is allowed in the current environment.
+
+    Auth bypass (skipping OpenFGA authorization when middleware is not configured)
+    is only allowed in development and test environments. In production/staging,
+    missing auth middleware is a configuration error that must fail closed.
+
+    Returns:
+        True if auth bypass is allowed (dev/test), False otherwise (production/staging).
+    """
+    env = os.getenv("ENVIRONMENT", "").lower()
+    if env in ("production", "staging"):
+        return False
+    # Allow bypass in dev, test, or when TESTING=true
+    if os.getenv("TESTING") == "true" or os.getenv("PYTEST_CURRENT_TEST"):
+        return True
+    # Default: allow bypass for backward compatibility in development
+    return True
+
 
 # FastAPI imports (optional)
 try:
@@ -417,7 +439,11 @@ if FASTAPI_AVAILABLE:
                 # Fall back to global for backward compatibility
                 auth = _global_auth_middleware
             if auth is None:
-                # No auth middleware available, allow (for development)
+                if not _is_auth_bypass_allowed():
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Authorization service not configured",
+                    )
                 logger.warning(
                     "No auth middleware available, skipping authorization check",
                     extra={"resource": resource, "relation": relation},
@@ -630,7 +656,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping observability auth check")
             return user
 
@@ -661,7 +693,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping observability auth check")
             return user
 
@@ -819,7 +857,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware available, skipping skill viewer check")
             return user
 
@@ -864,7 +908,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware available, skipping skill author check")
             return user
 
@@ -909,7 +959,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware available, skipping marketplace viewer check")
             return user
 
@@ -954,7 +1010,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware available, skipping marketplace admin check")
             return user
 
@@ -1067,7 +1129,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping compliance auth check")
             return user
 
@@ -1098,7 +1166,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping compliance auth check")
             return user
 
@@ -1133,7 +1207,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping config auth check")
             return user
 
@@ -1164,7 +1244,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping config auth check")
             return user
 
@@ -1199,7 +1285,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping cost auth check")
             return user
 
@@ -1230,7 +1322,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware, skipping cost auth check")
             return user
 
@@ -1266,7 +1364,13 @@ if FASTAPI_AVAILABLE:
         auth = get_auth_middleware_from_request(request)
         if auth is None:
             auth = _global_auth_middleware
+
         if auth is None:
+            if not _is_auth_bypass_allowed():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Authorization service not configured",
+                )
             logger.warning("No auth middleware available, skipping reference viewer check")
             return user
 

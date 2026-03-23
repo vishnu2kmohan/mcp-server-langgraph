@@ -7,7 +7,8 @@ secret rotation, and deletion.
 See ADR-0033 for service principal design decisions.
 """
 
-from typing import Any
+import re
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -16,6 +17,7 @@ from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.core.dependencies import get_openfga_client_from_request, get_service_principal_manager
+from mcp_server_langgraph.observability.telemetry import logger
 
 router = APIRouter(
     prefix="/service-principals",
@@ -37,11 +39,16 @@ class CreateServicePrincipalRequest(BaseModel):
         max_length=50,
     )
     description: str = Field(..., description="Purpose/description of the service")
-    authentication_mode: str = Field(
+    authentication_mode: Literal["client_credentials", "service_account_user"] = Field(
         default="client_credentials",
-        description="Authentication mode: 'client_credentials' or 'service_account_user'",
+        description="Authentication mode",
     )
-    associated_user_id: str | None = Field(None, description="User to act as for permission inheritance (e.g., 'user:alice')")
+    associated_user_id: str | None = Field(
+        None,
+        description="User to act as for permission inheritance (e.g., 'user:alice')",
+        pattern=r"^user:[a-zA-Z0-9_-]{1,100}$",  # SECURITY: Prevent CWE-20 injection
+        max_length=110,
+    )
     inherit_permissions: bool = Field(default=False, description="Whether to inherit permissions from associated user")
 
 
@@ -64,6 +71,19 @@ class CreateServicePrincipalResponse(ServicePrincipalResponse):
 
     client_secret: str = Field(..., description="Client secret (save securely, won't be shown again)")
     message: str = Field(default="Service principal created successfully. Save the client_secret securely.")
+
+
+class AssociateUserRequest(BaseModel):
+    """Request to associate a service principal with a user"""
+
+    user_id: str = Field(
+        ...,
+        description="User ID to associate (e.g., 'user:alice')",
+        pattern=r"^user:[a-zA-Z0-9_-]{1,100}$",  # SECURITY: Prevent CWE-20 injection
+        min_length=1,
+        max_length=110,
+    )
+    inherit_permissions: bool = Field(default=True, description="Whether to inherit permissions from associated user")
 
 
 class RotateSecretResponse(BaseModel):
@@ -127,8 +147,6 @@ async def _validate_user_association_permission(
             )
 
             if authorized:
-                from mcp_server_langgraph.observability.telemetry import logger
-
                 logger.info(
                     "Service Principal authorization granted via OpenFGA delegation",
                     extra={
@@ -140,9 +158,10 @@ async def _validate_user_association_permission(
                 return  # Authorized via OpenFGA delegation
 
         except Exception:
-            # Log error but continue to denial
+            # Log error but continue to denial (fail-closed is correct for security)
+            # TODO: Emit openfga_check_error_total metric for alerting on authz service degradation
             logger.warning(
-                "OpenFGA check failed for Service Principal authorization",
+                "OpenFGA check failed for Service Principal authorization - falling back to deny",
                 exc_info=True,
                 extra={"user_id": user_id, "target_user_id": target_user_id},
             )
@@ -188,17 +207,10 @@ async def create_service_principal(
         }
         ```
     """
-    # Validate authentication mode
-    if request.authentication_mode not in ["client_credentials", "service_account_user"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid authentication_mode. Must be 'client_credentials' or 'service_account_user'",
-        )
-
     # SECURITY FIX (CWE-269): Validate user association authorization
     # Prevent privilege escalation by validating that the caller has permission
     # to create service principals that act as the specified user
-    if request.associated_user_id and request.inherit_permissions:
+    if request.associated_user_id:
         await _validate_user_association_permission(
             current_user=current_user,
             target_user_id=request.associated_user_id,
@@ -207,6 +219,12 @@ async def create_service_principal(
 
     # Generate service ID from name
     service_id = request.name.lower().replace(" ", "-").replace("_", "-")
+    service_id = re.sub(r"-+", "-", service_id).strip("-")
+    if not service_id or not any(c.isalnum() for c in service_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Generated service ID '{service_id}' is invalid",
+        )
 
     # Validate service ID doesn't already exist
     existing = await sp_manager.get_service_principal(service_id)
@@ -290,17 +308,12 @@ async def get_service_principal(
     """
     sp = await sp_manager.get_service_principal(service_id)
 
-    if not sp:
+    # SECURITY: Return 404 for both "not found" and "not owned" to prevent
+    # timing-based enumeration of service principal IDs (CWE-203)
+    if not sp or sp.owner_user_id != current_user["user_id"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Service principal '{service_id}' not found",
-        )
-
-    # Verify ownership
-    if sp.owner_user_id != current_user["user_id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to view this service principal",
         )
 
     return ServicePrincipalResponse(
@@ -334,17 +347,11 @@ async def rotate_service_principal_secret(
     # Get service principal
     sp = await sp_manager.get_service_principal(service_id)
 
-    if not sp:
+    # SECURITY: Return 404 for both "not found" and "not owned" (CWE-203)
+    if not sp or sp.owner_user_id != current_user["user_id"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Service principal '{service_id}' not found",
-        )
-
-    # Verify ownership
-    if sp.owner_user_id != current_user["user_id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to rotate this service principal's secret",
         )
 
     # Rotate secret
@@ -371,17 +378,11 @@ async def delete_service_principal(
     # Get service principal
     sp = await sp_manager.get_service_principal(service_id)
 
-    if not sp:
+    # SECURITY: Return 404 for both "not found" and "not owned" (CWE-203)
+    if not sp or sp.owner_user_id != current_user["user_id"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Service principal '{service_id}' not found",
-        )
-
-    # Verify ownership
-    if sp.owner_user_id != current_user["user_id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to delete this service principal",
         )
 
     # Delete service principal
@@ -393,8 +394,7 @@ async def delete_service_principal(
 @router.post("/{service_id}/associate-user")
 async def associate_service_principal_with_user(
     service_id: str,
-    user_id: str,
-    inherit_permissions: bool = True,
+    request: AssociateUserRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
     openfga: OpenFGAClient | None = Depends(get_openfga_client_from_request),
@@ -409,33 +409,26 @@ async def associate_service_principal_with_user(
     # Get service principal
     sp = await sp_manager.get_service_principal(service_id)
 
-    if not sp:
+    # SECURITY: Return 404 for both "not found" and "not owned" (CWE-203)
+    if not sp or sp.owner_user_id != current_user["user_id"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Service principal '{service_id}' not found",
         )
 
-    # Verify ownership
-    if sp.owner_user_id != current_user["user_id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to modify this service principal",
-        )
-
     # SECURITY FIX (CWE-269): Validate user association authorization
     # Prevent privilege escalation by validating permission to associate with target user
-    if inherit_permissions:
-        await _validate_user_association_permission(
-            current_user=current_user,
-            target_user_id=user_id,
-            openfga=openfga,
-        )
+    await _validate_user_association_permission(
+        current_user=current_user,
+        target_user_id=request.user_id,
+        openfga=openfga,
+    )
 
     # Associate with user
     await sp_manager.associate_with_user(
         service_id=service_id,
-        user_id=user_id,
-        inherit_permissions=inherit_permissions,
+        user_id=request.user_id,
+        inherit_permissions=request.inherit_permissions,
     )
 
     # Return updated service principal
