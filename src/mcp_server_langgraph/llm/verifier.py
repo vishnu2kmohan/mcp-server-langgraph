@@ -920,8 +920,10 @@ FEEDBACK:
                     visual_observations=[],
                 )
 
-            # At this point llm_response cannot be None (handled by return at line 900)
-            assert llm_response is not None, "llm_response should not be None here"
+            # At this point llm_response cannot be None (handled by return above)
+            # Use raise (not assert) because assert is stripped by python -O
+            if llm_response is None:
+                raise RuntimeError("llm_response should not be None after retry loop")
 
             # Get content and ensure it's a string
             content = llm_response.content if hasattr(llm_response, "content") else str(llm_response)

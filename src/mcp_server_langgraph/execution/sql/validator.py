@@ -216,7 +216,10 @@ class SQLValidator:
             return ValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
         ast = statements[0]
-        assert ast is not None, "Parser returned None expression"
+        # Use raise (not assert) because assert is stripped by python -O
+        if ast is None:
+            errors.append("Parser returned None expression")
+            return ValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
         # -------------------------------------------------------------- #
         # 3. Verify statement type (whitelist with wrapper support)
