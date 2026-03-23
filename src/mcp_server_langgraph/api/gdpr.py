@@ -198,6 +198,11 @@ async def export_user_data(
             )
 
         user_id = str(user.get("user_id") or "")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User identity missing from authentication token",
+            )
         username = str(user.get("username") or "")
         email = str(user.get("email", f"{username}@example.com"))
 
@@ -342,6 +347,11 @@ async def delete_user_account(
             )
 
         user_id = str(user.get("user_id") or "")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User identity missing from authentication token",
+            )
         username = str(user.get("username") or "")
         email = user.get("email")  # May be None if not in token
 
