@@ -5,8 +5,7 @@
 # It creates all databases required by different components:
 #   - openfga_test: OpenFGA authorization (created by POSTGRES_DB env var)
 #   - keycloak_test: Keycloak authentication
-#   - compliance_test: Multi-framework compliance (GDPR, HIPAA, SOC2, FedRAMP)
-#   - agent_studio_test: Agent Studio main database (sessions, workflows, audit logs)
+#   - agent_studio_test: Agent Studio main database (sessions, workflows, compliance, audit logs)
 #
 # IMPORTANT: This script runs as postgres superuser during initdb phase.
 # See: https://hub.docker.com/_/postgres (Initialization scripts section)
@@ -25,18 +24,14 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE keycloak_test;
     GRANT ALL PRIVILEGES ON DATABASE keycloak_test TO postgres;
 
-    -- compliance_test: Multi-framework compliance storage (GDPR, HIPAA, SOC2, FedRAMP)
-    -- Renamed from gdpr_test in v2.8 to reflect broader compliance scope
-    CREATE DATABASE compliance_test;
-    GRANT ALL PRIVILEGES ON DATABASE compliance_test TO postgres;
-
-    -- agent_studio_test: Main Agent Studio database (sessions, workflows, audit logs)
-    -- Renamed from mcp_test in project rename to agent-studio
+    -- agent_studio_test: Main Agent Studio database (sessions, workflows, compliance, audit logs)
+    -- All compliance tables (GDPR, HIPAA, SOC2, FedRAMP) are consolidated here.
+    -- Schema managed by Alembic (alembic-migrate-test service).
     CREATE DATABASE agent_studio_test;
     GRANT ALL PRIVILEGES ON DATABASE agent_studio_test TO postgres;
 
     -- Log success
-    \echo 'Created test databases: keycloak_test, compliance_test, agent_studio_test'
+    \echo 'Created test databases: keycloak_test, agent_studio_test'
 EOSQL
 
 echo "✓ Test databases created successfully"
@@ -55,37 +50,17 @@ echo "✓ TimescaleDB extension enabled"
 # Required for execution plan and template embedding search
 # TimescaleDB 2.17.2-pg16 includes pgvector as a bundled extension
 # Reference: Phase 1 - pgvector Test Image
-echo "Enabling pgvector extension in all test databases..."
-for db in agent_studio_test compliance_test; do
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db" <<-EOSQL
-        CREATE EXTENSION IF NOT EXISTS vector;
-        \echo 'pgvector extension enabled in $db'
+echo "Enabling pgvector extension in agent_studio_test..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "agent_studio_test" <<-EOSQL
+    CREATE EXTENSION IF NOT EXISTS vector;
+    \echo 'pgvector extension enabled in agent_studio_test'
 EOSQL
-done
-echo "✓ pgvector extension enabled in all databases"
+echo "✓ pgvector extension enabled"
 
-# Apply compliance schema to compliance_test database
-# The compliance schema is required for E2E tests (test_infrastructure fixture checks for these tables)
-# Supports GDPR, HIPAA, SOC2, and FedRAMP compliance data storage
-# See: tests/fixtures/docker_fixtures.py - _verify_schema_ready()
-# Apply all numbered SQL migrations to compliance_test database in order
-# Each migration uses IF NOT EXISTS / IF NOT EXISTS for idempotency
-echo "Applying SQL migrations to compliance_test database..."
-for migration in /docker-entrypoint-initdb.d/01-migrations/[0-9]*.sql; do
-    if [ -f "$migration" ]; then
-        echo "  Applying $(basename "$migration")..."
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "compliance_test" \
-            -f "$migration"
-        echo "  ✓ $(basename "$migration") applied"
-    fi
-done
-echo "✓ All SQL migrations applied to compliance_test"
-
-# NOTE: agent_studio_test database schema is now managed by Alembic (alembic-migrate-test service)
+# NOTE: agent_studio_test database schema (including compliance tables) is managed by Alembic
 # The alembic-migrate-test service runs AFTER postgres-test is healthy and BEFORE mcp-server-test starts
-# This standardizes on Alembic for all production-like database migrations
+# SQL migrations in migrations/*.sql are superseded by Alembic migrations
 # See: docker-compose.test.yml - alembic-migrate-test service
-# See: alembic/versions/8348487e5796_initial_gdpr_schema_user_profiles_.py
-echo "ℹ agent_studio_test database schema will be managed by Alembic (alembic-migrate-test service)"
+echo "ℹ agent_studio_test schema will be managed by Alembic (alembic-migrate-test service)"
 
 echo "✓ All test databases initialized successfully"

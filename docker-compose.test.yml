@@ -1253,13 +1253,13 @@ services:
       # -----------------------------------------------------------------------
       # DB Allocation:
       #   - agent_studio_test: Main Agent Studio data (sessions, workflows, audit logs)
-      #   - compliance_test: Multi-framework compliance (GDPR, HIPAA, SOC2, FedRAMP)
+      #   - (compliance tables consolidated into agent_studio_test)
       #   - openfga_test:   OpenFGA authorization (tuples, permissions) - used by openfga-test
       #   - keycloak_test:  Keycloak identity (users, realms, clients) - used by keycloak-test
       - POSTGRES_HOST=postgres-test
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres-test:5432/agent_studio_test
-      # Compliance database for GDPR/HIPAA/SOC2/FedRAMP data (user profiles, consents, audit)
-      - COMPLIANCE_POSTGRES_URL=postgresql://postgres:postgres@postgres-test:5432/compliance_test
+      # Compliance tables consolidated into agent_studio_test (managed by Alembic)
+      - COMPLIANCE_POSTGRES_URL=postgresql://postgres:postgres@postgres-test:5432/agent_studio_test
       # -----------------------------------------------------------------------
       # Keycloak Authentication (Docker network internal URLs)
       # -----------------------------------------------------------------------
@@ -1507,11 +1507,11 @@ services:
       alloy-test:
         condition: service_healthy
       loki-test:
-        condition: service_started  # Loki has healthcheck disabled (distroless image)
+        condition: service_healthy
       tempo-test:
         condition: service_healthy
       mimir-test:
-        condition: service_started  # Mimir has healthcheck disabled (distroless)
+        condition: service_healthy
     ports:
       - "13001:3000"  # Grafana UI (offset by 10000 from prod's 3001)
     environment:
@@ -1747,7 +1747,7 @@ services:
   # Logs accessible at /logs or via Grafana Explore
 
   loki-test:
-    image: grafana/loki:3.6.2
+    image: grafana/loki:3.6.7
     # RESILIENCE: Auto-restart on failure for log aggregation
     restart: unless-stopped
     # Loki runs as UID 10001 in the official image (non-root for security)
@@ -1766,11 +1766,13 @@ services:
       # Reference: https://grafana.com/docs/loki/latest/alert/#ruler
       - ./docker/loki/rules:/data/loki/rules/fake:ro
     healthcheck:
-      # NOTE: Loki 3.6.2 uses distroless image with no shell utilities (no bash, wget, curl)
-      # Healthcheck disabled; service is still accessible on port 3100
-      # Dependent services use condition: service_started instead of service_healthy
-      # See: https://github.com/grafana/loki/issues/18890
-      disable: true
+      # Loki 3.6.4+ added built-in -health flag for distroless healthchecks
+      # See: https://github.com/grafana/loki/issues/20149
+      test: ["CMD", "loki", "-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     deploy:
       resources:
         limits:
@@ -1877,9 +1879,13 @@ services:
       - ./docker/mimir/rules:/data/mimir/ruleconfigs/anonymous:ro
     # NOTE: Mimir uses distroless image with no wget/curl
     # See: https://github.com/grafana/mimir/issues/9034
-    # Healthcheck disabled; service is still accessible on port 9009
+    # Mimir binary supports -version flag for distroless healthchecks (exit 0 = healthy)
     healthcheck:
-      disable: true
+      test: ["CMD", "mimir", "-version"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     deploy:
       resources:
         limits:
@@ -1920,11 +1926,11 @@ services:
       - --stability.level=generally-available
     depends_on:
       loki-test:
-        condition: service_started  # Loki has healthcheck disabled (distroless image)
+        condition: service_healthy
       tempo-test:
         condition: service_healthy
       mimir-test:
-        condition: service_started  # Mimir has healthcheck disabled (distroless)
+        condition: service_healthy
     ports:
       - "12345:12345"  # Alloy UI/API
       - "4317:4317"    # OTLP gRPC (applications send here)
