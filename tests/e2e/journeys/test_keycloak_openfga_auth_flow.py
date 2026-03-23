@@ -474,20 +474,8 @@ class TestKeycloakAuthentication:
 
         assert "access_token" in token_response
 
-    @pytest.mark.skip(reason="ROPC is disabled per ADR-0086 - cannot test user credential validation with client_credentials")
-    def test_invalid_credentials_rejected(self):
-        """
-        GIVEN: Invalid user credentials
-        WHEN: Requesting access token via ROPC (intentionally testing ROPC flow)
-        THEN: Should be rejected with error
-
-        User Journey: Failed login attempt
-
-        Note: This test intentionally used ROPC to test credential validation.
-        ROPC is now disabled per security audit (ADR-0086).
-        Token exchange and client_credentials cannot test invalid user credentials.
-        """
-        pass  # Skipped via decorator - ROPC disabled per ADR-0086
+    # ROPC test removed — ROPC disabled per ADR-0086. All auth tests use
+    # Token Exchange (RFC 8693) or client_credentials.
 
     def test_userinfo_endpoint_returns_claims(self, require_user_token):
         """

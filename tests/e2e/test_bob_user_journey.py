@@ -180,14 +180,14 @@ class TestBobStandardUserJourney:
         """
         Step 6: Bob uses agent chat (within standard tier limits).
 
-        GIVEN bob has executor permission for agent_chat
+        GIVEN bob has executor permission for tool:chat
         WHEN bob sends a message to the agent
         THEN bob should receive a response
         """
         import httpx
 
-        # Verify bob has the required tuples
-        assert "agent_chat" in openfga_bob_tuples["tools"]
+        # Verify bob has the required tuples (pre-seeded: user:bob executor tool:chat)
+        assert "chat" in openfga_bob_tuples["tools"]
 
         chat_data = {
             "message": "Hello, I'm Bob!",

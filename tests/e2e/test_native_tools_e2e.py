@@ -27,9 +27,16 @@ from fastapi import FastAPI
 
 from mcp_server_langgraph.core.numeric import safe_average
 
-# Skip markers for provider availability
-has_anthropic_key = bool(os.getenv("ANTHROPIC_API_KEY"))
-has_google_key = bool(os.getenv("GOOGLE_API_KEY"))
+# Skip markers for provider availability (API key or Vertex AI ADC)
+from tests.constants import HAS_ANTHROPIC, HAS_GOOGLE
+
+has_anthropic_key = HAS_ANTHROPIC
+has_google_key = HAS_GOOGLE
+
+# Direct Anthropic API calls (ChatAnthropic) need ANTHROPIC_API_KEY,
+# not just Vertex AI ADC (which requires ChatAnthropicVertex instead).
+_has_anthropic_api_key = bool(os.getenv("ANTHROPIC_API_KEY"))
+_has_google_api_key = bool(os.getenv("GOOGLE_API_KEY"))
 
 pytestmark = [
     pytest.mark.e2e,
@@ -95,7 +102,9 @@ class TestAnthropicNativeWebSearch:
         assert config is not None
         assert config["type"] == "web_search_20250305"
 
-    @pytest.mark.skipif(not has_anthropic_key, reason="ANTHROPIC_API_KEY not set")
+    @pytest.mark.skipif(
+        not _has_anthropic_api_key, reason="ANTHROPIC_API_KEY not set (Vertex AI ADC insufficient for ChatAnthropic)"
+    )
     @pytest.mark.asyncio
     async def test_anthropic_native_web_search_real_call(self, anthropic_settings):
         """Test real Anthropic native web search call."""
@@ -157,7 +166,9 @@ class TestAnthropicNativeCodeExecution:
         assert config is not None
         assert config["type"] == "code_execution_20250825"
 
-    @pytest.mark.skipif(not has_anthropic_key, reason="ANTHROPIC_API_KEY not set")
+    @pytest.mark.skipif(
+        not _has_anthropic_api_key, reason="ANTHROPIC_API_KEY not set (Vertex AI ADC insufficient for ChatAnthropic)"
+    )
     @pytest.mark.asyncio
     async def test_anthropic_native_code_execution_real_call(self, anthropic_settings):
         """Test real Anthropic native code execution call."""
@@ -282,7 +293,9 @@ class TestNativeToolMetricsE2E:
 class TestNativeToolLatencyComparison:
     """E2E tests comparing native vs builtin tool latency."""
 
-    @pytest.mark.skipif(not has_anthropic_key, reason="ANTHROPIC_API_KEY not set")
+    @pytest.mark.skipif(
+        not _has_anthropic_api_key, reason="ANTHROPIC_API_KEY not set (Vertex AI ADC insufficient for ChatAnthropic)"
+    )
     @pytest.mark.asyncio
     async def test_capture_native_web_search_latency(self, anthropic_settings):
         """Capture latency for native web search for comparison."""
@@ -708,7 +721,9 @@ class TestNativeToolsListAPIE2E:
 class TestSourceCitationsE2E:
     """E2E tests for source citation extraction from native tool results."""
 
-    @pytest.mark.skipif(not has_anthropic_key, reason="ANTHROPIC_API_KEY not set")
+    @pytest.mark.skipif(
+        not _has_anthropic_api_key, reason="ANTHROPIC_API_KEY not set (Vertex AI ADC insufficient for ChatAnthropic)"
+    )
     @pytest.mark.asyncio
     async def test_anthropic_web_search_extracts_source_citations(self, anthropic_settings):
         """Source citations should be extracted from Anthropic native web search."""
@@ -782,7 +797,7 @@ class TestSourceCitationsE2E:
         assert "docs.python.org" in domains
         assert "realpython.com" in domains
 
-    @pytest.mark.skipif(not has_google_key, reason="GOOGLE_API_KEY not set")
+    @pytest.mark.skipif(not _has_google_api_key, reason="GOOGLE_API_KEY not set (ADC insufficient for ChatGoogleGenerativeAI)")
     @pytest.mark.asyncio
     async def test_google_grounded_search_extracts_source_citations(self, google_settings):
         """Source citations should be extracted from Google grounded search."""
@@ -859,9 +874,10 @@ class TestSourceCitationsE2E:
         ]
 
         message = Message(
-            id="test-msg-1",
+            message_id="test-msg-1",
             role="assistant",
             content="Here is the response with sources.",
+            user_id="test-user",
             sources=citations,
         )
 

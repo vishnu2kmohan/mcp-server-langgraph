@@ -23,10 +23,10 @@ Test journeys:
 
 from __future__ import annotations
 
+import asyncio
 import gc
 import os
 import socket
-import time
 import uuid
 import warnings
 from typing import Any, AsyncGenerator
@@ -37,6 +37,7 @@ import pytest
 from fastapi import FastAPI
 
 from tests.constants import (
+    TEST_POSTGRES_DB,
     TEST_POSTGRES_HOST,
     TEST_POSTGRES_PASSWORD,
     TEST_POSTGRES_PORT,
@@ -155,7 +156,7 @@ async def e2e_app(mock_feature_flags: MagicMock) -> AsyncGenerator[FastAPI, None
 
             database_url = (
                 f"postgresql+asyncpg://{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}"
-                f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/compliance_test"
+                f"@{TEST_POSTGRES_HOST}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
             )
             engine = create_async_engine(database_url, echo=False, pool_pre_ping=True)
             session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -347,7 +348,7 @@ class TestCheckpointsE2EJourney:
         )
         assert cp1.status_code == 201
 
-        time.sleep(0.05)  # Ensure ordering on loaded CI runners
+        await asyncio.sleep(0.05)  # Ensure ordering on loaded CI runners
 
         cp2 = await alice_client.post(
             "/api/v1/memory/checkpoint",

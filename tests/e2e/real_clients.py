@@ -39,7 +39,7 @@ class RealKeycloakAuth:
         Initialize Keycloak auth client.
 
         Args:
-            base_url: Keycloak base URL (default: http://localhost:9082)
+            base_url: Keycloak base URL (default: http://localhost/authn via Traefik gateway)
         """
         # CRITICAL: Include /authn prefix because Keycloak is configured with KC_HTTP_RELATIVE_PATH=/authn
         self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost/authn")
@@ -84,7 +84,7 @@ class RealKeycloakAuth:
             sa_token_data = sa_response.json()
             sa_token = sa_token_data.get("access_token")
         except httpx.HTTPError as e:
-            raise RuntimeError(f"Failed to get service account token from {token_url}: {e}") from e
+            raise RuntimeError(f"Failed to get Keycloak service account token from {token_url}: {e}") from e
 
         if not sa_token:
             raise RuntimeError("Service account token response missing access_token")
@@ -108,25 +108,7 @@ class RealKeycloakAuth:
             pass
 
         # Fallback to service account token if exchange not configured
-        try:
-            return sa_token_data
-
-        except httpx.TimeoutException as e:
-            raise RuntimeError(
-                f"Keycloak auth timeout after 30s at {self.base_url} - "
-                f"service may be down or overloaded. "
-                f"Check docker-compose services are running."
-            ) from e
-        except httpx.ConnectError as e:
-            raise RuntimeError(
-                f"Cannot connect to Keycloak at {self.base_url} - "
-                f"service is not reachable. "
-                f"Ensure docker-compose.test.yml is running: docker compose -f docker-compose.test.yml up -d"
-            ) from e
-        except httpx.HTTPStatusError as e:
-            raise RuntimeError(
-                f"Keycloak auth failed: {e.response.status_code} - {e.response.text[:200]} (URL: {token_url})"
-            ) from e
+        return sa_token_data
 
     async def refresh(self, refresh_token: str) -> dict[str, str]:
         """

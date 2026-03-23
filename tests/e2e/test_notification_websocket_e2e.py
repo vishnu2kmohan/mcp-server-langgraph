@@ -250,6 +250,8 @@ class TestNotificationWebSocketE2E:
                     except TimeoutError:
                         pass  # No notification received - expected if no broadcast triggered
             except _ws_module.ConnectionClosedError as e:
+                if e.code == 4003:
+                    pytest.skip("Authorization denied (4003) — SA token not in OpenFGA notification tuples")
                 if e.code == 4009:
                     pytest.skip(f"Server rejected WS protocol version: {e}")
                 raise

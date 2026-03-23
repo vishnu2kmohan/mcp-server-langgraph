@@ -22,6 +22,7 @@ Note:
 from __future__ import annotations
 
 import gc
+import os
 from typing import TYPE_CHECKING
 
 import pytest
@@ -178,7 +179,7 @@ class TestFrontendAPIInfrastructureTests:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.mark.skip(reason="Requires DATABASE_URL configured")
+    @pytest.mark.skipif(not os.getenv("DATABASE_URL"), reason="DATABASE_URL not configured")
     def test_cost_summary_endpoint_with_db(self, client: TestClient) -> None:
         """GIVEN the cost API with database configured
         WHEN GET /cost/summary is called
@@ -187,7 +188,7 @@ class TestFrontendAPIInfrastructureTests:
         response = client.get("/api/v1/cost/summary")
         assert response.status_code == 200
 
-    @pytest.mark.skip(reason="Requires Tempo configured")
+    @pytest.mark.skipif(not os.getenv("TEMPO_URL"), reason="TEMPO_URL not configured")
     def test_observability_traces_endpoint_with_tempo(self, client: TestClient) -> None:
         """GIVEN the observability API with Tempo configured
         WHEN GET /observability/traces is called
