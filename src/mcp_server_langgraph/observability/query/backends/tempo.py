@@ -187,16 +187,20 @@ class TempoTracingClient(TracingQueryClient):
 
         Useful for finding traces associated with a session, user, or request ID.
         """
-        result = await self._client.search_by_attribute(
-            attribute=attribute,
-            value=value,
-            start=start,
-            end=end,
-            limit=limit,
-        )
+        try:
+            result = await self._client.search_by_attribute(
+                attribute=attribute,
+                value=value,
+                start=start,
+                end=end,
+                limit=limit,
+            )
 
-        traces = [_convert_trace(t) for t in result.traces]
-        return TraceSearchResult(traces=traces, total_count=result.total_traces)
+            traces = [_convert_trace(t) for t in result.traces]
+            return TraceSearchResult(traces=traces, total_count=result.total_traces)
+        except Exception as e:
+            logger.warning(f"Failed to search traces by attribute: {e}")
+            return TraceSearchResult(traces=[], total_count=0)
 
     async def get_error_traces(
         self,
@@ -208,15 +212,19 @@ class TempoTracingClient(TracingQueryClient):
         """
         Get traces that contain errors.
         """
-        result = await self._client.get_error_traces(
-            service_name=service_name,
-            start=start,
-            end=end,
-            limit=limit,
-        )
+        try:
+            result = await self._client.get_error_traces(
+                service_name=service_name,
+                start=start,
+                end=end,
+                limit=limit,
+            )
 
-        traces = [_convert_trace(t) for t in result.traces]
-        return TraceSearchResult(traces=traces, total_count=result.total_traces)
+            traces = [_convert_trace(t) for t in result.traces]
+            return TraceSearchResult(traces=traces, total_count=result.total_traces)
+        except Exception as e:
+            logger.warning(f"Failed to get error traces: {e}")
+            return TraceSearchResult(traces=[], total_count=0)
 
     async def health_check(self) -> bool:
         """

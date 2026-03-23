@@ -16,12 +16,14 @@ Reference: ADR-0026 - Comprehensive Client Resilience Patterns
 from __future__ import annotations
 
 import logging
+import uuid as uuid_module
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from sqlalchemy import DateTime, String, Text, delete, select
+from sqlalchemy import DateTime, String, Text, Uuid, delete, select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Mapped, mapped_column
 
 from mcp_server_langgraph.models.base import Base
@@ -271,7 +273,7 @@ class PushSubscriptionRecord(Base):
 
     __tablename__ = "push_subscriptions"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    id: Mapped[uuid_module.UUID] = mapped_column(Uuid, primary_key=True, server_default=text("gen_random_uuid()"))
     user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     endpoint: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     p256dh_key: Mapped[str] = mapped_column(Text, nullable=False)
@@ -316,7 +318,7 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
             A PushSubscription instance.
         """
         return PushSubscription(
-            id=record.id,
+            id=str(record.id),
             user_id=record.user_id,
             endpoint=record.endpoint,
             p256dh_key=record.p256dh_key,
@@ -334,26 +336,18 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
         Save or update a push subscription.
 
         If a subscription with the same endpoint exists, it will be updated.
+        Uses atomic upsert (INSERT ... ON CONFLICT) to avoid TOCTOU races.
         """
-        async with self._session_maker() as session:
-            # Check if subscription exists
-            stmt = select(PushSubscriptionRecord).where(PushSubscriptionRecord.endpoint == subscription.endpoint)
-            result = await session.execute(stmt)
-            existing = result.scalar_one_or_none()
+        try:
+            record_id = uuid_module.UUID(subscription.id)
+        except ValueError:
+            raise ValueError(f"PushSubscription.id must be a valid UUID, got: {subscription.id!r}")
 
-            if existing:
-                # Update existing record
-                existing.user_id = subscription.user_id
-                existing.p256dh_key = subscription.p256dh_key
-                existing.auth_key = subscription.auth_key
-                existing.user_agent = subscription.user_agent
-                existing.device_name = subscription.device_name
-                existing.updated_at = datetime.now(UTC)
-                existing.expires_at = subscription.expires_at
-            else:
-                # Create new record
-                record = PushSubscriptionRecord(
-                    id=subscription.id,
+        async with self._session_maker() as session:
+            stmt = (
+                pg_insert(PushSubscriptionRecord)
+                .values(
+                    id=record_id,
                     user_id=subscription.user_id,
                     endpoint=subscription.endpoint,
                     p256dh_key=subscription.p256dh_key,
@@ -365,8 +359,21 @@ class PostgresPushSubscriptionStore(PushSubscriptionStore):
                     expires_at=subscription.expires_at,
                     last_used_at=subscription.last_used_at,
                 )
-                session.add(record)
-
+                .on_conflict_do_update(
+                    index_elements=[PushSubscriptionRecord.endpoint],
+                    set_={
+                        "user_id": subscription.user_id,
+                        "p256dh_key": subscription.p256dh_key,
+                        "auth_key": subscription.auth_key,
+                        "user_agent": subscription.user_agent,
+                        "device_name": subscription.device_name,
+                        "updated_at": datetime.now(UTC),
+                        "expires_at": subscription.expires_at,
+                        "last_used_at": subscription.last_used_at,
+                    },
+                )
+            )
+            await session.execute(stmt)
             await session.commit()
             logger.debug(
                 f"Saved push subscription for user {subscription.user_id} to endpoint {subscription.endpoint[:50]}..."

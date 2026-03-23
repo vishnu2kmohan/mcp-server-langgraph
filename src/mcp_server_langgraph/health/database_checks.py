@@ -41,7 +41,7 @@ class DatabaseInfo:
     name: str
     purpose: str
     required_tables: list[str]
-    managed_by: str  # "migrations" or service name (e.g., "openfga", "keycloak")
+    managed_by: str  # "alembic", "migrations" (legacy), or service name (e.g., "openfga", "keycloak")
 
 
 class DatabaseValidator:
@@ -131,11 +131,11 @@ class DatabaseValidator:
         suffix = "_test" if self.environment == Environment.TEST else ""
 
         return {
-            f"compliance{suffix}": DatabaseInfo(
-                name=f"compliance{suffix}",
-                purpose="GDPR compliance storage (user profiles, consents, audit logs)",
+            f"agent_studio{suffix}": DatabaseInfo(
+                name=f"agent_studio{suffix}",
+                purpose="Agent Studio main database (sessions, workflows, compliance, audit logs)",
                 required_tables=["user_profiles", "user_preferences", "consent_records", "conversations", "audit_logs"],
-                managed_by="migrations",
+                managed_by="alembic",
             ),
             f"openfga{suffix}": DatabaseInfo(
                 name=f"openfga{suffix}",
@@ -180,7 +180,8 @@ class DatabaseValidator:
         result = await conn.fetchval(
             """
             SELECT 1 FROM information_schema.tables
-            WHERE table_name = $1
+            WHERE table_schema = 'public'
+            AND table_name = $1
             """,
             table_name,
         )
@@ -243,7 +244,7 @@ class DatabaseValidator:
                         missing_tables.append(table)
 
                 if missing_tables:
-                    if db_info.managed_by == "migrations":
+                    if db_info.managed_by in {"migrations", "alembic"}:
                         errors.append(
                             f"Missing tables in '{db_info.name}': {', '.join(missing_tables)}. "
                             f"Schema migration may not have run correctly."
@@ -292,7 +293,7 @@ class DatabaseValidator:
         Returns:
             Overall validation result
         """
-        logger.info(f"Validating database architecture for {self.environment.value} environment")
+        logger.info("Validating database architecture for %s environment", self.environment.value)
 
         expected_databases = self.get_expected_databases()
         database_results = {}
@@ -367,10 +368,10 @@ class ValidationResult:
 
 
 async def validate_database_architecture(
-    host: str = "localhost",
-    port: int = 5432,
-    user: str = "postgres",
-    password: str = "postgres",
+    host: str | None = None,
+    port: int | None = None,
+    user: str | None = None,
+    password: str | None = None,
 ) -> ValidationResult:
     """
     Convenience function to validate database architecture.
@@ -392,5 +393,11 @@ async def validate_database_architecture(
             for error in result.errors:
                 print(f"❌ {error}")
     """
+    import os
+
+    host = host if host is not None else os.getenv("POSTGRES_HOST", "localhost")
+    port = port if port is not None else int(os.getenv("POSTGRES_PORT", "5432"))
+    user = user if user is not None else os.getenv("POSTGRES_USER", "postgres")
+    password = password if password is not None else os.getenv("POSTGRES_PASSWORD", "")
     validator = DatabaseValidator(host=host, port=port, user=user, password=password)
     return await validator.validate()
