@@ -21,8 +21,8 @@ config = context.config
 # - Production/Dev: uses POSTGRES_DB environment variable (default: agent_studio)
 # - Docker Compose test: uses agent_studio_test database (via init script)
 #
-# Note: Tests use direct SQL (migrations/001_gdpr_schema.sql) to avoid
-# asyncio.run() conflicts with pytest-asyncio. Alembic is for production.
+# Note: Alembic is the single source of truth for schema management.
+# When running locally against test infra, set POSTGRES_PORT=9432.
 default_db = "agent_studio_test" if os.getenv("TESTING") == "true" else os.getenv("POSTGRES_DB", "agent_studio")
 
 postgres_url = os.getenv(
