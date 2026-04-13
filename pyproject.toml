@@ -68,7 +68,7 @@ dependencies = [
     "tiktoken>=0.5.0",  # Token counting for response optimization
     # Anthropic Best Practices Enhancements (ADR-0025)
     "qdrant-client>=1.16.1",  # Updated 2025-11-28: Vector search improvements
-    "langchain-google-genai>=3.0.0",  # Google Gemini embeddings (API-based, no model hosting)
+    "langchain-google-genai>=4.2.1",  # Google Gemini embeddings (API-based, no model hosting)
     # Monitoring
     "prometheus-api-client>=0.5.5",  # For querying Prometheus metrics in SLA monitoring
     "prometheus-client>=0.20.0",  # For exporting Prometheus metrics
