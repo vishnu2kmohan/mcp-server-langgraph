@@ -29,7 +29,7 @@ jobs:
           version: 'v1.31.0'
 
       - name: Set up Kustomize
-        uses: imranismail/setup-kustomize@v2
+        uses: imranismail/setup-kustomize@v3
         with:
           kustomize-version: "5.0.0"
 
@@ -91,7 +91,7 @@ jobs:
           version: 'v1.31.0'
 
       - name: Set up Kustomize
-        uses: imranismail/setup-kustomize@v2
+        uses: imranismail/setup-kustomize@v3
         with:
           kustomize-version: "5.0.0"
 
@@ -119,7 +119,7 @@ jobs:
           version: 'v1.31.0'
 
       - name: Set up Kustomize
-        uses: imranismail/setup-kustomize@v2
+        uses: imranismail/setup-kustomize@v3
         with:
           kustomize-version: "5.0.0"
 
