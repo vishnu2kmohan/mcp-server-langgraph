@@ -126,7 +126,7 @@ jobs:
 
       - name: Enable auto-merge
         if: steps.check-update.outputs.auto_merge == 'true'
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 2
           max_attempts: 3
