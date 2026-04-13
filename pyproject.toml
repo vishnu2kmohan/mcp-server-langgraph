@@ -257,13 +257,13 @@ observability-grpc = [
 ]
 
 observability-http = [
-    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.0",
 ]
 
 # Both exporters (for flexibility)
 observability-full = [
     "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.0",
 ]
 
 # ==============================================================================
@@ -274,7 +274,7 @@ observability-full = [
 all = [
     "infisical-python>=2.1.7,<=2.3.6",
     "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.0",
     # embeddings-local intentionally excluded - choose explicitly
 ]
 
@@ -284,7 +284,7 @@ all-full = [
     "sentence-transformers>=5.1.2",  # Updated 2025-11-28: Python 3.13 support
     "torch>=2.0.0,<3.0.0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.0",
 ]
 
 [project.scripts]
