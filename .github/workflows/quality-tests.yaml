@@ -299,7 +299,7 @@ jobs:
 
       - name: Store benchmark results
         continue-on-error: true  # Don't fail workflow if gh-pages push fails
-        uses: benchmark-action/github-action-benchmark@v1.20.7
+        uses: benchmark-action/github-action-benchmark@v1.22.1
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           tool: 'pytest'
