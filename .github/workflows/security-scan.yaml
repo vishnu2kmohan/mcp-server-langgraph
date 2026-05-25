@@ -87,7 +87,7 @@ jobs:
     # Filesystem scan
     - name: Run Trivy filesystem scan
       if: matrix.scan-type == 'fs'
-      uses: aquasecurity/trivy-action@0.33.1
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -110,7 +110,7 @@ jobs:
 
     - name: Run Trivy image scan
       if: matrix.scan-type == 'image'
-      uses: aquasecurity/trivy-action@0.33.1
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'image'
         image-ref: 'mcp-server-langgraph:scan'
@@ -129,7 +129,7 @@ jobs:
     # Config scan
     - name: Run Trivy config scan
       if: matrix.scan-type == 'config'
-      uses: aquasecurity/trivy-action@0.33.1
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'config'
         scan-ref: '.'
@@ -165,7 +165,7 @@ jobs:
           trivy-db-${{ runner.os }}-
 
     - name: Generate comprehensive report
-      uses: aquasecurity/trivy-action@0.33.1
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -237,7 +237,7 @@ jobs:
       run: docker build -f docker/Dockerfile -t mcp-server-langgraph:scan .
 
     - name: Generate SBOM
-      uses: aquasecurity/trivy-action@0.33.1
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'image'
         image-ref: 'mcp-server-langgraph:scan'

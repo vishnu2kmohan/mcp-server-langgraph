@@ -175,7 +175,7 @@ jobs:
           docker rm playground-test
 
       - name: Security scan with Trivy
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: 'ghcr.io/${{ github.repository_owner }}/mcp-server-langgraph-playground:latest'
           format: 'sarif'
