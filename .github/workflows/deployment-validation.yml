@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -32,7 +32,7 @@ jobs:
       # Cache Helm dependencies to avoid rate limiting from GitHub-hosted chart repos
       # See: https://github.com/openfga/helm-charts (redirects to GitHub Releases)
       - name: Cache Helm Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             deployments/helm/mcp-server-langgraph/charts
@@ -151,7 +151,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2
@@ -269,7 +269,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2
@@ -292,7 +292,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2
@@ -315,7 +315,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2
@@ -383,7 +383,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps

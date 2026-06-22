@@ -72,7 +72,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -91,7 +91,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -112,7 +112,7 @@ jobs:
 
       - name: Upload property test coverage
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-property
           path: coverage-property.xml
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload property test results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: property-test-results
           path: |
@@ -134,7 +134,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -163,7 +163,7 @@ jobs:
 
       - name: Upload contract test coverage
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-contract
           path: coverage-contract.xml
@@ -171,7 +171,7 @@ jobs:
 
       - name: Upload OpenAPI schema
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: openapi-schema
           path: docs/api/openapi.json
@@ -186,7 +186,7 @@ jobs:
     # pytest-xdist handles parallelization internally with -n auto
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload regression test coverage
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-regression
           path: coverage-regression.xml
@@ -224,7 +224,7 @@ jobs:
 
       - name: Upload regression results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: regression-results
           path: |
@@ -239,7 +239,7 @@ jobs:
     if: github.event_name == 'schedule'  # Only on weekly schedule (too slow for PRs)
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -261,7 +261,7 @@ jobs:
 
       - name: Upload mutation results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: mutation-test-results
           path: html/
@@ -275,7 +275,7 @@ jobs:
       contents: write  # Required for benchmark-action to push to gh-pages
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -314,7 +314,7 @@ jobs:
 
       - name: Upload benchmark results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results
           path: |

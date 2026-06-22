@@ -26,7 +26,7 @@ jobs:
     if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
@@ -106,7 +106,7 @@ jobs:
 
       - name: Add comment to release
         if: steps.check_changes.outputs.has_changes == 'true' && github.event_name == 'release'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const release = context.payload.release;

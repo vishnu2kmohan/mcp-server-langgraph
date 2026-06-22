@@ -83,7 +83,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -140,7 +140,7 @@ jobs:
         echo "budget_remaining=$budget_remaining" >> $GITHUB_OUTPUT
 
     - name: Upload report
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: cost-report-${{ steps.fetch.outputs.period }}days
         path: |
@@ -150,7 +150,7 @@ jobs:
 
     - name: Create issue if over budget
       if: steps.analyze.outputs.budget_pct > 100
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       env:
         BUDGET_PCT: ${{ steps.analyze.outputs.budget_pct }}
       with:

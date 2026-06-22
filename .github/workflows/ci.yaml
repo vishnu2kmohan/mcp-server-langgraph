@@ -82,7 +82,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install actionlint
         run: |
@@ -145,7 +145,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -189,7 +189,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -229,7 +229,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -292,7 +292,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -331,7 +331,7 @@ jobs:
     # See: https://github.com/openfga/helm-charts (redirects to GitHub Releases)
     - name: Cache Helm Dependencies
       if: matrix.python-version == '3.12'
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           deployments/helm/mcp-server-langgraph/charts
@@ -444,7 +444,7 @@ jobs:
 
     - name: Upload coverage artifact (${{ matrix.label }})
       if: matrix.python-version == '3.12'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-${{ matrix.label }}-py3.12
         path: |
@@ -454,7 +454,7 @@ jobs:
 
     - name: Upload test durations artifact (${{ matrix.label }})
       if: matrix.python-version == '3.12'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: test-durations-${{ matrix.label }}-py3.12
         path: test-durations-${{ matrix.label }}.txt
@@ -473,7 +473,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -482,7 +482,7 @@ jobs:
         extras: 'dev'
 
     - name: Download all coverage artifacts
-      uses: actions/download-artifact@v4.1.8
+      uses: actions/download-artifact@v8.0.1
       with:
         pattern: coverage-*-py3.12
         path: coverage-artifacts/
@@ -537,14 +537,14 @@ jobs:
         fi
 
     - name: Upload merged coverage (XML)
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-merged
         path: coverage-merged.xml
         retention-days: 7
 
     - name: Upload merged coverage (HTML)
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-html
         path: coverage-html/
@@ -552,7 +552,7 @@ jobs:
       if: hashFiles('coverage-html/') != ''
 
     - name: Upload merged coverage (JSON)
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-json
         path: coverage.json
@@ -578,7 +578,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -592,7 +592,7 @@ jobs:
         terraform_version: '1.6.6'
 
     - name: Cache pre-commit environments
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pre-commit
         key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -691,7 +691,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -737,7 +737,7 @@ jobs:
         node-version: '20'
 
     - name: Cache pre-commit environments
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pre-commit
         key: push-validators-${{ matrix.category }}-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -814,7 +814,7 @@ jobs:
         variant: [base, full, test]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Free disk space
       run: |
@@ -942,7 +942,7 @@ jobs:
         stack: [main, dev, test]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Run smoke test (config validation only)
       run: |
@@ -971,7 +971,7 @@ jobs:
         variant: [base, full]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Free disk space
       run: |
@@ -1042,7 +1042,7 @@ jobs:
         variant: [base, full]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Docker Buildx
       uses: ./.github/actions/setup-docker-buildx
@@ -1094,7 +1094,7 @@ jobs:
     environment: development
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     # Authenticate to Google Cloud
     - id: auth
@@ -1132,7 +1132,7 @@ jobs:
     if: github.ref == 'refs/heads/develop' && vars.ENABLE_DEV_AUTODEPLOY == 'true'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v4.0.1

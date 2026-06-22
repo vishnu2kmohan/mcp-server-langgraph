@@ -72,12 +72,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     # Cache Trivy DB to avoid repeated downloads (GitHub API rate limiting)
     # The DB is ~50MB and refreshes daily; caching saves ~30s per scan
     - name: Cache Trivy DB
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/trivy
         key: trivy-db-${{ runner.os }}-${{ github.run_id }}
@@ -153,11 +153,11 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     # Restore cached Trivy DB from trivy-scan job
     - name: Cache Trivy DB
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/trivy
         key: trivy-db-${{ runner.os }}-${{ github.run_id }}
@@ -174,7 +174,7 @@ jobs:
         severity: 'CRITICAL,HIGH,MEDIUM,LOW'
 
     - name: Upload report artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: trivy-comprehensive-report
         path: trivy-report.txt
@@ -182,7 +182,7 @@ jobs:
 
     - name: Comment on PR
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');
@@ -222,11 +222,11 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     # Cache Trivy DB to avoid repeated downloads
     - name: Cache Trivy DB
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/trivy
         key: trivy-db-${{ runner.os }}-${{ github.run_id }}
@@ -245,7 +245,7 @@ jobs:
         output: 'sbom.json'
 
     - name: Upload SBOM artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: software-bill-of-materials
         path: sbom.json
@@ -257,7 +257,7 @@ jobs:
     if: github.event_name != 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup Python
       uses: ./.github/actions/setup-python-deps
@@ -280,7 +280,7 @@ jobs:
       continue-on-error: true  # Allow failures but report them
 
     - name: Upload reports
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: dependency-reports
         path: |
@@ -298,7 +298,7 @@ jobs:
       security-events: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
@@ -318,7 +318,7 @@ jobs:
     if: github.event_name != 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0  # Required for full repository history scan
 
@@ -348,7 +348,7 @@ jobs:
     if: github.event_name != 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -364,7 +364,7 @@ jobs:
         pip-licenses --format=markdown --output-file=licenses.md
 
     - name: Upload license report
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: license-report
         path: |

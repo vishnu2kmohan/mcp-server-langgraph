@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run Trivy on Terraform
         uses: aquasecurity/trivy-action@0.33.1
@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run Trivy on Kubernetes manifests
         uses: aquasecurity/trivy-action@0.33.1
@@ -156,7 +156,7 @@ jobs:
     if: github.event_name == 'schedule' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - id: auth
         name: Authenticate to Google Cloud
@@ -195,7 +195,7 @@ jobs:
           fi
 
       - name: Upload CIS results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: cis-benchmark-results
           path: kube-bench-results.txt
@@ -209,7 +209,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install OPA
         run: |
@@ -244,7 +244,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0  # Full history for gitleaks
 
@@ -311,7 +311,7 @@ jobs:
           cat compliance-report.md
 
       - name: Upload report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: compliance-report
           path: compliance-report.md

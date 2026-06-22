@@ -51,7 +51,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -80,7 +80,7 @@ jobs:
         echo "without_issues=$WITHOUT_ISSUES" >> $GITHUB_OUTPUT
 
     - name: Upload reports
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: skipped-tests-report
         path: |
@@ -91,7 +91,7 @@ jobs:
 
     - name: Comment on PR
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');
@@ -142,7 +142,7 @@ jobs:
 
     - name: Create issue if too many untracked tests
       if: github.event_name == 'schedule' && steps.track.outputs.without_issues > 30
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');

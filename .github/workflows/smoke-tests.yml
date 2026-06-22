@@ -12,7 +12,7 @@ jobs:
     name: Validate Dependency Injection
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -43,7 +43,7 @@ jobs:
     name: Validate Repository Root Calculations
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -76,7 +76,7 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and Dependencies
         uses: ./.github/actions/setup-python-deps
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: dependency-validation
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Python and Dependencies
         uses: ./.github/actions/setup-python-deps
