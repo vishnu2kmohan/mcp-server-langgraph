@@ -71,7 +71,7 @@ jobs:
       drift_detected: ${{ steps.plan.outputs.drift_detected }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -110,7 +110,7 @@ jobs:
 
       - name: Save drift plan (text)
         if: steps.plan.outputs.drift_detected == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: drift-plan-production-txt
           path: /tmp/drift-plan.txt
@@ -118,7 +118,7 @@ jobs:
 
       - name: Save drift plan (binary)
         if: steps.plan.outputs.drift_detected == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: drift-plan-production-binary
           path: terraform/environments/gcp-prod/tfplan
@@ -126,7 +126,7 @@ jobs:
 
       - name: Create drift issue
         if: steps.plan.outputs.drift_detected == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -191,7 +191,7 @@ jobs:
       name: production-drift-remediation
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -229,7 +229,7 @@ jobs:
           terraform apply -auto-approve
 
       - name: Comment on drift issue
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // Find the drift issue
@@ -270,7 +270,7 @@ jobs:
     if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

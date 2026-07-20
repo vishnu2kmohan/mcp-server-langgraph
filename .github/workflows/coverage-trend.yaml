@@ -76,7 +76,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0  # Full history for trend analysis
 
@@ -87,7 +87,7 @@ jobs:
         extras: 'dev'
 
     - name: Download previous coverage data
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8.0.1
       with:
         name: coverage-history
         path: .coverage-history
@@ -96,7 +96,7 @@ jobs:
     # For workflow_run (main branch): Download coverage from CI instead of running tests
     - name: Download coverage from CI (workflow_run)
       if: github.event_name == 'workflow_run'
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8.0.1
       with:
         name: coverage-json
         path: .
@@ -127,7 +127,7 @@ jobs:
         echo "coverage_rounded=$COVERAGE_ROUNDED" >> $GITHUB_OUTPUT
 
     - name: Upload coverage history
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-history
         path: .coverage-history/
@@ -163,7 +163,7 @@ jobs:
 
     - name: Comment on PR
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         script: |
           const coverage = '${{ steps.coverage.outputs.coverage_rounded }}';
