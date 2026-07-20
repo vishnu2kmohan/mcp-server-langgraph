@@ -59,7 +59,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -113,7 +113,7 @@ jobs:
             --output performance-report.md || echo "has_regression=true" >> $GITHUB_OUTPUT
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: performance-benchmarks
           path: |
@@ -150,16 +150,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download benchmark results
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.1
         with:
           name: performance-benchmarks
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -174,7 +174,7 @@ jobs:
 
       - name: Create issue for regression
         if: github.event_name != 'pull_request'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -217,10 +217,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download benchmark results
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8.0.1
         with:
           name: performance-benchmarks
 
@@ -261,7 +261,7 @@ jobs:
 
       - name: Comment on improvement
         if: steps.check.outputs.update_baseline == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.repos.createCommitComment({
